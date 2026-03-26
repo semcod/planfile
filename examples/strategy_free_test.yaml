@@ -1,0 +1,24 @@
+domain: software
+goal: Test free model usage
+name: Free Model Strategy
+project_type: python
+sprints:
+- id: 1
+  name: Free Model Test
+  objectives:
+  - Test all free model hints
+  tasks:
+  - description: Task with free hint
+    model_hints: free
+    name: Test Free Hint
+    type: chore
+  - description: Task with cheap hint
+    model_hints:
+      implementation: cheap
+    name: Test Cheap Hint
+    type: documentation
+  - description: Task with local model
+    model_hints: local
+    name: Test Local Model
+    type: refactor
+version: 1.0.0
