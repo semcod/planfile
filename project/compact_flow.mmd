@@ -1,0 +1,8 @@
+flowchart TD
+    strategy__cli["strategy.cli<br/>5 funcs"]
+    strategy__loaders["strategy.loaders<br/>12 funcs"]
+    strategy__runner["strategy.runner<br/>8 funcs"]
+    strategy__utils["strategy.utils<br/>5 funcs"]
+    strategy__cli -->|3| strategy__loaders
+    strategy__runner -->|2| strategy__utils
+    strategy__cli -->|2| strategy__runner

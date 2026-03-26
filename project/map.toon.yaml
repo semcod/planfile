@@ -1,0 +1,98 @@
+# strategy | 19f 2500L | python:18,shell:1 | 2026-03-26
+# stats: 72 func | 0 cls | 19 mod | CC̄=5.4 | critical:5 | cycles:0
+# alerts[5]: fan-out apply_strategy_cli=28; fan-out analyze_project_metrics=23; fan-out review_strategy_cli=23; CC export_results_to_markdown=19; CC apply_strategy_cli=18
+# hotspots[5]: apply_strategy_cli fan=28; analyze_project_metrics fan=23; review_strategy_cli fan=23; export_results_to_markdown fan=16; validate_strategy_schema fan=10
+# evolution: baseline
+# Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
+M[19]:
+  project.sh,21
+  strategy/__init__.py,23
+  strategy/cli/__init__.py,0
+  strategy/cli/__main__.py,4
+  strategy/cli/commands.py,328
+  strategy/integrations/__init__.py,0
+  strategy/integrations/base.py,112
+  strategy/integrations/generic.py,197
+  strategy/integrations/github.py,193
+  strategy/integrations/gitlab.py,230
+  strategy/integrations/jira.py,276
+  strategy/loaders/__init__.py,0
+  strategy/loaders/cli_loader.py,158
+  strategy/loaders/yaml_loader.py,225
+  strategy/models.py,97
+  strategy/runner.py,324
+  strategy/utils/__init__.py,0
+  strategy/utils/metrics.py,201
+  strategy/utils/priorities.py,111
+D:
+  strategy/loaders/cli_loader.py:
+    e: load_from_json,save_to_json,load_strategy_from_json,save_strategy_to_json,export_results_to_markdown
+    load_from_json(file_path)
+    save_to_json(data;file_path)
+    load_strategy_from_json(file_path)
+    save_strategy_to_json(strategy;file_path)
+    export_results_to_markdown(results;file_path)
+  strategy/cli/commands.py:
+    e: get_backend,apply_strategy_cli,review_strategy_cli,validate_strategy_cli,main
+    get_backend(backend_type;config)
+    apply_strategy_cli(strategy_path;project_path;backend;config_file;dry_run;sprint_filter;output;verbose)
+    review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
+    validate_strategy_cli(strategy_path;verbose)
+    main()
+  strategy/loaders/yaml_loader.py:
+    e: load_yaml,save_yaml,load_strategy_yaml,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,validate_strategy_schema
+    load_yaml(file_path)
+    save_yaml(data;file_path)
+    load_strategy_yaml(file_path)
+    save_strategy_yaml(strategy;file_path)
+    load_tasks_yaml(file_path)
+    merge_strategy_with_tasks(strategy;tasks_file)
+    validate_strategy_schema(file_path)
+  strategy/utils/metrics.py:
+    e: analyze_project_metrics,calculate_strategy_health
+    analyze_project_metrics(project_path)
+    calculate_strategy_health(strategy_results)
+  strategy/integrations/gitlab.py:
+    e: GitLabBackend
+    GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
+  strategy/integrations/github.py:
+    e: GitHubBackend
+    GitHubBackend(BasePMBackend): __init__(2),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitHub Issues integration backend...
+  strategy/runner.py:
+    e: StrategyRunner,apply_strategy,review_strategy
+    StrategyRunner: __init__(1),apply_strategy(5),review_strategy(3),_find_task_pattern(2),_create_ticket_for_task(5),_get_sprint_tickets(3)  # Main runner for applying and reviewing strategies...
+    apply_strategy(strategy;project_path;backends;backend_name;dry_run;sprint_filter)
+    review_strategy(strategy;project_path;backends;backend_name)
+  strategy/integrations/jira.py:
+    e: JiraBackend
+    JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Jira integration backend...
+  strategy/integrations/generic.py:
+    e: GenericBackend
+    GenericBackend(BasePMBackend): __init__(3),_validate_config(0),_make_request(4),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Generic HTTP API backend for PM systems...
+  strategy/utils/priorities.py:
+    e: calculate_task_priority,map_priority_to_system,get_priority_color
+    calculate_task_priority(base_priority;task_type;sprint_id;weight_factors)
+    map_priority_to_system(priority;system)
+    get_priority_color(priority)
+  strategy/integrations/base.py:
+    e: TicketRef,TicketStatus,PMBackend,BasePMBackend
+    TicketRef(BaseModel):  # Reference to a created/updated ticket...
+    TicketStatus(BaseModel):  # Status of a ticket...
+    PMBackend(Protocol): create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Protocol for PM system backends...
+    BasePMBackend(ABC): __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1)  # Base class for PM backends with common functionality...
+  strategy/models.py:
+    e: TaskType,ModelTier,ModelHints,TaskPattern,Sprint,QualityGate,Strategy
+    TaskType(str,Enum):  # Type of task in the strategy...
+    ModelTier(str,Enum):  # Model tier for different phases of work...
+    ModelHints(BaseModel):  # AI model hints for different phases of task execution...
+    TaskPattern(BaseModel):  # A pattern for generating tasks...
+    Sprint(BaseModel):  # A sprint in the strategy...
+    QualityGate(BaseModel):  # Quality gate definition...
+    Strategy(BaseModel): get_task_patterns(1),get_sprint(1)  # Main strategy configuration...
+  strategy/__init__.py:
+  strategy/loaders/__init__.py:
+  strategy/cli/__init__.py:
+  strategy/cli/__main__.py:
+  strategy/utils/__init__.py:
+  strategy/integrations/__init__.py:
+  project.sh:
