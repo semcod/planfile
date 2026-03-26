@@ -1,8 +1,8 @@
 """
 Simple test to verify the strategy package structure.
 """
-from strategy.models import Strategy, TaskPattern, TaskType, Sprint
-from strategy.loaders.yaml_loader import load_strategy_yaml
+from planfile.models import Strategy, TaskPattern, TaskType, Sprint
+from planfile.loaders.yaml_loader import load_strategy_yaml
 from pathlib import Path
 
 

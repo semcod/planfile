@@ -50,7 +50,7 @@ class StrategyRunner:
         
         backend = self.backends[backend_name]
         results = {
-            "strategy": strategy.name,
+            "strategy": planfile.name,
             "applied_at": datetime.now().isoformat(),
             "backend": backend_name,
             "dry_run": dry_run,
@@ -63,10 +63,10 @@ class StrategyRunner:
             }
         }
         
-        logger.info(f"Applying strategy '{strategy.name}' using {backend_name} backend")
+        logger.info(f"Applying strategy '{planfile.name}' using {backend_name} backend")
         
         # Process each sprint
-        for sprint in strategy.sprints:
+        for sprint in planfile.sprints:
             if sprint_filter and sprint.id not in sprint_filter:
                 continue
             
@@ -128,7 +128,7 @@ class StrategyRunner:
         
         backend = self.backends[backend_name]
         results = {
-            "strategy": strategy.name,
+            "strategy": planfile.name,
             "reviewed_at": datetime.now().isoformat(),
             "backend": backend_name,
             "sprints": {},
@@ -142,14 +142,14 @@ class StrategyRunner:
             }
         }
         
-        logger.info(f"Reviewing strategy '{strategy.name}' using {backend_name} backend")
+        logger.info(f"Reviewing strategy '{planfile.name}' using {backend_name} backend")
         
         # Analyze project metrics
         project_metrics = analyze_project_metrics(project_path)
         results["metrics"]["project"] = project_metrics
         
         # Review each sprint
-        for sprint in strategy.sprints:
+        for sprint in planfile.sprints:
             sprint_results = {
                 "name": sprint.name,
                 "objectives": sprint.objectives,
@@ -205,7 +205,7 @@ class StrategyRunner:
     
     def _find_task_pattern(self, strategy: Strategy, pattern_id: str) -> Optional[TaskPattern]:
         """Find a task pattern by ID across all categories."""
-        for category_patterns in strategy.tasks.values():
+        for category_patterns in planfile.tasks.values():
             for pattern in category_patterns:
                 if pattern.id == pattern_id:
                     return pattern
@@ -230,7 +230,7 @@ class StrategyRunner:
         
         # Prepare metadata
         metadata = {
-            "strategy": strategy.name,
+            "strategy": planfile.name,
             "sprint_id": sprint.id,
             "sprint_name": sprint.name,
             "pattern_id": task_pattern.id,
@@ -292,7 +292,7 @@ def apply_strategy(
     Apply a strategy to create/update tickets.
     
     This is a convenience function that creates a StrategyRunner
-    and applies the strategy.
+    and applies the planfile.
     """
     runner = StrategyRunner(backends)
     return runner.apply_strategy(
@@ -314,7 +314,7 @@ def review_strategy(
     Review strategy execution by checking ticket statuses.
     
     This is a convenience function that creates a StrategyRunner
-    and reviews the strategy.
+    and reviews the planfile.
     """
     runner = StrategyRunner(backends)
     return runner.review_strategy(

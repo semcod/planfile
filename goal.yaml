@@ -1,5 +1,5 @@
 # goal.yaml - Goal configuration file
-# Generated: 2026-03-26 13:13:52
+# Generated: 2026-03-26 13:39:39
 # Documentation: https://github.com/wronai/goal#configuration
 #
 # This file configures Goal's behavior for:
@@ -23,7 +23,7 @@ versioning:
   files:
   - VERSION
   - pyproject.toml:version
-  - strategy/__init__.py:__version__
+  - planfile/__init__.py:__version__
   bump_rules:
     patch: 10
     minor: 50

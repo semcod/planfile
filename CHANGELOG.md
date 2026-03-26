@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-03-26
+
+### Docs
+- Update README_OLD.md
+- Update README_PACKAGE.md
+- Update STRATEGY_SUMMARY.md
+- Update docs/CI_CD_INTEGRATION_OLD.md
+- Update docs/CLI.md
+- Update docs/EXAMPLES.md
+- Update docs/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Test
+- Update test_strategy.py
+
+### Other
+- Update planfile/__init__.py
+- Update planfile/ci_runner.py
+- Update planfile/cli/__init__.py
+- Update planfile/cli/__main__.py
+- Update planfile/cli/auto_loop.py
+- Update planfile/cli/commands.py
+- Update planfile/examples/strategies/ecommerce-mvp.yaml
+- Update planfile/examples/strategies/onboarding.yaml
+- Update planfile/examples/tasks/common-tasks.yaml
+- Update planfile/integrations/__init__.py
+- ... and 27 more files
+
 ## [0.1.9] - 2026-03-26
 
 ### Docs

@@ -290,7 +290,7 @@ Focus on the failed tests and make minimal changes to fix them.
             issues.append(f"{summary['blocked']} tickets are blocked")
         
         # Check quality goals
-        for goal in self.strategy.goal.quality:
+        for goal in self.planfile.goal.quality:
             if "coverage" in goal.lower():
                 coverage = review.get("metrics", {}).get("project", {}).get("test_coverage", 0)
                 if coverage < 80:  # Default threshold
@@ -301,7 +301,7 @@ Focus on the failed tests and make minimal changes to fix them.
     def run_loop(self) -> Dict[str, Any]:
         """Run the main CI/CD loop."""
         print(f"🚀 Starting CI/CD loop (max {self.max_iterations} iterations)")
-        print(f"Strategy: {self.strategy.name}")
+        print(f"Strategy: {self.planfile.name}")
         print(f"Project: {self.project_path}")
         print("=" * 60)
         

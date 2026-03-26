@@ -20,7 +20,7 @@ before_script:
   - python -m venv .venv
   - source .venv/bin/activate
   - pip install --upgrade pip
-  - pip install strategy-pm[jira] pytest pytest-cov
+  - pip install planfile[jira] pytest pytest-cov
   - pip install llx
 
 # Test stage
@@ -70,7 +70,7 @@ create_tickets:
     - |
       if [ ! -f coverage.json ] || [ "$(jq '.totals.percent_covered' coverage.json)" -lt 80 ]; then
         echo "Coverage below threshold, creating tickets..."
-        strategy-pm auto loop \
+        planfile auto loop \
           --strategy ./strategy.yaml \
           --project . \
           --backend jira \
@@ -95,7 +95,7 @@ auto_fix:
   stage: fix
   script:
     - echo "🔧 Attempting auto-fix..."
-    - strategy-pm auto loop \
+    - planfile auto loop \
         --strategy ./strategy.yaml \
         --project . \
         --backend jira \
@@ -121,7 +121,7 @@ review_strategy:
     - echo "📊 Reviewing strategy..."
     - |
       # Check if strategy is complete
-      strategy-pm strategy review \
+      planfile strategy review \
         --strategy ./strategy.yaml \
         --project . \
         --backend jira \
@@ -131,7 +131,7 @@ review_strategy:
       python - <<'EOF'
 import os
 import json
-from strategy.integrations.jira import JiraBackend
+from planfile.integrations.jira import JiraBackend
 
 if os.path.exists('review-results.json'):
     with open('review-results.json') as f:

@@ -1,17 +1,18 @@
-# code2llm | 19f 2500L | python:18,shell:1 | 2026-03-26
-# CC̄=5.4 | critical:5/72 | dups:0 | cycles:0
+# code2llm | 22f 3343L | python:20,shell:2 | 2026-03-26
+# CC̄=5.1 | critical:6/90 | dups:0 | cycles:0
 
-HEALTH[5]:
+HEALTH[6]:
   🟡 CC    validate_strategy_schema CC=17 (limit:15)
   🟡 CC    export_results_to_markdown CC=19 (limit:15)
-  🟡 CC    analyze_project_metrics CC=16 (limit:15)
+  🟡 CC    auto_loop CC=20 (limit:15)
   🟡 CC    apply_strategy_cli CC=18 (limit:15)
+  🟡 CC    analyze_project_metrics CC=16 (limit:15)
   🟡 CC    update_ticket CC=15 (limit:15)
 
 REFACTOR[1]:
-  1. split 5 high-CC methods  (CC>15)
+  1. split 6 high-CC methods  (CC>15)
 
-PIPELINES[53]:
+PIPELINES[65]:
   [1] Src [save_strategy_yaml]: save_strategy_yaml → save_yaml
       PURITY: 100% pure
   [2] Src [merge_strategy_with_tasks]: merge_strategy_with_tasks → load_tasks_yaml → load_yaml
@@ -25,11 +26,13 @@ PIPELINES[53]:
 
 LAYERS:
   strategy/                       CC̄=5.4    ←in:2  →out:2
+  │ ci_runner                  452L  3C   10m  CC=9      ←0
   │ !! commands                   328L  0C    5m  CC=18     ←0
-  │ runner                     324L  1C    8m  CC=13     ←1
+  │ runner                     324L  1C    8m  CC=13     ←2
   │ jira                       276L  1C    9m  CC=13     ←0
   │ !! gitlab                     230L  1C    7m  CC=15     ←0
   │ !! yaml_loader                225L  0C    7m  CC=17     ←1
+  │ !! auto_loop                  217L  0C    3m  CC=20     ←0
   │ !! metrics                    201L  0C    2m  CC=16     ←1
   │ generic                    197L  1C    8m  CC=8      ←0
   │ github                     193L  1C    7m  CC=14     ←0
@@ -45,6 +48,7 @@ LAYERS:
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │
   ./                              CC̄=0.0    ←in:0  →out:0
+  │ docker-entrypoint.sh       174L  0C    5m  CC=0.0    ←0
   │ project.sh                  21L  0C    0m  CC=0.0    ←0
   │
   ── zero ──

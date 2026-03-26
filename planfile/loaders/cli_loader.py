@@ -61,7 +61,7 @@ def save_strategy_to_json(strategy: Strategy, file_path: Union[str, Path]) -> No
         strategy: Strategy instance
         file_path: Path to save JSON file
     """
-    data = strategy.model_dump()
+    data = planfile.model_dump()
     save_to_json(data, file_path)
 
 

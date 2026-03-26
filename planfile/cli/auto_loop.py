@@ -77,7 +77,7 @@ def auto_loop(
     console.print()
     
     # Validate strategy exists
-    if not strategy.exists():
+    if not planfile.exists():
         console.print(f"[red]✗ Strategy file not found: {strategy}[/red]")
         raise typer.Exit(1)
     
@@ -150,7 +150,7 @@ def auto_loop(
     # Final status
     if results["success"]:
         console.print("\n[green]✅ Loop completed successfully![/green]")
-        console.print(f"Strategy '{runner.strategy.name}' is complete!")
+        console.print(f"Strategy '{runner.planfile.name}' is complete!")
     else:
         console.print(f"\n[red]❌ Loop failed: {results['final_status']}[/red]")
         console.print(f"Total iterations: {results['total_iterations']}")
