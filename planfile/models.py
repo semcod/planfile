@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class TaskType(str, Enum):
-    """Type of task in the strategy."""
+    """Type of task in the planfile."""
     feature = "feature"
     tech_debt = "tech_debt"
     bug = "bug"
@@ -42,7 +42,7 @@ class TaskPattern(BaseModel):
 
 
 class Sprint(BaseModel):
-    """A sprint in the strategy."""
+    """A sprint in the planfile."""
     id: int = Field(..., description="Sprint number")
     name: str = Field(..., description="Sprint name")
     length_days: int = Field(14, description="Sprint length in days")

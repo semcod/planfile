@@ -101,7 +101,7 @@ def save_strategy_yaml(strategy: Strategy, file_path: Union[str, Path]) -> None:
         strategy: Strategy instance
         file_path: Path to save YAML file
     """
-    data = strategy.model_dump()
+    data = planfile.model_dump()
     
     # Convert enums to strings
     if "tasks" in data:
@@ -147,7 +147,7 @@ def merge_strategy_with_tasks(
     tasks_file: Union[str, Path]
 ) -> Strategy:
     """
-    Merge additional task patterns into a strategy.
+    Merge additional task patterns into a planfile.
     
     Args:
         strategy: Base strategy
@@ -160,9 +160,9 @@ def merge_strategy_with_tasks(
     
     # Merge tasks
     for category, patterns in additional_tasks.items():
-        if category not in strategy.tasks:
-            strategy.tasks[category] = []
-        strategy.tasks[category].extend(patterns)
+        if category not in planfile.tasks:
+            planfile.tasks[category] = []
+        planfile.tasks[category].extend(patterns)
     
     return strategy
 

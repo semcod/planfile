@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planfile"
-version = "0.1.9"
+version = "0.1.10"
 description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 license = "Apache-2.0"
@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.scripts]
-planfile = "strategy.cli.commands:main"
+planfile = "planfile.cli.commands:main"
 
 [project.optional-dependencies]
 github = ["PyGithub>=2.0"]
@@ -58,10 +58,10 @@ Documentation = "https://strategy.readthedocs.io"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["strategy*"]
+include = ["planfile*"]
 
 [tool.setuptools.package-data]
-"strategy" = ["examples/**/*.yaml", "examples/**/*.yml"]
+"planfile" = ["examples/**/*.yaml", "examples/**/*.yml"]
 
 [tool.ruff]
 line-length = 100
@@ -89,7 +89,7 @@ strict_equality = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --tb=short --cov=strategy --cov-report=html --cov-report=term-missing"
+addopts = "-v --tb=short --cov=planfile --cov-report=html --cov-report=term-missing"
 
 [tool.black]
 line-length = 100

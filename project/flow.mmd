@@ -4,6 +4,9 @@ flowchart TD
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph CLI
+        strategy__cli__auto_loop__get_backend["get_backend"]
+        strategy__cli__auto_loop__auto_loop["auto_loop"]
+        strategy__cli__auto_loop__ci_status["ci_status"]
         strategy__cli__commands__get_backend["get_backend"]
         strategy__cli__commands__apply_strategy_cli["apply_strategy_cli"]
         strategy__cli__commands__review_strategy_cli["review_strategy_cli"]
@@ -27,7 +30,7 @@ flowchart TD
         strategy__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
         strategy__loaders__cli_loader__save_strategy_to_json["save_strategy_to_json"]
         strategy__utils__priorities__map_priority_to_system["map_priority_to_system"]
-        ...["+40 more"]
+        ...["+54 more"]
     end
 
     subgraph Exporters

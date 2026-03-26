@@ -1,19 +1,22 @@
 flowchart LR
+    subgraph strategy__ci_runner
+        strategy__ci_runner__CIRunner__check_strategy_completion["check_strategy_completion"]
+    end
     subgraph strategy__cli
         strategy__cli__commands__validate_strategy_cli["validate_strategy_cli"]
         strategy__cli__commands__review_strategy_cli["review_strategy_cli"]
     end
     subgraph strategy__loaders
-        strategy__loaders__yaml_loader__validate_strategy_schema["validate_strategy_schema"]
         strategy__loaders__yaml_loader__load_yaml["load_yaml"]
-        strategy__loaders__yaml_loader__load_strategy_yaml["load_strategy_yaml"]
-        strategy__loaders__yaml_loader__save_yaml["save_yaml"]
-        strategy__loaders__yaml_loader__load_tasks_yaml["load_tasks_yaml"]
+        strategy__loaders__yaml_loader__validate_strategy_schema["validate_strategy_schema"]
         strategy__loaders__cli_loader__save_to_json["save_to_json"]
         strategy__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
-        strategy__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
+        strategy__loaders__yaml_loader__save_yaml["save_yaml"]
+        strategy__loaders__yaml_loader__load_strategy_yaml["load_strategy_yaml"]
         strategy__loaders__cli_loader__save_strategy_to_json["save_strategy_to_json"]
         strategy__loaders__yaml_loader__save_strategy_yaml["save_strategy_yaml"]
+        strategy__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
+        strategy__loaders__yaml_loader__load_tasks_yaml["load_tasks_yaml"]
         strategy__loaders__cli_loader__load_from_json["load_from_json"]
     end
     subgraph strategy__runner
@@ -21,8 +24,8 @@ flowchart LR
         strategy__runner__StrategyRunner__review_strategy["review_strategy"]
     end
     subgraph strategy__utils
-        strategy__utils__priorities__calculate_task_priority["calculate_task_priority"]
         strategy__utils__metrics__analyze_project_metrics["analyze_project_metrics"]
+        strategy__utils__priorities__calculate_task_priority["calculate_task_priority"]
     end
     strategy__loaders__yaml_loader__load_strategy_yaml --> strategy__loaders__yaml_loader__load_yaml
     strategy__loaders__yaml_loader__save_strategy_yaml --> strategy__loaders__yaml_loader__save_yaml
@@ -36,3 +39,4 @@ flowchart LR
     strategy__loaders__cli_loader__save_strategy_to_json --> strategy__loaders__cli_loader__save_to_json
     strategy__cli__commands__review_strategy_cli --> strategy__runner__StrategyRunner__review_strategy
     strategy__cli__commands__validate_strategy_cli --> strategy__loaders__yaml_loader__load_strategy_yaml
+    strategy__ci_runner__CIRunner__check_strategy_completion --> strategy__runner__StrategyRunner__review_strategy

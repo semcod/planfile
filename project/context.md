@@ -4,14 +4,19 @@
 
 - **Project**: /home/tom/github/semcod/strategy
 - **Primary Language**: python
-- **Languages**: python: 18, shell: 1
+- **Languages**: python: 20, shell: 2
 - **Analysis Mode**: static
-- **Total Functions**: 72
-- **Total Classes**: 16
-- **Modules**: 19
-- **Entry Points**: 61
+- **Total Functions**: 90
+- **Total Classes**: 19
+- **Modules**: 22
+- **Entry Points**: 78
 
 ## Architecture by Module
+
+### strategy.ci_runner
+- **Functions**: 10
+- **Classes**: 3
+- **File**: `ci_runner.py`
 
 ### strategy.integrations.jira
 - **Functions**: 9
@@ -55,6 +60,14 @@
 - **Functions**: 5
 - **File**: `commands.py`
 
+### docker-entrypoint
+- **Functions**: 5
+- **File**: `docker-entrypoint.sh`
+
+### strategy.cli.auto_loop
+- **Functions**: 3
+- **File**: `auto_loop.py`
+
 ### strategy.utils.priorities
 - **Functions**: 3
 - **File**: `priorities.py`
@@ -72,6 +85,14 @@
 
 Main execution flows into the system:
 
+### strategy.cli.auto_loop.auto_loop
+> Run automated CI/CD loop: test → ticket → fix → retest.
+
+This command will:
+1. Run tests and code analysis
+2. If tests fail, generate bug reports with
+- **Calls**: app.command, typer.Argument, typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
+
 ### strategy.loaders.cli_loader.export_results_to_markdown
 > Export strategy results to Markdown file.
 
@@ -88,6 +109,18 @@ Args:
 > Review strategy execution and progress.
 - **Calls**: app.command, typer.Argument, typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, strategy.runner.StrategyRunner.review_strategy
 
+### strategy.cli.auto_loop.ci_status
+> Check current CI status without running tests.
+- **Calls**: app.command, typer.Argument, console.print, results_file.exists, coverage_file.exists, list, json.loads, console.print
+
+### strategy.ci_runner.CIRunner.run_loop
+> Run the main CI/CD loop.
+- **Calls**: print, print, print, print, range, print, print, self.run_tests
+
+### strategy.ci_runner.main
+> CLI entry point.
+- **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.parse_args
+
 ### strategy.cli.commands.validate_strategy_cli
 > Validate a strategy YAML file.
 - **Calls**: app.command, typer.Argument, typer.Option, strategy.loaders.yaml_loader.load_strategy_yaml, console.print, console.print, console.print, console.print
@@ -101,6 +134,10 @@ Args:
 Returns:
     List of validation issues (empty
 - **Calls**: strategy.loaders.yaml_loader.load_yaml, set, enumerate, None.items, issues.append, enumerate, strategy.loaders.yaml_loader.load_strategy_yaml, issues.append
+
+### strategy.ci_runner.CIRunner.check_strategy_completion
+> Check if strategy goals are met.
+- **Calls**: print, strategy.runner.StrategyRunner.review_strategy, review.get, summary.get, summary.get, issues.append, summary.get, issues.append
 
 ### strategy.utils.metrics.calculate_strategy_health
 > Calculate health metrics for a strategy execution.
@@ -116,6 +153,10 @@ Returns:
 > Update an existing GitHub issue.
 - **Calls**: self.repo.get_issue, int, issue.edit, issue.edit, issue.set_labels, issue.edit, new_labels.append, status.lower
 
+### strategy.ci_runner.CIRunner.run_tests
+> Run tests and return results.
+- **Calls**: print, subprocess.run, coverage_file.exists, TestResult, json.loads, None.get, result.stdout.split, coverage_file.read_text
+
 ### strategy.integrations.generic.GenericBackend.list_tickets
 > List tickets via generic API.
 - **Calls**: self._make_request, response.get, None.join, tickets.append, TicketStatus, str, ticket_data.get, ticket_data.get
@@ -127,6 +168,10 @@ Returns:
 ### strategy.integrations.generic.GenericBackend.search_tickets
 > Search tickets via generic API.
 - **Calls**: self._make_request, response.get, tickets.append, TicketStatus, str, ticket_data.get, ticket_data.get, ticket_data.get
+
+### strategy.ci_runner.CIRunner.generate_bug_report
+> Generate bug report using LLM.
+- **Calls**: print, subprocess.run, json.loads, BugReport, json.dumps, BugReport, bug_data.get, bug_data.get
 
 ### strategy.integrations.gitlab.GitLabBackend.list_tickets
 > List GitLab issues with filters.
@@ -189,97 +234,63 @@ Args:
 > Search GitLab issues.
 - **Calls**: self.project.issues.list, tickets.append, RuntimeError, TicketStatus, str, issue.updated_at.isoformat
 
-### strategy.integrations.jira.JiraBackend.__init__
-> Initialize Jira backend.
-
-Args:
-    base_url: Jira instance URL (e.g., "https://company.atlassian.net")
-    email: Email for authentication (defaults 
-- **Calls**: None.__init__, JIRA, os.environ.get, os.environ.get, os.environ.get, super
-
-### strategy.integrations.gitlab.GitLabBackend.get_ticket
-> Get GitLab issue status.
-- **Calls**: self.project.issues.get, TicketStatus, RuntimeError, str, issue.updated_at.isoformat
-
-### strategy.integrations.jira.JiraBackend.list_tickets
-> List Jira issues with filters.
-- **Calls**: self.jira.search_issues, tickets.append, RuntimeError, TicketStatus, issue.fields.updated.isoformat
-
-### strategy.integrations.jira.JiraBackend.search_tickets
-> Search Jira issues.
-- **Calls**: self.jira.search_issues, tickets.append, RuntimeError, TicketStatus, issue.fields.updated.isoformat
-
-### strategy.integrations.github.GitHubBackend.__init__
-> Initialize GitHub backend.
-
-Args:
-    repo: Repository in format "owner/repo"
-    token: GitHub token (defaults to GITHUB_TOKEN env var)
-- **Calls**: None.__init__, Github, self.github.get_repo, os.environ.get, super
-
-### strategy.integrations.github.GitHubBackend._validate_config
-> Validate GitHub configuration.
-- **Calls**: self.config.get, ValueError, self.config.get, ValueError, ValueError
-
-### strategy.integrations.github.GitHubBackend.get_ticket
-> Get GitHub issue status.
-- **Calls**: self.repo.get_issue, TicketStatus, int, str, issue.updated_at.isoformat
-
 ## Process Flows
 
 Key execution flows identified:
 
-### Flow 1: export_results_to_markdown
+### Flow 1: auto_loop
+```
+auto_loop [strategy.cli.auto_loop]
+```
+
+### Flow 2: export_results_to_markdown
 ```
 export_results_to_markdown [strategy.loaders.cli_loader]
 ```
 
-### Flow 2: apply_strategy_cli
+### Flow 3: apply_strategy_cli
 ```
 apply_strategy_cli [strategy.cli.commands]
 ```
 
-### Flow 3: review_strategy_cli
+### Flow 4: review_strategy_cli
 ```
 review_strategy_cli [strategy.cli.commands]
 ```
 
-### Flow 4: validate_strategy_cli
+### Flow 5: ci_status
+```
+ci_status [strategy.cli.auto_loop]
+```
+
+### Flow 6: run_loop
+```
+run_loop [strategy.ci_runner.CIRunner]
+```
+
+### Flow 7: main
+```
+main [strategy.ci_runner]
+```
+
+### Flow 8: validate_strategy_cli
 ```
 validate_strategy_cli [strategy.cli.commands]
   └─ →> load_strategy_yaml
       └─> load_yaml
 ```
 
-### Flow 5: validate_strategy_schema
+### Flow 9: validate_strategy_schema
 ```
 validate_strategy_schema [strategy.loaders.yaml_loader]
   └─> load_yaml
 ```
 
-### Flow 6: calculate_strategy_health
+### Flow 10: check_strategy_completion
 ```
-calculate_strategy_health [strategy.utils.metrics]
-```
-
-### Flow 7: update_ticket
-```
-update_ticket [strategy.integrations.github.GitHubBackend]
-```
-
-### Flow 8: list_tickets
-```
-list_tickets [strategy.integrations.generic.GenericBackend]
-```
-
-### Flow 9: create_ticket
-```
-create_ticket [strategy.integrations.gitlab.GitLabBackend]
-```
-
-### Flow 10: search_tickets
-```
-search_tickets [strategy.integrations.generic.GenericBackend]
+check_strategy_completion [strategy.ci_runner.CIRunner]
+  └─ →> review_strategy
+      └─ →> analyze_project_metrics
 ```
 
 ## Key Classes
@@ -289,6 +300,11 @@ search_tickets [strategy.integrations.generic.GenericBackend]
 - **Methods**: 9
 - **Key Methods**: strategy.integrations.jira.JiraBackend.__init__, strategy.integrations.jira.JiraBackend._validate_config, strategy.integrations.jira.JiraBackend._map_priority_to_jira, strategy.integrations.jira.JiraBackend._map_task_type_to_jira, strategy.integrations.jira.JiraBackend.create_ticket, strategy.integrations.jira.JiraBackend.update_ticket, strategy.integrations.jira.JiraBackend.get_ticket, strategy.integrations.jira.JiraBackend.list_tickets, strategy.integrations.jira.JiraBackend.search_tickets
 - **Inherits**: BasePMBackend
+
+### strategy.ci_runner.CIRunner
+> CI/CD runner with automated bug-fix loop.
+- **Methods**: 9
+- **Key Methods**: strategy.ci_runner.CIRunner.__init__, strategy.ci_runner.CIRunner.run_tests, strategy.ci_runner.CIRunner.run_code_analysis, strategy.ci_runner.CIRunner.generate_bug_report, strategy.ci_runner.CIRunner.create_bug_tickets, strategy.ci_runner.CIRunner.auto_fix_bugs, strategy.ci_runner.CIRunner.check_strategy_completion, strategy.ci_runner.CIRunner.run_loop, strategy.ci_runner.CIRunner.save_results
 
 ### strategy.integrations.generic.GenericBackend
 > Generic HTTP API backend for PM systems.
@@ -331,15 +347,13 @@ search_tickets [strategy.integrations.generic.GenericBackend]
 - **Key Methods**: strategy.models.Strategy.get_task_patterns, strategy.models.Strategy.get_sprint
 - **Inherits**: BaseModel
 
-### strategy.integrations.base.TicketRef
-> Reference to a created/updated ticket.
+### strategy.ci_runner.TestResult
+> Result of running tests.
 - **Methods**: 0
-- **Inherits**: BaseModel
 
-### strategy.integrations.base.TicketStatus
-> Status of a ticket.
+### strategy.ci_runner.BugReport
+> Generated bug report from test failures.
 - **Methods**: 0
-- **Inherits**: BaseModel
 
 ### strategy.models.TaskType
 > Type of task in the strategy.
@@ -368,6 +382,16 @@ search_tickets [strategy.integrations.generic.GenericBackend]
 
 ### strategy.models.QualityGate
 > Quality gate definition.
+- **Methods**: 0
+- **Inherits**: BaseModel
+
+### strategy.integrations.base.TicketRef
+> Reference to a created/updated ticket.
+- **Methods**: 0
+- **Inherits**: BaseModel
+
+### strategy.integrations.base.TicketStatus
+> Status of a ticket.
 - **Methods**: 0
 - **Inherits**: BaseModel
 
@@ -402,6 +426,8 @@ Args:
 > Validate generic backend configuration.
 - **Output to**: self.config.get, ValueError
 
+### docker-entrypoint.validate_config
+
 ### strategy.integrations.base.BasePMBackend._validate_config
 > Validate backend configuration.
 
@@ -409,21 +435,29 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
+- `strategy.cli.auto_loop.auto_loop` - 66 calls
 - `strategy.loaders.cli_loader.export_results_to_markdown` - 60 calls
 - `strategy.cli.commands.apply_strategy_cli` - 58 calls
 - `strategy.cli.commands.review_strategy_cli` - 51 calls
 - `strategy.utils.metrics.analyze_project_metrics` - 33 calls
+- `strategy.cli.auto_loop.ci_status` - 27 calls
+- `strategy.ci_runner.CIRunner.run_loop` - 25 calls
+- `strategy.ci_runner.main` - 24 calls
 - `strategy.cli.commands.validate_strategy_cli` - 22 calls
 - `strategy.loaders.yaml_loader.validate_strategy_schema` - 17 calls
+- `strategy.ci_runner.CIRunner.check_strategy_completion` - 15 calls
 - `strategy.cli.commands.get_backend` - 14 calls
+- `strategy.cli.auto_loop.get_backend` - 13 calls
 - `strategy.runner.StrategyRunner.apply_strategy` - 12 calls
 - `strategy.runner.StrategyRunner.review_strategy` - 12 calls
 - `strategy.utils.metrics.calculate_strategy_health` - 12 calls
 - `strategy.integrations.github.GitHubBackend.update_ticket` - 12 calls
+- `strategy.ci_runner.CIRunner.run_tests` - 12 calls
 - `strategy.integrations.generic.GenericBackend.list_tickets` - 11 calls
 - `strategy.loaders.yaml_loader.load_strategy_yaml` - 10 calls
 - `strategy.integrations.gitlab.GitLabBackend.create_ticket` - 10 calls
 - `strategy.integrations.generic.GenericBackend.search_tickets` - 10 calls
+- `strategy.ci_runner.CIRunner.generate_bug_report` - 10 calls
 - `strategy.integrations.gitlab.GitLabBackend.list_tickets` - 9 calls
 - `strategy.integrations.jira.JiraBackend.create_ticket` - 9 calls
 - `strategy.integrations.jira.JiraBackend.update_ticket` - 9 calls
@@ -437,18 +471,10 @@ Functions exposed as public API (no underscore prefix):
 - `strategy.loaders.yaml_loader.load_yaml` - 6 calls
 - `strategy.loaders.yaml_loader.load_tasks_yaml` - 6 calls
 - `strategy.integrations.gitlab.GitLabBackend.search_tickets` - 6 calls
+- `strategy.ci_runner.CIRunner.create_bug_tickets` - 6 calls
 - `strategy.loaders.cli_loader.load_from_json` - 5 calls
 - `strategy.integrations.gitlab.GitLabBackend.get_ticket` - 5 calls
 - `strategy.integrations.jira.JiraBackend.list_tickets` - 5 calls
-- `strategy.integrations.jira.JiraBackend.search_tickets` - 5 calls
-- `strategy.integrations.github.GitHubBackend.get_ticket` - 5 calls
-- `strategy.loaders.yaml_loader.save_yaml` - 4 calls
-- `strategy.loaders.cli_loader.save_to_json` - 4 calls
-- `strategy.integrations.jira.JiraBackend.get_ticket` - 4 calls
-- `strategy.loaders.yaml_loader.save_strategy_yaml` - 3 calls
-- `strategy.loaders.yaml_loader.merge_strategy_with_tasks` - 3 calls
-- `strategy.integrations.base.BasePMBackend.map_priority` - 3 calls
-- `strategy.runner.apply_strategy` - 2 calls
 
 ## System Interactions
 
@@ -456,6 +482,9 @@ How components interact:
 
 ```mermaid
 graph TD
+    auto_loop --> command
+    auto_loop --> Argument
+    auto_loop --> Option
     export_results_to_ma --> Path
     export_results_to_ma --> mkdir
     export_results_to_ma --> append
@@ -465,6 +494,14 @@ graph TD
     review_strategy_cli --> command
     review_strategy_cli --> Argument
     review_strategy_cli --> Option
+    ci_status --> command
+    ci_status --> Argument
+    ci_status --> print
+    ci_status --> exists
+    run_loop --> print
+    run_loop --> range
+    main --> ArgumentParser
+    main --> add_argument
     validate_strategy_cl --> command
     validate_strategy_cl --> Argument
     validate_strategy_cl --> Option
@@ -475,17 +512,6 @@ graph TD
     validate_strategy_sc --> enumerate
     validate_strategy_sc --> items
     validate_strategy_sc --> append
-    calculate_strategy_h --> get
-    calculate_strategy_h --> values
-    update_ticket --> get_issue
-    update_ticket --> int
-    update_ticket --> edit
-    update_ticket --> set_labels
-    list_tickets --> _make_request
-    list_tickets --> get
-    list_tickets --> join
-    list_tickets --> append
-    list_tickets --> TicketStatus
 ```
 
 ## Reverse Engineering Guidelines
