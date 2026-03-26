@@ -223,3 +223,14 @@ marimo/_lsp/
 __marimo__/
 .aider*
 htmlcov/
+
+# Large generated files and analysis outputs
+*.yaml.bak
+*analysis_summary.json
+.planfile_analysis/
+**/.planfile_analysis/
+planfile-from-files.yaml
+examples/*/generated.yaml
+examples/*/external*.yaml
+examples/*/full-analysis.yaml
+examples/quick-start/quick-start.yaml
