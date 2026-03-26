@@ -1,4 +1,4 @@
-# planfile | 27f 4395L | python:24,javascript:1,shell:2 | 2026-03-26
+# planfile | 27f 4396L | python:24,javascript:1,shell:2 | 2026-03-26
 # stats: 163 func | 0 cls | 27 mod | CC̄=4.9 | critical:12 | cycles:0
 # alerts[5]: fan-out apply_strategy_cli=28; fan-out analyze_project_metrics=23; fan-out auto_loop=23; fan-out review_strategy_cli=23; CC filter_handler=21
 # hotspots[5]: apply_strategy_cli fan=28; auto_loop fan=23; review_strategy_cli fan=23; analyze_project_metrics fan=23; export_results_to_markdown fan=16
@@ -8,7 +8,7 @@ M[27]:
   docker-entrypoint.sh,174
   htmlcov/coverage_html_cb_dd2e7eb5.js,735
   planfile/__init__.py,23
-  planfile/ci_runner.py,452
+  planfile/ci_runner.py,453
   planfile/cli/__init__.py,0
   planfile/cli/__main__.py,4
   planfile/cli/auto_loop.py,216

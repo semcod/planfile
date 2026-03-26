@@ -12,4 +12,5 @@ flowchart TD
     planfile__runner -->|2| planfile__utils
     planfile__cli -->|2| planfile__runner
     planfile__cli -->|1| planfile__llm
+    planfile__ci_runner -->|1| planfile__loaders
     planfile__ci_runner -->|1| planfile__runner

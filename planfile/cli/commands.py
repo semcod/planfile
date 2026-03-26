@@ -56,32 +56,21 @@ def get_backend(backend_type: str, config: dict):
         raise ValueError(f"Unknown backend type: {backend_type}")
 
 
-@app.command("apply")
-def apply_strategy_cli(
-    strategy_path: Path = typer.Argument(..., help="Path to strategy YAML file"),
-    project_path: Path = typer.Argument(..., help="Path to project directory"),
-    backend: str = typer.Option("github", help="Backend type (github, jira, gitlab, generic)"),
-    config_file: Optional[Path] = typer.Option(None, help="Backend config file"),
-    dry_run: bool = typer.Option(False, help="Simulate without creating tickets"),
-    sprint_filter: Optional[str] = typer.Option(None, help="Comma-separated sprint IDs to process"),
-    output: Optional[Path] = typer.Option(None, help="Output results to file"),
-    verbose: bool = typer.Option(False, help="Verbose output"),
-):
-    """Apply a strategy to create tickets."""
-    
-    if verbose:
-        logging.basicConfig(level=logging.INFO)
-    
-    # Load strategy
+def _load_and_validate_strategy(strategy_path: Path) -> Strategy:
+    """Load and validate strategy file."""
     try:
         strategy = load_strategy_yaml(strategy_path)
-        console.print(f"[green]✓[/green] Loaded strategy: {planfile.name}")
+        console.print(f"[green]✓[/green] Loaded strategy: {strategy.name}")
+        return strategy
     except Exception as e:
         console.print(f"[red]✗[/red] Failed to load strategy: {e}")
         raise typer.Exit(1)
-    
-    # Load backend config
+
+
+def _load_backend_config(backend: str, config_file: Optional[Path]) -> dict:
+    """Load backend configuration from file or environment."""
     backend_config = {}
+    
     if config_file:
         with open(config_file) as f:
             backend_config = json.load(f)
@@ -106,29 +95,39 @@ def apply_strategy_cli(
                 "project_id": os.environ.get("GITLAB_PROJECT_ID")
             }
     
-    # Validate config
-    if not all(v for v in backend_config.values() if v is not None):
-        console.print("[red]✗[/red] Missing backend configuration. Use --config-file or set environment variables.")
+    return backend_config
+
+
+def _parse_sprint_filter(sprint_filter: Optional[str]) -> Optional[List[int]]:
+    """Parse sprint filter from string."""
+    if not sprint_filter:
+        return None
+    
+    try:
+        return [int(s.strip()) for s in sprint_filter.split(",")]
+    except ValueError:
+        console.print("[red]✗[/red] Invalid sprint filter format. Use comma-separated integers.")
         raise typer.Exit(1)
-    
-    # Parse sprint filter
-    sprint_ids = None
-    if sprint_filter:
-        try:
-            sprint_ids = [int(s.strip()) for s in sprint_filter.split(",")]
-        except ValueError:
-            console.print("[red]✗[/red] Invalid sprint filter format. Use comma-separated integers.")
-            raise typer.Exit(1)
-    
-    # Get backend
+
+
+def _select_backend(backend: str, backend_config: dict) -> dict:
+    """Select and initialize backend."""
     try:
         backend_instance = get_backend(backend, backend_config)
-        backends = {"default": backend_instance}
+        return {"default": backend_instance}
     except Exception as e:
         console.print(f"[red]✗[/red] Failed to initialize backend: {e}")
         raise typer.Exit(1)
-    
-    # Apply strategy
+
+
+def _execute_apply_strategy(
+    strategy: Strategy,
+    project_path: Path,
+    backends: dict,
+    dry_run: bool,
+    sprint_ids: Optional[List[int]]
+) -> dict:
+    """Execute strategy application with progress bar."""
     with Progress() as progress:
         task = progress.add_task("Applying planfile...", total=100)
         
@@ -143,7 +142,11 @@ def apply_strategy_cli(
         
         progress.update(task, completed=100)
     
-    # Display results
+    return results
+
+
+def _display_apply_results(results: dict) -> None:
+    """Display strategy application results."""
     console.print("\n[bold]Strategy Applied Successfully![/bold]")
     console.print(Panel(
         f"Strategy: {results['strategy']}\n"
@@ -171,12 +174,57 @@ def apply_strategy_cli(
             )
         
         console.print(table)
-    
-    # Save results
+
+
+def _save_results(results: dict, output: Optional[Path]) -> None:
+    """Save results to file if specified."""
     if output:
         with open(output, "w") as f:
             json.dump(results, f, indent=2)
         console.print(f"\n[green]✓[/green] Results saved to: {output}")
+
+
+@app.command("apply")
+def apply_strategy_cli(
+    strategy_path: Path = typer.Argument(..., help="Path to strategy YAML file"),
+    project_path: Path = typer.Argument(..., help="Path to project directory"),
+    backend: str = typer.Option("github", help="Backend type (github, jira, gitlab, generic)"),
+    config_file: Optional[Path] = typer.Option(None, help="Backend config file"),
+    dry_run: bool = typer.Option(False, help="Simulate without creating tickets"),
+    sprint_filter: Optional[str] = typer.Option(None, help="Comma-separated sprint IDs to process"),
+    output: Optional[Path] = typer.Option(None, help="Output results to file"),
+    verbose: bool = typer.Option(False, help="Verbose output"),
+):
+    """Apply a strategy to create tickets."""
+    
+    if verbose:
+        logging.basicConfig(level=logging.INFO)
+    
+    # Load strategy
+    strategy = _load_and_validate_strategy(strategy_path)
+    
+    # Load backend config
+    backend_config = _load_backend_config(backend, config_file)
+    
+    # Validate config
+    if not all(v for v in backend_config.values() if v is not None):
+        console.print("[red]✗[/red] Missing backend configuration. Use --config-file or set environment variables.")
+        raise typer.Exit(1)
+    
+    # Parse sprint filter
+    sprint_ids = _parse_sprint_filter(sprint_filter)
+    
+    # Get backend
+    backends = _select_backend(backend, backend_config)
+    
+    # Apply strategy
+    results = _execute_apply_strategy(strategy, project_path, backends, dry_run, sprint_ids)
+    
+    # Display results
+    _display_apply_results(results)
+    
+    # Save results
+    _save_results(results, output)
 
 
 @app.command("review")

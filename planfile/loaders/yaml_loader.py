@@ -167,6 +167,61 @@ def merge_strategy_with_tasks(
     return strategy
 
 
+def _check_required_keys(data: dict, issues: list[str]) -> None:
+    """Check required top-level fields."""
+    required_fields = ["name", "project_type", "domain", "goal"]
+    for field in required_fields:
+        if field not in data:
+            issues.append(f"Missing required field: {field}")
+
+
+def _validate_sprints(data: dict, issues: list[str]) -> None:
+    """Validate sprint section."""
+    if "sprints" not in data:
+        return
+    
+    sprint_ids = set()
+    for i, sprint in enumerate(data["sprints"]):
+        if "id" not in sprint:
+            issues.append(f"Sprint {i} missing required field: id")
+        else:
+            if sprint["id"] in sprint_ids:
+                issues.append(f"Duplicate sprint ID: {sprint['id']}")
+            sprint_ids.add(sprint["id"])
+        
+        if "name" not in sprint:
+            issues.append(f"Sprint {i} missing required field: name")
+
+
+def _validate_gates(data: dict, issues: list[str]) -> None:
+    """Validate quality gates section."""
+    if "quality_gates" not in data:
+        return
+    
+    for i, gate in enumerate(data["quality_gates"]):
+        if "metric" not in gate:
+            issues.append(f"Quality gate {i} missing required field: metric")
+        if "condition" not in gate:
+            issues.append(f"Quality gate {i} missing required field: condition")
+        if "threshold" not in gate:
+            issues.append(f"Quality gate {i} missing required field: threshold")
+
+
+def _validate_task_patterns(data: dict, issues: list[str]) -> None:
+    """Validate task patterns section."""
+    if "tasks" not in data:
+        return
+    
+    for category, patterns in data["tasks"].items():
+        for i, pattern in enumerate(patterns):
+            if "id" not in pattern:
+                issues.append(f"Task pattern {category}[{i}] missing required field: id")
+            if "title" not in pattern:
+                issues.append(f"Task pattern {category}[{i}] missing required field: title")
+            if "description" not in pattern:
+                issues.append(f"Task pattern {category}[{i}] missing required field: description")
+
+
 def validate_strategy_schema(file_path: Union[str, Path]) -> list[str]:
     """
     Validate strategy YAML file and return list of issues.
@@ -185,35 +240,16 @@ def validate_strategy_schema(file_path: Union[str, Path]) -> list[str]:
         return [f"Failed to load YAML: {e}"]
     
     # Check required fields
-    required_fields = ["name", "project_type", "domain", "goal"]
-    for field in required_fields:
-        if field not in data:
-            issues.append(f"Missing required field: {field}")
+    _check_required_keys(data, issues)
     
     # Validate sprints
-    if "sprints" in data:
-        sprint_ids = set()
-        for i, sprint in enumerate(data["sprints"]):
-            if "id" not in sprint:
-                issues.append(f"Sprint {i} missing required field: id")
-            else:
-                if sprint["id"] in sprint_ids:
-                    issues.append(f"Duplicate sprint ID: {sprint['id']}")
-                sprint_ids.add(sprint["id"])
-            
-            if "name" not in sprint:
-                issues.append(f"Sprint {i} missing required field: name")
+    _validate_sprints(data, issues)
+    
+    # Validate quality gates
+    _validate_gates(data, issues)
     
     # Validate task patterns
-    if "tasks" in data:
-        for category, patterns in data["tasks"].items():
-            for i, pattern in enumerate(patterns):
-                if "id" not in pattern:
-                    issues.append(f"Task pattern {category}[{i}] missing required field: id")
-                if "title" not in pattern:
-                    issues.append(f"Task pattern {category}[{i}] missing required field: title")
-                if "description" not in pattern:
-                    issues.append(f"Task pattern {category}[{i}] missing required field: description")
+    _validate_task_patterns(data, issues)
     
     # Try to validate with Pydantic
     if not issues:

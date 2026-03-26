@@ -1,4 +1,4 @@
-# code2llm | 27f 4395L | python:24,shell:2,javascript:1 | 2026-03-26
+# code2llm | 27f 4396L | python:24,shell:2,javascript:1 | 2026-03-26
 # CC̄=4.9 | critical:12/208 | dups:0 | cycles:0
 
 HEALTH[12]:
@@ -31,13 +31,13 @@ PIPELINES[130]:
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=5.4    ←in:2  →out:2
-  │ ci_runner                  452L  3C   10m  CC=9      ←0
+  planfile/                       CC̄=5.4    ←in:2  →out:3
+  │ ci_runner                  453L  3C   10m  CC=9      ←0
   │ !! commands                   373L  0C    6m  CC=18     ←0
   │ runner                     324L  1C    8m  CC=13     ←2
   │ jira                       283L  1C    9m  CC=13     ←0
   │ !! gitlab                     237L  1C    7m  CC=15     ←0
-  │ !! yaml_loader                225L  0C    7m  CC=17     ←1
+  │ !! yaml_loader                225L  0C    7m  CC=17     ←2
   │ !! auto_loop                  216L  0C    3m  CC=20     ←0
   │ !! metrics                    201L  0C    2m  CC=16     ←1
   │ github                     201L  1C    7m  CC=14     ←0
@@ -73,11 +73,12 @@ LAYERS:
 COUPLING:
                         planfile.cli          planfile  planfile.loaders    planfile.utils      planfile.llm
       planfile.cli                ──                 2                 4                                   1
-          planfile                ←2                ──                                   2                  
-  planfile.loaders                ←4                                  ──                                    
+          planfile                ←2                ──                 1                 2                  
+  planfile.loaders                ←4                ←1                ──                                      hub
     planfile.utils                                  ←2                                  ──                  
       planfile.llm                ←1                                                                      ──
   CYCLES: none
+  HUB: planfile.loaders/ (fan-in=5)
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
