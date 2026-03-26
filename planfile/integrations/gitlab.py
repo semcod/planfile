@@ -7,7 +7,7 @@ except ImportError:
     gitlab = None
     GitlabError = None  # pip install python-gitlab
 
-from .base import BasePMBackend, TicketRef, TicketStatus
+from planfile.integrations.base import BasePMBackend, TicketRef, TicketStatus
 
 
 class GitLabBackend(BasePMBackend):

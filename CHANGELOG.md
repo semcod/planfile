@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14] - 2026-03-26
+
+### Docs
+- Update docs/README.md
+- Update project/context.md
+
+### Test
+- Update tests/test_strategy.py
+
+### Other
+- Update planfile/ci_runner.py
+- Update planfile/cli/auto_loop.py
+- Update planfile/cli/commands.py
+- Update planfile/integrations/generic.py
+- Update planfile/integrations/github.py
+- Update planfile/integrations/gitlab.py
+- Update planfile/integrations/jira.py
+- Update planfile/loaders/cli_loader.py
+- Update planfile/loaders/yaml_loader.py
+- Update planfile/utils/priorities.py
+- ... and 9 more files
+
 ## [0.1.13] - 2026-03-26
 
 ### Docs

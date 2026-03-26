@@ -2,7 +2,7 @@
 # stats: 163 func | 0 cls | 27 mod | CC̄=4.9 | critical:12 | cycles:0
 # alerts[5]: fan-out apply_strategy_cli=28; fan-out analyze_project_metrics=23; fan-out auto_loop=23; fan-out review_strategy_cli=23; CC filter_handler=21
 # hotspots[5]: apply_strategy_cli fan=28; auto_loop fan=23; review_strategy_cli fan=23; analyze_project_metrics fan=23; export_results_to_markdown fan=16
-# evolution: CC̄ 5.1→4.9 (improved -0.2)
+# evolution: CC̄ 4.9→4.9 (flat 0.0)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
 M[27]:
   docker-entrypoint.sh,174

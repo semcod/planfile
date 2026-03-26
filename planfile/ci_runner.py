@@ -11,11 +11,12 @@ from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 import time
 
-from ..models import Strategy, TaskPattern, TaskType
-from ..runner import apply_strategy, review_strategy, load_valid_strategy
-from ..integrations.github import GitHubBackend
-from ..integrations.jira import JiraBackend
-from ..integrations.gitlab import GitLabBackend
+from planfile.models import Strategy, TaskPattern, TaskType
+from planfile.runner import apply_strategy, review_strategy
+from planfile.loaders.yaml_loader import load_strategy_yaml
+from planfile.integrations.github import GitHubBackend
+from planfile.integrations.jira import JiraBackend
+from planfile.integrations.gitlab import GitLabBackend
 
 
 @dataclass
@@ -67,7 +68,7 @@ class CIRunner:
         self.llx_command = llx_command
         self.max_iterations = max_iterations
         self.auto_fix = auto_fix
-        self.strategy = load_valid_strategy(strategy_path)
+        self.strategy = load_strategy_yaml(strategy_path)
         self.iteration = 0
         
     def run_tests(self) -> TestResult:

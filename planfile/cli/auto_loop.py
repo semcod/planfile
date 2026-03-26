@@ -8,10 +8,10 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from ..ci_runner import CIRunner
-from ..integrations.github import GitHubBackend
-from ..integrations.jira import JiraBackend
-from ..integrations.gitlab import GitLabBackend
+from planfile.ci_runner import CIRunner
+from planfile.integrations.github import GitHubBackend
+from planfile.integrations.jira import JiraBackend
+from planfile.integrations.gitlab import GitLabBackend
 import os
 
 console = Console()

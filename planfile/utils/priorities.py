@@ -1,5 +1,5 @@
 from typing import Optional
-from ..models import TaskType
+from planfile.models import TaskType
 
 
 def calculate_task_priority(
