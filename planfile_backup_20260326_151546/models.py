@@ -1,15 +1,10 @@
-"""
-Strategy models for LLX - integrated approach.
-No separate library needed - just add to llx package.
-"""
 from enum import Enum
 from typing import List, Dict, Optional, Any
-from pydantic import BaseModel, Field, validator
-import yaml
+from pydantic import BaseModel, Field
 
 
 class TaskType(str, Enum):
-    """Type of task in the strategy."""
+    """Type of task in the planfile."""
     feature = "feature"
     tech_debt = "tech_debt"
     bug = "bug"
@@ -47,21 +42,13 @@ class TaskPattern(BaseModel):
 
 
 class Sprint(BaseModel):
-    """A sprint in the strategy."""
+    """A sprint in the planfile."""
     id: int = Field(..., description="Sprint number")
     name: str = Field(..., description="Sprint name")
     length_days: int = Field(14, description="Sprint length in days")
     objectives: List[str] = Field(default_factory=list, description="Sprint objectives")
     start_date: Optional[str] = Field(None, description="Start date (ISO format)")
     tasks: List[str] = Field(default_factory=list, description="Task pattern IDs for this sprint")
-
-
-class Goal(BaseModel):
-    """Project goal definition."""
-    short: str = Field(..., description="Short one-sentence goal")
-    quality: List[str] = Field(default_factory=list, description="Quality goals")
-    delivery: List[str] = Field(default_factory=list, description="Delivery goals")
-    metrics: List[str] = Field(default_factory=list, description="Success metrics")
 
 
 class QualityGate(BaseModel):
@@ -75,10 +62,9 @@ class QualityGate(BaseModel):
 class Strategy(BaseModel):
     """Main strategy configuration."""
     name: str = Field(..., description="Strategy name")
-    version: str = Field("0.1.0", description="Strategy version")
     project_type: str = Field(..., description="Type of project (e.g., 'web', 'mobile', 'api')")
     domain: str = Field(..., description="Business domain")
-    goal: Goal = Field(..., description="Project goals")
+    goal: str = Field(..., description="Main goal of this strategy")
     description: Optional[str] = Field(None, description="Detailed description")
     
     # Sprint configuration
@@ -96,13 +82,8 @@ class Strategy(BaseModel):
     # Strategy metadata
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     
-    @validator('sprints')
-    def validate_sprint_ids(cls, v):
-        """Ensure sprint IDs are unique."""
-        ids = [sprint.id for sprint in v]
-        if len(ids) != len(set(ids)):
-            raise ValueError("Sprint IDs must be unique")
-        return v
+    # Metrics and KPIs
+    success_metrics: List[str] = Field(default_factory=list, description="Success metrics")
     
     def get_task_patterns(self, category: str = "patterns") -> List[TaskPattern]:
         """Get task patterns by category."""
@@ -114,46 +95,3 @@ class Strategy(BaseModel):
             if sprint.id == sprint_id:
                 return sprint
         return None
-    
-    @classmethod
-    def model_validate_yaml(cls, yaml_content: str) -> "Strategy":
-        """Load strategy from YAML string."""
-        data = yaml.safe_load(yaml_content)
-        
-        # Convert string enums back to enum values
-        def convert_enum_fields(obj, field_type):
-            if isinstance(obj, dict):
-                for k, v in obj.items():
-                    if k == 'type' and isinstance(v, str):
-                        if field_type == 'task':
-                            obj[k] = TaskType(v)
-                    else:
-                        convert_enum_fields(v, field_type)
-            elif isinstance(obj, list):
-                for item in obj:
-                    convert_enum_fields(item, field_type)
-        
-        # Convert task types
-        if 'tasks' in data and 'patterns' in data['tasks']:
-            for pattern in data['tasks']['patterns']:
-                if 'type' in pattern and isinstance(pattern['type'], str):
-                    pattern['type'] = TaskType(pattern['type'])
-        
-        return cls.model_validate(data)
-    
-    def model_dump_yaml(self) -> str:
-        """Dump model to YAML string."""
-        data = self.model_dump()
-        # Convert enums to strings for YAML
-        def convert_enums(obj):
-            if isinstance(obj, dict):
-                return {k: convert_enums(v) for k, v in obj.items()}
-            elif isinstance(obj, list):
-                return [convert_enums(item) for item in obj]
-            elif hasattr(obj, 'value'):  # Enum
-                return obj.value
-            else:
-                return obj
-        
-        data = convert_enums(data)
-        return yaml.dump(data, default_flow_style=False, sort_keys=False)
