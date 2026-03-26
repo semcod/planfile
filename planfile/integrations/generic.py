@@ -2,7 +2,7 @@ from typing import Dict, Any, Optional
 import requests
 import json
 
-from .base import BasePMBackend, TicketRef, TicketStatus
+from planfile.integrations.base import BasePMBackend, TicketRef, TicketStatus
 
 
 class GenericBackend(BasePMBackend):

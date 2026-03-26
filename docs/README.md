@@ -152,7 +152,7 @@ Content outside the markers is preserved when regenerating. Enable this with `sy
 
 ```
 planfile/
-├── planfile/        ├── llx_validator        ├── summary    ├── runner        ├── yaml_loader        ├── cli_loader    ├── loaders/        ├── auto_loop    ├── cli/        ├── __main__        ├── generator        ├── commands    ├── llm/        ├── prompts        ├── client    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── 02_mcp_integration    ├── ci_runner            ├── 03_proxy_routing├── docker-entrypoint├── project        ├── validate_with_llx            ├── 01_full_workflow            ├── verify_planfile            ├── 04_llx_integration    ├── models        ├── base```
+├── planfile/        ├── llx_validator    ├── runner        ├── summary        ├── cli_loader        ├── yaml_loader    ├── loaders/        ├── auto_loop    ├── cli/        ├── __main__        ├── generator        ├── commands        ├── prompts    ├── llm/        ├── priorities    ├── utils/        ├── client        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── 02_mcp_integration    ├── ci_runner            ├── 03_proxy_routing├── docker-entrypoint├── project        ├── validate_with_llx            ├── 01_full_workflow            ├── verify_planfile            ├── 04_llx_integration    ├── models        ├── base```
 
 ## API Overview
 
@@ -189,9 +189,14 @@ planfile/
 ### Functions
 
 - `create_validation_script()` — Create a validation script that uses LLX.
-- `create_summary()` — Create a summary of all changes made.
 - `apply_strategy(strategy, project_path, backends, backend_name)` — Apply a strategy to create/update tickets.
 - `review_strategy(strategy, project_path, backends, backend_name)` — Review strategy execution by checking ticket statuses.
+- `create_summary()` — Create a summary of all changes made.
+- `load_from_json(file_path)` — Load JSON file and return as dictionary.
+- `save_to_json(data, file_path)` — Save dictionary to JSON file.
+- `load_strategy_from_json(file_path)` — Load strategy from JSON file.
+- `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
+- `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
 - `load_yaml(file_path)` — Load YAML file and return as dictionary.
 - `save_yaml(data, file_path)` — Save dictionary to YAML file.
 - `load_strategy_yaml(file_path)` — Load strategy from YAML file.
@@ -199,11 +204,6 @@ planfile/
 - `load_tasks_yaml(file_path)` — Load task patterns from YAML file.
 - `merge_strategy_with_tasks(strategy, tasks_file)` — Merge additional task patterns into a planfile.
 - `validate_strategy_schema(file_path)` — Validate strategy YAML file and return list of issues.
-- `load_from_json(file_path)` — Load JSON file and return as dictionary.
-- `save_to_json(data, file_path)` — Save dictionary to JSON file.
-- `load_strategy_from_json(file_path)` — Load strategy from JSON file.
-- `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
-- `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
 - `get_backend(backend_type)` — Get backend instance by type.
 - `auto_loop(strategy, project_path, backend, max_iterations)` — Run automated CI/CD loop: test → ticket → fix → retest.
 - `ci_status(project_path)` — Check current CI status without running tests.
@@ -215,10 +215,10 @@ planfile/
 - `generate_strategy_cli(project_path, output, model, sprints)` — Generate strategy.yaml from project analysis + LLM.
 - `main()` — Main CLI entry point.
 - `build_strategy_prompt(metrics, sprints, focus)` — Build a structured prompt for strategy generation.
-- `call_llm(prompt, model, temperature)` — Call LLM via LiteLLM. Falls back to llx proxy if available.
 - `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
 - `map_priority_to_system(priority, system)` — Map generic priority to system-specific priority.
 - `get_priority_color(priority)` — Get color code for priority (for UI display).
+- `call_llm(prompt, model, temperature)` — Call LLM via LiteLLM. Falls back to llx proxy if available.
 - `analyze_project_metrics(project_path)` — Analyze project metrics for strategy review.
 - `calculate_strategy_health(strategy_results)` — Calculate health metrics for a strategy execution.
 - `run_mcp_tool(tool_name, arguments)` — Simulate running an MCP tool.

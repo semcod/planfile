@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Union
 
-from ..models import Strategy, TaskPattern
+from planfile.models import Strategy, TaskPattern
 
 
 def load_from_json(file_path: Union[str, Path]) -> Dict[str, Any]:

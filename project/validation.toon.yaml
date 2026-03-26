@@ -34,7 +34,7 @@ ERRORS[19]{path,score}:
       python.import.resolvable,error,Module 'commands' not found,1
   tests/test_strategy.py,0.57
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'strategy' not found,11
+      python.import.resolvable,error,Module 'planfile' not found,11
   planfile/llm/client.py,0.66
     issues[4]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,17

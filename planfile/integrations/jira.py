@@ -7,7 +7,7 @@ except ImportError:
     JIRA = None
     JIRAError = None  # pip install jira
 
-from .base import BasePMBackend, TicketRef, TicketStatus
+from planfile.integrations.base import BasePMBackend, TicketRef, TicketStatus
 
 
 class JiraBackend(BasePMBackend):

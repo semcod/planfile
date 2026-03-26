@@ -9,13 +9,13 @@ from rich.panel import Panel
 from rich.progress import Progress
 import logging
 
-from ..models import Strategy
-from ..runner import apply_strategy, review_strategy
-from ..loaders.yaml_loader import load_strategy_yaml
-from ..integrations.github import GitHubBackend
-from ..integrations.jira import JiraBackend
-from ..integrations.gitlab import GitLabBackend
-from ..integrations.generic import GenericBackend
+from planfile.models import Strategy
+from planfile.runner import apply_strategy, review_strategy
+from planfile.loaders.yaml_loader import load_strategy_yaml
+from planfile.integrations.github import GitHubBackend
+from planfile.integrations.jira import JiraBackend
+from planfile.integrations.gitlab import GitLabBackend
+from planfile.integrations.generic import GenericBackend
 from . import auto_loop
 
 app = typer.Typer(help="Strategy CLI - Manage strategies and sprints")

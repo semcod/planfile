@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, Any, Union
 from pydantic import ValidationError
 
-from ..models import Strategy, Sprint, TaskPattern, TaskType, ModelHints, ModelTier, QualityGate
+from planfile.models import Strategy, Sprint, TaskPattern, TaskType, ModelHints, ModelTier, QualityGate
 
 
 def load_yaml(file_path: Union[str, Path]) -> Dict[str, Any]:
