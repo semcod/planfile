@@ -30,7 +30,7 @@ class ExampleTester:
         print("Testing All Planfile Examples")
         print("=" * 60)
         
-        examples_dir = Path("planfile/examples/ecosystem")
+        examples_dir = Path("./ecosystem")
         if not examples_dir.exists():
             examples_dir = Path("planfile/examples")
         

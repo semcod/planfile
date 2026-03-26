@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import time
 
 from planfile.models import Strategy, TaskPattern, TaskType
-from planfile.runner import apply_strategy, review_strategy
+from planfile.runner import apply_strategy_to_tickets, review_strategy
 from planfile.loaders.yaml_loader import load_strategy_yaml
 from planfile.integrations.github import GitHubBackend
 from planfile.integrations.jira import JiraBackend

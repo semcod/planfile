@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 
 # Add planfile to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from planfile.llm.adapters import (
     LLMTestRunner,

@@ -12,7 +12,7 @@ import yaml
 import json
 
 # Add planfile to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from planfile.llm.client import call_llm
 from planfile.llm.generator import generate_strategy
@@ -288,19 +288,19 @@ def show_testing_approach():
    export GOOGLE_API_KEY=your_key
 
 2. Test with built-in script:
-   python3 planfile/examples/test_llm_adapters.py
+   python3 ./test_llm_adapters.py
 
 3. Test specific integration:
-   python3 planfile/examples/test_litellm_integration.py
+   python3 ./test_litellm_integration.py
 
 4. Run full demo:
-   python3 planfile/examples/llm_integration_demo.py
+   python3 ./llm_integration_demo.py
 
 5. Compare results:
    - Check llm-test-results.json
    - Review generated strategies
    - Compare response times and costs
-    """")
+    "")
 
 
 def main():

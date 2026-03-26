@@ -46,7 +46,7 @@ def main():
     print("PLANFILE COMPREHENSIVE EXAMPLES")
     print("=" * 60)
     
-    strategies_dir = Path("planfile/examples/strategies")
+    strategies_dir = Path("./strategies")
     
     # Example 1: Validate all strategies
     print("\n\n📋 EXAMPLE 1: Validate All Strategies")
@@ -147,7 +147,7 @@ print(json.dumps(metrics, indent=2))
             print(f"  - {file}")
     
     print("\nNext steps:")
-    print("1. Examine the generated strategies in planfile/examples/strategies/")
+    print("1. Examine the generated strategies in ./strategies/")
     print("2. Try applying a strategy with real backend configuration")
     print("3. Set up OPENROUTER_API_KEY to enable LLM generation")
     print("4. Check the documentation for more advanced features")
