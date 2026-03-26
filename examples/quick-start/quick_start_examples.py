@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # Import planfile components
 from planfile import Strategy
 from planfile.analysis.generator import generator
+from planfile.loaders.yaml_loader import save_strategy_yaml, load_strategy_yaml
 
 
 def quick_start_1():
@@ -22,11 +23,17 @@ def quick_start_1():
     print("=" * 50)
     
     # Generate strategy from current directory
-    strategy = generator.generate_from_current_project(
-        project_path="./strategies",
-        project_name="quick-start",
-        max_sprints=2
-    )
+    try:
+        initial = generator.generate_from_current_project(
+            project_path="../strategies",
+            project_name="example-project",
+            max_sprints=2
+        )
+        strategy = initial # Assign to strategy for subsequent use
+    except Exception as e:
+        print(f"❌ Failed to generate strategy: {e}")
+        print("   Ensure the '../strategies' directory exists and contains valid project files.")
+        return None # Or re-raise, depending on desired error handling
     
     print(f"✓ Generated strategy!")
     print(f"  Name: {strategy.get('name', 'N/A')}")
@@ -71,7 +78,7 @@ def quick_start_3():
     print("=" * 50)
     
     # Load the strategy we just created
-    strategy = Strategy.load("web-template.yaml")
+    strategy = load_strategy_yaml("web-template.yaml")
     
     print(f"✓ Loaded strategy: {strategy.name}")
     
@@ -99,7 +106,7 @@ def quick_start_4():
     print("=" * 50)
     
     # Load strategy
-    strategy = Strategy.load("web-template.yaml")
+    strategy = load_strategy_yaml("web-template.yaml")
     
     # Export to JSON
     json_data = strategy.export("json")
@@ -123,8 +130,8 @@ def quick_start_5():
     print("=" * 50)
     
     # Load both strategies
-    strategy1 = Strategy.load("quick-start.yaml")
-    strategy2 = Strategy.load("web-template.yaml")
+    strategy1 = load_strategy_yaml("quick-start.yaml")
+    strategy2 = load_strategy_yaml("web-template.yaml")
     
     # Compare them
     comparison = strategy1.compare(strategy2)

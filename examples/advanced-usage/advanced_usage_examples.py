@@ -39,7 +39,7 @@ def example_1_custom_file_patterns():
     
     # Analyze with custom patterns
     result = analyzer.analyze_directory(
-        Path("../planfile"),
+        Path("../../planfile"),
         patterns=custom_patterns
     )
     
@@ -57,7 +57,7 @@ def example_1_custom_file_patterns():
     
     # Generate strategy from custom analysis
     strategy = generator.generate_from_analysis(
-        analysis_path="../planfile",
+        analysis_path="../../planfile",
         project_name="custom-patterns-analysis",
         max_sprints=3
     )
@@ -81,7 +81,7 @@ def example_2_focus_area_strategies():
         
         try:
             strategy = generator.generate_from_current_project(
-                project_path="../planfile",
+                project_path="../../planfile",
                 project_name=f"planfile-{focus}-focus",
                 max_sprints=2,
                 focus_area=focus
@@ -119,7 +119,7 @@ def example_3_iterative_refinement():
     # Generate initial strategy
     print("1. Generating initial strategy...")
     initial = generator.generate_from_current_project(
-        project_path="../planfile",
+        project_path="../../planfile",
         project_name="iterative-example",
         max_sprints=5,
         focus_area="quality"
@@ -131,7 +131,7 @@ def example_3_iterative_refinement():
     save_strategy_yaml(initial, "iterative-v1.yaml")
     
     # Load as Strategy object for manipulation
-    strategy = Strategy.load("iterative-v1.yaml")
+    strategy = load_strategy_yaml("iterative-v1.yaml")
     
     # Add custom quality gate
     from planfile.models_v2 import QualityGate
@@ -161,7 +161,7 @@ def example_3_iterative_refinement():
         f.write(strategy.export("yaml"))
     
     # Compare versions
-    v1 = Strategy.load("iterative-v1.yaml")
+    v1 = load_strategy_yaml("iterative-v1.yaml")
     comparison = v1.compare(strategy)
     
     print(f"\n3. Comparison:")
@@ -179,9 +179,9 @@ def example_4_batch_processing():
     
     # Define directories to analyze
     directories = {
-        "core": "../planfile",
-        "examples": "./strategies",
-        "tests": "../tests",
+        "core": "../../planfile",
+        "examples": "../strategies",
+        "tests": "../../tests",
     }
     
     results = {}
@@ -235,9 +235,6 @@ def example_4_batch_processing():
     valid_strategies = []
     for name, path in directories.items():
         filename = f"batch-{name}-strategy.yaml"
-        if Path(filename).exists():
-            valid_strategies.append(Strategy.load(filename))
-    
     if len(valid_strategies) > 1:
         combined = valid_strategies[0].merge(
             valid_strategies[1:],
@@ -261,14 +258,15 @@ def example_5_custom_metrics():
     
     # Add custom issue patterns
     import re
-    analyzer.issue_patterns.update({
+    from planfile.analysis.parsers.text_parser import ISSUE_PATTERNS
+    ISSUE_PATTERNS.update({
         'security': re.compile(r'(?i)SECURITY\s*[:#]?\s*(.+)', re.MULTILINE),
         'performance': re.compile(r'(?i)PERFORMANCE\s*[:#]?\s*(.+)', re.MULTILINE),
         'api': re.compile(r'(?i)API\s*[:#]?\s*(.+)', re.MULTILINE),
     })
     
     # Analyze with custom patterns
-    result = analyzer.analyze_directory(Path("../planfile"))
+    result = analyzer.analyze_directory(Path("../../planfile"))
     
     # Count custom issues
     custom_issues = {}
@@ -283,7 +281,7 @@ def example_5_custom_metrics():
     
     # Generate strategy with custom metrics
     strategy = generator.generate_from_analysis(
-        analysis_path="../planfile",
+        analysis_path="../../planfile",
         project_name="custom-metrics-example",
         max_sprints=3,
         external_metrics={
@@ -320,9 +318,9 @@ def example_6_workflow_automation():
     # Simulate CI/CD workflow
     workflow_steps = [
         ("1. Analyze Code", lambda: generator.generate_from_current_project(
-            "../planfile", "ci-analysis", max_sprints=2, focus_area="quality"
+            "../../planfile", "ci-analysis", max_sprints=2, focus_area="quality"
         )),
-        ("2. Check Quality Gates", lambda: Strategy.load("ci-analysis-strategy.yaml")),
+        ("2. Check Quality Gates", lambda: load_strategy_yaml("ci-analysis-strategy.yaml")),
         ("3. Generate Report", lambda: None),
         ("4. Create Tasks", lambda: None),
     ]

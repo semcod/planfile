@@ -66,7 +66,7 @@ class Task(BaseModel):
 
 class Sprint(BaseModel):
     """A sprint in the planfile - simplified."""
-    id: int = Field(..., description="Sprint number")
+    id: Union[int, str] = Field(..., description="Sprint number or ID")
     name: str = Field(..., description="Sprint name")
     objectives: List[str] = Field(default_factory=list, description="Sprint objectives")
     tasks: List[Task] = Field(default_factory=list, description="Tasks in this sprint")

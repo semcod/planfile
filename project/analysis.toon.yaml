@@ -1,5 +1,5 @@
-# code2llm | 54f 8936L | python:48,shell:4,javascript:2 | 2026-03-26
-# CC̄=4.2 | critical:15/452 | dups:0 | cycles:0
+# code2llm | 54f 8947L | python:48,shell:4,javascript:2 | 2026-03-26
+# CC̄=4.2 | critical:15/454 | dups:0 | cycles:0
 
 HEALTH[15]:
   🟡 CC    load_strategy_yaml CC=18 (limit:15)
@@ -21,16 +21,16 @@ HEALTH[15]:
 REFACTOR[1]:
   1. split 15 high-CC methods  (CC>15)
 
-PIPELINES[288]:
-  [1] Src [planfile_generate]: planfile_generate
+PIPELINES[290]:
+  [1] Src [example_create_strategy]: example_create_strategy
       PURITY: 100% pure
-  [2] Src [planfile_apply]: planfile_apply
+  [2] Src [example_validate_strategy]: example_validate_strategy → load_valid_strategy → print
       PURITY: 100% pure
-  [3] Src [planfile_review]: planfile_review
+  [3] Src [example_run_strategy]: example_run_strategy → run_strategy → load_valid_strategy → print
       PURITY: 100% pure
-  [4] Src [main]: main
+  [4] Src [example_verify_strategy]: example_verify_strategy → load_valid_strategy → print
       PURITY: 100% pure
-  [5] Src [main]: main → print
+  [5] Src [example_programmatic_strategy]: example_programmatic_strategy → print
       PURITY: 100% pure
 
 LAYERS:
@@ -62,14 +62,14 @@ LAYERS:
   │ base                       112L  4C    9m  CC=4      ←0
   │ priorities                 111L  0C    3m  CC=4      ←0
   │ cmd_apply                  108L  0C    4m  CC=5      ←0
-  │ cmd_utils                  103L  0C    5m  CC=5      ←2
   │ cmd_review                  97L  0C    1m  CC=10     ←0
+  │ cmd_utils                   96L  0C    5m  CC=6      ←2
   │ yaml_parser                 79L  0C    2m  CC=9      ←2
+  │ commands                    63L  0C    3m  CC=2      ←0
   │ prompts                     63L  0C    1m  CC=5      ←1
   │ client                      63L  0C    1m  CC=4      ←1
   │ __init__                    55L  0C    0m  CC=0.0    ←0
   │ models                      50L  3C    2m  CC=3      ←0
-  │ commands                    45L  0C    1m  CC=1      ←0
   │ metrics_extractor           43L  0C    6m  CC=9      ←1
   │ cmd_validate                37L  0C    1m  CC=7      ←0
   │ json_parser                 31L  0C    1m  CC=2      ←1

@@ -1,0 +1,49 @@
+flowchart TD
+
+    %% Entry points (blue)
+    classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
+
+    subgraph CLI
+        planfile__cli__commands__version_callback["version_callback"]
+        planfile__cli__commands__main_callback["main_callback"]
+        planfile__cli__commands__main["main"]
+        planfile__cli__auto_loop__get_backend["get_backend"]
+        planfile__cli__auto_loop___validate_strategy["_validate_strategy"]
+        planfile__cli__auto_loop___initialize_backends["_initialize_backends"]
+        planfile__cli__auto_loop___display_summary_table["_display_summary_table"]
+        planfile__cli__auto_loop___display_final_status["_display_final_status"]
+        planfile__cli__auto_loop___display_ticket_summary["_display_ticket_summary"]
+        planfile__cli__auto_loop___save_results_if_needed["_save_results_if_needed"]
+        planfile__cli__auto_loop__auto_loop["auto_loop"]
+        planfile__cli__auto_loop__ci_status["ci_status"]
+        planfile__cli__extra_commands__export_to_csv["export_to_csv"]
+        planfile__cli__extra_commands__export_to_html["export_to_html"]
+        planfile__cli__extra_commands__compare_strategies["compare_strategies"]
+        ...["+16 more"]
+    end
+
+    subgraph Core
+        mcp_server_example__planfile_generate["planfile_generate"]
+        mcp_server_example__planfile_apply["planfile_apply"]
+        mcp_server_example__planfile_review["planfile_review"]
+        mcp_server_example__main["main"]
+        planfile__executor_standalone__LLMClient__chat["chat"]
+        planfile__executor_standalone__StrategyExecutor___default_config["_default_config"]
+        planfile__executor_standalone__StrategyExecutor__execute_strategy["execute_strategy"]
+        planfile__executor_standalone__StrategyExecutor___execute_task["_execute_task"]
+        planfile__executor_standalone__StrategyExecutor___select_model["_select_model"]
+        planfile__executor_standalone__StrategyExecutor___build_prompt["_build_prompt"]
+        planfile__executor_standalone__StrategyExecutor___get_project_metrics["_get_project_metrics"]
+        planfile__executor_standalone__create_openai_client["create_openai_client"]
+        planfile__executor_standalone__create_litellm_client["create_litellm_client"]
+        planfile__executor_standalone__execute_strategy["execute_strategy"]
+        planfile__ci_runner__CIRunner__run_tests["run_tests"]
+        ...["+268 more"]
+    end
+
+    subgraph Exporters
+        planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
+        planfile__models_v2__Strategy__export["export"]
+    end
+
+    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__executor_standalone__LLMClient__chat,planfile__executor_standalone__StrategyExecutor___default_config,planfile__executor_standalone__StrategyExecutor__execute_strategy,planfile__executor_standalone__StrategyExecutor___execute_task,planfile__executor_standalone__StrategyExecutor___select_model,planfile__executor_standalone__StrategyExecutor___build_prompt entry

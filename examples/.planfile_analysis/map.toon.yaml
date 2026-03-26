@@ -1,0 +1,8 @@
+# examples | 0f 0L | unknown | 2026-03-26
+# stats: 0 func | 0 cls | 0 mod | CC̄=0.0 | critical:0 | cycles:0
+# alerts[0]: none
+# hotspots[0]: none
+# evolution: baseline
+# Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
+M[0]:
+D:

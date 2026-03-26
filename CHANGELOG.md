@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.28] - 2026-03-26
+
+### Docs
+- Update .planfile_analysis/README.md
+- Update .planfile_analysis/context.md
+- Update docs/README.md
+- Update examples/.planfile_analysis/README.md
+- Update examples/.planfile_analysis/context.md
+- Update examples/comprehensive-example/README.md
+- Update examples/demo-without-keys/README.md
+- Update examples/llm-integration/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update .planfile_analysis/analysis.toon.yaml
+- Update .planfile_analysis/calls.mmd
+- Update .planfile_analysis/compact_flow.mmd
+- Update .planfile_analysis/duplication.toon
+- Update .planfile_analysis/evolution.toon.yaml
+- Update .planfile_analysis/flow.mmd
+- Update .planfile_analysis/index.html
+- Update .planfile_analysis/map.toon.yaml
+- Update .planfile_analysis/project.toon.yaml
+- Update .planfile_analysis/prompt.txt
+- ... and 53 more files
+
 ## [0.1.27] - 2026-03-26
 
 ### Docs

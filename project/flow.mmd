@@ -4,6 +4,8 @@ flowchart TD
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph CLI
+        planfile__cli__commands__version_callback["version_callback"]
+        planfile__cli__commands__main_callback["main_callback"]
         planfile__cli__commands__main["main"]
         planfile__cli__auto_loop__get_backend["get_backend"]
         planfile__cli__auto_loop___validate_strategy["_validate_strategy"]
@@ -17,9 +19,7 @@ flowchart TD
         planfile__cli__extra_commands__export_to_csv["export_to_csv"]
         planfile__cli__extra_commands__export_to_html["export_to_html"]
         planfile__cli__extra_commands__compare_strategies["compare_strategies"]
-        planfile__cli__extra_commands__generate_template["generate_template"]
-        planfile__cli__extra_commands__calculate_strategy_stats["calculate_strategy_stats"]
-        ...["+14 more"]
+        ...["+16 more"]
     end
 
     subgraph Core

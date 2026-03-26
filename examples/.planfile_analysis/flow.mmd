@@ -1,0 +1,29 @@
+flowchart TD
+
+    %% Entry points (blue)
+    classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
+
+    subgraph Core
+        summary__create_summary["create_summary"]
+        ecosystem__02_mcp_integration__run_mcp_tool["run_mcp_tool"]
+        ecosystem__02_mcp_integration__simulate_planfile_generate("simulate_planfile_generate CC=9")
+        ecosystem__02_mcp_integration__example_mcp_session["example_mcp_session"]
+        ecosystem__02_mcp_integration__create_mcp_tool_definitions["create_mcp_tool_definitions"]
+        comprehensive_example__main["main"]
+        llx_validator__LLXValidator__validate_strategy["validate_strategy"]
+        llx_validator__LLXValidator__analyze_generated_code["analyze_generated_code"]
+        llx_validator__LLXValidator___is_llx_available["_is_llx_available"]
+        llx_validator__LLXValidator___parse_llx_analysis["_parse_llx_analysis"]
+        llx_validator__LLXValidator___basic_code_analysis["_basic_code_analysis"]
+        llx_validator__create_validation_script["create_validation_script"]
+        ecosystem__03_proxy_routing__ProxyClient__chat["chat"]
+        ecosystem__03_proxy_routing__ProxyClient__get_routing_decision["get_routing_decision"]
+        ecosystem__03_proxy_routing__ProxyClient__get_usage_stats["get_usage_stats"]
+        ...["+23 more"]
+    end
+
+    subgraph Exporters
+        ecosystem__01_full_workflow__export_to_json["export_to_json"]
+    end
+
+    class summary__create_summary,ecosystem__02_mcp_integration__example_mcp_session,ecosystem__02_mcp_integration__create_mcp_tool_definitions,comprehensive_example__main,llx_validator__LLXValidator__validate_strategy,llx_validator__LLXValidator__analyze_generated_code,llx_validator__LLXValidator___is_llx_available,llx_validator__LLXValidator___parse_llx_analysis,llx_validator__LLXValidator___basic_code_analysis,llx_validator__create_validation_script entry

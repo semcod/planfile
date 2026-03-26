@@ -120,10 +120,11 @@ def example_4_generate_strategy_with_tools():
     print("EXAMPLE 4: Generate Strategy with External Tools")
     print("=" * 60)
     
+    # Check if external tools are available
     try:
         strategy = generator.generate_with_external_tools(
-            project_path="../",
-            project_name="planfile-self-analysis",
+            project_path="../../",
+            project_name="planfile-external-analysis",
             max_sprints=4,
             focus_area="quality"
         )
@@ -190,12 +191,12 @@ def example_5_custom_analysis():
         print(f"  ⚠ Duplication groups: {results.duplication_groups}")
         print("    Recommendation: Extract common code")
     
-    # Generate focused strategy
+    # Check if external tools are available
     try:
         strategy = generator.generate_with_external_tools(
-            project_path="../",
-            project_name="quality-focused",
-            max_sprints=2,
+            project_path="../../",
+            project_name="planfile-quality-focus",
+            max_sprints=3,
             focus_area="quality"
         )
         

@@ -1,8 +1,8 @@
-# planfile | 54f 8936L | python:48,javascript:2,shell:4 | 2026-03-26
-# stats: 376 func | 0 cls | 54 mod | CC̄=4.2 | critical:15 | cycles:0
+# planfile | 54f 8947L | python:48,javascript:2,shell:4 | 2026-03-26
+# stats: 378 func | 0 cls | 54 mod | CC̄=4.2 | critical:15 | cycles:0
 # alerts[5]: fan-out add_extra_commands=28; fan-out auto_loop=21; fan-out review_strategy_cli=21; fan-out analyze_text=20; CC _parse_toon_sections=24
 # hotspots[5]: add_extra_commands fan=28; auto_loop fan=21; review_strategy_cli fan=21; analyze_text fan=20; Strategy.merge fan=17
-# evolution: CC̄ 4.4→4.2 (improved -0.2)
+# evolution: CC̄ 4.2→4.2 (flat 0.0)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
 M[54]:
   auto_generate_planfile.sh,124
@@ -32,9 +32,9 @@ M[54]:
   planfile/cli/cmd/cmd_apply.py,108
   planfile/cli/cmd/cmd_generate.py,115
   planfile/cli/cmd/cmd_review.py,97
-  planfile/cli/cmd/cmd_utils.py,103
+  planfile/cli/cmd/cmd_utils.py,96
   planfile/cli/cmd/cmd_validate.py,37
-  planfile/cli/commands.py,45
+  planfile/cli/commands.py,63
   planfile/cli/extra_commands.py,487
   planfile/examples.py,141
   planfile/executor_standalone.py,336
@@ -372,6 +372,13 @@ D:
   planfile/cli/cmd/cmd_validate.py:
     e: validate_strategy_cli
     validate_strategy_cli(strategy_path;verbose)
+  planfile/cli/cmd/cmd_utils.py:
+    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend
+    get_backend(backend_type;config)
+    _load_and_validate_strategy(strategy_path)
+    _load_backend_config(backend;config_file)
+    _parse_sprint_filter(sprint_filter)
+    _select_backend(backend;backend_config)
   planfile/models.py:
     e: TaskType,ModelTier,ModelHints,TaskPattern,Sprint,Goal,QualityGate,Strategy
     TaskType(str,Enum):  # Type of task in the strategy...
@@ -385,13 +392,6 @@ D:
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)
-  planfile/cli/cmd/cmd_utils.py:
-    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend
-    get_backend(backend_type;config)
-    _load_and_validate_strategy(strategy_path)
-    _load_backend_config(backend;config_file)
-    _parse_sprint_filter(sprint_filter)
-    _select_backend(backend;backend_config)
   planfile/cli/cmd/cmd_apply.py:
     e: _execute_apply_strategy,_display_apply_results,_save_results,apply_strategy_cli
     _execute_apply_strategy(strategy;project_path;backends;dry_run;sprint_ids)
@@ -424,6 +424,11 @@ D:
     example_run_strategy()
     example_verify_strategy()
     example_programmatic_strategy()
+  planfile/cli/commands.py:
+    e: version_callback,main_callback,main
+    version_callback(value)
+    main_callback(version)
+    main()
   planfile/analysis/parsers/json_parser.py:
     e: analyze_json
     analyze_json(file_path)
@@ -432,9 +437,6 @@ D:
     planfile_generate(arguments)
     planfile_apply(arguments)
     planfile_review(arguments)
-    main()
-  planfile/cli/commands.py:
-    e: main
     main()
   planfile/__init__.py:
   planfile/loaders/__init__.py:

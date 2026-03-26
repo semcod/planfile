@@ -2,16 +2,15 @@ flowchart TD
     examples__advanced_usage["examples.advanced-usage<br/>7 funcs"]
     examples__bash_generation["examples.bash-generation<br/>2 funcs"]
     examples__cli_commands["examples.cli-commands<br/>2 funcs"]
-    examples__comprehensive_example["examples.comprehensive_example<br/>2 funcs"]
+    examples__comprehensive_example["examples.comprehensive-example<br/>3 funcs"]
     examples__ecosystem["examples.ecosystem<br/>34 funcs"]
     examples__external_tools["examples.external-tools<br/>6 funcs"]
     examples__integrated_functionality["examples.integrated-functionality<br/>8 funcs"]
     examples__llx_validator["examples.llx_validator<br/>7 funcs"]
     examples__quick_start["examples.quick-start<br/>6 funcs"]
-    examples__summary["examples.summary<br/>1 funcs"]
     planfile__analysis["planfile.analysis<br/>62 funcs"]
     planfile__ci_runner["planfile.ci_runner<br/>10 funcs"]
-    planfile__cli["planfile.cli<br/>29 funcs"]
+    planfile__cli["planfile.cli<br/>31 funcs"]
     planfile__examples["planfile.examples<br/>5 funcs"]
     planfile__executor_standalone["planfile.executor_standalone<br/>12 funcs"]
     planfile__llm["planfile.llm<br/>26 funcs"]
@@ -22,10 +21,9 @@ flowchart TD
     examples__ecosystem ==>|95| examples__bash_generation
     examples__external_tools ==>|89| examples__bash_generation
     examples__advanced_usage ==>|86| examples__bash_generation
-    examples__integrated_functionality ==>|77| examples__bash_generation
-    examples__quick_start ==>|62| examples__bash_generation
-    examples__summary ==>|40| examples__bash_generation
-    examples__comprehensive_example ==>|32| examples__bash_generation
+    examples__integrated_functionality ==>|78| examples__bash_generation
+    examples__comprehensive_example ==>|72| examples__bash_generation
+    examples__quick_start ==>|64| examples__bash_generation
     examples__cli_commands ==>|26| examples__bash_generation
     planfile__ci_runner ==>|22| examples__bash_generation
     planfile__runner ==>|20| examples__bash_generation

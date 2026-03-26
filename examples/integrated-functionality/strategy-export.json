@@ -1,0 +1,58 @@
+{
+  "name": "Web Application Strategy",
+  "version": "1.0.0",
+  "project_type": "web",
+  "domain": "ecommerce",
+  "goal": "Build a scalable web application for ecommerce",
+  "description": null,
+  "sprints": [
+    {
+      "id": 1,
+      "name": "Foundation & Setup",
+      "objectives": [
+        "Set up project structure",
+        "Configure CI/CD pipeline",
+        "Implement authentication"
+      ],
+      "tasks": [],
+      "length_days": 14,
+      "duration": "2 weeks"
+    },
+    {
+      "id": 2,
+      "name": "Core Features",
+      "objectives": [
+        "Build main functionality",
+        "Implement user interface",
+        "Add database layer"
+      ],
+      "tasks": [],
+      "length_days": 14,
+      "duration": "3 weeks"
+    },
+    {
+      "id": 3,
+      "name": "Polish & Deploy",
+      "objectives": [
+        "Performance optimization",
+        "Security hardening",
+        "Production deployment"
+      ],
+      "tasks": [],
+      "length_days": 14,
+      "duration": "2 weeks"
+    }
+  ],
+  "quality_gates": [
+    {
+      "name": "Code Quality",
+      "description": "Maintain high code quality",
+      "criteria": [
+        "Coverage > 80%",
+        "No critical issues"
+      ],
+      "required": true
+    }
+  ],
+  "metadata": {}
+}

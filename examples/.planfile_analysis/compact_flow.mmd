@@ -1,0 +1,24 @@
+flowchart TD
+    advanced_usage__advanced_usage_examples["advanced-usage.advanced_usage_examples<br/>7 funcs"]
+    bash_generation__verify_planfile["bash-generation.verify_planfile<br/>2 funcs"]
+    cli_commands__cli_command_examples["cli-commands.cli_command_examples<br/>2 funcs"]
+    comprehensive_example["comprehensive_example<br/>2 funcs"]
+    ecosystem__02_mcp_integration["ecosystem.02_mcp_integration<br/>6 funcs"]
+    ecosystem__03_proxy_routing["ecosystem.03_proxy_routing<br/>7 funcs"]
+    ecosystem__04_llx_integration["ecosystem.04_llx_integration<br/>9 funcs"]
+    external_tools__external_tools_examples["external-tools.external_tools_examples<br/>6 funcs"]
+    integrated_functionality__integrated_functionality_examples["integrated-functionality.integrated_functionality_examples<br/>8 funcs"]
+    llx_validator["llx_validator<br/>1 funcs"]
+    quick_start__quick_start_examples["quick-start.quick_start_examples<br/>6 funcs"]
+    summary["summary<br/>1 funcs"]
+    external_tools__external_tools_examples ==>|89| bash_generation__verify_planfile
+    advanced_usage__advanced_usage_examples ==>|86| bash_generation__verify_planfile
+    integrated_functionality__integrated_functionality_examples ==>|77| bash_generation__verify_planfile
+    quick_start__quick_start_examples ==>|62| bash_generation__verify_planfile
+    summary ==>|40| bash_generation__verify_planfile
+    ecosystem__03_proxy_routing ==>|38| bash_generation__verify_planfile
+    comprehensive_example ==>|32| bash_generation__verify_planfile
+    ecosystem__04_llx_integration ==>|30| bash_generation__verify_planfile
+    ecosystem__02_mcp_integration ==>|27| bash_generation__verify_planfile
+    cli_commands__cli_command_examples ==>|26| bash_generation__verify_planfile
+    llx_validator -->|1| bash_generation__verify_planfile

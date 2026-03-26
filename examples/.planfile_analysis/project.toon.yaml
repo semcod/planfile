@@ -1,0 +1,9 @@
+# examples | 0 func | 19f | 4036L | unknown | 2026-03-26
+
+HEALTH:
+  CC̄=0.0  critical=0 (limit:10)  dup=0  cycles=0
+
+MODULES[0] (top by size):
+
+EVOLUTION:
+  2026-03-26 CC̄=0.0 crit=0 4036L // Automated analysis

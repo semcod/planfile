@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from planfile.analysis.generator import generator
 from planfile import Strategy
-from planfile.loaders.yaml_loader import save_strategy_yaml
+from planfile.loaders.yaml_loader import save_strategy_yaml, load_strategy_yaml
 
 
 def example_1_generate_from_files():
@@ -22,23 +22,26 @@ def example_1_generate_from_files():
     print("=" * 60)
     
     # Generate from current examples directory
-    strategy = generator.generate_from_current_project(
-        project_path="./strategies",
-        project_name="example-strategies",
-        max_sprints=3,
-        focus_area="quality"
-    )
-    
-    print(f"✓ Generated strategy: {strategy.get('name', 'N/A')}")
-    print(f"  Sprints: {len(strategy.get('sprints', []))}")
-    print(f"  Quality gates: {len(strategy.get('quality_gates', []))}")
-    
-    # Save the strategy
-    output_file = "generated-from-examples.yaml"
-    save_strategy_yaml(strategy, output_file)
-    print(f"✓ Saved to: {output_file}")
-    
-    return strategy
+    try:
+        strategy = generator.generate_from_current_project(
+            project_path="../strategies",
+            project_name="example-project",
+            max_sprints=3
+        )
+        
+        print(f"✓ Generated strategy: {strategy.get('name', 'N/A')}")
+        print(f"  Sprints: {len(strategy.get('sprints', []))}")
+        print(f"  Quality gates: {len(strategy.get('quality_gates', []))}")
+        
+        # Save the strategy
+        output_file = "generated-from-examples.yaml"
+        save_strategy_yaml(strategy, output_file)
+        print(f"✓ Saved to: {output_file}")
+        
+        return strategy
+    except Exception as e:
+        print(f"✗ Failed to generate strategy from files: {e}")
+        return None
 
 
 def example_2_template_generation():
@@ -75,8 +78,8 @@ def example_3_strategy_comparison():
     print("=" * 60)
     
     # Load two different templates
-    template1 = Strategy.load("template-web-ecommerce.yaml")
-    template2 = Strategy.load("template-mobile-healthcare.yaml")
+    template1 = load_strategy_yaml("template-web-ecommerce.yaml")
+    template2 = load_strategy_yaml("template-mobile-healthcare.yaml")
     
     # Compare them
     comparison = template1.compare(template2)
@@ -105,7 +108,7 @@ def example_4_export_formats():
     print("=" * 60)
     
     # Load a strategy
-    strategy = Strategy.load("template-web-ecommerce.yaml")
+    strategy = load_strategy_yaml("template-web-ecommerce.yaml")
     
     # Export to different formats
     formats = {
@@ -145,7 +148,7 @@ def example_5_strategy_stats():
     print("=" * 60)
     
     # Load a strategy
-    strategy = Strategy.load("template-web-ecommerce.yaml")
+    strategy = load_strategy_yaml("template-web-ecommerce.yaml")
     
     # Get statistics
     stats = strategy.get_stats()
@@ -179,9 +182,9 @@ def example_6_merge_strategies():
     
     # Load multiple strategies
     strategies = [
-        Strategy.load("template-web-ecommerce.yaml"),
-        Strategy.load("template-mobile-healthcare.yaml"),
-        Strategy.load("template-ml-finance.yaml")
+        load_strategy_yaml("template-web-ecommerce.yaml"),
+        load_strategy_yaml("template-mobile-healthcare.yaml"),
+        load_strategy_yaml("template-ml-finance.yaml")
     ]
     
     # Merge them
@@ -210,8 +213,8 @@ def example_7_external_tools():
     # Check if external tools are available
     try:
         strategy = generator.generate_with_external_tools(
-            project_path="../",
-            project_name="planfile-self-analysis",
+            project_path="../../",
+            project_name="planfile-health",
             max_sprints=3,
             focus_area="quality"
         )
