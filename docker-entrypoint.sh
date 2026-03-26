@@ -111,8 +111,8 @@ setup_workspace() {
 run_command() {
     echo -e "${YELLOW}🏃 Running command: $@${NC}"
     
-    # Build sdlc-automation command
-    local cmd="sdlc-automation"
+    # Build entry command
+    local cmd="entry"
     
     # Add command arguments
     if [ -n "$MAX_ITERATIONS" ]; then
@@ -152,7 +152,7 @@ main() {
     # Print environment info
     echo "Environment:"
     echo "  Python: $(python --version)"
-    echo "  SDLC-Automation: $(sdlc-automation --version)"
+    echo "  Entry: $(entry --version)"
     echo "  Workspace: $WORKSPACE"
     echo "  Results: $RESULTS_DIR"
     echo ""

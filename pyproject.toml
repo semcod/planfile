@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "entry"
-version = "0.1.6"
+name = "planfile"
+version = "0.1.7"
 description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 license = "Apache-2.0"
@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.scripts]
-entry = "strategy.cli.commands:main"
+planfile = "strategy.cli.commands:main"
 
 [project.optional-dependencies]
 github = ["PyGithub>=2.0"]
