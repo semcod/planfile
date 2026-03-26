@@ -49,7 +49,7 @@ ci-loop:
 		echo "Usage: make ci-loop STRATEGY=<strategy.yaml> [BACKENDS=github,jira] [MAX_ITERATIONS=5]"; \
 		exit 1; \
 	fi
-	strategy-pm auto loop \
+	sdlc auto loop \
 		--strategy $(STRATEGY) \
 		--project . \
 		--backend $(or $(BACKENDS),github) \
@@ -75,7 +75,7 @@ format:
 example-github:
 	@echo "Running example with GitHub backend..."
 	@echo "Make sure GITHUB_TOKEN and GITHUB_REPO are set"
-	strategy-pm auto loop \
+	sdlc auto loop \
 		--strategy examples/strategies/onboarding.yaml \
 		--project . \
 		--backend github \
@@ -85,7 +85,7 @@ example-github:
 example-jira:
 	@echo "Running example with Jira backend..."
 	@echo "Make sure JIRA_URL, JIRA_EMAIL, JIRA_TOKEN, JIRA_PROJECT are set"
-	strategy-pm auto loop \
+	sdlc auto loop \
 		--strategy examples/strategies/ecommerce-mvp.yaml \
 		--project . \
 		--backend jira \
@@ -94,7 +94,7 @@ example-jira:
 
 # Monitoring
 status:
-	strategy-pm auto ci-status
+	sdlc auto ci-status
 
 logs:
 	docker-compose logs -f sprintstrat-runner
@@ -143,7 +143,7 @@ pipeline-docker:
 	make docker-build
 	docker-compose up -d
 	sleep 10
-	docker-compose exec sprintstrat-runner strategy-pm auto loop \
+	docker-compose exec sprintstrat-runner sdlc auto loop \
 		--strategy /app/strategy.yaml \
 		--project /workspace \
 		--backend github \
@@ -152,7 +152,7 @@ pipeline-docker:
 # Advanced examples
 full-loop:
 	@echo "Running full bug-fix loop with auto-fix..."
-	strategy-pm auto loop \
+	sdlc auto loop \
 		--strategy examples/strategies/onboarding.yaml \
 		--project . \
 		--backend github \
@@ -161,7 +161,7 @@ full-loop:
 		--output full-loop-results.json
 
 strategy-review:
-	strategy-pm strategy review \
+	sdlc strategy review \
 		--strategy examples/strategies/onboarding.yaml \
 		--project . \
 		--backend github

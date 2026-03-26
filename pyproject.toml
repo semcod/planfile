@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sdlc"
-version = "0.1.3"
-description = "Strategic PM layer for ticket systems - manage sprints and strategies across Jira, GitHub, GitLab"
+version = "0.1.4"
+description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [{name = "Tom Sapletta", email = "tom@sapletta.com"}]
-keywords = ["strategy", "sprint", "pm", "jira", "github", "gitlab", "tickets", "agile"]
+keywords = ["sdlc", "strategy", "sprint", "pm", "jira", "github", "gitlab", "tickets", "agile", "cicd", "automation"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.scripts]
-strategy = "strategy.cli.commands:main"
+sdlc = "strategy.cli.commands:main"
 
 [project.optional-dependencies]
 github = ["PyGithub>=2.0"]
