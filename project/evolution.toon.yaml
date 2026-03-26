@@ -1,6 +1,6 @@
-# code2llm/evolution | 90 func | 15f | 2026-03-26
+# code2llm/evolution | 163 func | 19f | 2026-03-26
 
-NEXT[6] (ranked by impact):
+NEXT[10] (ranked by impact):
   [1] !  SPLIT-FUNC      apply_strategy_cli  CC=18  fan=28
       WHY: CC=18 exceeds 15
       EFFORT: ~1h  IMPACT: 504
@@ -13,26 +13,42 @@ NEXT[6] (ranked by impact):
       WHY: CC=16 exceeds 15
       EFFORT: ~1h  IMPACT: 368
 
-  [4] !  SPLIT-FUNC      export_results_to_markdown  CC=19  fan=16
+  [4] !  SPLIT-FUNC      table  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [5] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [6] !  SPLIT-FUNC      no_rows  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [7] !  SPLIT-FUNC      footer  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [8] !  SPLIT-FUNC      ratio_columns  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [9] !  SPLIT-FUNC      filter_handler  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [10] !  SPLIT-FUNC      export_results_to_markdown  CC=19  fan=16
       WHY: CC=19 exceeds 15
       EFFORT: ~1h  IMPACT: 304
-
-  [5] !  SPLIT-FUNC      validate_strategy_schema  CC=17  fan=10
-      WHY: CC=17 exceeds 15
-      EFFORT: ~1h  IMPACT: 170
-
-  [6] !  SPLIT-FUNC      GitLabBackend.update_ticket  CC=15  fan=7
-      WHY: CC=15 exceeds 15
-      EFFORT: ~1h  IMPACT: 105
 
 
 RISKS[0]: none
 
 METRICS-TARGET:
-  CC̄:          5.1 → ≤3.6
-  max-CC:      20 → ≤10
+  CC̄:          4.9 → ≤3.4
+  max-CC:      21 → ≤10
   god-modules: 0 → 0
-  high-CC(≥15): 6 → ≤3
+  high-CC(≥15): 12 → ≤6
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -60,4 +76,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=5.1 → now CC̄=5.1
+  prev CC̄=5.1 → now CC̄=4.9
