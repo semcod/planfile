@@ -396,10 +396,10 @@ _parse_llx_output [planfile.examples.ecosystem.04_llx_integration.LLXIntegration
 > Project metrics from LLX analysis.
 - **Methods**: 0
 
-### planfile.integrations.base.TicketRef
-> Reference to a created/updated ticket.
+### planfile.models.TaskType
+> Type of task in the planfile.
 - **Methods**: 0
-- **Inherits**: BaseModel
+- **Inherits**: str, Enum
 
 ## Data Transformation Functions
 

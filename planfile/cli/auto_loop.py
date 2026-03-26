@@ -42,6 +42,82 @@ def get_backend(backend_type: str) -> Any:
         raise ValueError(f"Unknown backend: {backend_type}")
 
 
+def _validate_strategy(strategy: Path) -> None:
+    """Validate strategy file exists."""
+    if not strategy.exists():
+        console.print(f"[red]✗ Strategy file not found: {strategy}[/red]")
+        raise typer.Exit(1)
+
+
+def _initialize_backends(backend: List[str]) -> dict:
+    """Initialize PM backends."""
+    backends = {}
+    for b in backend:
+        try:
+            backends[b] = get_backend(b)
+            console.print(f"✓ Initialized {b} backend")
+        except Exception as e:
+            console.print(f"[red]✗ Failed to initialize {b} backend: {e}[/red]")
+            raise typer.Exit(1)
+    return backends
+
+
+def _display_summary_table(results: dict) -> None:
+    """Display iteration summary table."""
+    table = Table(title="Iteration Summary")
+    table.add_column("Iteration", style="cyan")
+    table.add_column("Status", style="green")
+    table.add_column("Tests", style="yellow")
+    table.add_column("Coverage", style="blue")
+    table.add_column("Tickets", style="magenta")
+    
+    for iteration in results["iterations"]:
+        status = "✅" if iteration["tests_passed"] else "❌"
+        tests = "Pass" if iteration["tests_passed"] else f"Fail ({len(iteration.get('failed_tests', []))})"
+        coverage = f"{iteration.get('coverage', 0):.1f}%"
+        tickets = str(len(iteration.get("tickets_created", [])))
+        
+        table.add_row(
+            str(iteration["iteration"]),
+            status,
+            tests,
+            coverage,
+            tickets
+        )
+    
+    console.print(table)
+
+
+def _display_final_status(results: dict, strategy: Path) -> None:
+    """Display final loop status."""
+    if results["success"]:
+        console.print("\n[green]✅ Loop completed successfully![/green]")
+        console.print(f"Strategy '{strategy.name}' is complete!")
+    else:
+        console.print(f"\n[red]❌ Loop failed: {results['final_status']}[/red]")
+        console.print(f"Total iterations: {results['total_iterations']}")
+
+
+def _display_ticket_summary(results: dict) -> None:
+    """Display summary of created tickets."""
+    if results["tickets_created"]:
+        console.print(f"\n📫 Tickets created: {len(results['tickets_created'])}")
+        for url in results["tickets_created"][:5]:  # Show first 5
+            console.print(f"  • {url}")
+        if len(results["tickets_created"]) > 5:
+            console.print(f"  ... and {len(results['tickets_created']) - 5} more")
+
+
+def _save_results_if_needed(results: dict, output: Optional[Path]) -> None:
+    """Save results to file if needed."""
+    if output or not results["success"]:
+        output_path = output or Path("ci-results.json")
+        # Note: This would need runner instance - consider moving to caller
+        with open(output_path, 'w') as f:
+            import json
+            json.dump(results, f, indent=2)
+
+
 @app.command("auto-loop")
 def auto_loop(
     strategy: Path = typer.Argument(..., help="Strategy YAML file"),
@@ -78,19 +154,10 @@ def auto_loop(
     console.print()
     
     # Validate strategy exists
-    if not strategy.exists():
-        console.print(f"[red]✗ Strategy file not found: {strategy}[/red]")
-        raise typer.Exit(1)
+    _validate_strategy(strategy)
     
     # Initialize backends
-    backends = {}
-    for b in backend:
-        try:
-            backends[b] = get_backend(b)
-            console.print(f"✓ Initialized {b} backend")
-        except Exception as e:
-            console.print(f"[red]✗ Failed to initialize {b} backend: {e}[/red]")
-            raise typer.Exit(1)
+    backends = _initialize_backends(backend)
     
     if not backends and not dry_run:
         console.print("[yellow]⚠️  No backends configured - will run in dry-run mode[/yellow]")
@@ -125,44 +192,13 @@ def auto_loop(
     console.print("=" * 50)
     
     # Summary table
-    table = Table(title="Iteration Summary")
-    table.add_column("Iteration", style="cyan")
-    table.add_column("Status", style="green")
-    table.add_column("Tests", style="yellow")
-    table.add_column("Coverage", style="blue")
-    table.add_column("Tickets", style="magenta")
-    
-    for iteration in results["iterations"]:
-        status = "✅" if iteration["tests_passed"] else "❌"
-        tests = "Pass" if iteration["tests_passed"] else f"Fail ({len(iteration.get('failed_tests', []))})"
-        coverage = f"{iteration.get('coverage', 0):.1f}%"
-        tickets = str(len(iteration.get("tickets_created", [])))
-        
-        table.add_row(
-            str(iteration["iteration"]),
-            status,
-            tests,
-            coverage,
-            tickets
-        )
-    
-    console.print(table)
+    _display_summary_table(results)
     
     # Final status
-    if results["success"]:
-        console.print("\n[green]✅ Loop completed successfully![/green]")
-        console.print(f"Strategy '{strategy.name}' is complete!")
-    else:
-        console.print(f"\n[red]❌ Loop failed: {results['final_status']}[/red]")
-        console.print(f"Total iterations: {results['total_iterations']}")
+    _display_final_status(results, strategy)
     
     # Ticket summary
-    if results["tickets_created"]:
-        console.print(f"\n📫 Tickets created: {len(results['tickets_created'])}")
-        for url in results["tickets_created"][:5]:  # Show first 5
-            console.print(f"  • {url}")
-        if len(results["tickets_created"]) > 5:
-            console.print(f"  ... and {len(results['tickets_created']) - 5} more")
+    _display_ticket_summary(results)
     
     # Save results
     if output or not results["success"]:

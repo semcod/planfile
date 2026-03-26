@@ -5,81 +5,61 @@ import subprocess
 import json
 
 
-def analyze_project_metrics(project_path: str) -> Dict[str, Any]:
-    """
-    Analyze project metrics for strategy review.
+def _collect_git_metrics(path: Path) -> dict:
+    """Collect git repository metrics."""
+    git_metrics = {}
     
-    Args:
-        project_path: Path to the project directory
-    
-    Returns:
-        Dictionary with project metrics
-    """
-    path = Path(project_path)
-    metrics = {
-        "path": str(path.absolute()),
-        "exists": path.exists(),
-        "is_git_repo": False,
-        "file_count": 0,
-        "language_distribution": {},
-        "last_commit": None,
-        "branch_count": 0,
-        "total_commits": 0
-    }
-    
-    if not path.exists():
-        return metrics
-    
-    # Check if it's a git repository
-    git_path = path / ".git"
-    if git_path.exists():
-        metrics["is_git_repo"] = True
+    try:
+        # Get current branch
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            git_metrics["current_branch"] = result.stdout.strip()
         
-        try:
-            # Get git metrics
-            result = subprocess.run(
-                ["git", "-C", str(path), "rev-parse", "--abbrev-ref", "HEAD"],
-                capture_output=True,
-                text=True
-            )
-            if result.returncode == 0:
-                metrics["current_branch"] = result.stdout.strip()
+        # Get last commit date
+        result = subprocess.run(
+            ["git", "-C", str(path), "log", "-1", "--format=%ci"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            git_metrics["last_commit"] = result.stdout.strip()
+        
+        # Get commit count
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-list", "--count", "HEAD"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            git_metrics["total_commits"] = int(result.stdout.strip())
+        
+        # Get branch count
+        result = subprocess.run(
+            ["git", "-C", str(path), "branch", "-a"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            git_metrics["branch_count"] = len([b for b in result.stdout.split("\n") if b.strip()])
             
-            # Get last commit date
-            result = subprocess.run(
-                ["git", "-C", str(path), "log", "-1", "--format=%ci"],
-                capture_output=True,
-                text=True
-            )
-            if result.returncode == 0:
-                metrics["last_commit"] = result.stdout.strip()
-            
-            # Get commit count
-            result = subprocess.run(
-                ["git", "-C", str(path), "rev-list", "--count", "HEAD"],
-                capture_output=True,
-                text=True
-            )
-            if result.returncode == 0:
-                metrics["total_commits"] = int(result.stdout.strip())
-            
-            # Get branch count
-            result = subprocess.run(
-                ["git", "-C", str(path), "branch", "-a"],
-                capture_output=True,
-                text=True
-            )
-            if result.returncode == 0:
-                metrics["branch_count"] = len([b for b in result.stdout.split("\n") if b.strip()])
-                
-        except (subprocess.SubprocessError, FileNotFoundError):
-            pass
+    except (subprocess.SubprocessError, FileNotFoundError):
+        pass
     
-    # Count files by extension
+    return git_metrics
+
+
+def _count_files_by_language(path: Path) -> tuple[int, dict]:
+    """Count files and group by language."""
     file_extensions = {}
+    file_count = 0
+    
     for file_path in path.rglob("*"):
         if file_path.is_file() and not file_path.name.startswith("."):
-            metrics["file_count"] += 1
+            file_count += 1
             ext = file_path.suffix.lower()
             if ext:
                 file_extensions[ext] = file_extensions.get(ext, 0) + 1
@@ -116,16 +96,21 @@ def analyze_project_metrics(project_path: str) -> Dict[str, Any]:
         ".txt": "Text",
     }
     
+    language_distribution = {}
     for ext, count in file_extensions.items():
         lang = language_map.get(ext, ext)
-        metrics["language_distribution"][lang] = metrics["language_distribution"].get(lang, 0) + count
+        language_distribution[lang] = language_distribution.get(lang, 0) + count
     
     # Sort languages by count
-    metrics["language_distribution"] = dict(
-        sorted(metrics["language_distribution"].items(), key=lambda x: x[1], reverse=True)
+    language_distribution = dict(
+        sorted(language_distribution.items(), key=lambda x: x[1], reverse=True)
     )
     
-    # Check for common project files
+    return file_count, language_distribution
+
+
+def _check_project_files(path: Path) -> dict:
+    """Check for common project files."""
     common_files = [
         "package.json",
         "requirements.txt",
@@ -141,10 +126,53 @@ def analyze_project_metrics(project_path: str) -> Dict[str, Any]:
         ".gitignore",
     ]
     
-    metrics["project_files"] = {}
+    project_files = {}
     for file_name in common_files:
         file_path = path / file_name
-        metrics["project_files"][file_name] = file_path.exists()
+        project_files[file_name] = file_path.exists()
+    
+    return project_files
+
+
+def analyze_project_metrics(project_path: str) -> Dict[str, Any]:
+    """
+    Analyze project metrics for strategy review.
+    
+    Args:
+        project_path: Path to the project directory
+    
+    Returns:
+        Dictionary with project metrics
+    """
+    path = Path(project_path)
+    metrics = {
+        "path": str(path.absolute()),
+        "exists": path.exists(),
+        "is_git_repo": False,
+        "file_count": 0,
+        "language_distribution": {},
+        "last_commit": None,
+        "branch_count": 0,
+        "total_commits": 0
+    }
+    
+    if not path.exists():
+        return metrics
+    
+    # Check if it's a git repository
+    git_path = path / ".git"
+    if git_path.exists():
+        metrics["is_git_repo"] = True
+        git_metrics = _collect_git_metrics(path)
+        metrics.update(git_metrics)
+    
+    # Count files by language
+    file_count, language_distribution = _count_files_by_language(path)
+    metrics["file_count"] = file_count
+    metrics["language_distribution"] = language_distribution
+    
+    # Check for common project files
+    metrics["project_files"] = _check_project_files(path)
     
     return metrics
 

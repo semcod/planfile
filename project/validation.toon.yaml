@@ -43,7 +43,7 @@ ERRORS[19]{path,score}:
       python.import.resolvable,error,Module 'llx.config' not found,55
   planfile/integrations/github.py,0.71
     issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'base' not found,12
+      python.import.resolvable,error,Module 'planfile.integrations.base' not found,12
       python.import.resolvable,error,Module 'github' not found,4
       python.import.resolvable,error,Module 'github.Issue' not found,5
       python.import.resolvable,error,Module 'github.Repository' not found,6
@@ -53,12 +53,12 @@ ERRORS[19]{path,score}:
       python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,5
   planfile/integrations/gitlab.py,0.74
     issues[3]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'base' not found,10
+      python.import.resolvable,error,Module 'planfile.integrations.base' not found,10
       python.import.resolvable,error,Module 'gitlab' not found,4
       python.import.resolvable,error,Module 'gitlab.exceptions' not found,5
   planfile/integrations/jira.py,0.74
     issues[3]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'base' not found,10
+      python.import.resolvable,error,Module 'planfile.integrations.base' not found,10
       python.import.resolvable,error,Module 'jira' not found,4
       python.import.resolvable,error,Module 'jira.exceptions' not found,5
   planfile/llm/generator.py,0.74
@@ -77,40 +77,41 @@ ERRORS[19]{path,score}:
       python.import.resolvable,error,Module 'utils.priorities' not found,9
   planfile/utils/priorities.py,0.79
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,2
+      python.import.resolvable,error,Module 'planfile.models' not found,2
   planfile/cli/commands.py,0.80
     issues[9]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,12
-      python.import.resolvable,error,Module 'runner' not found,13
-      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,14
-      python.import.resolvable,error,Module 'integrations.github' not found,15
-      python.import.resolvable,error,Module 'integrations.jira' not found,16
-      python.import.resolvable,error,Module 'integrations.gitlab' not found,17
-      python.import.resolvable,error,Module 'integrations.generic' not found,18
+      python.import.resolvable,error,Module 'planfile.models' not found,12
+      python.import.resolvable,error,Module 'planfile.runner' not found,13
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,14
+      python.import.resolvable,error,Module 'planfile.integrations.github' not found,15
+      python.import.resolvable,error,Module 'planfile.integrations.jira' not found,16
+      python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,17
+      python.import.resolvable,error,Module 'planfile.integrations.generic' not found,18
       python.import.resolvable,error,Module 'llm.generator' not found,341
       python.import.resolvable,error,Module 'loaders.yaml_loader' not found,342
-  planfile/ci_runner.py,0.85
-    issues[5]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,14
-      python.import.resolvable,error,Module 'runner' not found,15
-      python.import.resolvable,error,Module 'integrations.github' not found,16
-      python.import.resolvable,error,Module 'integrations.jira' not found,17
-      python.import.resolvable,error,Module 'integrations.gitlab' not found,18
-  planfile/cli/auto_loop.py,0.87
+  planfile/ci_runner.py,0.83
+    issues[6]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.models' not found,14
+      python.import.resolvable,error,Module 'planfile.runner' not found,15
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,16
+      python.import.resolvable,error,Module 'planfile.integrations.github' not found,17
+      python.import.resolvable,error,Module 'planfile.integrations.jira' not found,18
+      python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,19
+  planfile/cli/auto_loop.py,0.88
     issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'ci_runner' not found,11
-      python.import.resolvable,error,Module 'integrations.github' not found,12
-      python.import.resolvable,error,Module 'integrations.jira' not found,13
-      python.import.resolvable,error,Module 'integrations.gitlab' not found,14
+      python.import.resolvable,error,Module 'planfile.ci_runner' not found,11
+      python.import.resolvable,error,Module 'planfile.integrations.github' not found,12
+      python.import.resolvable,error,Module 'planfile.integrations.jira' not found,13
+      python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,14
   planfile/integrations/generic.py,0.89
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'base' not found,5
+      python.import.resolvable,error,Module 'planfile.integrations.base' not found,5
   planfile/loaders/cli_loader.py,0.89
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,5
+      python.import.resolvable,error,Module 'planfile.models' not found,5
   planfile/loaders/yaml_loader.py,0.91
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,6
+      python.import.resolvable,error,Module 'planfile.models' not found,6
   planfile/examples/ecosystem/03_proxy_routing.py,0.93
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'aiohttp' not found,9
