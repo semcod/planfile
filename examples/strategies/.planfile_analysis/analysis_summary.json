@@ -1,0 +1,964 @@
+{
+  "issues": [
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 171,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: authentication system...",
+      "description": "authentication system",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 172,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 182,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: coverage...",
+      "description": "coverage",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 18,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ed'...",
+      "description": "ed'",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 19,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 140,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 141,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing pipeline...",
+      "description": "ing pipeline",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 158,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing:...",
+      "description": "_writing:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 193,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: suite...",
+      "description": "suite",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 194,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 195,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 199,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage: 90...",
+      "description": "_coverage: 90",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 218,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation:...",
+      "description": "umentation:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 204,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument all security procedures...",
+      "description": "ument all security procedures",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 206,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/security-hardening.yaml",
+      "line_number": 211,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ker configuration...",
+      "description": "ker configuration",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/onboarding.yaml",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umented....",
+      "description": "umented.",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/onboarding.yaml",
+      "line_number": 63,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument signing workflow...",
+      "description": "ument signing workflow",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/onboarding.yaml",
+      "line_number": 97,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument uploads...",
+      "description": "ument uploads",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/onboarding.yaml",
+      "line_number": 115,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Issue in tasks.patterns[6].description",
+      "description": "Add payment capabilities:\n- Stripe integration\n- Multiple payment methods\n- PCI compliance\n- Error handling\n- Payment retries\n",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "strategies/ecommerce-mvp.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Issue in sprints[3].task_patterns[0].description",
+      "description": "Test system resilience under failure conditions",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Refactor: ing Strategy...",
+      "description": "ing Strategy",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 1,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: priority: critical...",
+      "description": "priority: critical",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 55,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: priority: high...",
+      "description": "priority: high",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 78,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 174,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 185,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: authentication...",
+      "description": "authentication",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 186,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: coverage...",
+      "description": "coverage",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 24,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing and Migration...",
+      "description": "ing and Migration",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 139,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 142,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing at scale...",
+      "description": "ing at scale",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 143,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 149,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: system resilience under failure conditions...",
+      "description": "system resilience under failure conditions",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 150,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: priority: high...",
+      "description": "priority: high",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 151,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ed...",
+      "description": "ed",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 158,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ed...",
+      "description": "ed",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 171,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing:...",
+      "description": "_writing:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 196,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 197,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: API contracts between services...",
+      "description": "API contracts between services",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 198,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 202,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing under load...",
+      "description": "ing under load",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 203,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage: 85...",
+      "description": "_coverage: 85",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 225,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umented...",
+      "description": "umented",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 49,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation and training...",
+      "description": "umentation and training",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 145,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umented...",
+      "description": "umented",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 157,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation:...",
+      "description": "umentation:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 207,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 208,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument all service APIs...",
+      "description": "ument all service APIs",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 209,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation: 100...",
+      "description": "umentation: 100",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/microservices-migration.yaml",
+      "line_number": 226,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Optimize: ML training pipeline for 10x faster training...",
+      "description": "ML training pipeline for 10x faster training",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 8,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: data loading and preprocessing...",
+      "description": "data loading and preprocessing",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 35,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: priority: critical...",
+      "description": "priority: critical",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 43,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: d...",
+      "description": "d",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 50,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: hyperparameter tuning...",
+      "description": "hyperparameter tuning",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 70,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: priority: high...",
+      "description": "priority: high",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 90,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: priority: high...",
+      "description": "priority: high",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 113,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: data pipeline...",
+      "description": "data pipeline",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 172,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: inference code...",
+      "description": "inference code",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 188,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 171,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: for parallel processing...",
+      "description": "for parallel processing",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 173,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 182,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: feature engineering...",
+      "description": "feature engineering",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 183,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: ing framework...",
+      "description": "ing framework",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 106,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s passing...",
+      "description": "s passing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 155,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing:...",
+      "description": "_writing:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 193,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 194,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 195,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 200,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage: 90...",
+      "description": "_coverage: 90",
+      "priority": "low",
+      "category": "test",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 222,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation and knowledge sharing...",
+      "description": "umentation and knowledge sharing",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 143,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation:...",
+      "description": "umentation:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 204,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 205,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 206,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation_coverage: 95...",
+      "description": "umentation_coverage: 95",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "strategies/ml-pipeline-optimization.yaml",
+      "line_number": 224,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "name": "Test Coverage",
+      "value": 90.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "strategies/security-hardening.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 100.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "strategies/security-hardening.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 85.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "strategies/microservices-migration.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 90.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "strategies/ml-pipeline-optimization.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 95.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "strategies/ml-pipeline-optimization.yaml"
+    }
+  ],
+  "tasks": [],
+  "analyzed_files": [
+    "strategies/security-hardening.yaml",
+    "strategies/onboarding.yaml",
+    "strategies/ecommerce-mvp.yaml",
+    "strategies/microservices-migration.yaml",
+    "strategies/ml-pipeline-optimization.yaml"
+  ],
+  "summary": {
+    "total_issues": 75,
+    "priority_breakdown": {
+      "critical": 0,
+      "high": 0,
+      "medium": 24,
+      "low": 51
+    },
+    "category_breakdown": {
+      "refactor": 13,
+      "test": 32,
+      "documentation": 19,
+      "bug": 2,
+      "performance": 9
+    },
+    "total_metrics": 5,
+    "critical_metrics": 0,
+    "total_tasks": 0
+  }
+}

@@ -27,7 +27,27 @@ examples/
 │   └── simple.yaml
 ├── tasks/                      # Example task patterns
 │   └── common.yaml
-└── run_all_tests.sh           # Master test runner
+├── run_all_tests.sh           # Master test runner
+├── quick-start/               # ⚡ Quick start guide (NEW!)
+│   ├── README.md
+│   ├── run.sh
+│   └── quick_start_examples.py
+├── integrated-functionality/  # 🚀 Integrated features demo
+│   ├── README.md
+│   ├── run.sh
+│   └── integrated_functionality_examples.py
+├── cli-commands/              # 💻 CLI commands showcase
+│   ├── README.md
+│   ├── run.sh
+│   └── cli_command_examples.py
+├── external-tools/           # 🔧 External tools integration
+│   ├── README.md
+│   ├── run.sh
+│   └── external_tools_examples.py
+└── advanced-usage/           # 🎯 Advanced patterns and workflows
+    ├── README.md
+    ├── run.sh
+    └── advanced_usage_examples.py
 ```
 
 ## Quick Start
@@ -48,14 +68,35 @@ pip install litellm llx PyGithub python-gitlab jira
 ### 2. Set Up API Keys
 
 ```bash
-# For OpenRouter (free LLM validation)
-export OPENROUTER_API_KEY=your_key_here
+# For OpenAI (if using)
+export OPENAI_API_KEY=sk-...
 
-# For various backends (optional)
-export GITHUB_TOKEN=your_github_token
-export JIRA_URL=your_jira_url
-export JIRA_EMAIL=your_email
-export JIRA_TOKEN=your_jira_token
+# For GitHub backend (if using)
+export GITHUB_TOKEN=ghp_...
+
+# For OpenRouter (free LLM validation)
+export OPENROUTER_API_KEY=sk-or-v1-...
+```
+
+### 3. Run Examples
+
+Each example has its own folder with README and run.sh script:
+
+```bash
+# Quick start (beginners)
+cd quick-start && ./run.sh
+
+# Integrated functionality (complete overview)
+cd integrated-functionality && ./run.sh
+
+# CLI commands (command-line interface)
+cd cli-commands && ./run.sh
+
+# External tools (code2llm, vallm, redup)
+cd external-tools && ./run.sh
+
+# Advanced usage (power users)
+cd advanced-usage && ./run.sh
 ```
 
 ### 3. Run All Examples with Validation
@@ -115,6 +156,77 @@ Shows metric-driven planning using LLX:
 
 ```python
 python ecosystem/04_llx_integration.py
+```
+
+## New Examples (Integrated Functionality)
+
+### ⚡ Quick Start (quick-start/)
+
+Get started with planfile in minutes! This example shows the basics:
+- Generate strategy from files
+- Create templates
+- Load and analyze strategies
+- Export to different formats
+- Compare strategies
+
+```bash
+cd quick-start && ./run.sh
+```
+
+### 🚀 Integrated Functionality (integrated-functionality/)
+
+Comprehensive demo of all new integrated features:
+- File analysis without external scripts
+- Template generation for different project types
+- Strategy comparison and merging
+- Multiple export formats
+- Statistics and health checking
+
+```bash
+cd integrated-functionality && ./run.sh
+```
+
+### 💻 CLI Commands (cli-commands/)
+
+Shows how to use all new CLI commands:
+- `planfile template` - Generate templates
+- `planfile stats` - View statistics
+- `planfile export` - Export to various formats
+- `planfile compare` - Compare strategies
+- `planfile health` - Check project health
+- `planfile generate-from-files` - Analyze and generate
+
+```bash
+cd cli-commands && ./run.sh
+```
+
+### 🔧 External Tools (external-tools/)
+
+Integration with external analysis tools:
+- code2llm - Code complexity analysis
+- vallm - Validation and linting
+- redup - Code duplication detection
+- Combined analysis with all tools
+
+```bash
+# Install tools first
+pip install code2llm vallm redup
+
+cd external-tools && ./run.sh
+```
+
+### 🎯 Advanced Usage (advanced-usage/)
+
+Advanced patterns and workflows:
+- Custom file patterns
+- Focus-specific strategies
+- Iterative strategy refinement
+- Batch processing multiple directories
+- Custom metrics integration
+- CI/CD workflow automation
+
+```bash
+cd advanced-usage && ./run.sh
 ```
 
 ## Validation with LLX
@@ -240,6 +352,94 @@ Each test generates:
 - Validation reports (test-results.json)
 
 ## Example Generated Strategy
+
+## Quick Reference
+
+### New CLI Commands
+```bash
+# Generate template
+planfile template web ecommerce
+
+# Generate from files
+planfile generate-from-files . --focus quality
+
+# View statistics
+planfile stats strategy.yaml
+
+# Export formats
+planfile export strategy.yaml --format html
+planfile export strategy.yaml --format csv
+
+# Compare strategies
+planfile compare old.yaml new.yaml
+
+# Health check
+planfile health .
+```
+
+### Python API
+```python
+from planfile import Strategy
+from planfile.analysis.generator import generator
+
+# Generate from analysis
+strategy = generator.generate_from_current_project(".")
+
+# Create template
+from planfile.cli.extra_commands import generate_template
+template = generate_template("web", "ecommerce")
+
+# Load and analyze
+s = Strategy.load("strategy.yaml")
+stats = s.get_stats()
+
+# Compare
+comparison = s1.compare(s2)
+
+# Export
+yaml_data = s.export("yaml")
+json_data = s.export("json")
+```
+
+### Example Files Generated
+
+Each example folder generates its own set of files:
+
+**quick-start/**
+- `quick-start.yaml` - Basic generated strategy
+- `web-template.yaml` - Web project template
+- `web-template.json` - Template in JSON format
+
+**integrated-functionality/**
+- `generated-from-examples.yaml` - Strategy from file analysis
+- `template-*.yaml` - Project templates (web, mobile, ml)
+- `strategy-export.*` - Various export formats
+- `merged-strategy.yaml` - Combined strategy
+
+**cli-commands/**
+- `cli-example-*.yaml` - Generated strategies
+- `cli-example-*.json` - JSON exports
+- `cli-example.html` - HTML report
+
+**external-tools/**
+- `*.toon.yaml` - External tool outputs (if tools installed)
+- `external-tools-generated.yaml` - Strategy from external analysis
+- `quality-focused.yaml` - Quality-focused strategy
+
+**advanced-usage/**
+- `custom-patterns-strategy.yaml` - Custom analysis strategy
+- `focus-*-strategy.yaml` - Focus-specific strategies
+- `iterative-*.yaml` - Strategy versions
+- `batch-*-strategy.yaml` - Batch processing results
+- `ci-workflow.sh` - Generated CI/CD script
+
+## Tips
+1. Start with `cd quick-start && ./run.sh` for basics
+2. Use `cd integrated-functionality && ./run.sh` for complete overview
+3. Install external tools for deeper analysis: `pip install code2llm vallm redup`
+4. Each example has its own README with detailed information
+5. Check generated YAML files to understand structure
+6. Use `./run.sh` in each folder for easy execution
 
 ```yaml
 project:
