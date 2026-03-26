@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+"""
+Command-line interface for automated planfile generation.
+"""
+
+import sys
+import subprocess
+from pathlib import Path
+
+def main():
+    """Main CLI interface."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description="Automated Planfile Generation",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                    # Run full pipeline
+  %(prog)s --mock            # Use mock data
+  %(prog)s --validate-only   # Validate existing planfile
+  %(prog)s --apply           # Apply generated planfile
+        """
+    )
+    
+    parser.add_argument(
+        "--mock",
+        action="store_true",
+        help="Use mock data instead of running analysis"
+    )
+    
+    parser.add_argument(
+        "--validate-only",
+        action="store_true",
+        help="Only validate existing planfile.yaml"
+    )
+    
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply generated planfile (dry run)"
+    )
+    
+    parser.add_argument(
+        "--backend",
+        default="generic",
+        choices=["generic", "github", "jira", "gitlab"],
+        help="Backend for applying planfile"
+    )
+    
+    parser.add_argument(
+        "--project-path",
+        default=".",
+        help="Path to project directory"
+    )
+    
+    args = parser.parse_args()
+    
+    # Validate existing planfile
+    if args.validate_only:
+        if not Path("planfile.yaml").exists():
+            print("❌ planfile.yaml not found")
+            sys.exit(1)
+        
+        print("🔍 Validating planfile.yaml...")
+        result = subprocess.run([
+            sys.executable, "-m", "planfile.cli.commands", "validate", "planfile.yaml"
+        ])
+        
+        if result.returncode == 0:
+            print("✅ planfile.yaml is valid!")
+        else:
+            print("❌ planfile.yaml has issues")
+            sys.exit(1)
+        
+        return
+    
+    # Apply planfile
+    if args.apply:
+        if not Path("planfile.yaml").exists():
+            print("❌ planfile.yaml not found. Generate it first.")
+            sys.exit(1)
+        
+        print(f"🎯 Applying planfile.yaml with {args.backend} backend (dry run)...")
+        result = subprocess.run([
+            sys.executable, "-m", "planfile.cli.commands", "apply",
+            "planfile.yaml", ".", "--backend", args.backend, "--dry-run"
+        ])
+        
+        if result.returncode == 0:
+            print("✅ Planfile applied successfully (dry run)!")
+        else:
+            print("❌ Failed to apply planfile")
+            sys.exit(1)
+        
+        return
+    
+    # Generate planfile
+    from generate_planfile import PlanfileGenerator
+    
+    generator = PlanfileGenerator(args.project_path)
+    
+    if args.mock:
+        print("⚠️  Using mock data")
+        generator.code2llm_results = generator.get_mock_code2llm_data()
+        generator.vallm_results = generator.get_mock_vallm_data()
+        generator.redup_results = generator.get_mock_redup_data()
+        planfile = generator.generate_planfile()
+        generator.save_planfile(planfile)
+    else:
+        generator.run()
+    
+    # Ask if user wants to validate
+    try:
+        response = input("\n🔍 Validate generated planfile? [Y/n] ").strip().lower()
+        if response != 'n':
+            print("\nValidating...")
+            result = subprocess.run([
+                sys.executable, "-m", "planfile.cli.commands", "validate", "planfile.yaml"
+            ])
+            
+            if result.returncode == 0:
+                print("✅ Generated planfile is valid!")
+            else:
+                print("⚠️  Generated planfile has issues")
+    except (KeyboardInterrupt, EOFError):
+        print("\n")
+    
+    # Ask if user wants to apply
+    try:
+        response = input("\n🎯 Apply planfile (dry run)? [Y/n] ").strip().lower()
+        if response != 'n':
+            print(f"\nApplying with {args.backend} backend...")
+            result = subprocess.run([
+                sys.executable, "-m", "planfile.cli.commands", "apply",
+                "planfile.yaml", ".", "--backend", args.backend, "--dry-run"
+            ])
+            
+            if result.returncode == 0:
+                print("✅ Planfile applied successfully (dry run)!")
+            else:
+                print("❌ Failed to apply planfile")
+    except (KeyboardInterrupt, EOFError):
+        print("\n")
+    
+    print("\n✅ Done! Check planfile.yaml for your generated strategy.")
+
+
+if __name__ == "__main__":
+    main()

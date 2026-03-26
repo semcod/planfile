@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.22] - 2026-03-26
+
+### Docs
+- Update AUTOMATED_GENERATION_SUMMARY.md
+- Update ENHANCEMENT_ANALYSIS.md
+- Update FILE_ANALYSIS_SYSTEM.md
+- Update GENERATE_README.md
+- Update IMPLEMENTATION_SUMMARY.md
+- Update INTEGRATED_GENERATION.md
+
+### Test
+- Update test-integrated.yaml
+- Update test_integration.py
+
+### Other
+- Update .gitignore
+- Update .planfile_analysis/analysis_summary.json
+- Update analysis-generated.yaml
+- Update analyze_files.py
+- Update auto_generate_planfile.sh
+- Update demo_planfile_usage.py
+- Update enhanced-analysis.yaml
+- Update enhanced_analyze.py
+- Update final-planfile.yaml
+- Update generate_from_files.py
+- ... and 19 more files
+
 ## [0.1.21] - 2026-03-26
 
 ### Docs

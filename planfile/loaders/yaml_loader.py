@@ -88,20 +88,32 @@ def load_strategy_yaml(file_path: Union[str, Path]) -> Strategy:
             data["quality_gates"][i] = QualityGate(**gate)
     
     try:
-        return Strategy(**data)
-    except ValidationError as e:
-        raise ValidationError(f"Invalid strategy in {file_path}: {e}")
+        return Strategy.load_flexible(data)
+    except Exception as e:
+        # Re-raise with more context
+        if hasattr(e, 'errors') and callable(e.errors):
+            # Pydantic validation error
+            error_msg = f"Invalid strategy in {file_path}:\n"
+            for error in e.errors():
+                loc = " -> ".join(str(x) for x in error['loc'])
+                error_msg += f"  {loc}: {error['msg']}\n"
+            raise ValueError(error_msg)
+        else:
+            raise ValueError(f"Invalid strategy in {file_path}: {e}")
 
 
-def save_strategy_yaml(strategy: Strategy, file_path: Union[str, Path]) -> None:
+def save_strategy_yaml(strategy: Union[Strategy, Dict], file_path: Union[str, Path]) -> None:
     """
     Save strategy to YAML file.
     
     Args:
-        strategy: Strategy instance
+        strategy: Strategy instance or dictionary
         file_path: Path to save YAML file
     """
-    data = planfile.model_dump()
+    if isinstance(strategy, dict):
+        data = strategy
+    else:
+        data = strategy.model_dump()
     
     # Convert enums to strings
     if "tasks" in data:
