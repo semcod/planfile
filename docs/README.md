@@ -154,27 +154,27 @@ Content outside the markers is preserved when regenerating. Enable this with `sy
 
 ```
 planfile/
-├── mcp-server-example    ├── comprehensive_example    ├── examples    ├── summary    ├── llx_validator├── planfile/    ├── runner    ├── executor_standalone        ├── yaml_loader    ├── ci_runner    ├── loaders/        ├── cli_loader        ├── generator    ├── analysis/        ├── file_analyzer        ├── external_tools        ├── sprint_generator        ├── auto_loop        ├── commands    ├── cli/        ├── __main__        ├── extra_commands        ├── generator        ├── adapters    ├── llm/        ├── prompts        ├── client    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic        ├── 02_mcp_integration        ├── 04_llx_integration        ├── 03_proxy_routing├── cleanup_redundant├── docker-entrypoint├── auto_generate_planfile├── project    ├── validate_with_llx        ├── 01_full_workflow        ├── verify_planfile    ├── models        ├── base    ├── models_v2```
+├── mcp-server-example    ├── llx_validator    ├── summary    ├── examples    ├── comprehensive_example├── planfile/    ├── runner    ├── ci_runner    ├── executor_standalone        ├── cli_loader    ├── loaders/        ├── yaml_loader        ├── external_tools    ├── analysis/        ├── generator        ├── sprint_generator        ├── file_analyzer        ├── auto_loop        ├── commands    ├── cli/        ├── __main__        ├── extra_commands        ├── generator        ├── prompts    ├── llm/        ├── client        ├── adapters    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic        ├── 02_mcp_integration        ├── 04_llx_integration        ├── 03_proxy_routing├── cleanup_redundant├── docker-entrypoint├── auto_generate_planfile├── project    ├── validate_with_llx        ├── 01_full_workflow        ├── verify_planfile    ├── models    ├── models_v2        ├── base```
 
 ## API Overview
 
 ### Classes
 
 - **`LLXValidator`** — Use LLX to validate generated code and strategies.
-- **`TaskResult`** — Result of executing a task.
-- **`LLMClient`** — Simple LLM client interface.
-- **`StrategyExecutor`** — Standalone strategy executor.
 - **`TestResult`** — Result of running tests.
 - **`BugReport`** — Generated bug report from test failures.
 - **`CIRunner`** — CI/CD runner with automated bug-fix loop.
+- **`TaskResult`** — Result of executing a task.
+- **`LLMClient`** — Simple LLM client interface.
+- **`StrategyExecutor`** — Standalone strategy executor.
+- **`AnalysisResults`** — Results from external tool analysis.
+- **`ExternalToolRunner`** — Runner for external code analysis tools.
 - **`PlanfileGenerator`** — Generate comprehensive planfile from file analysis.
+- **`SprintGenerator`** — Generates sprints and tickets from extracted information.
 - **`ExtractedIssue`** — Represents an issue extracted from a file.
 - **`ExtractedMetric`** — Represents a metric extracted from a file.
 - **`ExtractedTask`** — Represents a task extracted from a file.
 - **`FileAnalyzer`** — Analyzes YAML/JSON files to extract issues and metrics.
-- **`AnalysisResults`** — Results from external tool analysis.
-- **`ExternalToolRunner`** — Runner for external code analysis tools.
-- **`SprintGenerator`** — Generates sprints and tickets from extracted information.
 - **`LLMTestResult`** — Result of LLM test.
 - **`BaseLLMAdapter`** — Base class for LLM adapters.
 - **`LiteLLMAdapter`** — Adapter for LiteLLM providers.
@@ -200,10 +200,6 @@ planfile/
 - **`Goal`** — Project goal definition.
 - **`QualityGate`** — Quality gate definition.
 - **`Strategy`** — Main strategy configuration.
-- **`TicketRef`** — Reference to a created/updated ticket.
-- **`TicketStatus`** — Status of a ticket.
-- **`PMBackend`** — Protocol for PM system backends.
-- **`BasePMBackend`** — Base class for PM backends with common functionality.
 - **`TaskType`** — Type of task in the planfile.
 - **`ModelTier`** — Model tier for different phases of work.
 - **`ModelHints`** — AI model hints for different phases of task execution.
@@ -212,6 +208,10 @@ planfile/
 - **`QualityGate`** — Quality gate definition.
 - **`Goal`** — Project goal definition.
 - **`Strategy`** — Main strategy configuration - simplified and more flexible.
+- **`TicketRef`** — Reference to a created/updated ticket.
+- **`TicketStatus`** — Status of a ticket.
+- **`PMBackend`** — Protocol for PM system backends.
+- **`BasePMBackend`** — Base class for PM backends with common functionality.
 
 ### Functions
 
@@ -219,24 +219,30 @@ planfile/
 - `planfile_apply(arguments)` — —
 - `planfile_review(arguments)` — —
 - `main()` — —
-- `run_command(cmd, description)` — Run a command and display results.
-- `main()` — Run comprehensive examples.
+- `create_validation_script()` — Create a validation script that uses LLX.
+- `create_summary()` — Create a summary of all changes made.
 - `example_create_strategy()` — Create a strategy using LLX with local LLM.
 - `example_validate_strategy()` — Load and validate an existing strategy.
 - `example_run_strategy()` — Run strategy to create tickets (dry run).
 - `example_verify_strategy()` — Verify strategy execution.
 - `example_programmatic_strategy()` — Create strategy programmatically without LLM.
-- `create_summary()` — Create a summary of all changes made.
-- `create_validation_script()` — Create a validation script that uses LLX.
+- `run_command(cmd, description)` — Run a command and display results.
+- `main()` — Run comprehensive examples.
 - `load_valid_strategy(path)` — Load and validate strategy from YAML file.
 - `verify_strategy_post_execution(strategy, project_path, backend)` — Verify strategy after execution.
 - `analyze_project_metrics(project_path)` — Analyze project metrics using available tools.
 - `apply_strategy_to_tickets(strategy, project_path, backend, dry_run)` — Apply strategy to create tickets in PM system.
 - `review_strategy(strategy, project_path, backends, backend_name)` — Review strategy execution by checking ticket statuses.
 - `run_strategy(strategy_path, project_path, backend, dry_run)` — Run strategy: load, validate, and apply.
+- `main()` — CLI entry point.
 - `create_openai_client(api_key, model)` — Create an OpenAI client.
 - `create_litellm_client(api_key, model)` — Create a LiteLLM client.
 - `execute_strategy(strategy_path, project_path)` — Execute strategy from file - convenience function.
+- `load_from_json(file_path)` — Load JSON file and return as dictionary.
+- `save_to_json(data, file_path)` — Save dictionary to JSON file.
+- `load_strategy_from_json(file_path)` — Load strategy from JSON file.
+- `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
+- `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
 - `load_yaml(file_path)` — Load YAML file and return as dictionary.
 - `save_yaml(data, file_path)` — Save dictionary to YAML file.
 - `load_strategy_yaml(file_path)` — Load strategy from YAML file.
@@ -244,12 +250,6 @@ planfile/
 - `load_tasks_yaml(file_path)` — Load task patterns from YAML file.
 - `merge_strategy_with_tasks(strategy, tasks_file)` — Merge additional task patterns into a planfile.
 - `validate_strategy_schema(file_path)` — Validate strategy YAML file and return list of issues.
-- `main()` — CLI entry point.
-- `load_from_json(file_path)` — Load JSON file and return as dictionary.
-- `save_to_json(data, file_path)` — Save dictionary to JSON file.
-- `load_strategy_from_json(file_path)` — Load strategy from JSON file.
-- `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
-- `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
 - `run_external_analysis(project_path)` — Convenience function to run all external tools.
 - `get_backend(backend_type)` — Get backend instance by type.
 - `auto_loop(strategy, project_path, backend, max_iterations)` — Run automated CI/CD loop: test → ticket → fix → retest.

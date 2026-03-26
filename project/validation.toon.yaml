@@ -1,7 +1,7 @@
-# vallm batch | 134f | 57✓ 6⚠ 38✗ | 2026-03-26
+# vallm batch | 136f | 57✓ 6⚠ 38✗ | 2026-03-26
 
 SUMMARY:
-  scanned: 134  passed: 57 (42.5%)  warnings: 6  errors: 38  unsupported: 39
+  scanned: 136  passed: 57 (41.9%)  warnings: 6  errors: 38  unsupported: 41
 
 WARNINGS[6]{path,score}:
   planfile/analysis/file_analyzer.py,0.93
@@ -209,7 +209,7 @@ ERRORS[38]{path,score}:
       python.import.resolvable,error,Module 'aiohttp' not found,16
 
 UNSUPPORTED[5]{bucket,count}:
-  *.md,26
+  *.md,28
   Dockerfile*,1
   *.txt,1
   *.yml,2
