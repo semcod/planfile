@@ -111,8 +111,8 @@ setup_workspace() {
 run_command() {
     echo -e "${YELLOW}🏃 Running command: $@${NC}"
     
-    # Build entry command
-    local cmd="entry"
+    # Build planfile command
+    local cmd="planfile"
     
     # Add command arguments
     if [ -n "$MAX_ITERATIONS" ]; then
@@ -152,7 +152,7 @@ main() {
     # Print environment info
     echo "Environment:"
     echo "  Python: $(python --version)"
-    echo "  Entry: $(entry --version)"
+    echo "  Planfile: $(planfile --version)"
     echo "  Workspace: $WORKSPACE"
     echo "  Results: $RESULTS_DIR"
     echo ""
