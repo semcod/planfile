@@ -4,6 +4,7 @@ from typing import Dict, Any, Union
 from pydantic import ValidationError
 
 from planfile.models import Strategy, Sprint, TaskPattern, TaskType, ModelHints, ModelTier, QualityGate
+from planfile.models_v2 import Strategy as StrategyV2, Goal
 
 
 def load_yaml(file_path: Union[str, Path]) -> Dict[str, Any]:
@@ -83,12 +84,21 @@ def load_strategy_yaml(file_path: Union[str, Path]) -> Strategy:
                 sprint["tasks"] = []
     
     # Convert quality gates
-    if "quality_gates" in data:
-        for i, gate in enumerate(data["quality_gates"]):
-            data["quality_gates"][i] = QualityGate(**gate)
+    # Don't convert here - let StrategyV2 handle it
+    # if "quality_gates" in data:
+    #     for i, gate in enumerate(data["quality_gates"]):
+    #         data["quality_gates"][i] = QualityGate(**gate)
     
     try:
-        return Strategy.load_flexible(data)
+        # Handle goal field - allow string
+        if 'goal' in data and isinstance(data['goal'], str):
+            # Keep as string
+            pass
+        elif 'goal' in data and isinstance(data['goal'], dict):
+            # Convert dict to Goal object if needed
+            data['goal'] = Goal(**data['goal'])
+        
+        return StrategyV2(**data)
     except Exception as e:
         # Re-raise with more context
         if hasattr(e, 'errors') and callable(e.errors):

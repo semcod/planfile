@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.23] - 2026-03-26
+
+### Docs
+- Update ENHANCEMENT_COMPLETE.md
+
+### Other
+- Update cleanup_redundant.sh
+- Update examples/.planfile_analysis/analysis_summary.json
+- Update planfile/loaders/yaml_loader.py
+- Update web-export.html
+
 ## [0.1.22] - 2026-03-26
 
 ### Docs
