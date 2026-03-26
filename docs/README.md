@@ -1,205 +1,293 @@
-# Planfile Documentation Index
+<!-- code2docs:start --># planfile
 
-Complete documentation for the Planfile SDLC automation platform.
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-90-green)
+> **90** functions | **19** classes | **22** files | CC̄ = 5.4
 
-## 📚 Documentation Structure
+> Auto-generated project documentation from source code analysis.
 
-### Getting Started
-- [**README.md**](../README.md) - Main project documentation and quick start guide
-- [**Installation Guide**](INSTALLATION.md) - Detailed installation instructions
-- [**Quick Start Tutorial**](TUTORIAL.md) - Step-by-step tutorial for first-time users
+**Author:** Tom Sapletta  
+**License:** Apache-2.0[(LICENSE)](./LICENSE)  
+**Repository:** [https://github.com/semcod/planfile](https://github.com/semcod/planfile)
 
-### User Guides
-- [**CLI Reference**](CLI.md) - Complete command-line interface documentation
-- [**API Reference**](API.md) - Python API documentation
-- [**Configuration Guide**](CONFIGURATION.md) - Configuration options and environment variables
-- [**Strategy Schema**](STRATEGY_SCHEMA.md) - Complete strategy file schema reference
+## Installation
 
-### Integration Guides
-- [**CI/CD Integration**](CI_CD_INTEGRATION.md) - Complete CI/CD automation guide
-- [**Backend Integrations**](BACKENDS.md) - GitHub, Jira, GitLab integration setup
-- [**AI Integration**](AI_INTEGRATION.md) - LLM and AI service integration
-- [**Docker Deployment**](DOCKER.md) - Container deployment guide
+### From PyPI
 
-### Examples and Templates
-- [**Examples**](EXAMPLES.md) - Real-world examples and templates
-- [**Project Templates**](TEMPLATES.md) - Ready-to-use project templates
-- [**Best Practices**](BEST_PRACTICES.md) - Recommended practices and patterns
-
-### Advanced Topics
-- [**Custom Backends**](CUSTOM_BACKENDS.md) - Building custom backend integrations
-- [**Extending Planfile**](EXTENDING.md) - Plugin development and extensions
-- [**Performance Optimization**](PERFORMANCE.md) - Performance tuning and optimization
-- [**Security Guide**](SECURITY.md) - Security best practices and guidelines
-
-### Development
-- [**Contributing Guide**](CONTRIBUTING.md) - How to contribute to Planfile
-- [**Development Setup**](DEVELOPMENT.md) - Development environment setup
-- [**Architecture Overview**](ARCHITECTURE.md) - System architecture and design
-- [**Testing Guide**](TESTING.md) - Testing strategies and guidelines
-
-### Reference
-- [**Glossary**](GLOSSARY.md) - Terminology and definitions
-- [**FAQ**](FAQ.md) - Frequently asked questions
-- [**Troubleshooting**](TROUBLESHOOTING.md) - Common issues and solutions
-- [**Changelog**](CHANGELOG.md) - Version history and changes
-
-## 🚀 Quick Navigation
-
-### For New Users
-1. Start with [README.md](../README.md) for overview
-2. Follow [Installation Guide](INSTALLATION.md)
-3. Complete [Quick Start Tutorial](TUTORIAL.md)
-4. Explore [Examples](EXAMPLES.md)
-
-### For DevOps Engineers
-1. Read [CI/CD Integration](CI_CD_INTEGRATION.md)
-2. Set up [Backend Integrations](BACKENDS.md)
-3. Configure [Docker Deployment](DOCKER.md)
-4. Follow [Best Practices](BEST_PRACTICES.md)
-
-### For Developers
-1. Review [API Reference](API.md)
-2. Understand [Architecture Overview](ARCHITECTURE.md)
-3. Set up [Development Environment](DEVELOPMENT.md)
-4. Learn about [Extending Planfile](EXTENDING.md)
-
-### For System Administrators
-1. Read [Configuration Guide](CONFIGURATION.md)
-2. Review [Security Guide](SECURITY.md)
-3. Optimize with [Performance Guide](PERFORMANCE.md)
-4. Troubleshoot with [Troubleshooting Guide](TROUBLESHOOTING.md)
-
-## 📖 Documentation Formats
-
-### Markdown Files
-- All documentation is written in Markdown
-- Code blocks with syntax highlighting
-- Tables and structured data
-- Links and cross-references
-
-### Code Examples
 ```bash
-# CLI commands
-planfile auto loop --strategy strategy.yaml
-
-# Python API
-from strategy.models import Strategy
-strategy = Strategy.from_file("strategy.yaml")
+pip install planfile
 ```
 
-### Configuration Examples
+### From Source
+
+```bash
+git clone https://github.com/semcod/planfile
+cd planfile
+pip install -e .
+```
+
+### Optional Extras
+
+```bash
+pip install planfile[github]    # github features
+pip install planfile[jira]    # jira features
+pip install planfile[gitlab]    # gitlab features
+pip install planfile[all]    # all optional features
+pip install planfile[dev]    # development tools
+```
+
+## Quick Start
+
+### CLI Usage
+
+```bash
+# Generate full documentation for your project
+planfile ./my-project
+
+# Only regenerate README
+planfile ./my-project --readme-only
+
+# Preview what would be generated (no file writes)
+planfile ./my-project --dry-run
+
+# Check documentation health
+planfile check ./my-project
+
+# Sync — regenerate only changed modules
+planfile sync ./my-project
+```
+
+### Python API
+
+```python
+from planfile import generate_readme, generate_docs, Code2DocsConfig
+
+# Quick: generate README
+generate_readme("./my-project")
+
+# Full: generate all documentation
+config = Code2DocsConfig(project_name="mylib", verbose=True)
+docs = generate_docs("./my-project", config=config)
+```
+
+## Generated Output
+
+When you run `planfile`, the following files are produced:
+
+```
+<project>/
+├── README.md                 # Main project README (auto-generated sections)
+├── docs/
+│   ├── api.md               # Consolidated API reference
+│   ├── modules.md           # Module documentation with metrics
+│   ├── architecture.md      # Architecture overview with diagrams
+│   ├── dependency-graph.md  # Module dependency graphs
+│   ├── coverage.md          # Docstring coverage report
+│   ├── getting-started.md   # Getting started guide
+│   ├── configuration.md    # Configuration reference
+│   └── api-changelog.md    # API change tracking
+├── examples/
+│   ├── quickstart.py       # Basic usage examples
+│   └── advanced_usage.py   # Advanced usage examples
+├── CONTRIBUTING.md         # Contribution guidelines
+└── mkdocs.yml             # MkDocs site configuration
+```
+
+## Configuration
+
+Create `planfile.yaml` in your project root (or run `planfile init`):
+
 ```yaml
-# Strategy files
-name: "My Project"
-sprints:
-  - id: 1
-    name: "Foundation"
-    length_days: 14
+project:
+  name: my-project
+  source: ./
+  output: ./docs/
+
+readme:
+  sections:
+    - overview
+    - install
+    - quickstart
+    - api
+    - structure
+  badges:
+    - version
+    - python
+    - coverage
+  sync_markers: true
+
+docs:
+  api_reference: true
+  module_docs: true
+  architecture: true
+  changelog: true
+
+examples:
+  auto_generate: true
+  from_entry_points: true
+
+sync:
+  planfile: markers    # markers | full | git-diff
+  watch: false
+  ignore:
+    - "tests/"
+    - "__pycache__"
 ```
 
-## 🔍 Search and Navigation
+## Sync Markers
 
-### Finding Information
-- Use [Glossary](GLOSSARY.md) for terminology
-- Check [FAQ](FAQ.md) for common questions
-- Search [Troubleshooting](TROUBLESHOOTING.md) for issues
+planfile can update only specific sections of an existing README using HTML comment markers:
 
-### Cross-References
-- Links between related documentation
-- Back-references to related topics
-- External resources and references
+```markdown
+<!-- planfile:start -->
+# Project Title
+... auto-generated content ...
+<!-- planfile:end -->
+```
 
-## 📝 Documentation Standards
+Content outside the markers is preserved when regenerating. Enable this with `sync_markers: true` in your configuration.
 
-### Style Guidelines
-- Clear, concise language
-- Consistent formatting
-- Active voice where possible
-- Examples for every major concept
+## Architecture
 
-### Code Documentation
-- Type hints in Python examples
-- Complete command examples
-- Error handling examples
-- Best practices notes
+```
+planfile/
+├── planfile/    ├── runner        ├── yaml_loader    ├── loaders/        ├── cli_loader        ├── auto_loop    ├── cli/        ├── __main__        ├── priorities    ├── utils/        ├── metrics        ├── commands    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic├── docker-entrypoint├── project    ├── ci_runner    ├── models        ├── base```
 
-### Version Information
-- Document version compatibility
-- Note breaking changes
-- Provide migration guides
-- Include deprecated features notice
+## API Overview
 
-## 🔄 Keeping Documentation Updated
+### Classes
 
-### Documentation Review Process
-1. Regular review of all documentation
-2. Updates with each release
-3. Community feedback incorporation
-4. Accuracy verification
+- **`StrategyRunner`** — Main runner for applying and reviewing strategies.
+- **`GitLabBackend`** — GitLab Issues integration backend.
+- **`JiraBackend`** — Jira integration backend.
+- **`GitHubBackend`** — GitHub Issues integration backend.
+- **`GenericBackend`** — Generic HTTP API backend for PM systems.
+- **`TestResult`** — Result of running tests.
+- **`BugReport`** — Generated bug report from test failures.
+- **`CIRunner`** — CI/CD runner with automated bug-fix loop.
+- **`TaskType`** — Type of task in the planfile.
+- **`ModelTier`** — Model tier for different phases of work.
+- **`ModelHints`** — AI model hints for different phases of task execution.
+- **`TaskPattern`** — A pattern for generating tasks.
+- **`Sprint`** — A sprint in the planfile.
+- **`QualityGate`** — Quality gate definition.
+- **`Strategy`** — Main strategy configuration.
+- **`TicketRef`** — Reference to a created/updated ticket.
+- **`TicketStatus`** — Status of a ticket.
+- **`PMBackend`** — Protocol for PM system backends.
+- **`BasePMBackend`** — Base class for PM backends with common functionality.
 
-### Contributing to Documentation
-- Edit documentation files directly
-- Submit pull requests for improvements
-- Report documentation issues
-- Suggest new documentation topics
+### Functions
 
-## 📊 Documentation Metrics
+- `apply_strategy(strategy, project_path, backends, backend_name)` — Apply a strategy to create/update tickets.
+- `review_strategy(strategy, project_path, backends, backend_name)` — Review strategy execution by checking ticket statuses.
+- `load_yaml(file_path)` — Load YAML file and return as dictionary.
+- `save_yaml(data, file_path)` — Save dictionary to YAML file.
+- `load_strategy_yaml(file_path)` — Load strategy from YAML file.
+- `save_strategy_yaml(strategy, file_path)` — Save strategy to YAML file.
+- `load_tasks_yaml(file_path)` — Load task patterns from YAML file.
+- `merge_strategy_with_tasks(strategy, tasks_file)` — Merge additional task patterns into a planfile.
+- `validate_strategy_schema(file_path)` — Validate strategy YAML file and return list of issues.
+- `load_from_json(file_path)` — Load JSON file and return as dictionary.
+- `save_to_json(data, file_path)` — Save dictionary to JSON file.
+- `load_strategy_from_json(file_path)` — Load strategy from JSON file.
+- `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
+- `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
+- `get_backend(backend_type)` — Get backend instance by type.
+- `auto_loop(strategy, project_path, backend, max_iterations)` — Run automated CI/CD loop: test → ticket → fix → retest.
+- `ci_status(project_path)` — Check current CI status without running tests.
+- `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
+- `map_priority_to_system(priority, system)` — Map generic priority to system-specific priority.
+- `get_priority_color(priority)` — Get color code for priority (for UI display).
+- `analyze_project_metrics(project_path)` — Analyze project metrics for strategy review.
+- `calculate_strategy_health(strategy_results)` — Calculate health metrics for a strategy execution.
+- `get_backend(backend_type, config)` — Get backend instance by type and config.
+- `apply_strategy_cli(strategy_path, project_path, backend, config_file)` — Apply a strategy to create tickets.
+- `review_strategy_cli(strategy_path, project_path, backend, config_file)` — Review strategy execution and progress.
+- `validate_strategy_cli(strategy_path, verbose)` — Validate a strategy YAML file.
+- `main()` — Main CLI entry point.
+- `check_env()` — —
+- `validate_config()` — —
+- `setup_workspace()` — —
+- `run_command()` — —
+- `main()` — —
+- `main()` — CLI entry point.
 
-### Coverage Areas
-- **User Documentation**: 95% complete
-- **Developer Documentation**: 90% complete
-- **API Documentation**: 100% complete
-- **Integration Guides**: 85% complete
 
-### Quality Metrics
-- **Accuracy**: Regularly verified
-- **Completeness**: Comprehensive coverage
-- **Usability**: User-tested
-- **Accessibility**: Screen reader compatible
+## Project Structure
 
-## 🔗 External Resources
+📄 `docker-entrypoint` (5 functions)
+📦 `planfile`
+📄 `planfile.ci_runner` (10 functions, 3 classes)
+📦 `planfile.cli`
+📄 `planfile.cli.__main__`
+📄 `planfile.cli.auto_loop` (3 functions)
+📄 `planfile.cli.commands` (5 functions)
+📦 `planfile.integrations`
+📄 `planfile.integrations.base` (9 functions, 4 classes)
+📄 `planfile.integrations.generic` (8 functions, 1 classes)
+📄 `planfile.integrations.github` (7 functions, 1 classes)
+📄 `planfile.integrations.gitlab` (7 functions, 1 classes)
+📄 `planfile.integrations.jira` (9 functions, 1 classes)
+📦 `planfile.loaders`
+📄 `planfile.loaders.cli_loader` (5 functions)
+📄 `planfile.loaders.yaml_loader` (7 functions)
+📄 `planfile.models` (2 functions, 7 classes)
+📄 `planfile.runner` (8 functions, 1 classes)
+📦 `planfile.utils`
+📄 `planfile.utils.metrics` (2 functions)
+📄 `planfile.utils.priorities` (3 functions)
+📄 `project`
 
-### Official Resources
-- [Planfile Website](https://planfile.dev)
-- [PyPI Package](https://pypi.org/project/planfile/)
-- [GitHub Repository](https://github.com/semcod/strategy)
-- [Discord Community](https://discord.gg/planfile)
+## Requirements
 
-### Related Tools
-- [Typer CLI Framework](https://typer.tiangolo.com/)
-- [Rich Terminal Library](https://rich.readthedocs.io/)
-- [Pydantic Data Validation](https://pydantic-docs.helpmanual.io/)
-- [Pytest Testing Framework](https://pytest.org/)
+- Python >= >=3.10
+- typer >=0.12- rich >=13.0- pydantic >=2.0- pydantic-settings >=2.0- pyyaml >=6.0- requests >=2.31
 
-### Standards and Best Practices
-- [Python Packaging](https://packaging.python.org/)
-- [Semantic Versioning](https://semver.org/)
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [OpenAPI Specification](https://swagger.io/specification/)
+## Contributing
 
-## 📞 Getting Help
+**Contributors:**
+- Tom Softreck <tom@sapletta.com>
+- Tom Sapletta <tom-sapletta-com@users.noreply.github.com>
 
-### Documentation Issues
-- Report documentation bugs on GitHub
-- Suggest improvements via issues
-- Request new documentation topics
-- Contribute fixes directly
+We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
-### Community Support
-- Join Discord discussions
-- Ask questions on GitHub Discussions
-- Share examples and templates
-- Help other users
+### Development Setup
 
-### Professional Support
-- Enterprise support options
-- Consulting services
-- Custom training
-- Priority issue resolution
+```bash
+# Clone the repository
+git clone https://github.com/semcod/strategy
+cd strategy
 
----
+# Install in development mode
+pip install -e ".[dev]"
 
-**Planfile Documentation** - Your complete guide to SDLC automation. 🚀
+# Run tests
+pytest
+```
 
-*Last updated: January 2024*
+## Documentation
+
+- 📖 [Full Documentation](https://github.com/semcod/strategy/tree/main/docs) — API reference, module docs, architecture
+- 🚀 [Getting Started](https://github.com/semcod/strategy/blob/main/docs/getting-started.md) — Quick start guide
+- 📚 [API Reference](https://github.com/semcod/strategy/blob/main/docs/api.md) — Complete API documentation
+- 🔧 [Configuration](https://github.com/semcod/strategy/blob/main/docs/configuration.md) — Configuration options
+- 💡 [Examples](./examples) — Usage examples and code samples
+
+### Generated Files
+
+| Output | Description | Link |
+|--------|-------------|------|
+| `README.md` | Project overview (this file) | — |
+| `docs/api.md` | Consolidated API reference | [View](./docs/api.md) |
+| `docs/modules.md` | Module reference with metrics | [View](./docs/modules.md) |
+| `docs/architecture.md` | Architecture with diagrams | [View](./docs/architecture.md) |
+| `docs/dependency-graph.md` | Dependency graphs | [View](./docs/dependency-graph.md) |
+| `docs/coverage.md` | Docstring coverage report | [View](./docs/coverage.md) |
+| `docs/getting-started.md` | Getting started guide | [View](./docs/getting-started.md) |
+| `docs/configuration.md` | Configuration reference | [View](./docs/configuration.md) |
+| `docs/api-changelog.md` | API change tracking | [View](./docs/api-changelog.md) |
+| `CONTRIBUTING.md` | Contribution guidelines | [View](./CONTRIBUTING.md) |
+| `examples/` | Usage examples | [Browse](./examples) |
+| `mkdocs.yml` | MkDocs configuration | — |
+
+<!-- code2docs:end -->

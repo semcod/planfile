@@ -7,7 +7,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🚀 SprintStrat CI/CD Runner${NC}"
+echo -e "${GREEN}🚀 Planfile CI/CD Runner${NC}"
 echo "=============================="
 
 # Start Ollama in background if enabled
@@ -93,7 +93,7 @@ setup_workspace() {
     
     # Copy strategy file if provided
     if [ -n "$STRATEGY_FILE" ] && [ -f "$STRATEGY_FILE" ]; then
-        cp "$STRATEGY_FILE" "$WORKSPACE/strategy.yaml"
+        cp "$STRATEGY_FILE" "$WORKSPACE/planfile.yaml"
         echo -e "${GREEN}✅ Strategy copied to workspace${NC}"
     fi
     
@@ -135,8 +135,8 @@ run_command() {
     fi
     
     # Add strategy file if exists
-    if [ -f "strategy.yaml" ]; then
-        cmd="$cmd strategy.yaml"
+    if [ -f "planfile.yaml" ]; then
+        cmd="$cmd planfile.yaml"
     fi
     
     # Add project path

@@ -1,10 +1,10 @@
 flowchart TD
-    strategy__ci_runner["strategy.ci_runner<br/>10 funcs"]
-    strategy__cli["strategy.cli<br/>8 funcs"]
-    strategy__loaders["strategy.loaders<br/>12 funcs"]
-    strategy__runner["strategy.runner<br/>8 funcs"]
-    strategy__utils["strategy.utils<br/>5 funcs"]
-    strategy__cli -->|3| strategy__loaders
-    strategy__runner -->|2| strategy__utils
-    strategy__cli -->|2| strategy__runner
-    strategy__ci_runner -->|1| strategy__runner
+    planfile__ci_runner["planfile.ci_runner<br/>10 funcs"]
+    planfile__cli["planfile.cli<br/>8 funcs"]
+    planfile__loaders["planfile.loaders<br/>12 funcs"]
+    planfile__runner["planfile.runner<br/>8 funcs"]
+    planfile__utils["planfile.utils<br/>5 funcs"]
+    planfile__cli -->|3| planfile__loaders
+    planfile__runner -->|2| planfile__utils
+    planfile__cli -->|2| planfile__runner
+    planfile__ci_runner -->|1| planfile__runner

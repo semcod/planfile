@@ -1,13 +1,13 @@
-# SprintStrat Makefile
+# Planfile Makefile
 .PHONY: help install test docker-build docker-run ci-loop clean
 
 # Default target
 help:
-	@echo "SprintStrat CI/CD Automation"
+	@echo "Planfile CI/CD Automation"
 	@echo "============================"
 	@echo ""
 	@echo "Targets:"
-	@echo "  install      Install SprintStrat with all integrations"
+	@echo "  install      Install Planfile with all integrations"
 	@echo "  test         Run tests"
 	@echo "  docker-build Build Docker image"
 	@echo "  docker-run   Run Docker container"
@@ -30,11 +30,11 @@ test:
 
 # Docker commands
 docker-build:
-	docker build -t sprintstrat/runner:latest .
+	docker build -t planfile/runner:latest .
 
 docker-run:
-	docker-compose up -d sprintstrat-runner
-	docker-compose logs -f sprintstrat-runner
+	docker-compose up -d planfile-runner
+	docker-compose logs -f planfile-runner
 
 docker-stop:
 	docker-compose down
@@ -97,7 +97,7 @@ status:
 	planfile auto ci-status
 
 logs:
-	docker-compose logs -f sprintstrat-runner
+	docker-compose logs -f planfile-runner
 
 # Cleanup
 clean:
@@ -113,7 +113,7 @@ clean:
 
 # Release
 version:
-	@python -c "import strategy; print(strategy.__version__)"
+	@python -c "import planfile; print(planfile.__version__)"
 
 bump-patch:
 	bump2version patch
@@ -143,8 +143,8 @@ pipeline-docker:
 	make docker-build
 	docker-compose up -d
 	sleep 10
-	docker-compose exec sprintstrat-runner planfile auto loop \
-		--strategy /app/strategy.yaml \
+	docker-compose exec planfile-runner planfile auto loop \
+		--strategy /app/planfile.yaml \
 		--project /workspace \
 		--backend github \
 		--max-iterations 1
@@ -194,7 +194,7 @@ serve-docs:
 
 # Quick start
 quick-start:
-	@echo "Quick start with SprintStrat"
+	@echo "Quick start with Planfile"
 	@echo "=========================="
 	@echo "1. Install: make install"
 	@echo "2. Configure: export GITHUB_TOKEN=your_token"

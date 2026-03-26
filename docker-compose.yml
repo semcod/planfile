@@ -1,10 +1,10 @@
 version: '3.8'
 
 services:
-  sprintstrat-runner:
+  planfile-runner:
     build: .
-    image: sprintstrat/runner:latest
-    container_name: sprintstrat-ci
+    image: planfile/runner:latest
+    container_name: planfile-ci
     environment:
       # General settings
       - WORKSPACE=/workspace
@@ -17,7 +17,7 @@ services:
       - OLLAMA_MODEL=qwen2.5:3b
       
       # Strategy file (mount or copy)
-      - STRATEGY_FILE=/app/strategy.yaml
+      - STRATEGY_FILE=/app/planfile.yaml
       
       # Backend configuration
       - BACKENDS=github,jira  # Comma-separated list
@@ -51,7 +51,7 @@ services:
       - ./results:/app/results
       
       # Mount strategy file
-      - ./strategy.yaml:/app/strategy.yaml:ro
+      - ./planfile.yaml:/app/planfile.yaml:ro
       
       # Mount git config if needed
       - ~/.gitconfig:/root/.gitconfig:ro
@@ -60,14 +60,14 @@ services:
       - "11434:11434"  # Ollama API
     
     networks:
-      - sprintstrat
+      - planfile
     
     # Restart policy
     restart: unless-stopped
     
     # Health check
     healthcheck:
-      test: ["CMD", "strategy-pm", "--version"]
+      test: ["CMD", "planfile", "--version"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -76,27 +76,27 @@ services:
   # Optional: PostgreSQL for storing results
   postgres:
     image: postgres:15-alpine
-    container_name: sprintstrat-db
+    container_name: planfile-db
     environment:
-      - POSTGRES_DB=sprintstrat
-      - POSTGRES_USER=sprintstrat
+      - POSTGRES_DB=planfile
+      - POSTGRES_USER=planfile
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      - sprintstrat
+      - planfile
     restart: unless-stopped
 
   # Optional: Redis for caching
   redis:
     image: redis:7-alpine
-    container_name: sprintstrat-redis
+    container_name: planfile-redis
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     networks:
-      - sprintstrat
+      - planfile
     restart: unless-stopped
 
   # Optional: Web UI for monitoring
@@ -104,21 +104,21 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.web
-    container_name: sprintstrat-ui
+    container_name: planfile-ui
     environment:
-      - API_URL=http://sprintstrat-runner:8080
+      - API_URL=http://planfile-runner:8080
       - REDIS_URL=redis://redis:6379
     ports:
       - "3000:3000"
     networks:
-      - sprintstrat
+      - planfile
     depends_on:
-      - sprintstrat-runner
+      - planfile-runner
       - redis
     restart: unless-stopped
 
 networks:
-  sprintstrat:
+  planfile:
     driver: bridge
 
 volumes:
