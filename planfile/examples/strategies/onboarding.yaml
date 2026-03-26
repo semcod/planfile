@@ -1,4 +1,5 @@
 name: "Onboarding Strategy"
+project_name: "EmployeeOnboarding"
 project_type: "web"
 domain: "education"
 goal: "Build a comprehensive onboarding platform for new employees"
@@ -249,29 +250,16 @@ tasks:
         review: "balanced"
 
 quality_gates:
-  - name: "Security Review"
-    description: "All authentication and data handling must pass security review"
-    criteria:
-      - "OWASP top 10 vulnerabilities addressed"
-      - "Data encryption at rest and in transit"
-      - "Proper access controls implemented"
-    required: true
-
-  - name: "Performance Testing"
-    description: "System must meet performance benchmarks"
-    criteria:
-      - "Page load time under 2 seconds"
-      - "API response time under 500ms"
-      - "Support 100 concurrent users"
-    required: true
-
-  - name: "Accessibility"
-    description: "WCAG 2.1 AA compliance required"
-    criteria:
-      - "Screen reader compatible"
-      - "Keyboard navigation support"
-      - "Color contrast ratios met"
-    required: true
+  - metric: "Security"
+    threshold: "OWASP compliance verified"
+  - metric: "Performance"
+    threshold: "Page load < 2 seconds"
+  - metric: "API Response"
+    threshold: "< 500ms"
+  - metric: "Concurrent Users"
+    threshold: ">= 100"
+  - metric: "Accessibility"
+    threshold: "WCAG 2.1 AA compliant"
 
 success_metrics:
   - "90% onboarding completion rate within 30 days"
