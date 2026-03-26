@@ -1,0 +1,296 @@
+name: "E-commerce Platform MVP"
+project_type: "web"
+domain: "retail"
+goal: "Launch a minimum viable e-commerce platform with core shopping features"
+description: "Build a modern e-commerce platform focusing on user experience, performance, and scalability."
+
+sprints:
+  - id: 1
+    name: "Product Catalog & Search"
+    length_days: 10
+    objectives:
+      - Implement product management
+      - Build search functionality
+      - Create product detail pages
+    start_date: "2024-02-01"
+    tasks:
+      - "product-model"
+      - "search-engine"
+      - "product-pages"
+      - "category-navigation"
+
+  - id: 2
+    name: "Shopping Cart & Checkout"
+    length_days: 10
+    objectives:
+      - Build shopping cart
+      - Implement checkout flow
+      - Add payment integration
+    start_date: "2024-02-11"
+    tasks:
+      - "cart-system"
+      - "checkout-flow"
+      - "payment-integration"
+      - "order-management"
+
+  - id: 3
+    name: "User Account & Orders"
+    length_days: 10
+    objectives:
+      - User account management
+      - Order history
+      - Customer support features
+    start_date: "2024-02-21"
+    tasks:
+      - "user-accounts"
+      - "order-history"
+      - "wishlist"
+      - "support-chat"
+
+tasks:
+  patterns:
+    - id: "product-model"
+      type: "feature"
+      title: "Design and implement product data model"
+      description: |
+        Create comprehensive product model:
+        - Product variants (size, color)
+        - Inventory tracking
+        - Pricing tiers
+        - Product relationships
+        - SEO metadata
+      priority: "highest"
+      estimate: "3d"
+      labels: ["backend", "database"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "search-engine"
+      type: "feature"
+      title: "Implement product search with filtering"
+      description: |
+        Build advanced search functionality:
+        - Full-text search
+        - Faceted filtering
+        - Search suggestions
+        - Performance optimization
+        - Search analytics
+      priority: "high"
+      estimate: "4d"
+      labels: ["search", "performance"]
+      model_hints:
+        design: "premium"
+        implementation: "premium"
+        review: "balanced"
+
+    - id: "product-pages"
+      type: "feature"
+      title: "Create product listing and detail pages"
+      description: |
+        Build product display pages:
+        - Product grid/list views
+        - Detailed product pages
+        - Image gallery
+        - Product recommendations
+        - Social sharing
+      priority: "high"
+      estimate: "5d"
+      labels: ["frontend", "ui"]
+      model_hints:
+        design: "premium"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "category-navigation"
+      type: "feature"
+      title: "Implement category navigation system"
+      description: |
+        Create intuitive navigation:
+        - Hierarchical categories
+        - Breadcrumb navigation
+        - Mega menu
+        - Mobile navigation
+        - SEO-friendly URLs
+      priority: "medium"
+      estimate: "3d"
+      labels: ["navigation", "ui"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "cart-system"
+      type: "feature"
+      title: "Build shopping cart functionality"
+      description: |
+        Implement shopping cart:
+        - Add/remove items
+        - Quantity updates
+        - Cart persistence
+        - Guest cart support
+        - Cart sharing
+      priority: "highest"
+      estimate: "4d"
+      labels: ["cart", "core"]
+      model_hints:
+        design: "balanced"
+        implementation: "premium"
+        review: "premium"
+
+    - id: "checkout-flow"
+      type: "feature"
+      title: "Create streamlined checkout process"
+      description: |
+        Build checkout system:
+        - Multi-step checkout
+        - Address management
+        - Shipping options
+        - Order summary
+        - Guest checkout
+      priority: "highest"
+      estimate: "5d"
+      labels: ["checkout", "core"]
+      model_hints:
+        design: "premium"
+        implementation: "premium"
+        review: "premium"
+
+    - id: "payment-integration"
+      type: "feature"
+      title: "Integrate payment processing"
+      description: |
+        Add payment capabilities:
+        - Stripe integration
+        - Multiple payment methods
+        - PCI compliance
+        - Error handling
+        - Payment retries
+      priority: "highest"
+      estimate: "4d"
+      labels: ["payment", "security"]
+      model_hints:
+        design: "premium"
+        implementation: "premium"
+        review: "premium"
+
+    - id: "order-management"
+      type: "feature"
+      title: "Build order management system"
+      description: |
+        Create order processing:
+        - Order status tracking
+        - Inventory updates
+        - Email notifications
+        - Order cancellation
+        - Refund processing
+      priority: "high"
+      estimate: "4d"
+      labels: ["orders", "backend"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "user-accounts"
+      type: "feature"
+      title: "Implement user account management"
+      description: |
+        Build user system:
+        - Registration/login
+        - Profile management
+        - Address book
+        - Payment methods
+        - Order preferences
+      priority: "medium"
+      estimate: "4d"
+      labels: ["users", "auth"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "order-history"
+      type: "feature"
+      title: "Create order history and tracking"
+      description: |
+        Build order tracking:
+        - Order list with filters
+        - Detailed order views
+        - Tracking integration
+        - Reorder functionality
+        - Return requests
+      priority: "medium"
+      estimate: "3d"
+      labels: ["orders", "tracking"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "wishlist"
+      type: "feature"
+      title: "Implement wishlist functionality"
+      description: |
+        Create wishlist features:
+        - Add to wishlist
+        - Multiple wishlists
+        - Share wishlist
+        - Stock notifications
+        - Wishlist analytics
+      priority: "low"
+      estimate: "2d"
+      labels: ["wishlist", "feature"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "support-chat"
+      type: "feature"
+      title: "Add customer support chat"
+      description: |
+        Implement support system:
+        - Live chat widget
+        - Chat history
+        - File sharing
+        - Canned responses
+        - Chat analytics
+      priority: "low"
+      estimate: "3d"
+      labels: ["support", "chat"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+quality_gates:
+  - name: "Payment Security"
+    description: "Payment processing must be PCI compliant"
+    criteria:
+      - "PCI DSS compliance verified"
+      - "No card data stored on servers"
+      - "SSL/TLS encryption enforced"
+    required: true
+
+  - name: "Performance"
+    description: "Site must meet performance benchmarks"
+    criteria:
+      - "Lighthouse score > 90"
+      - "Page load under 3 seconds"
+      - "Core Web Vitals passed"
+    required: true
+
+success_metrics:
+  - "Process 1000+ orders per day"
+  - "Achieve 2% conversion rate"
+  - "Cart abandonment rate under 70%"
+  - "99.9% uptime during peak hours"
+  - "Mobile traffic > 60%"
+
+metadata:
+  platform: "React + Node.js"
+  database: "PostgreSQL + Redis"
+  hosting: "AWS"
+  team_size: 8

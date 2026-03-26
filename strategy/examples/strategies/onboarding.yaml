@@ -1,0 +1,287 @@
+name: "Onboarding Strategy"
+project_type: "web"
+domain: "education"
+goal: "Build a comprehensive onboarding platform for new employees"
+description: "This strategy focuses on creating a modern web application that helps new employees get up to speed with company processes, tools, and culture."
+
+sprints:
+  - id: 1
+    name: "Foundation & Core Features"
+    length_days: 14
+    objectives:
+      - Set up project structure and CI/CD
+      - Implement user authentication
+      - Create basic onboarding workflow
+    start_date: "2024-01-01"
+    tasks:
+      - "setup-project"
+      - "auth-system"
+      - "onboarding-workflow"
+      - "user-profile"
+
+  - id: 2
+    name: "Content Management"
+    length_days: 14
+    objectives:
+      - Build content management system
+      - Create content templates
+      - Implement media handling
+    start_date: "2024-01-15"
+    tasks:
+      - "cms-backend"
+      - "cms-frontend"
+      - "content-templates"
+      - "media-upload"
+
+  - id: 3
+    name: "Progress Tracking & Analytics"
+    length_days: 14
+    objectives:
+      - Implement progress tracking
+      - Add analytics dashboard
+      - Create reporting features
+    start_date: "2024-01-29"
+    tasks:
+      - "progress-tracking"
+      - "analytics-dashboard"
+      - "reporting-system"
+
+tasks:
+  patterns:
+    - id: "setup-project"
+      type: "feature"
+      title: "Set up project foundation"
+      description: |
+        Initialize the project with:
+        - Modern React/TypeScript frontend
+        - Python FastAPI backend
+        - PostgreSQL database
+        - Docker configuration
+        - GitHub Actions CI/CD
+        
+        Ensure all tools are properly configured and documented.
+      priority: "highest"
+      estimate: "3d"
+      labels: ["setup", "infrastructure"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "premium"
+
+    - id: "auth-system"
+      type: "feature"
+      title: "Implement authentication system"
+      description: |
+        Build a secure authentication system with:
+        - JWT token-based authentication
+        - Role-based access control (admin, hr, employee)
+        - Password reset functionality
+        - SSO integration capability
+        - Session management
+      priority: "highest"
+      estimate: "5d"
+      labels: ["auth", "security"]
+      model_hints:
+        design: "premium"
+        implementation: "premium"
+        review: "premium"
+
+    - id: "onboarding-workflow"
+      type: "feature"
+      title: "Create core onboarding workflow"
+      description: |
+        Implement the main onboarding flow:
+        - Step-by-step guided process
+        - Task checklist for new hires
+        - Document signing workflow
+        - Welcome messages and notifications
+        - Progress visualization
+      priority: "high"
+      estimate: "7d"
+      labels: ["core", "workflow"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "user-profile"
+      type: "feature"
+      title: "Build user profile management"
+      description: |
+        Create comprehensive user profiles:
+        - Personal information management
+        - Skills and experience tracking
+        - Document uploads
+        - Profile picture handling
+        - Privacy settings
+      priority: "medium"
+      estimate: "4d"
+      labels: ["user", "profile"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "cms-backend"
+      type: "feature"
+      title: "Develop CMS backend API"
+      description: |
+        Build the backend for content management:
+        - RESTful API for content CRUD
+        - Version control for content
+        - Content scheduling
+        - Multi-language support
+        - Content approval workflow
+      priority: "high"
+      estimate: "6d"
+      labels: ["api", "cms"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "cms-frontend"
+      type: "feature"
+      title: "Create CMS frontend interface"
+      description: |
+        Build the user interface for content management:
+        - Rich text editor
+        - Media library integration
+        - Content preview
+        - Drag-and-drop content builder
+        - Responsive design
+      priority: "high"
+      estimate: "5d"
+      labels: ["frontend", "cms"]
+      model_hints:
+        design: "premium"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "content-templates"
+      type: "feature"
+      title: "Implement content templates system"
+      description: |
+        Create reusable content templates:
+        - Template builder
+        - Template categories
+        - Custom variables
+        - Template preview
+        - Template versioning
+      priority: "medium"
+      estimate: "4d"
+      labels: ["templates", "cms"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "media-upload"
+      type: "feature"
+      title: "Build media upload and management"
+      description: |
+        Implement media handling:
+        - File upload with progress
+        - Image optimization
+        - Video transcoding
+        - CDN integration
+        - Access control
+      priority: "medium"
+      estimate: "3d"
+      labels: ["media", "storage"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "progress-tracking"
+      type: "feature"
+      title: "Implement progress tracking system"
+      description: |
+        Build progress tracking features:
+        - Real-time progress updates
+        - Milestone tracking
+        - Achievement badges
+        - Progress analytics
+        - Email notifications
+      priority: "high"
+      estimate: "5d"
+      labels: ["tracking", "analytics"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "analytics-dashboard"
+      type: "feature"
+      title: "Create analytics dashboard"
+      description: |
+        Build comprehensive analytics:
+        - Onboarding completion rates
+        - Time-to-productivity metrics
+        - Engagement analytics
+        - Custom reports
+        - Data visualization
+      priority: "medium"
+      estimate: "6d"
+      labels: ["dashboard", "analytics"]
+      model_hints:
+        design: "premium"
+        implementation: "balanced"
+        review: "balanced"
+
+    - id: "reporting-system"
+      type: "feature"
+      title: "Develop reporting system"
+      description: |
+        Create reporting capabilities:
+        - Automated report generation
+        - Scheduled reports
+        - Export to PDF/Excel
+        - Report templates
+        - Email delivery
+      priority: "low"
+      estimate: "4d"
+      labels: ["reporting", "analytics"]
+      model_hints:
+        design: "balanced"
+        implementation: "balanced"
+        review: "balanced"
+
+quality_gates:
+  - name: "Security Review"
+    description: "All authentication and data handling must pass security review"
+    criteria:
+      - "OWASP top 10 vulnerabilities addressed"
+      - "Data encryption at rest and in transit"
+      - "Proper access controls implemented"
+    required: true
+
+  - name: "Performance Testing"
+    description: "System must meet performance benchmarks"
+    criteria:
+      - "Page load time under 2 seconds"
+      - "API response time under 500ms"
+      - "Support 100 concurrent users"
+    required: true
+
+  - name: "Accessibility"
+    description: "WCAG 2.1 AA compliance required"
+    criteria:
+      - "Screen reader compatible"
+      - "Keyboard navigation support"
+      - "Color contrast ratios met"
+    required: true
+
+success_metrics:
+  - "90% onboarding completion rate within 30 days"
+  - "Reduce time-to-productivity by 40%"
+  - "Achieve NPS score of 8+ from new hires"
+  - "Maintain 99.9% uptime"
+  - "Support 500+ concurrent users"
+
+metadata:
+  team: "Platform Team"
+  stakeholders: ["HR", "IT", "Management"]
+  budget: "$150,000"
+  timeline: "6 weeks"
