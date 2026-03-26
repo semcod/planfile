@@ -16,10 +16,14 @@ from ..integrations.github import GitHubBackend
 from ..integrations.jira import JiraBackend
 from ..integrations.gitlab import GitLabBackend
 from ..integrations.generic import GenericBackend
+from . import auto_loop
 
 app = typer.Typer(help="Strategy CLI - Manage strategies and sprints")
 console = Console()
 logger = logging.getLogger(__name__)
+
+# Add auto subcommand
+app.add_typer(auto_loop.app, name="auto", help="Automated CI/CD commands")
 
 
 def get_backend(backend_type: str, config: dict):
@@ -320,6 +324,47 @@ def validate_strategy_cli(
     
     except Exception as e:
         console.print(f"[red]✗[/red] Validation failed: {e}")
+        raise typer.Exit(1)
+
+
+@app.command("generate")
+def generate_strategy_cli(
+    project_path: str = typer.Argument(".", help="Project path to analyze"),
+    output: str = typer.Option("strategy.yaml", help="Output file path"),
+    model: Optional[str] = typer.Option(None, help="LiteLLM model ID"),
+    sprints: int = typer.Option(3, help="Number of sprints to generate"),
+    focus: Optional[str] = typer.Option(None, help="Focus area: complexity, duplication, tests, docs"),
+    toon_dir: Optional[str] = typer.Option(None, help="Pre-existing .toon analysis directory"),
+    dry_run: bool = typer.Option(False, help="Show prompt but don't call LLM"),
+):
+    """Generate strategy.yaml from project analysis + LLM."""
+    from ..llm.generator import generate_strategy
+    from ..loaders.yaml_loader import save_strategy_yaml
+
+    try:
+        console.print(f"[bold]Analyzing project:[/bold] {project_path}")
+        
+        strategy = generate_strategy(
+            project_path,
+            model=model,
+            sprints=sprints,
+            focus=focus,
+            toon_dir=toon_dir,
+            dry_run=dry_run,
+        )
+
+        if not dry_run:
+            save_strategy_yaml(strategy, output)
+            console.print(f"[green]✓[/green] Strategy saved to: {output}")
+            console.print(f"  Sprints: {len(strategy.sprints)}")
+            total_tasks = sum(len(s.task_patterns) for s in strategy.sprints)
+            console.print(f"  Tasks: {total_tasks}")
+            
+            if strategy.quality_gates:
+                console.print(f"  Quality Gates: {len(strategy.quality_gates)}")
+    
+    except Exception as e:
+        console.print(f"[red]✗[/red] Generation failed: {e}")
         raise typer.Exit(1)
 
 

@@ -47,7 +47,7 @@ Options:
 Examples:
 ```bash
 # Basic auto-loop
-planfile auto loop --strategy strategy.yaml
+planfile auto loop --strategy planfile.yaml
 
 # With multiple backends
 planfile auto loop --strategy strategy.yaml --backend github --backend jira

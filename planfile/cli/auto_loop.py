@@ -3,7 +3,7 @@ Auto-loop CLI command for sprintstrat.
 """
 import typer
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Any
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
@@ -15,6 +15,7 @@ from ..integrations.gitlab import GitLabBackend
 import os
 
 console = Console()
+app = typer.Typer(help="Automated CI/CD commands")
 
 
 def get_backend(backend_type: str) -> Any:
@@ -77,7 +78,7 @@ def auto_loop(
     console.print()
     
     # Validate strategy exists
-    if not planfile.exists():
+    if not strategy.exists():
         console.print(f"[red]✗ Strategy file not found: {strategy}[/red]")
         raise typer.Exit(1)
     
@@ -150,7 +151,7 @@ def auto_loop(
     # Final status
     if results["success"]:
         console.print("\n[green]✅ Loop completed successfully![/green]")
-        console.print(f"Strategy '{runner.planfile.name}' is complete!")
+        console.print(f"Strategy '{strategy.name}' is complete!")
     else:
         console.print(f"\n[red]❌ Loop failed: {results['final_status']}[/red]")
         console.print(f"Total iterations: {results['total_iterations']}")
@@ -212,6 +213,4 @@ def ci_status(
             console.print(f"  • {f}")
 
 
-# Add to main CLI
-from .commands import app
-app.add_typer(typer.Typer(name="auto", help="Automated CI/CD commands"), name="auto")
+# Note: This module is imported by commands.py to add the auto subcommand

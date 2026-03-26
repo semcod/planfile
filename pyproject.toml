@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planfile"
-version = "0.1.11"
+version = "0.1.12"
 description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 license = "Apache-2.0"
@@ -28,6 +28,7 @@ dependencies = [
     "pydantic-settings>=2.0",
     "pyyaml>=6.0",
     "requests>=2.31",
+    "httpx>=0.27",
 ]
 
 [project.scripts]
@@ -37,10 +38,14 @@ planfile = "planfile.cli.commands:main"
 github = ["PyGithub>=2.0"]
 jira = ["jira>=3.5"]
 gitlab = ["python-gitlab>=4.0"]
+litellm = ["litellm>=1.40"]
+llx = ["llx>=0.2.0"]
 all = [
     "PyGithub>=2.0",
     "jira>=3.5",
     "python-gitlab>=4.0",
+    "litellm>=1.40",
+    "llx>=0.2.0",
 ]
 dev = [
     "pytest>=8.0",

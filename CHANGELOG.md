@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-03-26
+
+### Docs
+- Update docs/CLI.md
+- Update docs/README.md
+- Update planfile/examples/README.md
+
+### Other
+- Update planfile/cli/auto_loop.py
+- Update planfile/cli/commands.py
+- Update planfile/examples/bash-generation/test_planfile_generation.sh
+- Update planfile/examples/bash-generation/verify_planfile.sh
+- Update planfile/examples/ecosystem/01_full_workflow.sh
+- Update planfile/examples/ecosystem/02_mcp_integration.py
+- Update planfile/examples/ecosystem/03_proxy_routing.py
+- Update planfile/examples/ecosystem/04_llx_integration.py
+- Update planfile/examples/interactive-tests/test_interactive_expect.sh
+- Update planfile/examples/interactive-tests/test_interactive_mode.py
+- ... and 19 more files
+
 ## [0.1.11] - 2026-03-26
 
 ### Docs
