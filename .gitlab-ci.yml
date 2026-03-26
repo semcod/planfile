@@ -1,0 +1,234 @@
+# GitLab CI/CD with Auto Bug-Fix Loop
+stages:
+  - test
+  - analyze
+  - ticket
+  - fix
+  - review
+
+variables:
+  PYTHON_VERSION: "3.11"
+  AUTO_FIX: "false"  # Set to "true" to enable auto-fix
+
+# Cache pip dependencies
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+before_script:
+  - python -m venv .venv
+  - source .venv/bin/activate
+  - pip install --upgrade pip
+  - pip install strategy-pm[jira] pytest pytest-cov
+  - pip install llx
+
+# Test stage
+run_tests:
+  stage: test
+  script:
+    - echo "🧪 Running tests..."
+    - pytest --cov=src --cov-report=json --cov-report=html --junit-xml=test-results.xml -v
+  artifacts:
+    reports:
+      junit: test-results.xml
+    paths:
+      - coverage.json
+      - htmlcov/
+    expire_in: 1 week
+  coverage: '/TOTAL.+?(\d+\%)$/'
+  only:
+    - main
+    - develop
+    - merge_requests
+
+# Code analysis stage
+code_analysis:
+  stage: analyze
+  script:
+    - echo "🔍 Running code analysis..."
+    # Run llx analysis
+    - llx analyze --run --json > llx-analysis.json || true
+    # Run vallm if available
+    - vallm validate --json > vallm-report.json || true
+  artifacts:
+    paths:
+      - llx-analysis.json
+      - vallm-report.json
+    expire_in: 1 week
+  only:
+    - main
+    - develop
+    - merge_requests
+  allow_failure: true
+
+# Ticket creation stage
+create_tickets:
+  stage: ticket
+  script:
+    - echo "🎫 Creating tickets for failures..."
+    - |
+      if [ ! -f coverage.json ] || [ "$(jq '.totals.percent_covered' coverage.json)" -lt 80 ]; then
+        echo "Coverage below threshold, creating tickets..."
+        strategy-pm auto loop \
+          --strategy ./strategy.yaml \
+          --project . \
+          --backend jira \
+          --max-iterations 1 \
+          --output ci-results.json
+      else
+        echo "Tests passed, no tickets needed"
+      fi
+  artifacts:
+    paths:
+      - ci-results.json
+    expire_in: 1 week
+  dependencies:
+    - run_tests
+    - code_analysis
+  only:
+    - main
+    - develop
+
+# Auto-fix stage (optional)
+auto_fix:
+  stage: fix
+  script:
+    - echo "🔧 Attempting auto-fix..."
+    - strategy-pm auto loop \
+        --strategy ./strategy.yaml \
+        --project . \
+        --backend jira \
+        --max-iterations 3 \
+        --auto-fix \
+        --output fix-results.json
+  artifacts:
+    paths:
+      - fix-results.json
+    expire_in: 1 week
+  dependencies:
+    - create_tickets
+  only:
+    - main
+    - develop
+  when: manual
+  allow_failure: true
+
+# Strategy review
+review_strategy:
+  stage: review
+  script:
+    - echo "📊 Reviewing strategy..."
+    - |
+      # Check if strategy is complete
+      strategy-pm strategy review \
+        --strategy ./strategy.yaml \
+        --project . \
+        --backend jira \
+        --output review-results.json
+      
+      # Update Jira with status
+      python - <<'EOF'
+import os
+import json
+from strategy.integrations.jira import JiraBackend
+
+if os.path.exists('review-results.json'):
+    with open('review-results.json') as f:
+        results = json.load(f)
+    
+    jira = JiraBackend(
+        base_url=os.environ['JIRA_URL'],
+        email=os.environ['JIRA_EMAIL'],
+        token=os.environ['JIRA_TOKEN'],
+        project=os.environ['JIRA_PROJECT']
+    )
+    
+    # Find or create sprint ticket
+    summary = f"Sprint Review - {os.environ['CI_COMMIT_REF_NAME']}"
+    description = f"""
+    Pipeline: {os.environ['CI_PIPELINE_URL']}
+    Commit: {os.environ['CI_COMMIT_SHA']}
+    
+    Results:
+    - Status: {results.get('summary', {}).get('status', 'Unknown')}
+    - Completed: {results.get('summary', {}).get('completed', 0)}
+    - In Progress: {results.get('summary', {}).get('in_progress', 0)}
+    - Blocked: {results.get('summary', {}).get('blocked', 0)}
+    """
+    
+    # Update or create ticket
+    tickets = jira.search_tickets(f"summary~'{summary}'")
+    if tickets:
+        jira.update_ticket(tickets[0].id, description=description)
+    else:
+        jira.create_ticket(title=summary, description=description, labels=["sprint-review"])
+EOF
+  artifacts:
+    paths:
+      - review-results.json
+    expire_in: 1 week
+  dependencies:
+    - auto_fix
+    - create_tickets
+  only:
+    - main
+    - develop
+
+# Notify on failure
+notify_failure:
+  stage: review
+  script:
+    - echo "📧 Sending failure notification..."
+    - |
+      if [ -f ci-results.json ]; then
+        # Send Slack notification
+        curl -X POST -H 'Content-type: application/json' \
+          --data "{
+            \"text\": \"❌ Pipeline failed on $CI_PROJECT_NAME\nBranch: $CI_COMMIT_REF_NAME\nPipeline: $CI_PIPELINE_URL\"
+          }" \
+          $SLACK_WEBHOOK_URL || true
+        
+        # Send email notification
+        python - <<'EOF'
+import smtplib
+import os
+from email.mime.text import MIMEText
+
+if os.environ.get('SMTP_HOST'):
+    msg = MIMEText(f"""
+    Pipeline failed on {os.environ['CI_PROJECT_NAME']}
+    
+    Branch: {os.environ['CI_COMMIT_REF_NAME']}
+    Commit: {os.environ['CI_COMMIT_SHA']}
+    Pipeline: {os.environ['CI_PIPELINE_URL']}
+    
+    Check the logs for details.
+    """)
+    
+    msg['Subject'] = f"CI/CD Failure: {os.environ['CI_PROJECT_NAME']}"
+    msg['From'] = os.environ['SMTP_FROM']
+    msg['To'] = os.environ['SMTP_TO']
+    
+    server = smtplib.SMTP(os.environ['SMTP_HOST'])
+    server.send_message(msg)
+    server.quit()
+EOF
+      fi
+  when: on_failure
+  only:
+    - main
+    - develop
+
+# Deploy on success
+deploy:
+  stage: review
+  script:
+    - echo "🚀 Deploying..."
+    # Add your deployment commands here
+  when: on_success
+  only:
+    - main
+  environment:
+    name: production
+    url: https://your-app.com

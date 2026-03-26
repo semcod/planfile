@@ -1,0 +1,66 @@
+# code2llm | 19f 2500L | python:18,shell:1 | 2026-03-26
+# CC̄=5.4 | critical:5/72 | dups:0 | cycles:0
+
+HEALTH[5]:
+  🟡 CC    validate_strategy_schema CC=17 (limit:15)
+  🟡 CC    export_results_to_markdown CC=19 (limit:15)
+  🟡 CC    analyze_project_metrics CC=16 (limit:15)
+  🟡 CC    apply_strategy_cli CC=18 (limit:15)
+  🟡 CC    update_ticket CC=15 (limit:15)
+
+REFACTOR[1]:
+  1. split 5 high-CC methods  (CC>15)
+
+PIPELINES[53]:
+  [1] Src [save_strategy_yaml]: save_strategy_yaml → save_yaml
+      PURITY: 100% pure
+  [2] Src [merge_strategy_with_tasks]: merge_strategy_with_tasks → load_tasks_yaml → load_yaml
+      PURITY: 100% pure
+  [3] Src [validate_strategy_schema]: validate_strategy_schema → load_yaml
+      PURITY: 100% pure
+  [4] Src [_find_task_pattern]: _find_task_pattern
+      PURITY: 100% pure
+  [5] Src [_create_ticket_for_task]: _create_ticket_for_task → calculate_task_priority
+      PURITY: 100% pure
+
+LAYERS:
+  strategy/                       CC̄=5.4    ←in:2  →out:2
+  │ !! commands                   328L  0C    5m  CC=18     ←0
+  │ runner                     324L  1C    8m  CC=13     ←1
+  │ jira                       276L  1C    9m  CC=13     ←0
+  │ !! gitlab                     230L  1C    7m  CC=15     ←0
+  │ !! yaml_loader                225L  0C    7m  CC=17     ←1
+  │ !! metrics                    201L  0C    2m  CC=16     ←1
+  │ generic                    197L  1C    8m  CC=8      ←0
+  │ github                     193L  1C    7m  CC=14     ←0
+  │ !! cli_loader                 158L  0C    5m  CC=19     ←0
+  │ base                       112L  4C    9m  CC=4      ←0
+  │ priorities                 111L  0C    3m  CC=4      ←1
+  │ models                      97L  7C    2m  CC=3      ←0
+  │ __init__                    23L  0C    0m  CC=0.0    ←0
+  │ __main__                     4L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │
+  ./                              CC̄=0.0    ←in:0  →out:0
+  │ project.sh                  21L  0C    0m  CC=0.0    ←0
+  │
+  ── zero ──
+     strategy/cli/__init__.py                  0L
+     strategy/integrations/__init__.py         0L
+     strategy/loaders/__init__.py              0L
+     strategy/utils/__init__.py                0L
+
+COUPLING:
+                        strategy.cli          strategy  strategy.loaders    strategy.utils
+      strategy.cli                ──                 2                 3                  
+          strategy                ←2                ──                                   2
+  strategy.loaders                ←3                                  ──                  
+    strategy.utils                                  ←2                                  ──
+  CYCLES: none
+
+EXTERNAL:
+  validation: run `vallm batch .` → validation.toon
+  duplication: run `redup scan .` → duplication.toon

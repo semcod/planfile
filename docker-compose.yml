@@ -1,0 +1,126 @@
+version: '3.8'
+
+services:
+  sprintstrat-runner:
+    build: .
+    image: sprintstrat/runner:latest
+    container_name: sprintstrat-ci
+    environment:
+      # General settings
+      - WORKSPACE=/workspace
+      - RESULTS_DIR=/app/results
+      - MAX_ITERATIONS=5
+      - AUTO_FIX=false
+      
+      # Ollama settings
+      - ENABLE_OLLAMA=true
+      - OLLAMA_MODEL=qwen2.5:3b
+      
+      # Strategy file (mount or copy)
+      - STRATEGY_FILE=/app/strategy.yaml
+      
+      # Backend configuration
+      - BACKENDS=github,jira  # Comma-separated list
+      
+      # GitHub settings
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_REPO=${GITHUB_REPO}
+      
+      # Jira settings
+      - JIRA_URL=${JIRA_URL}
+      - JIRA_EMAIL=${JIRA_EMAIL}
+      - JIRA_TOKEN=${JIRA_TOKEN}
+      - JIRA_PROJECT=${JIRA_PROJECT}
+      
+      # GitLab settings
+      - GITLAB_URL=${GITLAB_URL:-https://gitlab.com}
+      - GITLAB_TOKEN=${GITLAB_TOKEN}
+      - GITLAB_PROJECT_ID=${GITLAB_PROJECT_ID}
+      
+      # Repository to analyze (optional)
+      - GIT_REPO=${GIT_REPO}
+      
+      # Output settings
+      - OUTPUT_FILE=/app/results/ci-results.json
+    
+    volumes:
+      # Mount workspace directory
+      - ./workspace:/workspace
+      
+      # Mount results directory
+      - ./results:/app/results
+      
+      # Mount strategy file
+      - ./strategy.yaml:/app/strategy.yaml:ro
+      
+      # Mount git config if needed
+      - ~/.gitconfig:/root/.gitconfig:ro
+    
+    ports:
+      - "11434:11434"  # Ollama API
+    
+    networks:
+      - sprintstrat
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "strategy-pm", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: PostgreSQL for storing results
+  postgres:
+    image: postgres:15-alpine
+    container_name: sprintstrat-db
+    environment:
+      - POSTGRES_DB=sprintstrat
+      - POSTGRES_USER=sprintstrat
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - sprintstrat
+    restart: unless-stopped
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: sprintstrat-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - sprintstrat
+    restart: unless-stopped
+
+  # Optional: Web UI for monitoring
+  web-ui:
+    build: 
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: sprintstrat-ui
+    environment:
+      - API_URL=http://sprintstrat-runner:8080
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "3000:3000"
+    networks:
+      - sprintstrat
+    depends_on:
+      - sprintstrat-runner
+      - redis
+    restart: unless-stopped
+
+networks:
+  sprintstrat:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

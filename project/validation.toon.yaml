@@ -1,0 +1,74 @@
+# vallm batch | 40f | 13✓ 1⚠ 13✗ | 2026-03-26
+
+SUMMARY:
+  scanned: 40  passed: 13 (32.5%)  warnings: 1  errors: 13  unsupported: 14
+
+WARNINGS[1]{path,score}:
+  strategy/utils/metrics.py,0.93
+    issues[3]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,analyze_project_metrics has cyclomatic complexity 16 (max: 15),8
+      complexity.lizard_cc,warning,analyze_project_metrics: CC=16 exceeds limit 15,8
+      complexity.lizard_length,warning,analyze_project_metrics: 110 lines exceeds limit 100,8
+
+ERRORS[13]{path,score}:
+  strategy/__init__.py,0.57
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,14
+  strategy/cli/__main__.py,0.57
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'commands' not found,1
+  tests/test_strategy.py,0.57
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'strategy' not found,11
+  strategy/integrations/github.py,0.71
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'github' not found,3
+      python.import.resolvable,error,Module 'github.Issue' not found,4
+      python.import.resolvable,error,Module 'github.Repository' not found,5
+      python.import.resolvable,error,Module 'base' not found,7
+  test_strategy.py,0.71
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'strategy.models' not found,4
+      python.import.resolvable,error,Module 'strategy.loaders.yaml_loader' not found,5
+  strategy/integrations/gitlab.py,0.74
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'gitlab' not found,3
+      python.import.resolvable,error,Module 'gitlab.exceptions' not found,4
+      python.import.resolvable,error,Module 'base' not found,6
+  strategy/integrations/jira.py,0.74
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'jira' not found,3
+      python.import.resolvable,error,Module 'jira.exceptions' not found,4
+      python.import.resolvable,error,Module 'base' not found,6
+  strategy/runner.py,0.79
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,6
+      python.import.resolvable,error,Module 'integrations.base' not found,7
+      python.import.resolvable,error,Module 'utils.metrics' not found,8
+      python.import.resolvable,error,Module 'utils.priorities' not found,9
+  strategy/utils/priorities.py,0.79
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,2
+  strategy/cli/commands.py,0.82
+    issues[7]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,12
+      python.import.resolvable,error,Module 'runner' not found,13
+      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,14
+      python.import.resolvable,error,Module 'integrations.github' not found,15
+      python.import.resolvable,error,Module 'integrations.jira' not found,16
+      python.import.resolvable,error,Module 'integrations.gitlab' not found,17
+      python.import.resolvable,error,Module 'integrations.generic' not found,18
+  strategy/integrations/generic.py,0.89
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'base' not found,5
+  strategy/loaders/cli_loader.py,0.89
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,5
+  strategy/loaders/yaml_loader.py,0.91
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,6
+
+UNSUPPORTED[3]{bucket,count}:
+  *.md,7
+  *.txt,1
+  other,6
