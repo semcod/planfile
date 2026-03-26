@@ -1,7 +1,11 @@
 import os
 from typing import Optional, List, Dict, Any
-from jira import JIRA
-from jira.exceptions import JIRAError
+try:
+    from jira import JIRA
+    from jira.exceptions import JIRAError
+except ImportError:
+    JIRA = None
+    JIRAError = None  # pip install jira
 
 from .base import BasePMBackend, TicketRef, TicketStatus
 
@@ -26,6 +30,9 @@ class JiraBackend(BasePMBackend):
             token: API token (defaults to JIRA_TOKEN env var)
             project: Project key (defaults to JIRA_PROJECT env var)
         """
+        if JIRA is None:
+            raise ImportError("jira is required. Install with: pip install jira")
+            
         config = {
             "base_url": base_url,
             "email": email or os.environ.get("JIRA_EMAIL"),

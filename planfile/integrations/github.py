@@ -1,8 +1,13 @@
 import os
 from typing import Optional, List, Dict, Any
-from github import Github
-from github.Issue import Issue
-from github.Repository import Repository
+try:
+    from github import Github
+    from github.Issue import Issue
+    from github.Repository import Repository
+except ImportError:
+    Github = None
+    Issue = None
+    Repository = None  # pip install PyGithub
 
 from .base import BasePMBackend, TicketRef, TicketStatus
 
@@ -18,6 +23,9 @@ class GitHubBackend(BasePMBackend):
             repo: Repository in format "owner/repo"
             token: GitHub token (defaults to GITHUB_TOKEN env var)
         """
+        if Github is None:
+            raise ImportError("PyGithub is required. Install with: pip install PyGithub")
+            
         config = {
             "repo": repo,
             "token": token or os.environ.get("GITHUB_TOKEN"),

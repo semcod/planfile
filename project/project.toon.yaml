@@ -1,4 +1,4 @@
-# strategy | 90 func | 15f | 3414L | python | 2026-03-26
+# strategy | 90 func | 15f | 4149L | python | 2026-03-26
 
 HEALTH:
   CC̄=5.1  critical=15 (limit:10)  dup=0  cycles=0
@@ -51,4 +51,4 @@ REFACTOR[9]:
   [5] M/L Split analyze_project_metrics (CC=16 → target CC<10)
 
 EVOLUTION:
-  2026-03-26 CC̄=5.1 crit=15 3414L // Automated analysis
+  2026-03-26 CC̄=5.1 crit=15 4149L // Automated analysis

@@ -1,4 +1,4 @@
-<!-- code2docs:start --># planfile
+<!-- code2docs:start --># strategy
 
 ![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-90-green)
 > **90** functions | **19** classes | **22** files | CC̄ = 5.4
@@ -7,32 +7,32 @@
 
 **Author:** Tom Sapletta  
 **License:** Apache-2.0[(LICENSE)](./LICENSE)  
-**Repository:** [https://github.com/semcod/planfile](https://github.com/semcod/planfile)
+**Repository:** [https://github.com/semcod/strategy](https://github.com/semcod/strategy)
 
 ## Installation
 
 ### From PyPI
 
 ```bash
-pip install planfile
+pip install strategy
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/semcod/planfile
-cd planfile
+git clone https://github.com/semcod/strategy
+cd strategy
 pip install -e .
 ```
 
 ### Optional Extras
 
 ```bash
-pip install planfile[github]    # github features
-pip install planfile[jira]    # jira features
-pip install planfile[gitlab]    # gitlab features
-pip install planfile[all]    # all optional features
-pip install planfile[dev]    # development tools
+pip install strategy[github]    # github features
+pip install strategy[jira]    # jira features
+pip install strategy[gitlab]    # gitlab features
+pip install strategy[all]    # all optional features
+pip install strategy[dev]    # development tools
 ```
 
 ## Quick Start
@@ -41,25 +41,25 @@ pip install planfile[dev]    # development tools
 
 ```bash
 # Generate full documentation for your project
-planfile ./my-project
+strategy ./my-project
 
 # Only regenerate README
-planfile ./my-project --readme-only
+strategy ./my-project --readme-only
 
 # Preview what would be generated (no file writes)
-planfile ./my-project --dry-run
+strategy ./my-project --dry-run
 
 # Check documentation health
-planfile check ./my-project
+strategy check ./my-project
 
 # Sync — regenerate only changed modules
-planfile sync ./my-project
+strategy sync ./my-project
 ```
 
 ### Python API
 
 ```python
-from planfile import generate_readme, generate_docs, Code2DocsConfig
+from strategy import generate_readme, generate_docs, Code2DocsConfig
 
 # Quick: generate README
 generate_readme("./my-project")
@@ -71,7 +71,7 @@ docs = generate_docs("./my-project", config=config)
 
 ## Generated Output
 
-When you run `planfile`, the following files are produced:
+When you run `strategy`, the following files are produced:
 
 ```
 <project>/
@@ -94,7 +94,7 @@ When you run `planfile`, the following files are produced:
 
 ## Configuration
 
-Create `planfile.yaml` in your project root (or run `planfile init`):
+Create `strategy.yaml` in your project root (or run `strategy init`):
 
 ```yaml
 project:
@@ -126,7 +126,7 @@ examples:
   from_entry_points: true
 
 sync:
-  planfile: markers    # markers | full | git-diff
+  strategy: markers    # markers | full | git-diff
   watch: false
   ignore:
     - "tests/"
@@ -135,13 +135,13 @@ sync:
 
 ## Sync Markers
 
-planfile can update only specific sections of an existing README using HTML comment markers:
+strategy can update only specific sections of an existing README using HTML comment markers:
 
 ```markdown
-<!-- planfile:start -->
+<!-- strategy:start -->
 # Project Title
 ... auto-generated content ...
-<!-- planfile:end -->
+<!-- strategy:end -->
 ```
 
 Content outside the markers is preserved when regenerating. Enable this with `sync_markers: true` in your configuration.
@@ -149,8 +149,8 @@ Content outside the markers is preserved when regenerating. Enable this with `sy
 ## Architecture
 
 ```
-planfile/
-├── planfile/    ├── runner        ├── yaml_loader    ├── loaders/        ├── cli_loader        ├── auto_loop    ├── cli/        ├── __main__        ├── priorities    ├── utils/        ├── metrics        ├── commands    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic├── docker-entrypoint├── project    ├── ci_runner    ├── models        ├── base```
+strategy/
+├── planfile/        ├── yaml_loader        ├── cli_loader    ├── loaders/    ├── runner        ├── auto_loop    ├── cli/        ├── __main__        ├── priorities    ├── utils/        ├── commands        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic├── docker-entrypoint├── project    ├── ci_runner    ├── models        ├── base```
 
 ## API Overview
 
@@ -178,8 +178,6 @@ planfile/
 
 ### Functions
 
-- `apply_strategy(strategy, project_path, backends, backend_name)` — Apply a strategy to create/update tickets.
-- `review_strategy(strategy, project_path, backends, backend_name)` — Review strategy execution by checking ticket statuses.
 - `load_yaml(file_path)` — Load YAML file and return as dictionary.
 - `save_yaml(data, file_path)` — Save dictionary to YAML file.
 - `load_strategy_yaml(file_path)` — Load strategy from YAML file.
@@ -192,19 +190,21 @@ planfile/
 - `load_strategy_from_json(file_path)` — Load strategy from JSON file.
 - `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
 - `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
+- `apply_strategy(strategy, project_path, backends, backend_name)` — Apply a strategy to create/update tickets.
+- `review_strategy(strategy, project_path, backends, backend_name)` — Review strategy execution by checking ticket statuses.
 - `get_backend(backend_type)` — Get backend instance by type.
 - `auto_loop(strategy, project_path, backend, max_iterations)` — Run automated CI/CD loop: test → ticket → fix → retest.
 - `ci_status(project_path)` — Check current CI status without running tests.
 - `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
 - `map_priority_to_system(priority, system)` — Map generic priority to system-specific priority.
 - `get_priority_color(priority)` — Get color code for priority (for UI display).
-- `analyze_project_metrics(project_path)` — Analyze project metrics for strategy review.
-- `calculate_strategy_health(strategy_results)` — Calculate health metrics for a strategy execution.
 - `get_backend(backend_type, config)` — Get backend instance by type and config.
 - `apply_strategy_cli(strategy_path, project_path, backend, config_file)` — Apply a strategy to create tickets.
 - `review_strategy_cli(strategy_path, project_path, backend, config_file)` — Review strategy execution and progress.
 - `validate_strategy_cli(strategy_path, verbose)` — Validate a strategy YAML file.
 - `main()` — Main CLI entry point.
+- `analyze_project_metrics(project_path)` — Analyze project metrics for strategy review.
+- `calculate_strategy_health(strategy_results)` — Calculate health metrics for a strategy execution.
 - `check_env()` — —
 - `validate_config()` — —
 - `setup_workspace()` — —

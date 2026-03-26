@@ -1,7 +1,11 @@
 import os
 from typing import Optional, List, Dict, Any
-import gitlab
-from gitlab.exceptions import GitlabError
+try:
+    import gitlab
+    from gitlab.exceptions import GitlabError
+except ImportError:
+    gitlab = None
+    GitlabError = None  # pip install python-gitlab
 
 from .base import BasePMBackend, TicketRef, TicketStatus
 
@@ -24,6 +28,9 @@ class GitLabBackend(BasePMBackend):
             token: GitLab token (defaults to GITLAB_TOKEN env var)
             project_id: Project ID (defaults to GITLAB_PROJECT_ID env var)
         """
+        if gitlab is None:
+            raise ImportError("python-gitlab is required. Install with: pip install python-gitlab")
+            
         config = {
             "url": url,
             "token": token or os.environ.get("GITLAB_TOKEN"),
