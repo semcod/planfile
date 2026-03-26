@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-03-26
+
+### Docs
+- Update README.md
+- Update README_OLD.md
+- Update docs/API.md
+- Update docs/CI_CD_INTEGRATION.md
+- Update docs/CI_CD_INTEGRATION_OLD.md
+
+### Other
+- Update Makefile
+- Update VERSION
+- Update docker-entrypoint.sh
+- Update strategy/__init__.py
+
 ## [0.1.7] - 2026-03-26
 
 ### Other

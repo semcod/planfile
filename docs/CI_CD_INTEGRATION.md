@@ -1,10 +1,10 @@
-# SprintStrat CI/CD Integration
+# Planfile CI/CD Integration
 
 Complete automation for bug-fix loop: tests → tickets → fixes → retests.
 
 ## Overview
 
-SprintStrat provides automated CI/CD integration that:
+Planfile provides automated CI/CD integration that:
 - Runs tests and code analysis
 - Generates bug reports using LLM when tests fail
 - Creates tickets in PM systems (GitHub, Jira, GitLab)
@@ -16,7 +16,7 @@ SprintStrat provides automated CI/CD integration that:
 ### 1. Install
 
 ```bash
-pip install strategy-pm[all]
+pip install planfile[all]
 pip install llx  # For AI analysis
 ```
 
@@ -36,12 +36,16 @@ export JIRA_PROJECT=PROJ
 # GitLab
 export GITLAB_TOKEN=your_token
 export GITLAB_PROJECT_ID=123
+
+# AI Services (optional)
+export OPENAI_API_KEY=your_key
+export ANTHROPIC_API_KEY=your_key
 ```
 
 ### 3. Run Auto-Loop
 
 ```bash
-strategy-pm auto loop \
+planfile auto loop \
   --strategy ./strategy.yaml \
   --project . \
   --backend github \
@@ -50,423 +54,429 @@ strategy-pm auto loop \
   --auto-fix
 ```
 
-## CLI Commands
+## 🔄 Auto-Loop Process
 
-### auto loop
-
-Run the complete CI/CD loop:
-
+### Phase 1: Test Execution
 ```bash
-strategy-pm auto loop [OPTIONS] STRATEGY_PATH PROJECT_PATH
+# Run your test suite
+pytest tests/ -v --cov=src
+
+# Code quality checks
+ruff check src/
+mypy src/
 ```
 
-Options:
-- `--backend, -b`: PM backends (github, jira, gitlab)
-- `--max-iterations, -m`: Max iterations (default: 10)
-- `--auto-fix, -a`: Enable LLM auto-fix
-- `--output, -o`: Save results to file
-- `--dry-run, -d`: Simulate without creating tickets
+### Phase 2: Bug Detection
+- Identify failing tests
+- Analyze code quality issues
+- Check security vulnerabilities
+- Detect performance regressions
 
-Example:
-```bash
-strategy-pm auto loop \
-  --strategy strategy.yaml \
-  --project . \
-  --backend github \
-  --max-iterations 3 \
-  --auto-fix \
-  --output results.json
+### Phase 3: AI Analysis
+```python
+# Generate bug report
+bug_report = llx.analyze_failure(
+    test_output=test_results,
+    code_context=source_code,
+    error_type="test_failure"
+)
 ```
 
-### auto ci-status
-
-Check current CI status:
-
-```bash
-strategy-pm auto ci-status --project .
-```
-
-## CI/CD Platform Integration
-
-### GitHub Actions
-
-Create `.github/workflows/ci-auto-loop.yml`:
-
+### Phase 4: Ticket Creation
 ```yaml
-name: CI/CD with Auto Bug-Fix Loop
+# GitHub Issue
+title: "Fix: Authentication module test failures"
+body: |
+  ## Bug Report
+  **Test**: `test_auth_login_invalid_credentials`
+  **Error**: `AssertionError: Expected 401, got 500`
+  
+  ## Root Cause
+  The authentication service is not properly handling invalid credentials,
+  causing a server error instead of returning 401 Unauthorized.
+  
+  ## Suggested Fix
+  Update the `auth_service.py` to catch validation errors and return
+  appropriate HTTP status codes.
+  
+  ## Files Affected
+  - `src/auth/auth_service.py`
+  - `tests/test_auth.py`
+```
+
+### Phase 5: Auto-Fix (Optional)
+```python
+# Generate fix code
+fix_code = llx.generate_fix(
+    bug_report=bug_report,
+    source_code=auth_service_code,
+    context="authentication_error_handling"
+)
+
+# Apply fix
+apply_fix(fix_code, file_path="src/auth/auth_service.py")
+```
+
+### Phase 6: Verification
+```bash
+# Re-run tests
+pytest tests/test_auth.py -v
+
+# Verify fix
+if tests_pass:
+    close_ticket(ticket_id)
+else:
+    update_ticket_status(ticket_id, "needs_review")
+```
+
+## 🐳 Docker Integration
+
+### Dockerfile
+```dockerfile
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Planfile
+RUN pip install planfile[all]
+
+# Copy project
+WORKDIR /workspace
+COPY . .
+
+# Run auto-loop
+CMD ["planfile", "auto", "loop", "--strategy", "strategy.yaml"]
+```
+
+### Docker Compose
+```yaml
+version: '3.8'
+services:
+  planfile-runner:
+    build: .
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_REPO=${GITHUB_REPO}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - .:/workspace
+      - ./results:/app/results
+    command: planfile auto loop --strategy strategy.yaml --max-iterations 10
+```
+
+## 🔧 Configuration
+
+### Strategy Configuration
+```yaml
+name: "CI/CD Automation Strategy"
+project_type: "web"
+domain: "software"
+
+sprints:
+  - id: 1
+    name: "Bug Fix Sprint"
+    length_days: 7
+    quality_gates:
+      - type: "test_coverage"
+        threshold: 80
+      - type: "security_scan"
+        threshold: "no_critical"
+    tasks:
+      - type: "bug_fix"
+        pattern: "test_failure"
+        auto_fix: true
+        priority: "high"
+```
+
+### Quality Gates
+```yaml
+quality_gates:
+  - name: "Test Coverage"
+    type: "coverage"
+    threshold: 80
+    command: "pytest --cov=src --cov-report=xml"
+    
+  - name: "Security Scan"
+    type: "security"
+    threshold: "no_critical"
+    command: "bandit -r src/"
+    
+  - name: "Code Quality"
+    type: "quality"
+    threshold: "no_issues"
+    command: "ruff check src/"
+```
+
+## 🚀 GitHub Actions
+
+### Workflow Configuration
+```yaml
+name: Planfile Auto-Loop
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
     branches: [main]
 
 jobs:
-  ci-loop:
+  auto-loop:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
-    
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
-      
-      - name: Install dependencies
-        run: |
-          pip install strategy-pm[github] pytest
-          pip install llx
-      
-      - name: Run CI Auto-Loop
+          python-version: '3.11'
+          
+      - name: Install Planfile
+        run: pip install planfile[all]
+        
+      - name: Run Auto-Loop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO: ${{ github.repository }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          strategy-pm auto loop \
-            --strategy ./strategy.yaml \
+          planfile auto loop \
+            --strategy .github/strategy.yaml \
             --project . \
             --backend github \
-            --max-iterations 5 \
-            --output ci-results.json
+            --max-iterations 3 \
+            --auto-fix
 ```
 
-### GitLab CI
+## 📊 Monitoring and Reporting
 
-Create `.gitlab-ci.yml`:
+### Progress Tracking
+```bash
+# Check CI status
+planfile auto ci-status
 
+# View detailed results
+planfile auto results --format json
+
+# Generate report
+planfile strategy report \
+  --strategy strategy.yaml \
+  --output ci-report.md
+```
+
+### Metrics Collection
 ```yaml
-stages:
-  - test
-  - ticket
-  - fix
-
-run_tests:
-  stage: test
-  script:
-    - pip install strategy-pm[jira] pytest
-    - pytest --cov=src --cov-report=json
-  artifacts:
-    reports:
-      junit: test-results.xml
-    paths:
-      - coverage.json
-
-create_tickets:
-  stage: ticket
-  script:
-    - strategy-pm auto loop \
-        --strategy ./strategy.yaml \
-        --project . \
-        --backend jira \
-        --max-iterations 1
-  dependencies:
-    - run_tests
-```
-
-### Jenkins Pipeline
-
-```groovy
-pipeline {
-    agent any
+metrics:
+  - name: "bug_fix_rate"
+    type: "percentage"
+    target: 95
     
-    environment {
-        GITHUB_TOKEN = credentials('github-token')
-        JIRA_TOKEN = credentials('jira-token')
-    }
+  - name: "test_coverage"
+    type: "percentage"
+    target: 80
     
-    stages {
-        stage('Test') {
-            steps {
-                sh 'pip install strategy-pm[github,jira] pytest'
-                sh 'pytest --cov=src --cov-report=json'
-            }
-        }
-        
-        stage('Auto-Loop') {
-            steps {
-                script {
-                    sh '''
-                        strategy-pm auto loop \
-                            --strategy ./strategy.yaml \
-                            --project . \
-                            --backend github \
-                            --backend jira \
-                            --max-iterations 5 \
-                            --output ci-results.json
-                    '''
-                }
-            }
-        }
-    }
-}
+  - name: "auto_fix_success"
+    type: "percentage"
+    target: 70
 ```
 
-## Docker Integration
+## 🔄 Integration Examples
 
-### Build Image
-
-```bash
-docker build -t sprintstrat/runner:latest .
-```
-
-### Run with Docker Compose
-
-```bash
-# Configure environment
-cp .env.example .env
-# Edit .env with your tokens
-
-# Run
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-```
-
-### Docker Run
-
-```bash
-docker run -e GITHUB_TOKEN=$GITHUB_TOKEN \
-           -e GITHUB_REPO=owner/repo \
-           -v $(pwd)/strategy.yaml:/app/strategy.yaml:ro \
-           -v $(pwd)/workspace:/workspace \
-           sprintstrat/runner:latest \
-           strategy.yaml /workspace
-```
-
-## Configuration
-
-### Strategy File
-
-Your `strategy.yaml` should include:
-
-```yaml
-name: "CI/CD Strategy"
-project_type: "web"
-domain: "your-domain"
-goal:
-  short: "Automated CI/CD with bug-fix loop"
-  quality:
-    - "Test coverage > 80%"
-    - "All tests passing"
-  delivery:
-    - "Tickets created for failures"
-    - "Auto-fix applied when possible"
-
-sprints:
-  - id: 1
-    name: "CI/CD Loop"
-    objectives:
-      - "Run tests"
-      - "Fix failures"
-      - "Maintain coverage"
-    tasks: ["bug", "feature"]
-
-tasks:
-  patterns:
-    - id: "bug"
-      type: "bug"
-      title: "Auto: {test_name} failure"
-      description: |
-        Test failure detected:
-        - Test: {test_name}
-        - Coverage: {coverage}%
-        - Error: {error_message}
-      priority: "high"
-      model_hints:
-        triage: "balanced"
-        implementation: "local"
-```
-
-### Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GITHUB_TOKEN` | GitHub backend | GitHub personal access token |
-| `GITHUB_REPO` | GitHub backend | Repository in format owner/repo |
-| `JIRA_URL` | Jira backend | Jira instance URL |
-| `JIRA_EMAIL` | Jira backend | Jira user email |
-| `JIRA_TOKEN` | Jira backend | Jira API token |
-| `JIRA_PROJECT` | Jira backend | Jira project key |
-| `GITLAB_TOKEN` | GitLab backend | GitLab personal access token |
-| `GITLAB_PROJECT_ID` | GitLab backend | GitLab project ID |
-
-## Advanced Usage
-
-### Custom Test Commands
-
-Override default test command:
-
+### GitHub Integration
 ```python
-from strategy.ci_runner import CIRunner
+from strategy.integrations.github import GitHubBackend
 
-class CustomRunner(CIRunner):
+github = GitHubBackend(
+    token="github_token",
+    repo="owner/repo"
+)
+
+# Create issue for bug
+issue = github.create_issue(
+    title="Fix: Authentication test failure",
+    body=bug_report,
+    labels=["bug", "auto-generated"]
+)
+
+# Update issue status
+github.update_issue(issue.id, state="closed")
+```
+
+### Jira Integration
+```python
+from strategy.integrations.jira import JiraBackend
+
+jira = JiraBackend(
+    url="https://company.atlassian.net",
+    email="user@company.com",
+    token="jira_token",
+    project="PROJ"
+)
+
+# Create ticket
+ticket = jira.create_ticket(
+    summary="Authentication module bug fix",
+    description=bug_report,
+    issue_type="Bug",
+    priority="High"
+)
+```
+
+### GitLab Integration
+```python
+from strategy.integrations.gitlab import GitLabBackend
+
+gitlab = GitLabBackend(
+    token="gitlab_token",
+    project_id=123
+)
+
+# Create issue
+issue = gitlab.create_issue(
+    title="Fix authentication bug",
+    description=bug_report,
+    labels=["bug", "auto-generated"]
+)
+```
+
+## 🛠️ Advanced Features
+
+### Custom Test Runners
+```python
+from strategy.ci_runner import CustomTestRunner
+
+class CustomRunner(CustomTestRunner):
     def run_tests(self):
         # Custom test logic
-        result = subprocess.run(["npm", "test"], ...)
-        return TestResult(...)
+        results = subprocess.run([
+            "pytest", "tests/", 
+            "--cov=src", 
+            "--junitxml=results.xml"
+        ])
+        return results.returncode == 0
+```
+
+### Custom Bug Analyzers
+```python
+from strategy.ci_runner import BugAnalyzer
+
+class CustomAnalyzer(BugAnalyzer):
+    def analyze_failure(self, test_output, code_context):
+        # Custom analysis logic
+        return {
+            "type": "logic_error",
+            "severity": "high",
+            "suggested_fix": "Update validation logic"
+        }
 ```
 
 ### Custom Ticket Templates
-
-Create custom bug report templates:
-
-```python
-def generate_bug_report(self, test_result, metrics):
-    # Custom LLM prompt
-    prompt = """
-    Analyze these test failures and create a detailed bug report
-    following our team's template...
-    """
-```
-
-### Integration with Other Tools
-
-#### SonarQube
-
 ```yaml
-- name: Run SonarQube
-  run: |
-    sonar-scanner \
-      -Dsonar.projectKey=$CI_PROJECT_NAME \
-      -Dsonar.sources=src/
-    
-- name: Check Quality Gate
-  run: |
-    quality_gate=$(curl -s -u $SONAR_TOKEN: \
-      "$SONAR_URL/api/qualitygates/project_status?analysisId=$analysisId")
-    
-    if [[ $(echo $quality_gate | jq -r '.projectStatus.status') != "OK" ]]; then
-      strategy-pm auto loop --strategy strategy.yaml ...
-    fi
+ticket_templates:
+  bug_fix:
+    title: "Fix: {test_name} failure"
+    body: |
+      ## Bug Report
+      **Test**: {test_name}
+      **Error**: {error_message}
+      
+      ## Analysis
+      {analysis}
+      
+      ## Suggested Fix
+      {suggested_fix}
+    labels: ["bug", "auto-generated"]
+    priority: "high"
 ```
 
-#### Security Scans
+## 📈 Best Practices
 
-```yaml
-- name: Security Scan
-  run: |
-    bandit -r src/ -f json -o bandit-report.json
-    safety check --json --output safety-report.json
-    
-    # Create tickets for security issues
-    strategy-pm auto loop \
-      --strategy security-strategy.yaml \
-      --project .
-```
+### 1. Strategy Design
+- Keep sprints focused and time-boxed
+- Define clear quality gates
+- Use task patterns for consistency
 
-## Monitoring and Alerts
+### 2. Test Organization
+- Structure tests by feature/module
+- Use descriptive test names
+- Include assertion messages
 
-### Slack Notifications
+### 3. Error Handling
+- Provide meaningful error messages
+- Include context in bug reports
+- Use structured logging
 
-```python
-import requests
+### 4. AI Integration
+- Provide clear prompts for LLM
+- Validate AI-generated fixes
+- Use human-in-the-loop for critical changes
 
-def notify_slack(results):
-    webhook = os.environ["SLACK_WEBHOOK_URL"]
-    
-    message = {
-        "text": f"CI/CD Loop {'✅ Success' if results['success'] else '❌ Failed'}",
-        "attachments": [{
-            "fields": [
-                {"title": "Iterations", "value": results['total_iterations']},
-                {"title": "Tickets Created", "value": len(results['tickets_created'])}
-            ]
-        }]
-    }
-    
-    requests.post(webhook, json=message)
-```
+### 5. Monitoring
+- Track key metrics
+- Set up alerts for failures
+- Regular strategy reviews
 
-### Email Notifications
-
-```python
-import smtplib
-from email.mime.text import MIMEText
-
-def notify_email(results):
-    msg = MIMEText(f"""
-    CI/CD Loop Results:
-    
-    Status: {'Success' if results['success'] else 'Failed'}
-    Iterations: {results['total_iterations']}
-    Tickets: {len(results['tickets_created'])}
-    
-    View details: {os.environ['CI_PIPELINE_URL']}
-    """)
-    
-    server = smtplib.SMTP(os.environ['SMTP_HOST'])
-    server.send_message(msg)
-```
-
-## Best Practices
-
-1. **Start with dry-run**: Always test with `--dry-run` first
-2. **Limit iterations**: Set reasonable `--max-iterations` (3-5)
-3. **Monitor tickets**: Review auto-generated tickets regularly
-4. **Customize prompts**: Tailor LLM prompts to your project
-5. **Use separate strategies**: Different strategies for different types of failures
-6. **Rate limiting**: Be mindful of API rate limits
-7. **Security**: Never commit tokens to repository
-
-## Troubleshooting
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **Backend authentication errors**
-   - Check tokens are valid and have required permissions
-   - Ensure environment variables are set correctly
+#### Auto-Loop Stuck
+```bash
+# Check current status
+planfile auto ci-status
 
-2. **LLM not responding**
-   - Check LLX installation and configuration
-   - Verify model availability
-   - Check network connectivity
+# Force stop
+planfile auto stop
 
-3. **Tests not found**
-   - Ensure test command matches your project
-   - Check working directory is correct
+# Resume with different parameters
+planfile auto loop --max-iterations 1 --dry-run
+```
 
-4. **Tickets not created**
-   - Run with `--dry-run` to check configuration
-   - Check backend permissions
-   - Verify project/issue tracker settings
+#### AI Service Issues
+```bash
+# Check API keys
+echo $OPENAI_API_KEY
+
+# Test AI connection
+planfile ai test --provider openai
+
+# Fallback to manual mode
+planfile auto loop --no-auto-fix
+```
+
+#### Backend Connection Issues
+```bash
+# Test GitHub connection
+planfile backend test github
+
+# Test Jira connection
+planfile backend test jira
+
+# Check permissions
+planfile backend check github --permissions
+```
 
 ### Debug Mode
-
-Enable debug logging:
-
 ```bash
-export STRATEGY_DEBUG=1
-strategy-pm auto loop --strategy strategy.yaml .
+# Enable debug logging
+planfile auto loop --debug --log-level debug
+
+# Save detailed logs
+planfile auto loop --log-file debug.log
+
+# Dry run mode
+planfile auto loop --dry-run --verbose
 ```
 
-### Logs
+## 📚 Additional Resources
 
-Check detailed logs:
+- [Planfile CLI Reference](CLI.md)
+- [Strategy Schema Guide](STRATEGY_SCHEMA.md)
+- [Integration Examples](EXAMPLES.md)
+- [API Documentation](API.md)
 
-```bash
-# Docker
-docker-compose logs sprintstrat-runner
+---
 
-# Local
-tail -f ~/.local/share/strategy/logs/ci-runner.log
-```
-
-## Examples
-
-See the `examples/` directory for complete working examples:
-- `examples/github-actions/` - GitHub Actions workflow
-- `examples/gitlab-ci/` - GitLab CI configuration
-- `examples/jenkins/` - Jenkinsfile
-- `examples/docker/` - Docker setup
-
-## Support
-
-- Documentation: https://strategy-pm.readthedocs.io
-- Issues: https://github.com/semcod/strategy/issues
-- Discussions: https://github.com/semcod/strategy/discussions
+**Planfile** - Automating your SDLC, one loop at a time. 🚀

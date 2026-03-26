@@ -1,329 +1,339 @@
-# strategy
+# Planfile
 
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI version](https://img.shields.io/pypi/v/planfile.svg)](https://pypi.org/project/planfile/)
 
-# gdyby to by była osobna biblitoeka, to mozna byc zrobić integracje z github, jira, gitlab  iiinnymi integracjami dla zewnatrznych systemow ticketow, bez wzgledu na LLM i tools, dlatego zaprpoonuj nazwe i strukuiture takiej paczki
+**Planfile** is an SDLC automation platform that provides strategic project management with CI/CD integration and automated bug-fix loops. It manages sprints and strategies across external ticket systems like GitHub, Jira, and GitLab.
 
-Świetne rozszerzenie! Można zrobić **osobny pakiet** jako „strategiczny layer” nad ticket‑systemami, który:
+## ✨ Features
 
-- opisuje **sprinty, strategie, quality‑gates** w `strategy.yaml`,
-- tworzy / aktualizuje **tikety w Jira, GitHub, GitLab, Linear, ClickUp, …**,
-- jest **neutranle** względem LLM i narzędzi (tj. LLM to tylko „input generator”, nie zależność runtime).
+- 🎯 **Strategy Modeling**: Define strategies and sprints in YAML with task patterns
+- 🔄 **Automated CI/CD Loop**: Test → Ticket → Fix → Retest automation
+- 🔌 **Multi-Backend Support**: Integrates with GitHub Issues, Jira, GitLab, and generic HTTP APIs
+- 🤖 **LLM-Powered**: AI-driven bug reports and auto-fix capabilities
+- 📊 **Progress Tracking**: Review strategy execution with detailed metrics
+- 🚀 **CLI Tool**: Easy-to-use command-line interface for applying and reviewing strategies
+- 🎨 **Rich Output**: Beautiful terminal output with progress bars and tables
+- 🐳 **Docker Support**: Containerized deployment with Ollama integration
+- 🔧 **Extensible**: Easy to add new backends and custom integrations
 
-Poniżej zaproponuję **nazwę**, **strukturę pakietu** i **ogólny interfejs**.
-
-***
-
-## 1. Propozycja nazwy paczki
-
-**`strategy`** – skrót od **sprint + strategy**
-
-- inny rytm niż `llm`, `llx`, `agent` – jasne: to **strategiczny/PM layer**.
-- można myśleć: `strategy` + `sprint`.
-
-Alternatywy:
-
-- `agilestrat`
-- `planstrat`
-- `taskflow`
-
-Ale **`strategy`** jest najbardziej intuicyjne dla IT‑PM.
-
-***
-
-## 2. `strategy` – wysoki poziom funkcjonalności
-
-Pakiet ma:
-
-- modelować **strategie** i **sprinty** w YAML (`strategy.yaml`),
-- mieć **integrations** dla:
-    - Jira
-    - GitHub Issues
-    - GitLab Issues
-    - ClickUp / Linear (opcjonalnie)
-- dostarczać CLI i API:
-    - `strategy apply --strategy=... --project-path=.`
-    - `strategy review --strategy=... --project-path=.` (po wykonaniu).
-
-Difference vs `llx`:
-
-- `llx` − **LLM + routing + tools**
-- `strategy` − **strategia + sprinty + tickets** (może być wywoływane przez `llx`, ale nie zależy od LLM).
-
-***
-
-## 3. Struktura pakietu `strategy`
+## 📦 Installation
 
 ```bash
+# Basic installation
+pip install planfile
+
+# With all backend integrations
+pip install planfile[all]
+
+# Or with specific backends
+pip install planfile[github,jira]
+pip install planfile[gitlab]
+```
+
+## 🚀 Quick Start
+
+### 1. Create a Strategy
+
+Create a `strategy.yaml` file:
+
+```yaml
+name: "My Project Strategy"
+project_type: "web"
+domain: "fintech"
+goal: "Launch a secure payment processing platform"
+
+sprints:
+  - id: 1
+    name: "Core Infrastructure"
+    length_days: 14
+    objectives:
+      - Set up project structure
+      - Implement authentication
+    tasks:
+      - type: "feature"
+        title: "Setup project structure"
+        description: "Create basic project layout and configuration"
+        estimate: 2
+        priority: "high"
+
+  - id: 2
+    name: "Payment Processing"
+    length_days: 21
+    objectives:
+      - Implement payment gateway
+      - Add security measures
+    tasks:
+      - type: "feature"
+        title: "Payment gateway integration"
+        description: "Integrate with payment provider API"
+        estimate: 5
+        priority: "critical"
+```
+
+### 2. Configure Environment
+
+```bash
+# GitHub
+export GITHUB_TOKEN=your_token
+export GITHUB_REPO=owner/repo
+
+# Jira
+export JIRA_URL=https://company.atlassian.net
+export JIRA_EMAIL=your@email.com
+export JIRA_TOKEN=your_token
+export JIRA_PROJECT=PROJ
+
+# GitLab
+export GITLAB_TOKEN=your_token
+export GITLAB_PROJECT_ID=123
+```
+
+### 3. Run CI/CD Auto-Loop
+
+```bash
+# Run automated bug-fix loop
+planfile auto loop \
+  --strategy ./strategy.yaml \
+  --project . \
+  --backend github \
+  --max-iterations 5 \
+  --auto-fix
+
+# Check CI status
+planfile auto ci-status
+
+# Review strategy progress
+planfile strategy review \
+  --strategy ./strategy.yaml \
+  --project . \
+  --backend github
+```
+
+### 4. Using Makefile
+
+```bash
+# Run CI loop with strategy
+make ci-loop STRATEGY=strategy.yaml BACKENDS=github MAX_ITERATIONS=5
+
+# Run examples
+make example-github
+make example-jira
+
+# Full pipeline
+make pipeline-docker
+```
+
+## 🔄 CI/CD Automation
+
+Planfile provides complete automation for the bug-fix lifecycle:
+
+1. **Test Execution**: Run your test suite
+2. **Bug Detection**: Identify failing tests and code issues
+3. **AI Analysis**: Generate detailed bug reports using LLM
+4. **Ticket Creation**: Create tickets in your PM system
+5. **Auto-Fix**: Optionally fix bugs automatically with AI
+6. **Verification**: Re-run tests to verify fixes
+7. **Loop**: Repeat until all tests pass
+
+## 🐳 Docker Support
+
+```bash
+# Build Docker image
+make docker-build
+
+# Run with Docker Compose
+docker-compose up -d
+
+# Run auto-loop in container
+docker-compose exec sprintstrat-runner planfile auto loop \
+  --strategy /app/strategy.yaml \
+  --project /workspace \
+  --backend github \
+  --max-iterations 5
+```
+
+## 📚 Documentation
+
+- [CI/CD Integration Guide](docs/CI_CD_INTEGRATION.md)
+- [API Reference](docs/API.md)
+- [Examples](examples/)
+
+## 🔧 Configuration
+
+### Strategy Schema
+
+The `strategy.yaml` file supports:
+
+- **Sprints**: Time-boxed development periods
+- **Task Patterns**: Reusable task templates
+- **Quality Gates**: Definition of done criteria
+- **Success Metrics**: KPIs for strategy completion
+
+### Backend Configuration
+
+Each backend requires specific configuration:
+
+```yaml
+# GitHub backend
+github:
+  token: ${GITHUB_TOKEN}
+  repo: ${GITHUB_REPO}
+
+# Jira backend
+jira:
+  url: ${JIRA_URL}
+  email: ${JIRA_EMAIL}
+  token: ${JIRA_TOKEN}
+  project: ${JIRA_PROJECT}
+```
+
+## 🤖 AI Integration
+
+Planfile integrates with LLM services for:
+
+- **Bug Analysis**: Detailed error analysis and root cause identification
+- **Auto-Fix**: Automatic code generation for bug fixes
+- **Strategy Optimization**: AI-powered recommendations for strategy improvements
+
+```bash
+# Enable AI features
+export OPENAI_API_KEY=your_key
+export ANTHROPIC_API_KEY=your_key
+
+# Run with auto-fix
+planfile auto loop --strategy strategy.yaml --auto-fix
+```
+
+## 📊 Examples
+
+### Web Project Strategy
+
+```yaml
+name: "E-commerce MVP"
+project_type: "web"
+domain: "ecommerce"
+goal: "Launch minimum viable e-commerce platform"
+
+sprints:
+  - id: 1
+    name: "Foundation"
+    length_days: 10
+    tasks:
+      - type: "feature"
+        title: "Setup project structure"
+        estimate: 1
+      - type: "feature"
+        title: "Database schema"
+        estimate: 3
+```
+
+### Mobile App Strategy
+
+```yaml
+name: "Mobile App MVP"
+project_type: "mobile"
+domain: "healthcare"
+goal: "Launch health tracking mobile app"
+
+sprints:
+  - id: 1
+    name: "Core Features"
+    length_days: 14
+    tasks:
+      - type: "feature"
+        title: "User authentication"
+        estimate: 3
+      - type: "feature"
+        title: "Health data tracking"
+        estimate: 5
+```
+
+## 🔗 Integrations
+
+### Version Control
+
+- **GitHub**: Issues, Projects, Actions
+- **GitLab**: Issues, CI/CD, Merge Requests
+- **Bitbucket**: Issues, Pipelines
+
+### Project Management
+
+- **Jira**: Issues, Epics, Sprints
+- **Linear**: Issues, Projects, Teams
+- **ClickUp**: Tasks, Lists, Spaces
+- **Asana**: Tasks, Projects, Portfolios
+
+### CI/CD Platforms
+
+- **GitHub Actions**: Workflow automation
+- **GitLab CI**: Pipeline integration
+- **Jenkins**: Build automation
+- **Azure DevOps**: Release management
+
+## 🛠️ Development
+
+### Setup Development Environment
+
+```bash
+# Clone repository
+git clone https://github.com/semcod/strategy
+cd strategy
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install in development mode
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/ -v
+
+# Run linting
+ruff check src/ tests/
+ruff format src/ tests/
+```
+
+### Project Structure
+
+```
 strategy/
-├── __init__.py
-├── models.py                 # Pydantic Strategy + Ticket schemas
-├── runner.py                 # apply / review / execution logic
-├── cli/                      # CLI `strategy ...`
-│   ├── __main__.py
-│   └── commands.py
-├── integrations/             # PM integrations
-│   ├── base.py               # Base PM interface
-│   ├── jira.py
-│   ├── github.py
-│   ├── gitlab.py
-│   └── generic.py           # generic HTTP webhook / API
-├── loaders/                  # YAML / JSON loading + validation
-│   ├── yaml_loader.py       # Strategy.model_validate_yaml(...)
-│   └── cli_loader.py
-├── utils/                   # helpers (priority mapping, etc.)
-│   ├── priorities.py
-│   └── metrics.py
-└── examples/
-    ├── strategies/
-    │   └── onboarding.yaml
-    └── tasks/
-        └── tasks.yaml
+├── strategy/           # Main package
+│   ├── cli/           # CLI commands
+│   ├── integrations/  # Backend integrations
+│   ├── loaders/       # YAML/JSON loaders
+│   └── utils/         # Utilities
+├── examples/           # Example strategies
+├── tests/             # Test suite
+├── docs/              # Documentation
+└── docker/            # Docker files
 ```
 
+## 📄 License
 
-***
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## 4. `models.py` – jądro schematu (uproszczone)
+## 🤝 Contributing
 
-```python
-from enum import Enum
-from typing import List, Dict, Optional
-from pydantic import BaseModel
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
+## 📞 Support
 
-class TaskType(str, Enum):
-    feature = "feature"
-    tech_debt = "tech_debt"
-    bug = "bug"
+- 📖 [Documentation](docs/)
+- 🐛 [Issue Tracker](https://github.com/semcod/strategy/issues)
+- 💬 [Discussions](https://github.com/semcod/strategy/discussions)
 
+## 🏆 Acknowledgments
 
-class ModelTier(str, Enum):
-    local = "local"
-    cheap = "cheap"
-    balanced = "balanced"
-    premium = "premium"
+- Built with [Typer](https://typer.tiangolo.com/) for CLI
+- Styled with [Rich](https://rich.readthedocs.io/) for terminal output
+- Validated with [Pydantic](https://pydantic-docs.helpmanual.io/) for data models
 
+---
 
-class ModelHints(BaseModel):
-    design: Optional[ModelTier] = None
-    implementation: Optional[ModelTier] = None
-    review: Optional[ModelTier] = None
-    triage: Optional[ModelTier] = None
-
-
-class TaskPattern(BaseModel):
-    id: str
-    type: TaskType
-    title: str
-    description: str
-    priority: Optional[str] = None
-    estimate: Optional[str] = None
-    model_hints: ModelHints = ModelHints()
-
-
-class Sprint(BaseModel):
-    id: int
-    name: str
-    length_days: int
-    objectives: List[str]
-
-
-class Strategy(BaseModel):
-    name: str
-    project_type: str
-    domain: str
-    goal: str
-    sprints: List[Sprint]
-    tasks: Dict[str, List[TaskPattern]]
-```
-
-Za pomocą `pydantic-yaml`:
-
-```python
-from pydantic_yaml import YamlModel
-
-class Strategy(YamlModel, Strategy):
-    pass
-```
-
-
-***
-
-## 5. `integrations/base.py` – wspólny interfejs
-
-```python
-from typing import Protocol, Optional
-
-class TicketRef(BaseModel):
-    id: str
-    url: Optional[str] = None
-
-
-class PMBackend(Protocol):
-    def create_ticket(
-        self,
-        title: str,
-        body: str,
-        labels: list[str],
-        priority: str,
-        metadata: dict,
-    ) -> TicketRef:
-        ...
-
-    def update_ticket(
-        self,
-        ticket_id: str,
-        title: Optional[str] = None,
-        body: Optional[str] = None,
-        status: Optional[str] = None,
-        labels: Optional[list[str]] = None,
-    ) -> None:
-        ...
-```
-
-Każdy `jira.py`, `github.py`, `gitlab.py` implementuje ten protokół.
-
-***
-
-## 6. `runner.py` – apply / review
-
-```python
-from strategy.models import Strategy, TaskPattern, Sprint
-from strategy.integrations.base import PMBackend, TicketRef
-from strategy.utils.metrics import analyze_project_metrics
-
-
-def apply_strategy(
-    strategy: Strategy,
-    project_path: str,
-    backends: Dict[str, PMBackend],
-) -> Dict[str, TicketRef]:
-    refs = {}
-    for sprint in strategy.sprints:
-        for task_pattern in strategy.tasks.get("patterns", []):
-            for _ in range(1):  # lub N zależnie od heurystyki
-                title = task_pattern.title
-                body = task_pattern.description
-                labels = task_pattern.type.value + [task_pattern.id]
-                priority = task_pattern.priority or "medium"
-
-                ref = backends["github"].create_ticket(
-                    title=title,
-                    body=body,
-                    labels=labels,
-                    priority=priority,
-                    metadata={
-                        "sprint": sprint.id,
-                        "pattern": task_pattern.id,
-                        "model_hints": task_pattern.model_hints.model_dump(),
-                    },
-                )
-                refs[f"{sprint.id}-{task_pattern.id}"] = ref
-    return refs
-
-
-def review_strategy(
-    strategy: Strategy,
-    project_path: str,
-    backends: Dict[str, PMBackend],
-) -> dict:
-    metrics = analyze_project_metrics(project_path)
-    result = {"strategy": [], "metrics": []}
-    # ... porównaj z strategy.metrics
-    # ... sprawdź status wszystkich tiketów z backends
-    return result
-```
-
-
-***
-
-## 7. `cli/commands.py` – CLI
-
-```python
-import typer
-from strategy.models import Strategy
-from strategy.runner import apply_strategy, review_strategy
-from strategy.integrations.jira import JiraBackend
-from strategy.integrations.github import GitHubBackend
-
-app = typer.Typer()
-
-@app.command("apply")
-def apply_strategy_cli(
-    strategy_path: Path,
-    project_path: Path,
-):
-    strategy = Strategy.model_validate_yaml(strategy_path.read_text())
-    backends = {
-        "github": GitHubBackend(
-            repo="company/backend",
-            token=os.environ["GITHUB_TOKEN"],
-        ),
-        "jira": JiraBackend(
-            base_url="https://company.atlassian.net",
-            email=os.environ["JIRA_EMAIL"],
-            token=os.environ["JIRA_TOKEN"],
-        ),
-    }
-    apply_strategy(strategy, project_path, backends)
-
-
-@app.command("review")
-def review_strategy_cli(
-    strategy_path: Path,
-    project_bonus_path: Path,
-):
-    strategy = Strategy.model_validate_yaml(strategy_path.read_text())
-    backends = { ... }
-    review_strategy(strategy, project_path, backends)
-```
-
-
-***
-
-## 8. Jak `llx` integruje się z `strategy`
-
-- `llx`:
-    - generuje `strategy.yaml` i `tasks.yaml` z LLM,
-    - zapisuje do pliku.
-- `strategy`:
-    - wczytuje `strategy.yaml` i `tasks.yaml` z walidacją,
-    - wywołuje `apply_strategy` / `review_strategy`,
-    - wraca wynik do `llx` (np. jako JSON statusu).
-
-Flow:
-
-```text
-llm
-└─ generuje YAML → llx
-      ↓
-      llx zapisuje → strategy.yaml + tasks.yaml
-      ↓
-      llx wywołuje: strategy apply --strategy=... --project-path=.
-      ↓
-      strategy: tworzy tickets w Jira/GitHub/GitLab
-      ↓
-      llx odczytuje status i zwraca podsumowanie użytkownikowi
-```
-
-
-***
-
-## 9. Przykładowa instalacja / integracja
-
-```bash
-pip install llx strategy[all]  # lub llx[sprint] + separatne strategy
-
-# w projekcie
-llx run-strategy ...             # generuje strategy.yaml + tasks.yaml
-strategy apply --strategy ./strategies/main.yaml .
-```
-
-Jeśli chcesz, mogę:
-
-- rozpisać gotowy `strategy/setup.py` z `strategy[jira,github,gitlab]`,
-- albo napisać minimalną `strategy/integrations/github.py` z `PyGithub`.
+**Planfile** - Your strategic partner in SDLC automation. 🚀
 
 ## License
 
