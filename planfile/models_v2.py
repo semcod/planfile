@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import List, Dict, Optional, Any, Union
 from pathlib import Path
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class TaskType(str, Enum):
@@ -34,7 +34,8 @@ class ModelHints(BaseModel):
     triage: Optional[ModelTier] = None
     
     # Allow string value for simplicity
-    @validator('*', pre=True)
+    @field_validator('*', mode='before')
+    @classmethod
     def convert_str_to_tier(cls, v):
         if isinstance(v, str) and v not in ModelTier.__members__:
             if v == "free":
@@ -53,7 +54,8 @@ class Task(BaseModel):
     tags: List[str] = Field(default_factory=list, description="Tags for organization")
     
     # Allow flexible model hints
-    @validator('model_hints', pre=True)
+    @field_validator('model_hints', mode='before')
+    @classmethod
     def normalize_model_hints(cls, v):
         if isinstance(v, str):
             return {"implementation": v}
@@ -71,7 +73,8 @@ class Sprint(BaseModel):
     length_days: Optional[int] = Field(14, description="Sprint length in days")
     
     # Allow both task objects and simple dicts
-    @validator('tasks', pre=True)
+    @field_validator('tasks', mode='before')
+    @classmethod
     def convert_tasks(cls, v):
         if isinstance(v, list):
             tasks = []
@@ -104,7 +107,8 @@ class QualityGate(BaseModel):
     required: bool = Field(True, description="Whether this gate is required")
     
     # Allow string criteria
-    @validator('criteria', pre=True)
+    @field_validator('criteria', mode='before')
+    @classmethod
     def normalize_criteria(cls, v):
         if isinstance(v, str):
             return [v]
