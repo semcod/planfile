@@ -1,7 +1,7 @@
-# planfile | 54f 8947L | python:48,javascript:2,shell:4 | 2026-03-26
+# planfile | 54f 8993L | python:48,javascript:2,shell:4 | 2026-03-26
 # stats: 378 func | 0 cls | 54 mod | CC̄=4.2 | critical:15 | cycles:0
-# alerts[5]: fan-out add_extra_commands=28; fan-out auto_loop=21; fan-out review_strategy_cli=21; fan-out analyze_text=20; CC _parse_toon_sections=24
-# hotspots[5]: add_extra_commands fan=28; auto_loop fan=21; review_strategy_cli fan=21; analyze_text fan=20; Strategy.merge fan=17
+# alerts[5]: fan-out add_extra_commands=30; fan-out auto_loop=21; fan-out review_strategy_cli=21; fan-out analyze_text=20; CC _parse_toon_sections=24
+# hotspots[5]: add_extra_commands fan=30; auto_loop fan=21; review_strategy_cli fan=21; analyze_text fan=20; Strategy.merge fan=17
 # evolution: CC̄ 4.2→4.2 (flat 0.0)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
 M[54]:
@@ -30,12 +30,12 @@ M[54]:
   planfile/cli/__main__.py,4
   planfile/cli/auto_loop.py,252
   planfile/cli/cmd/cmd_apply.py,108
-  planfile/cli/cmd/cmd_generate.py,115
+  planfile/cli/cmd/cmd_generate.py,128
   planfile/cli/cmd/cmd_review.py,97
   planfile/cli/cmd/cmd_utils.py,96
   planfile/cli/cmd/cmd_validate.py,37
   planfile/cli/commands.py,63
-  planfile/cli/extra_commands.py,487
+  planfile/cli/extra_commands.py,520
   planfile/examples.py,141
   planfile/executor_standalone.py,336
   planfile/integrations/__init__.py,0
@@ -255,6 +255,10 @@ D:
   planfile/integrations/github.py:
     e: GitHubBackend
     GitHubBackend(BasePMBackend): __init__(2),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitHub Issues integration backend...
+  planfile/cli/cmd/cmd_generate.py:
+    e: generate_strategy_cli,generate_from_files_cmd
+    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
+    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;external_tools;verbose)
   planfile/integrations/jira.py:
     e: JiraBackend
     JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Jira integration backend...
@@ -284,10 +288,6 @@ D:
     QualityGate(BaseModel): normalize_criteria(1)  # Quality gate definition...
     Goal(BaseModel):  # Project goal definition...
     Strategy(BaseModel): get_task_patterns(0),get_sprint(1),to_llx_format(0),compare(1),merge(2),export(1),get_stats(0),load_flexible(1),_convert_old_format(0),to_yaml(0)  # Main strategy configuration - simplified and more flexible...
-  planfile/cli/cmd/cmd_generate.py:
-    e: generate_strategy_cli,generate_from_files_cmd
-    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
-    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;verbose)
   planfile/cli/auto_loop.py:
     e: get_backend,_validate_strategy,_initialize_backends,_display_summary_table,_display_final_status,_display_ticket_summary,_save_results_if_needed,auto_loop,ci_status
     get_backend(backend_type)
@@ -372,6 +372,13 @@ D:
   planfile/cli/cmd/cmd_validate.py:
     e: validate_strategy_cli
     validate_strategy_cli(strategy_path;verbose)
+  planfile/cli/cmd/cmd_utils.py:
+    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend
+    get_backend(backend_type;config)
+    _load_and_validate_strategy(strategy_path)
+    _load_backend_config(backend;config_file)
+    _parse_sprint_filter(sprint_filter)
+    _select_backend(backend;backend_config)
   planfile/models.py:
     e: TaskType,ModelTier,ModelHints,TaskPattern,Sprint,Goal,QualityGate,Strategy
     TaskType(str,Enum):  # Type of task in the strategy...
@@ -382,13 +389,6 @@ D:
     Goal(BaseModel):  # Project goal definition...
     QualityGate(BaseModel):  # Quality gate definition...
     Strategy(BaseModel): validate_sprint_ids(1),get_task_patterns(1),get_sprint(1),model_validate_yaml(1),model_dump_yaml(0)  # Main strategy configuration...
-  planfile/cli/cmd/cmd_utils.py:
-    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend
-    get_backend(backend_type;config)
-    _load_and_validate_strategy(strategy_path)
-    _load_backend_config(backend;config_file)
-    _parse_sprint_filter(sprint_filter)
-    _select_backend(backend;backend_config)
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)

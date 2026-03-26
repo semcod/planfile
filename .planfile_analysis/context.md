@@ -4,16 +4,20 @@
 
 - **Project**: /home/tom/github/semcod/planfile
 - **Primary Language**: python
-- **Languages**: python: 59, shell: 16, javascript: 2
+- **Languages**: python: 52, shell: 16, javascript: 3
 - **Analysis Mode**: static
-- **Total Functions**: 454
+- **Total Functions**: 487
 - **Total Classes**: 52
-- **Modules**: 77
-- **Entry Points**: 371
+- **Modules**: 71
+- **Entry Points**: 404
 
 ## Architecture by Module
 
 ### htmlcov.coverage_html_cb_dd2e7eb5
+- **Functions**: 77
+- **File**: `coverage_html_cb_dd2e7eb5.js`
+
+### examples.htmlcov.coverage_html_cb_dd2e7eb5
 - **Functions**: 77
 - **File**: `coverage_html_cb_dd2e7eb5.js`
 
@@ -93,10 +97,6 @@
 - **Classes**: 1
 - **File**: `generic.py`
 
-### examples.integrated-functionality.integrated_functionality_examples
-- **Functions**: 8
-- **File**: `integrated_functionality_examples.py`
-
 ### examples.llx_validator
 - **Functions**: 7
 - **Classes**: 1
@@ -113,7 +113,7 @@ Main execution flows into the system:
 
 ### planfile.cli.extra_commands.add_extra_commands
 > Add extra commands to the CLI app.
-- **Calls**: app.command, app.command, app.command, app.command, app.command, typer.Argument, typer.Option, typer.Option
+- **Calls**: app.command, app.command, app.command, app.command, app.command, app.command, typer.Argument, typer.Option
 
 ### examples.ecosystem.04_llx_integration.example_metric_driven_planning
 > Example: Generate strategy based on actual project metrics.
@@ -123,13 +123,9 @@ Main execution flows into the system:
 > Example: Generate strategy using proxy for smart model routing.
 - **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, ProxyClient, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, enumerate
 
-### examples.comprehensive-example.summary.create_summary
-> Create a summary of all changes made.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print
-
 ### planfile.cli.cmd.cmd_generate.generate_from_files_cmd
 > Generate planfile from file analysis (no LLM required).
-- **Calls**: typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, console.print
+- **Calls**: typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
 
 ### planfile.cli.cmd.cmd_review.review_strategy_cli
 > Review strategy execution and progress.
@@ -142,38 +138,6 @@ This command will:
 1. Run tests and code analysis
 2. If tests fail, generate bug reports with
 - **Calls**: app.command, typer.Argument, typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
-
-### examples.comprehensive-example.comprehensive_example.main
-> Run comprehensive examples.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, Path, examples.bash-generation.verify_planfile.print, sorted, examples.bash-generation.verify_planfile.print, examples.comprehensive-example.comprehensive_example.run_command
-
-### examples.advanced-usage.advanced_usage_examples.example_6_workflow_automation
-> Example 6: Automated workflow for CI/CD.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, os.chmod, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print
-
-### examples.advanced-usage.advanced_usage_examples.example_4_batch_processing
-> Example 4: Process multiple directories.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, directories.items, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, results.items
-
-### examples.external-tools.external_tools_examples.main
-> Run all external tools examples.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.external-tools.external_tools_examples.example_1_check_external_tools, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, results.get
-
-### examples.cli-commands.cli_command_examples.main
-> Demonstrate CLI commands.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, os.chdir, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command
-
-### examples.advanced-usage.advanced_usage_examples.example_3_iterative_refinement
-> Example 3: Iteratively refine a strategy.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, generator.generate_from_current_project, examples.bash-generation.verify_planfile.print, planfile.loaders.yaml_loader.save_strategy_yaml, planfile.loaders.yaml_loader.load_strategy_yaml
-
-### examples.advanced-usage.advanced_usage_examples.main
-> Run all advanced examples.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, results.items, examples.bash-generation.verify_planfile.print
-
-### examples.external-tools.external_tools_examples.example_5_custom_analysis
-> Example 5: Custom analysis with specific focus.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, Path, output_dir.mkdir, ExternalToolRunner, runner.run_all, examples.bash-generation.verify_planfile.print
 
 ### planfile.cli.auto_loop.ci_status
 > Check current CI status without running tests.
@@ -195,21 +159,9 @@ This command will:
 > CLI entry point.
 - **Calls**: argparse.ArgumentParser, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.add_argument, parser.parse_args
 
-### examples.external-tools.external_tools_examples.example_4_generate_strategy_with_tools
-> Example 4: Generate strategy using external tools.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, generator.generate_with_external_tools, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print
-
-### examples.advanced-usage.advanced_usage_examples.example_5_custom_metrics
-> Example 5: Add custom metrics to analysis.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, FileAnalyzer, ISSUE_PATTERNS.update, analyzer.analyze_directory, examples.bash-generation.verify_planfile.print, custom_issues.items
-
 ### planfile.models_v2.Strategy.merge
 > Merge with other strategies to create a combined strategy.
 - **Calls**: self.model_dump, set, merged_data.get, Strategy, merged_data.get, all_sprints.append, merged_data.get, all_gates.append
-
-### examples.quick-start.quick_start_examples.main
-> Run all quick start examples.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print
 
 ### planfile.cli.cmd.cmd_validate.validate_strategy_cli
 > Validate a strategy YAML file.
@@ -227,13 +179,53 @@ This command will:
 > Generate strategy.yaml from project analysis + LLM.
 - **Calls**: typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, console.print
 
-### examples.external-tools.external_tools_examples.example_2_run_individual_tools
-> Example 2: Run each tool individually.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, ExternalToolRunner, Path, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print
+### examples.ecosystem.03_proxy_routing.example_budget_tracking
+> Example: Budget tracking with proxy.
+- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, ProxyClient, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print
 
-### examples.integrated-functionality.integrated_functionality_examples.main
-> Run all examples.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, results.items, examples.bash-generation.verify_planfile.print
+### planfile.models_v2.Strategy.get_stats
+> Get strategy statistics.
+- **Calls**: len, sum, len, sum, hasattr, durations.append, hasattr, sum
+
+### planfile.llm.adapters.LLMTestRunner.generate_report
+> Generate a test report.
+- **Calls**: report.append, report.append, report.append, results.items, report.append, results.items, None.join, report.append
+
+### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
+> Parse code2llm analysis.toon.yaml output.
+- **Calls**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists, self._mock_code2llm_data, open, f.read
+
+### planfile.ci_runner.CIRunner.check_strategy_completion
+> Check if strategy goals are met.
+- **Calls**: examples.bash-generation.verify_planfile.print, planfile.runner.review_strategy, review.get, summary.get, summary.get, issues.append, summary.get, issues.append
+
+### planfile.analysis.generator.PlanfileGenerator.generate_from_analysis
+> Generate planfile from analyzed files.
+- **Calls**: self.analyzer.analyze_directory, self.generator.generate_sprints, self.generator.generate_tickets, self._extract_key_metrics, self._create_strategy_object, Path, self._generate_goal, self._generate_goals
+
+### htmlcov.coverage_html_cb_dd2e7eb5.sortColumn
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.getAttribute, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.setAttribute, htmlcov.coverage_html_cb_dd2e7eb5.indexOf, htmlcov.coverage_html_cb_dd2e7eb5.from, htmlcov.coverage_html_cb_dd2e7eb5.closest, htmlcov.coverage_html_cb_dd2e7eb5.querySelectorAll, htmlcov.coverage_html_cb_dd2e7eb5.sort
+
+### htmlcov.coverage_html_cb_dd2e7eb5.table
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
+
+### htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
+
+### htmlcov.coverage_html_cb_dd2e7eb5.no_rows
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
+
+### htmlcov.coverage_html_cb_dd2e7eb5.footer
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
+
+### htmlcov.coverage_html_cb_dd2e7eb5.ratio_columns
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
+
+### htmlcov.coverage_html_cb_dd2e7eb5.filter_handler
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
+
+### htmlcov.coverage_html_cb_6fb7b396.sortColumn
+- **Calls**: htmlcov.coverage_html_cb_6fb7b396.getAttribute, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.setAttribute, htmlcov.coverage_html_cb_6fb7b396.indexOf, htmlcov.coverage_html_cb_6fb7b396.from, htmlcov.coverage_html_cb_6fb7b396.closest, htmlcov.coverage_html_cb_6fb7b396.querySelectorAll, htmlcov.coverage_html_cb_6fb7b396.sort
 
 ## Process Flows
 
@@ -258,45 +250,41 @@ example_strategy_generation_with_proxy [examples.ecosystem.03_proxy_routing]
   └─ →> print
 ```
 
-### Flow 4: create_summary
-```
-create_summary [examples.comprehensive-example.summary]
-  └─ →> print
-  └─ →> print
-```
-
-### Flow 5: generate_from_files_cmd
+### Flow 4: generate_from_files_cmd
 ```
 generate_from_files_cmd [planfile.cli.cmd.cmd_generate]
 ```
 
-### Flow 6: review_strategy_cli
+### Flow 5: review_strategy_cli
 ```
 review_strategy_cli [planfile.cli.cmd.cmd_review]
 ```
 
-### Flow 7: auto_loop
+### Flow 6: auto_loop
 ```
 auto_loop [planfile.cli.auto_loop]
 ```
 
-### Flow 8: main
+### Flow 7: ci_status
 ```
-main [examples.comprehensive-example.comprehensive_example]
+ci_status [planfile.cli.auto_loop]
+```
+
+### Flow 8: example_mcp_session
+```
+example_mcp_session [examples.ecosystem.02_mcp_integration]
   └─ →> print
   └─ →> print
 ```
 
-### Flow 9: example_6_workflow_automation
+### Flow 9: _parse_llx_output
 ```
-example_6_workflow_automation [examples.advanced-usage.advanced_usage_examples]
-  └─ →> print
-  └─ →> print
+_parse_llx_output [examples.ecosystem.04_llx_integration.LLXIntegration]
 ```
 
-### Flow 10: example_4_batch_processing
+### Flow 10: run_loop
 ```
-example_4_batch_processing [examples.advanced-usage.advanced_usage_examples]
+run_loop [planfile.ci_runner.CIRunner]
   └─ →> print
   └─ →> print
 ```
@@ -373,17 +361,17 @@ example_4_batch_processing [examples.advanced-usage.advanced_usage_examples]
 - **Methods**: 6
 - **Key Methods**: examples.ecosystem.04_llx_integration.LLXIntegration.__init__, examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project, examples.ecosystem.04_llx_integration.LLXIntegration._parse_llx_output, examples.ecosystem.04_llx_integration.LLXIntegration._basic_analysis, examples.ecosystem.04_llx_integration.LLXIntegration.select_model, examples.ecosystem.04_llx_integration.LLXIntegration.get_task_scope
 
-### planfile.models.Strategy
-> Main strategy configuration.
-- **Methods**: 5
-- **Key Methods**: planfile.models.Strategy.validate_sprint_ids, planfile.models.Strategy.get_task_patterns, planfile.models.Strategy.get_sprint, planfile.models.Strategy.model_validate_yaml, planfile.models.Strategy.model_dump_yaml
-- **Inherits**: BaseModel
-
 ### planfile.integrations.base.PMBackend
 > Protocol for PM system backends.
 - **Methods**: 5
 - **Key Methods**: planfile.integrations.base.PMBackend.create_ticket, planfile.integrations.base.PMBackend.update_ticket, planfile.integrations.base.PMBackend.get_ticket, planfile.integrations.base.PMBackend.list_tickets, planfile.integrations.base.PMBackend.search_tickets
 - **Inherits**: Protocol
+
+### planfile.models.Strategy
+> Main strategy configuration.
+- **Methods**: 5
+- **Key Methods**: planfile.models.Strategy.validate_sprint_ids, planfile.models.Strategy.get_task_patterns, planfile.models.Strategy.get_sprint, planfile.models.Strategy.model_validate_yaml, planfile.models.Strategy.model_dump_yaml
+- **Inherits**: BaseModel
 
 ### planfile.llm.adapters.LocalLLMAdapter
 > Adapter for local LLM servers (Ollama, LM Studio, etc.).
@@ -416,10 +404,6 @@ example_4_batch_processing [examples.advanced-usage.advanced_usage_examples]
 
 Key functions that process and transform data:
 
-### planfile.examples.example_validate_strategy
-> Load and validate an existing strategy.
-- **Output to**: planfile.runner.load_valid_strategy, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, len
-
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
 - **Output to**: self._is_llx_available, subprocess.run, str, str
@@ -427,6 +411,10 @@ Key functions that process and transform data:
 ### examples.llx_validator.LLXValidator._parse_llx_analysis
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
+
+### planfile.examples.example_validate_strategy
+> Load and validate an existing strategy.
+- **Output to**: planfile.runner.load_valid_strategy, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, len
 
 ### planfile.loaders.yaml_loader._validate_sprints
 > Validate sprint section.
@@ -447,9 +435,6 @@ Args:
     file_path: Path to strategy YAML f
 - **Output to**: planfile.loaders.yaml_loader._check_required_keys, planfile.loaders.yaml_loader._validate_sprints, planfile.loaders.yaml_loader._validate_gates, planfile.loaders.yaml_loader._validate_task_patterns, planfile.loaders.yaml_loader.load_yaml
 
-### planfile.analysis.generator.PlanfileGenerator._parse_effort
-- **Output to**: parse_effort
-
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
 > Parse code2llm analysis.toon.yaml output.
 - **Output to**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists
@@ -462,6 +447,9 @@ Args:
 > Parse redup duplication.toon.yaml output.
 - **Output to**: AnalysisResults, re.search, re.search, dup_file.exists, self._mock_redup_data
 
+### planfile.analysis.generator.PlanfileGenerator._parse_effort
+- **Output to**: parse_effort
+
 ### planfile.cli.auto_loop._validate_strategy
 > Validate strategy file exists.
 - **Output to**: strategy.exists, console.print, typer.Exit
@@ -473,26 +461,6 @@ Args:
 ### planfile.llm.generator._fix_yaml_formatting
 > Fix common YAML formatting issues from LLM responses.
 - **Output to**: yaml_text.split, enumerate, None.join, fixed_lines.append, prev_line.startswith
-
-### planfile.models.Strategy.validate_sprint_ids
-> Ensure sprint IDs are unique.
-- **Output to**: validator, len, len, ValueError, set
-
-### planfile.models.Strategy.model_validate_yaml
-> Load strategy from YAML string.
-- **Output to**: yaml.safe_load, cls.model_validate, isinstance, obj.items, isinstance
-
-### planfile.integrations.gitlab.GitLabBackend._validate_config
-> Validate GitLab configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError
-
-### planfile.integrations.jira.JiraBackend._validate_config
-> Validate Jira configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
-
-### planfile.integrations.github.GitHubBackend._validate_config
-> Validate GitHub configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError, ValueError
 
 ### planfile.models_v2.ModelHints.convert_str_to_tier
 - **Output to**: field_validator, isinstance
@@ -508,6 +476,18 @@ Args:
 > Convert old format with separate task patterns to new format.
 - **Output to**: data.get, sprint.get, sprint.pop, sprint.pop, None.get
 
+### planfile.integrations.gitlab.GitLabBackend._validate_config
+> Validate GitLab configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError
+
+### planfile.integrations.jira.JiraBackend._validate_config
+> Validate Jira configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
+
+### planfile.integrations.github.GitHubBackend._validate_config
+> Validate GitHub configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError, ValueError
+
 ### planfile.integrations.generic.GenericBackend._validate_config
 > Validate generic backend configuration.
 - **Output to**: self.config.get, ValueError
@@ -515,6 +495,14 @@ Args:
 ### planfile.cli.cmd.cmd_utils._load_and_validate_strategy
 > Load and validate strategy file.
 - **Output to**: planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print, typer.Exit
+
+### planfile.cli.cmd.cmd_utils._parse_sprint_filter
+> Parse sprint filter from string.
+- **Output to**: int, console.print, typer.Exit, s.strip, sprint_filter.split
+
+### planfile.cli.cmd.cmd_validate.validate_strategy_cli
+> Validate a strategy YAML file.
+- **Output to**: typer.Argument, typer.Option, planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print
 
 ## Behavioral Patterns
 
@@ -527,46 +515,46 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
-- `planfile.cli.extra_commands.add_extra_commands` - 98 calls
+- `planfile.cli.extra_commands.add_extra_commands` - 118 calls
 - `examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
-- `examples.comprehensive-example.summary.create_summary` - 44 calls
-- `planfile.cli.cmd.cmd_generate.generate_from_files_cmd` - 42 calls
+- `planfile.cli.cmd.cmd_generate.generate_from_files_cmd` - 45 calls
 - `planfile.cli.cmd.cmd_review.review_strategy_cli` - 40 calls
 - `planfile.cli.auto_loop.auto_loop` - 39 calls
-- `examples.comprehensive-example.comprehensive_example.main` - 39 calls
-- `examples.advanced-usage.advanced_usage_examples.example_6_workflow_automation` - 34 calls
-- `examples.advanced-usage.advanced_usage_examples.example_4_batch_processing` - 32 calls
 - `planfile.analysis.parsers.text_parser.analyze_text` - 30 calls
-- `examples.external-tools.external_tools_examples.main` - 30 calls
-- `examples.cli-commands.cli_command_examples.main` - 29 calls
-- `examples.advanced-usage.advanced_usage_examples.example_3_iterative_refinement` - 29 calls
-- `examples.advanced-usage.advanced_usage_examples.main` - 29 calls
-- `examples.external-tools.external_tools_examples.example_5_custom_analysis` - 28 calls
 - `planfile.cli.auto_loop.ci_status` - 27 calls
 - `examples.ecosystem.02_mcp_integration.example_mcp_session` - 26 calls
 - `planfile.ci_runner.CIRunner.run_loop` - 25 calls
 - `planfile.ci_runner.main` - 24 calls
-- `examples.external-tools.external_tools_examples.example_4_generate_strategy_with_tools` - 24 calls
-- `examples.advanced-usage.advanced_usage_examples.example_5_custom_metrics` - 24 calls
 - `planfile.runner.run_strategy` - 23 calls
 - `planfile.models_v2.Strategy.merge` - 23 calls
-- `examples.quick-start.quick_start_examples.main` - 23 calls
 - `planfile.cli.extra_commands.compare_strategies` - 22 calls
 - `planfile.cli.cmd.cmd_validate.validate_strategy_cli` - 21 calls
 - `planfile.models_v2.Strategy.to_llx_format` - 20 calls
 - `planfile.cli.cmd.cmd_apply.apply_strategy_cli` - 20 calls
 - `planfile.cli.cmd.cmd_generate.generate_strategy_cli` - 20 calls
 - `planfile.analysis.parsers.yaml_parser.analyze_yaml` - 20 calls
-- `examples.external-tools.external_tools_examples.example_2_run_individual_tools` - 20 calls
-- `examples.integrated-functionality.integrated_functionality_examples.main` - 19 calls
 - `examples.ecosystem.03_proxy_routing.example_budget_tracking` - 19 calls
 - `planfile.models_v2.Strategy.get_stats` - 18 calls
-- `examples.external-tools.external_tools_examples.example_3_run_all_tools` - 18 calls
 - `planfile.llm.adapters.LLMTestRunner.generate_report` - 18 calls
 - `planfile.loaders.yaml_loader.load_strategy_yaml` - 17 calls
 - `planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output` - 17 calls
-- `examples.integrated-functionality.integrated_functionality_examples.example_5_strategy_stats` - 17 calls
+- `planfile.ci_runner.CIRunner.check_strategy_completion` - 15 calls
+- `planfile.loaders.cli_loader.export_results_to_markdown` - 15 calls
+- `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 15 calls
+- `planfile.cli.cmd.cmd_utils.get_backend` - 15 calls
+- `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.sortColumn` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.table` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.no_rows` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.footer` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.ratio_columns` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.filter_handler` - 15 calls
+- `htmlcov.coverage_html_cb_6fb7b396.sortColumn` - 15 calls
+- `htmlcov.coverage_html_cb_6fb7b396.table` - 15 calls
+- `htmlcov.coverage_html_cb_6fb7b396.table_body_rows` - 15 calls
+- `htmlcov.coverage_html_cb_6fb7b396.no_rows` - 15 calls
 
 ## System Interactions
 
@@ -579,7 +567,6 @@ graph TD
     example_metric_drive --> LLXIntegration
     example_strategy_gen --> print
     example_strategy_gen --> ProxyClient
-    create_summary --> print
     generate_from_files_ --> Argument
     generate_from_files_ --> Option
     review_strategy_cli --> Argument
@@ -587,19 +574,24 @@ graph TD
     auto_loop --> command
     auto_loop --> Argument
     auto_loop --> Option
-    main --> print
-    main --> Path
-    example_6_workflow_a --> print
-    example_4_batch_proc --> print
-    example_4_batch_proc --> items
-    main --> example_1_check_exte
-    main --> chdir
-    main --> run_command
-    example_3_iterative_ --> print
-    example_3_iterative_ --> generate_from_curren
-    example_5_custom_ana --> print
-    example_5_custom_ana --> Path
-    example_5_custom_ana --> mkdir
+    ci_status --> command
+    ci_status --> Argument
+    ci_status --> print
+    ci_status --> exists
+    example_mcp_session --> print
+    _parse_llx_output --> split
+    _parse_llx_output --> ProjectMetrics
+    _parse_llx_output --> strip
+    run_loop --> print
+    run_loop --> range
+    main --> ArgumentParser
+    main --> add_argument
+    merge --> model_dump
+    merge --> set
+    merge --> get
+    merge --> Strategy
+    validate_strategy_cl --> Argument
+    validate_strategy_cl --> Option
 ```
 
 ## Reverse Engineering Guidelines

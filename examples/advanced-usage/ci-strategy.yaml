@@ -1,0 +1,2983 @@
+name: Ci-Pipeline Improvement Plan
+project_name: ci-pipeline
+project_type: improvement
+domain: software
+goal: Improve overall code quality and maintainability
+goals:
+- Improve overall code quality
+- Ensure all files pass validation
+quality_gates:
+- name: Critical Functions
+  description: No functions should have CC > 15
+  criteria:
+  - "All functions CC \u2264 15"
+  required: true
+- name: Validation Errors
+  description: All files must pass validation
+  criteria:
+  - Zero validation errors
+  required: true
+- name: Validation Warnings
+  description: Address all validation warnings
+  criteria:
+  - Zero validation warnings
+  required: true
+- name: Test Coverage
+  description: Maintain adequate test coverage
+  criteria:
+  - "Coverage \u2265 80%"
+  required: true
+sprints:
+- id: sprint-1
+  name: Feature Development
+  duration: 2 weeks
+  objectives:
+  - Implement features and improvements
+  task_patterns:
+  - name: Resolve Bug Issues
+    description: Fix 15 bug issues
+    task_type: bugfix
+    priority: medium
+    estimate: 7d
+    issues:
+    - title: Issue in issues[3].title
+      description: 'Bug: ",...'
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[3].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[4].title
+      description: 'Bug: ,...'
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[4].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[5].title
+      description: 'Bug: report:\n- Description: {issue_description}\n- Ste...'
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[5].description
+      description: 'report:\n- Description: {issue_description}\n- Steps to reproduce:
+        {reproduction_steps}\n- Expected behavior: {expected_behavior}",'
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[5].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[16].title
+      description: 'Bug: = "bug"...'
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[16].description
+      description: = "bug"
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[16].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[21].title
+      description: "Bug: -fix loop: tests \u2192 tickets \u2192 fixes \u2192 retests...."
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[21].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[22].title
+      description: 'Bug: Report:...'
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[22].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[23].title
+      description: 'Bug: report from test failures."""...'
+      priority: medium
+      category: bug
+      file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+  issue_count: 15
+tasks:
+  critical_refactors: []
+  standard_refactors: []
+  bug_fixes:
+  - name: Issue in issues[3].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[3].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[4].title
+    description: 'Bug: ,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[4].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[5].title
+    description: 'Bug: report:\n- Description: {issue_description}\n- Ste...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[5].description
+    description: 'report:\n- Description: {issue_description}\n- Steps to reproduce:
+      {reproduction_steps}\n- Expected behavior: {expected_behavior}",'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[5].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[16].title
+    description: 'Bug: = "bug"...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[16].description
+    description: = "bug"
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[16].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[21].title
+    description: "Bug: -fix loop: tests \u2192 tickets \u2192 fixes \u2192 retests...."
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[21].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[22].title
+    description: 'Bug: Report:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[22].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[23].title
+    description: 'Bug: report from test failures."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[23].description
+    description: report from test failures."""
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[23].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[24].title
+    description: 'Bug: -fix loop."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[24].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[25].title
+    description: 'Bug: _report(self, test_result: TestResult, metrics: Di...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[25].description
+    description: '_report(self, test_result: TestResult, metrics: Dict[str, Any])
+      -> BugReport:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[25].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[26].title
+    description: 'Bug: report using LLM."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[26].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[27].title
+    description: 'Bug: report with LLM...")...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[27].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[28].title
+    description: 'Bug: report:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[28].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[29].title
+    description: 'Bug: report with:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[29].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[30].title
+    description: 'Bug: _data = json.loads(result.stdout)...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[30].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[31].title
+    description: 'Bug: Report(...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[31].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[32].title
+    description: 'Bug: _data["title"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[32].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[33].title
+    description: 'Bug: _data["description"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[33].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[34].title
+    description: 'Bug: _data.get("files", []),...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[34].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[35].title
+    description: 'Bug: _data.get("severity", "medium")...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[35].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[36].title
+    description: 'Bug: Report(...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[36].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[37].title
+    description: 'Bug: _tickets(self, bug_report: BugReport) -> List[str]...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[37].description
+    description: '_tickets(self, bug_report: BugReport) -> List[str]:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[37].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[38].title
+    description: 'Bug: tickets in configured backends."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[38].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[39].title
+    description: 'Bug: tickets: {bug_report.title}")...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[39].description
+    description: 'tickets: {bug_report.title}")'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[39].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[40].title
+    description: 'Bug: _report.title,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[40].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[41].title
+    description: 'Bug: _report.description,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[41].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[42].title
+    description: 'Bug: ", "auto-generated", f"severity-{bug_report.severi...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[42].description
+    description: '", "auto-generated", f"severity-{bug_report.severity}"],'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[42].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[43].title
+    description: 'Bug: _report.severity in ["high", "critical"] else "med...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[43].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[44].title
+    description: 'Bug: s(self, bug_report: BugReport) -> bool:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[44].description
+    description: 's(self, bug_report: BugReport) -> bool:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[44].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[45].title
+    description: 'Bug: s using LLM."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[45].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[46].title
+    description: 'Bug: in the codebase:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[46].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].title
+    description: 'Bug: {bug_report.title}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].description
+    description: '{bug_report.title}'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[48].title
+    description: 'Bug: _report.description}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[48].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[49].title
+    description: 'Bug: _report.test_names}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[49].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[50].title
+    description: 'Bug: report...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[50].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[51].title
+    description: 'Bug: _report = self.generate_bug_report(test_result, me...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[51].description
+    description: _report = self.generate_bug_report(test_result, metrics)
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[51].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].title
+    description: 'Bug: _tickets(bug_report)...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].description
+    description: _tickets(bug_report)
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[53].title
+    description: 'Bug: s(bug_report)...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[53].description
+    description: s(bug_report)
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[53].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[54].title
+    description: 'Bug: -fix loop")...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[54].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[59].title
+    description: 'Test: failures."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[59].description
+    description: failures."""
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[69].title
+    description: 'Test: _name = line.split("FAILED")[1].strip()...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[69].description
+    description: _name = line.split("FAILED")[1].strip()
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[72].title
+    description: 'Test: s=failed_tests,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[72].description
+    description: s=failed_tests,
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[73].description
+    description: '_result: TestResult, metrics: Dict[str, Any]) -> BugReport:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[74].title
+    description: 'Test: s": test_result.failed_tests,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[74].description
+    description: 's": test_result.failed_tests,'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[77].title
+    description: 'Test: failures and code metrics, create a bug report:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[77].description
+    description: 'failures and code metrics, create a bug report:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[78].title
+    description: 'Test: s: {context[''failed_tests'']}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[78].description
+    description: 's: {context[''failed_tests'']}'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[80].title
+    description: 'Test: _names=test_result.failed_tests,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[80].description
+    description: _names=test_result.failed_tests,
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[81].title
+    description: 'Test: s failed: {len(test_result.failed_tests)} failures...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[81].description
+    description: 's failed: {len(test_result.failed_tests)} failures",'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[82].title
+    description: 'Test: s failed: {'', ''.join(test_result.failed_tests)}",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[82].description
+    description: 's failed: {'', ''.join(test_result.failed_tests)}",'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[83].title
+    description: 'Test: _names=test_result.failed_tests,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[83].description
+    description: _names=test_result.failed_tests,
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[84].title
+    description: 'Test: s: {bug_report.test_names}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[84].description
+    description: 's: {bug_report.test_names}'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[94].title
+    description: 'Test: s failed: {len(test_result.failed_tests)} failures...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[94].description
+    description: 's failed: {len(test_result.failed_tests)} failures")'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[97].title
+    description: 'Bug: = "bug"...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[97].description
+    description: = "bug"
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[97].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[99].title
+    description: 'Bug: pattern...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[99].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[100].title
+    description: 'Bug: _title = self._call_llx(...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[100].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[101].title
+    description: 'Bug: tasks. "...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[101].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[102].title
+    description: 'Bug: _desc = self._call_llx(...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[102].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[103].title
+    description: 'Bug: tasks. "...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[103].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[104].title
+    description: 'Bug: _pattern"] = {...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[104].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[105].title
+    description: 'Bug: _title,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[105].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[106].title
+    description: 'Bug: _desc...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[106].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[107].title
+    description: 'Bug: pattern...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[107].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[108].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[108].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[109].title
+    description: 'Bug: ,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[109].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[110].title
+    description: 'Bug: _pattern"]["title"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[110].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[111].title
+    description: 'Bug: _pattern"]["description"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[111].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[112].title
+    description: 'Bug: ", "tech_debt"]...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[112].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[117].title
+    description: 'Bug: '',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[117].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[122].title
+    description: 'Bug: , feature, refactor, test, docs, etc....'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[122].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[129].title
+    description: 'Bug: s and issues''...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[129].description
+    description: s and issues'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[129].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[130].title
+    description: 'Bug: s and errors"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[130].description
+    description: s and errors"],
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[130].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[131].title
+    description: 'Bug: '': ''bugfix'',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[131].description
+    description: ''': ''bugfix'','
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[131].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[144].title
+    description: 'Bug: reports with LLM...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[144].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[147].description
+    description: s = "Pass" if iteration["tests_passed"] else f"Fail ({len(iteration.get('failed_tests',
+      []))})"
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[151].title
+    description: 'Test: s fail, generate bug reports with LLM...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[151].description
+    description: s fail, generate bug reports with LLM
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[206].title
+    description: 'Bug: fix, security...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[206].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[208].title
+    description: 'Refactor: , test, docs, feature, bugfix, security...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[208].description
+    description: ', test, docs, feature, bugfix, security'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[212].title
+    description: 'Test: , docs, feature, bugfix, security...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[212].description
+    description: ', docs, feature, bugfix, security'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[215].title
+    description: 'Doc: s, feature, bugfix, security...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[215].description
+    description: s, feature, bugfix, security
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[217].title
+    description: 'Bug: ": {"boost": 2, "base": "high"},...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[217].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[221].title
+    description: 'Bug: ": "Bug",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[221].description
+    description: '": "Bug",'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[221].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[227].title
+    description: 'Bug: _fixes'': [],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[227].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[228].title
+    description: 'Bug: '':...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[228].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[229].title
+    description: 'Bug: _fixes''].append(task)...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[229].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[230].title
+    description: 'Bug: s",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[230].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[238].title
+    description: 'Refactor: ing may introduce new bugs",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[238].description
+    description: ing may introduce new bugs",
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[262].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[262].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[273].title
+    description: 'Bug: '', ''issue'']):...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[273].description
+    description: ''', ''issue'']):'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[273].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[274].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[274].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[275].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[275].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[276].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[276].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[277].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[277].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[282].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[283].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[284].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[285].title
+    description: 'Fixme: '': ''bug'',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[285].description
+    description: ''': ''bug'','
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[285].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[289].title
+    description: 'Bug: '': re.compile(r''(?i)BUG\s*[:#]?\s*(.+)'', re.MULTIL...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[289].description
+    description: ''': re.compile(r''(?i)BUG\s*[:#]?\s*(.+)'', re.MULTILINE),'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[289].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[290].title
+    description: 'Bug: '': ''critical'',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[290].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[291].title
+    description: 'Bug: '',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[291].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[292].title
+    description: 'Bug: '': ''bug'',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[292].description
+    description: ''': ''bug'','
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[292].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  test_writing: []
+  documentation: []
+metrics:
+  current:
+    validation_errors: 0
+    validation_warnings: 0
+  target:
+    validation_errors: 0
+    validation_warnings: 0
+    average_cc: 3.5
+    critical_functions: 0
+    duplication_groups: 0
+    test_coverage: 80
+tickets:
+  critical: []
+  high: []
+  medium:
+  - title: Issue in issues[3].title
+    description: 'Bug: ",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[3].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[4].title
+    description: 'Bug: ,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[4].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[5].title
+    description: 'Bug: report:\n- Description: {issue_description}\n- Ste...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[5].description
+    description: 'report:\n- Description: {issue_description}\n- Steps to reproduce:
+      {reproduction_steps}\n- Expected behavior: {expected_behavior}",'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[5].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[16].title
+    description: 'Bug: = "bug"...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[16].description
+    description: = "bug"
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[16].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[21].title
+    description: "Bug: -fix loop: tests \u2192 tickets \u2192 fixes \u2192 retests...."
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[21].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[22].title
+    description: 'Bug: Report:...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[22].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[23].title
+    description: 'Bug: report from test failures."""...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[23].description
+    description: report from test failures."""
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[23].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[24].title
+    description: 'Bug: -fix loop."""...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[24].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[25].title
+    description: 'Bug: _report(self, test_result: TestResult, metrics: Di...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[25].description
+    description: '_report(self, test_result: TestResult, metrics: Dict[str, Any])
+      -> BugReport:'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[25].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[26].title
+    description: 'Bug: report using LLM."""...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[26].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[27].title
+    description: 'Bug: report with LLM...")...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[27].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[28].title
+    description: 'Bug: report:...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[28].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[29].title
+    description: 'Bug: report with:...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[29].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[30].title
+    description: 'Bug: _data = json.loads(result.stdout)...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[30].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[31].title
+    description: 'Bug: Report(...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[31].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[32].title
+    description: 'Bug: _data["title"],...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[32].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[33].title
+    description: 'Bug: _data["description"],...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[33].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[34].title
+    description: 'Bug: _data.get("files", []),...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[34].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[35].title
+    description: 'Bug: _data.get("severity", "medium")...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[35].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[36].title
+    description: 'Bug: Report(...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[36].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[37].title
+    description: 'Bug: _tickets(self, bug_report: BugReport) -> List[str]...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[37].description
+    description: '_tickets(self, bug_report: BugReport) -> List[str]:'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[37].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[38].title
+    description: 'Bug: tickets in configured backends."""...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[38].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[39].title
+    description: 'Bug: tickets: {bug_report.title}")...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[39].description
+    description: 'tickets: {bug_report.title}")'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[39].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[40].title
+    description: 'Bug: _report.title,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[40].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[41].title
+    description: 'Bug: _report.description,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[41].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[42].title
+    description: 'Bug: ", "auto-generated", f"severity-{bug_report.severi...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[42].description
+    description: '", "auto-generated", f"severity-{bug_report.severity}"],'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[42].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[43].title
+    description: 'Bug: _report.severity in ["high", "critical"] else "med...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[43].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[44].title
+    description: 'Bug: s(self, bug_report: BugReport) -> bool:...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[44].description
+    description: 's(self, bug_report: BugReport) -> bool:'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[44].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[45].title
+    description: 'Bug: s using LLM."""...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[45].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[46].title
+    description: 'Bug: in the codebase:...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[46].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[47].title
+    description: 'Bug: {bug_report.title}...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[47].description
+    description: '{bug_report.title}'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[47].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[48].title
+    description: 'Bug: _report.description}...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[48].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[49].title
+    description: 'Bug: _report.test_names}...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[49].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[50].title
+    description: 'Bug: report...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[50].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[51].title
+    description: 'Bug: _report = self.generate_bug_report(test_result, me...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[51].description
+    description: _report = self.generate_bug_report(test_result, metrics)
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[51].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[52].title
+    description: 'Bug: _tickets(bug_report)...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[52].description
+    description: _tickets(bug_report)
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[52].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[53].title
+    description: 'Bug: s(bug_report)...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[53].description
+    description: s(bug_report)
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[53].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[54].title
+    description: 'Bug: -fix loop")...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[54].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[59].title
+    description: 'Test: failures."""...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[59].description
+    description: failures."""
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[69].title
+    description: 'Test: _name = line.split("FAILED")[1].strip()...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[69].description
+    description: _name = line.split("FAILED")[1].strip()
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[72].title
+    description: 'Test: s=failed_tests,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[72].description
+    description: s=failed_tests,
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[73].description
+    description: '_result: TestResult, metrics: Dict[str, Any]) -> BugReport:'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[74].title
+    description: 'Test: s": test_result.failed_tests,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[74].description
+    description: 's": test_result.failed_tests,'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[77].title
+    description: 'Test: failures and code metrics, create a bug report:...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[77].description
+    description: 'failures and code metrics, create a bug report:'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[78].title
+    description: 'Test: s: {context[''failed_tests'']}...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[78].description
+    description: 's: {context[''failed_tests'']}'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[80].title
+    description: 'Test: _names=test_result.failed_tests,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[80].description
+    description: _names=test_result.failed_tests,
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[81].title
+    description: 'Test: s failed: {len(test_result.failed_tests)} failures...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[81].description
+    description: 's failed: {len(test_result.failed_tests)} failures",'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[82].title
+    description: 'Test: s failed: {'', ''.join(test_result.failed_tests)}",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[82].description
+    description: 's failed: {'', ''.join(test_result.failed_tests)}",'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[83].title
+    description: 'Test: _names=test_result.failed_tests,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[83].description
+    description: _names=test_result.failed_tests,
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[84].title
+    description: 'Test: s: {bug_report.test_names}...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[84].description
+    description: 's: {bug_report.test_names}'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[94].title
+    description: 'Test: s failed: {len(test_result.failed_tests)} failures...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[94].description
+    description: 's failed: {len(test_result.failed_tests)} failures")'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[97].title
+    description: 'Bug: = "bug"...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[97].description
+    description: = "bug"
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[97].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[99].title
+    description: 'Bug: pattern...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[99].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[100].title
+    description: 'Bug: _title = self._call_llx(...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[100].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[101].title
+    description: 'Bug: tasks. "...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[101].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[102].title
+    description: 'Bug: _desc = self._call_llx(...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[102].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[103].title
+    description: 'Bug: tasks. "...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[103].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[104].title
+    description: 'Bug: _pattern"] = {...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[104].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[105].title
+    description: 'Bug: _title,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[105].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[106].title
+    description: 'Bug: _desc...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[106].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[107].title
+    description: 'Bug: pattern...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[107].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[108].title
+    description: 'Bug: ",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[108].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[109].title
+    description: 'Bug: ,...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[109].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[110].title
+    description: 'Bug: _pattern"]["title"],...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[110].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[111].title
+    description: 'Bug: _pattern"]["description"],...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[111].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[112].title
+    description: 'Bug: ", "tech_debt"]...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[112].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[117].title
+    description: 'Bug: '',...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[117].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[122].title
+    description: 'Bug: , feature, refactor, test, docs, etc....'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[122].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[129].title
+    description: 'Bug: s and issues''...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[129].description
+    description: s and issues'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[129].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[130].title
+    description: 'Bug: s and errors"],...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[130].description
+    description: s and errors"],
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[130].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[131].title
+    description: 'Bug: '': ''bugfix'',...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[131].description
+    description: ''': ''bugfix'','
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[131].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[144].title
+    description: 'Bug: reports with LLM...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[144].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[147].description
+    description: s = "Pass" if iteration["tests_passed"] else f"Fail ({len(iteration.get('failed_tests',
+      []))})"
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[151].title
+    description: 'Test: s fail, generate bug reports with LLM...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[151].description
+    description: s fail, generate bug reports with LLM
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[206].title
+    description: 'Bug: fix, security...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[206].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[208].title
+    description: 'Refactor: , test, docs, feature, bugfix, security...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[208].description
+    description: ', test, docs, feature, bugfix, security'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[212].title
+    description: 'Test: , docs, feature, bugfix, security...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[212].description
+    description: ', docs, feature, bugfix, security'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[215].title
+    description: 'Doc: s, feature, bugfix, security...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[215].description
+    description: s, feature, bugfix, security
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[217].title
+    description: 'Bug: ": {"boost": 2, "base": "high"},...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[217].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[221].title
+    description: 'Bug: ": "Bug",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[221].description
+    description: '": "Bug",'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[221].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[227].title
+    description: 'Bug: _fixes'': [],...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[227].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[228].title
+    description: 'Bug: '':...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[228].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[229].title
+    description: 'Bug: _fixes''].append(task)...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[229].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[230].title
+    description: 'Bug: s",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[230].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[238].title
+    description: 'Refactor: ing may introduce new bugs",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[238].description
+    description: ing may introduce new bugs",
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[262].title
+    description: 'Bug: ",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[262].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[273].title
+    description: 'Bug: '', ''issue'']):...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[273].description
+    description: ''', ''issue'']):'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[273].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[274].title
+    description: 'Bug: ",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[274].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[275].title
+    description: 'Bug: ",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[275].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[276].title
+    description: 'Bug: ",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[276].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[277].title
+    description: 'Bug: ",...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[277].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[282].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[283].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[284].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[285].title
+    description: 'Fixme: '': ''bug'',...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[285].description
+    description: ''': ''bug'','
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[285].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[289].title
+    description: 'Bug: '': re.compile(r''(?i)BUG\s*[:#]?\s*(.+)'', re.MULTIL...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[289].description
+    description: ''': re.compile(r''(?i)BUG\s*[:#]?\s*(.+)'', re.MULTILINE),'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[289].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[290].title
+    description: 'Bug: '': ''critical'',...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[290].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[291].title
+    description: 'Bug: '',...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[291].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[292].title
+    description: 'Bug: '': ''bug'',...'
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[292].description
+    description: ''': ''bug'','
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[292].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  low: []
+risks:
+- description: Refactoring may introduce new bugs
+  mitigation: Comprehensive testing and code review
+success_criteria:
+- All quality gates pass
+- All generated tickets are completed
+- Zero validation errors
+- Code duplication eliminated
+- All files pass linting and validation

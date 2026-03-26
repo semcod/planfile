@@ -1,10 +1,10 @@
-# planfile | 378 func | 41f | 10795L | python | 2026-03-26
+# planfile | 378 func | 41f | 10841L | python | 2026-03-26
 
 HEALTH:
   CC̄=4.2  critical=41 (limit:10)  dup=7  cycles=0
 
 ALERTS[20]:
-  !!! high_fan_out     add_extra_commands = 28 (limit:10)
+  !!! high_fan_out     add_extra_commands = 30 (limit:10)
   !!! high_fan_out     auto_loop = 21 (limit:10)
   !!! high_fan_out     review_strategy_cli = 21 (limit:10)
   !!! high_fan_out     analyze_text = 20 (limit:10)
@@ -18,13 +18,13 @@ ALERTS[20]:
 MODULES[54] (top by size):
   M[htmlcov/coverage_html_cb_dd2e7eb5.js] 735L C:0 F:65 CC↑21 D:0 (javascript)
   M[htmlcov/coverage_html_cb_6fb7b396.js] 733L C:0 F:64 CC↑19 D:0 (javascript)
-  M[planfile/cli/extra_commands.py] 487L C:0 F:6 CC↑10 D:2 (python)
+  M[planfile/cli/extra_commands.py] 520L C:0 F:6 CC↑10 D:0 (python)
   M[planfile/llm/adapters.py] 459L C:6 F:18 CC↑20 D:0 (python)
   M[planfile/ci_runner.py] 453L C:3 F:10 CC↑9 D:0 (python)
   M[planfile/models_v2.py] 426L C:8 F:14 CC↑12 D:0 (python)
   M[planfile/executor_standalone.py] 336L C:3 F:12 CC↑8 D:0 (python)
   M[planfile/runner.py] 284L C:0 F:6 CC↑12 D:4 (python)
-  M[planfile/loaders/yaml_loader.py] 283L C:0 F:11 CC↑18 D:10 (python)
+  M[planfile/loaders/yaml_loader.py] 283L C:0 F:11 CC↑18 D:6 (python)
   M[planfile/integrations/jira.py] 283L C:1 F:9 CC↑13 D:0 (python)
   M[planfile/analysis/external_tools.py] 267L C:2 F:13 CC↑12 D:0 (python)
   M[planfile/cli/auto_loop.py] 252L C:0 F:9 CC↑10 D:1 (python)
@@ -34,7 +34,7 @@ MODULES[54] (top by size):
   LANGS: python:48/shell:4/javascript:2
 
 HOTSPOTS[10]:
-  ★ add_extra_commands fan=28  // Add extra commands to the CLI app.
+  ★ add_extra_commands fan=30  // Add extra commands to the CLI app.
   ★ auto_loop fan=21  // Run automated CI/CD loop: test → ticket → fix → retest.
 
 This command will:
@@ -46,9 +46,9 @@ This command will:
 REFACTOR[15]:
   [1] H/H Split god module htmlcov/coverage_html_cb_dd2e7eb5.js (735L, 0 classes)
   [2] H/H Split god module htmlcov/coverage_html_cb_6fb7b396.js (733L, 0 classes)
-  [3] M/L Split load_strategy_yaml (CC=18 → target CC<10)
-  [4] M/L Split SprintGenerator.generate_sprints (CC=21 → target CC<10)
-  [5] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
+  [3] H/H Split god module planfile/cli/extra_commands.py (520L, 0 classes)
+  [4] M/L Split load_strategy_yaml (CC=18 → target CC<10)
+  [5] M/L Split SprintGenerator.generate_sprints (CC=21 → target CC<10)
 
 EVOLUTION:
-  2026-03-26 CC̄=4.2 crit=41 10795L // Automated analysis
+  2026-03-26 CC̄=4.2 crit=41 10841L // Automated analysis
