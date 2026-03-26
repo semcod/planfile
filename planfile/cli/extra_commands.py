@@ -241,9 +241,57 @@ def generate_template(project_type: str, domain: str) -> Strategy:
                     ]
                 }
             ]
+        },
+        'api': {
+            'name': 'REST API Strategy',
+            'project_type': 'api',
+            'domain': domain,
+            'goal': f'Build a simple Python REST API for {domain}',
+            'sprints': [
+                {
+                    'id': 1,
+                    'name': 'Specification & Architecture',
+                    'duration': '1 week',
+                    'objectives': [
+                        'Define API endpoints and data models (OpenAPI spec)',
+                        'Choose framework (FastAPI) and project dependencies',
+                        'Set up project structure and virtual environment'
+                    ]
+                },
+                {
+                    'id': 2,
+                    'name': 'Implementation',
+                    'duration': '2 weeks',
+                    'objectives': [
+                        'Implement CRUD endpoints',
+                        'Add input validation with Pydantic models',
+                        'Configure database / storage layer'
+                    ]
+                },
+                {
+                    'id': 3,
+                    'name': 'Testing',
+                    'duration': '1 week',
+                    'objectives': [
+                        'Write unit tests with pytest',
+                        'Write integration tests with TestClient',
+                        'Achieve >80% code coverage'
+                    ]
+                },
+                {
+                    'id': 4,
+                    'name': 'Deploy & Monitoring',
+                    'duration': '1 week',
+                    'objectives': [
+                        'Dockerize the application',
+                        'Configure CI/CD pipeline',
+                        'Add health-check endpoint and basic metrics'
+                    ]
+                }
+            ]
         }
     }
-    
+
     template = templates.get(project_type, templates['web'])
     
     # Create Strategy object
@@ -418,7 +466,7 @@ def add_extra_commands(app):
     
     @app.command("template")
     def template_cmd(
-        project_type: str = typer.Argument(..., help="Project type: web, mobile, ml"),
+        project_type: str = typer.Argument(..., help="Project type: web, mobile, ml, api"),
         domain: str = typer.Argument(..., help="Project domain"),
         output: str = typer.Option("template.yaml", help="Output file"),
     ):

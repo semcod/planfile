@@ -22,6 +22,7 @@ from planfile.cli.cmd.cmd_apply import (
 from planfile.cli.cmd.cmd_review import review_strategy_cli
 from planfile.cli.cmd.cmd_validate import validate_strategy_cli
 from planfile.cli.cmd.cmd_generate import generate_strategy_cli, generate_from_files_cmd
+from planfile.cli.cmd.cmd_init import init_strategy_cli
 
 app = typer.Typer(help="Strategy CLI - Manage strategies and sprints")
 console = Console()
@@ -57,6 +58,8 @@ app.command("review")(review_strategy_cli)
 app.command("validate")(validate_strategy_cli)
 app.command("generate")(generate_strategy_cli)
 app.command("generate-from-files")(generate_from_files_cmd)
+app.command("init")(init_strategy_cli)
+
 
 def main():
     """Main CLI entry point."""

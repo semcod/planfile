@@ -19,18 +19,20 @@ def validate_strategy_cli(
         console.print(f"Project Type: {strategy.project_type}")
         console.print(f"Domain: {strategy.domain}")
         console.print(f"Sprints: {len(strategy.sprints)}")
-        console.print(f"Task Patterns: {sum(len(patterns) for patterns in strategy.tasks.values())}")
+        tasks_dict = getattr(strategy, 'tasks', {}) or {}
+        console.print(f"Task Patterns: {sum(len(v) for v in tasks_dict.values())}")
         
         if verbose:
             console.print("\n[bold]Sprints:[/bold]")
             for sprint in strategy.sprints:
                 console.print(f"  - Sprint {sprint.id}: {sprint.name} ({sprint.length_days} days)")
             
-            console.print("\n[bold]Task Patterns:[/bold]")
-            for category, patterns in strategy.tasks.items():
-                console.print(f"  {category}:")
-                for pattern in patterns:
-                    console.print(f"    - {pattern.id}: {pattern.title}")
+            if tasks_dict:
+                console.print("\n[bold]Task Patterns:[/bold]")
+                for category, patterns in tasks_dict.items():
+                    console.print(f"  {category}:")
+                    for pattern in patterns:
+                        console.print(f"    - {pattern.id}: {pattern.title}")
     
     except Exception as e:
         console.print(f"[red]✗[/red] Validation failed: {e}")

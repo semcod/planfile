@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.32] - 2026-03-26
+
+### Docs
+- Update README.md
+
+### Other
+- Update examples/advanced-usage/ci-strategy.yaml
+- Update examples/demo-without-keys/local-strategy.yaml
+- Update examples/external-tools/full-analysis.yaml
+- Update planfile/.planfile_analysis/analysis_summary.json
+- Update planfile/cli/cmd/cmd_init.py
+- Update planfile/cli/cmd/cmd_validate.py
+- Update planfile/cli/commands.py
+- Update planfile/cli/extra_commands.py
+
 ## [0.1.31] - 2026-03-26
 
 ### Docs
