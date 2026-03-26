@@ -1,11 +1,11 @@
 flowchart TD
     planfile__ci_runner["planfile.ci_runner<br/>10 funcs"]
-    planfile__cli["planfile.cli<br/>9 funcs"]
+    planfile__cli["planfile.cli<br/>22 funcs"]
     planfile__examples["planfile.examples<br/>45 funcs"]
     planfile__llm["planfile.llm<br/>7 funcs"]
-    planfile__loaders["planfile.loaders<br/>12 funcs"]
+    planfile__loaders["planfile.loaders<br/>21 funcs"]
     planfile__runner["planfile.runner<br/>8 funcs"]
-    planfile__utils["planfile.utils<br/>5 funcs"]
+    planfile__utils["planfile.utils<br/>8 funcs"]
     planfile__ci_runner ==>|22| planfile__examples
     planfile__cli ==>|4| planfile__loaders
     planfile__llm -->|3| planfile__examples

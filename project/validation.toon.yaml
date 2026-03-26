@@ -1,14 +1,9 @@
-# vallm batch | 69f | 29✓ 6⚠ 19✗ | 2026-03-26
+# vallm batch | 70f | 29✓ 5⚠ 19✗ | 2026-03-26
 
 SUMMARY:
-  scanned: 69  passed: 29 (42.0%)  warnings: 6  errors: 19  unsupported: 21
+  scanned: 70  passed: 29 (41.4%)  warnings: 5  errors: 19  unsupported: 22
 
-WARNINGS[6]{path,score}:
-  planfile/utils/metrics.py,0.93
-    issues[3]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,analyze_project_metrics has cyclomatic complexity 16 (max: 15),8
-      complexity.lizard_cc,warning,analyze_project_metrics: CC=16 exceeds limit 15,8
-      complexity.lizard_length,warning,analyze_project_metrics: 110 lines exceeds limit 100,8
+WARNINGS[5]{path,score}:
   planfile/examples/bash-generation/verify_planfile.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
@@ -87,8 +82,8 @@ ERRORS[19]{path,score}:
       python.import.resolvable,error,Module 'planfile.integrations.jira' not found,16
       python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,17
       python.import.resolvable,error,Module 'planfile.integrations.generic' not found,18
-      python.import.resolvable,error,Module 'llm.generator' not found,341
-      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,342
+      python.import.resolvable,error,Module 'llm.generator' not found,389
+      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,390
   planfile/ci_runner.py,0.83
     issues[6]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,14
@@ -120,7 +115,7 @@ ERRORS[19]{path,score}:
       python.import.resolvable,error,Module 'aiohttp' not found,16
 
 UNSUPPORTED[5]{bucket,count}:
-  *.md,10
+  *.md,11
   Dockerfile*,1
   *.txt,1
   *.yml,2

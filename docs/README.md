@@ -1,7 +1,7 @@
 <!-- code2docs:start --># planfile
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-143-green)
-> **143** functions | **27** classes | **34** files | CC̄ = 4.8
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-168-green)
+> **168** functions | **27** classes | **34** files | CC̄ = 4.2
 
 > Auto-generated project documentation from source code analysis.
 
@@ -152,14 +152,14 @@ Content outside the markers is preserved when regenerating. Enable this with `sy
 
 ```
 planfile/
-├── planfile/        ├── llx_validator        ├── summary    ├── runner        ├── yaml_loader    ├── loaders/        ├── cli_loader        ├── auto_loop    ├── cli/        ├── __main__        ├── generator        ├── commands    ├── llm/        ├── prompts        ├── client    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── 02_mcp_integration    ├── ci_runner            ├── 03_proxy_routing├── docker-entrypoint├── project        ├── validate_with_llx            ├── 01_full_workflow            ├── verify_planfile            ├── 04_llx_integration    ├── models        ├── base```
+├── planfile/    ├── runner        ├── llx_validator        ├── summary        ├── cli_loader        ├── yaml_loader    ├── loaders/        ├── auto_loop    ├── cli/        ├── __main__        ├── commands        ├── generator        ├── prompts    ├── llm/        ├── client    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── 02_mcp_integration    ├── ci_runner            ├── 03_proxy_routing├── docker-entrypoint├── project        ├── validate_with_llx            ├── 01_full_workflow            ├── verify_planfile            ├── 04_llx_integration    ├── models        ├── base```
 
 ## API Overview
 
 ### Classes
 
-- **`LLXValidator`** — Use LLX to validate generated code and strategies.
 - **`StrategyRunner`** — Main runner for applying and reviewing strategies.
+- **`LLXValidator`** — Use LLX to validate generated code and strategies.
 - **`GitLabBackend`** — GitLab Issues integration backend.
 - **`JiraBackend`** — Jira integration backend.
 - **`GitHubBackend`** — GitHub Issues integration backend.
@@ -188,10 +188,15 @@ planfile/
 
 ### Functions
 
-- `create_validation_script()` — Create a validation script that uses LLX.
-- `create_summary()` — Create a summary of all changes made.
 - `apply_strategy(strategy, project_path, backends, backend_name)` — Apply a strategy to create/update tickets.
 - `review_strategy(strategy, project_path, backends, backend_name)` — Review strategy execution by checking ticket statuses.
+- `create_validation_script()` — Create a validation script that uses LLX.
+- `create_summary()` — Create a summary of all changes made.
+- `load_from_json(file_path)` — Load JSON file and return as dictionary.
+- `save_to_json(data, file_path)` — Save dictionary to JSON file.
+- `load_strategy_from_json(file_path)` — Load strategy from JSON file.
+- `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
+- `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
 - `load_yaml(file_path)` — Load YAML file and return as dictionary.
 - `save_yaml(data, file_path)` — Save dictionary to YAML file.
 - `load_strategy_yaml(file_path)` — Load strategy from YAML file.
@@ -199,21 +204,16 @@ planfile/
 - `load_tasks_yaml(file_path)` — Load task patterns from YAML file.
 - `merge_strategy_with_tasks(strategy, tasks_file)` — Merge additional task patterns into a planfile.
 - `validate_strategy_schema(file_path)` — Validate strategy YAML file and return list of issues.
-- `load_from_json(file_path)` — Load JSON file and return as dictionary.
-- `save_to_json(data, file_path)` — Save dictionary to JSON file.
-- `load_strategy_from_json(file_path)` — Load strategy from JSON file.
-- `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
-- `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
 - `get_backend(backend_type)` — Get backend instance by type.
 - `auto_loop(strategy, project_path, backend, max_iterations)` — Run automated CI/CD loop: test → ticket → fix → retest.
 - `ci_status(project_path)` — Check current CI status without running tests.
-- `generate_strategy(project_path)` — Generate a complete strategy from project analysis.
 - `get_backend(backend_type, config)` — Get backend instance by type and config.
 - `apply_strategy_cli(strategy_path, project_path, backend, config_file)` — Apply a strategy to create tickets.
 - `review_strategy_cli(strategy_path, project_path, backend, config_file)` — Review strategy execution and progress.
 - `validate_strategy_cli(strategy_path, verbose)` — Validate a strategy YAML file.
 - `generate_strategy_cli(project_path, output, model, sprints)` — Generate strategy.yaml from project analysis + LLM.
 - `main()` — Main CLI entry point.
+- `generate_strategy(project_path)` — Generate a complete strategy from project analysis.
 - `build_strategy_prompt(metrics, sprints, focus)` — Build a structured prompt for strategy generation.
 - `call_llm(prompt, model, temperature)` — Call LLM via LiteLLM. Falls back to llx proxy if available.
 - `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
@@ -260,8 +260,8 @@ planfile/
 📄 `planfile.ci_runner` (10 functions, 3 classes)
 📦 `planfile.cli`
 📄 `planfile.cli.__main__`
-📄 `planfile.cli.auto_loop` (3 functions)
-📄 `planfile.cli.commands` (6 functions)
+📄 `planfile.cli.auto_loop` (9 functions)
+📄 `planfile.cli.commands` (13 functions)
 📄 `planfile.examples.bash-generation.verify_planfile` (4 functions)
 📄 `planfile.examples.ecosystem.01_full_workflow` (17 functions, 6 classes)
 📄 `planfile.examples.ecosystem.02_mcp_integration` (6 functions)
@@ -281,12 +281,12 @@ planfile/
 📄 `planfile.llm.generator` (5 functions)
 📄 `planfile.llm.prompts` (1 functions)
 📦 `planfile.loaders`
-📄 `planfile.loaders.cli_loader` (5 functions)
-📄 `planfile.loaders.yaml_loader` (7 functions)
+📄 `planfile.loaders.cli_loader` (10 functions)
+📄 `planfile.loaders.yaml_loader` (11 functions)
 📄 `planfile.models` (2 functions, 7 classes)
 📄 `planfile.runner` (8 functions, 1 classes)
 📦 `planfile.utils`
-📄 `planfile.utils.metrics` (2 functions)
+📄 `planfile.utils.metrics` (5 functions)
 📄 `planfile.utils.priorities` (3 functions)
 📄 `project`
 
