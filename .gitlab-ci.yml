@@ -71,7 +71,7 @@ create_tickets:
       if [ ! -f coverage.json ] || [ "$(jq '.totals.percent_covered' coverage.json)" -lt 80 ]; then
         echo "Coverage below threshold, creating tickets..."
         planfile auto loop \
-          --strategy ./strategy.yaml \
+          --strategy ./planfile.yaml \
           --project . \
           --backend jira \
           --max-iterations 1 \
@@ -96,7 +96,7 @@ auto_fix:
   script:
     - echo "🔧 Attempting auto-fix..."
     - planfile auto loop \
-        --strategy ./strategy.yaml \
+        --strategy ./planfile.yaml \
         --project . \
         --backend jira \
         --max-iterations 3 \
@@ -122,7 +122,7 @@ review_strategy:
     - |
       # Check if strategy is complete
       planfile strategy review \
-        --strategy ./strategy.yaml \
+        --strategy ./planfile.yaml \
         --project . \
         --backend jira \
         --output review-results.json

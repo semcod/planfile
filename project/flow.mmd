@@ -4,37 +4,37 @@ flowchart TD
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph CLI
-        strategy__cli__auto_loop__get_backend["get_backend"]
-        strategy__cli__auto_loop__auto_loop["auto_loop"]
-        strategy__cli__auto_loop__ci_status["ci_status"]
-        strategy__cli__commands__get_backend["get_backend"]
-        strategy__cli__commands__apply_strategy_cli["apply_strategy_cli"]
-        strategy__cli__commands__review_strategy_cli["review_strategy_cli"]
-        strategy__cli__commands__validate_strategy_cli["validate_strategy_cli"]
-        strategy__cli__commands__main["main"]
+        planfile__cli__auto_loop__get_backend["get_backend"]
+        planfile__cli__auto_loop__auto_loop["auto_loop"]
+        planfile__cli__auto_loop__ci_status["ci_status"]
+        planfile__cli__commands__get_backend["get_backend"]
+        planfile__cli__commands__apply_strategy_cli["apply_strategy_cli"]
+        planfile__cli__commands__review_strategy_cli["review_strategy_cli"]
+        planfile__cli__commands__validate_strategy_cli["validate_strategy_cli"]
+        planfile__cli__commands__main["main"]
     end
 
     subgraph Core
-        strategy__loaders__yaml_loader__load_yaml["load_yaml"]
-        strategy__loaders__yaml_loader__save_strategy_yaml["save_strategy_yaml"]
-        strategy__loaders__yaml_loader__load_tasks_yaml["load_tasks_yaml"]
-        strategy__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
-        strategy__loaders__yaml_loader__validate_strategy_schema["validate_strategy_schema"]
-        strategy__runner__StrategyRunner___find_task_pattern["_find_task_pattern"]
-        strategy__runner__StrategyRunner___create_ticket_for_task["_create_ticket_for_task"]
-        strategy__runner__StrategyRunner___get_sprint_tickets["_get_sprint_tickets"]
-        strategy__runner__apply_strategy["apply_strategy"]
-        strategy__runner__review_strategy["review_strategy"]
-        strategy__loaders__cli_loader__load_from_json["load_from_json"]
-        strategy__loaders__cli_loader__save_to_json["save_to_json"]
-        strategy__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
-        strategy__loaders__cli_loader__save_strategy_to_json["save_strategy_to_json"]
-        strategy__utils__priorities__map_priority_to_system["map_priority_to_system"]
+        planfile__loaders__yaml_loader__load_yaml["load_yaml"]
+        planfile__loaders__yaml_loader__save_strategy_yaml["save_strategy_yaml"]
+        planfile__loaders__yaml_loader__load_tasks_yaml["load_tasks_yaml"]
+        planfile__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
+        planfile__loaders__yaml_loader__validate_strategy_schema["validate_strategy_schema"]
+        planfile__runner__StrategyRunner___find_task_pattern["_find_task_pattern"]
+        planfile__runner__StrategyRunner___create_ticket_for_task["_create_ticket_for_task"]
+        planfile__runner__StrategyRunner___get_sprint_tickets["_get_sprint_tickets"]
+        planfile__runner__apply_strategy["apply_strategy"]
+        planfile__runner__review_strategy["review_strategy"]
+        planfile__loaders__cli_loader__load_from_json["load_from_json"]
+        planfile__loaders__cli_loader__save_to_json["save_to_json"]
+        planfile__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
+        planfile__loaders__cli_loader__save_strategy_to_json["save_strategy_to_json"]
+        planfile__utils__priorities__map_priority_to_system["map_priority_to_system"]
         ...["+54 more"]
     end
 
     subgraph Exporters
-        strategy__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
+        planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
     end
 
-    class strategy__loaders__yaml_loader__save_strategy_yaml,strategy__loaders__yaml_loader__merge_strategy_with_tasks,strategy__loaders__yaml_loader__validate_strategy_schema,strategy__runner__StrategyRunner___find_task_pattern,strategy__runner__StrategyRunner___create_ticket_for_task,strategy__runner__StrategyRunner___get_sprint_tickets,strategy__runner__apply_strategy,strategy__runner__review_strategy,strategy__loaders__cli_loader__load_from_json,strategy__loaders__cli_loader__save_to_json entry
+    class planfile__loaders__yaml_loader__save_strategy_yaml,planfile__loaders__yaml_loader__merge_strategy_with_tasks,planfile__loaders__yaml_loader__validate_strategy_schema,planfile__runner__StrategyRunner___find_task_pattern,planfile__runner__StrategyRunner___create_ticket_for_task,planfile__runner__StrategyRunner___get_sprint_tickets,planfile__runner__apply_strategy,planfile__runner__review_strategy,planfile__loaders__cli_loader__load_from_json,planfile__loaders__cli_loader__save_to_json entry

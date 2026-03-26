@@ -1,4 +1,4 @@
-# SprintStrat CI/CD Runner Docker Image
+# Planfile CI/CD Runner Docker Image
 FROM python:3.11-slim
 
 # Install system dependencies
@@ -18,7 +18,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install SprintStrat with all integrations
+# Install Planfile with all integrations
 RUN pip install --no-cache-dir planfile[all]
 
 # Install LLX
