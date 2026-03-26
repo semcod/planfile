@@ -1,9 +1,17 @@
-# vallm batch | 190f | 98✓ 8⚠ 28✗ | 2026-03-26
+# vallm batch | 204f | 109✓ 10⚠ 30✗ | 2026-03-26
 
 SUMMARY:
-  scanned: 190  passed: 98 (51.6%)  warnings: 8  errors: 28  unsupported: 64
+  scanned: 204  passed: 109 (53.4%)  warnings: 10  errors: 30  unsupported: 65
 
-WARNINGS[8]{path,score}:
+WARNINGS[10]{path,score}:
+  ../../examples/advanced-usage/ci-strategy.yaml,0.93
+    issues[2]{rule,severity,message,line}:
+      complexity.lizard_length,warning,_report: 152 lines exceeds limit 100,271
+      complexity.lizard_length,warning,generate_bug_report: 111 lines exceeds limit 100,557
+  ../../examples/demo-without-keys/local-strategy.yaml,0.93
+    issues[2]{rule,severity,message,line}:
+      complexity.lizard_length,warning,_report: 452 lines exceeds limit 100,475
+      complexity.lizard_length,warning,generate_bug_report: 331 lines exceeds limit 100,1331
   ../../examples/test_llm_adapters.py,0.93
     issues[3]{rule,severity,message,line}:
       complexity.cyclomatic,warning,main has cyclomatic complexity 32 (max: 15),25
@@ -33,11 +41,17 @@ WARNINGS[8]{path,score}:
     issues[1]{rule,severity,message,line}:
       complexity.cyclomatic,warning,generate_report has cyclomatic complexity 20 (max: 15),416
 
-ERRORS[28]{path,score}:
+ERRORS[30]{path,score}:
   ../../examples/integrated-functionality/external-tools-strategy.yaml,0.00
     issues[1]{rule,severity,message,line}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
+  ../../examples/integrated-functionality/external.yaml,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
   ../../examples/integrated-functionality/generated-from-examples.yaml,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
+  ../../examples/integrated-functionality/generated.yaml,0.00
     issues[1]{rule,severity,message,line}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
   ../../examples/llm-integration/llm-config.yaml,0.00
@@ -165,4 +179,4 @@ UNSUPPORTED[5]{bucket,count}:
   Dockerfile*,1
   *.txt,4
   *.yml,2
-  other,17
+  other,18

@@ -6,7 +6,7 @@ SUMMARY:
   dup_groups:    1
   dup_fragments: 2
   saved_lines:   6
-  scan_ms:       1917
+  scan_ms:       1732
 
 DUPLICATES[1] (ranked by impact):
   [4349a92ea864c3ca]   EXAC  get_sprint  L=6 N=2 saved=6 sim=1.00

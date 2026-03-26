@@ -59,14 +59,14 @@
 - **Functions**: 11
 - **File**: `yaml_loader.py`
 
+### planfile.loaders.cli_loader
+- **Functions**: 10
+- **File**: `cli_loader.py`
+
 ### planfile.ci_runner
 - **Functions**: 10
 - **Classes**: 3
 - **File**: `ci_runner.py`
-
-### planfile.loaders.cli_loader
-- **Functions**: 10
-- **File**: `cli_loader.py`
 
 ### planfile.analysis.file_analyzer
 - **Functions**: 10
@@ -82,15 +82,15 @@
 - **Classes**: 1
 - **File**: `jira.py`
 
-### planfile.integrations.base
-- **Functions**: 9
-- **Classes**: 4
-- **File**: `base.py`
-
 ### examples.ecosystem.04_llx_integration
 - **Functions**: 9
 - **Classes**: 2
 - **File**: `04_llx_integration.py`
+
+### planfile.integrations.base
+- **Functions**: 9
+- **Classes**: 4
+- **File**: `base.py`
 
 ### planfile.integrations.generic
 - **Functions**: 8
@@ -361,17 +361,17 @@ run_loop [planfile.ci_runner.CIRunner]
 - **Methods**: 6
 - **Key Methods**: examples.ecosystem.04_llx_integration.LLXIntegration.__init__, examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project, examples.ecosystem.04_llx_integration.LLXIntegration._parse_llx_output, examples.ecosystem.04_llx_integration.LLXIntegration._basic_analysis, examples.ecosystem.04_llx_integration.LLXIntegration.select_model, examples.ecosystem.04_llx_integration.LLXIntegration.get_task_scope
 
-### planfile.integrations.base.PMBackend
-> Protocol for PM system backends.
-- **Methods**: 5
-- **Key Methods**: planfile.integrations.base.PMBackend.create_ticket, planfile.integrations.base.PMBackend.update_ticket, planfile.integrations.base.PMBackend.get_ticket, planfile.integrations.base.PMBackend.list_tickets, planfile.integrations.base.PMBackend.search_tickets
-- **Inherits**: Protocol
-
 ### planfile.models.Strategy
 > Main strategy configuration.
 - **Methods**: 5
 - **Key Methods**: planfile.models.Strategy.validate_sprint_ids, planfile.models.Strategy.get_task_patterns, planfile.models.Strategy.get_sprint, planfile.models.Strategy.model_validate_yaml, planfile.models.Strategy.model_dump_yaml
 - **Inherits**: BaseModel
+
+### planfile.integrations.base.PMBackend
+> Protocol for PM system backends.
+- **Methods**: 5
+- **Key Methods**: planfile.integrations.base.PMBackend.create_ticket, planfile.integrations.base.PMBackend.update_ticket, planfile.integrations.base.PMBackend.get_ticket, planfile.integrations.base.PMBackend.list_tickets, planfile.integrations.base.PMBackend.search_tickets
+- **Inherits**: Protocol
 
 ### planfile.llm.adapters.LocalLLMAdapter
 > Adapter for local LLM servers (Ollama, LM Studio, etc.).
@@ -379,16 +379,16 @@ run_loop [planfile.ci_runner.CIRunner]
 - **Key Methods**: planfile.llm.adapters.LocalLLMAdapter.__init__, planfile.llm.adapters.LocalLLMAdapter.test_strategy_generation, planfile.llm.adapters.LocalLLMAdapter._test_ollama, planfile.llm.adapters.LocalLLMAdapter._test_openai_compatible, planfile.llm.adapters.LocalLLMAdapter.get_available_models
 - **Inherits**: BaseLLMAdapter
 
+### examples.ecosystem.03_proxy_routing.ProxyClient
+> Client for interacting with Proxym API.
+- **Methods**: 4
+- **Key Methods**: examples.ecosystem.03_proxy_routing.ProxyClient.__init__, examples.ecosystem.03_proxy_routing.ProxyClient.chat, examples.ecosystem.03_proxy_routing.ProxyClient.get_routing_decision, examples.ecosystem.03_proxy_routing.ProxyClient.get_usage_stats
+
 ### planfile.integrations.base.BasePMBackend
 > Base class for PM backends with common functionality.
 - **Methods**: 4
 - **Key Methods**: planfile.integrations.base.BasePMBackend.__init__, planfile.integrations.base.BasePMBackend._validate_config, planfile.integrations.base.BasePMBackend.map_priority, planfile.integrations.base.BasePMBackend.prepare_metadata
 - **Inherits**: ABC
-
-### examples.ecosystem.03_proxy_routing.ProxyClient
-> Client for interacting with Proxym API.
-- **Methods**: 4
-- **Key Methods**: examples.ecosystem.03_proxy_routing.ProxyClient.__init__, examples.ecosystem.03_proxy_routing.ProxyClient.chat, examples.ecosystem.03_proxy_routing.ProxyClient.get_routing_decision, examples.ecosystem.03_proxy_routing.ProxyClient.get_usage_stats
 
 ### planfile.llm.adapters.LLMTestRunner
 > Run tests across multiple LLM adapters.
@@ -480,6 +480,14 @@ Args:
 > Validate GitLab configuration.
 - **Output to**: self.config.get, ValueError, self.config.get, ValueError
 
+### planfile.models.Strategy.validate_sprint_ids
+> Ensure sprint IDs are unique.
+- **Output to**: validator, len, len, ValueError, set
+
+### planfile.models.Strategy.model_validate_yaml
+> Load strategy from YAML string.
+- **Output to**: yaml.safe_load, cls.model_validate, isinstance, obj.items, isinstance
+
 ### planfile.integrations.jira.JiraBackend._validate_config
 > Validate Jira configuration.
 - **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
@@ -495,14 +503,6 @@ Args:
 ### planfile.cli.cmd.cmd_utils._load_and_validate_strategy
 > Load and validate strategy file.
 - **Output to**: planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print, typer.Exit
-
-### planfile.cli.cmd.cmd_utils._parse_sprint_filter
-> Parse sprint filter from string.
-- **Output to**: int, console.print, typer.Exit, s.strip, sprint_filter.split
-
-### planfile.cli.cmd.cmd_validate.validate_strategy_cli
-> Validate a strategy YAML file.
-- **Output to**: typer.Argument, typer.Option, planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print
 
 ## Behavioral Patterns
 
@@ -539,8 +539,8 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.llm.adapters.LLMTestRunner.generate_report` - 18 calls
 - `planfile.loaders.yaml_loader.load_strategy_yaml` - 17 calls
 - `planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output` - 17 calls
-- `planfile.ci_runner.CIRunner.check_strategy_completion` - 15 calls
 - `planfile.loaders.cli_loader.export_results_to_markdown` - 15 calls
+- `planfile.ci_runner.CIRunner.check_strategy_completion` - 15 calls
 - `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 15 calls
 - `planfile.cli.cmd.cmd_utils.get_backend` - 15 calls
 - `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls

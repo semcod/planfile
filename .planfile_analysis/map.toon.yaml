@@ -372,13 +372,6 @@ D:
   planfile/cli/cmd/cmd_validate.py:
     e: validate_strategy_cli
     validate_strategy_cli(strategy_path;verbose)
-  planfile/cli/cmd/cmd_utils.py:
-    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend
-    get_backend(backend_type;config)
-    _load_and_validate_strategy(strategy_path)
-    _load_backend_config(backend;config_file)
-    _parse_sprint_filter(sprint_filter)
-    _select_backend(backend;backend_config)
   planfile/models.py:
     e: TaskType,ModelTier,ModelHints,TaskPattern,Sprint,Goal,QualityGate,Strategy
     TaskType(str,Enum):  # Type of task in the strategy...
@@ -389,6 +382,13 @@ D:
     Goal(BaseModel):  # Project goal definition...
     QualityGate(BaseModel):  # Quality gate definition...
     Strategy(BaseModel): validate_sprint_ids(1),get_task_patterns(1),get_sprint(1),model_validate_yaml(1),model_dump_yaml(0)  # Main strategy configuration...
+  planfile/cli/cmd/cmd_utils.py:
+    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend
+    get_backend(backend_type;config)
+    _load_and_validate_strategy(strategy_path)
+    _load_backend_config(backend;config_file)
+    _parse_sprint_filter(sprint_filter)
+    _select_backend(backend;backend_config)
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)

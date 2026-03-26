@@ -24,7 +24,7 @@ flowchart TD
     planfile__cli -->|2| planfile__runner
     planfile__runner -->|1| planfile__models
     examples__llx_validator -->|1| examples__bash_generation
+    planfile__executor_standalone -->|1| planfile__models_v2
     planfile__ci_runner -->|1| planfile__loaders
     planfile__ci_runner -->|1| planfile__runner
-    planfile__executor_standalone -->|1| planfile__models_v2
     planfile__cli -->|1| planfile__llm
