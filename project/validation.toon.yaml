@@ -1,9 +1,14 @@
-# vallm batch | 103f | 41✓ 5⚠ 33✗ | 2026-03-26
+# vallm batch | 134f | 57✓ 6⚠ 38✗ | 2026-03-26
 
 SUMMARY:
-  scanned: 103  passed: 41 (39.8%)  warnings: 5  errors: 33  unsupported: 29
+  scanned: 134  passed: 57 (42.5%)  warnings: 6  errors: 38  unsupported: 39
 
-WARNINGS[5]{path,score}:
+WARNINGS[6]{path,score}:
+  planfile/analysis/file_analyzer.py,0.93
+    issues[3]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_analyze_toon has cyclomatic complexity 38 (max: 15),117
+      complexity.lizard_cc,warning,_analyze_toon: CC=38 exceeds limit 15,117
+      complexity.lizard_length,warning,_analyze_toon: 127 lines exceeds limit 100,117
   examples/bash-generation/verify_planfile.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
@@ -20,7 +25,7 @@ WARNINGS[5]{path,score}:
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
 
-ERRORS[33]{path,score}:
+ERRORS[38]{path,score}:
   examples/demo_without_keys.py,0.00
     issues[1]{rule,severity,message,line}:
       syntax.parse,error,SyntaxError: unmatched ')',303
@@ -33,6 +38,9 @@ ERRORS[33]{path,score}:
   examples/llm_integration_demo.py,0.00
     issues[1]{rule,severity,message,line}:
       syntax.parse,error,SyntaxError: unmatched ')',164
+  test-integrated.yaml,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
   planfile/__init__.py,0.57
     issues[5]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models' not found,15
@@ -40,6 +48,12 @@ ERRORS[33]{path,score}:
       python.import.resolvable,error,Module 'runner' not found,21
       python.import.resolvable,error,Module 'executor_standalone' not found,22
       python.import.resolvable,error,Module 'executor_standalone' not found,23
+  planfile/analysis/__init__.py,0.57
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'file_analyzer' not found,6
+      python.import.resolvable,error,Module 'sprint_generator' not found,7
+      python.import.resolvable,error,Module 'generator' not found,8
+      python.import.resolvable,error,Module 'external_tools' not found,9
   planfile/cli/__main__.py,0.57
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'commands' not found,1
@@ -59,11 +73,6 @@ ERRORS[33]{path,score}:
       python.import.resolvable,error,Module 'httpx' not found,35
       python.import.resolvable,error,Module 'llx.routing.client' not found,54
       python.import.resolvable,error,Module 'llx.config' not found,55
-  example_standalone.py,0.68
-    issues[3]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'planfile' not found,5
-      python.import.resolvable,error,Module 'planfile' not found,92
-      python.import.resolvable,error,Module 'planfile' not found,133
   mcp-server-example.py,0.68
     issues[3]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'mcp.server' not found,3
@@ -97,11 +106,8 @@ ERRORS[33]{path,score}:
       python.import.resolvable,error,Module 'llx' not found,66
       python.import.resolvable,error,Module 'llx' not found,87
       python.import.resolvable,error,Module 'llx.analysis.collector' not found,88
-  planfile/utils/priorities.py,0.79
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'planfile.models' not found,2
-  planfile/cli/commands.py,0.80
-    issues[9]{rule,severity,message,line}:
+  planfile/cli/commands.py,0.78
+    issues[12]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,12
       python.import.resolvable,error,Module 'planfile.runner' not found,13
       python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,14
@@ -109,8 +115,20 @@ ERRORS[33]{path,score}:
       python.import.resolvable,error,Module 'planfile.integrations.jira' not found,16
       python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,17
       python.import.resolvable,error,Module 'planfile.integrations.generic' not found,18
-      python.import.resolvable,error,Module 'llm.generator' not found,389
-      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,390
+      python.import.resolvable,error,Module 'extra_commands' not found,29
+      python.import.resolvable,error,Module 'llm.generator' not found,393
+      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,394
+      python.import.resolvable,error,Module 'analysis.generator' not found,439
+      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,440
+  planfile/utils/priorities.py,0.79
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.models' not found,2
+  test_integration.py,0.79
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.analysis.generator' not found,10
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,11
+      python.import.resolvable,error,Module 'planfile.analysis.file_analyzer' not found,51
+      python.import.resolvable,error,Module 'planfile.analysis.sprint_generator' not found,70
   planfile/ci_runner.py,0.83
     issues[6]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,14
@@ -119,15 +137,34 @@ ERRORS[33]{path,score}:
       python.import.resolvable,error,Module 'planfile.integrations.github' not found,17
       python.import.resolvable,error,Module 'planfile.integrations.jira' not found,18
       python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,19
+  planfile/analysis/generator.py,0.84
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'file_analyzer' not found,14
+      python.import.resolvable,error,Module 'sprint_generator' not found,15
+      python.import.resolvable,error,Module 'external_tools' not found,16
+      python.import.resolvable,error,Module 'models' not found,17
+  planfile/analysis/sprint_generator.py,0.86
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'file_analyzer' not found,8
   planfile/executor_standalone.py,0.86
     issues[3]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models_v2' not found,10
       python.import.resolvable,error,Module 'openai' not found,285
       python.import.resolvable,error,Module 'litellm' not found,303
+  planfile/loaders/yaml_loader.py,0.86
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.models' not found,6
+      python.import.resolvable,error,Module 'planfile.models_v2' not found,7
   planfile/runner.py,0.86
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models' not found,9
       python.import.resolvable,error,Module 'integrations.base' not found,10
+  planfile/cli/extra_commands.py,0.87
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,15
+      python.import.resolvable,error,Module 'models_v2' not found,16
+      python.import.resolvable,error,Module 'analysis.generator' not found,446
+      python.import.resolvable,error,Module 'loaders.cli_loader' not found,324
   examples/test_litellm_integration.py,0.88
     issues[3]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.llm.client' not found,17
@@ -161,9 +198,6 @@ ERRORS[33]{path,score}:
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,14
       python.import.resolvable,error,Module 'httpx' not found,21
-  planfile/loaders/yaml_loader.py,0.91
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'planfile.models' not found,6
   examples/ecosystem/03_proxy_routing.py,0.93
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'aiohttp' not found,9
@@ -175,8 +209,8 @@ ERRORS[33]{path,score}:
       python.import.resolvable,error,Module 'aiohttp' not found,16
 
 UNSUPPORTED[5]{bucket,count}:
-  *.md,18
+  *.md,26
   Dockerfile*,1
   *.txt,1
   *.yml,2
-  other,7
+  other,9

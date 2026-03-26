@@ -1,21 +1,28 @@
-# planfile | 34f 6773L | python:30,javascript:2,shell:2 | 2026-03-26
-# stats: 307 func | 0 cls | 34 mod | CC̄=4.1 | critical:12 | cycles:0
-# alerts[5]: fan-out review_strategy_cli=23; fan-out auto_loop=21; CC filter_handler=21; CC footer=21; CC no_rows=21
-# hotspots[5]: review_strategy_cli fan=23; auto_loop fan=21; apply_strategy_cli fan=15; sortColumn fan=15; table fan=15
-# evolution: CC̄ 4.4→4.1 (improved -0.3)
+# planfile | 41f 9105L | python:35,javascript:2,shell:4 | 2026-03-26
+# stats: 363 func | 0 cls | 41 mod | CC̄=4.4 | critical:16 | cycles:0
+# alerts[5]: CC FileAnalyzer._analyze_toon=38; CC PlanfileGenerator._extract_key_metrics=30; fan-out add_extra_commands=28; fan-out FileAnalyzer._analyze_toon=24; fan-out review_strategy_cli=23
+# hotspots[5]: add_extra_commands fan=28; FileAnalyzer._analyze_toon fan=24; review_strategy_cli fan=23; auto_loop fan=21; FileAnalyzer._analyze_text fan=20
+# evolution: CC̄ 4.4→4.4 (flat 0.0)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[34]:
+M[41]:
+  auto_generate_planfile.sh,124
+  cleanup_redundant.sh,71
   docker-entrypoint.sh,174
-  example_standalone.py,162
   htmlcov/coverage_html_cb_6fb7b396.js,733
   htmlcov/coverage_html_cb_dd2e7eb5.js,735
   mcp-server-example.py,27
   planfile/__init__.py,55
+  planfile/analysis/__init__.py,22
+  planfile/analysis/external_tools.py,267
+  planfile/analysis/file_analyzer.py,524
+  planfile/analysis/generator.py,530
+  planfile/analysis/sprint_generator.py,200
   planfile/ci_runner.py,453
   planfile/cli/__init__.py,0
   planfile/cli/__main__.py,4
   planfile/cli/auto_loop.py,252
-  planfile/cli/commands.py,421
+  planfile/cli/commands.py,501
+  planfile/cli/extra_commands.py,487
   planfile/examples.py,141
   planfile/executor_standalone.py,336
   planfile/integrations/__init__.py,0
@@ -31,15 +38,27 @@ M[34]:
   planfile/llm/prompts.py,63
   planfile/loaders/__init__.py,0
   planfile/loaders/cli_loader.py,194
-  planfile/loaders/yaml_loader.py,261
+  planfile/loaders/yaml_loader.py,283
   planfile/models.py,159
-  planfile/models_v2.py,259
+  planfile/models_v2.py,426
   planfile/runner.py,284
   planfile/utils/__init__.py,0
   planfile/utils/metrics.py,229
   planfile/utils/priorities.py,111
   project.sh,21
 D:
+  planfile/analysis/file_analyzer.py:
+    e: ExtractedIssue,ExtractedMetric,ExtractedTask,FileAnalyzer
+    ExtractedIssue: __post_init__(0)  # Represents an issue extracted from a file...
+    ExtractedMetric:  # Represents a metric extracted from a file...
+    ExtractedTask: __post_init__(0)  # Represents a task extracted from a file...
+    FileAnalyzer: __init__(0),analyze_file(1),_analyze_toon(1),_analyze_yaml(1),_analyze_json(1),_analyze_text(1),_extract_from_yaml_structure(3),_extract_from_json_structure(3),analyze_directory(2),_generate_summary(3)  # Analyzes YAML/JSON files to extract issues and metrics...
+  planfile/analysis/generator.py:
+    e: PlanfileGenerator
+    PlanfileGenerator: __init__(0),generate_with_external_tools(4),_external_to_internal_analysis(1),_extract_external_metrics(1),generate_from_analysis(5),generate_from_current_project(2),_extract_key_metrics(2),_generate_goal(3),_generate_goals(3),_generate_quality_gates(1),_generate_tasks(1),_parse_effort(1),_generate_target_metrics(1),_generate_risks(1),_generate_success_criteria(1),_create_strategy_object(1),_make_serializable(1)  # Generate comprehensive planfile from file analysis...
+  planfile/analysis/sprint_generator.py:
+    e: SprintGenerator
+    SprintGenerator: __init__(0),generate_sprints(2),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information...
   htmlcov/coverage_html_cb_dd2e7eb5.js:
     e: debounce,timeoutId,checkVisible,rect,viewBottom,viewTop,on_click,elt,getCellValue,cell,child,rowComparator,valueA,valueB,sortColumn,currentSortOrder,current_direction,stored_list,saved_filter_value,saved_hide100_value,table,table_body_rows,no_rows,footer,ratio_columns,filter_handler,totals,text,casefold,hide100,show,celltext,cell,places,stored_list,by_region,sorted_by_region,frag,btn,category,btn,helpCheck,classes,match,c,probe,begin,next_indicator,c,probe,probe_line,chunk_indicator,end,prev_indicator,begin,end,line,line,c,probe_line,the_indicator,probe,indicator,begin,element,temp_scroll_marker,marker_scale,line_height,scroll_marker,line_top,line_number,header,header_bottom,updateHeader,ctxs,ctxs_text,width
     debounce()
@@ -205,11 +224,24 @@ D:
     ctxs()
     ctxs_text()
     width()
+  planfile/loaders/yaml_loader.py:
+    e: load_yaml,save_yaml,load_strategy_yaml,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,_check_required_keys,_validate_sprints,_validate_gates,_validate_task_patterns,validate_strategy_schema
+    load_yaml(file_path)
+    save_yaml(data;file_path)
+    load_strategy_yaml(file_path)
+    save_strategy_yaml(strategy;file_path)
+    load_tasks_yaml(file_path)
+    merge_strategy_with_tasks(strategy;tasks_file)
+    _check_required_keys(data;issues)
+    _validate_sprints(data;issues)
+    _validate_gates(data;issues)
+    _validate_task_patterns(data;issues)
+    validate_strategy_schema(file_path)
   planfile/integrations/gitlab.py:
     e: GitLabBackend
     GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
   planfile/cli/commands.py:
-    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend,_execute_apply_strategy,_display_apply_results,_save_results,apply_strategy_cli,review_strategy_cli,validate_strategy_cli,generate_strategy_cli,main
+    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend,_execute_apply_strategy,_display_apply_results,_save_results,apply_strategy_cli,review_strategy_cli,validate_strategy_cli,generate_strategy_cli,main,generate_from_files_cmd
     get_backend(backend_type;config)
     _load_and_validate_strategy(strategy_path)
     _load_backend_config(backend;config_file)
@@ -223,6 +255,7 @@ D:
     validate_strategy_cli(strategy_path;verbose)
     generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
     main()
+    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;verbose)
   planfile/integrations/github.py:
     e: GitHubBackend
     GitHubBackend(BasePMBackend): __init__(2),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitHub Issues integration backend...
@@ -237,19 +270,21 @@ D:
     apply_strategy_to_tickets(strategy;project_path;backend;dry_run)
     review_strategy(strategy;project_path;backends;backend_name)
     run_strategy(strategy_path;project_path;backend;dry_run)
-  planfile/loaders/yaml_loader.py:
-    e: load_yaml,save_yaml,load_strategy_yaml,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,_check_required_keys,_validate_sprints,_validate_gates,_validate_task_patterns,validate_strategy_schema
-    load_yaml(file_path)
-    save_yaml(data;file_path)
-    load_strategy_yaml(file_path)
-    save_strategy_yaml(strategy;file_path)
-    load_tasks_yaml(file_path)
-    merge_strategy_with_tasks(strategy;tasks_file)
-    _check_required_keys(data;issues)
-    _validate_sprints(data;issues)
-    _validate_gates(data;issues)
-    _validate_task_patterns(data;issues)
-    validate_strategy_schema(file_path)
+  planfile/analysis/external_tools.py:
+    e: AnalysisResults,ExternalToolRunner,run_external_analysis
+    AnalysisResults: __post_init__(0)  # Results from external tool analysis...
+    ExternalToolRunner: __init__(1),run_all(0),run_code2llm(0),run_vallm(0),run_redup(0),parse_code2llm_output(0),parse_vallm_output(0),parse_redup_output(0),_mock_code2llm_data(0),_mock_vallm_data(0),_mock_redup_data(0)  # Runner for external code analysis tools...
+    run_external_analysis(project_path)
+  planfile/models_v2.py:
+    e: TaskType,ModelTier,ModelHints,Task,Sprint,QualityGate,Goal,Strategy
+    TaskType(str,Enum):  # Type of task in the planfile...
+    ModelTier(str,Enum):  # Model tier for different phases of work...
+    ModelHints(BaseModel): convert_str_to_tier(1)  # AI model hints for different phases of task execution...
+    Task(BaseModel): normalize_model_hints(1)  # A task in a sprint - simplified and directly embedded...
+    Sprint(BaseModel): convert_tasks(1)  # A sprint in the planfile - simplified...
+    QualityGate(BaseModel): normalize_criteria(1)  # Quality gate definition...
+    Goal(BaseModel):  # Project goal definition...
+    Strategy(BaseModel): get_task_patterns(0),get_sprint(1),to_llx_format(0),compare(1),merge(2),export(1),get_stats(0),load_flexible(1),_convert_old_format(0),to_yaml(0)  # Main strategy configuration - simplified and more flexible...
   planfile/cli/auto_loop.py:
     e: get_backend,_validate_strategy,_initialize_backends,_display_summary_table,_display_final_status,_display_ticket_summary,_save_results_if_needed,auto_loop,ci_status
     get_backend(backend_type)
@@ -261,22 +296,20 @@ D:
     _save_results_if_needed(results;output)
     auto_loop(strategy;project_path;backend;max_iterations;auto_fix;llx_command;output;dry_run)
     ci_status(project_path)
+  planfile/cli/extra_commands.py:
+    e: export_to_csv,export_to_html,compare_strategies,generate_template,calculate_strategy_stats,add_extra_commands
+    export_to_csv(strategy;file_path)
+    export_to_html(strategy;file_path)
+    compare_strategies(s1;s2)
+    generate_template(project_type;domain)
+    calculate_strategy_stats(strategy)
+    add_extra_commands(app)
   planfile/ci_runner.py:
     e: TestResult,BugReport,CIRunner,main
     TestResult:  # Result of running tests...
     BugReport:  # Generated bug report from test failures...
     CIRunner: __init__(6),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop...
     main()
-  planfile/models_v2.py:
-    e: TaskType,ModelTier,ModelHints,Task,Sprint,QualityGate,Goal,Strategy
-    TaskType(str,Enum):  # Type of task in the planfile...
-    ModelTier(str,Enum):  # Model tier for different phases of work...
-    ModelHints(BaseModel): convert_str_to_tier(1)  # AI model hints for different phases of task execution...
-    Task(BaseModel): normalize_model_hints(1)  # A task in a sprint - simplified and directly embedded...
-    Sprint(BaseModel): convert_tasks(1)  # A sprint in the planfile - simplified...
-    QualityGate(BaseModel): normalize_criteria(1)  # Quality gate definition...
-    Goal(BaseModel):  # Project goal definition...
-    Strategy(BaseModel): get_task_patterns(0),get_sprint(1),to_llx_format(0),load_flexible(1),_convert_old_format(0),to_yaml(0)  # Main strategy configuration - simplified and more flexible...
   planfile/executor_standalone.py:
     e: TaskResult,LLMClient,StrategyExecutor,create_openai_client,create_litellm_client,execute_strategy
     TaskResult:  # Result of executing a task...
@@ -325,12 +358,6 @@ D:
     Goal(BaseModel):  # Project goal definition...
     QualityGate(BaseModel):  # Quality gate definition...
     Strategy(BaseModel): validate_sprint_ids(1),get_task_patterns(1),get_sprint(1),model_validate_yaml(1),model_dump_yaml(0)  # Main strategy configuration...
-  example_standalone.py:
-    e: example_1_basic_usage,example_2_with_openai,example_3_custom_client,example_4_model_configuration
-    example_1_basic_usage()
-    example_2_with_openai()
-    example_3_custom_client()
-    example_4_model_configuration()
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)
@@ -363,11 +390,13 @@ D:
     main()
   planfile/__init__.py:
   planfile/loaders/__init__.py:
+  planfile/analysis/__init__.py:
   planfile/cli/__init__.py:
   planfile/cli/__main__.py:
   planfile/llm/__init__.py:
   planfile/utils/__init__.py:
   planfile/integrations/__init__.py:
+  cleanup_redundant.sh:
   docker-entrypoint.sh:
     e: check_env,validate_config,setup_workspace,run_command,main
     check_env()
@@ -375,4 +404,5 @@ D:
     setup_workspace()
     run_command()
     main()
+  auto_generate_planfile.sh:
   project.sh:

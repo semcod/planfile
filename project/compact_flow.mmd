@@ -1,35 +1,33 @@
 flowchart TD
-    example_standalone["example_standalone<br/>4 funcs"]
     examples__bash_generation["examples.bash-generation<br/>2 funcs"]
     examples__comprehensive_example["examples.comprehensive_example<br/>2 funcs"]
     examples__ecosystem["examples.ecosystem<br/>34 funcs"]
     examples__llx_validator["examples.llx_validator<br/>7 funcs"]
     examples__summary["examples.summary<br/>1 funcs"]
+    planfile__analysis["planfile.analysis<br/>49 funcs"]
     planfile__ci_runner["planfile.ci_runner<br/>10 funcs"]
-    planfile__cli["planfile.cli<br/>22 funcs"]
+    planfile__cli["planfile.cli<br/>29 funcs"]
     planfile__examples["planfile.examples<br/>5 funcs"]
     planfile__executor_standalone["planfile.executor_standalone<br/>12 funcs"]
     planfile__llm["planfile.llm<br/>26 funcs"]
     planfile__loaders["planfile.loaders<br/>21 funcs"]
     planfile__models["planfile.models<br/>5 funcs"]
-    planfile__models_v2["planfile.models_v2<br/>10 funcs"]
+    planfile__models_v2["planfile.models_v2<br/>14 funcs"]
     planfile__runner["planfile.runner<br/>6 funcs"]
     examples__ecosystem ==>|95| examples__bash_generation
     examples__summary ==>|40| examples__bash_generation
     examples__comprehensive_example ==>|32| examples__bash_generation
     planfile__ci_runner ==>|22| examples__bash_generation
-    example_standalone ==>|21| examples__bash_generation
     planfile__runner ==>|20| examples__bash_generation
+    planfile__analysis ==>|15| examples__bash_generation
+    planfile__cli ==>|12| planfile__loaders
     planfile__examples ==>|6| examples__bash_generation
     planfile__examples ==>|4| planfile__runner
-    planfile__cli ==>|4| planfile__loaders
     planfile__llm ==>|4| examples__bash_generation
-    example_standalone -->|2| planfile__models_v2
-    example_standalone -->|2| planfile__executor_standalone
     planfile__cli -->|2| planfile__runner
     planfile__llm -->|2| examples__ecosystem
-    examples__llx_validator -->|1| examples__bash_generation
     planfile__runner -->|1| planfile__models
+    examples__llx_validator -->|1| examples__bash_generation
     planfile__executor_standalone -->|1| planfile__models_v2
     planfile__ci_runner -->|1| planfile__loaders
     planfile__ci_runner -->|1| planfile__runner

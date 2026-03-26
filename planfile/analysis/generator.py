@@ -13,6 +13,7 @@ from datetime import datetime
 
 from .file_analyzer import FileAnalyzer
 from .sprint_generator import SprintGenerator
+from .external_tools import ExternalToolRunner, AnalysisResults
 from ..models import Strategy
 
 
@@ -22,12 +23,133 @@ class PlanfileGenerator:
     def __init__(self):
         self.analyzer = FileAnalyzer()
         self.generator = SprintGenerator()
+        self.external_runner: Optional[ExternalToolRunner] = None
+    
+    def generate_with_external_tools(self,
+                                     project_path: str = ".",
+                                     project_name: str = None,
+                                     max_sprints: int = 4,
+                                     focus_area: str = None) -> Strategy:
+        """Generate planfile using external analysis tools (code2llm, vallm, redup).
+        
+        This method runs external tools if available and incorporates their
+        results into the generated strategy.
+        
+        Args:
+            project_path: Path to project directory
+            project_name: Name of the project (defaults to directory name)
+            max_sprints: Maximum number of sprints to generate
+            focus_area: Specific focus area (quality, security, performance, etc.)
+        
+        Returns:
+            Strategy object with external tool analysis incorporated
+        """
+        print("=" * 60)
+        print("GENERATING PLANFILE WITH EXTERNAL TOOLS")
+        print("=" * 60)
+        
+        # Run external tools
+        self.external_runner = ExternalToolRunner(Path(project_path))
+        external_results = self.external_runner.run_all()
+        
+        # Convert external results to internal format
+        analysis_result = self._external_to_internal_analysis(external_results)
+        
+        # Generate strategy from combined analysis
+        return self.generate_from_analysis(
+            analysis_path=str(self.external_runner.output_dir),
+            project_name=project_name,
+            max_sprints=max_sprints,
+            focus_area=focus_area,
+            external_metrics=self._extract_external_metrics(external_results)
+        )
+    
+    def _external_to_internal_analysis(self, results: AnalysisResults) -> Dict[str, Any]:
+        """Convert external tool results to internal analysis format."""
+        issues = []
+        metrics = []
+        
+        # Create issues from high CC functions
+        for func in results.high_cc_functions:
+            issues.append({
+                'title': f"Refactor {func['name']} (CC={func['cc']})",
+                'description': f"Function has high cyclomatic complexity",
+                'priority': 'critical' if func['cc'] > 20 else 'high',
+                'category': 'refactor',
+                'effort_estimate': f"{max(2, func['cc'] // 5)}h",
+                'file_path': 'analysis.toon.yaml'
+            })
+        
+        # Create issues from validation errors
+        if results.validation_errors > 0:
+            issues.append({
+                'title': f"Fix {results.validation_errors} validation errors",
+                'description': "Resolve all validation errors found in project",
+                'priority': 'critical',
+                'category': 'bug',
+                'effort_estimate': f"{max(1, results.validation_errors // 5)}d",
+                'file_path': 'validation.toon.yaml'
+            })
+        
+        # Create issues from validation warnings
+        if results.validation_warnings > 0:
+            issues.append({
+                'title': f"Address {results.validation_warnings} validation warnings",
+                'description': "Fix all validation warnings",
+                'priority': 'medium',
+                'category': 'refactor',
+                'effort_estimate': f"{max(1, results.validation_warnings // 3)}d",
+                'file_path': 'validation.toon.yaml'
+            })
+        
+        # Create issues from duplication
+        if results.duplication_groups > 0:
+            issues.append({
+                'title': f"Remove {results.duplication_groups} code duplication groups",
+                'description': "Extract duplicated code into reusable functions",
+                'priority': 'medium',
+                'category': 'refactor',
+                'effort_estimate': f"{results.duplication_groups * 2}h",
+                'file_path': 'duplication.toon.yaml'
+            })
+        
+        return {
+            'issues': issues,
+            'metrics': metrics,
+            'summary': {
+                'total_issues': len(issues),
+                'priority_breakdown': {
+                    'critical': len([i for i in issues if i['priority'] == 'critical']),
+                    'high': len([i for i in issues if i['priority'] == 'high']),
+                    'medium': len([i for i in issues if i['priority'] == 'medium']),
+                    'low': len([i for i in issues if i['priority'] == 'low']),
+                },
+                'category_breakdown': {},
+                'total_metrics': len(metrics),
+                'critical_metrics': 0,
+                'total_tasks': 0
+            }
+        }
+    
+    def _extract_external_metrics(self, results: AnalysisResults) -> Dict[str, Any]:
+        """Extract metrics from external tool results."""
+        return {
+            'average_cc': results.cc_average,
+            'critical_functions': results.critical_functions,
+            'high_cc_functions': results.high_cc_functions,
+            'validation_errors': results.validation_errors,
+            'validation_warnings': results.validation_warnings,
+            'duplication_groups': results.duplication_groups,
+            'saved_lines': results.saved_lines,
+            'pass_rate': results.pass_rate
+        }
     
     def generate_from_analysis(self, 
                              analysis_path: str,
                              project_name: str = None,
                              max_sprints: int = 4,
-                             focus_area: str = None) -> Strategy:
+                             focus_area: str = None,
+                             external_metrics: Optional[Dict[str, Any]] = None) -> Strategy:
         """Generate planfile from analyzed files.
         
         Args:
@@ -35,6 +157,7 @@ class PlanfileGenerator:
             project_name: Name of the project (defaults to directory name)
             max_sprints: Maximum number of sprints to generate
             focus_area: Specific focus area (quality, security, performance, etc.)
+            external_metrics: Optional metrics from external tools
         
         Returns:
             Strategy object ready for validation and application
@@ -53,7 +176,7 @@ class PlanfileGenerator:
         tickets = self.generator.generate_tickets(analysis_result)
         
         # Extract key metrics for quality gates
-        metrics = self._extract_key_metrics(analysis_result)
+        metrics = self._extract_key_metrics(analysis_result, external_metrics)
         
         # Create strategy
         project_name = project_name or Path(analysis_path).name
@@ -123,11 +246,15 @@ class PlanfileGenerator:
             **kwargs
         )
     
-    def _extract_key_metrics(self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_key_metrics(self, analysis_result: Dict[str, Any], external_metrics: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Extract key metrics from analysis."""
         metrics = {}
         
-        # Extract CC metrics
+        # Use external metrics if available
+        if external_metrics:
+            metrics.update(external_metrics)
+        
+        # Extract CC metrics from file analysis
         cc_metrics = [m for m in analysis_result['metrics'] if 'CC' in m.name or 'complexity' in m.name.lower()]
         if cc_metrics:
             avg_cc = sum(m.value for m in cc_metrics if isinstance(m.value, (int, float))) / len(cc_metrics)
