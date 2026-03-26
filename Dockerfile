@@ -19,7 +19,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install SprintStrat with all integrations
-RUN pip install --no-cache-dir strategy-pm[all]
+RUN pip install --no-cache-dir sdlc[all]
 
 # Install LLX
 RUN pip install --no-cache-dir llx
@@ -41,7 +41,7 @@ EXPOSE 11434
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD strategy-pm --version || exit 1
+    CMD sdlc --version || exit 1
 
 # Entry point
 ENTRYPOINT ["docker-entrypoint.sh"]
