@@ -1,6 +1,7 @@
 .idea
 litellm_config.yaml
 litellm-config.yaml
+.code2llm_cache
 .llm
 managed_components
 .gui-agent.pid

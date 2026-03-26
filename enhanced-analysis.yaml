@@ -1,0 +1,1311 @@
+name: Generated from File Analysis
+project_name: project
+project_type: improvement
+domain: software
+goal: Address issues found in file analysis
+sprints:
+- id: sprint-1
+  name: Critical Issues Resolution
+  duration: 1 week
+  objectives:
+  - Fix all critical bugs and errors
+  task_patterns:
+  - name: Resolve Bug Issues
+    description: Fix 4 bug issues
+    task_type: bugfix
+    priority: critical
+    estimate: 4d
+    issues:
+    - title: 'Bug: Report,CIRunner,main...'
+      description: Report,CIRunner,main
+      priority: critical
+      category: bug
+      file_path: project/map.toon.yaml
+      line_number: 265
+      effort_estimate: null
+      tags:
+      - bug
+    - title: 'Bug: Report:  # Generated bug report from test failures...'
+      description: 'Report:  # Generated bug report from test failures...'
+      priority: critical
+      category: bug
+      file_path: project/map.toon.yaml
+      line_number: 267
+      effort_estimate: null
+      tags:
+      - bug
+    - title: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+      description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+        CI/CD runner with automated bug-fix loop...'
+      priority: critical
+      category: bug
+      file_path: project/map.toon.yaml
+      line_number: 268
+      effort_estimate: null
+      tags:
+      - bug
+    - title: 'Bug: Report,CIRunner,main...'
+      description: Report,CIRunner,main
+      priority: critical
+      category: bug
+      file_path: project/map.toon.yaml
+      line_number: 265
+      effort_estimate: null
+      tags:
+      - bug
+  - name: Resolve Refactor Issues
+    description: Fix 6 refactor issues
+    task_type: refactor
+    priority: critical
+    estimate: 3d
+    issues:
+    - title: Refactor table (CC=21)
+      description: Function has cyclomatic complexity 21 (>15)
+      priority: critical
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 7
+      effort_estimate: 4h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor table_body_rows (CC=21)
+      description: Function has cyclomatic complexity 21 (>15)
+      priority: critical
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 8
+      effort_estimate: 4h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor no_rows (CC=21)
+      description: Function has cyclomatic complexity 21 (>15)
+      priority: critical
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 9
+      effort_estimate: 4h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor footer (CC=21)
+      description: Function has cyclomatic complexity 21 (>15)
+      priority: critical
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 10
+      effort_estimate: 4h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor ratio_columns (CC=21)
+      description: Function has cyclomatic complexity 21 (>15)
+      priority: critical
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 11
+      effort_estimate: 4h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor filter_handler (CC=21)
+      description: Function has cyclomatic complexity 21 (>15)
+      priority: critical
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 12
+      effort_estimate: 4h
+      tags:
+      - complexity
+      - refactor
+  issue_count: 10
+- id: sprint-2
+  name: Quality & High Priority
+  duration: 2 weeks
+  objectives:
+  - Address high priority issues
+  - Improve code quality
+  task_patterns:
+  - name: Resolve Refactor Issues
+    description: Fix 15 refactor issues
+    task_type: refactor
+    priority: high
+    estimate: 6d
+    issues:
+    - title: Refactor generate_report (CC=20)
+      description: Function has cyclomatic complexity 20 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 5
+      effort_estimate: 4h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor update_ticket (CC=15)
+      description: Function has cyclomatic complexity 15 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 6
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor table (CC=19)
+      description: Function has cyclomatic complexity 19 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 13
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor table_body_rows (CC=19)
+      description: Function has cyclomatic complexity 19 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 14
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor no_rows (CC=19)
+      description: Function has cyclomatic complexity 19 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 15
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor filter_handler (CC=19)
+      description: Function has cyclomatic complexity 19 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 16
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor generate_report (CC=20)
+      description: Function has cyclomatic complexity 20 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 5
+      effort_estimate: 4h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor update_ticket (CC=15)
+      description: Function has cyclomatic complexity 15 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 6
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor table (CC=19)
+      description: Function has cyclomatic complexity 19 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 13
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor table_body_rows (CC=19)
+      description: Function has cyclomatic complexity 19 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 14
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor no_rows (CC=19)
+      description: Function has cyclomatic complexity 19 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 15
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Refactor filter_handler (CC=19)
+      description: Function has cyclomatic complexity 19 (>15)
+      priority: high
+      category: refactor
+      file_path: project/analysis.toon.yaml
+      line_number: 16
+      effort_estimate: 3h
+      tags:
+      - complexity
+      - refactor
+    - title: Remove 1 code duplication groups
+      description: Extract duplicated code into reusable functions
+      priority: medium
+      category: refactor
+      file_path: project/duplication.toon.yaml
+      line_number: null
+      effort_estimate: 2h
+      tags:
+      - duplication
+      - cleanup
+    - title: 'Refactor: [1] (ranked by priority):...'
+      description: '[1] (ranked by priority):'
+      priority: medium
+      category: refactor
+      file_path: project/duplication.toon.yaml
+      line_number: 16
+      effort_estimate: null
+      tags:
+      - refactor
+    - title: "Reduce average CC from 4.1 to \u2264 3.5"
+      description: Project has high average cyclomatic complexity
+      priority: medium
+      category: refactor
+      file_path: project/project.toon.yaml
+      line_number: null
+      effort_estimate: 5h
+      tags:
+      - complexity
+      - quality
+  issue_count: 15
+- id: sprint-3
+  name: Polish & Documentation
+  duration: 1 week
+  objectives:
+  - Documentation
+  - Minor improvements
+  task_patterns:
+  - name: Resolve Test Issues
+    description: Fix 9 test issues
+    task_type: test
+    priority: low
+    estimate: 2d
+    issues:
+    - title: 'Test: s/test_interactive_mode.py,0.97...'
+      description: s/test_interactive_mode.py,0.97
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 13
+      effort_estimate: null
+      tags:
+      - test
+    - title: 'Test: _interactive_mode: 131 lines exceeds limit 100,33...'
+      description: '_interactive_mode: 131 lines exceeds limit 100,33'
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 15
+      effort_estimate: null
+      tags:
+      - test
+    - title: 'Test: s/test_strategy.py,0.57...'
+      description: s/test_strategy.py,0.57
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 46
+      effort_estimate: null
+      tags:
+      - test
+    - title: 'Test: _strategy.py,0.71...'
+      description: _strategy.py,0.71
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 78
+      effort_estimate: null
+      tags:
+      - test
+    - title: 'Test: _litellm_integration.py,0.88...'
+      description: _litellm_integration.py,0.88
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 131
+      effort_estimate: null
+      tags:
+      - test
+    - title: 'Test: _improvements.py,0.89...'
+      description: _improvements.py,0.89
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 152
+      effort_estimate: null
+      tags:
+      - test
+    - title: 'Test: _planfile_final.py,0.89...'
+      description: _planfile_final.py,0.89
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 156
+      effort_estimate: null
+      tags:
+      - test
+    - title: 'Test: _llm_adapters.py,0.94...'
+      description: _llm_adapters.py,0.94
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 170
+      effort_estimate: null
+      tags:
+      - test
+    - title: 'Test: _all_examples.py,0.96...'
+      description: _all_examples.py,0.96
+      priority: low
+      category: test
+      file_path: project/validation.toon.yaml
+      line_number: 173
+      effort_estimate: null
+      tags:
+      - test
+  - name: Resolve Documentation Issues
+    description: Fix 1 documentation issues
+    task_type: documentation
+    priority: low
+    estimate: 2h
+    issues:
+    - title: 'Doc: kerfile*,1...'
+      description: kerfile*,1
+      priority: low
+      category: documentation
+      file_path: project/validation.toon.yaml
+      line_number: 179
+      effort_estimate: null
+      tags:
+      - doc
+  issue_count: 10
+tickets:
+  critical:
+  - title: 'Bug: Report,CIRunner,main...'
+    description: Report,CIRunner,main
+    priority: critical
+    category: bug
+    file_path: project/map.toon.yaml
+    line_number: 265
+    effort_estimate: null
+    tags:
+    - bug
+  - title: 'Bug: Report:  # Generated bug report from test failures...'
+    description: 'Report:  # Generated bug report from test failures...'
+    priority: critical
+    category: bug
+    file_path: project/map.toon.yaml
+    line_number: 267
+    effort_estimate: null
+    tags:
+    - bug
+  - title: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: critical
+    category: bug
+    file_path: project/map.toon.yaml
+    line_number: 268
+    effort_estimate: null
+    tags:
+    - bug
+  - title: Refactor table (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 7
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor table_body_rows (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 8
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor no_rows (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 9
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor footer (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 10
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor ratio_columns (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 11
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor filter_handler (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 12
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: 'Bug: Report,CIRunner,main...'
+    description: Report,CIRunner,main
+    priority: critical
+    category: bug
+    file_path: project/map.toon.yaml
+    line_number: 265
+    effort_estimate: null
+    tags:
+    - bug
+  - title: 'Bug: Report:  # Generated bug report from test failures...'
+    description: 'Report:  # Generated bug report from test failures...'
+    priority: critical
+    category: bug
+    file_path: project/map.toon.yaml
+    line_number: 267
+    effort_estimate: null
+    tags:
+    - bug
+  - title: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: critical
+    category: bug
+    file_path: project/map.toon.yaml
+    line_number: 268
+    effort_estimate: null
+    tags:
+    - bug
+  - title: Refactor table (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 7
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor table_body_rows (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 8
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor no_rows (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 9
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor footer (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 10
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor ratio_columns (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 11
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor filter_handler (CC=21)
+    description: Function has cyclomatic complexity 21 (>15)
+    priority: critical
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 12
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  high:
+  - title: Refactor generate_report (CC=20)
+    description: Function has cyclomatic complexity 20 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 5
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor update_ticket (CC=15)
+    description: Function has cyclomatic complexity 15 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 6
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor table (CC=19)
+    description: Function has cyclomatic complexity 19 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 13
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor table_body_rows (CC=19)
+    description: Function has cyclomatic complexity 19 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 14
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor no_rows (CC=19)
+    description: Function has cyclomatic complexity 19 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 15
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor filter_handler (CC=19)
+    description: Function has cyclomatic complexity 19 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 16
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor generate_report (CC=20)
+    description: Function has cyclomatic complexity 20 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 5
+    effort_estimate: 4h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor update_ticket (CC=15)
+    description: Function has cyclomatic complexity 15 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 6
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor table (CC=19)
+    description: Function has cyclomatic complexity 19 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 13
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor table_body_rows (CC=19)
+    description: Function has cyclomatic complexity 19 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 14
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor no_rows (CC=19)
+    description: Function has cyclomatic complexity 19 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 15
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  - title: Refactor filter_handler (CC=19)
+    description: Function has cyclomatic complexity 19 (>15)
+    priority: high
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 16
+    effort_estimate: 3h
+    tags:
+    - complexity
+    - refactor
+  medium:
+  - title: Remove 1 code duplication groups
+    description: Extract duplicated code into reusable functions
+    priority: medium
+    category: refactor
+    file_path: project/duplication.toon.yaml
+    line_number: null
+    effort_estimate: 2h
+    tags:
+    - duplication
+    - cleanup
+  - title: 'Refactor: [1] (ranked by priority):...'
+    description: '[1] (ranked by priority):'
+    priority: medium
+    category: refactor
+    file_path: project/duplication.toon.yaml
+    line_number: 16
+    effort_estimate: null
+    tags:
+    - refactor
+  - title: "Reduce average CC from 4.1 to \u2264 3.5"
+    description: Project has high average cyclomatic complexity
+    priority: medium
+    category: refactor
+    file_path: project/project.toon.yaml
+    line_number: null
+    effort_estimate: 5h
+    tags:
+    - complexity
+    - quality
+  - title: 'Refactor: [15]:...'
+    description: '[15]:'
+    priority: medium
+    category: refactor
+    file_path: project/project.toon.yaml
+    line_number: 46
+    effort_estimate: null
+    tags:
+    - refactor
+  - title: 'Refactor: [1]:...'
+    description: '[1]:'
+    priority: medium
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 18
+    effort_estimate: null
+    tags:
+    - refactor
+  - title: Remove 1 code duplication groups
+    description: Extract duplicated code into reusable functions
+    priority: medium
+    category: refactor
+    file_path: project/duplication.toon.yaml
+    line_number: null
+    effort_estimate: 2h
+    tags:
+    - duplication
+    - cleanup
+  - title: 'Refactor: [1] (ranked by priority):...'
+    description: '[1] (ranked by priority):'
+    priority: medium
+    category: refactor
+    file_path: project/duplication.toon.yaml
+    line_number: 16
+    effort_estimate: null
+    tags:
+    - refactor
+  - title: "Reduce average CC from 4.1 to \u2264 3.5"
+    description: Project has high average cyclomatic complexity
+    priority: medium
+    category: refactor
+    file_path: project/project.toon.yaml
+    line_number: null
+    effort_estimate: 5h
+    tags:
+    - complexity
+    - quality
+  - title: 'Refactor: [15]:...'
+    description: '[15]:'
+    priority: medium
+    category: refactor
+    file_path: project/project.toon.yaml
+    line_number: 46
+    effort_estimate: null
+    tags:
+    - refactor
+  - title: 'Refactor: [1]:...'
+    description: '[1]:'
+    priority: medium
+    category: refactor
+    file_path: project/analysis.toon.yaml
+    line_number: 18
+    effort_estimate: null
+    tags:
+    - refactor
+  low:
+  - title: 'Test: s/test_interactive_mode.py,0.97...'
+    description: s/test_interactive_mode.py,0.97
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 13
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _interactive_mode: 131 lines exceeds limit 100,33...'
+    description: '_interactive_mode: 131 lines exceeds limit 100,33'
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 15
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: s/test_strategy.py,0.57...'
+    description: s/test_strategy.py,0.57
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 46
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy.py,0.71...'
+    description: _strategy.py,0.71
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 78
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _litellm_integration.py,0.88...'
+    description: _litellm_integration.py,0.88
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 131
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _improvements.py,0.89...'
+    description: _improvements.py,0.89
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 152
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _planfile_final.py,0.89...'
+    description: _planfile_final.py,0.89
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 156
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _llm_adapters.py,0.94...'
+    description: _llm_adapters.py,0.94
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 170
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _all_examples.py,0.96...'
+    description: _all_examples.py,0.96
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 173
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Doc: kerfile*,1...'
+    description: kerfile*,1
+    priority: low
+    category: documentation
+    file_path: project/validation.toon.yaml
+    line_number: 179
+    effort_estimate: null
+    tags:
+    - doc
+  - title: 'Test: Result,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAda...'
+    description: Result,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAdapter,LocalLLMAdapter,LLMTestRunner
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 123
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: Result:  # Result of LLM test......'
+    description: 'Result:  # Result of LLM test...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 124
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy_generation(2),get_available_models(0)  #...'
+    description: '_strategy_generation(2),get_available_models(0)  # Base class for
+      LLM adapters...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 125
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy_generation(2),get_available_models(0)  #...'
+    description: '_strategy_generation(2),get_available_models(0)  # Adapter for LiteLLM
+      providers...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 126
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy_generation(2),get_available_models(0)  #...'
+    description: '_strategy_generation(2),get_available_models(0)  # Adapter for OpenRouter
+      API...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 127
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy_generation(2),_test_ollama(2),_test_open...'
+    description: '_strategy_generation(2),_test_ollama(2),_test_openai_compatible(2),get_available_models(0)  #
+      Adapter for local LLM servers (Ollama, LM Studio, etc.)...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 128
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: Runner: __init__(0),register_adapter(2),test_strat...'
+    description: 'Runner: __init__(0),register_adapter(2),test_strategy_with_all_adapters(2),generate_report(1)  #
+      Run tests across multiple LLM adapters...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 129
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: Result,BugReport,CIRunner,main...'
+    description: Result,BugReport,CIRunner,main
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 265
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: Result:  # Result of running tests......'
+    description: 'Result:  # Result of running tests...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 266
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: failures......'
+    description: failures...
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 267
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 268
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Doc: ker-entrypoint.sh,174...'
+    description: ker-entrypoint.sh,174
+    priority: low
+    category: documentation
+    file_path: project/map.toon.yaml
+    line_number: 8
+    effort_estimate: null
+    tags:
+    - doc
+  - title: 'Doc: ker-entrypoint.sh:...'
+    description: 'ker-entrypoint.sh:'
+    priority: low
+    category: documentation
+    file_path: project/map.toon.yaml
+    line_number: 371
+    effort_estimate: null
+    tags:
+    - doc
+  - title: 'Test: Runner.generate_report = 20 (limit:15)...'
+    description: Runner.generate_report = 20 (limit:15)
+    priority: low
+    category: test
+    file_path: project/project.toon.yaml
+    line_number: 15
+    effort_estimate: null
+    tags:
+    - test
+  - title: "Test: \u2192 ticket \u2192 fix \u2192 retest...."
+    description: "\u2192 ticket \u2192 fix \u2192 retest."
+    priority: low
+    category: test
+    file_path: project/project.toon.yaml
+    line_number: 38
+    effort_estimate: null
+    tags:
+    - test
+  - title: "Test: Runner.generate_report (CC=20 \u2192 target CC<10)..."
+    description: "Runner.generate_report (CC=20 \u2192 target CC<10)"
+    priority: low
+    category: test
+    file_path: project/project.toon.yaml
+    line_number: 49
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Doc: ker-entrypoint.sh       174L  0C    5m  CC=0.0    ...'
+    description: "ker-entrypoint.sh       174L  0C    5m  CC=0.0    \u21900"
+    priority: low
+    category: documentation
+    file_path: project/analysis.toon.yaml
+    line_number: 69
+    effort_estimate: null
+    tags:
+    - doc
+  - title: 'Test: s/test_interactive_mode.py,0.97...'
+    description: s/test_interactive_mode.py,0.97
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 13
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _interactive_mode: 131 lines exceeds limit 100,33...'
+    description: '_interactive_mode: 131 lines exceeds limit 100,33'
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 15
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: s/test_strategy.py,0.57...'
+    description: s/test_strategy.py,0.57
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 46
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy.py,0.71...'
+    description: _strategy.py,0.71
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 78
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _litellm_integration.py,0.88...'
+    description: _litellm_integration.py,0.88
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 131
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _improvements.py,0.89...'
+    description: _improvements.py,0.89
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 152
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _planfile_final.py,0.89...'
+    description: _planfile_final.py,0.89
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 156
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _llm_adapters.py,0.94...'
+    description: _llm_adapters.py,0.94
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 170
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _all_examples.py,0.96...'
+    description: _all_examples.py,0.96
+    priority: low
+    category: test
+    file_path: project/validation.toon.yaml
+    line_number: 173
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Doc: kerfile*,1...'
+    description: kerfile*,1
+    priority: low
+    category: documentation
+    file_path: project/validation.toon.yaml
+    line_number: 179
+    effort_estimate: null
+    tags:
+    - doc
+  - title: 'Test: Result,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAda...'
+    description: Result,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAdapter,LocalLLMAdapter,LLMTestRunner
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 123
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: Result:  # Result of LLM test......'
+    description: 'Result:  # Result of LLM test...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 124
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy_generation(2),get_available_models(0)  #...'
+    description: '_strategy_generation(2),get_available_models(0)  # Base class for
+      LLM adapters...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 125
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy_generation(2),get_available_models(0)  #...'
+    description: '_strategy_generation(2),get_available_models(0)  # Adapter for LiteLLM
+      providers...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 126
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy_generation(2),get_available_models(0)  #...'
+    description: '_strategy_generation(2),get_available_models(0)  # Adapter for OpenRouter
+      API...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 127
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: _strategy_generation(2),_test_ollama(2),_test_open...'
+    description: '_strategy_generation(2),_test_ollama(2),_test_openai_compatible(2),get_available_models(0)  #
+      Adapter for local LLM servers (Ollama, LM Studio, etc.)...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 128
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: Runner: __init__(0),register_adapter(2),test_strat...'
+    description: 'Runner: __init__(0),register_adapter(2),test_strategy_with_all_adapters(2),generate_report(1)  #
+      Run tests across multiple LLM adapters...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 129
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: Result,BugReport,CIRunner,main...'
+    description: Result,BugReport,CIRunner,main
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 265
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: Result:  # Result of running tests......'
+    description: 'Result:  # Result of running tests...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 266
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: failures......'
+    description: failures...
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 267
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: low
+    category: test
+    file_path: project/map.toon.yaml
+    line_number: 268
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Doc: ker-entrypoint.sh,174...'
+    description: ker-entrypoint.sh,174
+    priority: low
+    category: documentation
+    file_path: project/map.toon.yaml
+    line_number: 8
+    effort_estimate: null
+    tags:
+    - doc
+  - title: 'Doc: ker-entrypoint.sh:...'
+    description: 'ker-entrypoint.sh:'
+    priority: low
+    category: documentation
+    file_path: project/map.toon.yaml
+    line_number: 371
+    effort_estimate: null
+    tags:
+    - doc
+  - title: 'Test: Runner.generate_report = 20 (limit:15)...'
+    description: Runner.generate_report = 20 (limit:15)
+    priority: low
+    category: test
+    file_path: project/project.toon.yaml
+    line_number: 15
+    effort_estimate: null
+    tags:
+    - test
+  - title: "Test: \u2192 ticket \u2192 fix \u2192 retest...."
+    description: "\u2192 ticket \u2192 fix \u2192 retest."
+    priority: low
+    category: test
+    file_path: project/project.toon.yaml
+    line_number: 38
+    effort_estimate: null
+    tags:
+    - test
+  - title: "Test: Runner.generate_report (CC=20 \u2192 target CC<10)..."
+    description: "Runner.generate_report (CC=20 \u2192 target CC<10)"
+    priority: low
+    category: test
+    file_path: project/project.toon.yaml
+    line_number: 49
+    effort_estimate: null
+    tags:
+    - test
+  - title: 'Doc: ker-entrypoint.sh       174L  0C    5m  CC=0.0    ...'
+    description: "ker-entrypoint.sh       174L  0C    5m  CC=0.0    \u21900"
+    priority: low
+    category: documentation
+    file_path: project/analysis.toon.yaml
+    line_number: 69
+    effort_estimate: null
+    tags:
+    - doc
+metrics:
+  current:
+    total_issues: 94
+    critical_issues: 18
+    high_issues: 12
+    medium_issues: 10
+    low_issues: 54
+analysis_summary:
+  analyzed_files:
+  - project/duplication.toon.yaml
+  - project/validation.toon.yaml
+  - project/map.toon.yaml
+  - project/evolution.toon.yaml
+  - project/project.toon.yaml
+  - project/analysis.toon.yaml
+  - project/duplication.toon.yaml
+  - project/validation.toon.yaml
+  - project/map.toon.yaml
+  - project/evolution.toon.yaml
+  - project/project.toon.yaml
+  - project/analysis.toon.yaml
+  total_metrics: 150
+  critical_metrics: 0

@@ -1,388 +1,174 @@
-name: Planfile Code Quality Improvement
-project_name: planfile
+name: ' Code Quality Improvement'
+project_name: ''
 project_type: refactoring
 domain: dev-tools
-goal: Reduce cyclomatic complexity and improve code quality based on analysis results
-
+goal: Reduce complexity and improve code quality based on automated analysis
 goals:
-- Reduce cyclomatic complexity from 4.1 to ≤ 3.5
-- Eliminate all 12 high-CC functions (CC > 15)
-- Fix 33 validation errors and 5 warnings
-- Remove code duplication (1 duplicate group)
-- Improve test coverage and documentation
+- "Reduce cyclomatic complexity from 4.1 to \u2264 3.5"
+- Fix all 33 validation errors
+- Resolve 5 validation warnings
+- Remove 1 code duplication groups
+- "Improve test coverage to \u2265 80%"
 - Ensure all imports are resolvable
-
 quality_gates:
 - metric: Average Cyclomatic Complexity
-  threshold: ≤ 3.5
+  threshold: "\u2264 3.5"
 - metric: High-CC Functions
-  threshold: 0
+  threshold: '0'
 - metric: Validation Errors
-  threshold: 0
+  threshold: '0'
+- metric: Validation Warnings
+  threshold: '0'
 - metric: Test Coverage
-  threshold: ≥ 80%
+  threshold: "\u2265 80%"
 - metric: Code Duplication
   threshold: 0 groups
-- metric: Import Resolution
-  threshold: 100% resolvable
-
 sprints:
 - id: sprint-1
-  name: Critical Complexity Reduction
+  name: Critical Issues Resolution
   duration: 2 weeks
   objectives:
-  - Split 12 high-CC functions (CC > 15)
-  - Fix syntax errors in example files
+  - Fix 33 validation errors
+  - Split 4 high-CC functions
+  - Remove 1 duplication groups
   - Resolve import issues
-  - Remove code duplication
-  
   task_patterns:
-  - name: Refactor high-CC functions
-    description: Split functions with CC > 15 into smaller functions
-    task_type: refactor
-    priority: critical
-    estimate: 5d
-    model_hints:
-      planning: premium
-      implementation: premium
-    acceptance_criteria:
-    - All functions have CC ≤ 15
-    - Functionality preserved
-    - Tests pass
-    
-  - name: Fix syntax errors
-    description: Fix unmatched parentheses and string literals in example files
+  - name: Fix validation errors
+    description: Resolve all syntax and import errors
     task_type: bugfix
     priority: critical
-    estimate: 1d
-    model_hints:
-      planning: balanced
-      implementation: balanced
-    acceptance_criteria:
-    - All Python files parse correctly
-    - Examples run without errors
-    
-  - name: Resolve imports
-    description: Fix all unresolvable import errors
-    task_type: refactor
-    priority: critical
-    estimate: 2d
-    model_hints:
-      planning: balanced
-      implementation: balanced
-    acceptance_criteria:
-    - All imports resolve correctly
-    - vallm validation passes
-    
-  - name: Remove duplication
-    description: Extract duplicate get_sprint function to utils
-    task_type: refactor
-    priority: high
-    estimate: 0.5d
-    model_hints:
-      planning: balanced
-      implementation: balanced
-    acceptance_criteria:
-    - Create planfile/utils/get_sprint.py
-    - Update both files to import from utils
-    - No code duplication
-
-- id: sprint-2
-  name: Validation and Testing
-  duration: 2 weeks
-  objectives:
-  - Fix all validation warnings
-  - Improve test coverage
-  - Add integration tests
-  - Document complex functions
-  
-  task_patterns:
-  - name: Fix validation warnings
-    description: Address 5 validation warnings for long functions
-    task_type: refactor
-    priority: high
-    estimate: 2d
-    model_hints:
-      planning: balanced
-      implementation: balanced
-    acceptance_criteria:
-    - All functions ≤ 100 lines
-    - vallm shows no warnings
-    
-  - name: Improve test coverage
-    description: Add comprehensive unit tests for all modules
-    task_type: test
-    priority: high
-    estimate: 5d
-    model_hints:
-      planning: balanced
-      implementation: balanced
-    acceptance_criteria:
-    - Coverage ≥ 80%
-    - All critical paths tested
-    
-  - name: Add integration tests
-    description: Test end-to-end workflows
-    task_type: test
-    priority: medium
     estimate: 3d
     model_hints:
       planning: balanced
       implementation: balanced
-    acceptance_criteria:
-    - CLI commands tested
-    - LLM integration tested
-    - Backend integrations tested
-    
-  - name: Document complex code
-    description: Add documentation for high-complexity areas
-    task_type: documentation
-    priority: medium
-    estimate: 2d
+  - name: Refactor high-CC functions
+    description: Split functions with CC > 15
+    task_type: refactor
+    priority: critical
+    estimate: 4d
+    model_hints:
+      planning: premium
+      implementation: premium
+- id: sprint-2
+  name: Quality Improvements
+  duration: 2 weeks
+  objectives:
+  - Address 5 validation warnings
+  - Improve test coverage
+  - Add documentation
+  task_patterns:
+  - name: Fix validation warnings
+    description: Address all validation warnings
+    task_type: refactor
+    priority: high
+    estimate: 5d
     model_hints:
       planning: balanced
       implementation: balanced
-    acceptance_criteria:
-    - All adapters documented
-    - Complex algorithms explained
-    - API docs updated
-
+  - name: Improve test coverage
+    description: Add comprehensive tests
+    task_type: test
+    priority: high
+    estimate: 5d
+    model_hints:
+      planning: balanced
+      implementation: balanced
 - id: sprint-3
-  name: Performance and Polish
+  name: Polish and Release
   duration: 1 week
   objectives:
-  - Optimize performance bottlenecks
-  - Improve error handling
-  - Update documentation
-  - Prepare release
-  
+  - Performance optimization
+  - Documentation updates
+  - Release preparation
   task_patterns:
   - name: Performance optimization
-    description: Profile and optimize slow operations
+    description: Optimize bottlenecks
     task_type: optimize
     priority: medium
     estimate: 2d
     model_hints:
       planning: balanced
       implementation: balanced
-    acceptance_criteria:
-    - LLM responses < 5 seconds
-    - Strategy generation < 10 seconds
-    - Memory usage optimized
-    
-  - name: Improve error handling
-    description: Add better error messages and recovery
-    task_type: refactor
-    priority: medium
-    estimate: 1d
-    model_hints:
-      planning: balanced
-      implementation: balanced
-    acceptance_criteria:
-    - Clear error messages
-    - Graceful degradation
-    - Recovery procedures
-    
   - name: Update documentation
-    description: Update README and API docs
+    description: Update API docs and README
     task_type: documentation
     priority: low
     estimate: 1d
     model_hints:
       planning: balanced
       implementation: balanced
-    acceptance_criteria:
-    - README reflects new features
-    - API docs complete
-    - Examples updated
-    
-  - name: Prepare release
-    description: Version bump and changelog
-    task_type: release
-    priority: low
-    estimate: 0.5d
-    model_hints:
-      planning: balanced
-      implementation: balanced
-    acceptance_criteria:
-    - Version updated
-    - Changelog written
-    - Release notes prepared
-
 tasks:
   critical_refactors:
-  - name: Split adapters.generate_report
-    description: CC=20, needs to be split into smaller functions
-    file: planfile/llm/adapters.py
-    estimated_hours: 8
+  - name: Refactor generate_report (CC=20)
+    description: Split function with high cyclomatic complexity
+    estimated_hours: 10.0
     complexity: high
-    
-  - name: Refactor table functions
-    description: Multiple functions with CC=19-21 need refactoring
-    file: htmlcov/coverage_html_js
-    estimated_hours: 12
-    complexity: high
-    
-  - name: Fix example syntax errors
-    description: 4 example files have syntax errors
-    files:
-    - examples/demo_without_keys.py
-    - examples/demo_without_keys_fixed.py
-    - examples/llm_integration_demo.py
-    estimated_hours: 4
+  - name: Refactor update_ticket (CC=15)
+    description: Split function with high cyclomatic complexity
+    estimated_hours: 7.5
     complexity: medium
-    
+  - name: Refactor table (CC=21)
+    description: Split function with high cyclomatic complexity
+    estimated_hours: 10.5
+    complexity: high
+  - name: Refactor filter_handler (CC=21)
+    description: Split function with high cyclomatic complexity
+    estimated_hours: 10.5
+    complexity: high
   standard_refactors:
   - name: Extract get_sprint utility
-    description: Remove duplication between models.py and models_v2.py
-    estimated_hours: 2
+    description: Remove duplication (2 occurrences)
+    estimated_hours: 3.0
     complexity: low
-    
-  - name: Fix long functions
-    description: 5 functions exceed 100 lines
-    estimated_hours: 6
-    complexity: medium
-    
   test_writing:
-  - name: Unit tests for adapters
-    description: Test all LLM adapters
-    estimated_hours: 16
-    complexity: medium
-    
-  - name: CLI integration tests
-    description: Test all CLI commands
-    estimated_hours: 12
-    complexity: medium
-    
-  - name: Backend integration tests
-    description: Test GitHub, Jira, GitLab integrations
+  - name: Add unit tests
+    description: Comprehensive test suite
     estimated_hours: 20
-    complexity: high
-    
+    complexity: medium
   documentation:
-  - name: Adapter documentation
-    description: Document LiteLLM integration
+  - name: Update API documentation
+    description: Document all modules and functions
     estimated_hours: 8
     complexity: low
-    
-  - name: API documentation
-    description: Update API docs
-    estimated_hours: 6
-    complexity: low
-
 metrics:
   current:
     cc_average: 4.1
-    high_cc_functions: 12
+    high_cc_functions: 4
     validation_errors: 33
     validation_warnings: 5
-    test_coverage: Unknown
     duplication_groups: 1
-    total_functions: 307
-    total_files: 34
-    
+    pass_rate: 39.8
   target:
     cc_average: 3.5
     high_cc_functions: 0
     validation_errors: 0
     validation_warnings: 0
-    test_coverage: 80
     duplication_groups: 0
-    
-  quality_gates:
-    performance:
-      llm_response_time: "< 5s"
-      strategy_generation: "< 10s"
-    reliability:
-      import_resolution: "100%"
-      syntax_errors: "0"
-    maintainability:
-      max_function_length: "100 lines"
-      max_cc: "15"
-
+    pass_rate: 100
 tickets:
   high_priority:
-  - title: "Split 12 high-CC functions to reduce complexity"
-    description: "Functions with CC > 15 need to be refactored"
+  - title: Fix 33 validation errors
+    description: Resolve all syntax and import errors
     priority: highest
-    assignee: "Senior Developer"
-    labels: ["complexity", "refactor"]
-    
-  - title: "Fix 33 validation errors"
-    description: "Syntax and import errors blocking validation"
-    priority: highest
-    assignee: "Developer"
-    labels: ["bugfix", "validation"]
-    
-  - title: "Remove code duplication"
-    description: "Extract duplicate get_sprint function"
+    labels:
+    - bugfix
+    - validation
+  - title: Refactor 4 high-CC functions
+    description: Reduce cyclomatic complexity
     priority: high
-    assignee: "Developer"
-    labels: ["duplication", "refactor"]
-    
+    labels:
+    - complexity
+    - refactor
   medium_priority:
-  - title: "Improve test coverage to 80%"
-    description: "Add comprehensive unit and integration tests"
+  - title: Address 5 validation warnings
+    description: Fix long functions and other warnings
     priority: medium
-    assignee: "QA Engineer"
-    labels: ["testing", "coverage"]
-    
-  - title: "Fix 5 validation warnings"
-    description: "Long functions need to be split"
-    priority: medium
-    assignee: "Developer"
-    labels: ["warning", "refactor"]
-    
+    labels:
+    - warning
+    - refactor
   low_priority:
-  - title: "Update documentation"
-    description: "API docs and README need updates"
+  - title: Improve documentation
+    description: Update API docs and examples
     priority: low
-    assignee: "Technical Writer"
-    labels: ["documentation"]
-    
-  - title: "Performance optimization"
-    description: "Profile and optimize bottlenecks"
-    priority: low
-    assignee: "Developer"
-    labels: ["performance", "optimization"]
-
-risks:
-  high:
-  - description: "Refactoring high-CC functions may introduce bugs"
-    mitigation: "Comprehensive testing and code review"
-    
-  - description: "Import fixes may break existing functionality"
-    mitigation: "Gradual refactoring with validation at each step"
-    
-  medium:
-  - description: "LLM adapter changes may affect integrations"
-    mitigation: "Backward compatibility and extensive testing"
-    
-  low:
-  - description: "Documentation updates may lag behind code"
-    mitigation: "Documentation as part of definition of done"
-
-dependencies:
-  external:
-  - "LiteLLM for LLM provider abstraction"
-  - "httpx for HTTP client functionality"
-  - "PyYAML for configuration parsing"
-  
-  internal:
-  - "models.py for data structures"
-  - "integrations/ for backend connections"
-  - "loaders/ for file parsing"
-
-success_criteria:
-  technical:
-  - All quality gates pass
-  - CC̄ ≤ 3.5
-  - 0 high-CC functions
-  - 0 validation errors
-  - Test coverage ≥ 80%
-  
-  business:
-  - Examples work without errors
-  - Documentation is complete
-  - Release is ready
-  - User feedback is positive
+    labels:
+    - documentation

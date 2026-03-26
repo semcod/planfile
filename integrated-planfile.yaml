@@ -1,0 +1,1668 @@
+name: .Planfile_Analysis Improvement Plan
+project_name: .planfile_analysis
+project_type: improvement
+domain: software
+goal: Systematically address issues found in code analysis
+goals:
+- Improve overall code quality
+- Ensure all files pass validation
+quality_gates:
+- name: Critical Functions
+  description: No functions should have CC > 15
+  criteria:
+  - "All functions CC \u2264 15"
+  required: true
+- name: Validation Errors
+  description: All files must pass validation
+  criteria:
+  - Zero validation errors
+  required: true
+- name: Validation Warnings
+  description: Address all validation warnings
+  criteria:
+  - Zero validation warnings
+  required: true
+- name: Test Coverage
+  description: Maintain adequate test coverage
+  criteria:
+  - "Coverage \u2265 80%"
+  required: true
+sprints:
+- id: sprint-1
+  name: Feature Development
+  duration: 2 weeks
+  objectives:
+  - Implement features and improvements
+  task_patterns:
+  - name: Resolve Bug Issues
+    description: Fix 15 bug issues
+    task_type: bugfix
+    priority: medium
+    estimate: 7d
+    issues:
+    - title: Issue in issues[12].title
+      description: 'Bug: Report,CIRunner,main...'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[12].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[13].title
+      description: 'Bug: Report:  # Generated bug report from test failures...'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[13].description
+      description: 'Report:  # Generated bug report from test failures...'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[13].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[14].title
+      description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[14].description
+      description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+        CI/CD runner with automated bug-fix loop...'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[14].category
+      description: bug
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[22].title
+      description: 'Test: Result,BugReport,CIRunner,main...'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[22].description
+      description: Result,BugReport,CIRunner,main
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[24].title
+      description: 'Test: failures......'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[24].description
+      description: failures...
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[25].title
+      description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[25].description
+      description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+        CI/CD runner with automated bug-fix loop...'
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Issue in issues[47].title
+      description: Issue in issues[12].title
+      priority: medium
+      category: bug
+      file_path: project/.planfile_analysis/analysis_summary.json
+      line_number: null
+      effort_estimate: null
+      tags: []
+  issue_count: 15
+tasks:
+  critical_refactors: []
+  standard_refactors: []
+  bug_fixes:
+  - name: Issue in issues[12].title
+    description: 'Bug: Report,CIRunner,main...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[12].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[13].title
+    description: 'Bug: Report:  # Generated bug report from test failures...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[13].description
+    description: 'Report:  # Generated bug report from test failures...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[13].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[14].title
+    description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[14].description
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[14].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[22].title
+    description: 'Test: Result,BugReport,CIRunner,main...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[22].description
+    description: Result,BugReport,CIRunner,main
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[24].title
+    description: 'Test: failures......'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[24].description
+    description: failures...
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[25].title
+    description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[25].description
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].title
+    description: Issue in issues[12].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].description
+    description: 'Bug: Report,CIRunner,main...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[48].title
+    description: Issue in issues[12].category
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[48].description
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[48].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[49].title
+    description: Issue in issues[13].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[49].description
+    description: 'Bug: Report:  # Generated bug report from test failures...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[49].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[50].title
+    description: Issue in issues[13].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[50].description
+    description: 'Report:  # Generated bug report from test failures...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[50].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[51].title
+    description: Issue in issues[13].category
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[51].description
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[51].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].title
+    description: Issue in issues[14].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].description
+    description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[53].title
+    description: Issue in issues[14].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[53].description
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[53].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[54].title
+    description: Issue in issues[14].category
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[54].description
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[54].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[55].title
+    description: Issue in issues[22].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[55].description
+    description: 'Test: Result,BugReport,CIRunner,main...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[55].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[56].title
+    description: Issue in issues[22].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[56].description
+    description: Result,BugReport,CIRunner,main
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[56].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[57].title
+    description: Issue in issues[24].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[57].description
+    description: 'Test: failures......'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[57].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[58].title
+    description: Issue in issues[24].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[58].description
+    description: failures...
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[58].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[59].title
+    description: Issue in issues[25].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[59].description
+    description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[59].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[60].title
+    description: Issue in issues[25].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[60].description
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[60].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[61].title
+    description: Issue in issues[59].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[61].description
+    description: 'Bug: Report,CIRunner,main...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[61].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[62].title
+    description: Issue in issues[59].category
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[62].description
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[62].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[63].title
+    description: Issue in issues[60].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[63].description
+    description: 'Bug: Report:  # Generated bug report from test failures...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[63].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[64].title
+    description: Issue in issues[60].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[64].description
+    description: 'Report:  # Generated bug report from test failures...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[64].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[65].title
+    description: Issue in issues[60].category
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[65].description
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[65].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[66].title
+    description: Issue in issues[61].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[66].description
+    description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[66].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[67].title
+    description: Issue in issues[61].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[67].description
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[67].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[68].title
+    description: Issue in issues[61].category
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[68].description
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[68].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[69].title
+    description: Issue in issues[69].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[69].description
+    description: 'Test: Result,BugReport,CIRunner,main...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[69].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[70].title
+    description: Issue in issues[69].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[70].description
+    description: Result,BugReport,CIRunner,main
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[70].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[71].title
+    description: Issue in issues[71].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[71].description
+    description: 'Test: failures......'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[71].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[72].title
+    description: Issue in issues[71].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[72].description
+    description: failures...
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[72].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[73].title
+    description: Issue in issues[72].title
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[73].description
+    description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[73].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[74].title
+    description: Issue in issues[72].description
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[74].description
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[74].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[87].title
+    description: 'Bug: Report,CIRunner,main...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[87].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[88].title
+    description: 'Bug: Report:  # Generated bug report from test failures...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[88].description
+    description: 'Report:  # Generated bug report from test failures...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[88].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[89].title
+    description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[89].description
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[89].category
+    description: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[97].title
+    description: 'Test: Result,BugReport,CIRunner,main...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[97].description
+    description: Result,BugReport,CIRunner,main
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[99].title
+    description: 'Test: failures......'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[99].description
+    description: failures...
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[100].title
+    description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[100].description
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  test_writing: []
+  documentation: []
+metrics:
+  current:
+    validation_errors: 0
+    validation_warnings: 0
+  target:
+    validation_errors: 0
+    validation_warnings: 0
+    average_cc: 3.5
+    critical_functions: 0
+    duplication_groups: 0
+    test_coverage: 80
+tickets:
+  critical: []
+  high: []
+  medium:
+  - title: Issue in issues[12].title
+    description: 'Bug: Report,CIRunner,main...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[12].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[13].title
+    description: 'Bug: Report:  # Generated bug report from test failures...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[13].description
+    description: 'Report:  # Generated bug report from test failures...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[13].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[14].title
+    description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[14].description
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[14].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[22].title
+    description: 'Test: Result,BugReport,CIRunner,main...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[22].description
+    description: Result,BugReport,CIRunner,main
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[24].title
+    description: 'Test: failures......'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[24].description
+    description: failures...
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[25].title
+    description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[25].description
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[47].title
+    description: Issue in issues[12].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[47].description
+    description: 'Bug: Report,CIRunner,main...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[47].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[48].title
+    description: Issue in issues[12].category
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[48].description
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[48].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[49].title
+    description: Issue in issues[13].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[49].description
+    description: 'Bug: Report:  # Generated bug report from test failures...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[49].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[50].title
+    description: Issue in issues[13].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[50].description
+    description: 'Report:  # Generated bug report from test failures...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[50].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[51].title
+    description: Issue in issues[13].category
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[51].description
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[51].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[52].title
+    description: Issue in issues[14].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[52].description
+    description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[52].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[53].title
+    description: Issue in issues[14].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[53].description
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[53].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[54].title
+    description: Issue in issues[14].category
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[54].description
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[54].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[55].title
+    description: Issue in issues[22].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[55].description
+    description: 'Test: Result,BugReport,CIRunner,main...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[55].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[56].title
+    description: Issue in issues[22].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[56].description
+    description: Result,BugReport,CIRunner,main
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[56].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[57].title
+    description: Issue in issues[24].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[57].description
+    description: 'Test: failures......'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[57].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[58].title
+    description: Issue in issues[24].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[58].description
+    description: failures...
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[58].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[59].title
+    description: Issue in issues[25].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[59].description
+    description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[59].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[60].title
+    description: Issue in issues[25].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[60].description
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[60].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[61].title
+    description: Issue in issues[59].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[61].description
+    description: 'Bug: Report,CIRunner,main...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[61].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[62].title
+    description: Issue in issues[59].category
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[62].description
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[62].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[63].title
+    description: Issue in issues[60].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[63].description
+    description: 'Bug: Report:  # Generated bug report from test failures...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[63].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[64].title
+    description: Issue in issues[60].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[64].description
+    description: 'Report:  # Generated bug report from test failures...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[64].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[65].title
+    description: Issue in issues[60].category
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[65].description
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[65].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[66].title
+    description: Issue in issues[61].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[66].description
+    description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[66].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[67].title
+    description: Issue in issues[61].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[67].description
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[67].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[68].title
+    description: Issue in issues[61].category
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[68].description
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[68].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[69].title
+    description: Issue in issues[69].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[69].description
+    description: 'Test: Result,BugReport,CIRunner,main...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[69].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[70].title
+    description: Issue in issues[69].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[70].description
+    description: Result,BugReport,CIRunner,main
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[70].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[71].title
+    description: Issue in issues[71].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[71].description
+    description: 'Test: failures......'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[71].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[72].title
+    description: Issue in issues[71].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[72].description
+    description: failures...
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[72].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[73].title
+    description: Issue in issues[72].title
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[73].description
+    description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[73].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[74].title
+    description: Issue in issues[72].description
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[74].description
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[74].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[87].title
+    description: 'Bug: Report,CIRunner,main...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[87].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[88].title
+    description: 'Bug: Report:  # Generated bug report from test failures...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[88].description
+    description: 'Report:  # Generated bug report from test failures...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[88].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[89].title
+    description: 'Bug: _report(2),create_bug_tickets(1),auto_fix_bugs(1),...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[89].description
+    description: '_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[89].category
+    description: bug
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[97].title
+    description: 'Test: Result,BugReport,CIRunner,main...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[97].description
+    description: Result,BugReport,CIRunner,main
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[99].title
+    description: 'Test: failures......'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[99].description
+    description: failures...
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[100].title
+    description: 'Test: s(0),run_code_analysis(0),generate_bug_report(2),c...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Issue in issues[100].description
+    description: 's(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  #
+      CI/CD runner with automated bug-fix loop...'
+    priority: medium
+    category: bug
+    file_path: project/.planfile_analysis/analysis_summary.json
+    line_number: null
+    effort_estimate: null
+    tags: []
+  low: []
+risks:
+- description: Refactoring may introduce new bugs
+  mitigation: Comprehensive testing and code review
+success_criteria:
+- All quality gates pass
+- All generated tickets are completed
+- Zero validation errors
+- Code duplication eliminated
+- All files pass linting and validation

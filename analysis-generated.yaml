@@ -1,0 +1,310 @@
+name: Generated from File Analysis
+project_name: project
+project_type: improvement
+domain: software
+goal: Address issues found in file analysis
+sprints:
+- id: sprint-1
+  name: Quality & High Priority
+  duration: 2 weeks
+  objectives:
+  - Address high priority issues
+  - Improve code quality
+  task_patterns:
+  - name: Resolve Bug Issues
+    description: Fix 12 bug issues
+    task_type: bugfix
+    priority: high
+    estimate: 9d
+    issues:
+    - title: Failed to parse duplication.toon.yaml
+      description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+        \ string>\", line 3, column 1:\n    SUMMARY:\n    ^\nexpected <block end>,\
+        \ but found '<scalar>'\n  in \"<unicode string>\", line 12, column 24:\n \
+        \     [ccf4e8110e3ba8d2]   EXAC  get_sprint  L=6 N=2 saved= ... \n       \
+        \                    ^"
+      priority: high
+      category: bug
+      file_path: project/duplication.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse validation.toon.yaml
+      description: "YAML parsing error: mapping values are not allowed here\n  in\
+        \ \"<unicode string>\", line 4, column 23:\n      scanned: 103  passed: 41\
+        \ (39.8%)  warnings: 5  error ... \n                          ^"
+      priority: high
+      category: bug
+      file_path: project/validation.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse map.toon.yaml
+      description: "YAML parsing error: while scanning a simple key\n  in \"<unicode\
+        \ string>\", line 45, column 5:\n        debounce()\n        ^\ncould not\
+        \ find expected ':'\n  in \"<unicode string>\", line 46, column 5:\n     \
+        \   timeoutId()\n        ^"
+      priority: high
+      category: bug
+      file_path: project/map.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse evolution.toon.yaml
+      description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+        \ string>\", line 3, column 1:\n    NEXT[10] (ranked by impact):\n    ^\n\
+        expected <block end>, but found '<tag>'\n  in \"<unicode string>\", line 4,\
+        \ column 7:\n      [1] !  SPLIT-FUNC      table  CC=21  ... \n          ^"
+      priority: high
+      category: bug
+      file_path: project/evolution.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse project.toon.yaml
+      description: "YAML parsing error: mapping values are not allowed here\n  in\
+        \ \"<unicode string>\", line 34, column 8:\n      LANGS: python:30/javascript:2/shell:2\n\
+        \           ^"
+      priority: high
+      category: bug
+      file_path: project/project.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse analysis.toon.yaml
+      description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+        \ string>\", line 22, column 3:\n      [1] Src [planfile_generate]: pla ...\
+        \ \n      ^\nexpected <block end>, but found '<scalar>'\n  in \"<unicode string>\"\
+        , line 22, column 7:\n      [1] Src [planfile_generate]: planfil ... \n  \
+        \        ^"
+      priority: high
+      category: bug
+      file_path: project/analysis.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse duplication.toon.yaml
+      description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+        \ string>\", line 3, column 1:\n    SUMMARY:\n    ^\nexpected <block end>,\
+        \ but found '<scalar>'\n  in \"<unicode string>\", line 12, column 24:\n \
+        \     [ccf4e8110e3ba8d2]   EXAC  get_sprint  L=6 N=2 saved= ... \n       \
+        \                    ^"
+      priority: high
+      category: bug
+      file_path: project/duplication.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse validation.toon.yaml
+      description: "YAML parsing error: mapping values are not allowed here\n  in\
+        \ \"<unicode string>\", line 4, column 23:\n      scanned: 103  passed: 41\
+        \ (39.8%)  warnings: 5  error ... \n                          ^"
+      priority: high
+      category: bug
+      file_path: project/validation.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse map.toon.yaml
+      description: "YAML parsing error: while scanning a simple key\n  in \"<unicode\
+        \ string>\", line 45, column 5:\n        debounce()\n        ^\ncould not\
+        \ find expected ':'\n  in \"<unicode string>\", line 46, column 5:\n     \
+        \   timeoutId()\n        ^"
+      priority: high
+      category: bug
+      file_path: project/map.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse evolution.toon.yaml
+      description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+        \ string>\", line 3, column 1:\n    NEXT[10] (ranked by impact):\n    ^\n\
+        expected <block end>, but found '<tag>'\n  in \"<unicode string>\", line 4,\
+        \ column 7:\n      [1] !  SPLIT-FUNC      table  CC=21  ... \n          ^"
+      priority: high
+      category: bug
+      file_path: project/evolution.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse project.toon.yaml
+      description: "YAML parsing error: mapping values are not allowed here\n  in\
+        \ \"<unicode string>\", line 34, column 8:\n      LANGS: python:30/javascript:2/shell:2\n\
+        \           ^"
+      priority: high
+      category: bug
+      file_path: project/project.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+    - title: Failed to parse analysis.toon.yaml
+      description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+        \ string>\", line 22, column 3:\n      [1] Src [planfile_generate]: pla ...\
+        \ \n      ^\nexpected <block end>, but found '<scalar>'\n  in \"<unicode string>\"\
+        , line 22, column 7:\n      [1] Src [planfile_generate]: planfil ... \n  \
+        \        ^"
+      priority: high
+      category: bug
+      file_path: project/analysis.toon.yaml
+      line_number: null
+      effort_estimate: null
+      tags: []
+  issue_count: 12
+tickets:
+  critical: []
+  high:
+  - title: Failed to parse duplication.toon.yaml
+    description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+      \ string>\", line 3, column 1:\n    SUMMARY:\n    ^\nexpected <block end>, but\
+      \ found '<scalar>'\n  in \"<unicode string>\", line 12, column 24:\n      [ccf4e8110e3ba8d2]\
+      \   EXAC  get_sprint  L=6 N=2 saved= ... \n                           ^"
+    priority: high
+    category: bug
+    file_path: project/duplication.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse validation.toon.yaml
+    description: "YAML parsing error: mapping values are not allowed here\n  in \"\
+      <unicode string>\", line 4, column 23:\n      scanned: 103  passed: 41 (39.8%)\
+      \  warnings: 5  error ... \n                          ^"
+    priority: high
+    category: bug
+    file_path: project/validation.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse map.toon.yaml
+    description: "YAML parsing error: while scanning a simple key\n  in \"<unicode\
+      \ string>\", line 45, column 5:\n        debounce()\n        ^\ncould not find\
+      \ expected ':'\n  in \"<unicode string>\", line 46, column 5:\n        timeoutId()\n\
+      \        ^"
+    priority: high
+    category: bug
+    file_path: project/map.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse evolution.toon.yaml
+    description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+      \ string>\", line 3, column 1:\n    NEXT[10] (ranked by impact):\n    ^\nexpected\
+      \ <block end>, but found '<tag>'\n  in \"<unicode string>\", line 4, column\
+      \ 7:\n      [1] !  SPLIT-FUNC      table  CC=21  ... \n          ^"
+    priority: high
+    category: bug
+    file_path: project/evolution.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse project.toon.yaml
+    description: "YAML parsing error: mapping values are not allowed here\n  in \"\
+      <unicode string>\", line 34, column 8:\n      LANGS: python:30/javascript:2/shell:2\n\
+      \           ^"
+    priority: high
+    category: bug
+    file_path: project/project.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse analysis.toon.yaml
+    description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+      \ string>\", line 22, column 3:\n      [1] Src [planfile_generate]: pla ...\
+      \ \n      ^\nexpected <block end>, but found '<scalar>'\n  in \"<unicode string>\"\
+      , line 22, column 7:\n      [1] Src [planfile_generate]: planfil ... \n    \
+      \      ^"
+    priority: high
+    category: bug
+    file_path: project/analysis.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse duplication.toon.yaml
+    description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+      \ string>\", line 3, column 1:\n    SUMMARY:\n    ^\nexpected <block end>, but\
+      \ found '<scalar>'\n  in \"<unicode string>\", line 12, column 24:\n      [ccf4e8110e3ba8d2]\
+      \   EXAC  get_sprint  L=6 N=2 saved= ... \n                           ^"
+    priority: high
+    category: bug
+    file_path: project/duplication.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse validation.toon.yaml
+    description: "YAML parsing error: mapping values are not allowed here\n  in \"\
+      <unicode string>\", line 4, column 23:\n      scanned: 103  passed: 41 (39.8%)\
+      \  warnings: 5  error ... \n                          ^"
+    priority: high
+    category: bug
+    file_path: project/validation.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse map.toon.yaml
+    description: "YAML parsing error: while scanning a simple key\n  in \"<unicode\
+      \ string>\", line 45, column 5:\n        debounce()\n        ^\ncould not find\
+      \ expected ':'\n  in \"<unicode string>\", line 46, column 5:\n        timeoutId()\n\
+      \        ^"
+    priority: high
+    category: bug
+    file_path: project/map.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse evolution.toon.yaml
+    description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+      \ string>\", line 3, column 1:\n    NEXT[10] (ranked by impact):\n    ^\nexpected\
+      \ <block end>, but found '<tag>'\n  in \"<unicode string>\", line 4, column\
+      \ 7:\n      [1] !  SPLIT-FUNC      table  CC=21  ... \n          ^"
+    priority: high
+    category: bug
+    file_path: project/evolution.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse project.toon.yaml
+    description: "YAML parsing error: mapping values are not allowed here\n  in \"\
+      <unicode string>\", line 34, column 8:\n      LANGS: python:30/javascript:2/shell:2\n\
+      \           ^"
+    priority: high
+    category: bug
+    file_path: project/project.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  - title: Failed to parse analysis.toon.yaml
+    description: "YAML parsing error: while parsing a block mapping\n  in \"<unicode\
+      \ string>\", line 22, column 3:\n      [1] Src [planfile_generate]: pla ...\
+      \ \n      ^\nexpected <block end>, but found '<scalar>'\n  in \"<unicode string>\"\
+      , line 22, column 7:\n      [1] Src [planfile_generate]: planfil ... \n    \
+      \      ^"
+    priority: high
+    category: bug
+    file_path: project/analysis.toon.yaml
+    line_number: null
+    effort_estimate: null
+    tags: []
+  medium: []
+  low: []
+metrics:
+  current:
+    total_issues: 12
+    critical_issues: 0
+    high_issues: 12
+    medium_issues: 0
+    low_issues: 0
+analysis_summary:
+  analyzed_files:
+  - project/duplication.toon.yaml
+  - project/validation.toon.yaml
+  - project/map.toon.yaml
+  - project/evolution.toon.yaml
+  - project/project.toon.yaml
+  - project/analysis.toon.yaml
+  - project/duplication.toon.yaml
+  - project/validation.toon.yaml
+  - project/map.toon.yaml
+  - project/evolution.toon.yaml
+  - project/project.toon.yaml
+  - project/analysis.toon.yaml
+  total_metrics: 0
+  critical_metrics: 0

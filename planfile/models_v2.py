@@ -71,6 +71,7 @@ class Sprint(BaseModel):
     objectives: List[str] = Field(default_factory=list, description="Sprint objectives")
     tasks: List[Task] = Field(default_factory=list, description="Tasks in this sprint")
     length_days: Optional[int] = Field(14, description="Sprint length in days")
+    duration: Optional[str] = Field(None, description="Sprint duration (e.g., '2 weeks')")
     
     # Allow both task objects and simple dicts
     @field_validator('tasks', mode='before')
@@ -131,7 +132,7 @@ class Strategy(BaseModel):
     domain: Optional[str] = Field("software", description="Business domain")
     
     # Goal can be string or Goal object
-    goal: Union[str, Goal] = Field(..., description="Main goal of this strategy")
+    goal: Optional[str] = Field(None, description="Main goal of this strategy")
     description: Optional[str] = Field(None, description="Detailed description")
     
     # Sprints - the main structure
@@ -203,6 +204,172 @@ class Strategy(BaseModel):
                 sprint['tasks'] = [f"task-{i+1}" for i in range(len(task_patterns))]
         
         return data
+    
+    def compare(self, other: 'Strategy') -> Dict[str, Any]:
+        """Compare with another strategy and return differences."""
+        comparison = {
+            'common_elements': [],
+            'differences': [],
+            'only_in_self': [],
+            'only_in_other': [],
+            'similarity_score': 0.0
+        }
+        
+        # Compare basic attributes
+        if self.name == other.name:
+            comparison['common_elements'].append(f"Name: {self.name}")
+        else:
+            comparison['differences'].append({
+                'field': 'name',
+                'self': self.name,
+                'other': other.name
+            })
+        
+        # Compare goals
+        self_goal = self.goal.short if isinstance(self.goal, Goal) else str(self.goal)
+        other_goal = other.goal.short if isinstance(other.goal, Goal) else str(other.goal)
+        
+        if self_goal == other_goal:
+            comparison['common_elements'].append(f"Goal: {self_goal}")
+        else:
+            comparison['differences'].append({
+                'field': 'goal',
+                'self': self_goal,
+                'other': other_goal
+            })
+        
+        # Compare sprints
+        self_sprint_ids = {s.id for s in self.sprints}
+        other_sprint_ids = {s.id for s in other.sprints}
+        
+        comparison['common_elements'].extend([
+            f"Sprint {sid}" for sid in self_sprint_ids & other_sprint_ids
+        ])
+        comparison['only_in_self'].extend([
+            f"Sprint {sid}" for sid in self_sprint_ids - other_sprint_ids
+        ])
+        comparison['only_in_other'].extend([
+            f"Sprint {sid}" for sid in other_sprint_ids - self_sprint_ids
+        ])
+        
+        # Calculate similarity score
+        total_elements = 2 + len(self_sprint_ids) + len(other_sprint_ids)  # name, goal, sprints
+        common_elements = 2 + len(self_sprint_ids & other_sprint_ids)
+        comparison['similarity_score'] = common_elements / total_elements if total_elements > 0 else 0
+        
+        return comparison
+    
+    def merge(self, others: List['Strategy'], name: str = None) -> 'Strategy':
+        """Merge with other strategies to create a combined strategy."""
+        if not others:
+            return self
+        
+        # Start with self
+        merged_data = self.model_dump()
+        
+        # Use custom name or combine names
+        if name:
+            merged_data['name'] = name
+        else:
+            all_names = [self.name] + [s.name for s in others]
+            merged_data['name'] = f"Merged: {' + '.join(all_names)}"
+        
+        # Combine sprints (renumber to avoid conflicts)
+        all_sprints = [merged_data.get('sprints', [])]
+        for other in others:
+            all_sprints.append(other.model_dump().get('sprints', []))
+        
+        # Renumber sprints
+        merged_sprints = []
+        sprint_id = 1
+        for sprints in all_sprints:
+            for sprint in sprints:
+                sprint_copy = sprint.copy()
+                sprint_copy['id'] = sprint_id
+                merged_sprints.append(Sprint(**sprint_copy))
+                sprint_id += 1
+        
+        merged_data['sprints'] = merged_sprints
+        
+        # Combine quality gates
+        all_gates = [merged_data.get('quality_gates', [])]
+        for other in others:
+            all_gates.append(other.model_dump().get('quality_gates', []))
+        
+        # Flatten and deduplicate
+        merged_gates = []
+        gate_names = set()
+        for gates in all_gates:
+            for gate in gates:
+                gate_name = gate.get('name', 'Unnamed')
+                if gate_name not in gate_names:
+                    merged_gates.append(QualityGate(**gate))
+                    gate_names.add(gate_name)
+        
+        merged_data['quality_gates'] = merged_gates
+        
+        # Combine metadata
+        merged_metadata = merged_data.get('metadata', {})
+        for other in others:
+            other_metadata = other.model_dump().get('metadata', {})
+            merged_metadata.update(other_metadata)
+        
+        merged_data['metadata'] = merged_metadata
+        
+        return Strategy(**merged_data)
+    
+    def export(self, format: str = 'yaml') -> str:
+        """Export strategy to specified format."""
+        if format.lower() == 'yaml':
+            import yaml
+            return yaml.dump(self.model_dump(), default_flow_style=False, sort_keys=False)
+        elif format.lower() == 'json':
+            import json
+            return json.dumps(self.model_dump(), indent=2, default=str)
+        elif format.lower() == 'dict':
+            return self.model_dump()
+        else:
+            raise ValueError(f"Unsupported export format: {format}")
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get strategy statistics."""
+        stats = {
+            'total_sprints': len(self.sprints),
+            'total_tasks': sum(len(sprint.tasks) for sprint in self.sprints),
+            'total_quality_gates': len(self.quality_gates),
+            'project_type': self.project_type,
+            'domain': self.domain,
+            'version': self.version
+        }
+        
+        # Task type breakdown
+        task_types = {}
+        for sprint in self.sprints:
+            for task in sprint.tasks:
+                task_type = task.type.value
+                task_types[task_type] = task_types.get(task_type, 0) + 1
+        stats['task_types'] = task_types
+        
+        # Sprint duration stats
+        durations = []
+        for sprint in self.sprints:
+            if hasattr(sprint, 'duration_days') and sprint.duration_days:
+                durations.append(sprint.duration_days)
+            elif hasattr(sprint, 'duration'):
+                # Parse duration string
+                duration_str = sprint.duration.lower()
+                if 'week' in duration_str:
+                    weeks = int(duration_str.split()[0])
+                    durations.append(weeks * 7)
+                elif 'day' in duration_str:
+                    days = int(duration_str.split()[0])
+                    durations.append(days)
+        
+        if durations:
+            stats['total_duration_days'] = sum(durations)
+            stats['avg_duration_days'] = sum(durations) / len(durations)
+        
+        return stats
     
     # Allow loading from various formats
     @classmethod

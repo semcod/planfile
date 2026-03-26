@@ -25,6 +25,10 @@ logger = logging.getLogger(__name__)
 # Add auto subcommand
 app.add_typer(auto_loop.app, name="auto", help="Automated CI/CD commands")
 
+# Import and add extra commands
+from .extra_commands import add_extra_commands
+add_extra_commands(app)
+
 
 def get_backend(backend_type: str, config: dict):
     """Get backend instance by type and config."""
@@ -419,3 +423,79 @@ def generate_strategy_cli(
 def main():
     """Main CLI entry point."""
     app()
+
+
+@app.command("generate-from-files")
+def generate_from_files_cmd(
+    project_path: str = typer.Argument(".", help="Project path to analyze"),
+    output: str = typer.Option("planfile-from-files.yaml", help="Output file path"),
+    project_name: Optional[str] = typer.Option(None, help="Project name"),
+    max_sprints: int = typer.Option(4, help="Maximum number of sprints"),
+    focus: Optional[str] = typer.Option(None, help="Focus area: quality, security, performance, testing, documentation"),
+    patterns: Optional[List[str]] = typer.Option(None, help="File patterns to analyze"),
+    verbose: bool = typer.Option(False, help="Verbose output"),
+):
+    """Generate planfile from file analysis (no LLM required)."""
+    from ..analysis.generator import generator
+    from ..loaders.yaml_loader import save_strategy_yaml
+    
+    try:
+        console.print(f"[bold]Analyzing project files:[/bold] {project_path}")
+        
+        if verbose:
+            console.print(f"  Project name: {project_name or 'auto-detected'}")
+            console.print(f"  Max sprints: {max_sprints}")
+            console.print(f"  Focus area: {focus or 'auto-detected'}")
+            if patterns:
+                console.print(f"  Patterns: {', '.join(patterns)}")
+        
+        # Generate strategy from file analysis
+        strategy = generator.generate_from_current_project(
+            project_path=project_path,
+            project_name=project_name,
+            max_sprints=max_sprints,
+            focus_area=focus,
+            patterns=patterns
+        )
+        
+        # Save strategy
+        save_strategy_yaml(strategy, output)
+        
+        console.print(f"[green]✓[/green] Strategy saved to: {output}")
+        
+        # Show summary
+        if isinstance(strategy, dict):
+            console.print(f"  Name: {strategy.get('name', 'N/A')}")
+            console.print(f"  Sprints: {len(strategy.get('sprints', []))}")
+            
+            total_issues = strategy.get('summary', {}).get('total_issues', 0)
+            if total_issues > 0:
+                console.print(f"  Issues found: {total_issues}")
+            
+            if strategy.get('quality_gates'):
+                console.print(f"  Quality gates: {len(strategy['quality_gates'])}")
+            
+            # Show priority breakdown
+            priority_breakdown = strategy.get('summary', {}).get('priority_breakdown', {})
+            if priority_breakdown:
+                console.print("\n[bold]Issue Breakdown:[/bold]")
+                for priority, count in priority_breakdown.items():
+                    color = {
+                        'critical': 'red',
+                        'high': 'yellow',
+                        'medium': 'blue',
+                        'low': 'green'
+                    }.get(priority, 'white')
+                    console.print(f"  {priority}: [{color}]{count}[/{color}]")
+        
+        console.print(f"\n[dim]Next steps:[/dim]")
+        console.print(f"  1. Review: planfile validate {output}")
+        console.print(f"  2. Apply: planfile apply {output} . --dry-run")
+        console.print(f"  3. Execute: planfile apply {output} . --backend <backend>")
+    
+    except Exception as e:
+        console.print(f"[red]✗[/red] Generation failed: {e}")
+        if verbose:
+            import traceback
+            console.print(traceback.format_exc())
+        raise typer.Exit(1)
