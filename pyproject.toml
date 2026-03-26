@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planfile"
-version = "0.1.18"
+version = "0.1.19"
 description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 license = "Apache-2.0"
@@ -39,12 +39,16 @@ github = ["PyGithub>=2.0"]
 jira = ["jira>=3.5"]
 gitlab = ["python-gitlab>=4.0"]
 litellm = ["litellm>=1.40"]
+openai = ["openai>=1.0"]
+anthropic = ["anthropic>=0.25"]
 llx = ["llx>=0.2.0"]
 all = [
     "PyGithub>=2.0",
     "jira>=3.5",
     "python-gitlab>=4.0",
     "litellm>=1.40",
+    "openai>=1.0",
+    "anthropic>=0.25",
     "llx>=0.2.0",
 ]
 dev = [

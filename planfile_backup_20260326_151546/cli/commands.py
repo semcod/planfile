@@ -10,7 +10,7 @@ from rich.progress import Progress
 import logging
 
 from planfile.models import Strategy
-from planfile.runner import apply_strategy_to_tickets, run_strategy
+from planfile.runner import apply_strategy, review_strategy
 from planfile.loaders.yaml_loader import load_strategy_yaml
 from planfile.integrations.github import GitHubBackend
 from planfile.integrations.jira import JiraBackend
@@ -131,7 +131,7 @@ def _execute_apply_strategy(
     with Progress() as progress:
         task = progress.add_task("Applying planfile...", total=100)
         
-        results = apply_strategy_to_tickets(
+        results = apply_strategy(
             strategy=strategy,
             project_path=str(project_path),
             backends=backends,

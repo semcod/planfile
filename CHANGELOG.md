@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.19] - 2026-03-26
+
+### Docs
+- Update INTEGRATION_SUMMARY.md
+- Update LITELLM_INTEGRATION_SUMMARY.md
+- Update README_STANDALONE.md
+- Update planfile_backup_20260326_151546/examples/README.md
+
+### Other
+- Update example_standalone.py
+- Update planfile/__init__.py
+- Update planfile/builder.py
+- Update planfile/cli/commands.py
+- Update planfile/examples.py
+- Update planfile/examples/demo_without_keys.py
+- Update planfile/examples/demo_without_keys_fixed.py
+- Update planfile/executor_standalone.py
+- Update planfile/models.py
+- Update planfile/models_v2.py
+- ... and 54 more files
+
 ## [0.1.18] - 2026-03-26
 
 ### Docs

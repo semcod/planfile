@@ -158,52 +158,6 @@ class Strategy(BaseModel):
                 return sprint
         return None
     
-    def to_llx_format(self) -> Dict:
-        """Convert to LLX-compatible format."""
-        # Use model_dump with mode='json' to convert enums to strings
-        data = self.model_dump(mode='json')
-        
-        # Convert goal to proper Goal format
-        if isinstance(data.get('goal'), str):
-            data['goal'] = {
-                'short': data['goal'],
-                'quality': [],
-                'delivery': [],
-                'metrics': []
-            }
-        elif isinstance(data.get('goal'), dict):
-            # Ensure all required fields
-            goal = data['goal']
-            if 'short' not in goal:
-                goal['short'] = str(goal)
-            goal.setdefault('quality', [])
-            goal.setdefault('delivery', [])
-            goal.setdefault('metrics', [])
-        
-        # Convert tasks to task_patterns with string format
-        for sprint in data.get('sprints', []):
-            if 'tasks' in sprint:
-                task_patterns = []
-                for task in sprint['tasks']:
-                    if isinstance(task, dict):
-                        # Convert to task pattern format
-                        pattern = {
-                            'name': task.get('name', 'unnamed'),
-                            'description': task.get('description', ''),
-                            'task_type': task.get('type', 'feature'),
-                            'model_hint': task.get('model_hints', {}).get('implementation', 'balanced')
-                        }
-                        task_patterns.append(pattern)
-                    else:
-                        # Already a pattern
-                        task_patterns.append(task)
-                
-                sprint['task_patterns'] = task_patterns
-                # Remove tasks but keep as string list for compatibility
-                sprint['tasks'] = [f"task-{i+1}" for i in range(len(task_patterns))]
-        
-        return data
-    
     # Allow loading from various formats
     @classmethod
     def load_flexible(cls, data: Union[Dict, str, Path]) -> "Strategy":
