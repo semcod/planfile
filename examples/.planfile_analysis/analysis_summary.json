@@ -1,0 +1,5635 @@
+{
+  "issues": [
+    {
+      "title": "Refactor: version: 1.0.0...",
+      "description": "version: 1.0.0",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategy_free_test.yaml",
+      "line_number": 23,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: free model usage...",
+      "description": "free model usage",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_free_test.yaml",
+      "line_number": 2,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: objectives:...",
+      "description": "objectives:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_free_test.yaml",
+      "line_number": 7,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: all free model hints...",
+      "description": "all free model hints",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_free_test.yaml",
+      "line_number": 9,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Free Hint...",
+      "description": "Free Hint",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_free_test.yaml",
+      "line_number": 13,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Cheap Hint...",
+      "description": "Cheap Hint",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_free_test.yaml",
+      "line_number": 18,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Local Model...",
+      "description": "Local Model",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_free_test.yaml",
+      "line_number": 22,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategy_free_test.yaml",
+      "line_number": 19,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Refactor: \"...",
+      "description": "\"",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 29,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing\", \"cleanup\", \"quality\"]...",
+      "description": "ing\", \"cleanup\", \"quality\"]",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 80,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 14,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing & Documentation\"...",
+      "description": "ing & Documentation\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 47,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: coverage\"...",
+      "description": "coverage\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 49,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s\"...",
+      "description": "s\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 53,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s for core functionality\"...",
+      "description": "s for core functionality\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 54,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \"...",
+      "description": "\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 55,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: changes\"...",
+      "description": "changes\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Coverage\"...",
+      "description": "Coverage\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 71,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ed\"...",
+      "description": "ed\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 74,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 15,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\"...",
+      "description": "umentation\"",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 47,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\"...",
+      "description": "s\"",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 50,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\"...",
+      "description": "umentation\"",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategy_simple_v2.yaml",
+      "line_number": 61,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Fix YAML syntax in llm-config.yaml",
+      "description": "YAML parsing error: while scanning a block scalar\n  in \"<unicode string>\", line 158, column 11:\n        poor: > 10s\n              ^\nexpected a comment or a line break, but found '1'\n  in \"<unicode string>\", line 158, column 13:\n        poor: > 10s\n                ^",
+      "priority": "high",
+      "category": "bug",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": null,
+      "effort_estimate": "1h",
+      "tags": [
+        "yaml",
+        "syntax"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 1,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 81,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 95,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: configurations...",
+      "description": "configurations",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 116,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _scenarios:...",
+      "description": "_scenarios:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 117,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: - anthropic/claude-3-sonnet...",
+      "description": "- anthropic/claude-3-sonnet",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 125,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: - gpt-4-turbo-preview...",
+      "description": "- gpt-4-turbo-preview",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 136,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: - anthropic/claude-3-haiku...",
+      "description": "- anthropic/claude-3-haiku",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 147,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -results...",
+      "description": "-results",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 177,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/llm-config.yaml",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 171,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: authentication system...",
+      "description": "authentication system",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 172,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 182,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: coverage...",
+      "description": "coverage",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 18,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ed'...",
+      "description": "ed'",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 19,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 140,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 141,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing pipeline...",
+      "description": "ing pipeline",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 158,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing:...",
+      "description": "_writing:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 193,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: suite...",
+      "description": "suite",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 194,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 195,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 199,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage: 90...",
+      "description": "_coverage: 90",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 218,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation:...",
+      "description": "umentation:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 204,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument all security procedures...",
+      "description": "ument all security procedures",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 206,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/security-hardening.yaml",
+      "line_number": 211,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ker configuration...",
+      "description": "ker configuration",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/onboarding.yaml",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umented....",
+      "description": "umented.",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/onboarding.yaml",
+      "line_number": 63,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument signing workflow...",
+      "description": "ument signing workflow",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/onboarding.yaml",
+      "line_number": 97,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument uploads...",
+      "description": "ument uploads",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/onboarding.yaml",
+      "line_number": 115,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Issue in tasks.patterns[6].description",
+      "description": "Add payment capabilities:\n- Stripe integration\n- Multiple payment methods\n- PCI compliance\n- Error handling\n- Payment retries\n",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "examples/strategies/ecommerce-mvp.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Issue in sprints[3].task_patterns[0].description",
+      "description": "Test system resilience under failure conditions",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Refactor: ing Strategy...",
+      "description": "ing Strategy",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 1,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: priority: critical...",
+      "description": "priority: critical",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 55,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: priority: high...",
+      "description": "priority: high",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 78,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 174,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 185,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: authentication...",
+      "description": "authentication",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 186,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: coverage...",
+      "description": "coverage",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 24,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing and Migration...",
+      "description": "ing and Migration",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 139,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 142,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing at scale...",
+      "description": "ing at scale",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 143,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 149,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: system resilience under failure conditions...",
+      "description": "system resilience under failure conditions",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 150,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: priority: high...",
+      "description": "priority: high",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 151,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ed...",
+      "description": "ed",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 158,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ed...",
+      "description": "ed",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 171,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing:...",
+      "description": "_writing:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 196,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 197,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: API contracts between services...",
+      "description": "API contracts between services",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 198,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 202,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing under load...",
+      "description": "ing under load",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 203,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage: 85...",
+      "description": "_coverage: 85",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 225,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umented...",
+      "description": "umented",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 49,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation and training...",
+      "description": "umentation and training",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 145,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umented...",
+      "description": "umented",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 157,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation:...",
+      "description": "umentation:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 207,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 208,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument all service APIs...",
+      "description": "ument all service APIs",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 209,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation: 100...",
+      "description": "umentation: 100",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/microservices-migration.yaml",
+      "line_number": 226,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Optimize: ML training pipeline for 10x faster training...",
+      "description": "ML training pipeline for 10x faster training",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 8,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: data loading and preprocessing...",
+      "description": "data loading and preprocessing",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 35,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: priority: critical...",
+      "description": "priority: critical",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 43,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: d...",
+      "description": "d",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 50,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: hyperparameter tuning...",
+      "description": "hyperparameter tuning",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 70,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: priority: high...",
+      "description": "priority: high",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 90,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: priority: high...",
+      "description": "priority: high",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 113,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: data pipeline...",
+      "description": "data pipeline",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 172,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: inference code...",
+      "description": "inference code",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 188,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 171,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: for parallel processing...",
+      "description": "for parallel processing",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 173,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 182,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: feature engineering...",
+      "description": "feature engineering",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 183,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: ing framework...",
+      "description": "ing framework",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 106,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s passing...",
+      "description": "s passing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 155,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing:...",
+      "description": "_writing:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 193,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 194,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 195,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 200,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage: 90...",
+      "description": "_coverage: 90",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 222,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation and knowledge sharing...",
+      "description": "umentation and knowledge sharing",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 143,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation:...",
+      "description": "umentation:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 204,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 205,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 206,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation_coverage: 95...",
+      "description": "umentation_coverage: 95",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml",
+      "line_number": 224,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Issue in patterns[1].description",
+      "description": "Add unit test coverage for:\n- Core business logic\n- API endpoints\n- Utility functions\n- Data models\n- Error handling\n",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Issue in patterns[2].description",
+      "description": "Document all API endpoints:\n- OpenAPI/Swagger specification\n- Request/response examples\n- Authentication details\n- Error codes\n- Rate limiting info\n",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Issue in patterns[5].id",
+      "description": "error-handling",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Issue in patterns[5].title",
+      "description": "Implement comprehensive error handling",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Issue in patterns[5].description",
+      "description": "Add robust error handling:\n- Global error handlers\n- User-friendly error messages\n- Error logging and monitoring\n- Graceful degradation\n- Retry mechanisms\n",
+      "priority": "medium",
+      "category": "bug",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": null,
+      "effort_estimate": null,
+      "tags": []
+    },
+    {
+      "title": "Optimize: application performance\"...",
+      "description": "application performance\"",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Optimize: for mobile devices:...",
+      "description": "for mobile devices:",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 152,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Test: ing on push...",
+      "description": "ing on push",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 9,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s\"...",
+      "description": "s\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 22,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s\"...",
+      "description": "s\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 24,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: coverage for:...",
+      "description": "coverage for:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 26,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing\", \"quality\"]...",
+      "description": "ing\", \"quality\"]",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 34,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 83,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 138,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 156,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing...",
+      "description": "ing",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 171,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation\"...",
+      "description": "umentation\"",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 40,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\"...",
+      "description": "umentation\"",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 41,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\"...",
+      "description": "umentation\"",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 42,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument all API endpoints:...",
+      "description": "ument all API endpoints:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 44,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\", \"api\"]...",
+      "description": "umentation\", \"api\"]",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 52,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/tasks/common-tasks.yaml",
+      "line_number": 175,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Test: planfile strategies with various LLM providers usi...",
+      "description": "planfile strategies with various LLM providers using adapters.",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 3,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Runner,...",
+      "description": "Runner,",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 17,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Result...",
+      "description": "Result",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 21,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s.\"\"\"...",
+      "description": "s.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 26,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: S\")...",
+      "description": "S\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 28,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: runner...",
+      "description": "runner",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 31,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Runner()...",
+      "description": "Runner()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 32,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: strategies_dir = Path(__file__).parent / \"strategi...",
+      "description": "strategies_dir = Path(__file__).parent / \"strategies\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 89,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategies = [...",
+      "description": "_strategies = [",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 91,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing strategies from: {strategies_dir}\")...",
+      "description": "ing strategies from: {strategies_dir}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 97,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: per adapter...",
+      "description": "per adapter",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 99,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _models = {...",
+      "description": "_models = {",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 100,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 107,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategies:...",
+      "description": "_strategies:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 110,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing strategy: {strategy_file}\")...",
+      "description": "ing strategy: {strategy_file}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 117,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategy_with_all_adapters(...",
+      "description": "_strategy_with_all_adapters(",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 121,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _models...",
+      "description": "_models",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 123,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing {strategy_file}: {e}\")...",
+      "description": "ing {strategy_file}: {e}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 135,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -report.md\")...",
+      "description": "-report.md\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 146,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -results.json\")...",
+      "description": "-results.json\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 153,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _results = []...",
+      "description": "_results = []",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 184,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _results.extend(adapter_results)...",
+      "description": "_results.extend(adapter_results)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 187,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _results if r.success]...",
+      "description": "_results if r.success]",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 189,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: fastest = min(successful, key=lambda x: x.response...",
+      "description": "fastest = min(successful, key=lambda x: x.response_time)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 192,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: {fastest.provider} {fastest.model} ({fastest.respo...",
+      "description": "{fastest.provider} {fastest.model} ({fastest.response_time:.2f}s)\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 194,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing complete!\")...",
+      "description": "ing complete!\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_llm_adapters.py",
+      "line_number": 208,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Bug: s or issues...",
+      "description": "s or issues",
+      "priority": "critical",
+      "category": "bug",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 256,
+      "effort_estimate": null,
+      "tags": [
+        "bug"
+      ]
+    },
+    {
+      "title": "Refactor: ing project:...",
+      "description": "ing project:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 215,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: runner for all planfile examples...",
+      "description": "runner for all planfile examples",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 3,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: er:...",
+      "description": "er:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 19,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: runner for planfile examples.\"\"\"...",
+      "description": "runner for planfile examples.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 20,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _all_examples(self):...",
+      "description": "_all_examples(self):",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 27,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: all examples in the ecosystem directory.\"\"\"...",
+      "description": "all examples in the ecosystem directory.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 28,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing All Planfile Examples\")...",
+      "description": "ing All Planfile Examples\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 30,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: each example...",
+      "description": "each example",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 37,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing: {example_file.name}\")...",
+      "description": "ing: {example_file.name}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 41,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _python_example(example_file)...",
+      "description": "_python_example(example_file)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 46,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _shell_example(example_file)...",
+      "description": "_shell_example(example_file)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 48,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing {example_file}: {e}\")...",
+      "description": "ing {example_file}: {e}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 50,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _python_example(self, example_path: Path):...",
+      "description": "_python_example(self, example_path: Path):",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: a Python example.\"\"\"...",
+      "description": "a Python example.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 61,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: directory...",
+      "description": "directory",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 64,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir:...",
+      "description": "_dir:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 65,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir_path = Path(test_dir)...",
+      "description": "_dir_path = Path(test_dir)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 66,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir_path,...",
+      "description": "_dir_path,",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 71,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir_path.rglob(\"*\"))...",
+      "description": "_dir_path.rglob(\"*\"))",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 85,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir_path)...",
+      "description": "_dir_path)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 93,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _shell_example(self, example_path: Path):...",
+      "description": "_shell_example(self, example_path: Path):",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 110,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: a shell example.\"\"\"...",
+      "description": "a shell example.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 111,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: directory...",
+      "description": "directory",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 114,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir:...",
+      "description": "_dir:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 115,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir_path = Path(test_dir)...",
+      "description": "_dir_path = Path(test_dir)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 116,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir_path,...",
+      "description": "_dir_path,",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 124,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir_path.rglob(\"*\"))...",
+      "description": "_dir_path.rglob(\"*\"))",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 139,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir_path)...",
+      "description": "_dir_path)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 146,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: summary.\"\"\"...",
+      "description": "summary.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 303,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: SUMMARY\")...",
+      "description": "SUMMARY\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 305,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -results.json\", \"w\") as f:...",
+      "description": "-results.json\", \"w\") as f:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 345,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -results.json\")...",
+      "description": "-results.json\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 348,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 360,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: er = ExampleTester()...",
+      "description": "er = ExampleTester()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 361,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: er.test_all_examples()...",
+      "description": "er.test_all_examples()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_all_examples.py",
+      "line_number": 362,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Optimize: data queries...",
+      "description": "data queries",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 99,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 98,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 104,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: UI components...",
+      "description": "UI components",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 105,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: coverage >= 80%...",
+      "description": "coverage >= 80%",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 93,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing:...",
+      "description": "_writing:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 110,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 111,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: suite...",
+      "description": "suite",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 112,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage: 80...",
+      "description": "_coverage: 80",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 131,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategy_generation(prompt, 'llama2')...",
+      "description": "_strategy_generation(prompt, 'llama2')",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 254,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing_approach():...",
+      "description": "ing_approach():",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 278,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: different LLM providers.\"\"\"...",
+      "description": "different LLM providers.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 279,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ING APPROACH\")...",
+      "description": "ING APPROACH\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 281,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: with built-in script:...",
+      "description": "with built-in script:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 290,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _llm_adapters.py...",
+      "description": "_llm_adapters.py",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 291,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: specific integration:...",
+      "description": "specific integration:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 293,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _litellm_integration.py...",
+      "description": "_litellm_integration.py",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 294,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -results.json...",
+      "description": "-results.json",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 300,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing approach...",
+      "description": "ing approach",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 314,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing_approach()...",
+      "description": "ing_approach()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 315,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing\")...",
+      "description": "ing\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 321,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: scripts\")...",
+      "description": "scripts\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 322,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation:...",
+      "description": "umentation:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 116,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 117,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument all endpoints...",
+      "description": "ument all endpoints",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/demo_without_keys_fixed.py",
+      "line_number": 118,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Optimize: application performance and scalability\"...",
+      "description": "application performance and scalability\"",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 64,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Test: er:...",
+      "description": "er:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 22,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: strategies with different LiteLLM models.\"\"\"...",
+      "description": "strategies with different LiteLLM models.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 23,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: = [...",
+      "description": "= [",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 26,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _prompts = [...",
+      "description": "_prompts = [",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 41,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _prompt(self, prompt_config: Dict[str, Any]) -> st...",
+      "description": "_prompt(self, prompt_config: Dict[str, Any]) -> str:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 68,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: prompt from configuration.\"\"\"...",
+      "description": "prompt from configuration.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 69,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _model_with_prompt(...",
+      "description": "_model_with_prompt(",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 89,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: a specific model with a prompt.\"\"\"...",
+      "description": "a specific model with a prompt.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 94,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: (self) -> Dict[str, Any]:...",
+      "description": "(self) -> Dict[str, Any]:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 151,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s across models and prompts.\"\"\"...",
+      "description": "s across models and prompts.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 152,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: S\")...",
+      "description": "S\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 154,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing models...\")...",
+      "description": "ing models...\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 172,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _prompts:...",
+      "description": "_prompts:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 176,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _prompt(prompt_config)...",
+      "description": "_prompt(prompt_config)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 180,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: print(f\"  \ud83d\udd04 Testing {model}...\")...",
+      "description": "print(f\"  \ud83d\udd04 Testing {model}...\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 183,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _model_with_prompt(model, prompt)...",
+      "description": "_model_with_prompt(model, prompt)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 186,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: SUMMARY\")...",
+      "description": "SUMMARY\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 202,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -results.json\")...",
+      "description": "-results.json\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 209,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: results.\"\"\"...",
+      "description": "results.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 223,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s: {total}\")...",
+      "description": "s: {total}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 236,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: = min(successful_results, key=lambda x: x['respons...",
+      "description": "= min(successful_results, key=lambda x: x['response_time'])",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 244,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: model: {fastest['model']} ({fastest['response_time...",
+      "description": "model: {fastest['model']} ({fastest['response_time']:.2f}s)\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 245,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _specific_strategy():...",
+      "description": "_specific_strategy():",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 278,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: generating a specific strategy with different mode...",
+      "description": "generating a specific strategy with different models.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 279,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \")...",
+      "description": "\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 281,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: with the microservices migration strategy...",
+      "description": "with the microservices migration strategy",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 284,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: function.\"\"\"...",
+      "description": "function.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 344,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 345,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: er = LiteLLMStrategyTester()...",
+      "description": "er = LiteLLMStrategyTester()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 346,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: er.run_comprehensive_test()...",
+      "description": "er.run_comprehensive_test()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 347,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: specific strategy generation...",
+      "description": "specific strategy generation",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 349,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _specific_strategy()...",
+      "description": "_specific_strategy()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 350,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s completed!\")...",
+      "description": "s completed!\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_litellm_integration.py",
+      "line_number": 352,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -\"))...",
+      "description": "-\"))",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 29,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategy_generation(prompt, model)...",
+      "description": "_strategy_generation(prompt, model)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 67,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: adapters...",
+      "description": "adapters",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 147,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: = []...",
+      "description": "= []",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 148,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: .append(...",
+      "description": ".append(",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 152,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: .append(...",
+      "description": ".append(",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 160,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: .append(...",
+      "description": ".append(",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 172,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: print(\"\\n\u274c No adapters available. Please configure...",
+      "description": "print(\"\\n\u274c No adapters available. Please configure API keys:\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 181,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: strategies...",
+      "description": "strategies",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 188,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: print(f\"\\n{'='*60}\")...",
+      "description": "print(f\"\\n{'='*60}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 189,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ING WITH: {adapter_name}\")...",
+      "description": "ING WITH: {adapter_name}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 191,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: {adapter_name}: {e}\")...",
+      "description": "{adapter_name}: {e}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 221,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -results\")...",
+      "description": "-results\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/llm_integration_demo.py",
+      "line_number": 264,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation for more advanced features\")...",
+      "description": "umentation for more advanced features\")",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/comprehensive_example.py",
+      "line_number": 153,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Refactor: ing implementation...",
+      "description": "ing implementation",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/summary.py",
+      "line_number": 3,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing_phase\": \"LiteLLM + LLX + Proxy Integration\",...",
+      "description": "ing_phase\": \"LiteLLM + LLX + Proxy Integration\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/summary.py",
+      "line_number": 16,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing_summary.json\", \"w\") as f:...",
+      "description": "ing_summary.json\", \"w\") as f:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/summary.py",
+      "line_number": 98,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ING SUMMARY\")...",
+      "description": "ING SUMMARY\")",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/summary.py",
+      "line_number": 103,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing_summary.json\")...",
+      "description": "ing_summary.json\")",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/summary.py",
+      "line_number": 148,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: _all_examples.py - Test runner with OpenRouter LLM...",
+      "description": "_all_examples.py - Test runner with OpenRouter LLM validation\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/summary.py",
+      "line_number": 54,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage\": \"Comprehensive examples with validatio...",
+      "description": "_coverage\": \"Comprehensive examples with validation\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/summary.py",
+      "line_number": 64,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: with actual LLX and Proxy instances\",...",
+      "description": "with actual LLX and Proxy instances\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/summary.py",
+      "line_number": 91,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _all_examples.py\")...",
+      "description": "_all_examples.py\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/summary.py",
+      "line_number": 120,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: the implementation:\")...",
+      "description": "the implementation:\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/summary.py",
+      "line_number": 143,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _all_examples.py\")...",
+      "description": "_all_examples.py\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/summary.py",
+      "line_number": 146,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Optimize: data queries...",
+      "description": "data queries",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 99,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 98,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s:...",
+      "description": "s:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 104,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: UI components...",
+      "description": "UI components",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 105,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: coverage >= 80%...",
+      "description": "coverage >= 80%",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 93,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing:...",
+      "description": "_writing:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 110,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 111,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: suite...",
+      "description": "suite",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 112,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage: 80...",
+      "description": "_coverage: 80",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 131,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategy_generation(prompt, 'llama2')...",
+      "description": "_strategy_generation(prompt, 'llama2')",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 254,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing_approach():...",
+      "description": "ing_approach():",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 278,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: different LLM providers.\"\"\"...",
+      "description": "different LLM providers.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 279,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ING APPROACH\")...",
+      "description": "ING APPROACH\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 281,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: with built-in script:...",
+      "description": "with built-in script:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 290,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _llm_adapters.py...",
+      "description": "_llm_adapters.py",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 291,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: specific integration:...",
+      "description": "specific integration:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 293,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _litellm_integration.py...",
+      "description": "_litellm_integration.py",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 294,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: -results.json...",
+      "description": "-results.json",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 300,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing approach...",
+      "description": "ing approach",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 314,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing_approach()...",
+      "description": "ing_approach()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 315,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing\")...",
+      "description": "ing\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 321,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: scripts\")...",
+      "description": "scripts\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 322,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation:...",
+      "description": "umentation:",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 116,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 117,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: ument all endpoints...",
+      "description": "ument all endpoints",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/demo_without_keys.py",
+      "line_number": 118,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Test: script to validate all example strategies work cor...",
+      "description": "script to validate all example strategies work correctly.",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 3,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategy_generation(strategy_path):...",
+      "description": "_strategy_generation(strategy_path):",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 51,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: strategy generation with the YAML file.\"\"\"...",
+      "description": "strategy generation with the YAML file.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 52,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing generation with: {strategy_path.name}\")...",
+      "description": "ing generation with: {strategy_path.name}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 53,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategy_validation(strategy_path):...",
+      "description": "_strategy_validation(strategy_path):",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 77,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: strategy validation.\"\"\"...",
+      "description": "strategy validation.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 78,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing validation for: {strategy_path.name}\")...",
+      "description": "ing validation for: {strategy_path.name}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 79,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s.\"\"\"...",
+      "description": "s.\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 103,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing Planfile Example Strategies\")...",
+      "description": "ing Planfile Example Strategies\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 105,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: each strategy...",
+      "description": "each strategy",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 122,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: validation command...",
+      "description": "validation command",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 131,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategy_validation(strategy_file)...",
+      "description": "_strategy_validation(strategy_file)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 132,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: generation (dry run)...",
+      "description": "generation (dry run)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 134,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _strategy_generation(strategy_file)...",
+      "description": "_strategy_generation(strategy_file)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 135,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: SUMMARY\")...",
+      "description": "SUMMARY\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/test_strategies.py",
+      "line_number": 153,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: script for planfile...",
+      "description": "script for planfile",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 3,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s repeatable generation in interactive mode...",
+      "description": "s repeatable generation in interactive mode",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 4,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _interactive_mode():...",
+      "description": "_interactive_mode():",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 33,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: interactive mode generation\"\"\"...",
+      "description": "interactive mode generation\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 34,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing interactive mode...\")...",
+      "description": "ing interactive mode...\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 35,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: directory...",
+      "description": "directory",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 37,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir:...",
+      "description": "_dir:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 38,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: directory: {test_dir}\")...",
+      "description": "directory: {test_dir}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 39,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: case 1: Basic interactive input...",
+      "description": "case 1: Basic interactive input",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 41,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: 1: Basic interactive input ===\")...",
+      "description": "1: Basic interactive input ===\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 42,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Project\",...",
+      "description": "Project\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 45,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir...",
+      "description": "_dir",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 56,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir) / \"planfile.yaml\"...",
+      "description": "_dir) / \"planfile.yaml\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 67,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Project\" in content:...",
+      "description": "Project\" in content:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 81,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: case 2: Repeat generation with same inputs...",
+      "description": "case 2: Repeat generation with same inputs",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 87,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: 2: Repeat generation (consistency test) ===\")...",
+      "description": "2: Repeat generation (consistency test) ===\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 88,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir...",
+      "description": "_dir",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 96,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: case 3: Interactive with custom options...",
+      "description": "case 3: Interactive with custom options",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 117,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: 3: Interactive with custom options ===\")...",
+      "description": "3: Interactive with custom options ===\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 118,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir) / \"custom\"...",
+      "description": "_dir) / \"custom\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 121,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing\",...",
+      "description": "ing\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 141,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Coverage\",...",
+      "description": "Coverage\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 154,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s Pass\",...",
+      "description": "s Pass\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 157,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s\",...",
+      "description": "s\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 158,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: case 4: Test with invalid input handling...",
+      "description": "case 4: Test with invalid input handling",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 193,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: 4: Invalid input handling ===\")...",
+      "description": "4: Invalid input handling ===\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 194,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir) / \"invalid\"...",
+      "description": "_dir) / \"invalid\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 196,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: with empty inputs (should use defaults)...",
+      "description": "with empty inputs (should use defaults)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 199,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _expect_script():...",
+      "description": "_expect_script():",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 215,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: using expect script for more realistic interaction...",
+      "description": "using expect script for more realistic interaction\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 216,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing with expect script ===\")...",
+      "description": "ing with expect script ===\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 217,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Project\\\\r\"...",
+      "description": "Project\\\\r\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 224,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: directory...",
+      "description": "directory",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 256,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir:...",
+      "description": "_dir:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 257,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir,...",
+      "description": "_dir,",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 261,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _dir) / \"planfile.yaml\"...",
+      "description": "_dir) / \"planfile.yaml\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 270,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Project\" in content:...",
+      "description": "Project\" in content:",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 277,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s\"\"\"...",
+      "description": "s\"\"\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 292,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: S\")...",
+      "description": "S\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 294,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s...",
+      "description": "s",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 308,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _interactive_mode():...",
+      "description": "_interactive_mode():",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 312,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _expect_script()...",
+      "description": "_expect_script()",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 315,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: interrupted by user\")...",
+      "description": "interrupted by user\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 318,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: failed with error: {e}\")...",
+      "description": "failed with error: {e}\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 321,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s completed!\")...",
+      "description": "s completed!\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 326,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s failed\")...",
+      "description": "s failed\")",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/interactive-tests/test_interactive_mode.py",
+      "line_number": 328,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Refactor: ing' if i == 1 else 'Polish'}\",...",
+      "description": "ing' if i == 1 else 'Polish'}\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 59,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: god modules\" if i == 1 else \"Add tests and documen...",
+      "description": "god modules\" if i == 1 else \"Add tests and documentation\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 70,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 76,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 85,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: this Python project to reduce complexity....",
+      "description": "this Python project to reduce complexity.",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 207,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing strategy using planfile_generate...",
+      "description": "ing strategy using planfile_generate",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 210,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: -strategy.yaml\"...",
+      "description": "-strategy.yaml\"",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 227,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: -strategy.yaml\",...",
+      "description": "-strategy.yaml\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 238,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: -strategy.yaml\",...",
+      "description": "-strategy.yaml\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 251,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing to meet complexity gate...",
+      "description": "ing to meet complexity gate",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 271,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing process!...",
+      "description": "ing process!",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 273,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing strategy YAML from project analysis. Uses LLM ...",
+      "description": "ing strategy YAML from project analysis. Uses LLM to create sprints, tasks, and quality gates.\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 283,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: s and documentation\",...",
+      "description": "s and documentation\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage\",...",
+      "description": "_coverage\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 103,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage\": 65,  # Added coverage...",
+      "description": "_coverage\": 65,  # Added coverage",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 166,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage\"], \"passed\": False}...",
+      "description": "_coverage\"], \"passed\": False}",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 178,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: coverage to meet quality gate\",...",
+      "description": "coverage to meet quality gate\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 194,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: coverage at 65% (need 15% more to meet gate)...",
+      "description": "coverage at 65% (need 15% more to meet gate)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 266,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s to increase coverage...",
+      "description": "s to increase coverage",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 270,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s\", \"docs\"]},...",
+      "description": "s\", \"docs\"]},",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 290,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: umentation\",...",
+      "description": "umentation\",",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 60,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\"]},...",
+      "description": "s\"]},",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": 290,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Increase test coverage from 3.0% to 80%",
+      "description": "Test coverage is below threshold",
+      "priority": "high",
+      "category": "test",
+      "file_path": "examples/ecosystem/02_mcp_integration.py",
+      "line_number": null,
+      "effort_estimate": "38h",
+      "tags": [
+        "coverage",
+        "testing"
+      ]
+    },
+    {
+      "title": "Refactor: \": {...",
+      "description": "\": {",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 145,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"]).get(complexity_tier, \"anthropic/claude-sonnet-...",
+      "description": "\"]).get(complexity_tier, \"anthropic/claude-sonnet-4\")",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 162,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s\": metrics.critical_count + metrics.god_modules,...",
+      "description": "s\": metrics.critical_count + metrics.god_modules,",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 168,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: s\": max(0, metrics.total_files // 10 - metrics.cri...",
+      "description": "s\": max(0, metrics.total_files // 10 - metrics.critical_count),",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 169,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \", \"test\", \"docs\"]...",
+      "description": "\", \"test\", \"docs\"]",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 213,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 248,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"],...",
+      "description": "\"],",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 252,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"],...",
+      "description": "\"],",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 253,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"]...",
+      "description": "\"]",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 254,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 261,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"],...",
+      "description": "\"],",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 265,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"],...",
+      "description": "\"],",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 266,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"]...",
+      "description": "\"]",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 267,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 283,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"],...",
+      "description": "\"],",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 287,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"],...",
+      "description": "\"],",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 288,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 295,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"],...",
+      "description": "\"],",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 300,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \"]...",
+      "description": "\"]",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 301,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 431,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 441,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing!...",
+      "description": "ing!",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 490,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: \": {...",
+      "description": "\": {",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 150,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing\": max(5, metrics.total_files // 5),...",
+      "description": "_writing\": max(5, metrics.total_files // 5),",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 170,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \", \"docs\"]...",
+      "description": "\", \"docs\"]",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 213,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \"]...",
+      "description": "\"]",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 289,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing and documentation...",
+      "description": "ing and documentation",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 312,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: suite ({task_scope['test_writing']} tests)\",...",
+      "description": "suite ({task_scope['test_writing']} tests)\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 315,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \",...",
+      "description": "\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 316,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _writing\"] * 2,...",
+      "description": "_writing\"] * 2,",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 318,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \"],...",
+      "description": "\"],",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 320,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \"],...",
+      "description": "\"],",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 321,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \"]...",
+      "description": "\"]",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 322,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: ing & Documentation\",...",
+      "description": "ing & Documentation\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 340,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: coverage and complete documentation\",...",
+      "description": "coverage and complete documentation\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 341,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: Coverage\",...",
+      "description": "Coverage\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 355,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _coverage\",...",
+      "description": "_coverage\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 356,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s/*\"...",
+      "description": "s/*\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 406,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: _files\": False...",
+      "description": "_files\": False",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 424,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \", \"docs\"]...",
+      "description": "\", \"docs\"]",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 453,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: s\": {...",
+      "description": "s\": {",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 155,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\": max(3, metrics.total_files // 15),...",
+      "description": "umentation\": max(3, metrics.total_files // 15),",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 171,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\"]...",
+      "description": "s\"]",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 213,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation...",
+      "description": "umentation",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 312,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation ({task_scope['documentation']} docs)\",...",
+      "description": "umentation ({task_scope['documentation']} docs)\",",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 326,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\",...",
+      "description": "s\",",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 327,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\"] * 3,...",
+      "description": "umentation\"] * 3,",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 329,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\"],...",
+      "description": "s\"],",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 331,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\"],...",
+      "description": "s\"],",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 332,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\"]...",
+      "description": "s\"]",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 333,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\",...",
+      "description": "umentation\",",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 340,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: umentation\",...",
+      "description": "umentation\",",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 341,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\"]...",
+      "description": "s\"]",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/04_llx_integration.py",
+      "line_number": 453,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Optimize: _routing\": True...",
+      "description": "_routing\": True",
+      "priority": "medium",
+      "category": "performance",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 282,
+      "effort_estimate": null,
+      "tags": [
+        "optimize"
+      ]
+    },
+    {
+      "title": "Refactor: ing strategy\"),...",
+      "description": "ing strategy\"),",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 74,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \", \"critical\", \"Split god module with CC=24\"),...",
+      "description": "\", \"critical\", \"Split god module with CC=24\"),",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 75,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing strategy:...",
+      "description": "ing strategy:",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 97,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing (patterns, architecture)...",
+      "description": "ing (patterns, architecture)",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 103,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: ing strategy...",
+      "description": "ing strategy",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 137,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 218,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 220,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 227,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \",...",
+      "description": "\",",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 229,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \", \"decision\": \"Use premium model (within budget)\"...",
+      "description": "\", \"decision\": \"Use premium model (within budget)\"},",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 313,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Refactor: \", \"decision\": \"Use balanced model\"},...",
+      "description": "\", \"decision\": \"Use balanced model\"},",
+      "priority": "medium",
+      "category": "refactor",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 314,
+      "effort_estimate": null,
+      "tags": [
+        "refactor"
+      ]
+    },
+    {
+      "title": "Test: \", \"medium\", \"Write unit tests for service layer\")...",
+      "description": "\", \"medium\", \"Write unit tests for service layer\"),",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 76,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s, docs, coverage)...",
+      "description": "s, docs, coverage)",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 104,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: s\",...",
+      "description": "s\",",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 236,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Test: \"...",
+      "description": "\"",
+      "priority": "low",
+      "category": "test",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 238,
+      "effort_estimate": null,
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "title": "Doc: s\", \"low\", \"Generate API documentation\"),...",
+      "description": "s\", \"low\", \"Generate API documentation\"),",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 77,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s, coverage)...",
+      "description": "s, coverage)",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 104,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\",...",
+      "description": "s\",",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 245,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\"...",
+      "description": "s\"",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 247,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    },
+    {
+      "title": "Doc: s\", \"decision\": \"Use cheap model\"},...",
+      "description": "s\", \"decision\": \"Use cheap model\"},",
+      "priority": "low",
+      "category": "documentation",
+      "file_path": "examples/ecosystem/03_proxy_routing.py",
+      "line_number": 315,
+      "effort_estimate": null,
+      "tags": [
+        "doc"
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "name": "Test Coverage",
+      "value": 90.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "examples/strategies/security-hardening.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 100.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "examples/strategies/security-hardening.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 85.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "examples/strategies/microservices-migration.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 90.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 95.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "examples/strategies/ml-pipeline-optimization.yaml"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 80.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "examples/demo_without_keys_fixed.py"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 80.0,
+      "threshold": 80.0,
+      "status": "good",
+      "file_path": "examples/demo_without_keys.py"
+    },
+    {
+      "name": "Test Coverage",
+      "value": 3.0,
+      "threshold": 80.0,
+      "status": "critical",
+      "file_path": "examples/ecosystem/02_mcp_integration.py"
+    },
+    {
+      "name": "Cyclomatic Complexity",
+      "value": 24.0,
+      "threshold": 10.0,
+      "status": "warning",
+      "file_path": "examples/ecosystem/03_proxy_routing.py"
+    }
+  ],
+  "tasks": [],
+  "analyzed_files": [
+    "examples/strategy_free_test.yaml",
+    "examples/strategy_simple_v2.yaml",
+    "examples/llm-config.yaml",
+    "examples/strategies/security-hardening.yaml",
+    "examples/strategies/onboarding.yaml",
+    "examples/strategies/ecommerce-mvp.yaml",
+    "examples/strategies/microservices-migration.yaml",
+    "examples/strategies/ml-pipeline-optimization.yaml",
+    "examples/tasks/common-tasks.yaml",
+    "examples/interactive-tests/htmlcov/status.json",
+    "examples/test_llm_adapters.py",
+    "examples/llx_validator.py",
+    "examples/test_all_examples.py",
+    "examples/demo_without_keys_fixed.py",
+    "examples/test_litellm_integration.py",
+    "examples/llm_integration_demo.py",
+    "examples/comprehensive_example.py",
+    "examples/summary.py",
+    "examples/demo_without_keys.py",
+    "examples/test_strategies.py",
+    "examples/interactive-tests/test_interactive_mode.py",
+    "examples/ecosystem/02_mcp_integration.py",
+    "examples/ecosystem/04_llx_integration.py",
+    "examples/ecosystem/03_proxy_routing.py"
+  ],
+  "summary": {
+    "total_issues": 461,
+    "priority_breakdown": {
+      "critical": 1,
+      "high": 2,
+      "medium": 96,
+      "low": 362
+    },
+    "category_breakdown": {
+      "refactor": 74,
+      "test": 305,
+      "documentation": 58,
+      "bug": 9,
+      "performance": 15
+    },
+    "total_metrics": 9,
+    "critical_metrics": 1,
+    "total_tasks": 0
+  }
+}
