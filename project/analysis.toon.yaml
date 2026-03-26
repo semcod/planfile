@@ -1,51 +1,64 @@
-# code2llm | 22f 3343L | python:20,shell:2 | 2026-03-26
-# CC̄=5.1 | critical:6/90 | dups:0 | cycles:0
+# code2llm | 27f 4395L | python:24,shell:2,javascript:1 | 2026-03-26
+# CC̄=4.9 | critical:12/208 | dups:0 | cycles:0
 
-HEALTH[6]:
+HEALTH[12]:
   🟡 CC    validate_strategy_schema CC=17 (limit:15)
   🟡 CC    export_results_to_markdown CC=19 (limit:15)
   🟡 CC    auto_loop CC=20 (limit:15)
   🟡 CC    apply_strategy_cli CC=18 (limit:15)
   🟡 CC    analyze_project_metrics CC=16 (limit:15)
   🟡 CC    update_ticket CC=15 (limit:15)
+  🟡 CC    table CC=21 (limit:15)
+  🟡 CC    table_body_rows CC=21 (limit:15)
+  🟡 CC    no_rows CC=21 (limit:15)
+  🟡 CC    footer CC=21 (limit:15)
+  🟡 CC    ratio_columns CC=21 (limit:15)
+  🟡 CC    filter_handler CC=21 (limit:15)
 
 REFACTOR[1]:
-  1. split 6 high-CC methods  (CC>15)
+  1. split 12 high-CC methods  (CC>15)
 
-PIPELINES[65]:
-  [1] Src [save_strategy_yaml]: save_strategy_yaml → save_yaml
+PIPELINES[130]:
+  [1] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
-  [2] Src [merge_strategy_with_tasks]: merge_strategy_with_tasks → load_tasks_yaml → load_yaml
+  [2] Src [analyze_generated_code]: analyze_generated_code
       PURITY: 100% pure
-  [3] Src [validate_strategy_schema]: validate_strategy_schema → load_yaml
+  [3] Src [_is_llx_available]: _is_llx_available
       PURITY: 100% pure
-  [4] Src [_find_task_pattern]: _find_task_pattern
+  [4] Src [_parse_llx_analysis]: _parse_llx_analysis
       PURITY: 100% pure
-  [5] Src [_create_ticket_for_task]: _create_ticket_for_task → calculate_task_priority
+  [5] Src [_basic_code_analysis]: _basic_code_analysis
       PURITY: 100% pure
 
 LAYERS:
   planfile/                       CC̄=5.4    ←in:2  →out:2
   │ ci_runner                  452L  3C   10m  CC=9      ←0
-  │ !! commands                   328L  0C    5m  CC=18     ←0
+  │ !! commands                   373L  0C    6m  CC=18     ←0
   │ runner                     324L  1C    8m  CC=13     ←2
-  │ jira                       276L  1C    9m  CC=13     ←0
-  │ !! gitlab                     230L  1C    7m  CC=15     ←0
+  │ jira                       283L  1C    9m  CC=13     ←0
+  │ !! gitlab                     237L  1C    7m  CC=15     ←0
   │ !! yaml_loader                225L  0C    7m  CC=17     ←1
-  │ !! auto_loop                  217L  0C    3m  CC=20     ←0
+  │ !! auto_loop                  216L  0C    3m  CC=20     ←0
   │ !! metrics                    201L  0C    2m  CC=16     ←1
+  │ github                     201L  1C    7m  CC=14     ←0
   │ generic                    197L  1C    8m  CC=8      ←0
-  │ github                     193L  1C    7m  CC=14     ←0
   │ !! cli_loader                 158L  0C    5m  CC=19     ←0
+  │ generator                  124L  0C    5m  CC=8      ←1
   │ base                       112L  4C    9m  CC=4      ←0
   │ priorities                 111L  0C    3m  CC=4      ←1
   │ models                      97L  7C    2m  CC=3      ←0
+  │ prompts                     63L  0C    1m  CC=5      ←1
+  │ client                      63L  0C    1m  CC=4      ←1
   │ __init__                    23L  0C    0m  CC=0.0    ←0
   │ __main__                     4L  0C    0m  CC=0.0    ←0
+  │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │
+  htmlcov/                        CC̄=4.6    ←in:0  →out:0
+  │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
   │
   ./                              CC̄=0.0    ←in:0  →out:0
   │ docker-entrypoint.sh       174L  0C    5m  CC=0.0    ←0
@@ -58,11 +71,12 @@ LAYERS:
      planfile/utils/__init__.py                0L
 
 COUPLING:
-                        planfile.cli          planfile  planfile.loaders    planfile.utils
-      planfile.cli                ──                 2                 3                  
-          planfile                ←2                ──                                   2
-  planfile.loaders                ←3                                  ──                  
-    planfile.utils                                  ←2                                  ──
+                        planfile.cli          planfile  planfile.loaders    planfile.utils      planfile.llm
+      planfile.cli                ──                 2                 4                                   1
+          planfile                ←2                ──                                   2                  
+  planfile.loaders                ←4                                  ──                                    
+    planfile.utils                                  ←2                                  ──                  
+      planfile.llm                ←1                                                                      ──
   CYCLES: none
 
 EXTERNAL:

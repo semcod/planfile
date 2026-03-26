@@ -1,37 +1,37 @@
-# strategy | 90 func | 15f | 4149L | python | 2026-03-26
+# planfile | 163 func | 19f | 4466L | python | 2026-03-26
 
 HEALTH:
-  CC̄=5.1  critical=15 (limit:10)  dup=0  cycles=0
+  CC̄=4.9  critical=25 (limit:10)  dup=0  cycles=0
 
-ALERTS[19]:
+ALERTS[20]:
   !!! high_fan_out     apply_strategy_cli = 28 (limit:10)
   !!! high_fan_out     auto_loop = 23 (limit:10)
   !!! high_fan_out     review_strategy_cli = 23 (limit:10)
   !!! high_fan_out     analyze_project_metrics = 23 (limit:10)
-  !!  cc_exceeded      auto_loop = 20 (limit:15)
-  !!  high_fan_out     export_results_to_markdown = 16 (limit:10)
-  !   cc_exceeded      export_results_to_markdown = 19 (limit:15)
-  !   cc_exceeded      apply_strategy_cli = 18 (limit:15)
-  !   cc_exceeded      validate_strategy_schema = 17 (limit:15)
-  !   cc_exceeded      analyze_project_metrics = 16 (limit:15)
+  !!  cc_exceeded      table = 21 (limit:15)
+  !!  cc_exceeded      table_body_rows = 21 (limit:15)
+  !!  cc_exceeded      no_rows = 21 (limit:15)
+  !!  cc_exceeded      footer = 21 (limit:15)
+  !!  cc_exceeded      ratio_columns = 21 (limit:15)
+  !!  cc_exceeded      filter_handler = 21 (limit:15)
 
-MODULES[22] (top by size):
+MODULES[27] (top by size):
+  M[htmlcov/coverage_html_cb_dd2e7eb5.js] 735L C:0 F:65 CC↑21 D:0 (javascript)
   M[planfile/ci_runner.py] 452L C:3 F:10 CC↑9 D:0 (python)
-  M[planfile/cli/commands.py] 328L C:0 F:5 CC↑18 D:0 (python)
+  M[planfile/cli/commands.py] 373L C:0 F:6 CC↑18 D:0 (python)
   M[planfile/runner.py] 324L C:1 F:8 CC↑13 D:2 (python)
-  M[planfile/integrations/jira.py] 276L C:1 F:9 CC↑13 D:0 (python)
-  M[planfile/integrations/gitlab.py] 230L C:1 F:7 CC↑15 D:0 (python)
+  M[planfile/integrations/jira.py] 283L C:1 F:9 CC↑13 D:0 (python)
+  M[planfile/integrations/gitlab.py] 237L C:1 F:7 CC↑15 D:0 (python)
   M[planfile/loaders/yaml_loader.py] 225L C:0 F:7 CC↑17 D:1 (python)
-  M[planfile/cli/auto_loop.py] 217L C:0 F:3 CC↑20 D:0 (python)
+  M[planfile/cli/auto_loop.py] 216L C:0 F:3 CC↑20 D:0 (python)
   M[planfile/utils/metrics.py] 201L C:0 F:2 CC↑16 D:1 (python)
+  M[planfile/integrations/github.py] 201L C:1 F:7 CC↑14 D:0 (python)
   M[planfile/integrations/generic.py] 197L C:1 F:8 CC↑8 D:0 (python)
-  M[planfile/integrations/github.py] 193L C:1 F:7 CC↑14 D:0 (python)
   M[docker-entrypoint.sh] 174L C:0 F:5 CC↑0 D:0 (shell)
   M[planfile/loaders/cli_loader.py] 158L C:0 F:5 CC↑19 D:0 (python)
+  M[planfile/llm/generator.py] 124L C:0 F:5 CC↑8 D:1 (python)
   M[planfile/integrations/base.py] 112L C:4 F:9 CC↑4 D:0 (python)
-  M[planfile/utils/priorities.py] 111L C:0 F:3 CC↑4 D:1 (python)
-  M[planfile/models.py] 97L C:7 F:2 CC↑3 D:0 (python)
-  LANGS: python:20/shell:2
+  LANGS: python:24/shell:2/javascript:1
 
 HOTSPOTS[10]:
   ★ apply_strategy_cli fan=28  // Apply a strategy to create tickets.
@@ -43,12 +43,12 @@ This command will:
   ★ analyze_project_metrics fan=23  // Analysis pipeline, 23 stages
   ★ export_results_to_markdown fan=16  // Export with 16 outputs
 
-REFACTOR[9]:
-  [1] M/L Split validate_strategy_schema (CC=17 → target CC<10)
-  [2] M/L Split export_results_to_markdown (CC=19 → target CC<10)
-  [3] M/L Split auto_loop (CC=20 → target CC<10)
-  [4] M/L Split apply_strategy_cli (CC=18 → target CC<10)
-  [5] M/L Split analyze_project_metrics (CC=16 → target CC<10)
+REFACTOR[15]:
+  [1] H/H Split god module htmlcov/coverage_html_cb_dd2e7eb5.js (735L, 0 classes)
+  [2] M/L Split validate_strategy_schema (CC=17 → target CC<10)
+  [3] M/L Split export_results_to_markdown (CC=19 → target CC<10)
+  [4] M/L Split auto_loop (CC=20 → target CC<10)
+  [5] M/L Split apply_strategy_cli (CC=18 → target CC<10)
 
 EVOLUTION:
-  2026-03-26 CC̄=5.1 crit=15 4149L // Automated analysis
+  2026-03-26 CC̄=4.9 crit=25 4466L // Automated analysis

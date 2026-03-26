@@ -1,23 +1,28 @@
-# strategy | 22f 3343L | python:20,shell:2 | 2026-03-26
-# stats: 90 func | 0 cls | 22 mod | CC̄=5.1 | critical:6 | cycles:0
-# alerts[5]: fan-out apply_strategy_cli=28; fan-out analyze_project_metrics=23; fan-out auto_loop=23; fan-out review_strategy_cli=23; CC auto_loop=20
+# planfile | 27f 4395L | python:24,javascript:1,shell:2 | 2026-03-26
+# stats: 163 func | 0 cls | 27 mod | CC̄=4.9 | critical:12 | cycles:0
+# alerts[5]: fan-out apply_strategy_cli=28; fan-out analyze_project_metrics=23; fan-out auto_loop=23; fan-out review_strategy_cli=23; CC filter_handler=21
 # hotspots[5]: apply_strategy_cli fan=28; auto_loop fan=23; review_strategy_cli fan=23; analyze_project_metrics fan=23; export_results_to_markdown fan=16
-# evolution: CC̄ 5.1→5.1 (flat 0.0)
+# evolution: CC̄ 5.1→4.9 (improved -0.2)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[22]:
+M[27]:
   docker-entrypoint.sh,174
+  htmlcov/coverage_html_cb_dd2e7eb5.js,735
   planfile/__init__.py,23
   planfile/ci_runner.py,452
   planfile/cli/__init__.py,0
   planfile/cli/__main__.py,4
-  planfile/cli/auto_loop.py,217
-  planfile/cli/commands.py,328
+  planfile/cli/auto_loop.py,216
+  planfile/cli/commands.py,373
   planfile/integrations/__init__.py,0
   planfile/integrations/base.py,112
   planfile/integrations/generic.py,197
-  planfile/integrations/github.py,193
-  planfile/integrations/gitlab.py,230
-  planfile/integrations/jira.py,276
+  planfile/integrations/github.py,201
+  planfile/integrations/gitlab.py,237
+  planfile/integrations/jira.py,283
+  planfile/llm/__init__.py,1
+  planfile/llm/client.py,63
+  planfile/llm/generator.py,124
+  planfile/llm/prompts.py,63
   planfile/loaders/__init__.py,0
   planfile/loaders/cli_loader.py,158
   planfile/loaders/yaml_loader.py,225
@@ -28,6 +33,85 @@ M[22]:
   planfile/utils/priorities.py,111
   project.sh,21
 D:
+  htmlcov/coverage_html_cb_dd2e7eb5.js:
+    e: debounce,timeoutId,checkVisible,rect,viewBottom,viewTop,on_click,elt,getCellValue,cell,child,rowComparator,valueA,valueB,sortColumn,currentSortOrder,current_direction,stored_list,saved_filter_value,saved_hide100_value,table,table_body_rows,no_rows,footer,ratio_columns,filter_handler,totals,text,casefold,hide100,show,celltext,cell,places,stored_list,by_region,sorted_by_region,frag,btn,category,btn,helpCheck,classes,match,c,probe,begin,next_indicator,c,probe,probe_line,chunk_indicator,end,prev_indicator,begin,end,line,line,c,probe_line,the_indicator,probe,indicator,begin,element,temp_scroll_marker,marker_scale,line_height,scroll_marker,line_top,line_number,header,header_bottom,updateHeader,ctxs,ctxs_text,width
+    debounce()
+    timeoutId()
+    checkVisible()
+    rect()
+    viewBottom()
+    viewTop()
+    on_click()
+    elt()
+    getCellValue()
+    cell()
+    child()
+    rowComparator()
+    valueA()
+    valueB()
+    sortColumn()
+    currentSortOrder()
+    current_direction()
+    stored_list()
+    saved_filter_value()
+    saved_hide100_value()
+    table()
+    table_body_rows()
+    no_rows()
+    footer()
+    ratio_columns()
+    filter_handler()
+    totals()
+    text()
+    casefold()
+    hide100()
+    show()
+    celltext()
+    cell()
+    places()
+    stored_list()
+    by_region()
+    sorted_by_region()
+    frag()
+    btn()
+    category()
+    btn()
+    helpCheck()
+    classes()
+    match()
+    c()
+    probe()
+    begin()
+    next_indicator()
+    c()
+    probe()
+    probe_line()
+    chunk_indicator()
+    end()
+    prev_indicator()
+    begin()
+    end()
+    line()
+    line()
+    c()
+    probe_line()
+    the_indicator()
+    probe()
+    indicator()
+    begin()
+    element()
+    temp_scroll_marker()
+    marker_scale()
+    line_height()
+    scroll_marker()
+    line_top()
+    line_number()
+    header()
+    header_bottom()
+    updateHeader()
+    ctxs()
+    ctxs_text()
+    width()
   planfile/cli/auto_loop.py:
     e: get_backend,auto_loop,ci_status
     get_backend(backend_type)
@@ -41,11 +125,12 @@ D:
     save_strategy_to_json(strategy;file_path)
     export_results_to_markdown(results;file_path)
   planfile/cli/commands.py:
-    e: get_backend,apply_strategy_cli,review_strategy_cli,validate_strategy_cli,main
+    e: get_backend,apply_strategy_cli,review_strategy_cli,validate_strategy_cli,generate_strategy_cli,main
     get_backend(backend_type;config)
     apply_strategy_cli(strategy_path;project_path;backend;config_file;dry_run;sprint_filter;output;verbose)
     review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
     validate_strategy_cli(strategy_path;verbose)
+    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
     main()
   planfile/loaders/yaml_loader.py:
     e: load_yaml,save_yaml,load_strategy_yaml,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,validate_strategy_schema
@@ -80,9 +165,22 @@ D:
     BugReport:  # Generated bug report from test failures...
     CIRunner: __init__(6),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop...
     main()
+  planfile/llm/generator.py:
+    e: generate_strategy,_collect_metrics,_auto_select_model,_parse_strategy_response,_basic_metrics
+    generate_strategy(project_path)
+    _collect_metrics(project_path;toon_dir)
+    _auto_select_model(metrics)
+    _parse_strategy_response(response)
+    _basic_metrics(project_path)
   planfile/integrations/generic.py:
     e: GenericBackend
     GenericBackend(BasePMBackend): __init__(3),_validate_config(0),_make_request(4),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Generic HTTP API backend for PM systems...
+  planfile/llm/prompts.py:
+    e: build_strategy_prompt
+    build_strategy_prompt(metrics;sprints;focus)
+  planfile/llm/client.py:
+    e: call_llm
+    call_llm(prompt;model;temperature)
   planfile/utils/priorities.py:
     e: calculate_task_priority,map_priority_to_system,get_priority_color
     calculate_task_priority(base_priority;task_type;sprint_id;weight_factors)
@@ -107,6 +205,7 @@ D:
   planfile/loaders/__init__.py:
   planfile/cli/__init__.py:
   planfile/cli/__main__.py:
+  planfile/llm/__init__.py:
   planfile/utils/__init__.py:
   planfile/integrations/__init__.py:
   docker-entrypoint.sh:

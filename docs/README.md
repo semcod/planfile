@@ -1,7 +1,7 @@
-<!-- code2docs:start --># strategy
+<!-- code2docs:start --># planfile
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-90-green)
-> **90** functions | **19** classes | **22** files | CC̄ = 5.4
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-143-green)
+> **143** functions | **27** classes | **34** files | CC̄ = 4.8
 
 > Auto-generated project documentation from source code analysis.
 
@@ -14,25 +14,27 @@
 ### From PyPI
 
 ```bash
-pip install strategy
+pip install planfile
 ```
 
 ### From Source
 
 ```bash
 git clone https://github.com/semcod/strategy
-cd strategy
+cd planfile
 pip install -e .
 ```
 
 ### Optional Extras
 
 ```bash
-pip install strategy[github]    # github features
-pip install strategy[jira]    # jira features
-pip install strategy[gitlab]    # gitlab features
-pip install strategy[all]    # all optional features
-pip install strategy[dev]    # development tools
+pip install planfile[github]    # github features
+pip install planfile[jira]    # jira features
+pip install planfile[gitlab]    # gitlab features
+pip install planfile[litellm]    # litellm features
+pip install planfile[llx]    # llx features
+pip install planfile[all]    # all optional features
+pip install planfile[dev]    # development tools
 ```
 
 ## Quick Start
@@ -41,25 +43,25 @@ pip install strategy[dev]    # development tools
 
 ```bash
 # Generate full documentation for your project
-strategy ./my-project
+planfile ./my-project
 
 # Only regenerate README
-strategy ./my-project --readme-only
+planfile ./my-project --readme-only
 
 # Preview what would be generated (no file writes)
-strategy ./my-project --dry-run
+planfile ./my-project --dry-run
 
 # Check documentation health
-strategy check ./my-project
+planfile check ./my-project
 
 # Sync — regenerate only changed modules
-strategy sync ./my-project
+planfile sync ./my-project
 ```
 
 ### Python API
 
 ```python
-from strategy import generate_readme, generate_docs, Code2DocsConfig
+from planfile import generate_readme, generate_docs, Code2DocsConfig
 
 # Quick: generate README
 generate_readme("./my-project")
@@ -71,7 +73,7 @@ docs = generate_docs("./my-project", config=config)
 
 ## Generated Output
 
-When you run `strategy`, the following files are produced:
+When you run `planfile`, the following files are produced:
 
 ```
 <project>/
@@ -94,7 +96,7 @@ When you run `strategy`, the following files are produced:
 
 ## Configuration
 
-Create `strategy.yaml` in your project root (or run `strategy init`):
+Create `planfile.yaml` in your project root (or run `planfile init`):
 
 ```yaml
 project:
@@ -135,13 +137,13 @@ sync:
 
 ## Sync Markers
 
-strategy can update only specific sections of an existing README using HTML comment markers:
+planfile can update only specific sections of an existing README using HTML comment markers:
 
 ```markdown
-<!-- strategy:start -->
+<!-- planfile:start -->
 # Project Title
 ... auto-generated content ...
-<!-- strategy:end -->
+<!-- planfile:end -->
 ```
 
 Content outside the markers is preserved when regenerating. Enable this with `sync_markers: true` in your configuration.
@@ -149,13 +151,14 @@ Content outside the markers is preserved when regenerating. Enable this with `sy
 ## Architecture
 
 ```
-strategy/
-├── planfile/        ├── yaml_loader        ├── cli_loader    ├── loaders/    ├── runner        ├── auto_loop    ├── cli/        ├── __main__        ├── priorities    ├── utils/        ├── commands        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic├── docker-entrypoint├── project    ├── ci_runner    ├── models        ├── base```
+planfile/
+├── planfile/        ├── llx_validator        ├── summary    ├── runner        ├── yaml_loader        ├── cli_loader    ├── loaders/        ├── auto_loop    ├── cli/        ├── __main__        ├── generator        ├── commands    ├── llm/        ├── prompts        ├── client    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── 02_mcp_integration    ├── ci_runner            ├── 03_proxy_routing├── docker-entrypoint├── project        ├── validate_with_llx            ├── 01_full_workflow            ├── verify_planfile            ├── 04_llx_integration    ├── models        ├── base```
 
 ## API Overview
 
 ### Classes
 
+- **`LLXValidator`** — Use LLX to validate generated code and strategies.
 - **`StrategyRunner`** — Main runner for applying and reviewing strategies.
 - **`GitLabBackend`** — GitLab Issues integration backend.
 - **`JiraBackend`** — Jira integration backend.
@@ -164,6 +167,13 @@ strategy/
 - **`TestResult`** — Result of running tests.
 - **`BugReport`** — Generated bug report from test failures.
 - **`CIRunner`** — CI/CD runner with automated bug-fix loop.
+- **`ProxyClient`** — Client for interacting with Proxym API.
+- **`UserType`** — —
+- **`User`** — —
+- **`UserService`** — —
+- **`UserController`** — —
+- **`ProjectMetrics`** — Project metrics from LLX analysis.
+- **`LLXIntegration`** — Integration with LLX for code analysis and model selection.
 - **`TaskType`** — Type of task in the planfile.
 - **`ModelTier`** — Model tier for different phases of work.
 - **`ModelHints`** — AI model hints for different phases of task execution.
@@ -178,6 +188,10 @@ strategy/
 
 ### Functions
 
+- `create_validation_script()` — Create a validation script that uses LLX.
+- `create_summary()` — Create a summary of all changes made.
+- `apply_strategy(strategy, project_path, backends, backend_name)` — Apply a strategy to create/update tickets.
+- `review_strategy(strategy, project_path, backends, backend_name)` — Review strategy execution by checking ticket statuses.
 - `load_yaml(file_path)` — Load YAML file and return as dictionary.
 - `save_yaml(data, file_path)` — Save dictionary to YAML file.
 - `load_strategy_yaml(file_path)` — Load strategy from YAML file.
@@ -190,27 +204,53 @@ strategy/
 - `load_strategy_from_json(file_path)` — Load strategy from JSON file.
 - `save_strategy_to_json(strategy, file_path)` — Save strategy to JSON file.
 - `export_results_to_markdown(results, file_path)` — Export strategy results to Markdown file.
-- `apply_strategy(strategy, project_path, backends, backend_name)` — Apply a strategy to create/update tickets.
-- `review_strategy(strategy, project_path, backends, backend_name)` — Review strategy execution by checking ticket statuses.
 - `get_backend(backend_type)` — Get backend instance by type.
 - `auto_loop(strategy, project_path, backend, max_iterations)` — Run automated CI/CD loop: test → ticket → fix → retest.
 - `ci_status(project_path)` — Check current CI status without running tests.
-- `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
-- `map_priority_to_system(priority, system)` — Map generic priority to system-specific priority.
-- `get_priority_color(priority)` — Get color code for priority (for UI display).
+- `generate_strategy(project_path)` — Generate a complete strategy from project analysis.
 - `get_backend(backend_type, config)` — Get backend instance by type and config.
 - `apply_strategy_cli(strategy_path, project_path, backend, config_file)` — Apply a strategy to create tickets.
 - `review_strategy_cli(strategy_path, project_path, backend, config_file)` — Review strategy execution and progress.
 - `validate_strategy_cli(strategy_path, verbose)` — Validate a strategy YAML file.
+- `generate_strategy_cli(project_path, output, model, sprints)` — Generate strategy.yaml from project analysis + LLM.
 - `main()` — Main CLI entry point.
+- `build_strategy_prompt(metrics, sprints, focus)` — Build a structured prompt for strategy generation.
+- `call_llm(prompt, model, temperature)` — Call LLM via LiteLLM. Falls back to llx proxy if available.
+- `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
+- `map_priority_to_system(priority, system)` — Map generic priority to system-specific priority.
+- `get_priority_color(priority)` — Get color code for priority (for UI display).
 - `analyze_project_metrics(project_path)` — Analyze project metrics for strategy review.
 - `calculate_strategy_health(strategy_results)` — Calculate health metrics for a strategy execution.
+- `run_mcp_tool(tool_name, arguments)` — Simulate running an MCP tool.
+- `simulate_planfile_generate(args)` — Simulate planfile generate tool.
+- `simulate_planfile_apply(args)` — Simulate planfile apply tool.
+- `simulate_planfile_review(args)` — Simulate planfile review tool.
+- `example_mcp_session()` — Example of an LLM agent using planfile MCP tools.
+- `create_mcp_tool_definitions()` — Create MCP tool definitions for integration.
+- `main()` — CLI entry point.
+- `example_strategy_generation_with_proxy()` — Example: Generate strategy using proxy for smart model routing.
+- `create_proxy_config_example()` — Create example proxy configuration for planfile integration.
+- `example_budget_tracking()` — Example: Budget tracking with proxy.
 - `check_env()` — —
 - `validate_config()` — —
 - `setup_workspace()` — —
 - `run_command()` — —
 - `main()` — —
-- `main()` — CLI entry point.
+- `validate_file()` — —
+- `create_user()` — —
+- `get_user()` — —
+- `update_user()` — —
+- `setattr()` — —
+- `delete_user()` — —
+- `get_users_by_type()` — —
+- `authenticate()` — —
+- `export_to_json()` — —
+- `import_from_json()` — —
+- `get_statistics()` — —
+- `validate_planfile()` — —
+- `print()` — —
+- `example_metric_driven_planning()` — Example: Generate strategy based on actual project metrics.
+- `create_llx_config_example()` — Create example LLX configuration for planfile integration.
 
 
 ## Project Structure
@@ -221,13 +261,25 @@ strategy/
 📦 `planfile.cli`
 📄 `planfile.cli.__main__`
 📄 `planfile.cli.auto_loop` (3 functions)
-📄 `planfile.cli.commands` (5 functions)
+📄 `planfile.cli.commands` (6 functions)
+📄 `planfile.examples.bash-generation.verify_planfile` (4 functions)
+📄 `planfile.examples.ecosystem.01_full_workflow` (17 functions, 6 classes)
+📄 `planfile.examples.ecosystem.02_mcp_integration` (6 functions)
+📄 `planfile.examples.ecosystem.03_proxy_routing` (7 functions, 1 classes)
+📄 `planfile.examples.ecosystem.04_llx_integration` (9 functions, 2 classes)
+📄 `planfile.examples.llx_validator` (7 functions, 1 classes)
+📄 `planfile.examples.summary` (1 functions)
+📄 `planfile.examples.validate_with_llx` (1 functions)
 📦 `planfile.integrations`
 📄 `planfile.integrations.base` (9 functions, 4 classes)
 📄 `planfile.integrations.generic` (8 functions, 1 classes)
 📄 `planfile.integrations.github` (7 functions, 1 classes)
 📄 `planfile.integrations.gitlab` (7 functions, 1 classes)
 📄 `planfile.integrations.jira` (9 functions, 1 classes)
+📦 `planfile.llm`
+📄 `planfile.llm.client` (1 functions)
+📄 `planfile.llm.generator` (5 functions)
+📄 `planfile.llm.prompts` (1 functions)
 📦 `planfile.loaders`
 📄 `planfile.loaders.cli_loader` (5 functions)
 📄 `planfile.loaders.yaml_loader` (7 functions)
@@ -241,7 +293,7 @@ strategy/
 ## Requirements
 
 - Python >= >=3.10
-- typer >=0.12- rich >=13.0- pydantic >=2.0- pydantic-settings >=2.0- pyyaml >=6.0- requests >=2.31
+- typer >=0.12- rich >=13.0- pydantic >=2.0- pydantic-settings >=2.0- pyyaml >=6.0- requests >=2.31- httpx >=0.27
 
 ## Contributing
 
@@ -256,7 +308,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 ```bash
 # Clone the repository
 git clone https://github.com/semcod/strategy
-cd strategy
+cd planfile
 
 # Install in development mode
 pip install -e ".[dev]"
