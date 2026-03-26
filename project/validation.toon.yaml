@@ -1,17 +1,15 @@
-# vallm batch | 136f | 57✓ 6⚠ 38✗ | 2026-03-26
+# vallm batch | 167f | 67✓ 6⚠ 54✗ | 2026-03-26
 
 SUMMARY:
-  scanned: 136  passed: 57 (41.9%)  warnings: 6  errors: 38  unsupported: 41
+  scanned: 167  passed: 67 (40.1%)  warnings: 6  errors: 54  unsupported: 46
 
 WARNINGS[6]{path,score}:
-  planfile/analysis/file_analyzer.py,0.93
-    issues[3]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_analyze_toon has cyclomatic complexity 38 (max: 15),117
-      complexity.lizard_cc,warning,_analyze_toon: CC=38 exceeds limit 15,117
-      complexity.lizard_length,warning,_analyze_toon: 127 lines exceeds limit 100,117
   examples/bash-generation/verify_planfile.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
+  examples/cli-commands/cli_command_examples.py,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_length,warning,main: 112 lines exceeds limit 100,46
   examples/ecosystem/04_llx_integration.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,example_metric_driven_planning: 175 lines exceeds limit 100,176
@@ -25,7 +23,7 @@ WARNINGS[6]{path,score}:
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
 
-ERRORS[38]{path,score}:
+ERRORS[54]{path,score}:
   examples/demo_without_keys.py,0.00
     issues[1]{rule,severity,message,line}:
       syntax.parse,error,SyntaxError: unmatched ')',303
@@ -54,6 +52,16 @@ ERRORS[38]{path,score}:
       python.import.resolvable,error,Module 'sprint_generator' not found,7
       python.import.resolvable,error,Module 'generator' not found,8
       python.import.resolvable,error,Module 'external_tools' not found,9
+  planfile/analysis/generators/__init__.py,0.57
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'metrics_extractor' not found,1
+      python.import.resolvable,error,Module 'strategy_builder' not found,2
+  planfile/analysis/parsers/__init__.py,0.57
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'toon_parser' not found,1
+      python.import.resolvable,error,Module 'yaml_parser' not found,2
+      python.import.resolvable,error,Module 'json_parser' not found,3
+      python.import.resolvable,error,Module 'text_parser' not found,4
   planfile/cli/__main__.py,0.57
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'commands' not found,1
@@ -78,6 +86,29 @@ ERRORS[38]{path,score}:
       python.import.resolvable,error,Module 'mcp.server' not found,3
       python.import.resolvable,error,Module 'mcp.server.stdio' not found,4
       python.import.resolvable,error,Module 'planfile.mcp' not found,5
+  examples/quick-start/quick_start_examples.py,0.69
+    issues[5]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile' not found,14
+      python.import.resolvable,error,Module 'planfile.analysis.generator' not found,15
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,36
+      python.import.resolvable,error,Module 'planfile.cli.extra_commands' not found,50
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,60
+  planfile/cli/commands.py,0.69
+    issues[8]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.cli' not found,5
+      python.import.resolvable,error,Module 'planfile.cli.cmd.cmd_utils' not found,8
+      python.import.resolvable,error,Module 'planfile.cli.cmd.cmd_apply' not found,15
+      python.import.resolvable,error,Module 'planfile.cli.cmd.cmd_review' not found,21
+      python.import.resolvable,error,Module 'planfile.cli.cmd.cmd_validate' not found,22
+      python.import.resolvable,error,Module 'planfile.cli.cmd.cmd_generate' not found,23
+      python.import.resolvable,error,Module 'planfile.cli.extra_commands' not found,50
+      python.import.resolvable,error,Module 'planfile' not found,31
+  examples/integrated-functionality/integrated_functionality_examples.py,0.71
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.analysis.generator' not found,13
+      python.import.resolvable,error,Module 'planfile' not found,14
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,15
+      python.import.resolvable,error,Module 'planfile.cli.extra_commands' not found,50
   planfile/integrations/github.py,0.71
     issues[4]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.integrations.base' not found,12
@@ -88,6 +119,18 @@ ERRORS[38]{path,score}:
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,4
       python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,5
+  planfile/analysis/file_analyzer.py,0.73
+    issues[5]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,10
+      python.import.resolvable,error,Module 'parsers.text_parser' not found,11
+      python.import.resolvable,error,Module 'parsers.yaml_parser' not found,12
+      python.import.resolvable,error,Module 'parsers.json_parser' not found,13
+      python.import.resolvable,error,Module 'parsers.toon_parser' not found,14
+  examples/external-tools/external_tools_examples.py,0.74
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.analysis.external_tools' not found,13
+      python.import.resolvable,error,Module 'planfile.analysis.generator' not found,14
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,15
   planfile/integrations/gitlab.py,0.74
     issues[3]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.integrations.base' not found,10
@@ -106,20 +149,33 @@ ERRORS[38]{path,score}:
       python.import.resolvable,error,Module 'llx' not found,66
       python.import.resolvable,error,Module 'llx' not found,87
       python.import.resolvable,error,Module 'llx.analysis.collector' not found,88
-  planfile/cli/commands.py,0.78
-    issues[12]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'planfile.models' not found,12
-      python.import.resolvable,error,Module 'planfile.runner' not found,13
-      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,14
-      python.import.resolvable,error,Module 'planfile.integrations.github' not found,15
-      python.import.resolvable,error,Module 'planfile.integrations.jira' not found,16
-      python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,17
-      python.import.resolvable,error,Module 'planfile.integrations.generic' not found,18
-      python.import.resolvable,error,Module 'extra_commands' not found,29
-      python.import.resolvable,error,Module 'llm.generator' not found,393
-      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,394
-      python.import.resolvable,error,Module 'analysis.generator' not found,439
-      python.import.resolvable,error,Module 'loaders.yaml_loader' not found,440
+  examples/advanced-usage/advanced_usage_examples.py,0.79
+    issues[6]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile' not found,14
+      python.import.resolvable,error,Module 'planfile.analysis.generator' not found,15
+      python.import.resolvable,error,Module 'planfile.analysis.file_analyzer' not found,16
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,17
+      python.import.resolvable,error,Module 'planfile.models_v2' not found,137
+      python.import.resolvable,error,Module 'planfile.models_v2' not found,298
+  planfile/analysis/parsers/yaml_parser.py,0.79
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,5
+      python.import.resolvable,error,Module 'text_parser' not found,6
+      python.import.resolvable,error,Module 'toon_parser' not found,7
+  planfile/cli/cmd/cmd_generate.py,0.79
+    issues[4]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.llm.generator' not found,17
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,18
+      python.import.resolvable,error,Module 'planfile.analysis.generator' not found,57
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,58
+  planfile/cli/cmd/cmd_utils.py,0.79
+    issues[6]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.models' not found,8
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,9
+      python.import.resolvable,error,Module 'planfile.integrations.github' not found,10
+      python.import.resolvable,error,Module 'planfile.integrations.jira' not found,11
+      python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,12
+      python.import.resolvable,error,Module 'planfile.integrations.generic' not found,13
   planfile/utils/priorities.py,0.79
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,2
@@ -129,6 +185,22 @@ ERRORS[38]{path,score}:
       python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,11
       python.import.resolvable,error,Module 'planfile.analysis.file_analyzer' not found,51
       python.import.resolvable,error,Module 'planfile.analysis.sprint_generator' not found,70
+  planfile/analysis/generator.py,0.80
+    issues[6]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'file_analyzer' not found,14
+      python.import.resolvable,error,Module 'sprint_generator' not found,15
+      python.import.resolvable,error,Module 'external_tools' not found,16
+      python.import.resolvable,error,Module 'models' not found,17
+      python.import.resolvable,error,Module 'generators.metrics_extractor' not found,19
+      python.import.resolvable,error,Module 'generators.strategy_builder' not found,20
+  planfile/analysis/parsers/json_parser.py,0.83
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,5
+      python.import.resolvable,error,Module 'yaml_parser' not found,6
+  planfile/analysis/parsers/toon_parser.py,0.83
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,5
+      python.import.resolvable,error,Module 'text_parser' not found,6
   planfile/ci_runner.py,0.83
     issues[6]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,14
@@ -137,15 +209,9 @@ ERRORS[38]{path,score}:
       python.import.resolvable,error,Module 'planfile.integrations.github' not found,17
       python.import.resolvable,error,Module 'planfile.integrations.jira' not found,18
       python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,19
-  planfile/analysis/generator.py,0.84
-    issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'file_analyzer' not found,14
-      python.import.resolvable,error,Module 'sprint_generator' not found,15
-      python.import.resolvable,error,Module 'external_tools' not found,16
-      python.import.resolvable,error,Module 'models' not found,17
   planfile/analysis/sprint_generator.py,0.86
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'file_analyzer' not found,8
+      python.import.resolvable,error,Module 'models' not found,8
   planfile/executor_standalone.py,0.86
     issues[3]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models_v2' not found,10
@@ -180,6 +246,22 @@ ERRORS[38]{path,score}:
       python.import.resolvable,error,Module 'planfile.integrations.github' not found,12
       python.import.resolvable,error,Module 'planfile.integrations.jira' not found,13
       python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,14
+  planfile/cli/cmd/cmd_review.py,0.88
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,10
+      python.import.resolvable,error,Module 'planfile.runner' not found,11
+      python.import.resolvable,error,Module 'planfile.cli.cmd.cmd_utils' not found,12
+  planfile/analysis/parsers/text_parser.py,0.89
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,5
+  planfile/cli/cmd/cmd_apply.py,0.89
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.models' not found,11
+      python.import.resolvable,error,Module 'planfile.runner' not found,12
+      python.import.resolvable,error,Module 'planfile.cli.cmd.cmd_utils' not found,13
+  planfile/cli/cmd/cmd_validate.py,0.89
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,5
   planfile/integrations/generic.py,0.89
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.integrations.base' not found,5
@@ -209,7 +291,7 @@ ERRORS[38]{path,score}:
       python.import.resolvable,error,Module 'aiohttp' not found,16
 
 UNSUPPORTED[5]{bucket,count}:
-  *.md,28
+  *.md,33
   Dockerfile*,1
   *.txt,1
   *.yml,2

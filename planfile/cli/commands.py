@@ -1,5 +1,6 @@
 import typer
 import logging
+from typing import Optional
 from rich.console import Console
 
 from planfile.cli import auto_loop
@@ -25,6 +26,23 @@ from planfile.cli.cmd.cmd_generate import generate_strategy_cli, generate_from_f
 app = typer.Typer(help="Strategy CLI - Manage strategies and sprints")
 console = Console()
 logger = logging.getLogger(__name__)
+
+def version_callback(value: bool):
+    if value:
+        import planfile
+        console.print(f"Planfile CLI version: {planfile.__version__}")
+        raise typer.Exit()
+
+@app.callback()
+def main_callback(
+    version: Optional[bool] = typer.Option(
+        None, "--version", "-v", 
+        help="Show CLI version and exit", 
+        callback=version_callback, 
+        is_eager=True
+    )
+):
+    pass
 
 # Add auto subcommand
 app.add_typer(auto_loop.app, name="auto", help="Automated CI/CD commands")

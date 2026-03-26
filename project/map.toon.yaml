@@ -1,10 +1,10 @@
-# planfile | 41f 9105L | python:35,javascript:2,shell:4 | 2026-03-26
-# stats: 363 func | 0 cls | 41 mod | CC̄=4.4 | critical:16 | cycles:0
-# alerts[5]: CC FileAnalyzer._analyze_toon=38; CC PlanfileGenerator._extract_key_metrics=30; fan-out add_extra_commands=28; fan-out FileAnalyzer._analyze_toon=24; fan-out review_strategy_cli=23
-# hotspots[5]: add_extra_commands fan=28; FileAnalyzer._analyze_toon fan=24; review_strategy_cli fan=23; auto_loop fan=21; FileAnalyzer._analyze_text fan=20
-# evolution: CC̄ 4.4→4.4 (flat 0.0)
+# planfile | 54f 8936L | python:48,javascript:2,shell:4 | 2026-03-26
+# stats: 376 func | 0 cls | 54 mod | CC̄=4.2 | critical:15 | cycles:0
+# alerts[5]: fan-out add_extra_commands=28; fan-out auto_loop=21; fan-out review_strategy_cli=21; fan-out analyze_text=20; CC _parse_toon_sections=24
+# hotspots[5]: add_extra_commands fan=28; auto_loop fan=21; review_strategy_cli fan=21; analyze_text fan=20; Strategy.merge fan=17
+# evolution: CC̄ 4.4→4.2 (improved -0.2)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[41]:
+M[54]:
   auto_generate_planfile.sh,124
   cleanup_redundant.sh,71
   docker-entrypoint.sh,174
@@ -14,14 +14,27 @@ M[41]:
   planfile/__init__.py,55
   planfile/analysis/__init__.py,22
   planfile/analysis/external_tools.py,267
-  planfile/analysis/file_analyzer.py,524
-  planfile/analysis/generator.py,530
+  planfile/analysis/file_analyzer.py,123
+  planfile/analysis/generator.py,243
+  planfile/analysis/generators/__init__.py,23
+  planfile/analysis/generators/metrics_extractor.py,43
+  planfile/analysis/models.py,50
+  planfile/analysis/parsers/__init__.py,12
+  planfile/analysis/parsers/json_parser.py,31
+  planfile/analysis/parsers/text_parser.py,119
+  planfile/analysis/parsers/toon_parser.py,158
+  planfile/analysis/parsers/yaml_parser.py,79
   planfile/analysis/sprint_generator.py,200
   planfile/ci_runner.py,453
   planfile/cli/__init__.py,0
   planfile/cli/__main__.py,4
   planfile/cli/auto_loop.py,252
-  planfile/cli/commands.py,501
+  planfile/cli/cmd/cmd_apply.py,108
+  planfile/cli/cmd/cmd_generate.py,115
+  planfile/cli/cmd/cmd_review.py,97
+  planfile/cli/cmd/cmd_utils.py,103
+  planfile/cli/cmd/cmd_validate.py,37
+  planfile/cli/commands.py,45
   planfile/cli/extra_commands.py,487
   planfile/examples.py,141
   planfile/executor_standalone.py,336
@@ -47,15 +60,11 @@ M[41]:
   planfile/utils/priorities.py,111
   project.sh,21
 D:
-  planfile/analysis/file_analyzer.py:
-    e: ExtractedIssue,ExtractedMetric,ExtractedTask,FileAnalyzer
-    ExtractedIssue: __post_init__(0)  # Represents an issue extracted from a file...
-    ExtractedMetric:  # Represents a metric extracted from a file...
-    ExtractedTask: __post_init__(0)  # Represents a task extracted from a file...
-    FileAnalyzer: __init__(0),analyze_file(1),_analyze_toon(1),_analyze_yaml(1),_analyze_json(1),_analyze_text(1),_extract_from_yaml_structure(3),_extract_from_json_structure(3),analyze_directory(2),_generate_summary(3)  # Analyzes YAML/JSON files to extract issues and metrics...
-  planfile/analysis/generator.py:
-    e: PlanfileGenerator
-    PlanfileGenerator: __init__(0),generate_with_external_tools(4),_external_to_internal_analysis(1),_extract_external_metrics(1),generate_from_analysis(5),generate_from_current_project(2),_extract_key_metrics(2),_generate_goal(3),_generate_goals(3),_generate_quality_gates(1),_generate_tasks(1),_parse_effort(1),_generate_target_metrics(1),_generate_risks(1),_generate_success_criteria(1),_create_strategy_object(1),_make_serializable(1)  # Generate comprehensive planfile from file analysis...
+  planfile/analysis/parsers/toon_parser.py:
+    e: _parse_toon_header,_parse_toon_sections,analyze_toon
+    _parse_toon_header(line;file_path;metrics;issues)
+    _parse_toon_sections(lines;file_path;metrics;issues)
+    analyze_toon(file_path)
   planfile/analysis/sprint_generator.py:
     e: SprintGenerator
     SprintGenerator: __init__(0),generate_sprints(2),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information...
@@ -240,28 +249,18 @@ D:
   planfile/integrations/gitlab.py:
     e: GitLabBackend
     GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
-  planfile/cli/commands.py:
-    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend,_execute_apply_strategy,_display_apply_results,_save_results,apply_strategy_cli,review_strategy_cli,validate_strategy_cli,generate_strategy_cli,main,generate_from_files_cmd
-    get_backend(backend_type;config)
-    _load_and_validate_strategy(strategy_path)
-    _load_backend_config(backend;config_file)
-    _parse_sprint_filter(sprint_filter)
-    _select_backend(backend;backend_config)
-    _execute_apply_strategy(strategy;project_path;backends;dry_run;sprint_ids)
-    _display_apply_results(results)
-    _save_results(results;output)
-    apply_strategy_cli(strategy_path;project_path;backend;config_file;dry_run;sprint_filter;output;verbose)
-    review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
-    validate_strategy_cli(strategy_path;verbose)
-    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
-    main()
-    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;verbose)
+  planfile/analysis/generator.py:
+    e: PlanfileGenerator
+    PlanfileGenerator: __init__(0),generate_with_external_tools(4),_external_to_internal_analysis(1),_extract_external_metrics(1),generate_from_analysis(5),generate_from_current_project(2),_extract_key_metrics(2),_generate_goal(3),_generate_goals(3),_generate_quality_gates(1),_generate_tasks(1),_parse_effort(1),_generate_target_metrics(1),_generate_risks(1),_generate_success_criteria(1),_create_strategy_object(1),_make_serializable(1)  # Generate comprehensive planfile from file analysis...
   planfile/integrations/github.py:
     e: GitHubBackend
     GitHubBackend(BasePMBackend): __init__(2),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitHub Issues integration backend...
   planfile/integrations/jira.py:
     e: JiraBackend
     JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Jira integration backend...
+  planfile/analysis/parsers/text_parser.py:
+    e: analyze_text
+    analyze_text(file_path)
   planfile/runner.py:
     e: load_valid_strategy,verify_strategy_post_execution,analyze_project_metrics,apply_strategy_to_tickets,review_strategy,run_strategy
     load_valid_strategy(path)
@@ -275,6 +274,10 @@ D:
     AnalysisResults: __post_init__(0)  # Results from external tool analysis...
     ExternalToolRunner: __init__(1),run_all(0),run_code2llm(0),run_vallm(0),run_redup(0),parse_code2llm_output(0),parse_vallm_output(0),parse_redup_output(0),_mock_code2llm_data(0),_mock_vallm_data(0),_mock_redup_data(0)  # Runner for external code analysis tools...
     run_external_analysis(project_path)
+  planfile/cli/cmd/cmd_generate.py:
+    e: generate_strategy_cli,generate_from_files_cmd
+    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
+    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;verbose)
   planfile/models_v2.py:
     e: TaskType,ModelTier,ModelHints,Task,Sprint,QualityGate,Goal,Strategy
     TaskType(str,Enum):  # Type of task in the planfile...
@@ -304,12 +307,27 @@ D:
     generate_template(project_type;domain)
     calculate_strategy_stats(strategy)
     add_extra_commands(app)
+  planfile/cli/cmd/cmd_review.py:
+    e: review_strategy_cli
+    review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
   planfile/ci_runner.py:
     e: TestResult,BugReport,CIRunner,main
     TestResult:  # Result of running tests...
     BugReport:  # Generated bug report from test failures...
     CIRunner: __init__(6),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop...
     main()
+  planfile/analysis/generators/metrics_extractor.py:
+    e: extract_key_metrics,_extract_cc_metrics,_extract_critical_metrics,_extract_validation_metrics,_extract_duplication_metrics,_extract_coverage_metrics
+    extract_key_metrics(analysis_result;external_metrics)
+    _extract_cc_metrics(analysis_result;metrics)
+    _extract_critical_metrics(analysis_result;metrics)
+    _extract_validation_metrics(analysis_result;metrics)
+    _extract_duplication_metrics(analysis_result;metrics)
+    _extract_coverage_metrics(analysis_result;metrics)
+  planfile/analysis/parsers/yaml_parser.py:
+    e: extract_from_yaml_structure,analyze_yaml
+    extract_from_yaml_structure(data;path;parent_key)
+    analyze_yaml(file_path)
   planfile/executor_standalone.py:
     e: TaskResult,LLMClient,StrategyExecutor,create_openai_client,create_litellm_client,execute_strategy
     TaskResult:  # Result of executing a task...
@@ -348,6 +366,12 @@ D:
     _md_sprints(results)
     _md_metrics(results)
     export_results_to_markdown(results;file_path)
+  planfile/analysis/file_analyzer.py:
+    e: FileAnalyzer
+    FileAnalyzer: __init__(0),analyze_file(1),_analyze_toon(1),_analyze_yaml(1),_analyze_json(1),_analyze_text(1),_extract_from_yaml_structure(3),_extract_from_json_structure(3),analyze_directory(2),_generate_summary(3)  # Analyzes YAML/JSON files to extract issues and metrics...
+  planfile/cli/cmd/cmd_validate.py:
+    e: validate_strategy_cli
+    validate_strategy_cli(strategy_path;verbose)
   planfile/models.py:
     e: TaskType,ModelTier,ModelHints,TaskPattern,Sprint,Goal,QualityGate,Strategy
     TaskType(str,Enum):  # Type of task in the strategy...
@@ -361,6 +385,19 @@ D:
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)
+  planfile/cli/cmd/cmd_utils.py:
+    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend
+    get_backend(backend_type;config)
+    _load_and_validate_strategy(strategy_path)
+    _load_backend_config(backend;config_file)
+    _parse_sprint_filter(sprint_filter)
+    _select_backend(backend;backend_config)
+  planfile/cli/cmd/cmd_apply.py:
+    e: _execute_apply_strategy,_display_apply_results,_save_results,apply_strategy_cli
+    _execute_apply_strategy(strategy;project_path;backends;dry_run;sprint_ids)
+    _display_apply_results(results)
+    _save_results(results;output)
+    apply_strategy_cli(strategy_path;project_path;backend;config_file;dry_run;sprint_filter;output;verbose)
   planfile/llm/client.py:
     e: call_llm
     call_llm(prompt;model;temperature)
@@ -375,6 +412,11 @@ D:
     TicketStatus(BaseModel):  # Status of a ticket...
     PMBackend(Protocol): create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Protocol for PM system backends...
     BasePMBackend(ABC): __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1)  # Base class for PM backends with common functionality...
+  planfile/analysis/models.py:
+    e: ExtractedIssue,ExtractedMetric,ExtractedTask
+    ExtractedIssue: __post_init__(0)  # Represents an issue extracted from a file...
+    ExtractedMetric:  # Represents a metric extracted from a file...
+    ExtractedTask: __post_init__(0)  # Represents a task extracted from a file...
   planfile/examples.py:
     e: example_create_strategy,example_validate_strategy,example_run_strategy,example_verify_strategy,example_programmatic_strategy
     example_create_strategy()
@@ -382,11 +424,17 @@ D:
     example_run_strategy()
     example_verify_strategy()
     example_programmatic_strategy()
+  planfile/analysis/parsers/json_parser.py:
+    e: analyze_json
+    analyze_json(file_path)
   mcp-server-example.py:
     e: planfile_generate,planfile_apply,planfile_review,main
     planfile_generate(arguments)
     planfile_apply(arguments)
     planfile_review(arguments)
+    main()
+  planfile/cli/commands.py:
+    e: main
     main()
   planfile/__init__.py:
   planfile/loaders/__init__.py:
@@ -396,6 +444,8 @@ D:
   planfile/llm/__init__.py:
   planfile/utils/__init__.py:
   planfile/integrations/__init__.py:
+  planfile/analysis/generators/__init__.py:
+  planfile/analysis/parsers/__init__.py:
   cleanup_redundant.sh:
   docker-entrypoint.sh:
     e: check_env,validate_config,setup_workspace,run_command,main

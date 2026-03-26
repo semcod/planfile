@@ -11,5 +11,5 @@
 - [x] Preserve module boundaries and update imports/exports as per `map.toon.yaml`
 
 ## Pending Improvements
-- [ ] Implement `--version` flag for the CLI to display the current version.
-- [ ] Add an extensible Backend Registry to remove complex `if/elif` statements when creating integrations.
+- [x] Implement `--version` flag for the CLI to display the current version.
+- [x] Add an extensible Backend Registry to remove complex `if/elif` statements when creating integrations.

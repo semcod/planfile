@@ -14,34 +14,27 @@ from planfile.integrations.generic import GenericBackend
 
 console = Console()
 
+BACKEND_REGISTRY = {
+    "github": GitHubBackend,
+    "jira": JiraBackend,
+    "gitlab": GitLabBackend,
+    "generic": GenericBackend
+}
+
 def get_backend(backend_type: str, config: dict):
     """Get backend instance by type and config."""
-    if backend_type == "github":
-        return GitHubBackend(
-            repo=config["repo"],
-            token=config.get("token")
-        )
-    elif backend_type == "jira":
-        return JiraBackend(
-            base_url=config["base_url"],
-            email=config.get("email"),
-            token=config.get("token"),
-            project=config.get("project")
-        )
-    elif backend_type == "gitlab":
-        return GitLabBackend(
-            url=config.get("url", "https://gitlab.com"),
-            token=config.get("token"),
-            project_id=config.get("project_id")
-        )
-    elif backend_type == "generic":
-        return GenericBackend(
-            base_url=config["base_url"],
-            api_key=config.get("api_key"),
-            headers=config.get("headers")
-        )
-    else:
+    backend_class = BACKEND_REGISTRY.get(backend_type)
+    if not backend_class:
         raise ValueError(f"Unknown backend type: {backend_type}")
+        
+    if backend_type == "github":
+        return backend_class(repo=config["repo"], token=config.get("token"))
+    elif backend_type == "jira":
+        return backend_class(base_url=config["base_url"], email=config.get("email"), token=config.get("token"), project=config.get("project"))
+    elif backend_type == "gitlab":
+        return backend_class(url=config.get("url", "https://gitlab.com"), token=config.get("token"), project_id=config.get("project_id"))
+    elif backend_type == "generic":
+        return backend_class(base_url=config["base_url"], api_key=config.get("api_key"), headers=config.get("headers"))
 
 def _load_and_validate_strategy(strategy_path: Path) -> Strategy:
     """Load and validate strategy file."""

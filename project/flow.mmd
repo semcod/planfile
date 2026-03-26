@@ -4,6 +4,7 @@ flowchart TD
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph CLI
+        planfile__cli__commands__main["main"]
         planfile__cli__auto_loop__get_backend["get_backend"]
         planfile__cli__auto_loop___validate_strategy["_validate_strategy"]
         planfile__cli__auto_loop___initialize_backends["_initialize_backends"]
@@ -13,12 +14,11 @@ flowchart TD
         planfile__cli__auto_loop___save_results_if_needed["_save_results_if_needed"]
         planfile__cli__auto_loop__auto_loop["auto_loop"]
         planfile__cli__auto_loop__ci_status["ci_status"]
-        planfile__cli__commands__get_backend["get_backend"]
-        planfile__cli__commands___load_and_validate_strategy["_load_and_validate_strategy"]
-        planfile__cli__commands___load_backend_config["_load_backend_config"]
-        planfile__cli__commands___parse_sprint_filter["_parse_sprint_filter"]
-        planfile__cli__commands___select_backend["_select_backend"]
-        planfile__cli__commands___execute_apply_strategy["_execute_apply_strategy"]
+        planfile__cli__extra_commands__export_to_csv["export_to_csv"]
+        planfile__cli__extra_commands__export_to_html["export_to_html"]
+        planfile__cli__extra_commands__compare_strategies["compare_strategies"]
+        planfile__cli__extra_commands__generate_template["generate_template"]
+        planfile__cli__extra_commands__calculate_strategy_stats["calculate_strategy_stats"]
         ...["+14 more"]
     end
 
@@ -38,7 +38,7 @@ flowchart TD
         planfile__executor_standalone__create_litellm_client["create_litellm_client"]
         planfile__executor_standalone__execute_strategy["execute_strategy"]
         planfile__loaders__yaml_loader__load_strategy_yaml{{load_strategy_yaml CC=18}}
-        ...["+267 more"]
+        ...["+268 more"]
     end
 
     subgraph Exporters

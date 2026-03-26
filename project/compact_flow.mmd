@@ -1,10 +1,15 @@
 flowchart TD
+    examples__advanced_usage["examples.advanced-usage<br/>7 funcs"]
     examples__bash_generation["examples.bash-generation<br/>2 funcs"]
+    examples__cli_commands["examples.cli-commands<br/>2 funcs"]
     examples__comprehensive_example["examples.comprehensive_example<br/>2 funcs"]
     examples__ecosystem["examples.ecosystem<br/>34 funcs"]
+    examples__external_tools["examples.external-tools<br/>6 funcs"]
+    examples__integrated_functionality["examples.integrated-functionality<br/>8 funcs"]
     examples__llx_validator["examples.llx_validator<br/>7 funcs"]
+    examples__quick_start["examples.quick-start<br/>6 funcs"]
     examples__summary["examples.summary<br/>1 funcs"]
-    planfile__analysis["planfile.analysis<br/>49 funcs"]
+    planfile__analysis["planfile.analysis<br/>62 funcs"]
     planfile__ci_runner["planfile.ci_runner<br/>10 funcs"]
     planfile__cli["planfile.cli<br/>29 funcs"]
     planfile__examples["planfile.examples<br/>5 funcs"]
@@ -15,20 +20,31 @@ flowchart TD
     planfile__models_v2["planfile.models_v2<br/>14 funcs"]
     planfile__runner["planfile.runner<br/>6 funcs"]
     examples__ecosystem ==>|95| examples__bash_generation
+    examples__external_tools ==>|89| examples__bash_generation
+    examples__advanced_usage ==>|86| examples__bash_generation
+    examples__integrated_functionality ==>|77| examples__bash_generation
+    examples__quick_start ==>|62| examples__bash_generation
     examples__summary ==>|40| examples__bash_generation
     examples__comprehensive_example ==>|32| examples__bash_generation
+    examples__cli_commands ==>|26| examples__bash_generation
     planfile__ci_runner ==>|22| examples__bash_generation
     planfile__runner ==>|20| examples__bash_generation
     planfile__analysis ==>|15| examples__bash_generation
     planfile__cli ==>|12| planfile__loaders
+    examples__advanced_usage ==>|7| planfile__loaders
     planfile__examples ==>|6| examples__bash_generation
     planfile__examples ==>|4| planfile__runner
     planfile__llm ==>|4| examples__bash_generation
-    planfile__cli -->|2| planfile__runner
+    examples__integrated_functionality ==>|4| planfile__loaders
     planfile__llm -->|2| examples__ecosystem
-    planfile__runner -->|1| planfile__models
+    planfile__cli -->|2| planfile__runner
+    examples__external_tools -->|2| planfile__loaders
+    examples__quick_start -->|2| planfile__loaders
     examples__llx_validator -->|1| examples__bash_generation
+    planfile__runner -->|1| planfile__models
     planfile__executor_standalone -->|1| planfile__models_v2
     planfile__ci_runner -->|1| planfile__loaders
     planfile__ci_runner -->|1| planfile__runner
     planfile__cli -->|1| planfile__llm
+    examples__integrated_functionality -->|1| planfile__cli
+    examples__quick_start -->|1| planfile__cli

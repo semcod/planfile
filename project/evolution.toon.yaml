@@ -1,57 +1,54 @@
-# code2llm/evolution | 363 func | 30f | 2026-03-26
+# code2llm/evolution | 376 func | 41f | 2026-03-26
 
 NEXT[10] (ranked by impact):
-  [1] !! SPLIT           planfile/analysis/file_analyzer.py
-      WHY: 524L, 4 classes, max CC=38
-      EFFORT: ~4h  IMPACT: 19912
+  [1] !  SPLIT-FUNC      _parse_toon_sections  CC=24  fan=14
+      WHY: CC=24 exceeds 15
+      EFFORT: ~1h  IMPACT: 336
 
-  [2] !! SPLIT           planfile/analysis/generator.py
-      WHY: 530L, 1 classes, max CC=30
-      EFFORT: ~4h  IMPACT: 15900
-
-  [3] !! SPLIT           planfile/cli/commands.py
-      WHY: 501L, 0 classes, max CC=14
-      EFFORT: ~4h  IMPACT: 7014
-
-  [4] !! SPLIT-FUNC      FileAnalyzer._analyze_toon  CC=38  fan=24
-      WHY: CC=38 exceeds 15
-      EFFORT: ~1h  IMPACT: 912
-
-  [5] !  SPLIT-FUNC      table  CC=21  fan=15
+  [2] !  SPLIT-FUNC      table  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [6] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
+  [3] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [7] !  SPLIT-FUNC      no_rows  CC=21  fan=15
+  [4] !  SPLIT-FUNC      no_rows  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [8] !  SPLIT-FUNC      footer  CC=21  fan=15
+  [5] !  SPLIT-FUNC      footer  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [9] !  SPLIT-FUNC      ratio_columns  CC=21  fan=15
+  [6] !  SPLIT-FUNC      ratio_columns  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [10] !  SPLIT-FUNC      filter_handler  CC=21  fan=15
+  [7] !  SPLIT-FUNC      filter_handler  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
+  [8] !  SPLIT-FUNC      table  CC=19  fan=15
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 285
 
-RISKS[3]:
-  ⚠ Splitting planfile/analysis/generator.py may break 17 import paths
-  ⚠ Splitting planfile/analysis/file_analyzer.py may break 12 import paths
-  ⚠ Splitting planfile/cli/commands.py may break 14 import paths
+  [9] !  SPLIT-FUNC      table_body_rows  CC=19  fan=15
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 285
+
+  [10] !  SPLIT-FUNC      no_rows  CC=19  fan=15
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 285
+
+
+RISKS[0]: none
 
 METRICS-TARGET:
-  CC̄:          4.4 → ≤3.1
-  max-CC:      38 → ≤19
-  god-modules: 3 → 0
-  high-CC(≥15): 16 → ≤8
+  CC̄:          4.2 → ≤2.9
+  max-CC:      24 → ≤12
+  god-modules: 0 → 0
+  high-CC(≥15): 15 → ≤7
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -79,4 +76,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.4 → now CC̄=4.4
+  prev CC̄=4.4 → now CC̄=4.2

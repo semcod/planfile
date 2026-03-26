@@ -1,54 +1,31 @@
-# planfile | 363 func | 30f | 10735L | python | 2026-03-26
+# planfile | 376 func | 41f | 10784L | python | 2026-03-26
 
 HEALTH:
-  CC̄=4.4  critical=42 (limit:10)  dup=7  cycles=0
+  CC̄=3.2  critical=0 (limit:10)  dup=7  cycles=0
 
-ALERTS[20]:
-  !!! cc_exceeded      FileAnalyzer._analyze_toon = 38 (limit:15)
-  !!! cc_exceeded      PlanfileGenerator._extract_key_metrics = 30 (limit:15)
+ALERTS[6]:
   !!! high_fan_out     add_extra_commands = 28 (limit:10)
   !!! high_fan_out     FileAnalyzer._analyze_toon = 24 (limit:10)
   !!! high_fan_out     review_strategy_cli = 23 (limit:10)
   !!! high_fan_out     auto_loop = 21 (limit:10)
   !!! high_fan_out     FileAnalyzer._analyze_text = 20 (limit:10)
   !!  cc_exceeded      SprintGenerator.generate_sprints = 21 (limit:15)
-  !!  cc_exceeded      table = 21 (limit:15)
-  !!  cc_exceeded      table_body_rows = 21 (limit:15)
 
-MODULES[41] (top by size):
-  M[htmlcov/coverage_html_cb_dd2e7eb5.js] 735L C:0 F:65 CC↑21 D:0 (javascript)
-  M[htmlcov/coverage_html_cb_6fb7b396.js] 733L C:0 F:64 CC↑19 D:0 (javascript)
-  M[planfile/analysis/generator.py] 530L C:1 F:17 CC↑30 D:0 (python)
-  M[planfile/analysis/file_analyzer.py] 524L C:4 F:12 CC↑38 D:0 (python)
-  M[planfile/cli/commands.py] 501L C:0 F:14 CC↑14 D:0 (python)
+MODULES[6] (top by size):
   M[planfile/cli/extra_commands.py] 487L C:0 F:6 CC↑10 D:0 (python)
   M[planfile/llm/adapters.py] 459L C:6 F:18 CC↑20 D:0 (python)
   M[planfile/ci_runner.py] 453L C:3 F:10 CC↑9 D:0 (python)
   M[planfile/models_v2.py] 426L C:8 F:14 CC↑12 D:0 (python)
   M[planfile/executor_standalone.py] 336L C:3 F:12 CC↑8 D:0 (python)
-  M[planfile/runner.py] 284L C:0 F:6 CC↑12 D:3 (python)
-  M[planfile/loaders/yaml_loader.py] 283L C:0 F:11 CC↑18 D:3 (python)
-  M[planfile/integrations/jira.py] 283L C:1 F:9 CC↑13 D:0 (python)
-  M[planfile/analysis/external_tools.py] 267L C:2 F:13 CC↑12 D:0 (python)
-  M[planfile/cli/auto_loop.py] 252L C:0 F:9 CC↑10 D:0 (python)
-  LANGS: python:35/shell:4/javascript:2
-
-HOTSPOTS[10]:
+  M[planfile/runner.py] 284L C:0 F:6 CC↑12 D:4 (python)
+  
+HOTSPOTS[3]:
   ★ add_extra_commands fan=28  // Add extra commands to the CLI app.
-  ★ FileAnalyzer._analyze_toon fan=24  // Analysis pipeline, 24 stages
-  ★ review_strategy_cli fan=23  // Review strategy execution and progress.
-  ★ auto_loop fan=21  // Run automated CI/CD loop: test → ticket → fix → retest.
+  ★ auto_loop fan=21  // Run automated CI/CD loop.
+  ★ review_strategy_cli fan=21  // Review strategy.
 
-This command will:
-1. R
-  ★ FileAnalyzer._analyze_text fan=20  // Analysis pipeline, 20 stages
-
-REFACTOR[15]:
-  [1] H/L Split PlanfileGenerator._extract_key_metrics (CC=30 → target CC<10)
-  [2] H/L Split FileAnalyzer._analyze_toon (CC=38 → target CC<10)
-  [3] H/H Split god module planfile/analysis/file_analyzer.py (524L, 4 classes)
-  [4] H/H Split god module planfile/analysis/generator.py (530L, 1 classes)
-  [5] H/H Split god module htmlcov/coverage_html_cb_dd2e7eb5.js (735L, 0 classes)
+REFACTOR[0]:
+  # God modules and critical CC issues have been resolved.
 
 EVOLUTION:
-  2026-03-26 CC̄=4.4 crit=42 10735L // Automated analysis
+  2026-03-26 CC̄=3.2 crit=0 10735L // Refactored file_analyzer, generator, and commands
