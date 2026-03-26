@@ -176,11 +176,11 @@ done
 echo "\\nValidation complete!"
 '''
     
-    with open("planfile/examples/validate_with_llx.sh", "w") as f:
+    with open("./validate_with_llx.sh", "w") as f:
         f.write(script)
     
-    os.chmod("planfile/examples/validate_with_llx.sh", 0o755)
-    print("✅ Created validation script: planfile/examples/validate_with_llx.sh")
+    os.chmod("./validate_with_llx.sh", 0o755)
+    print("✅ Created validation script: ./validate_with_llx.sh")
 
 if __name__ == "__main__":
     create_validation_script()

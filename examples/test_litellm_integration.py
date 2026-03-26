@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Optional
 import json
 
 # Add planfile to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from planfile.llm.client import call_llm
 from planfile.llm.generator import generate_strategy

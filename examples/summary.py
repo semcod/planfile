@@ -113,13 +113,13 @@ def create_summary():
     print("  - planfile/llm/generator.py")
     print("  - planfile/llm/client.py")
     print("  - planfile/llm/prompts.py")
-    print("  - planfile/examples/ecosystem/01_full_workflow.sh")
-    print("  - planfile/examples/ecosystem/02_mcp_integration.py")
-    print("  - planfile/examples/ecosystem/03_proxy_routing.py")
-    print("  - planfile/examples/ecosystem/04_llx_integration.py")
-    print("  - planfile/examples/test_all_examples.py")
-    print("  - planfile/examples/llx_validator.py")
-    print("  - planfile/examples/validate_with_llx.sh")
+    print("  - ./ecosystem/01_full_workflow.sh")
+    print("  - ./ecosystem/02_mcp_integration.py")
+    print("  - ./ecosystem/03_proxy_routing.py")
+    print("  - ./ecosystem/04_llx_integration.py")
+    print("  - ./test_all_examples.py")
+    print("  - ./llx_validator.py")
+    print("  - ./validate_with_llx.sh")
     
     print("\n🔧 Modified Files:")
     print("  - planfile/integrations/github.py")
@@ -128,7 +128,7 @@ def create_summary():
     print("  - planfile/cli/commands.py")
     print("  - planfile/cli/auto_loop.py")
     print("  - pyproject.toml")
-    print("  - planfile/examples/README.md")
+    print("  - ./README.md")
     
     print("\n🚀 Key Features Added:")
     print("  1. LLM-powered strategy generation via LiteLLM")
@@ -143,7 +143,7 @@ def create_summary():
     print("\n⚡ To test the implementation:")
     print("  1. Install: pip install -e .[all]")
     print("  2. Set OPENROUTER_API_KEY for validation")
-    print("  3. Run: python planfile/examples/test_all_examples.py")
+    print("  3. Run: python ./test_all_examples.py")
     
     print(f"\n📄 Detailed summary saved to: refactoring_summary.json")
 

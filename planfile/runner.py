@@ -7,6 +7,7 @@ import subprocess
 import json
 
 from .models import Strategy, Sprint, TaskPattern
+from .integrations.base import PMBackend
 
 
 def load_valid_strategy(path: str) -> Strategy:

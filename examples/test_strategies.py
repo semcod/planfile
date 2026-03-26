@@ -105,7 +105,7 @@ def main():
     print("Testing Planfile Example Strategies")
     print("=" * 60)
     
-    strategies_dir = Path("planfile/examples/strategies")
+    strategies_dir = Path("./strategies")
     if not strategies_dir.exists():
         print(f"❌ Strategies directory not found: {strategies_dir}")
         sys.exit(1)
