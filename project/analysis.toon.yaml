@@ -1,7 +1,8 @@
-# code2llm | 27f 4580L | python:24,shell:2,javascript:1 | 2026-03-26
-# CC̄=4.4 | critical:7/233 | dups:0 | cycles:0
+# code2llm | 34f 6773L | python:30,javascript:2,shell:2 | 2026-03-26
+# CC̄=4.1 | critical:12/354 | dups:0 | cycles:0
 
-HEALTH[7]:
+HEALTH[12]:
+  🟡 CC    generate_report CC=20 (limit:15)
   🟡 CC    update_ticket CC=15 (limit:15)
   🟡 CC    table CC=21 (limit:15)
   🟡 CC    table_body_rows CC=21 (limit:15)
@@ -9,45 +10,50 @@ HEALTH[7]:
   🟡 CC    footer CC=21 (limit:15)
   🟡 CC    ratio_columns CC=21 (limit:15)
   🟡 CC    filter_handler CC=21 (limit:15)
+  🟡 CC    table CC=19 (limit:15)
+  🟡 CC    table_body_rows CC=19 (limit:15)
+  🟡 CC    no_rows CC=19 (limit:15)
+  🟡 CC    filter_handler CC=19 (limit:15)
 
 REFACTOR[1]:
-  1. split 7 high-CC methods  (CC>15)
+  1. split 12 high-CC methods  (CC>15)
 
-PIPELINES[131]:
-  [1] Src [validate_strategy]: validate_strategy
+PIPELINES[216]:
+  [1] Src [planfile_generate]: planfile_generate
       PURITY: 100% pure
-  [2] Src [analyze_generated_code]: analyze_generated_code
+  [2] Src [planfile_apply]: planfile_apply
       PURITY: 100% pure
-  [3] Src [_is_llx_available]: _is_llx_available
+  [3] Src [planfile_review]: planfile_review
       PURITY: 100% pure
-  [4] Src [_parse_llx_analysis]: _parse_llx_analysis
+  [4] Src [main]: main
       PURITY: 100% pure
-  [5] Src [_basic_code_analysis]: _basic_code_analysis
+  [5] Src [main]: main → print
       PURITY: 100% pure
 
 LAYERS:
-  htmlcov/                        CC̄=4.6    ←in:0  →out:0
-  │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
-  │
-  planfile/                       CC̄=4.5    ←in:2  →out:3
+  planfile/                       CC̄=4.3    ←in:6  →out:1
+  │ !! adapters                   459L  6C   18m  CC=20     ←0
   │ ci_runner                  453L  3C   10m  CC=9      ←0
   │ commands                   421L  0C   13m  CC=14     ←0
-  │ runner                     324L  1C    8m  CC=13     ←2
+  │ executor_standalone        336L  3C   12m  CC=8      ←1
+  │ runner                     284L  0C    6m  CC=12     ←3
   │ jira                       283L  1C    9m  CC=13     ←0
   │ yaml_loader                261L  0C   11m  CC=12     ←2
+  │ models_v2                  259L  8C   10m  CC=9      ←2
   │ auto_loop                  252L  0C    9m  CC=10     ←0
   │ !! gitlab                     237L  1C    7m  CC=15     ←0
-  │ metrics                    229L  0C    5m  CC=8      ←1
+  │ metrics                    229L  0C    5m  CC=8      ←0
   │ github                     201L  1C    7m  CC=14     ←0
   │ generic                    197L  1C    8m  CC=8      ←0
   │ cli_loader                 194L  0C   10m  CC=7      ←0
-  │ generator                  124L  0C    5m  CC=8      ←1
+  │ models                     159L  8C    5m  CC=6      ←1
+  │ generator                  146L  0C    6m  CC=8      ←1
+  │ examples                   141L  0C    5m  CC=2      ←0
   │ base                       112L  4C    9m  CC=4      ←0
-  │ priorities                 111L  0C    3m  CC=4      ←1
-  │ models                      97L  7C    2m  CC=3      ←0
+  │ priorities                 111L  0C    3m  CC=4      ←0
   │ prompts                     63L  0C    1m  CC=5      ←1
   │ client                      63L  0C    1m  CC=4      ←1
-  │ __init__                    23L  0C    0m  CC=0.0    ←0
+  │ __init__                    55L  0C    0m  CC=0.0    ←0
   │ __main__                     4L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
@@ -55,8 +61,14 @@ LAYERS:
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │
-  ./                              CC̄=0.0    ←in:0  →out:0
+  htmlcov/                        CC̄=4.3    ←in:0  →out:0
+  │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
+  │ !! coverage_html_cb_6fb7b396.js   733L  0C   64m  CC=19     ←0
+  │
+  ./                              CC̄=1.2    ←in:0  →out:0
   │ docker-entrypoint.sh       174L  0C    5m  CC=0.0    ←0
+  │ example_standalone         162L  0C    4m  CC=5      ←0
+  │ mcp-server-example          27L  0C    4m  CC=1      ←0
   │ project.sh                  21L  0C    0m  CC=0.0    ←0
   │
   ── zero ──
@@ -66,14 +78,15 @@ LAYERS:
      planfile/utils/__init__.py                0L
 
 COUPLING:
-                        planfile.cli          planfile  planfile.loaders    planfile.utils      planfile.llm
-      planfile.cli                ──                 2                 4                                   1
-          planfile                ←2                ──                 1                 2                  
-  planfile.loaders                ←4                ←1                ──                                      hub
-    planfile.utils                                  ←2                                  ──                  
-      planfile.llm                ←1                                                                      ──
+                                planfile        planfile.cli    planfile.loaders  example_standalone        planfile.llm
+            planfile                  ──                  ←2                   1                  ←4                      hub
+        planfile.cli                   2                  ──                   4                                       1
+    planfile.loaders                  ←1                  ←4                  ──                                          hub
+  example_standalone                   4                                                          ──                    
+        planfile.llm                                      ←1                                                          ──
   CYCLES: none
   HUB: planfile.loaders/ (fan-in=5)
+  HUB: planfile/ (fan-in=6)
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon

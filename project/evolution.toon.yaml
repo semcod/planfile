@@ -1,6 +1,6 @@
-# code2llm/evolution | 188 func | 19f | 2026-03-26
+# code2llm/evolution | 307 func | 26f | 2026-03-26
 
-NEXT[7] (ranked by impact):
+NEXT[10] (ranked by impact):
   [1] !  SPLIT-FUNC      table  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
@@ -25,18 +25,30 @@ NEXT[7] (ranked by impact):
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [7] !  SPLIT-FUNC      GitLabBackend.update_ticket  CC=15  fan=7
-      WHY: CC=15 exceeds 15
-      EFFORT: ~1h  IMPACT: 105
+  [7] !  SPLIT-FUNC      table  CC=19  fan=15
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 285
+
+  [8] !  SPLIT-FUNC      table_body_rows  CC=19  fan=15
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 285
+
+  [9] !  SPLIT-FUNC      no_rows  CC=19  fan=15
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 285
+
+  [10] !  SPLIT-FUNC      filter_handler  CC=19  fan=15
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 285
 
 
 RISKS[0]: none
 
 METRICS-TARGET:
-  CC̄:          4.4 → ≤3.1
+  CC̄:          4.1 → ≤2.9
   max-CC:      21 → ≤10
   god-modules: 0 → 0
-  high-CC(≥15): 7 → ≤3
+  high-CC(≥15): 12 → ≤6
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -64,4 +76,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.9 → now CC̄=4.4
+  prev CC̄=4.4 → now CC̄=4.1

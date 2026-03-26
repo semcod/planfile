@@ -1,18 +1,23 @@
-# planfile | 27f 4580L | python:24,javascript:1,shell:2 | 2026-03-26
-# stats: 188 func | 0 cls | 27 mod | CC̄=4.4 | critical:7 | cycles:0
+# planfile | 34f 6773L | python:30,javascript:2,shell:2 | 2026-03-26
+# stats: 307 func | 0 cls | 34 mod | CC̄=4.1 | critical:12 | cycles:0
 # alerts[5]: fan-out review_strategy_cli=23; fan-out auto_loop=21; CC filter_handler=21; CC footer=21; CC no_rows=21
 # hotspots[5]: review_strategy_cli fan=23; auto_loop fan=21; apply_strategy_cli fan=15; sortColumn fan=15; table fan=15
-# evolution: CC̄ 4.9→4.4 (improved -0.5)
+# evolution: CC̄ 4.4→4.1 (improved -0.3)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[27]:
+M[34]:
   docker-entrypoint.sh,174
+  example_standalone.py,162
+  htmlcov/coverage_html_cb_6fb7b396.js,733
   htmlcov/coverage_html_cb_dd2e7eb5.js,735
-  planfile/__init__.py,23
+  mcp-server-example.py,27
+  planfile/__init__.py,55
   planfile/ci_runner.py,453
   planfile/cli/__init__.py,0
   planfile/cli/__main__.py,4
   planfile/cli/auto_loop.py,252
   planfile/cli/commands.py,421
+  planfile/examples.py,141
+  planfile/executor_standalone.py,336
   planfile/integrations/__init__.py,0
   planfile/integrations/base.py,112
   planfile/integrations/generic.py,197
@@ -20,14 +25,16 @@ M[27]:
   planfile/integrations/gitlab.py,237
   planfile/integrations/jira.py,283
   planfile/llm/__init__.py,1
+  planfile/llm/adapters.py,459
   planfile/llm/client.py,63
-  planfile/llm/generator.py,124
+  planfile/llm/generator.py,146
   planfile/llm/prompts.py,63
   planfile/loaders/__init__.py,0
   planfile/loaders/cli_loader.py,194
   planfile/loaders/yaml_loader.py,261
-  planfile/models.py,97
-  planfile/runner.py,324
+  planfile/models.py,159
+  planfile/models_v2.py,259
+  planfile/runner.py,284
   planfile/utils/__init__.py,0
   planfile/utils/metrics.py,229
   planfile/utils/priorities.py,111
@@ -112,6 +119,92 @@ D:
     ctxs()
     ctxs_text()
     width()
+  planfile/llm/adapters.py:
+    e: LLMTestResult,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAdapter,LocalLLMAdapter,LLMTestRunner
+    LLMTestResult:  # Result of LLM test...
+    BaseLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Base class for LLM adapters...
+    LiteLLMAdapter(BaseLLMAdapter): __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for LiteLLM providers...
+    OpenRouterAdapter(BaseLLMAdapter): __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for OpenRouter API...
+    LocalLLMAdapter(BaseLLMAdapter): __init__(1),test_strategy_generation(2),_test_ollama(2),_test_openai_compatible(2),get_available_models(0)  # Adapter for local LLM servers (Ollama, LM Studio, etc.)...
+    LLMTestRunner: __init__(0),register_adapter(2),test_strategy_with_all_adapters(2),generate_report(1)  # Run tests across multiple LLM adapters...
+  htmlcov/coverage_html_cb_6fb7b396.js:
+    e: debounce,timeoutId,checkVisible,rect,viewBottom,viewTop,on_click,elt,getCellValue,cell,child,rowComparator,valueA,valueB,sortColumn,currentSortOrder,current_direction,stored_list,saved_filter_value,saved_hide100_value,table,table_body_rows,no_rows,filter_handler,totals,text,casefold,hide100,show,celltext,footer,cell,places,stored_list,by_region,sorted_by_region,frag,btn,category,btn,helpCheck,classes,match,c,probe,begin,next_indicator,c,probe,probe_line,chunk_indicator,end,prev_indicator,begin,end,line,line,c,probe_line,the_indicator,probe,indicator,begin,element,temp_scroll_marker,marker_scale,line_height,scroll_marker,line_top,line_number,header,header_bottom,updateHeader,ctxs,ctxs_text,width
+    debounce()
+    timeoutId()
+    checkVisible()
+    rect()
+    viewBottom()
+    viewTop()
+    on_click()
+    elt()
+    getCellValue()
+    cell()
+    child()
+    rowComparator()
+    valueA()
+    valueB()
+    sortColumn()
+    currentSortOrder()
+    current_direction()
+    stored_list()
+    saved_filter_value()
+    saved_hide100_value()
+    table()
+    table_body_rows()
+    no_rows()
+    filter_handler()
+    totals()
+    text()
+    casefold()
+    hide100()
+    show()
+    celltext()
+    footer()
+    cell()
+    places()
+    stored_list()
+    by_region()
+    sorted_by_region()
+    frag()
+    btn()
+    category()
+    btn()
+    helpCheck()
+    classes()
+    match()
+    c()
+    probe()
+    begin()
+    next_indicator()
+    c()
+    probe()
+    probe_line()
+    chunk_indicator()
+    end()
+    prev_indicator()
+    begin()
+    end()
+    line()
+    line()
+    c()
+    probe_line()
+    the_indicator()
+    probe()
+    indicator()
+    begin()
+    element()
+    temp_scroll_marker()
+    marker_scale()
+    line_height()
+    scroll_marker()
+    line_top()
+    line_number()
+    header()
+    header_bottom()
+    updateHeader()
+    ctxs()
+    ctxs_text()
+    width()
   planfile/integrations/gitlab.py:
     e: GitLabBackend
     GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
@@ -133,14 +226,17 @@ D:
   planfile/integrations/github.py:
     e: GitHubBackend
     GitHubBackend(BasePMBackend): __init__(2),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitHub Issues integration backend...
-  planfile/runner.py:
-    e: StrategyRunner,apply_strategy,review_strategy
-    StrategyRunner: __init__(1),apply_strategy(5),review_strategy(3),_find_task_pattern(2),_create_ticket_for_task(5),_get_sprint_tickets(3)  # Main runner for applying and reviewing strategies...
-    apply_strategy(strategy;project_path;backends;backend_name;dry_run;sprint_filter)
-    review_strategy(strategy;project_path;backends;backend_name)
   planfile/integrations/jira.py:
     e: JiraBackend
     JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Jira integration backend...
+  planfile/runner.py:
+    e: load_valid_strategy,verify_strategy_post_execution,analyze_project_metrics,apply_strategy_to_tickets,review_strategy,run_strategy
+    load_valid_strategy(path)
+    verify_strategy_post_execution(strategy;project_path;backend)
+    analyze_project_metrics(project_path)
+    apply_strategy_to_tickets(strategy;project_path;backend;dry_run)
+    review_strategy(strategy;project_path;backends;backend_name)
+    run_strategy(strategy_path;project_path;backend;dry_run)
   planfile/loaders/yaml_loader.py:
     e: load_yaml,save_yaml,load_strategy_yaml,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,_check_required_keys,_validate_sprints,_validate_gates,_validate_task_patterns,validate_strategy_schema
     load_yaml(file_path)
@@ -171,12 +267,31 @@ D:
     BugReport:  # Generated bug report from test failures...
     CIRunner: __init__(6),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop...
     main()
+  planfile/models_v2.py:
+    e: TaskType,ModelTier,ModelHints,Task,Sprint,QualityGate,Goal,Strategy
+    TaskType(str,Enum):  # Type of task in the planfile...
+    ModelTier(str,Enum):  # Model tier for different phases of work...
+    ModelHints(BaseModel): convert_str_to_tier(1)  # AI model hints for different phases of task execution...
+    Task(BaseModel): normalize_model_hints(1)  # A task in a sprint - simplified and directly embedded...
+    Sprint(BaseModel): convert_tasks(1)  # A sprint in the planfile - simplified...
+    QualityGate(BaseModel): normalize_criteria(1)  # Quality gate definition...
+    Goal(BaseModel):  # Project goal definition...
+    Strategy(BaseModel): get_task_patterns(0),get_sprint(1),to_llx_format(0),load_flexible(1),_convert_old_format(0),to_yaml(0)  # Main strategy configuration - simplified and more flexible...
+  planfile/executor_standalone.py:
+    e: TaskResult,LLMClient,StrategyExecutor,create_openai_client,create_litellm_client,execute_strategy
+    TaskResult:  # Result of executing a task...
+    LLMClient: __init__(2),chat(2)  # Simple LLM client interface...
+    StrategyExecutor: __init__(2),_default_config(0),execute_strategy(2),_execute_task(4),_select_model(1),_build_prompt(2),_get_project_metrics(1)  # Standalone strategy executor...
+    create_openai_client(api_key;model)
+    create_litellm_client(api_key;model)
+    execute_strategy(strategy_path;project_path)
   planfile/llm/generator.py:
-    e: generate_strategy,_collect_metrics,_auto_select_model,_parse_strategy_response,_basic_metrics
+    e: generate_strategy,_collect_metrics,_auto_select_model,_parse_strategy_response,_fix_yaml_formatting,_basic_metrics
     generate_strategy(project_path)
     _collect_metrics(project_path;toon_dir)
     _auto_select_model(metrics)
     _parse_strategy_response(response)
+    _fix_yaml_formatting(yaml_text)
     _basic_metrics(project_path)
   planfile/utils/metrics.py:
     e: _collect_git_metrics,_count_files_by_language,_check_project_files,analyze_project_metrics,calculate_strategy_health
@@ -200,6 +315,22 @@ D:
     _md_sprints(results)
     _md_metrics(results)
     export_results_to_markdown(results;file_path)
+  planfile/models.py:
+    e: TaskType,ModelTier,ModelHints,TaskPattern,Sprint,Goal,QualityGate,Strategy
+    TaskType(str,Enum):  # Type of task in the strategy...
+    ModelTier(str,Enum):  # Model tier for different phases of work...
+    ModelHints(BaseModel):  # AI model hints for different phases of task execution...
+    TaskPattern(BaseModel):  # A pattern for generating tasks...
+    Sprint(BaseModel):  # A sprint in the strategy...
+    Goal(BaseModel):  # Project goal definition...
+    QualityGate(BaseModel):  # Quality gate definition...
+    Strategy(BaseModel): validate_sprint_ids(1),get_task_patterns(1),get_sprint(1),model_validate_yaml(1),model_dump_yaml(0)  # Main strategy configuration...
+  example_standalone.py:
+    e: example_1_basic_usage,example_2_with_openai,example_3_custom_client,example_4_model_configuration
+    example_1_basic_usage()
+    example_2_with_openai()
+    example_3_custom_client()
+    example_4_model_configuration()
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)
@@ -217,15 +348,19 @@ D:
     TicketStatus(BaseModel):  # Status of a ticket...
     PMBackend(Protocol): create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Protocol for PM system backends...
     BasePMBackend(ABC): __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1)  # Base class for PM backends with common functionality...
-  planfile/models.py:
-    e: TaskType,ModelTier,ModelHints,TaskPattern,Sprint,QualityGate,Strategy
-    TaskType(str,Enum):  # Type of task in the planfile...
-    ModelTier(str,Enum):  # Model tier for different phases of work...
-    ModelHints(BaseModel):  # AI model hints for different phases of task execution...
-    TaskPattern(BaseModel):  # A pattern for generating tasks...
-    Sprint(BaseModel):  # A sprint in the planfile...
-    QualityGate(BaseModel):  # Quality gate definition...
-    Strategy(BaseModel): get_task_patterns(1),get_sprint(1)  # Main strategy configuration...
+  planfile/examples.py:
+    e: example_create_strategy,example_validate_strategy,example_run_strategy,example_verify_strategy,example_programmatic_strategy
+    example_create_strategy()
+    example_validate_strategy()
+    example_run_strategy()
+    example_verify_strategy()
+    example_programmatic_strategy()
+  mcp-server-example.py:
+    e: planfile_generate,planfile_apply,planfile_review,main
+    planfile_generate(arguments)
+    planfile_apply(arguments)
+    planfile_review(arguments)
+    main()
   planfile/__init__.py:
   planfile/loaders/__init__.py:
   planfile/cli/__init__.py:

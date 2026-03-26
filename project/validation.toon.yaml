@@ -1,41 +1,74 @@
-# vallm batch | 70f | 29✓ 5⚠ 19✗ | 2026-03-26
+# vallm batch | 103f | 41✓ 5⚠ 33✗ | 2026-03-26
 
 SUMMARY:
-  scanned: 70  passed: 29 (41.4%)  warnings: 5  errors: 19  unsupported: 22
+  scanned: 103  passed: 41 (39.8%)  warnings: 5  errors: 33  unsupported: 29
 
 WARNINGS[5]{path,score}:
-  planfile/examples/bash-generation/verify_planfile.sh,0.97
+  examples/bash-generation/verify_planfile.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
-  planfile/examples/ecosystem/04_llx_integration.py,0.97
+  examples/ecosystem/04_llx_integration.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,example_metric_driven_planning: 175 lines exceeds limit 100,176
-  planfile/examples/interactive-tests/test_interactive_mode.py,0.97
+  examples/interactive-tests/test_interactive_mode.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,test_interactive_mode: 131 lines exceeds limit 100,33
-  planfile/examples/summary.py,0.97
+  examples/summary.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,create_summary: 126 lines exceeds limit 100,10
-  planfile/examples/validate_with_llx.sh,0.97
+  examples/validate_with_llx.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
 
-ERRORS[19]{path,score}:
-  planfile/__init__.py,0.57
+ERRORS[33]{path,score}:
+  examples/demo_without_keys.py,0.00
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,14
+      syntax.parse,error,SyntaxError: unmatched ')',303
+  examples/demo_without_keys_fixed.py,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.parse,error,SyntaxError: unterminated triple-quoted string literal (detected at line 328),307
+  examples/llm-config.yaml,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
+  examples/llm_integration_demo.py,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.parse,error,SyntaxError: unmatched ')',164
+  planfile/__init__.py,0.57
+    issues[5]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,15
+      python.import.resolvable,error,Module 'models_v2' not found,18
+      python.import.resolvable,error,Module 'runner' not found,21
+      python.import.resolvable,error,Module 'executor_standalone' not found,22
+      python.import.resolvable,error,Module 'executor_standalone' not found,23
   planfile/cli/__main__.py,0.57
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'commands' not found,1
   tests/test_strategy.py,0.57
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile' not found,11
+  planfile/examples.py,0.64
+    issues[5]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'llx.planfile' not found,9
+      python.import.resolvable,error,Module 'llx.planfile' not found,22
+      python.import.resolvable,error,Module 'llx.planfile' not found,35
+      python.import.resolvable,error,Module 'llx.planfile' not found,48
+      python.import.resolvable,error,Module 'llx.planfile.models' not found,66
   planfile/llm/client.py,0.66
     issues[4]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,17
       python.import.resolvable,error,Module 'httpx' not found,35
       python.import.resolvable,error,Module 'llx.routing.client' not found,54
       python.import.resolvable,error,Module 'llx.config' not found,55
+  example_standalone.py,0.68
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile' not found,5
+      python.import.resolvable,error,Module 'planfile' not found,92
+      python.import.resolvable,error,Module 'planfile' not found,133
+  mcp-server-example.py,0.68
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'mcp.server' not found,3
+      python.import.resolvable,error,Module 'mcp.server.stdio' not found,4
+      python.import.resolvable,error,Module 'planfile.mcp' not found,5
   planfile/integrations/github.py,0.71
     issues[4]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.integrations.base' not found,12
@@ -58,18 +91,12 @@ ERRORS[19]{path,score}:
       python.import.resolvable,error,Module 'jira.exceptions' not found,5
   planfile/llm/generator.py,0.74
     issues[6]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'planfile.models' not found,16
+      python.import.resolvable,error,Module 'models' not found,15
       python.import.resolvable,error,Module 'planfile.llm.prompts' not found,17
       python.import.resolvable,error,Module 'planfile.llm.client' not found,18
       python.import.resolvable,error,Module 'llx' not found,66
       python.import.resolvable,error,Module 'llx' not found,87
       python.import.resolvable,error,Module 'llx.analysis.collector' not found,88
-  planfile/runner.py,0.79
-    issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,6
-      python.import.resolvable,error,Module 'integrations.base' not found,7
-      python.import.resolvable,error,Module 'utils.metrics' not found,8
-      python.import.resolvable,error,Module 'utils.priorities' not found,9
   planfile/utils/priorities.py,0.79
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,2
@@ -92,6 +119,24 @@ ERRORS[19]{path,score}:
       python.import.resolvable,error,Module 'planfile.integrations.github' not found,17
       python.import.resolvable,error,Module 'planfile.integrations.jira' not found,18
       python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,19
+  planfile/executor_standalone.py,0.86
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models_v2' not found,10
+      python.import.resolvable,error,Module 'openai' not found,285
+      python.import.resolvable,error,Module 'litellm' not found,303
+  planfile/runner.py,0.86
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,9
+      python.import.resolvable,error,Module 'integrations.base' not found,10
+  examples/test_litellm_integration.py,0.88
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.llm.client' not found,17
+      python.import.resolvable,error,Module 'planfile.llm.generator' not found,18
+      python.import.resolvable,error,Module 'planfile.models' not found,19
+  planfile/builder.py,0.88
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'models' not found,10
+      python.import.resolvable,error,Module 'models' not found,304
   planfile/cli/auto_loop.py,0.88
     issues[4]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.ci_runner' not found,11
@@ -104,18 +149,33 @@ ERRORS[19]{path,score}:
   planfile/loaders/cli_loader.py,0.89
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,5
+  test_improvements.py,0.89
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile' not found,20
+      python.import.resolvable,error,Module 'planfile' not found,130
+  test_planfile_final.py,0.89
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.models_v2' not found,16
+      python.import.resolvable,error,Module 'planfile.executor_v2' not found,17
+  planfile/llm/adapters.py,0.90
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'litellm' not found,14
+      python.import.resolvable,error,Module 'httpx' not found,21
   planfile/loaders/yaml_loader.py,0.91
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,6
-  planfile/examples/ecosystem/03_proxy_routing.py,0.93
+  examples/ecosystem/03_proxy_routing.py,0.93
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'aiohttp' not found,9
-  planfile/examples/test_all_examples.py,0.96
+  examples/test_llm_adapters.py,0.94
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.llm.adapters' not found,16
+  examples/test_all_examples.py,0.96
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'aiohttp' not found,16
 
 UNSUPPORTED[5]{bucket,count}:
-  *.md,11
+  *.md,18
   Dockerfile*,1
   *.txt,1
   *.yml,2
