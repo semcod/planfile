@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.26] - 2026-03-26
+
+### Docs
+- Update TODO.md
+- Update examples/EXAMPLES_REORGANIZATION.md
+- Update examples/README.md
+- Update examples/advanced-usage/README.md
+- Update examples/cli-commands/README.md
+- Update examples/external-tools/README.md
+- Update examples/integrated-functionality/README.md
+- Update examples/quick-start/README.md
+
+### Other
+- Update examples/advanced-usage/advanced_usage_examples.py
+- Update examples/advanced-usage/run.sh
+- Update examples/cli-commands/cli_command_examples.py
+- Update examples/cli-commands/run.sh
+- Update examples/external-tools/external_tools_examples.py
+- Update examples/external-tools/run.sh
+- Update examples/integrated-functionality/integrated_functionality_examples.py
+- Update examples/integrated-functionality/run.sh
+- Update examples/quick-start.yaml
+- Update examples/quick-start/quick_start_examples.py
+- ... and 20 more files
+
 ## [0.1.25] - 2026-03-26
 
 ### Docs
