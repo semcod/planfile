@@ -1,53 +1,38 @@
 #!/bin/bash
-# Integrated Functionality Example Runner
+set -e
 
-echo "🚀" * 20
-echo "INTEGRATED FUNCTIONALITY EXAMPLES"
-echo "🚀" * 20
-echo ""
+echo "🚀 PLANFILE INTEGRATED FUNCTIONALITY (CLI)"
 
-# Check if planfile is installed
-if ! python3 -c "import planfile" 2>/dev/null; then
-    echo "❌ planfile not found. Install with:"
-    echo "   pip install -e ."
-    exit 1
-fi
+echo "--------------------------------------------------"
+echo "1. Generate from Files (with focus)"
+planfile generate-from-files ../strategies --project-name "planfile-core" --focus quality --max-sprints 2 --output generated.yaml
 
-# Check for optional external tools
-echo "🔧 Checking for external tools..."
-if command -v code2llm &> /dev/null; then
-    echo "  ✓ code2llm found"
-else
-    echo "  ⚠ code2llm not found (optional)"
-fi
+echo "--------------------------------------------------"
+echo "2. Generate Templates for Multiple Domains"
+planfile template web ecommerce --output web-ecommerce.yaml
+planfile template mobile healthcare --output mobile-healthcare.yaml
+planfile template ml finance --output ml-finance.yaml
 
-if command -v vallm &> /dev/null; then
-    echo "  ✓ vallm found"
-else
-    echo "  ⚠ vallm not found (optional)"
-fi
+echo "--------------------------------------------------"
+echo "3. Compare Strategies"
+planfile compare web-ecommerce.yaml mobile-healthcare.yaml || true
 
-if command -v redup &> /dev/null; then
-    echo "  ✓ redup found"
-else
-    echo "  ⚠ redup not found (optional)"
-fi
+echo "--------------------------------------------------"
+echo "4. Export Formats"
+planfile export web-ecommerce.yaml --format json --output web.json
+planfile export web-ecommerce.yaml --format html --output web.html
+planfile export web-ecommerce.yaml --format csv --output web.csv
 
-echo ""
-echo "Running integrated functionality examples..."
-echo ""
+echo "--------------------------------------------------"
+echo "5. Strategy Statistics"
+planfile stats web-ecommerce.yaml
 
-# Run the example
-python3 integrated_functionality_examples.py
+echo "--------------------------------------------------"
+echo "6. Merge Strategies"
+planfile merge web-ecommerce.yaml mobile-healthcare.yaml ml-finance.yaml --name "Merged Multi-Domain" --output merged.yaml
 
-echo ""
-echo "✅ Integrated functionality examples complete!"
-echo ""
-echo "Generated files:"
-echo "  Strategies:"
-ls -la *-strategy.yaml *-template.yaml 2>/dev/null | grep -v "^total" || echo "    No strategy files"
-echo ""
-echo "  Exports:"
-ls -la *-export.* 2>/dev/null | grep -v "^total" || echo "    No export files"
-echo ""
-echo "Next: Try 'cd ../cli-commands && ./run.sh' for CLI examples"
+echo "--------------------------------------------------"
+echo "7. External Tools (if available)"
+planfile generate-from-files ../../ --project-name "planfile-external" --external-tools --output external.yaml || true
+
+echo "✅ ALL EXAMPLES COMPLETED!"

@@ -159,6 +159,10 @@ This command will:
 > Run all external tools examples.
 - **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.external-tools.external_tools_examples.example_1_check_external_tools, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, results.get
 
+### examples.cli-commands.cli_command_examples.main
+> Demonstrate CLI commands.
+- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, os.chdir, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command
+
 ### examples.advanced-usage.advanced_usage_examples.example_3_iterative_refinement
 > Example 3: Iteratively refine a strategy.
 - **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, generator.generate_from_current_project, examples.bash-generation.verify_planfile.print, planfile.loaders.yaml_loader.save_strategy_yaml, planfile.loaders.yaml_loader.load_strategy_yaml
@@ -166,10 +170,6 @@ This command will:
 ### examples.advanced-usage.advanced_usage_examples.main
 > Run all advanced examples.
 - **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, results.items, examples.bash-generation.verify_planfile.print
-
-### examples.cli-commands.cli_command_examples.main
-> Demonstrate CLI commands.
-- **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, os.chdir, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command, examples.cli-commands.cli_command_examples.run_command
 
 ### examples.external-tools.external_tools_examples.example_5_custom_analysis
 > Example 5: Custom analysis with specific focus.
@@ -416,6 +416,10 @@ example_4_batch_processing [examples.advanced-usage.advanced_usage_examples]
 
 Key functions that process and transform data:
 
+### planfile.examples.example_validate_strategy
+> Load and validate an existing strategy.
+- **Output to**: planfile.runner.load_valid_strategy, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, len
+
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
 - **Output to**: self._is_llx_available, subprocess.run, str, str
@@ -423,10 +427,6 @@ Key functions that process and transform data:
 ### examples.llx_validator.LLXValidator._parse_llx_analysis
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
-
-### planfile.examples.example_validate_strategy
-> Load and validate an existing strategy.
-- **Output to**: planfile.runner.load_valid_strategy, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, len
 
 ### planfile.loaders.yaml_loader._validate_sprints
 > Validate sprint section.
@@ -447,6 +447,9 @@ Args:
     file_path: Path to strategy YAML f
 - **Output to**: planfile.loaders.yaml_loader._check_required_keys, planfile.loaders.yaml_loader._validate_sprints, planfile.loaders.yaml_loader._validate_gates, planfile.loaders.yaml_loader._validate_task_patterns, planfile.loaders.yaml_loader.load_yaml
 
+### planfile.analysis.generator.PlanfileGenerator._parse_effort
+- **Output to**: parse_effort
+
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
 > Parse code2llm analysis.toon.yaml output.
 - **Output to**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists
@@ -458,9 +461,6 @@ Args:
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_redup_output
 > Parse redup duplication.toon.yaml output.
 - **Output to**: AnalysisResults, re.search, re.search, dup_file.exists, self._mock_redup_data
-
-### planfile.analysis.generator.PlanfileGenerator._parse_effort
-- **Output to**: parse_effort
 
 ### planfile.cli.auto_loop._validate_strategy
 > Validate strategy file exists.
@@ -482,6 +482,18 @@ Args:
 > Load strategy from YAML string.
 - **Output to**: yaml.safe_load, cls.model_validate, isinstance, obj.items, isinstance
 
+### planfile.integrations.gitlab.GitLabBackend._validate_config
+> Validate GitLab configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError
+
+### planfile.integrations.jira.JiraBackend._validate_config
+> Validate Jira configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
+
+### planfile.integrations.github.GitHubBackend._validate_config
+> Validate GitHub configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError, ValueError
+
 ### planfile.models_v2.ModelHints.convert_str_to_tier
 - **Output to**: field_validator, isinstance
 
@@ -495,18 +507,6 @@ Args:
 ### planfile.models_v2.Strategy._convert_old_format
 > Convert old format with separate task patterns to new format.
 - **Output to**: data.get, sprint.get, sprint.pop, sprint.pop, None.get
-
-### planfile.integrations.gitlab.GitLabBackend._validate_config
-> Validate GitLab configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError
-
-### planfile.integrations.github.GitHubBackend._validate_config
-> Validate GitHub configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError, ValueError
-
-### planfile.integrations.jira.JiraBackend._validate_config
-> Validate Jira configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
 
 ### planfile.integrations.generic.GenericBackend._validate_config
 > Validate generic backend configuration.
@@ -539,9 +539,9 @@ Functions exposed as public API (no underscore prefix):
 - `examples.advanced-usage.advanced_usage_examples.example_4_batch_processing` - 32 calls
 - `planfile.analysis.parsers.text_parser.analyze_text` - 30 calls
 - `examples.external-tools.external_tools_examples.main` - 30 calls
+- `examples.cli-commands.cli_command_examples.main` - 29 calls
 - `examples.advanced-usage.advanced_usage_examples.example_3_iterative_refinement` - 29 calls
 - `examples.advanced-usage.advanced_usage_examples.main` - 29 calls
-- `examples.cli-commands.cli_command_examples.main` - 29 calls
 - `examples.external-tools.external_tools_examples.example_5_custom_analysis` - 28 calls
 - `planfile.cli.auto_loop.ci_status` - 27 calls
 - `examples.ecosystem.02_mcp_integration.example_mcp_session` - 26 calls
@@ -593,10 +593,10 @@ graph TD
     example_4_batch_proc --> print
     example_4_batch_proc --> items
     main --> example_1_check_exte
-    example_3_iterative_ --> print
-    example_3_iterative_ --> generate_from_curren
     main --> chdir
     main --> run_command
+    example_3_iterative_ --> print
+    example_3_iterative_ --> generate_from_curren
     example_5_custom_ana --> print
     example_5_custom_ana --> Path
     example_5_custom_ana --> mkdir

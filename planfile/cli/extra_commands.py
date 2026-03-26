@@ -301,6 +301,39 @@ def calculate_strategy_stats(strategy: Strategy) -> Dict[str, Any]:
 def add_extra_commands(app):
     """Add extra commands to the CLI app."""
     
+    @app.command("merge")
+    def merge_cmd(
+        files: List[str] = typer.Argument(..., help="Paths to strategy files to merge"),
+        output: str = typer.Option("merged-strategy.yaml", "--output", "-o", help="Output file path"),
+        name: Optional[str] = typer.Option(None, "--name", "-n", help="Name for the merged strategy"),
+    ):
+        """Merge multiple planfile strategies into one."""
+        from planfile import Strategy
+        from planfile.loaders.yaml_loader import load_strategy_yaml, save_strategy_yaml
+        
+        try:
+            if len(files) < 2:
+                console.print("[yellow]⚠[/yellow] Provide at least two strategy files to merge.")
+                raise typer.Exit(1)
+            
+            strategies = []
+            for f in files:
+                console.print(f"[dim]Loading '{f}'...[/dim]")
+                strategies.append(load_strategy_yaml(f))
+            
+            base_strategy = strategies[0]
+            merged = base_strategy.merge(strategies[1:], name=name)
+            
+            save_strategy_yaml(merged, output)
+            
+            console.print(f"[green]✓[/green] Successfully merged {len(files)} strategies.")
+            console.print(f"  Name: {merged.name}")
+            console.print(f"  Total sprints: {len(merged.sprints)}")
+            console.print(f"  Output saved to: {output}")
+        except Exception as e:
+            console.print(f"[red]✗[/red] Merge failed: {e}")
+            raise typer.Exit(1)
+    
     @app.command("export")
     def export_cmd(
         strategy_file: str = typer.Argument(..., help="Strategy file to export"),

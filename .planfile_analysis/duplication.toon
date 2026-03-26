@@ -1,17 +1,17 @@
-# redup/duplication | 1 groups | 51f 10706L | 2026-03-26
+# redup/duplication | 1 groups | 51f 10719L | 2026-03-26
 
 SUMMARY:
   files_scanned: 51
-  total_lines:   10706
+  total_lines:   10719
   dup_groups:    1
   dup_fragments: 2
   saved_lines:   6
-  scan_ms:       1343
+  scan_ms:       1491
 
 DUPLICATES[1] (ranked by impact):
   [4349a92ea864c3ca]   EXAC  get_sprint  L=6 N=2 saved=6 sim=1.00
-      ../../planfile/models.py:111-116  (get_sprint)
       ../../planfile/models_v2.py:155-160  (get_sprint)
+      ../../planfile/models.py:111-116  (get_sprint)
 
 REFACTOR[1] (ranked by priority):
   [1] ○ extract_class      → ../../planfile/utils/get_sprint.py

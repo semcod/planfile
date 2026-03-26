@@ -1,40 +1,29 @@
 #!/bin/bash
-# CLI Commands Example Runner
+set -e
 
-echo "💻" * 20
-echo "CLI COMMANDS EXAMPLES"
-echo "💻" * 20
-echo ""
+echo "💻 PLANFILE CLI COMMANDS DEMO"
+echo "Demonstrating core CLI commands for handling planfile strategies."
+echo "--------------------------------------------------"
 
-# Check if planfile is installed
-if ! python3 -c "import planfile" 2>/dev/null; then
-    echo "❌ planfile not found. Install with:"
-    echo "   pip install -e ."
-    exit 1
+# Assuming we have strategies directory in the parent
+if [ ! -f "test-strategy.yaml" ]; then
+    echo "Creating generic test strategy..."
+    planfile template web test --output test-strategy.yaml
 fi
 
-# Check if CLI is available
-if ! python3 -m planfile.cli.commands --help &> /dev/null; then
-    echo "❌ planfile CLI not available"
-    exit 1
-fi
+echo "1. Validate Configuration"
+planfile validate test-strategy.yaml
 
-echo "Available commands:"
-python3 -m planfile.cli.commands --help | grep -A 20 "Commands:" | tail -n +2
-echo ""
+echo "--------------------------------------------------"
+echo "2. Review Configuration"
+planfile review test-strategy.yaml
 
-# Run the example
-python3 cli_command_examples.py
+echo "--------------------------------------------------"
+echo "3. Apply Configuration (Dry run)"
+planfile apply test-strategy.yaml . --dry-run
 
-echo ""
-echo "✅ CLI commands examples complete!"
-echo ""
-echo "Generated files:"
-ls -la cli-example-* 2>/dev/null | grep -v "^total" || echo "  No files generated"
-echo ""
-echo "Try these commands manually:"
-echo "  planfile template web myproject"
-echo "  planfile stats cli-example-web.yaml"
-echo "  planfile export cli-example-web.yaml --format html"
-echo ""
-echo "Next: Try 'cd ../external-tools && ./run.sh' for external tools examples"
+echo "--------------------------------------------------"
+echo "4. Strategy Statistics"
+planfile stats test-strategy.yaml
+
+echo "✅ CLI COMMANDS DEMO COMPLETED!"

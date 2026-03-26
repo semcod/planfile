@@ -30,7 +30,7 @@ PIPELINES[290]:
       PURITY: 100% pure
   [4] Src [main]: main
       PURITY: 100% pure
-  [5] Src [validate_strategy]: validate_strategy
+  [5] Src [example_create_strategy]: example_create_strategy
       PURITY: 100% pure
 
 LAYERS:

@@ -51,6 +51,7 @@ def generate_from_files_cmd(
     max_sprints: int = typer.Option(4, help="Maximum number of sprints"),
     focus: Optional[str] = typer.Option(None, help="Focus area: quality, security, performance, testing, documentation"),
     patterns: Optional[List[str]] = typer.Option(None, help="File patterns to analyze"),
+    external_tools: bool = typer.Option(False, "--external-tools", help="Use external tools (code2llm, vallm)"),
     verbose: bool = typer.Option(False, help="Verbose output"),
 ):
     """Generate planfile from file analysis (no LLM required)."""
@@ -67,13 +68,25 @@ def generate_from_files_cmd(
             if patterns:
                 console.print(f"  Patterns: {', '.join(patterns)}")
         
-        strategy = generator.generate_from_current_project(
-            project_path=project_path,
-            project_name=project_name,
-            max_sprints=max_sprints,
-            focus_area=focus,
-            patterns=patterns
-        )
+        if external_tools:
+            if verbose:
+                console.print("  Using external tools (code2llm, vallm, redup)")
+            strategy = generator.generate_with_external_tools(
+                project_path=project_path,
+                project_name=project_name,
+                max_sprints=max_sprints,
+                focus_area=focus,
+                # generate_with_external_tools expects patterns as string lists if supported, but currently it doesn't take patterns
+                # if the method is not allowing patterns, this is omitted.
+            )
+        else:
+            strategy = generator.generate_from_current_project(
+                project_path=project_path,
+                project_name=project_name,
+                max_sprints=max_sprints,
+                focus_area=focus,
+                patterns=patterns
+            )
         
         save_strategy_yaml(strategy, output)
         

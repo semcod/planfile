@@ -1,53 +1,29 @@
 #!/bin/bash
-# Advanced Usage Example Runner
+set -e
 
-echo "🎯" * 20
-echo "ADVANCED USAGE EXAMPLES"
-echo "🎯" * 20
-echo ""
+echo "🛠 PLANFILE ADVANCED USAGE PIPELINE (CLI)"
+echo "This demonstrates using planfile in a bash-based automated pipeline workflow."
 
-# Check if planfile is installed
-if ! python3 -c "import planfile" 2>/dev/null; then
-    echo "❌ planfile not found. Install with:"
-    echo "   pip install -e ."
-    exit 1
-fi
+echo "--------------------------------------------------"
+echo "[Pipeline Phase 1] Lint and Code Generation"
+# In a real CI, this might fail the build if it finds critical issues
+planfile generate-from-files ../../planfile --project-name "ci-pipeline" --focus quality --output ci-strategy.yaml
 
-echo "Advanced patterns demonstrated:"
-echo "  ✓ Custom file patterns"
-echo "  ✓ Focus-specific strategies"
-echo "  ✓ Iterative refinement"
-echo "  ✓ Batch processing"
-echo "  ✓ Custom metrics"
-echo "  ✓ CI/CD automation"
-echo ""
+echo "--------------------------------------------------"
+echo "[Pipeline Phase 2] Health Validation"
+planfile health ci-strategy.yaml || echo "Health check had warnings/errors, but continuing for demo purposes..."
 
-# Run the example
-python3 advanced_usage_examples.py
+echo "--------------------------------------------------"
+echo "[Pipeline Phase 3] Merge with Security Template"
+# Generate a baseline security template
+planfile template web security --output security-baseline.yaml
 
-echo ""
-echo "✅ Advanced usage examples complete!"
-echo ""
-echo "Generated files:"
-echo "  Custom patterns:"
-ls -la custom-patterns-*.yaml 2>/dev/null | grep -v "^total" || echo "    None"
-echo ""
-echo "  Focus strategies:"
-ls -la focus-*-strategy.yaml 2>/dev/null | grep -v "^total" || echo "    None"
-echo ""
-echo "  Iterative versions:"
-ls -la iterative-*.yaml 2>/dev/null | grep -v "^total" || echo "    None"
-echo ""
-echo "  Batch results:"
-ls -la batch-*-strategy.yaml 2>/dev/null | grep -v "^total" || echo "    None"
-echo ""
-echo "  CI/CD artifacts:"
-ls -la ci-*.* 2>/dev/null | grep -v "^total" || echo "    None"
-echo ""
-echo "🎉 All examples completed!"
-echo ""
-echo "Tips:"
-echo "  - Combine patterns for custom workflows"
-echo "  - Check generated YAML files for structure"
-echo "  - Use ci-workflow.sh in your pipelines"
-echo "  - Modify examples for your needs"
+# Merge project strategy with security baseline
+planfile merge ci-strategy.yaml security-baseline.yaml --name "Combined Project+Security Strategy" --output final-strategy.yaml
+
+echo "--------------------------------------------------"
+echo "[Pipeline Phase 4] Apply Strategy (Dry-Run)"
+# Dry run to see what tickets/tasks would be created
+planfile apply final-strategy.yaml . --dry-run
+
+echo "✅ ADVANCED PIPELINE COMPLETED!"

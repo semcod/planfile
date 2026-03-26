@@ -37,7 +37,7 @@ flowchart TD
         planfile__executor_standalone__create_openai_client["create_openai_client"]
         planfile__executor_standalone__create_litellm_client["create_litellm_client"]
         planfile__executor_standalone__execute_strategy["execute_strategy"]
-        planfile__ci_runner__CIRunner__run_tests["run_tests"]
+        planfile__loaders__yaml_loader__load_strategy_yaml{{load_strategy_yaml CC=18}}
         ...["+268 more"]
     end
 

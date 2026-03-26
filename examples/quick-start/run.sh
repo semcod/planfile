@@ -1,25 +1,40 @@
 #!/bin/bash
-# Quick Start Example Runner
+set -e
 
-echo "⚡" * 20
-echo "PLANFILE QUICK START"
-echo "⚡" * 20
-echo ""
+echo "⚡ PLANFILE QUICK START (CLI)"
+echo "These examples will get you started with planfile in minutes using the command line!"
 
-# Check if planfile is installed
-if ! python3 -c "import planfile" 2>/dev/null; then
-    echo "❌ planfile not found. Install with:"
-    echo "   pip install -e ."
-    exit 1
-fi
+echo "--------------------------------------------------"
+echo "1. Generate from Files"
+echo "> planfile generate-from-files ../strategies --project-name example-project --max-sprints 2 --output quick-start.yaml"
+planfile generate-from-files ../strategies --project-name "example-project" --max-sprints 2 --output quick-start.yaml
+echo "✅ Complete!"
 
-# Run the example
-python3 quick_start_examples.py
+echo "--------------------------------------------------"
+echo "2. Create Template"
+echo "> planfile template web example --output web-template.yaml"
+planfile template web example --output web-template.yaml
+echo "✅ Complete!"
 
-echo ""
-echo "✅ Quick start complete!"
-echo ""
-echo "Generated files:"
-ls -la *.yaml *.json 2>/dev/null | grep -v "^total" || echo "  No files generated"
-echo ""
-echo "Next: Try 'cd ../integrated-functionality && ./run.sh' for more examples"
+echo "--------------------------------------------------"
+echo "3. Load and Analyze (Stats)"
+echo "> planfile stats web-template.yaml"
+planfile stats web-template.yaml
+echo "✅ Complete!"
+
+echo "--------------------------------------------------"
+echo "4. Export Formats (JSON)"
+echo "> planfile export web-template.yaml --format json --output web-template.json"
+planfile export web-template.yaml --format json --output web-template.json
+echo "✅ Complete!"
+
+echo "--------------------------------------------------"
+echo "5. Compare Strategies"
+echo "> planfile compare quick-start.yaml web-template.yaml"
+planfile compare quick-start.yaml web-template.yaml || true
+echo "✅ Complete!"
+
+echo "--------------------------------------------------"
+echo "QUICK START COMPLETE!"
+echo "Files created:"
+ls -l *.yaml *.json
