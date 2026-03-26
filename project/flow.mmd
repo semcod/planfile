@@ -19,7 +19,7 @@ flowchart TD
         planfile__cli__commands___parse_sprint_filter["_parse_sprint_filter"]
         planfile__cli__commands___select_backend["_select_backend"]
         planfile__cli__commands___execute_apply_strategy["_execute_apply_strategy"]
-        ...["+7 more"]
+        ...["+14 more"]
     end
 
     subgraph Core
@@ -27,22 +27,23 @@ flowchart TD
         mcp_server_example__planfile_apply["planfile_apply"]
         mcp_server_example__planfile_review["planfile_review"]
         mcp_server_example__main["main"]
-        example_standalone__example_1_basic_usage["example_1_basic_usage"]
-        example_standalone__example_2_with_openai["example_2_with_openai"]
-        example_standalone__example_3_custom_client["example_3_custom_client"]
-        example_standalone__example_4_model_configuration["example_4_model_configuration"]
         planfile__executor_standalone__LLMClient__chat["chat"]
         planfile__executor_standalone__StrategyExecutor___default_config["_default_config"]
+        planfile__executor_standalone__StrategyExecutor__execute_strategy["execute_strategy"]
         planfile__executor_standalone__StrategyExecutor___execute_task["_execute_task"]
         planfile__executor_standalone__StrategyExecutor___select_model["_select_model"]
         planfile__executor_standalone__StrategyExecutor___build_prompt["_build_prompt"]
         planfile__executor_standalone__StrategyExecutor___get_project_metrics["_get_project_metrics"]
         planfile__executor_standalone__create_openai_client["create_openai_client"]
-        ...["+221 more"]
+        planfile__executor_standalone__create_litellm_client["create_litellm_client"]
+        planfile__executor_standalone__execute_strategy["execute_strategy"]
+        planfile__loaders__yaml_loader__load_strategy_yaml{{load_strategy_yaml CC=18}}
+        ...["+267 more"]
     end
 
     subgraph Exporters
         planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
+        planfile__models_v2__Strategy__export["export"]
     end
 
-    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,example_standalone__example_1_basic_usage,example_standalone__example_2_with_openai,example_standalone__example_3_custom_client,example_standalone__example_4_model_configuration,planfile__executor_standalone__LLMClient__chat,planfile__executor_standalone__StrategyExecutor___default_config entry
+    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__executor_standalone__LLMClient__chat,planfile__executor_standalone__StrategyExecutor___default_config,planfile__executor_standalone__StrategyExecutor__execute_strategy,planfile__executor_standalone__StrategyExecutor___execute_task,planfile__executor_standalone__StrategyExecutor___select_model,planfile__executor_standalone__StrategyExecutor___build_prompt entry

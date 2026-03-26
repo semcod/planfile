@@ -6,6 +6,7 @@ Provides tools for analyzing code and generating improvement strategies.
 from .file_analyzer import FileAnalyzer, ExtractedIssue, ExtractedMetric, ExtractedTask
 from .sprint_generator import SprintGenerator
 from .generator import PlanfileGenerator, generator
+from .external_tools import ExternalToolRunner, AnalysisResults, run_external_analysis
 
 __all__ = [
     'FileAnalyzer',
@@ -14,5 +15,8 @@ __all__ = [
     'ExtractedTask',
     'SprintGenerator',
     'PlanfileGenerator',
-    'generator'
+    'generator',
+    'ExternalToolRunner',
+    'AnalysisResults',
+    'run_external_analysis',
 ]

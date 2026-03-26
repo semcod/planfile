@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.24] - 2026-03-26
+
+### Docs
+- Update code2llm_output/README.md
+- Update code2llm_output/context.md
+- Update docs/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update analyze_files.py
+- Update code2llm_output/analysis.toon.yaml
+- Update demo_planfile_usage.py
+- Update enhanced_analyze.py
+- Update example_standalone.py
+- Update generate_from_files.py
+- Update generate_planfile.py
+- Update planfile/analysis/__init__.py
+- Update planfile/analysis/external_tools.py
+- Update planfile/analysis/generator.py
+- ... and 17 more files
+
 ## [0.1.23] - 2026-03-26
 
 ### Docs

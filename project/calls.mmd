@@ -1,10 +1,4 @@
 flowchart LR
-    subgraph example_standalone
-        example_standalone__example_2_with_openai["example_2_with_openai"]
-        example_standalone__example_1_basic_usage["example_1_basic_usage"]
-        example_standalone__example_4_model_configuration["example_4_model_configuration"]
-        example_standalone__example_3_custom_client["example_3_custom_client"]
-    end
     subgraph examples__bash_generation
         examples__bash_generation__verify_planfile__print["print"]
     end
@@ -13,19 +7,19 @@ flowchart LR
         examples__comprehensive_example__main["main"]
     end
     subgraph examples__ecosystem
+        examples__ecosystem__02_mcp_integration__simulate_planfile_apply["simulate_planfile_apply"]
+        examples__ecosystem__02_mcp_integration__simulate_planfile_generate["simulate_planfile_generate"]
         examples__ecosystem__02_mcp_integration__example_mcp_session["example_mcp_session"]
         examples__ecosystem__04_llx_integration__LLXIntegration__analyze_project["analyze_project"]
-        examples__ecosystem__02_mcp_integration__simulate_planfile_generate["simulate_planfile_generate"]
-        examples__ecosystem__02_mcp_integration__simulate_planfile_apply["simulate_planfile_apply"]
-        examples__ecosystem__02_mcp_integration__simulate_planfile_review["simulate_planfile_review"]
-        examples__ecosystem__03_proxy_routing__example_strategy_generation_with_proxy["example_strategy_generation_wi"]
-        examples__ecosystem__04_llx_integration__create_llx_config_example["create_llx_config_example"]
-        examples__ecosystem__02_mcp_integration__run_mcp_tool["run_mcp_tool"]
-        examples__ecosystem__02_mcp_integration__create_mcp_tool_definitions["create_mcp_tool_definitions"]
-        examples__ecosystem__04_llx_integration__example_metric_driven_planning["example_metric_driven_planning"]
-        examples__ecosystem__03_proxy_routing__create_proxy_config_example["create_proxy_config_example"]
         examples__ecosystem__04_llx_integration__LLXIntegration__select_model["select_model"]
+        examples__ecosystem__02_mcp_integration__create_mcp_tool_definitions["create_mcp_tool_definitions"]
+        examples__ecosystem__03_proxy_routing__example_strategy_generation_with_proxy["example_strategy_generation_wi"]
+        examples__ecosystem__02_mcp_integration__run_mcp_tool["run_mcp_tool"]
+        examples__ecosystem__04_llx_integration__example_metric_driven_planning["example_metric_driven_planning"]
+        examples__ecosystem__04_llx_integration__create_llx_config_example["create_llx_config_example"]
         examples__ecosystem__03_proxy_routing__example_budget_tracking["example_budget_tracking"]
+        examples__ecosystem__03_proxy_routing__create_proxy_config_example["create_proxy_config_example"]
+        examples__ecosystem__02_mcp_integration__simulate_planfile_review["simulate_planfile_review"]
     end
     subgraph examples__llx_validator
         examples__llx_validator__create_validation_script["create_validation_script"]
@@ -34,93 +28,98 @@ flowchart LR
         examples__summary__create_summary["create_summary"]
     end
     subgraph htmlcov__coverage_html_cb_6fb7b396
-        htmlcov__coverage_html_cb_6fb7b396__probe["probe"]
-        htmlcov__coverage_html_cb_6fb7b396__indicator["indicator"]
-        htmlcov__coverage_html_cb_6fb7b396__getCellValue["getCellValue"]
-        htmlcov__coverage_html_cb_6fb7b396__prev_indicator["prev_indicator"]
-        htmlcov__coverage_html_cb_6fb7b396__sortColumn["sortColumn"]
-        htmlcov__coverage_html_cb_6fb7b396__next_indicator["next_indicator"]
         htmlcov__coverage_html_cb_6fb7b396__begin["begin"]
+        htmlcov__coverage_html_cb_6fb7b396__indicator["indicator"]
+        htmlcov__coverage_html_cb_6fb7b396__prev_indicator["prev_indicator"]
+        htmlcov__coverage_html_cb_6fb7b396__getCellValue["getCellValue"]
+        htmlcov__coverage_html_cb_6fb7b396__sortColumn["sortColumn"]
         htmlcov__coverage_html_cb_6fb7b396__the_indicator["the_indicator"]
-        htmlcov__coverage_html_cb_6fb7b396__rowComparator["rowComparator"]
         htmlcov__coverage_html_cb_6fb7b396__chunk_indicator["chunk_indicator"]
+        htmlcov__coverage_html_cb_6fb7b396__rowComparator["rowComparator"]
+        htmlcov__coverage_html_cb_6fb7b396__probe["probe"]
+        htmlcov__coverage_html_cb_6fb7b396__next_indicator["next_indicator"]
     end
     subgraph htmlcov__coverage_html_cb_dd2e7eb5
+        htmlcov__coverage_html_cb_dd2e7eb5__next_indicator["next_indicator"]
+        htmlcov__coverage_html_cb_dd2e7eb5__indicator["indicator"]
+        htmlcov__coverage_html_cb_dd2e7eb5__probe["probe"]
         htmlcov__coverage_html_cb_dd2e7eb5__the_indicator["the_indicator"]
+        htmlcov__coverage_html_cb_dd2e7eb5__prev_indicator["prev_indicator"]
         htmlcov__coverage_html_cb_dd2e7eb5__chunk_indicator["chunk_indicator"]
         htmlcov__coverage_html_cb_dd2e7eb5__getCellValue["getCellValue"]
         htmlcov__coverage_html_cb_dd2e7eb5__rowComparator["rowComparator"]
         htmlcov__coverage_html_cb_dd2e7eb5__begin["begin"]
-        htmlcov__coverage_html_cb_dd2e7eb5__prev_indicator["prev_indicator"]
         htmlcov__coverage_html_cb_dd2e7eb5__sortColumn["sortColumn"]
-        htmlcov__coverage_html_cb_dd2e7eb5__indicator["indicator"]
-        htmlcov__coverage_html_cb_dd2e7eb5__probe["probe"]
-        htmlcov__coverage_html_cb_dd2e7eb5__next_indicator["next_indicator"]
+    end
+    subgraph planfile__analysis
+        planfile__analysis__generator__PlanfileGenerator__generate_with_external_tools["generate_with_external_tools"]
+        planfile__analysis__external_tools__ExternalToolRunner__run_code2llm["run_code2llm"]
+        planfile__analysis__external_tools__ExternalToolRunner__run_redup["run_redup"]
+        planfile__analysis__external_tools__ExternalToolRunner__run_vallm["run_vallm"]
     end
     subgraph planfile__ci_runner
         planfile__ci_runner__CIRunner____init__["__init__"]
-        planfile__ci_runner__CIRunner__run_code_analysis["run_code_analysis"]
-        planfile__ci_runner__CIRunner__run_tests["run_tests"]
-        planfile__ci_runner__CIRunner__auto_fix_bugs["auto_fix_bugs"]
-        planfile__ci_runner__CIRunner__save_results["save_results"]
-        planfile__ci_runner__CIRunner__generate_bug_report["generate_bug_report"]
         planfile__ci_runner__CIRunner__check_strategy_completion["check_strategy_completion"]
+        planfile__ci_runner__CIRunner__run_code_analysis["run_code_analysis"]
+        planfile__ci_runner__CIRunner__auto_fix_bugs["auto_fix_bugs"]
         planfile__ci_runner__CIRunner__run_loop["run_loop"]
+        planfile__ci_runner__CIRunner__run_tests["run_tests"]
+        planfile__ci_runner__CIRunner__generate_bug_report["generate_bug_report"]
         planfile__ci_runner__CIRunner__create_bug_tickets["create_bug_tickets"]
+        planfile__ci_runner__CIRunner__save_results["save_results"]
     end
     subgraph planfile__cli
-        planfile__cli__auto_loop___initialize_backends["_initialize_backends"]
-        planfile__cli__commands__apply_strategy_cli["apply_strategy_cli"]
-        planfile__cli__commands__review_strategy_cli["review_strategy_cli"]
         planfile__cli__commands__get_backend["get_backend"]
+        planfile__cli__auto_loop__get_backend["get_backend"]
         planfile__cli__commands___load_and_validate_strategy["_load_and_validate_strategy"]
         planfile__cli__commands___select_backend["_select_backend"]
-        planfile__cli__commands__generate_strategy_cli["generate_strategy_cli"]
-        planfile__cli__commands__validate_strategy_cli["validate_strategy_cli"]
-        planfile__cli__auto_loop__get_backend["get_backend"]
         planfile__cli__commands___execute_apply_strategy["_execute_apply_strategy"]
+        planfile__cli__commands__validate_strategy_cli["validate_strategy_cli"]
+        planfile__cli__commands__generate_strategy_cli["generate_strategy_cli"]
+        planfile__cli__auto_loop___initialize_backends["_initialize_backends"]
+        planfile__cli__commands__review_strategy_cli["review_strategy_cli"]
+        planfile__cli__commands__apply_strategy_cli["apply_strategy_cli"]
     end
     subgraph planfile__examples
-        planfile__examples__example_run_strategy["example_run_strategy"]
-        planfile__examples__example_validate_strategy["example_validate_strategy"]
         planfile__examples__example_programmatic_strategy["example_programmatic_strategy"]
         planfile__examples__example_verify_strategy["example_verify_strategy"]
+        planfile__examples__example_validate_strategy["example_validate_strategy"]
+        planfile__examples__example_run_strategy["example_run_strategy"]
     end
     subgraph planfile__executor_standalone
         planfile__executor_standalone__StrategyExecutor__execute_strategy["execute_strategy"]
-        planfile__executor_standalone__create_openai_client["create_openai_client"]
     end
     subgraph planfile__llm
-        planfile__llm__generator__generate_strategy["generate_strategy"]
-        planfile__llm__prompts__build_strategy_prompt["build_strategy_prompt"]
-        planfile__llm__adapters__LLMTestRunner__test_strategy_with_all_adapters["test_strategy_with_all_adapter"]
-        planfile__llm__client__call_llm["call_llm"]
-        planfile__llm__generator___collect_metrics["_collect_metrics"]
         planfile__llm__generator___fix_yaml_formatting["_fix_yaml_formatting"]
-        planfile__llm__generator___auto_select_model["_auto_select_model"]
-        planfile__llm__generator___basic_metrics["_basic_metrics"]
         planfile__llm__generator___parse_strategy_response["_parse_strategy_response"]
+        planfile__llm__generator___basic_metrics["_basic_metrics"]
+        planfile__llm__adapters__LLMTestRunner__test_strategy_with_all_adapters["test_strategy_with_all_adapter"]
+        planfile__llm__prompts__build_strategy_prompt["build_strategy_prompt"]
+        planfile__llm__generator__generate_strategy["generate_strategy"]
+        planfile__llm__client__call_llm["call_llm"]
+        planfile__llm__generator___auto_select_model["_auto_select_model"]
+        planfile__llm__generator___collect_metrics["_collect_metrics"]
     end
     subgraph planfile__loaders
-        planfile__loaders__yaml_loader___check_required_keys["_check_required_keys"]
-        planfile__loaders__cli_loader___md_summary["_md_summary"]
-        planfile__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
-        planfile__loaders__cli_loader___md_tasks["_md_tasks"]
+        planfile__loaders__yaml_loader__save_strategy_yaml["save_strategy_yaml"]
         planfile__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
-        planfile__loaders__yaml_loader___validate_gates["_validate_gates"]
+        planfile__loaders__cli_loader___md_tasks["_md_tasks"]
+        planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
         planfile__loaders__cli_loader__save_strategy_to_json["save_strategy_to_json"]
+        planfile__loaders__yaml_loader___check_required_keys["_check_required_keys"]
+        planfile__loaders__yaml_loader__validate_strategy_schema["validate_strategy_schema"]
+        planfile__loaders__yaml_loader___validate_task_patterns["_validate_task_patterns"]
+        planfile__loaders__yaml_loader__load_strategy_yaml["load_strategy_yaml"]
+        planfile__loaders__yaml_loader__load_tasks_yaml["load_tasks_yaml"]
+        planfile__loaders__yaml_loader___validate_gates["_validate_gates"]
         planfile__loaders__yaml_loader__save_yaml["save_yaml"]
         planfile__loaders__cli_loader___md_header["_md_header"]
-        planfile__loaders__yaml_loader__validate_strategy_schema["validate_strategy_schema"]
-        planfile__loaders__yaml_loader___validate_sprints["_validate_sprints"]
-        planfile__loaders__yaml_loader__save_strategy_yaml["save_strategy_yaml"]
-        planfile__loaders__yaml_loader__load_tasks_yaml["load_tasks_yaml"]
-        planfile__loaders__yaml_loader__load_strategy_yaml["load_strategy_yaml"]
         planfile__loaders__cli_loader__load_from_json["load_from_json"]
-        planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
+        planfile__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
+        planfile__loaders__cli_loader___md_summary["_md_summary"]
         planfile__loaders__cli_loader__save_to_json["save_to_json"]
-        planfile__loaders__yaml_loader___validate_task_patterns["_validate_task_patterns"]
         planfile__loaders__yaml_loader__load_yaml["load_yaml"]
+        planfile__loaders__yaml_loader___validate_sprints["_validate_sprints"]
     end
     subgraph planfile__models
         planfile__models__Strategy__model_validate_yaml["model_validate_yaml"]
@@ -129,32 +128,23 @@ flowchart LR
         planfile__models_v2__Strategy__load_flexible["load_flexible"]
     end
     subgraph planfile__runner
-        planfile__runner__load_valid_strategy["load_valid_strategy"]
+        planfile__runner__analyze_project_metrics["analyze_project_metrics"]
         planfile__runner__review_strategy["review_strategy"]
         planfile__runner__run_strategy["run_strategy"]
-        planfile__runner__analyze_project_metrics["analyze_project_metrics"]
-        planfile__runner__apply_strategy_to_tickets["apply_strategy_to_tickets"]
         planfile__runner__verify_strategy_post_execution["verify_strategy_post_execution"]
+        planfile__runner__apply_strategy_to_tickets["apply_strategy_to_tickets"]
+        planfile__runner__load_valid_strategy["load_valid_strategy"]
     end
     subgraph planfile__utils
+        planfile__utils__metrics__analyze_project_metrics["analyze_project_metrics"]
         planfile__utils__metrics___count_files_by_language["_count_files_by_language"]
         planfile__utils__metrics___collect_git_metrics["_collect_git_metrics"]
         planfile__utils__metrics___check_project_files["_check_project_files"]
-        planfile__utils__metrics__analyze_project_metrics["analyze_project_metrics"]
     end
+    examples__summary__create_summary --> examples__bash_generation__verify_planfile__print
     examples__comprehensive_example__run_command --> examples__bash_generation__verify_planfile__print
     examples__comprehensive_example__main --> examples__bash_generation__verify_planfile__print
     examples__comprehensive_example__main --> examples__comprehensive_example__run_command
-    example_standalone__example_1_basic_usage --> examples__bash_generation__verify_planfile__print
-    example_standalone__example_1_basic_usage --> planfile__models_v2__Strategy__load_flexible
-    example_standalone__example_2_with_openai --> examples__bash_generation__verify_planfile__print
-    example_standalone__example_2_with_openai --> planfile__executor_standalone__create_openai_client
-    example_standalone__example_2_with_openai --> planfile__executor_standalone__StrategyExecutor__execute_strategy
-    example_standalone__example_3_custom_client --> examples__bash_generation__verify_planfile__print
-    example_standalone__example_3_custom_client --> planfile__models_v2__Strategy__load_flexible
-    example_standalone__example_4_model_configuration --> examples__bash_generation__verify_planfile__print
-    examples__llx_validator__create_validation_script --> examples__bash_generation__verify_planfile__print
-    examples__summary__create_summary --> examples__bash_generation__verify_planfile__print
     planfile__examples__example_validate_strategy --> planfile__runner__load_valid_strategy
     planfile__examples__example_validate_strategy --> examples__bash_generation__verify_planfile__print
     planfile__examples__example_run_strategy --> planfile__runner__run_strategy
@@ -169,17 +159,8 @@ flowchart LR
     planfile__runner__run_strategy --> planfile__runner__load_valid_strategy
     planfile__runner__run_strategy --> planfile__runner__apply_strategy_to_tickets
     planfile__runner__run_strategy --> examples__bash_generation__verify_planfile__print
+    examples__llx_validator__create_validation_script --> examples__bash_generation__verify_planfile__print
     planfile__executor_standalone__StrategyExecutor__execute_strategy --> planfile__models_v2__Strategy__load_flexible
-    planfile__ci_runner__CIRunner____init__ --> planfile__loaders__yaml_loader__load_strategy_yaml
-    planfile__ci_runner__CIRunner__run_tests --> examples__bash_generation__verify_planfile__print
-    planfile__ci_runner__CIRunner__run_code_analysis --> examples__bash_generation__verify_planfile__print
-    planfile__ci_runner__CIRunner__generate_bug_report --> examples__bash_generation__verify_planfile__print
-    planfile__ci_runner__CIRunner__create_bug_tickets --> examples__bash_generation__verify_planfile__print
-    planfile__ci_runner__CIRunner__auto_fix_bugs --> examples__bash_generation__verify_planfile__print
-    planfile__ci_runner__CIRunner__check_strategy_completion --> examples__bash_generation__verify_planfile__print
-    planfile__ci_runner__CIRunner__check_strategy_completion --> planfile__runner__review_strategy
-    planfile__ci_runner__CIRunner__run_loop --> examples__bash_generation__verify_planfile__print
-    planfile__ci_runner__CIRunner__save_results --> examples__bash_generation__verify_planfile__print
     planfile__loaders__yaml_loader__load_strategy_yaml --> planfile__loaders__yaml_loader__load_yaml
     planfile__loaders__yaml_loader__save_strategy_yaml --> planfile__loaders__yaml_loader__save_yaml
     planfile__loaders__yaml_loader__load_tasks_yaml --> planfile__loaders__yaml_loader__load_yaml
@@ -195,6 +176,20 @@ flowchart LR
     planfile__loaders__cli_loader__export_results_to_markdown --> planfile__loaders__cli_loader___md_header
     planfile__loaders__cli_loader__export_results_to_markdown --> planfile__loaders__cli_loader___md_summary
     planfile__loaders__cli_loader__export_results_to_markdown --> planfile__loaders__cli_loader___md_tasks
+    planfile__analysis__external_tools__ExternalToolRunner__run_code2llm --> examples__bash_generation__verify_planfile__print
+    planfile__analysis__external_tools__ExternalToolRunner__run_vallm --> examples__bash_generation__verify_planfile__print
+    planfile__analysis__external_tools__ExternalToolRunner__run_redup --> examples__bash_generation__verify_planfile__print
+    planfile__ci_runner__CIRunner____init__ --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__ci_runner__CIRunner__run_tests --> examples__bash_generation__verify_planfile__print
+    planfile__ci_runner__CIRunner__run_code_analysis --> examples__bash_generation__verify_planfile__print
+    planfile__ci_runner__CIRunner__generate_bug_report --> examples__bash_generation__verify_planfile__print
+    planfile__ci_runner__CIRunner__create_bug_tickets --> examples__bash_generation__verify_planfile__print
+    planfile__ci_runner__CIRunner__auto_fix_bugs --> examples__bash_generation__verify_planfile__print
+    planfile__ci_runner__CIRunner__check_strategy_completion --> examples__bash_generation__verify_planfile__print
+    planfile__ci_runner__CIRunner__check_strategy_completion --> planfile__runner__review_strategy
+    planfile__ci_runner__CIRunner__run_loop --> examples__bash_generation__verify_planfile__print
+    planfile__ci_runner__CIRunner__save_results --> examples__bash_generation__verify_planfile__print
+    planfile__analysis__generator__PlanfileGenerator__generate_with_external_tools --> examples__bash_generation__verify_planfile__print
     planfile__cli__auto_loop___initialize_backends --> planfile__cli__auto_loop__get_backend
     planfile__cli__commands___load_and_validate_strategy --> planfile__loaders__yaml_loader__load_strategy_yaml
     planfile__cli__commands___select_backend --> planfile__cli__commands__get_backend

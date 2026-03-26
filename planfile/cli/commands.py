@@ -248,7 +248,7 @@ def review_strategy_cli(
     # Load strategy
     try:
         strategy = load_strategy_yaml(strategy_path)
-        console.print(f"[green]✓[/green] Loaded strategy: {planfile.name}")
+        console.print(f"[green]✓[/green] Loaded strategy: {strategy.name}")
     except Exception as e:
         console.print(f"[red]✗[/red] Failed to load strategy: {e}")
         raise typer.Exit(1)
@@ -357,19 +357,19 @@ def validate_strategy_cli(
     try:
         strategy = load_strategy_yaml(strategy_path)
         console.print(f"[green]✓[/green] Strategy is valid!")
-        console.print(f"Name: {planfile.name}")
-        console.print(f"Project Type: {planfile.project_type}")
-        console.print(f"Domain: {planfile.domain}")
-        console.print(f"Sprints: {len(planfile.sprints)}")
-        console.print(f"Task Patterns: {sum(len(patterns) for patterns in planfile.tasks.values())}")
+        console.print(f"Name: {strategy.name}")
+        console.print(f"Project Type: {strategy.project_type}")
+        console.print(f"Domain: {strategy.domain}")
+        console.print(f"Sprints: {len(strategy.sprints)}")
+        console.print(f"Task Patterns: {sum(len(patterns) for patterns in strategy.tasks.values())}")
         
         if verbose:
             console.print("\n[bold]Sprints:[/bold]")
-            for sprint in planfile.sprints:
+            for sprint in strategy.sprints:
                 console.print(f"  - Sprint {sprint.id}: {sprint.name} ({sprint.length_days} days)")
             
             console.print("\n[bold]Task Patterns:[/bold]")
-            for category, patterns in planfile.tasks.items():
+            for category, patterns in strategy.tasks.items():
                 console.print(f"  {category}:")
                 for pattern in patterns:
                     console.print(f"    - {pattern.id}: {pattern.title}")
