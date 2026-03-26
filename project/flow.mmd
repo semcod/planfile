@@ -23,26 +23,26 @@ flowchart TD
     end
 
     subgraph Core
-        planfile__runner__StrategyRunner___find_task_pattern["_find_task_pattern"]
-        planfile__runner__StrategyRunner___create_ticket_for_task["_create_ticket_for_task"]
-        planfile__runner__StrategyRunner___get_sprint_tickets["_get_sprint_tickets"]
-        planfile__runner__apply_strategy["apply_strategy"]
-        planfile__runner__review_strategy["review_strategy"]
-        planfile__loaders__cli_loader__load_from_json["load_from_json"]
-        planfile__loaders__cli_loader__save_to_json["save_to_json"]
-        planfile__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
-        planfile__loaders__cli_loader__save_strategy_to_json["save_strategy_to_json"]
-        planfile__loaders__cli_loader___md_header["_md_header"]
-        planfile__loaders__cli_loader___md_summary["_md_summary"]
-        planfile__loaders__cli_loader___md_tasks["_md_tasks"]
-        planfile__loaders__cli_loader___md_sprints["_md_sprints"]
-        planfile__loaders__cli_loader___md_metrics["_md_metrics"]
-        planfile__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
-        ...["+120 more"]
+        mcp_server_example__planfile_generate["planfile_generate"]
+        mcp_server_example__planfile_apply["planfile_apply"]
+        mcp_server_example__planfile_review["planfile_review"]
+        mcp_server_example__main["main"]
+        example_standalone__example_1_basic_usage["example_1_basic_usage"]
+        example_standalone__example_2_with_openai["example_2_with_openai"]
+        example_standalone__example_3_custom_client["example_3_custom_client"]
+        example_standalone__example_4_model_configuration["example_4_model_configuration"]
+        planfile__executor_standalone__LLMClient__chat["chat"]
+        planfile__executor_standalone__StrategyExecutor___default_config["_default_config"]
+        planfile__executor_standalone__StrategyExecutor___execute_task["_execute_task"]
+        planfile__executor_standalone__StrategyExecutor___select_model["_select_model"]
+        planfile__executor_standalone__StrategyExecutor___build_prompt["_build_prompt"]
+        planfile__executor_standalone__StrategyExecutor___get_project_metrics["_get_project_metrics"]
+        planfile__executor_standalone__create_openai_client["create_openai_client"]
+        ...["+221 more"]
     end
 
     subgraph Exporters
         planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
     end
 
-    class planfile__runner__StrategyRunner___find_task_pattern,planfile__runner__StrategyRunner___create_ticket_for_task,planfile__runner__StrategyRunner___get_sprint_tickets,planfile__runner__apply_strategy,planfile__runner__review_strategy,planfile__loaders__cli_loader__load_from_json,planfile__loaders__cli_loader__save_to_json,planfile__loaders__cli_loader__load_strategy_from_json,planfile__loaders__cli_loader__save_strategy_to_json,planfile__loaders__cli_loader___md_header entry
+    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,example_standalone__example_1_basic_usage,example_standalone__example_2_with_openai,example_standalone__example_3_custom_client,example_standalone__example_4_model_configuration,planfile__executor_standalone__LLMClient__chat,planfile__executor_standalone__StrategyExecutor___default_config entry
