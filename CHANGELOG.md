@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.33] - 2026-03-26
+
+### Docs
+- Update docs/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update .gitignore
+- Update examples/cli-commands/run_fixed.sh
+- Update examples/quick-start/quick-start.yaml
+- Update examples/quick-start/run_fixed.sh
+- Update examples/strategies/.planfile_analysis/analysis_summary.json
+- Update examples/test-strategy.yaml
+- Update planfile/analysis/parsers/toon_parser.py
+- Update planfile/analysis/sprint_generator.py
+- Update planfile/integrations/__init__.py
+- Update planfile/integrations/generic.py
+- ... and 17 more files
+
 ## [0.1.32] - 2026-03-26
 
 ### Docs

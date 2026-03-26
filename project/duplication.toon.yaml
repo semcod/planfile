@@ -1,12 +1,12 @@
-# redup/duplication | 1 groups | 51f 10708L | 2026-03-26
+# redup/duplication | 1 groups | 45f 9351L | 2026-03-26
 
 SUMMARY:
-  files_scanned: 51
-  total_lines:   10708
+  files_scanned: 45
+  total_lines:   9351
   dup_groups:    1
   dup_fragments: 2
   saved_lines:   6
-  scan_ms:       1658
+  scan_ms:       1389
 
 DUPLICATES[1] (ranked by impact):
   [ccf4e8110e3ba8d2]   EXAC  get_sprint  L=6 N=2 saved=6 sim=1.00

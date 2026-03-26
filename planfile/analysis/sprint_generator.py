@@ -41,64 +41,54 @@ class SprintGenerator:
         metrics = analysis_result['metrics']
         
         # Group issues by priority
-        critical_issues = [i for i in issues if i.priority == 'critical']
-        high_issues = [i for i in issues if i.priority == 'high']
-        medium_issues = [i for i in issues if i.priority == 'medium']
-        low_issues = [i for i in issues if i.priority == 'low']
+        issue_groups = self._group_issues_by_priority(issues)
+        
+        sprint_creators = [
+            ("Critical Issues Resolution", "1 week", ["Fix all critical bugs and errors"], 
+             lambda: issue_groups['critical'][:10]),
+            ("Quality & High Priority", "2 weeks", ["Address high priority issues", "Improve code quality"], 
+             lambda: self._get_high_and_quality_issues(issue_groups)),
+            ("Feature Development", "2 weeks", ["Implement features and improvements"], 
+             lambda: self._get_remaining_medium_issues(issue_groups)),
+            ("Polish & Documentation", "1 week", ["Documentation", "Minor improvements"], 
+             lambda: issue_groups['low'][:10]),
+        ]
         
         sprints = []
-        sprint_id = 1
-        
-        # Sprint 1: Critical Issues
-        if critical_issues and sprint_id <= max_sprints:
-            sprint = self._create_sprint(
-                f"sprint-{sprint_id}",
-                "Critical Issues Resolution",
-                "1 week",
-                ["Fix all critical bugs and errors"],
-                critical_issues[:10]  # Limit to 10 issues
-            )
-            sprints.append(sprint)
-            sprint_id += 1
-        
-        # Sprint 2: High Priority & Quality
-        high_and_quality = high_issues + [i for i in medium_issues if i.category in ['refactor', 'test']]
-        if high_and_quality and sprint_id <= max_sprints:
-            sprint = self._create_sprint(
-                f"sprint-{sprint_id}",
-                "Quality & High Priority",
-                "2 weeks",
-                ["Address high priority issues", "Improve code quality"],
-                high_and_quality[:15]
-            )
-            sprints.append(sprint)
-            sprint_id += 1
-        
-        # Sprint 3: Medium Priority
-        remaining_medium = [i for i in medium_issues if i not in high_and_quality]
-        if remaining_medium and sprint_id <= max_sprints:
-            sprint = self._create_sprint(
-                f"sprint-{sprint_id}",
-                "Feature Development",
-                "2 weeks",
-                ["Implement features and improvements"],
-                remaining_medium[:15]
-            )
-            sprints.append(sprint)
-            sprint_id += 1
-        
-        # Sprint 4: Low Priority & Polish
-        if low_issues and sprint_id <= max_sprints:
-            sprint = self._create_sprint(
-                f"sprint-{sprint_id}",
-                "Polish & Documentation",
-                "1 week",
-                ["Documentation", "Minor improvements"],
-                low_issues[:10]
-            )
-            sprints.append(sprint)
+        for i, (name, duration, objectives, issues_getter) in enumerate(sprint_creators[:max_sprints]):
+            issues_for_sprint = issues_getter()
+            if issues_for_sprint:
+                sprint = self._create_sprint(
+                    f"sprint-{i+1}",
+                    name,
+                    duration,
+                    objectives,
+                    issues_for_sprint
+                )
+                sprints.append(sprint)
         
         return sprints
+    
+    def _group_issues_by_priority(self, issues: List[ExtractedIssue]) -> Dict[str, List[ExtractedIssue]]:
+        """Group issues by priority."""
+        return {
+            'critical': [i for i in issues if i.priority == 'critical'],
+            'high': [i for i in issues if i.priority == 'high'],
+            'medium': [i for i in issues if i.priority == 'medium'],
+            'low': [i for i in issues if i.priority == 'low'],
+        }
+    
+    def _get_high_and_quality_issues(self, issue_groups: Dict[str, List[ExtractedIssue]]) -> List[ExtractedIssue]:
+        """Get high priority issues plus quality-related medium issues."""
+        high_issues = issue_groups['high']
+        quality_medium = [i for i in issue_groups['medium'] if i.category in ['refactor', 'test']]
+        return (high_issues + quality_medium)[:15]
+    
+    def _get_remaining_medium_issues(self, issue_groups: Dict[str, List[ExtractedIssue]]) -> List[ExtractedIssue]:
+        """Get medium issues that weren't included in the quality sprint."""
+        high_and_quality = self._get_high_and_quality_issues(issue_groups)
+        remaining = [i for i in issue_groups['medium'] if i not in high_and_quality]
+        return remaining[:15]
     
     def _create_sprint(self, sprint_id: str, name: str, duration: str, objectives: List[str], issues: List[ExtractedIssue]) -> Dict[str, Any]:
         """Create a sprint from issues."""

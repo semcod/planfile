@@ -115,23 +115,44 @@ class GenericBackend(BasePMBackend):
         assignee: Optional[str] = None,
     ) -> None:
         """Update a ticket via generic API."""
-        data = {}
-        
-        if title:
-            data["title"] = title
-        if body:
-            data["description"] = body
-        if status:
-            data["status"] = status
-        if labels:
-            data["labels"] = labels
-        if priority:
-            data["priority"] = priority
-        if assignee:
-            data["assignee"] = assignee
+        data = self._build_update_data(
+            title=title,
+            body=body,
+            status=status,
+            labels=labels,
+            priority=priority,
+            assignee=assignee
+        )
         
         if data:
             self._make_request("PUT", f"/tickets/{ticket_id}", data=data)
+    
+    def _build_update_data(
+        self,
+        title: Optional[str] = None,
+        body: Optional[str] = None,
+        status: Optional[str] = None,
+        labels: Optional[list] = None,
+        priority: Optional[str] = None,
+        assignee: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Build update data dictionary."""
+        data = {}
+        
+        field_mapping = {
+            "title": title,
+            "description": body,
+            "status": status,
+            "labels": labels,
+            "priority": priority,
+            "assignee": assignee,
+        }
+        
+        for key, value in field_mapping.items():
+            if value is not None:
+                data[key] = value
+        
+        return data
     
     def get_ticket(self, ticket_id: str) -> TicketStatus:
         """Get ticket status via generic API."""

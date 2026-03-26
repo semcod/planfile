@@ -1,0 +1,12 @@
+project:
+  name: "test-project"
+  type: "web"
+  total_files: 10
+  python_files: 5
+  complexity_score: 3.5
+  
+files:
+  - path: "test.py"
+    type: "python"
+    complexity: 3
+    lines: 50

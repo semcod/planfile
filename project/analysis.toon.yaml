@@ -1,7 +1,7 @@
-# code2llm | 54f 8947L | python:48,shell:4,javascript:2 | 2026-03-26
-# CC̄=4.2 | critical:15/454 | dups:0 | cycles:0
+# code2llm | 56f 9626L | python:49,shell:5,javascript:2 | 2026-03-26
+# CC̄=4.1 | critical:15/504 | dups:0 | cycles:0
 
-HEALTH[15]:
+HEALTH[20]:
   🟡 CC    load_strategy_yaml CC=18 (limit:15)
   🟡 CC    generate_sprints CC=21 (limit:15)
   🟡 CC    generate_report CC=20 (limit:15)
@@ -17,31 +17,37 @@ HEALTH[15]:
   🟡 CC    table_body_rows CC=19 (limit:15)
   🟡 CC    no_rows CC=19 (limit:15)
   🟡 CC    filter_handler CC=19 (limit:15)
+  🟡 CC    table CC=21 (limit:15)
+  🟡 CC    table_body_rows CC=21 (limit:15)
+  🟡 CC    no_rows CC=21 (limit:15)
+  🟡 CC    footer CC=21 (limit:15)
+  🟡 CC    ratio_columns CC=21 (limit:15)
 
 REFACTOR[1]:
-  1. split 15 high-CC methods  (CC>15)
+  1. split 20 high-CC methods  (CC>15)
 
-PIPELINES[290]:
-  [1] Src [example_create_strategy]: example_create_strategy
+PIPELINES[307]:
+  [1] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
-  [2] Src [example_validate_strategy]: example_validate_strategy → load_valid_strategy → print
+  [2] Src [analyze_generated_code]: analyze_generated_code
       PURITY: 100% pure
-  [3] Src [example_run_strategy]: example_run_strategy → run_strategy → load_valid_strategy → print
+  [3] Src [_is_llx_available]: _is_llx_available
       PURITY: 100% pure
-  [4] Src [example_verify_strategy]: example_verify_strategy → load_valid_strategy → print
+  [4] Src [_parse_llx_analysis]: _parse_llx_analysis
       PURITY: 100% pure
-  [5] Src [example_programmatic_strategy]: example_programmatic_strategy → print
+  [5] Src [_basic_code_analysis]: _basic_code_analysis
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=4.3    ←in:2  →out:1
-  │ extra_commands             487L  0C    6m  CC=10     ←2
+  planfile/                       CC̄=4.4    ←in:2  →out:1
+  │ !! extra_commands             568L  0C    6m  CC=10     ←0
   │ !! adapters                   459L  6C   18m  CC=20     ←0
   │ ci_runner                  453L  3C   10m  CC=9      ←0
   │ models_v2                  426L  8C   14m  CC=12     ←1
   │ executor_standalone        336L  3C   12m  CC=8      ←0
+  │ cmd_init                   299L  0C    4m  CC=12     ←0
   │ runner                     284L  0C    6m  CC=12     ←4
-  │ !! yaml_loader                283L  0C   11m  CC=18     ←10
+  │ !! yaml_loader                283L  0C   11m  CC=18     ←6
   │ jira                       283L  1C    9m  CC=13     ←0
   │ external_tools             267L  2C   13m  CC=12     ←0
   │ auto_loop                  252L  0C    9m  CC=10     ←1
@@ -56,22 +62,22 @@ LAYERS:
   │ !! toon_parser                158L  0C    3m  CC=24     ←2
   │ generator                  146L  0C    6m  CC=8      ←1
   │ examples                   141L  0C    5m  CC=2      ←0
+  │ cmd_generate               128L  0C    2m  CC=14     ←0
   │ file_analyzer              123L  1C   10m  CC=7      ←0
   │ text_parser                119L  0C    1m  CC=13     ←3
-  │ cmd_generate               115L  0C    2m  CC=12     ←0
   │ base                       112L  4C    9m  CC=4      ←0
   │ priorities                 111L  0C    3m  CC=4      ←0
   │ cmd_apply                  108L  0C    4m  CC=5      ←0
   │ cmd_review                  97L  0C    1m  CC=10     ←0
   │ cmd_utils                   96L  0C    5m  CC=6      ←2
   │ yaml_parser                 79L  0C    2m  CC=9      ←2
-  │ commands                    63L  0C    3m  CC=2      ←0
+  │ commands                    66L  0C    3m  CC=2      ←0
   │ prompts                     63L  0C    1m  CC=5      ←1
   │ client                      63L  0C    1m  CC=4      ←1
   │ __init__                    55L  0C    0m  CC=0.0    ←0
   │ models                      50L  3C    2m  CC=3      ←0
   │ metrics_extractor           43L  0C    6m  CC=9      ←1
-  │ cmd_validate                37L  0C    1m  CC=7      ←0
+  │ cmd_validate                39L  0C    1m  CC=9      ←0
   │ json_parser                 31L  0C    1m  CC=2      ←1
   │ __init__                    23L  0C    0m  CC=0.0    ←0
   │ __init__                    22L  0C    0m  CC=0.0    ←0
@@ -87,7 +93,8 @@ LAYERS:
   │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
   │ !! coverage_html_cb_6fb7b396.js   733L  0C   64m  CC=19     ←0
   │
-  ./                              CC̄=0.4    ←in:0  →out:0
+  ./                              CC̄=0.2    ←in:0  →out:0
+  │ run_examples.sh            281L  0C   13m  CC=0.0    ←0
   │ docker-entrypoint.sh       174L  0C    5m  CC=0.0    ←0
   │ auto_generate_planfile.sh   124L  0C    0m  CC=0.0    ←0
   │ cleanup_redundant.sh        71L  0C    0m  CC=0.0    ←0
@@ -102,13 +109,13 @@ LAYERS:
 
 COUPLING:
                         planfile.cli  planfile.loaders          planfile      planfile.llm
-      planfile.cli                ──                12                 2                 1  !! fan-out
-  planfile.loaders               ←12                ──                ←1                    hub
+      planfile.cli                ──                14                 2                 1  !! fan-out
+  planfile.loaders               ←14                ──                ←1                    hub
           planfile                ←2                 1                ──                  
       planfile.llm                ←1                                                    ──
   CYCLES: none
-  HUB: planfile.loaders/ (fan-in=13)
-  SMELL: planfile.cli/ fan-out=15 → split needed
+  HUB: planfile.loaders/ (fan-in=15)
+  SMELL: planfile.cli/ fan-out=17 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon

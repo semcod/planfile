@@ -64,52 +64,68 @@ def load_strategy_yaml(file_path: Union[str, Path]) -> Strategy:
     """
     data = load_yaml(file_path)
     
-    # Convert task patterns
-    if "tasks" in data:
-        for category, patterns in data["tasks"].items():
-            for i, pattern in enumerate(patterns):
-                # Convert model_hints if present
-                if "model_hints" in pattern:
-                    pattern["model_hints"] = ModelHints(**pattern["model_hints"])
-                
-                # Convert type to enum
-                if "type" in pattern:
-                    pattern["type"] = TaskType(pattern["type"])
-    
-    # Convert sprints
-    if "sprints" in data:
-        for i, sprint in enumerate(data["sprints"]):
-            # Ensure tasks is a list
-            if "tasks" not in sprint:
-                sprint["tasks"] = []
-    
-    # Convert quality gates
-    # Don't convert here - let StrategyV2 handle it
-    # if "quality_gates" in data:
-    #     for i, gate in enumerate(data["quality_gates"]):
-    #         data["quality_gates"][i] = QualityGate(**gate)
+    # Transform data for StrategyV2
+    _transform_task_patterns(data)
+    _transform_sprints(data)
+    _transform_goal(data)
     
     try:
-        # Handle goal field - allow string
-        if 'goal' in data and isinstance(data['goal'], str):
-            # Keep as string
-            pass
-        elif 'goal' in data and isinstance(data['goal'], dict):
-            # Convert dict to Goal object if needed
-            data['goal'] = Goal(**data['goal'])
-        
         return StrategyV2(**data)
     except Exception as e:
-        # Re-raise with more context
-        if hasattr(e, 'errors') and callable(e.errors):
-            # Pydantic validation error
-            error_msg = f"Invalid strategy in {file_path}:\n"
-            for error in e.errors():
-                loc = " -> ".join(str(x) for x in error['loc'])
-                error_msg += f"  {loc}: {error['msg']}\n"
-            raise ValueError(error_msg)
-        else:
-            raise ValueError(f"Invalid strategy in {file_path}: {e}")
+        raise _format_validation_error(e, file_path)
+
+
+def _transform_task_patterns(data: Dict) -> None:
+    """Transform task patterns in the data."""
+    if "tasks" not in data:
+        return
+    
+    for category, patterns in data["tasks"].items():
+        for pattern in patterns:
+            # Convert model_hints if present
+            if "model_hints" in pattern:
+                pattern["model_hints"] = ModelHints(**pattern["model_hints"])
+            
+            # Convert type to enum
+            if "type" in pattern:
+                pattern["type"] = TaskType(pattern["type"])
+
+
+def _transform_sprints(data: Dict) -> None:
+    """Transform sprints in the data."""
+    if "sprints" not in data:
+        return
+    
+    for sprint in data["sprints"]:
+        # Ensure tasks is a list
+        if "tasks" not in sprint:
+            sprint["tasks"] = []
+
+
+def _transform_goal(data: Dict) -> None:
+    """Transform goal field in the data."""
+    if 'goal' not in data:
+        return
+    
+    if isinstance(data['goal'], str):
+        # Keep as string
+        pass
+    elif isinstance(data['goal'], dict):
+        # Convert dict to Goal object
+        data['goal'] = Goal(**data['goal'])
+
+
+def _format_validation_error(e: Exception, file_path: Union[str, Path]) -> ValueError:
+    """Format validation error with context."""
+    if hasattr(e, 'errors') and callable(e.errors):
+        # Pydantic validation error
+        error_msg = f"Invalid strategy in {file_path}:\n"
+        for error in e.errors():
+            loc = " -> ".join(str(x) for x in error['loc'])
+            error_msg += f"  {loc}: {error['msg']}\n"
+        return ValueError(error_msg)
+    else:
+        return ValueError(f"Invalid strategy in {file_path}: {e}")
 
 
 def save_strategy_yaml(strategy: Union[Strategy, Dict], file_path: Union[str, Path]) -> None:

@@ -1,7 +1,7 @@
 <!-- code2docs:start --># planfile
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-325-green)
-> **325** functions | **52** classes | **78** files | CC̄ = 4.2
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-310-green)
+> **310** functions | **52** classes | **70** files | CC̄ = 4.2
 
 > Auto-generated project documentation from source code analysis.
 
@@ -154,7 +154,7 @@ Content outside the markers is preserved when regenerating. Enable this with `sy
 
 ```
 planfile/
-├── mcp-server-example    ├── examples    ├── llx_validator├── planfile/    ├── runner    ├── executor_standalone        ├── yaml_loader    ├── ci_runner    ├── loaders/        ├── cli_loader        ├── generator    ├── analysis/        ├── models        ├── file_analyzer        ├── external_tools        ├── sprint_generator        ├── commands        ├── auto_loop    ├── cli/        ├── __main__        ├── extra_commands        ├── generator        ├── adapters    ├── llm/        ├── prompts        ├── client    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── cmd_review            ├── cmd_utils            ├── cmd_apply            ├── cmd_generate            ├── cmd_validate        ├── generators/            ├── metrics_extractor            ├── toon_parser        ├── parsers/            ├── yaml_parser            ├── json_parser            ├── text_parser        ├── integrated_functionality_examples        ├── advanced_usage_examples        ├── external_tools_examples        ├── 02_mcp_integration        ├── 04_llx_integration        ├── 03_proxy_routing        ├── quick_start_examples        ├── comprehensive_example        ├── summary        ├── cli_command_examples├── cleanup_redundant├── docker-entrypoint├── auto_generate_planfile├── project    ├── validate_with_llx        ├── run        ├── run        ├── run        ├── run        ├── ci-workflow        ├── run        ├── 01_full_workflow        ├── run        ├── run        ├── run        ├── verify_planfile    ├── models_v2        ├── base    ├── models```
+├── mcp-server-example    ├── examples    ├── llx_validator├── planfile/    ├── runner    ├── executor_standalone        ├── yaml_loader    ├── ci_runner    ├── loaders/        ├── cli_loader        ├── generator    ├── analysis/        ├── external_tools        ├── models        ├── file_analyzer        ├── sprint_generator        ├── commands        ├── auto_loop    ├── cli/        ├── __main__        ├── extra_commands        ├── adapters        ├── prompts    ├── llm/        ├── client        ├── generator    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── cmd_review            ├── cmd_utils            ├── cmd_init            ├── cmd_apply            ├── cmd_generate            ├── cmd_validate        ├── generators/            ├── metrics_extractor            ├── toon_parser        ├── parsers/            ├── yaml_parser            ├── json_parser            ├── text_parser        ├── 02_mcp_integration        ├── 04_llx_integration        ├── 03_proxy_routing├── cleanup_redundant├── docker-entrypoint├── auto_generate_planfile├── run_examples├── project    ├── validate_with_llx        ├── run        ├── run        ├── run        ├── run        ├── ci-workflow        ├── run        ├── 01_full_workflow        ├── run        ├── run        ├── run        ├── verify_planfile    ├── models    ├── models_v2        ├── base```
 
 ## API Overview
 
@@ -168,12 +168,12 @@ planfile/
 - **`BugReport`** — Generated bug report from test failures.
 - **`CIRunner`** — CI/CD runner with automated bug-fix loop.
 - **`PlanfileGenerator`** — Generate comprehensive planfile from file analysis.
+- **`AnalysisResults`** — Results from external tool analysis.
+- **`ExternalToolRunner`** — Runner for external code analysis tools.
 - **`ExtractedIssue`** — Represents an issue extracted from a file.
 - **`ExtractedMetric`** — Represents a metric extracted from a file.
 - **`ExtractedTask`** — Represents a task extracted from a file.
 - **`FileAnalyzer`** — Analyzes YAML/JSON files to extract issues and metrics.
-- **`AnalysisResults`** — Results from external tool analysis.
-- **`ExternalToolRunner`** — Runner for external code analysis tools.
 - **`SprintGenerator`** — Generates sprints and tickets from extracted information.
 - **`LLMTestResult`** — Result of LLM test.
 - **`BaseLLMAdapter`** — Base class for LLM adapters.
@@ -192,6 +192,14 @@ planfile/
 - **`User`** — —
 - **`UserService`** — —
 - **`UserController`** — —
+- **`TaskType`** — Type of task in the strategy.
+- **`ModelTier`** — Model tier for different phases of work.
+- **`ModelHints`** — AI model hints for different phases of task execution.
+- **`TaskPattern`** — A pattern for generating tasks.
+- **`Sprint`** — A sprint in the strategy.
+- **`Goal`** — Project goal definition.
+- **`QualityGate`** — Quality gate definition.
+- **`Strategy`** — Main strategy configuration.
 - **`TaskType`** — Type of task in the planfile.
 - **`ModelTier`** — Model tier for different phases of work.
 - **`ModelHints`** — AI model hints for different phases of task execution.
@@ -204,14 +212,6 @@ planfile/
 - **`TicketStatus`** — Status of a ticket.
 - **`PMBackend`** — Protocol for PM system backends.
 - **`BasePMBackend`** — Base class for PM backends with common functionality.
-- **`TaskType`** — Type of task in the strategy.
-- **`ModelTier`** — Model tier for different phases of work.
-- **`ModelHints`** — AI model hints for different phases of task execution.
-- **`TaskPattern`** — A pattern for generating tasks.
-- **`Sprint`** — A sprint in the strategy.
-- **`Goal`** — Project goal definition.
-- **`QualityGate`** — Quality gate definition.
-- **`Strategy`** — Main strategy configuration.
 
 ### Functions
 
@@ -260,9 +260,9 @@ planfile/
 - `generate_template(project_type, domain)` — Generate a strategy template based on project type and domain.
 - `calculate_strategy_stats(strategy)` — Calculate statistics for a strategy.
 - `add_extra_commands(app)` — Add extra commands to the CLI app.
-- `generate_strategy(project_path)` — Generate a complete strategy from project analysis.
 - `build_strategy_prompt(metrics, sprints, focus)` — Build a structured prompt for strategy generation.
 - `call_llm(prompt, model, temperature)` — Call LLM via LiteLLM. Falls back to llx proxy if available.
+- `generate_strategy(project_path)` — Generate a complete strategy from project analysis.
 - `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
 - `map_priority_to_system(priority, system)` — Map generic priority to system-specific priority.
 - `get_priority_color(priority)` — Get color code for priority (for UI display).
@@ -270,6 +270,7 @@ planfile/
 - `calculate_strategy_health(strategy_results)` — Calculate health metrics for a strategy execution.
 - `review_strategy_cli(strategy_path, project_path, backend, config_file)` — Review strategy execution and progress.
 - `get_backend(backend_type, config)` — Get backend instance by type and config.
+- `init_strategy_cli(output, yes)` — Interactive wizard — tworzy strategię przez zadawanie pytań.
 - `apply_strategy_cli(strategy_path, project_path, backend, config_file)` — Apply a strategy to create tickets.
 - `generate_strategy_cli(project_path, output, model, sprints)` — Generate strategy.yaml from project analysis + LLM.
 - `generate_from_files_cmd(project_path, output, project_name, max_sprints)` — Generate planfile from file analysis (no LLM required).
@@ -280,27 +281,6 @@ planfile/
 - `analyze_yaml(file_path)` — Analyze YAML file with better error handling.
 - `analyze_json(file_path)` — Analyze JSON file.
 - `analyze_text(file_path)` — Analyze text content for TODOs, FIXMEs, and metrics.
-- `example_1_generate_from_files()` — Example 1: Generate strategy from file analysis.
-- `example_2_template_generation()` — Example 2: Generate strategy templates.
-- `example_3_strategy_comparison()` — Example 3: Compare strategies.
-- `example_4_export_formats()` — Example 4: Export strategies to different formats.
-- `example_5_strategy_stats()` — Example 5: Get strategy statistics.
-- `example_6_merge_strategies()` — Example 6: Merge multiple strategies.
-- `example_7_external_tools()` — Example 7: Generate with external tools (if available).
-- `main()` — Run all examples.
-- `example_1_custom_file_patterns()` — Example 1: Analyze with custom file patterns.
-- `example_2_focus_area_strategies()` — Example 2: Generate strategies for different focus areas.
-- `example_3_iterative_refinement()` — Example 3: Iteratively refine a strategy.
-- `example_4_batch_processing()` — Example 4: Process multiple directories.
-- `example_5_custom_metrics()` — Example 5: Add custom metrics to analysis.
-- `example_6_workflow_automation()` — Example 6: Automated workflow for CI/CD.
-- `main()` — Run all advanced examples.
-- `example_1_check_external_tools()` — Example 1: Check if external tools are available.
-- `example_2_run_individual_tools()` — Example 2: Run each tool individually.
-- `example_3_run_all_tools()` — Example 3: Run all tools and get results.
-- `example_4_generate_strategy_with_tools()` — Example 4: Generate strategy using external tools.
-- `example_5_custom_analysis()` — Example 5: Custom analysis with specific focus.
-- `main()` — Run all external tools examples.
 - `run_mcp_tool(tool_name, arguments)` — Simulate running an MCP tool.
 - `simulate_planfile_generate(args)` — Simulate planfile generate tool.
 - `simulate_planfile_apply(args)` — Simulate planfile apply tool.
@@ -312,21 +292,23 @@ planfile/
 - `example_strategy_generation_with_proxy()` — Example: Generate strategy using proxy for smart model routing.
 - `create_proxy_config_example()` — Create example proxy configuration for planfile integration.
 - `example_budget_tracking()` — Example: Budget tracking with proxy.
-- `quick_start_1()` — Quick Start 1: Generate a strategy from current directory.
-- `quick_start_2()` — Quick Start 2: Create a template.
-- `quick_start_3()` — Quick Start 3: Load and analyze a strategy.
-- `quick_start_4()` — Quick Start 4: Export to different formats.
-- `quick_start_5()` — Quick Start 5: Compare two strategies.
-- `main()` — Run all quick start examples.
-- `run_command(cmd, description)` — Run a command and display results.
-- `main()` — Run comprehensive examples.
-- `create_summary()` — Create a summary of all changes made.
-- `run_command(cmd, description, check)` — Run a command and display results.
-- `main()` — Demonstrate CLI commands.
 - `check_env()` — —
 - `validate_config()` — —
 - `setup_workspace()` — —
 - `run_command()` — —
+- `main()` — —
+- `print_header()` — —
+- `print_step()` — —
+- `print_success()` — —
+- `print_error()` — —
+- `print_info()` — —
+- `run_example()` — —
+- `check_prerequisites()` — —
+- `setup_environment()` — —
+- `run_all_examples()` — —
+- `run_specific_example()` — —
+- `show_usage()` — —
+- `list_examples()` — —
 - `main()` — —
 - `validate_file()` — —
 - `create_user()` — —
@@ -348,27 +330,20 @@ planfile/
 📄 `auto_generate_planfile`
 📄 `cleanup_redundant`
 📄 `docker-entrypoint` (5 functions)
-📄 `examples.advanced-usage.advanced_usage_examples` (7 functions)
 📄 `examples.advanced-usage.ci-workflow`
 📄 `examples.advanced-usage.run`
 📄 `examples.bash-generation.verify_planfile` (4 functions)
-📄 `examples.cli-commands.cli_command_examples` (2 functions)
 📄 `examples.cli-commands.run`
-📄 `examples.comprehensive-example.comprehensive_example` (2 functions)
 📄 `examples.comprehensive-example.run`
-📄 `examples.comprehensive-example.summary` (1 functions)
 📄 `examples.demo-without-keys.run`
 📄 `examples.ecosystem.01_full_workflow` (17 functions, 6 classes)
 📄 `examples.ecosystem.02_mcp_integration` (6 functions)
 📄 `examples.ecosystem.03_proxy_routing` (7 functions, 1 classes)
 📄 `examples.ecosystem.04_llx_integration` (9 functions, 2 classes)
-📄 `examples.external-tools.external_tools_examples` (6 functions)
 📄 `examples.external-tools.run`
-📄 `examples.integrated-functionality.integrated_functionality_examples` (8 functions)
 📄 `examples.integrated-functionality.run`
 📄 `examples.llm-integration.run`
 📄 `examples.llx_validator` (7 functions, 1 classes)
-📄 `examples.quick-start.quick_start_examples` (6 functions)
 📄 `examples.quick-start.run`
 📄 `examples.validate_with_llx` (1 functions)
 📄 `mcp-server-example` (4 functions)
@@ -392,6 +367,7 @@ planfile/
 📄 `planfile.cli.auto_loop` (9 functions)
 📄 `planfile.cli.cmd.cmd_apply` (4 functions)
 📄 `planfile.cli.cmd.cmd_generate` (2 functions)
+📄 `planfile.cli.cmd.cmd_init` (4 functions)
 📄 `planfile.cli.cmd.cmd_review` (1 functions)
 📄 `planfile.cli.cmd.cmd_utils` (5 functions)
 📄 `planfile.cli.cmd.cmd_validate` (1 functions)
@@ -420,6 +396,7 @@ planfile/
 📄 `planfile.utils.metrics` (5 functions)
 📄 `planfile.utils.priorities` (3 functions)
 📄 `project`
+📄 `run_examples` (13 functions)
 
 ## Requirements
 

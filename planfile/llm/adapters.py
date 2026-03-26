@@ -415,10 +415,20 @@ class LLMTestRunner:
     
     def generate_report(self, results: Dict[str, List[LLMTestResult]]) -> str:
         """Generate a test report."""
-        report = ["# LLM Adapter Test Report\n"]
-        
-        # Summary table
-        report.append("## Summary\n")
+        report_sections = [
+            self._generate_header(),
+            self._generate_summary_table(results),
+            self._generate_detailed_results(results),
+        ]
+        return "\n".join(report_sections)
+    
+    def _generate_header(self) -> str:
+        """Generate report header."""
+        return "# LLM Adapter Test Report\n"
+    
+    def _generate_summary_table(self, results: Dict[str, List[LLMTestResult]]) -> str:
+        """Generate summary table section."""
+        report = ["## Summary\n"]
         report.append("| Adapter | Model | Success | Time (s) | Tokens | Cost |")
         report.append("|---------|-------|---------|----------|--------|------|")
         
@@ -430,8 +440,11 @@ class LLMTestRunner:
                     f"{result.token_count or '-'} | ${result.cost or '-'} |"
                 )
         
-        # Detailed results
-        report.append("\n## Detailed Results\n")
+        return "\n".join(report)
+    
+    def _generate_detailed_results(self, results: Dict[str, List[LLMTestResult]]) -> str:
+        """Generate detailed results section."""
+        report = ["\n## Detailed Results\n"]
         
         for adapter_name, adapter_results in results.items():
             report.append(f"### {adapter_name}\n")
@@ -440,20 +453,30 @@ class LLMTestRunner:
             failed = [r for r in adapter_results if not r.success]
             
             if successful:
-                report.append("#### Successful Tests\n")
-                for result in successful:
-                    report.append(f"**Model:** {result.model or 'default'}\n")
-                    report.append(f"- Response time: {result.response_time:.2f}s\n")
-                    if result.token_count:
-                        report.append(f"- Tokens: {result.token_count}\n")
-                    if result.cost:
-                        report.append(f"- Cost: ${result.cost:.4f}\n")
-                    report.append(f"- Response preview: {result.response[:200]}...\n")
+                report.append(self._generate_successful_tests_section(successful))
             
             if failed:
-                report.append("#### Failed Tests\n")
-                for result in failed:
-                    report.append(f"**Model:** {result.model or 'default'}\n")
-                    report.append(f"- Error: {result.error}\n")
+                report.append(self._generate_failed_tests_section(failed))
         
         return "\n".join(report)
+    
+    def _generate_successful_tests_section(self, successful: List[LLMTestResult]) -> str:
+        """Generate successful tests section."""
+        section = ["#### Successful Tests\n"]
+        for result in successful:
+            section.append(f"**Model:** {result.model or 'default'}\n")
+            section.append(f"- Response time: {result.response_time:.2f}s\n")
+            if result.token_count:
+                section.append(f"- Tokens: {result.token_count}\n")
+            if result.cost:
+                section.append(f"- Cost: ${result.cost:.4f}\n")
+            section.append(f"- Response preview: {result.response[:200]}...\n")
+        return "\n".join(section)
+    
+    def _generate_failed_tests_section(self, failed: List[LLMTestResult]) -> str:
+        """Generate failed tests section."""
+        section = ["#### Failed Tests\n"]
+        for result in failed:
+            section.append(f"**Model:** {result.model or 'default'}\n")
+            section.append(f"- Error: {result.error}\n")
+        return "\n".join(section)
