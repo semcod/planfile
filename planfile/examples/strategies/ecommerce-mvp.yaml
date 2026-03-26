@@ -1,4 +1,5 @@
 name: "E-commerce Platform MVP"
+project_name: "ECommerceMVP"
 project_type: "web"
 domain: "retail"
 goal: "Launch a minimum viable e-commerce platform with core shopping features"
@@ -266,21 +267,14 @@ tasks:
         review: "balanced"
 
 quality_gates:
-  - name: "Payment Security"
-    description: "Payment processing must be PCI compliant"
-    criteria:
-      - "PCI DSS compliance verified"
-      - "No card data stored on servers"
-      - "SSL/TLS encryption enforced"
-    required: true
-
-  - name: "Performance"
-    description: "Site must meet performance benchmarks"
-    criteria:
-      - "Lighthouse score > 90"
-      - "Page load under 3 seconds"
-      - "Core Web Vitals passed"
-    required: true
+  - metric: "Payment Security"
+    threshold: "PCI DSS compliant"
+  - metric: "Performance"
+    threshold: "Lighthouse score > 90"
+  - metric: "Page Load Time"
+    threshold: "< 3 seconds"
+  - metric: "Uptime"
+    threshold: ">= 99.9%"
 
 success_metrics:
   - "Process 1000+ orders per day"

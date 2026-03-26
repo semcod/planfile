@@ -1,0 +1,228 @@
+name: Microservices Refactoring Strategy
+project_name: Legacy Monolith
+project_type: microservices_migration
+domain: enterprise-software
+goal: architecture-transformation
+
+goals:
+- Decompose monolithic application into microservices
+- Establish service boundaries based on domain-driven design
+- Implement API gateway for service communication
+- Ensure zero-downtime deployment strategy
+- Maintain data consistency across services
+- Implement distributed tracing and monitoring
+
+quality_gates:
+- metric: Service independence
+  threshold: '>= 90% services can be deployed independently'
+- metric: API response time
+  threshold: '<= 200ms p95'
+- metric: Service availability
+  threshold: '>= 99.9% uptime'
+- metric: Data consistency
+  threshold: 'No data loss during migration'
+- metric: Test coverage
+  threshold: '>= 85% per service'
+- metric: Circuit breaker coverage
+  threshold: '100% of inter-service calls'
+
+sprints:
+- id: sprint-1
+  name: Foundation and Analysis
+  duration: 2 weeks
+  objectives:
+  - Analyze monolith dependencies and identify service boundaries
+  - Set up CI/CD pipeline for microservices
+  - Implement service discovery mechanism
+  - Create database per service pattern
+  - Establish logging and monitoring infrastructure
+  
+  task_patterns:
+  - name: Domain context mapping
+    description: Identify bounded contexts and aggregate boundaries
+    task_type: analysis
+    priority: critical
+    model_hints:
+      planning: premium
+      implementation: premium
+    acceptance_criteria:
+    - Domain model documented
+    - Service boundaries defined
+    - Context maps created
+    
+  - name: Database decomposition
+    description: Split monolith database into service-specific databases
+    task_type: refactor
+    priority: critical
+    model_hints:
+      planning: premium
+      implementation: premium
+    acceptance_criteria:
+    - Each service has its own database
+    - Data access patterns identified
+    - Migration scripts ready
+
+- id: sprint-2
+  name: Core Services Extraction
+  duration: 3 weeks
+  objectives:
+  - Extract user management service
+  - Extract product catalog service
+  - Extract order management service
+  - Implement API gateway
+  - Set up service mesh
+  
+  task_patterns:
+  - name: Extract user service
+    description: Move user-related functionality to dedicated service
+    task_type: refactor
+    priority: high
+    dependencies:
+    - Database decomposition
+    - Service discovery
+    model_hints:
+      planning: premium
+      implementation: premium
+    acceptance_criteria:
+    - User service deployed independently
+    - Authentication flows working
+    - User data migrated
+    
+  - name: Implement API gateway
+    description: Create gateway for routing and cross-cutting concerns
+    task_type: feature
+    priority: high
+    model_hints:
+      planning: premium
+      implementation: balanced
+    acceptance_criteria:
+    - All routes configured
+    - Rate limiting implemented
+    - Authentication middleware active
+
+- id: sprint-3
+  name: Advanced Services and Optimization
+  duration: 3 weeks
+  objectives:
+  - Extract notification service
+  - Extract payment service
+  - Implement event-driven architecture
+  - Add distributed caching
+  - Performance optimization
+  
+  task_patterns:
+  - name: Implement event bus
+    description: Set up message broker for async communication
+    task_type: feature
+    priority: high
+    model_hints:
+      planning: premium
+      implementation: premium
+    acceptance_criteria:
+    - Message broker configured
+    - Event schemas defined
+    - Publishers/subscribers working
+    
+  - name: Add distributed tracing
+    description: Implement OpenTelemetry for request tracing
+    task_type: feature
+    priority: medium
+    model_hints:
+      planning: balanced
+      implementation: balanced
+    acceptance_criteria:
+    - Tracing integrated across services
+    - Jaeger/Zipkin dashboard active
+    - Critical paths traced
+
+- id: sprint-4
+  name: Testing and Migration
+  duration: 2 weeks
+  objectives:
+  - Comprehensive integration testing
+  - Performance testing at scale
+  - Canary deployment strategy
+  - Documentation and training
+  - Production readiness review
+  
+  task_patterns:
+  - name: Chaos engineering tests
+    description: Test system resilience under failure conditions
+    task_type: test
+    priority: high
+    model_hints:
+      planning: premium
+      implementation: premium
+    acceptance_criteria:
+    - Failure scenarios documented
+    - Circuit breakers tested
+    - Recovery procedures verified
+    
+  - name: Production migration
+    description: Execute blue-green deployment to production
+    task_type: deployment
+    priority: critical
+    model_hints:
+      planning: premium
+      implementation: premium
+    acceptance_criteria:
+    - Zero-downtime migration
+    - Monitoring alerts configured
+    - Rollback plan tested
+
+tasks:
+  critical_refactors:
+  - name: Extract business logic
+    description: Identify and extract core business rules
+    estimated_hours: 40
+    complexity: high
+    
+  - name: Implement data consistency
+    description: Ensure ACID properties across services
+    estimated_hours: 60
+    complexity: high
+    
+  standard_refactors:
+  - name: Refactor authentication
+    description: Move auth to dedicated service
+    estimated_hours: 24
+    complexity: medium
+    
+  - name: Implement caching layer
+    description: Add Redis for performance
+    estimated_hours: 16
+    complexity: low
+    
+  test_writing:
+  - name: Contract tests
+    description: Test API contracts between services
+    estimated_hours: 32
+    complexity: medium
+    
+  - name: Load tests
+    description: Performance testing under load
+    estimated_hours: 40
+    complexity: high
+    
+  documentation:
+  - name: API documentation
+    description: Document all service APIs
+    estimated_hours: 24
+    complexity: low
+    
+  - name: Deployment guides
+    description: Create runbooks for operations
+    estimated_hours: 16
+    complexity: low
+
+metrics:
+  target:
+    services_count: 8
+    api_endpoints: 150
+    database_tables: 45
+    message_types: 20
+  quality:
+    test_coverage: 85
+    api_documentation: 100
+    sla_uptime: 99.9
+    deployment_frequency: weekly

@@ -1,0 +1,66 @@
+analysis:
+  exclude_patterns:
+  - '*/__pycache__/*'
+  - '*/venv/*'
+  - '*/.tox/*'
+  - '*/tests/*'
+  metrics:
+    complexity:
+      threshold:
+        high: 15
+        low: 5
+        medium: 10
+      tool: code2llm
+    coverage:
+      exclude_test_files: false
+      tool: vallm
+    duplication:
+      min_duplicates: 2
+      min_lines: 10
+      tool: redup
+  tools:
+  - code2llm
+  - redup
+  - vallm
+integration:
+  planfile:
+    auto_analyze: true
+    cache_metrics: true
+    cache_ttl: 3600
+    export_format: yaml
+model_selection:
+  fallback: anthropic/claude-sonnet-4
+  rules:
+  - conditions:
+      avg_cc:
+        gt: 8
+      god_modules:
+        gt: 0
+      max_cc:
+        gt: 20
+    models:
+    - anthropic/claude-opus-4
+    name: high_complexity_refactor
+    reasoning: High complexity requires strongest model
+  - conditions:
+      avg_cc:
+        gt: 4
+        lte: 8
+      total_files:
+        gt: 20
+    models:
+    - anthropic/claude-sonnet-4
+    - openai/gpt-4
+    name: medium_complexity_refactor
+    reasoning: Medium complexity needs balanced model
+  - conditions:
+      avg_cc:
+        lte: 4
+      task_type:
+      - test
+      - docs
+    models:
+    - anthropic/claude-haiku-4.5
+    - openai/gpt-3.5-turbo
+    name: low_complexity_tasks
+    reasoning: Simple tasks can use cheaper models

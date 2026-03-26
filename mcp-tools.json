@@ -1,0 +1,87 @@
+[
+  {
+    "name": "planfile_generate",
+    "description": "Generate a refactoring strategy YAML from project analysis. Uses LLM to create sprints, tasks, and quality gates.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "project_path": {
+          "type": "string",
+          "default": "."
+        },
+        "model": {
+          "type": "string",
+          "description": "LiteLLM model ID"
+        },
+        "sprints": {
+          "type": "integer",
+          "default": 3
+        },
+        "focus": {
+          "type": "string",
+          "enum": [
+            "complexity",
+            "duplication",
+            "tests",
+            "docs"
+          ]
+        },
+        "output": {
+          "type": "string",
+          "default": "strategy.yaml"
+        }
+      }
+    }
+  },
+  {
+    "name": "planfile_apply",
+    "description": "Apply a strategy.yaml to a project \u2014 create tickets, execute tasks.",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "strategy_path"
+      ],
+      "properties": {
+        "strategy_path": {
+          "type": "string"
+        },
+        "project_path": {
+          "type": "string",
+          "default": "."
+        },
+        "backend": {
+          "type": "string",
+          "enum": [
+            "github",
+            "jira",
+            "gitlab",
+            "generic"
+          ]
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  },
+  {
+    "name": "planfile_review",
+    "description": "Review progress against a strategy \u2014 check quality gates, report status.",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "strategy_path"
+      ],
+      "properties": {
+        "strategy_path": {
+          "type": "string"
+        },
+        "project_path": {
+          "type": "string",
+          "default": "."
+        }
+      }
+    }
+  }
+]

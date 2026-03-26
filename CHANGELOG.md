@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.18] - 2026-03-26
+
+### Docs
+- Update EXAMPLES_SUMMARY.md
+
+### Test
+- Update test-results.json
+
+### Other
+- Update llx-config-for-planfile.yaml
+- Update llx-driven-strategy.yaml
+- Update mcp-server-example.py
+- Update mcp-tools.json
+- Update planfile/examples/comprehensive_example.py
+- Update planfile/examples/ecosystem/01_full_workflow.sh
+- Update planfile/examples/llm-config.yaml
+- Update planfile/examples/llm_integration_demo.py
+- Update planfile/examples/strategies/ecommerce-mvp.yaml
+- Update planfile/examples/strategies/microservices-migration.yaml
+- ... and 8 more files
+
 ## [0.1.17] - 2026-03-26
 
 ### Test

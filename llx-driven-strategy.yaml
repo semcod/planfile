@@ -1,0 +1,77 @@
+project:
+  metrics:
+    avg_cc: 33.5
+    complexity_score: 80.5
+    max_cc: 960
+    total_files: 3837
+    total_lines: 1486822
+  name: ''
+quality_gates:
+- current: 33.498566588480585
+  metric: avg_cc
+  name: Cyclomatic Complexity
+  operator: <=
+  threshold: 20.09913995308835
+- current: 0
+  metric: test_coverage
+  name: Test Coverage
+  operator: '>='
+  threshold: 80
+- current: 0
+  metric: duplication_percent
+  name: Code Duplication
+  operator: <=
+  threshold: 5
+sprints:
+- goal: Reduce max CC from 960 to <15
+  id: sprint-1
+  name: Critical Complexity Reduction
+  task_patterns:
+  - estimated_hours: 4
+    model_hints:
+      implementation: anthropic/claude-opus-4
+      planning: anthropic/claude-opus-4
+      review: anthropic/claude-opus-4
+    name: "Fix 1 critical functions (CC\u226515)"
+    priority: critical
+    task_type: refactor
+  - estimated_hours: 8
+    model_hints:
+      implementation: anthropic/claude-opus-4
+      planning: anthropic/claude-opus-4
+      review: anthropic/claude-opus-4
+    name: Split 1 god modules
+    priority: critical
+    task_type: refactor
+- goal: Improve maintainability and reduce duplication
+  id: sprint-2
+  name: Code Quality Enhancement
+  task_patterns:
+  - estimated_hours: 383
+    model_hints:
+      implementation: anthropic/claude-opus-4
+      planning: anthropic/claude-opus-4
+      review: anthropic/claude-opus-4
+    name: Improve code structure and patterns
+    priority: medium
+    task_type: refactor
+- goal: Achieve 80% test coverage and complete documentation
+  id: sprint-3
+  name: Testing & Documentation
+  task_patterns:
+  - estimated_hours: 1534
+    model_hints:
+      implementation: anthropic/claude-sonnet-4
+      planning: anthropic/claude-sonnet-4
+      review: anthropic/claude-sonnet-4
+    name: Add comprehensive test suite (767 tests)
+    priority: high
+    task_type: test
+  - estimated_hours: 765
+    model_hints:
+      implementation: anthropic/claude-sonnet-4
+      planning: anthropic/claude-sonnet-4
+      review: anthropic/claude-sonnet-4
+    name: Generate documentation (255 docs)
+    priority: medium
+    task_type: docs
