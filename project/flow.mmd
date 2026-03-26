@@ -5,14 +5,21 @@ flowchart TD
 
     subgraph CLI
         planfile__cli__auto_loop__get_backend["get_backend"]
+        planfile__cli__auto_loop___validate_strategy["_validate_strategy"]
+        planfile__cli__auto_loop___initialize_backends["_initialize_backends"]
+        planfile__cli__auto_loop___display_summary_table["_display_summary_table"]
+        planfile__cli__auto_loop___display_final_status["_display_final_status"]
+        planfile__cli__auto_loop___display_ticket_summary["_display_ticket_summary"]
+        planfile__cli__auto_loop___save_results_if_needed["_save_results_if_needed"]
         planfile__cli__auto_loop__auto_loop["auto_loop"]
         planfile__cli__auto_loop__ci_status["ci_status"]
         planfile__cli__commands__get_backend["get_backend"]
-        planfile__cli__commands__apply_strategy_cli["apply_strategy_cli"]
-        planfile__cli__commands__review_strategy_cli["review_strategy_cli"]
-        planfile__cli__commands__validate_strategy_cli["validate_strategy_cli"]
-        planfile__cli__commands__generate_strategy_cli["generate_strategy_cli"]
-        planfile__cli__commands__main["main"]
+        planfile__cli__commands___load_and_validate_strategy["_load_and_validate_strategy"]
+        planfile__cli__commands___load_backend_config["_load_backend_config"]
+        planfile__cli__commands___parse_sprint_filter["_parse_sprint_filter"]
+        planfile__cli__commands___select_backend["_select_backend"]
+        planfile__cli__commands___execute_apply_strategy["_execute_apply_strategy"]
+        ...["+7 more"]
     end
 
     subgraph Core
@@ -21,21 +28,21 @@ flowchart TD
         planfile__runner__StrategyRunner___get_sprint_tickets["_get_sprint_tickets"]
         planfile__runner__apply_strategy["apply_strategy"]
         planfile__runner__review_strategy["review_strategy"]
-        planfile__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
-        planfile__loaders__yaml_loader__validate_strategy_schema["validate_strategy_schema"]
         planfile__loaders__cli_loader__load_from_json["load_from_json"]
         planfile__loaders__cli_loader__save_to_json["save_to_json"]
         planfile__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
         planfile__loaders__cli_loader__save_strategy_to_json["save_strategy_to_json"]
-        planfile__llm__generator__generate_strategy["generate_strategy"]
-        planfile__llm__generator___collect_metrics["_collect_metrics"]
-        planfile__llm__client__call_llm["call_llm"]
-        planfile__utils__priorities__map_priority_to_system["map_priority_to_system"]
-        ...["+116 more"]
+        planfile__loaders__cli_loader___md_header["_md_header"]
+        planfile__loaders__cli_loader___md_summary["_md_summary"]
+        planfile__loaders__cli_loader___md_tasks["_md_tasks"]
+        planfile__loaders__cli_loader___md_sprints["_md_sprints"]
+        planfile__loaders__cli_loader___md_metrics["_md_metrics"]
+        planfile__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
+        ...["+120 more"]
     end
 
     subgraph Exporters
         planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
     end
 
-    class planfile__runner__StrategyRunner___find_task_pattern,planfile__runner__StrategyRunner___create_ticket_for_task,planfile__runner__StrategyRunner___get_sprint_tickets,planfile__runner__apply_strategy,planfile__runner__review_strategy,planfile__loaders__yaml_loader__merge_strategy_with_tasks,planfile__loaders__yaml_loader__validate_strategy_schema,planfile__loaders__cli_loader__load_from_json,planfile__loaders__cli_loader__save_to_json,planfile__loaders__cli_loader__load_strategy_from_json entry
+    class planfile__runner__StrategyRunner___find_task_pattern,planfile__runner__StrategyRunner___create_ticket_for_task,planfile__runner__StrategyRunner___get_sprint_tickets,planfile__runner__apply_strategy,planfile__runner__review_strategy,planfile__loaders__cli_loader__load_from_json,planfile__loaders__cli_loader__save_to_json,planfile__loaders__cli_loader__load_strategy_from_json,planfile__loaders__cli_loader__save_strategy_to_json,planfile__loaders__cli_loader___md_header entry

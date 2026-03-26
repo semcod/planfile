@@ -1,8 +1,8 @@
-# planfile | 27f 4396L | python:24,javascript:1,shell:2 | 2026-03-26
-# stats: 163 func | 0 cls | 27 mod | CC̄=4.9 | critical:12 | cycles:0
-# alerts[5]: fan-out apply_strategy_cli=28; fan-out analyze_project_metrics=23; fan-out auto_loop=23; fan-out review_strategy_cli=23; CC filter_handler=21
-# hotspots[5]: apply_strategy_cli fan=28; auto_loop fan=23; review_strategy_cli fan=23; analyze_project_metrics fan=23; export_results_to_markdown fan=16
-# evolution: CC̄ 4.9→4.9 (flat 0.0)
+# planfile | 27f 4580L | python:24,javascript:1,shell:2 | 2026-03-26
+# stats: 188 func | 0 cls | 27 mod | CC̄=4.4 | critical:7 | cycles:0
+# alerts[5]: fan-out review_strategy_cli=23; fan-out auto_loop=21; CC filter_handler=21; CC footer=21; CC no_rows=21
+# hotspots[5]: review_strategy_cli fan=23; auto_loop fan=21; apply_strategy_cli fan=15; sortColumn fan=15; table fan=15
+# evolution: CC̄ 4.9→4.4 (improved -0.5)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
 M[27]:
   docker-entrypoint.sh,174
@@ -11,8 +11,8 @@ M[27]:
   planfile/ci_runner.py,453
   planfile/cli/__init__.py,0
   planfile/cli/__main__.py,4
-  planfile/cli/auto_loop.py,216
-  planfile/cli/commands.py,373
+  planfile/cli/auto_loop.py,252
+  planfile/cli/commands.py,421
   planfile/integrations/__init__.py,0
   planfile/integrations/base.py,112
   planfile/integrations/generic.py,197
@@ -24,12 +24,12 @@ M[27]:
   planfile/llm/generator.py,124
   planfile/llm/prompts.py,63
   planfile/loaders/__init__.py,0
-  planfile/loaders/cli_loader.py,158
-  planfile/loaders/yaml_loader.py,225
+  planfile/loaders/cli_loader.py,194
+  planfile/loaders/yaml_loader.py,261
   planfile/models.py,97
   planfile/runner.py,324
   planfile/utils/__init__.py,0
-  planfile/utils/metrics.py,201
+  planfile/utils/metrics.py,229
   planfile/utils/priorities.py,111
   project.sh,21
 D:
@@ -112,42 +112,24 @@ D:
     ctxs()
     ctxs_text()
     width()
-  planfile/cli/auto_loop.py:
-    e: get_backend,auto_loop,ci_status
-    get_backend(backend_type)
-    auto_loop(strategy;project_path;backend;max_iterations;auto_fix;llx_command;output;dry_run)
-    ci_status(project_path)
-  planfile/loaders/cli_loader.py:
-    e: load_from_json,save_to_json,load_strategy_from_json,save_strategy_to_json,export_results_to_markdown
-    load_from_json(file_path)
-    save_to_json(data;file_path)
-    load_strategy_from_json(file_path)
-    save_strategy_to_json(strategy;file_path)
-    export_results_to_markdown(results;file_path)
+  planfile/integrations/gitlab.py:
+    e: GitLabBackend
+    GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
   planfile/cli/commands.py:
-    e: get_backend,apply_strategy_cli,review_strategy_cli,validate_strategy_cli,generate_strategy_cli,main
+    e: get_backend,_load_and_validate_strategy,_load_backend_config,_parse_sprint_filter,_select_backend,_execute_apply_strategy,_display_apply_results,_save_results,apply_strategy_cli,review_strategy_cli,validate_strategy_cli,generate_strategy_cli,main
     get_backend(backend_type;config)
+    _load_and_validate_strategy(strategy_path)
+    _load_backend_config(backend;config_file)
+    _parse_sprint_filter(sprint_filter)
+    _select_backend(backend;backend_config)
+    _execute_apply_strategy(strategy;project_path;backends;dry_run;sprint_ids)
+    _display_apply_results(results)
+    _save_results(results;output)
     apply_strategy_cli(strategy_path;project_path;backend;config_file;dry_run;sprint_filter;output;verbose)
     review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
     validate_strategy_cli(strategy_path;verbose)
     generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
     main()
-  planfile/loaders/yaml_loader.py:
-    e: load_yaml,save_yaml,load_strategy_yaml,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,validate_strategy_schema
-    load_yaml(file_path)
-    save_yaml(data;file_path)
-    load_strategy_yaml(file_path)
-    save_strategy_yaml(strategy;file_path)
-    load_tasks_yaml(file_path)
-    merge_strategy_with_tasks(strategy;tasks_file)
-    validate_strategy_schema(file_path)
-  planfile/utils/metrics.py:
-    e: analyze_project_metrics,calculate_strategy_health
-    analyze_project_metrics(project_path)
-    calculate_strategy_health(strategy_results)
-  planfile/integrations/gitlab.py:
-    e: GitLabBackend
-    GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
   planfile/integrations/github.py:
     e: GitHubBackend
     GitHubBackend(BasePMBackend): __init__(2),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitHub Issues integration backend...
@@ -159,6 +141,30 @@ D:
   planfile/integrations/jira.py:
     e: JiraBackend
     JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Jira integration backend...
+  planfile/loaders/yaml_loader.py:
+    e: load_yaml,save_yaml,load_strategy_yaml,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,_check_required_keys,_validate_sprints,_validate_gates,_validate_task_patterns,validate_strategy_schema
+    load_yaml(file_path)
+    save_yaml(data;file_path)
+    load_strategy_yaml(file_path)
+    save_strategy_yaml(strategy;file_path)
+    load_tasks_yaml(file_path)
+    merge_strategy_with_tasks(strategy;tasks_file)
+    _check_required_keys(data;issues)
+    _validate_sprints(data;issues)
+    _validate_gates(data;issues)
+    _validate_task_patterns(data;issues)
+    validate_strategy_schema(file_path)
+  planfile/cli/auto_loop.py:
+    e: get_backend,_validate_strategy,_initialize_backends,_display_summary_table,_display_final_status,_display_ticket_summary,_save_results_if_needed,auto_loop,ci_status
+    get_backend(backend_type)
+    _validate_strategy(strategy)
+    _initialize_backends(backend)
+    _display_summary_table(results)
+    _display_final_status(results;strategy)
+    _display_ticket_summary(results)
+    _save_results_if_needed(results;output)
+    auto_loop(strategy;project_path;backend;max_iterations;auto_fix;llx_command;output;dry_run)
+    ci_status(project_path)
   planfile/ci_runner.py:
     e: TestResult,BugReport,CIRunner,main
     TestResult:  # Result of running tests...
@@ -172,9 +178,28 @@ D:
     _auto_select_model(metrics)
     _parse_strategy_response(response)
     _basic_metrics(project_path)
+  planfile/utils/metrics.py:
+    e: _collect_git_metrics,_count_files_by_language,_check_project_files,analyze_project_metrics,calculate_strategy_health
+    _collect_git_metrics(path)
+    _count_files_by_language(path)
+    _check_project_files(path)
+    analyze_project_metrics(project_path)
+    calculate_strategy_health(strategy_results)
   planfile/integrations/generic.py:
     e: GenericBackend
     GenericBackend(BasePMBackend): __init__(3),_validate_config(0),_make_request(4),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Generic HTTP API backend for PM systems...
+  planfile/loaders/cli_loader.py:
+    e: load_from_json,save_to_json,load_strategy_from_json,save_strategy_to_json,_md_header,_md_summary,_md_tasks,_md_sprints,_md_metrics,export_results_to_markdown
+    load_from_json(file_path)
+    save_to_json(data;file_path)
+    load_strategy_from_json(file_path)
+    save_strategy_to_json(strategy;file_path)
+    _md_header(results)
+    _md_summary(results)
+    _md_tasks(results)
+    _md_sprints(results)
+    _md_metrics(results)
+    export_results_to_markdown(results;file_path)
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)

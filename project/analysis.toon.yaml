@@ -1,12 +1,7 @@
-# code2llm | 27f 4396L | python:24,shell:2,javascript:1 | 2026-03-26
-# CC̄=4.9 | critical:12/208 | dups:0 | cycles:0
+# code2llm | 27f 4580L | python:24,shell:2,javascript:1 | 2026-03-26
+# CC̄=4.4 | critical:7/233 | dups:0 | cycles:0
 
-HEALTH[12]:
-  🟡 CC    validate_strategy_schema CC=17 (limit:15)
-  🟡 CC    export_results_to_markdown CC=19 (limit:15)
-  🟡 CC    auto_loop CC=20 (limit:15)
-  🟡 CC    apply_strategy_cli CC=18 (limit:15)
-  🟡 CC    analyze_project_metrics CC=16 (limit:15)
+HEALTH[7]:
   🟡 CC    update_ticket CC=15 (limit:15)
   🟡 CC    table CC=21 (limit:15)
   🟡 CC    table_body_rows CC=21 (limit:15)
@@ -16,9 +11,9 @@ HEALTH[12]:
   🟡 CC    filter_handler CC=21 (limit:15)
 
 REFACTOR[1]:
-  1. split 12 high-CC methods  (CC>15)
+  1. split 7 high-CC methods  (CC>15)
 
-PIPELINES[130]:
+PIPELINES[131]:
   [1] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
   [2] Src [analyze_generated_code]: analyze_generated_code
@@ -31,18 +26,21 @@ PIPELINES[130]:
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=5.4    ←in:2  →out:3
+  htmlcov/                        CC̄=4.6    ←in:0  →out:0
+  │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
+  │
+  planfile/                       CC̄=4.5    ←in:2  →out:3
   │ ci_runner                  453L  3C   10m  CC=9      ←0
-  │ !! commands                   373L  0C    6m  CC=18     ←0
+  │ commands                   421L  0C   13m  CC=14     ←0
   │ runner                     324L  1C    8m  CC=13     ←2
   │ jira                       283L  1C    9m  CC=13     ←0
+  │ yaml_loader                261L  0C   11m  CC=12     ←2
+  │ auto_loop                  252L  0C    9m  CC=10     ←0
   │ !! gitlab                     237L  1C    7m  CC=15     ←0
-  │ !! yaml_loader                225L  0C    7m  CC=17     ←2
-  │ !! auto_loop                  216L  0C    3m  CC=20     ←0
-  │ !! metrics                    201L  0C    2m  CC=16     ←1
+  │ metrics                    229L  0C    5m  CC=8      ←1
   │ github                     201L  1C    7m  CC=14     ←0
   │ generic                    197L  1C    8m  CC=8      ←0
-  │ !! cli_loader                 158L  0C    5m  CC=19     ←0
+  │ cli_loader                 194L  0C   10m  CC=7      ←0
   │ generator                  124L  0C    5m  CC=8      ←1
   │ base                       112L  4C    9m  CC=4      ←0
   │ priorities                 111L  0C    3m  CC=4      ←1
@@ -56,9 +54,6 @@ LAYERS:
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
-  │
-  htmlcov/                        CC̄=4.6    ←in:0  →out:0
-  │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
   │
   ./                              CC̄=0.0    ←in:0  →out:0
   │ docker-entrypoint.sh       174L  0C    5m  CC=0.0    ←0

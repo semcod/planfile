@@ -1,0 +1,80 @@
+# Simple strategy example using the improved v2 format
+name: "Code Cleanup Strategy"
+version: "1.0.0"
+project_type: "python"
+domain: "software"
+
+# Goal can be simple string or structured
+goal: "Improve code quality and reduce technical debt"
+
+# Optional description
+description: |
+  This strategy focuses on cleaning up the codebase by:
+  - Reducing complexity
+  - Adding tests
+  - Improving documentation
+
+# Sprints with embedded tasks (no separate task patterns needed)
+sprints:
+  - id: 1
+    name: "Complexity Reduction"
+    objectives:
+      - "Extract complex methods"
+      - "Reduce cyclomatic complexity"
+      - "Add type hints"
+    
+    tasks:
+      - name: "Extract Complex Methods"
+        description: "Find methods with CC > 10 and extract parts into smaller methods"
+        type: "refactor"
+        priority: "high"
+        model_hints: "balanced"  # Simple string hint
+        
+      - name: "Add Type Hints"
+        description: "Add type hints to all public functions"
+        type: "tech_debt"
+        priority: "medium"
+        model_hints:
+          implementation: "cheap"  # Can use dict format too
+        
+      - name: "Remove Dead Code"
+        description: "Remove unused imports and functions"
+        type: "chore"
+        priority: "low"
+        model_hints: "free"  # Will be converted to 'cheap'
+
+  - id: 2
+    name: "Testing & Documentation"
+    objectives:
+      - "Increase test coverage"
+      - "Update API docs"
+    
+    tasks:
+      - name: "Add Unit Tests"
+        description: "Write unit tests for core functionality"
+        type: "test"
+        priority: "high"
+        model_hints: "balanced"
+        
+      - name: "Update README"
+        description: "Update README with latest changes"
+        type: "documentation"
+        priority: "medium"
+        model_hints: "free"
+
+# Quality gates - simplified format
+quality_gates:
+  - name: "Complexity Check"
+    description: "Ensure complexity is reduced"
+    criteria: "Average CC < 5"  # Can be string or list
+    
+  - name: "Test Coverage"
+    criteria:
+      - "Coverage >= 80%"
+      - "All critical paths tested"
+
+# Optional metadata
+metadata:
+  author: "LLX Planfile"
+  created: "2026-03-26"
+  tags: ["refactoring", "cleanup", "quality"]

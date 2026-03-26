@@ -6,10 +6,10 @@
 - **Primary Language**: python
 - **Languages**: python: 29, shell: 5, javascript: 1
 - **Analysis Mode**: static
-- **Total Functions**: 208
+- **Total Functions**: 233
 - **Total Classes**: 27
 - **Modules**: 35
-- **Entry Points**: 177
+- **Entry Points**: 178
 
 ## Architecture by Module
 
@@ -22,10 +22,26 @@
 - **Classes**: 6
 - **File**: `01_full_workflow.sh`
 
+### planfile.cli.commands
+- **Functions**: 13
+- **File**: `commands.py`
+
+### planfile.loaders.yaml_loader
+- **Functions**: 11
+- **File**: `yaml_loader.py`
+
+### planfile.loaders.cli_loader
+- **Functions**: 10
+- **File**: `cli_loader.py`
+
 ### planfile.ci_runner
 - **Functions**: 10
 - **Classes**: 3
 - **File**: `ci_runner.py`
+
+### planfile.cli.auto_loop
+- **Functions**: 9
+- **File**: `auto_loop.py`
 
 ### planfile.integrations.jira
 - **Functions**: 9
@@ -57,10 +73,6 @@
 - **Classes**: 1
 - **File**: `llx_validator.py`
 
-### planfile.loaders.yaml_loader
-- **Functions**: 7
-- **File**: `yaml_loader.py`
-
 ### planfile.integrations.gitlab
 - **Functions**: 7
 - **Classes**: 1
@@ -76,57 +88,25 @@
 - **Classes**: 1
 - **File**: `03_proxy_routing.py`
 
-### planfile.cli.commands
-- **Functions**: 6
-- **File**: `commands.py`
-
 ### planfile.examples.ecosystem.02_mcp_integration
 - **Functions**: 6
 - **File**: `02_mcp_integration.py`
-
-### planfile.loaders.cli_loader
-- **Functions**: 5
-- **File**: `cli_loader.py`
 
 ### planfile.llm.generator
 - **Functions**: 5
 - **File**: `generator.py`
 
+### planfile.utils.metrics
+- **Functions**: 5
+- **File**: `metrics.py`
+
 ### docker-entrypoint
 - **Functions**: 5
 - **File**: `docker-entrypoint.sh`
 
-### planfile.examples.bash-generation.verify_planfile
-- **Functions**: 4
-- **File**: `verify_planfile.sh`
-
-### planfile.cli.auto_loop
-- **Functions**: 3
-- **File**: `auto_loop.py`
-
 ## Key Entry Points
 
 Main execution flows into the system:
-
-### planfile.cli.auto_loop.auto_loop
-> Run automated CI/CD loop: test → ticket → fix → retest.
-
-This command will:
-1. Run tests and code analysis
-2. If tests fail, generate bug reports with
-- **Calls**: app.command, typer.Argument, typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
-
-### planfile.loaders.cli_loader.export_results_to_markdown
-> Export strategy results to Markdown file.
-
-Args:
-    results: Results from apply_strategy or review_strategy
-    file_path: Path to save Markdown file
-- **Calls**: Path, path.parent.mkdir, md_content.append, md_content.append, md_content.append, md_content.append, md_content.append, md_content.append
-
-### planfile.cli.commands.apply_strategy_cli
-> Apply a strategy to create tickets.
-- **Calls**: app.command, typer.Argument, typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
 
 ### planfile.examples.ecosystem.04_llx_integration.example_metric_driven_planning
 > Example: Generate strategy based on actual project metrics.
@@ -143,6 +123,14 @@ Args:
 ### planfile.examples.summary.create_summary
 > Create a summary of all changes made.
 - **Calls**: planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print
+
+### planfile.cli.auto_loop.auto_loop
+> Run automated CI/CD loop: test → ticket → fix → retest.
+
+This command will:
+1. Run tests and code analysis
+2. If tests fail, generate bug reports with
+- **Calls**: app.command, typer.Argument, typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
 
 ### planfile.cli.auto_loop.ci_status
 > Check current CI status without running tests.
@@ -168,6 +156,10 @@ Args:
 > Validate a strategy YAML file.
 - **Calls**: app.command, typer.Argument, typer.Option, planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print, console.print, console.print
 
+### planfile.cli.commands.apply_strategy_cli
+> Apply a strategy to create tickets.
+- **Calls**: app.command, typer.Argument, typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
+
 ### planfile.cli.commands.generate_strategy_cli
 > Generate strategy.yaml from project analysis + LLM.
 - **Calls**: app.command, typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
@@ -176,15 +168,13 @@ Args:
 > Example: Budget tracking with proxy.
 - **Calls**: planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, ProxyClient, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print, planfile.examples.bash-generation.verify_planfile.print
 
-### planfile.loaders.yaml_loader.validate_strategy_schema
-> Validate strategy YAML file and return list of issues.
+### planfile.loaders.cli_loader.export_results_to_markdown
+> Export strategy results to Markdown file.
 
 Args:
-    file_path: Path to strategy YAML file
-
-Returns:
-    List of validation issues (empty
-- **Calls**: planfile.loaders.yaml_loader.load_yaml, set, enumerate, None.items, issues.append, enumerate, planfile.loaders.yaml_loader.load_strategy_yaml, issues.append
+    results: Results from apply_strategy or review_strategy
+    file_path: Path to save Markdown file
+- **Calls**: Path, path.parent.mkdir, md_content.extend, md_content.extend, md_content.extend, md_content.extend, md_content.extend, planfile.loaders.cli_loader._md_header
 
 ### planfile.ci_runner.CIRunner.check_strategy_completion
 > Check if strategy goals are met.
@@ -241,66 +231,72 @@ Returns:
 > List tickets via generic API.
 - **Calls**: self._make_request, response.get, None.join, tickets.append, TicketStatus, str, ticket_data.get, ticket_data.get
 
+### planfile.integrations.gitlab.GitLabBackend.create_ticket
+> Create a new GitLab issue.
+- **Calls**: issue_labels.append, metadata.items, self.project.issues.create, TicketRef, None.items, self.gl.users.list, RuntimeError, issue.save
+
 ## Process Flows
 
 Key execution flows identified:
 
-### Flow 1: auto_loop
-```
-auto_loop [planfile.cli.auto_loop]
-```
-
-### Flow 2: export_results_to_markdown
-```
-export_results_to_markdown [planfile.loaders.cli_loader]
-```
-
-### Flow 3: apply_strategy_cli
-```
-apply_strategy_cli [planfile.cli.commands]
-```
-
-### Flow 4: example_metric_driven_planning
+### Flow 1: example_metric_driven_planning
 ```
 example_metric_driven_planning [planfile.examples.ecosystem.04_llx_integration]
   └─ →> print
   └─ →> print
 ```
 
-### Flow 5: example_strategy_generation_with_proxy
+### Flow 2: example_strategy_generation_with_proxy
 ```
 example_strategy_generation_with_proxy [planfile.examples.ecosystem.03_proxy_routing]
   └─ →> print
   └─ →> print
 ```
 
-### Flow 6: review_strategy_cli
+### Flow 3: review_strategy_cli
 ```
 review_strategy_cli [planfile.cli.commands]
 ```
 
-### Flow 7: create_summary
+### Flow 4: create_summary
 ```
 create_summary [planfile.examples.summary]
   └─ →> print
   └─ →> print
 ```
 
-### Flow 8: ci_status
+### Flow 5: auto_loop
+```
+auto_loop [planfile.cli.auto_loop]
+```
+
+### Flow 6: ci_status
 ```
 ci_status [planfile.cli.auto_loop]
 ```
 
-### Flow 9: example_mcp_session
+### Flow 7: example_mcp_session
 ```
 example_mcp_session [planfile.examples.ecosystem.02_mcp_integration]
   └─ →> print
   └─ →> print
 ```
 
-### Flow 10: _parse_llx_output
+### Flow 8: _parse_llx_output
 ```
 _parse_llx_output [planfile.examples.ecosystem.04_llx_integration.LLXIntegration]
+```
+
+### Flow 9: run_loop
+```
+run_loop [planfile.ci_runner.CIRunner]
+  └─ →> print
+  └─ →> print
+```
+
+### Flow 10: main
+```
+main [planfile.ci_runner]
 ```
 
 ## Key Classes
@@ -396,10 +392,10 @@ _parse_llx_output [planfile.examples.ecosystem.04_llx_integration.LLXIntegration
 > Project metrics from LLX analysis.
 - **Methods**: 0
 
-### planfile.models.TaskType
-> Type of task in the planfile.
+### planfile.integrations.base.TicketRef
+> Reference to a created/updated ticket.
 - **Methods**: 0
-- **Inherits**: str, Enum
+- **Inherits**: BaseModel
 
 ## Data Transformation Functions
 
@@ -413,16 +409,40 @@ Key functions that process and transform data:
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
 
+### planfile.loaders.yaml_loader._validate_sprints
+> Validate sprint section.
+- **Output to**: set, enumerate, issues.append, sprint_ids.add, issues.append
+
+### planfile.loaders.yaml_loader._validate_gates
+> Validate quality gates section.
+- **Output to**: enumerate, issues.append, issues.append, issues.append
+
+### planfile.loaders.yaml_loader._validate_task_patterns
+> Validate task patterns section.
+- **Output to**: None.items, enumerate, issues.append, issues.append, issues.append
+
 ### planfile.loaders.yaml_loader.validate_strategy_schema
 > Validate strategy YAML file and return list of issues.
 
 Args:
     file_path: Path to strategy YAML f
-- **Output to**: planfile.loaders.yaml_loader.load_yaml, set, enumerate, None.items, issues.append
+- **Output to**: planfile.loaders.yaml_loader._check_required_keys, planfile.loaders.yaml_loader._validate_sprints, planfile.loaders.yaml_loader._validate_gates, planfile.loaders.yaml_loader._validate_task_patterns, planfile.loaders.yaml_loader.load_yaml
+
+### planfile.cli.auto_loop._validate_strategy
+> Validate strategy file exists.
+- **Output to**: strategy.exists, console.print, typer.Exit
 
 ### planfile.llm.generator._parse_strategy_response
 > Parse LLM YAML response into Strategy model.
 - **Output to**: yaml.safe_load, Strategy, None.split, None.split, response.split
+
+### planfile.cli.commands._load_and_validate_strategy
+> Load and validate strategy file.
+- **Output to**: planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print, typer.Exit
+
+### planfile.cli.commands._parse_sprint_filter
+> Parse sprint filter from string.
+- **Output to**: int, console.print, typer.Exit, s.strip, sprint_filter.split
 
 ### planfile.cli.commands.validate_strategy_cli
 > Validate a strategy YAML file.
@@ -461,22 +481,20 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
-- `planfile.cli.auto_loop.auto_loop` - 66 calls
-- `planfile.loaders.cli_loader.export_results_to_markdown` - 60 calls
-- `planfile.cli.commands.apply_strategy_cli` - 58 calls
 - `planfile.examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `planfile.examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
 - `planfile.cli.commands.review_strategy_cli` - 51 calls
 - `planfile.examples.summary.create_summary` - 44 calls
-- `planfile.utils.metrics.analyze_project_metrics` - 33 calls
+- `planfile.cli.auto_loop.auto_loop` - 39 calls
 - `planfile.cli.auto_loop.ci_status` - 27 calls
 - `planfile.examples.ecosystem.02_mcp_integration.example_mcp_session` - 26 calls
 - `planfile.ci_runner.CIRunner.run_loop` - 25 calls
 - `planfile.ci_runner.main` - 24 calls
 - `planfile.cli.commands.validate_strategy_cli` - 22 calls
+- `planfile.cli.commands.apply_strategy_cli` - 21 calls
 - `planfile.cli.commands.generate_strategy_cli` - 21 calls
 - `planfile.examples.ecosystem.03_proxy_routing.example_budget_tracking` - 19 calls
-- `planfile.loaders.yaml_loader.validate_strategy_schema` - 17 calls
+- `planfile.loaders.cli_loader.export_results_to_markdown` - 15 calls
 - `planfile.ci_runner.CIRunner.check_strategy_completion` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.sortColumn` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.table` - 15 calls
@@ -495,9 +513,11 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.integrations.generic.GenericBackend.list_tickets` - 11 calls
 - `planfile.loaders.yaml_loader.load_strategy_yaml` - 10 calls
 - `planfile.llm.client.call_llm` - 10 calls
+- `planfile.utils.metrics.analyze_project_metrics` - 10 calls
 - `planfile.integrations.gitlab.GitLabBackend.create_ticket` - 10 calls
 - `planfile.integrations.generic.GenericBackend.search_tickets` - 10 calls
 - `planfile.ci_runner.CIRunner.generate_bug_report` - 10 calls
+- `planfile.loaders.yaml_loader.validate_strategy_schema` - 9 calls
 - `planfile.llm.prompts.build_strategy_prompt` - 9 calls
 - `planfile.integrations.gitlab.GitLabBackend.list_tickets` - 9 calls
 - `planfile.integrations.jira.JiraBackend.create_ticket` - 9 calls
@@ -508,15 +528,6 @@ How components interact:
 
 ```mermaid
 graph TD
-    auto_loop --> command
-    auto_loop --> Argument
-    auto_loop --> Option
-    export_results_to_ma --> Path
-    export_results_to_ma --> mkdir
-    export_results_to_ma --> append
-    apply_strategy_cli --> command
-    apply_strategy_cli --> Argument
-    apply_strategy_cli --> Option
     example_metric_drive --> print
     example_metric_drive --> LLXIntegration
     example_strategy_gen --> print
@@ -525,6 +536,9 @@ graph TD
     review_strategy_cli --> Argument
     review_strategy_cli --> Option
     create_summary --> print
+    auto_loop --> command
+    auto_loop --> Argument
+    auto_loop --> Option
     ci_status --> command
     ci_status --> Argument
     ci_status --> print
@@ -538,6 +552,12 @@ graph TD
     main --> ArgumentParser
     main --> add_argument
     validate_strategy_cl --> command
+    validate_strategy_cl --> Argument
+    validate_strategy_cl --> Option
+    validate_strategy_cl --> load_strategy_yaml
+    validate_strategy_cl --> print
+    apply_strategy_cli --> command
+    apply_strategy_cli --> Argument
 ```
 
 ## Reverse Engineering Guidelines

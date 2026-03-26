@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16] - 2026-03-26
+
+### Docs
+- Update IMPROVEMENTS_SUMMARY.md
+- Update MIGRATION_GUIDE.md
+- Update docs/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Test
+- Update test_improvements.py
+
+### Other
+- Update examples/strategy_simple_v2.yaml
+- Update planfile/__init__.py
+- Update planfile/executor_v2.py
+- Update planfile/models_v2.py
+- Update project/analysis.toon.yaml
+- Update project/calls.mmd
+- Update project/calls.png
+- Update project/compact_flow.mmd
+- Update project/compact_flow.png
+- Update project/duplication.toon.yaml
+- ... and 8 more files
+
 ## [0.1.15] - 2026-03-26
 
 ### Docs
