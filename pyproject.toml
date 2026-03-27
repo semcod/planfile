@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planfile"
-version = "0.1.33"
+version = "0.1.34"
 description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 license = "Apache-2.0"
@@ -129,4 +129,4 @@ use_parentheses = true
 ensure_newline_before_comments = true
 
 [tool.code2llm]
-exclude = ["htmlcov", "*.egg-info", "__pycache__"]
+exclude = ["htmlcov", "*.egg-info", "__pycache__", ".pytest_cache"]

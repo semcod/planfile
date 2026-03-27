@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from planfile.ci_runner import CIRunner
+from planfile.ci import CIRunner
 from planfile.integrations.github import GitHubBackend
 from planfile.integrations.jira import JiraBackend
 from planfile.integrations.gitlab import GitLabBackend

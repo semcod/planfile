@@ -24,7 +24,7 @@ from planfile.cli.cmd.cmd_validate import validate_strategy_cli
 from planfile.cli.cmd.cmd_generate import generate_strategy_cli, generate_from_files_cmd
 from planfile.cli.cmd.cmd_init import init_strategy_cli
 
-app = typer.Typer(help="Strategy CLI - Manage strategies and sprints")
+app = typer.Typer(help="planfile — universal ticket standard for developer toolchains")
 console = Console()
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,20 @@ def main_callback(
 # Add auto subcommand
 app.add_typer(auto_loop.app, name="auto", help="Automated CI/CD commands")
 
-# Import and add extra commands
+# Register split commands (replaces old add_extra_commands from extra_commands.py)
+from planfile.cli.cmd.cmd_export import register_export_commands
+from planfile.cli.cmd.cmd_compare import register_compare_commands
+from planfile.cli.cmd.cmd_template import register_template_commands
+from planfile.cli.cmd.cmd_stats import register_stats_commands
+from planfile.cli.cmd.cmd_ticket import register_ticket_commands
+
+register_export_commands(app)
+register_compare_commands(app)
+register_template_commands(app)
+register_stats_commands(app)
+register_ticket_commands(app)
+
+# Health + examples (remaining from extra_commands.py)
 from planfile.cli.extra_commands import add_extra_commands
 add_extra_commands(app)
 
