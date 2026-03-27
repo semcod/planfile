@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.39] - 2026-03-27
+
+### Other
+- Update planfile/analysis/generator.py
+- Update planfile/sync/generic.py
+- Update planfile/sync/github.py
+- Update planfile/sync/gitlab.py
+- Update planfile/sync/jira.py
+
 ## [0.1.38] - 2026-03-27
 
 ### Docs

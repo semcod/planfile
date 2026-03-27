@@ -53,6 +53,7 @@ class GitHubBackend(BasePMBackend):
         body: str,
         labels: Optional[List[str]] = None,
         priority: Optional[str] = None,
+        backend_tag: str = "github",
         assignee: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> TicketRef:
@@ -102,6 +103,7 @@ class GitHubBackend(BasePMBackend):
         status: Optional[str] = None,
         labels: Optional[List[str]] = None,
         priority: Optional[str] = None,
+        backend_tag: str = "github",
         assignee: Optional[str] = None,
     ) -> None:
         """Update an existing GitHub issue."""
@@ -144,6 +146,10 @@ class GitHubBackend(BasePMBackend):
         """Get GitHub issue status."""
         issue = self.repo.get_issue(int(ticket_id))
         
+        return self._issue_to_ticket_status(issue)
+
+    def _issue_to_ticket_status(self, issue: Issue) -> TicketStatus:
+        """Convert a GitHub issue object into a TicketStatus."""
         return self.build_ticket_status(
             id=str(issue.number),
             status=issue.state,
@@ -156,6 +162,7 @@ class GitHubBackend(BasePMBackend):
         self,
         labels: Optional[List[str]] = None,
         status: Optional[str] = None,
+        backend_tag: str = "github",
         assignee: Optional[str] = None,
         limit: Optional[int] = None,
     ) -> List[TicketStatus]:
@@ -169,17 +176,11 @@ class GitHubBackend(BasePMBackend):
         )
         
         tickets = []
+        # GitHub listing path
         for issue in issues:
             if limit and len(tickets) >= limit:
                 break
-            
-            tickets.append(self.build_ticket_status(
-                id=str(issue.number),
-                status=issue.state,
-                assignee=issue.assignee.login if issue.assignee else None,
-                labels=[label.name for label in issue.labels],
-                updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
-            ))
+            tickets.append(self._issue_to_ticket_status(issue))
         
         return tickets
     
@@ -188,14 +189,9 @@ class GitHubBackend(BasePMBackend):
         issues = self.repo.get_issues(state="all")
         
         tickets = []
+        # GitHub search path
         for issue in issues:
             if query.lower() in issue.title.lower() or query.lower() in issue.body.lower():
-                tickets.append(self.build_ticket_status(
-                    id=str(issue.number),
-                    status=issue.state,
-                    assignee=issue.assignee.login if issue.assignee else None,
-                    labels=[label.name for label in issue.labels],
-                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
-                ))
+                tickets.append(self._issue_to_ticket_status(issue))
         
         return tickets

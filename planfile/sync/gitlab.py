@@ -56,6 +56,7 @@ class GitLabBackend(BasePMBackend):
         body: str,
         labels: Optional[List[str]] = None,
         priority: Optional[str] = None,
+        backend_tag: str = "gitlab",
         assignee: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> TicketRef:
@@ -117,6 +118,7 @@ class GitLabBackend(BasePMBackend):
         status: Optional[str] = None,
         labels: Optional[List[str]] = None,
         priority: Optional[str] = None,
+        backend_tag: str = "gitlab",
         assignee: Optional[str] = None,
     ) -> None:
         """Update an existing GitLab issue."""
@@ -168,20 +170,25 @@ class GitLabBackend(BasePMBackend):
         try:
             issue = self.project.issues.get(ticket_id)
             
-            return self.build_ticket_status(
-                id=str(issue.iid),
-                status=issue.state,
-                assignee=issue.assignee["username"] if issue.assignee else None,
-                labels=issue.labels or [],
-                updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
-            )
+            return self._issue_to_ticket_status(issue)
         except GitlabError as e:
             raise RuntimeError(f"Failed to get GitLab issue {ticket_id}: {e}")
+
+    def _issue_to_ticket_status(self, issue) -> TicketStatus:
+        """Convert a GitLab issue object into a TicketStatus."""
+        return self.build_ticket_status(
+            id=str(issue.iid),
+            status=issue.state,
+            assignee=issue.assignee["username"] if issue.assignee else None,
+            labels=issue.labels or [],
+            updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
+        )
     
     def _list_tickets(
         self,
         labels: Optional[List[str]] = None,
         status: Optional[str] = None,
+        backend_tag: str = "gitlab",
         assignee: Optional[str] = None,
         limit: Optional[int] = None,
     ) -> List[TicketStatus]:
@@ -205,13 +212,7 @@ class GitLabBackend(BasePMBackend):
             
             tickets = []
             for issue in issues:
-                tickets.append(self.build_ticket_status(
-                    id=str(issue.iid),
-                    status=issue.state,
-                    assignee=issue.assignee["username"] if issue.assignee else None,
-                    labels=issue.labels or [],
-                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
-                ))
+                tickets.append(self._issue_to_ticket_status(issue))
             
             return tickets
         except GitlabError as e:
@@ -224,13 +225,7 @@ class GitLabBackend(BasePMBackend):
             
             tickets = []
             for issue in issues:
-                tickets.append(self.build_ticket_status(
-                    id=str(issue.iid),
-                    status=issue.state,
-                    assignee=issue.assignee["username"] if issue.assignee else None,
-                    labels=issue.labels or [],
-                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
-                ))
+                tickets.append(self._issue_to_ticket_status(issue))
             
             return tickets
         except GitlabError as e:

@@ -96,6 +96,8 @@ class JiraBackend(BasePMBackend):
         priority: Optional[str] = None,
         assignee: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        *,
+        backend_tag: str = "jira",
     ) -> TicketRef:
         """Create a new Jira issue."""
         issue_dict = {
@@ -158,6 +160,8 @@ class JiraBackend(BasePMBackend):
         labels: Optional[List[str]] = None,
         priority: Optional[str] = None,
         assignee: Optional[str] = None,
+        *,
+        backend_tag: str = "jira",
     ) -> None:
         """Update an existing Jira issue."""
         try:
@@ -201,16 +205,20 @@ class JiraBackend(BasePMBackend):
         try:
             issue = self.jira.issue(ticket_id)
             
-            return self.build_ticket_status(
-                id=issue.id,
-                key=issue.key,
-                status=issue.fields.status.name,
-                assignee=issue.fields.assignee.displayName if issue.fields.assignee else None,
-                labels=issue.fields.labels or [],
-                updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None,
-            )
+            return self._issue_to_ticket_status(issue)
         except JIRAError as e:
             raise RuntimeError(f"Failed to get Jira issue {ticket_id}: {e}")
+
+    def _issue_to_ticket_status(self, issue) -> TicketStatus:
+        """Convert a Jira issue into a TicketStatus."""
+        return self.build_ticket_status(
+            id=issue.id,
+            key=issue.key,
+            status=issue.fields.status.name,
+            assignee=issue.fields.assignee.displayName if issue.fields.assignee else None,
+            labels=issue.fields.labels or [],
+            updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None,
+        )
     
     def _list_tickets(
         self,
@@ -218,6 +226,8 @@ class JiraBackend(BasePMBackend):
         status: Optional[str] = None,
         assignee: Optional[str] = None,
         limit: Optional[int] = None,
+        *,
+        backend_tag: str = "jira",
     ) -> List[TicketStatus]:
         """List Jira issues with filters."""
         jql = f'project = {self.config["project"]}'
@@ -243,20 +253,13 @@ class JiraBackend(BasePMBackend):
             
             tickets = []
             for issue in issues:
-                tickets.append(self.build_ticket_status(
-                    id=issue.id,
-                    key=issue.key,
-                    status=issue.fields.status.name,
-                    assignee=issue.fields.assignee.displayName if issue.fields.assignee else None,
-                    labels=issue.fields.labels or [],
-                    updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None,
-                ))
+                tickets.append(self._issue_to_ticket_status(issue))
             
             return tickets
         except JIRAError as e:
             raise RuntimeError(f"Failed to list Jira issues: {e}")
     
-    def _search_tickets(self, query: str) -> List[TicketStatus]:
+    def _search_tickets(self, query: str, *, backend_tag: str = "jira") -> List[TicketStatus]:
         """Search Jira issues."""
         jql = f'project = {self.config["project"]} AND text ~ "{query}" ORDER BY updated DESC'
         
@@ -269,14 +272,7 @@ class JiraBackend(BasePMBackend):
             
             tickets = []
             for issue in issues:
-                tickets.append(self.build_ticket_status(
-                    id=issue.id,
-                    key=issue.key,
-                    status=issue.fields.status.name,
-                    assignee=issue.fields.assignee.displayName if issue.fields.assignee else None,
-                    labels=issue.fields.labels or [],
-                    updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None,
-                ))
+                tickets.append(self._issue_to_ticket_status(issue))
             
             return tickets
         except JIRAError as e:

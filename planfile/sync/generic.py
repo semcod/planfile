@@ -79,6 +79,8 @@ class GenericBackend(BasePMBackend):
         priority: Optional[str] = None,
         assignee: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        *,
+        backend_tag: str = "generic",
     ) -> TicketRef:
         """Create a new ticket via generic API."""
         data = {
@@ -113,6 +115,8 @@ class GenericBackend(BasePMBackend):
         labels: Optional[list] = None,
         priority: Optional[str] = None,
         assignee: Optional[str] = None,
+        *,
+        backend_tag: str = "generic",
     ) -> None:
         """Update a ticket via generic API."""
         data = self._build_update_data(
@@ -158,13 +162,7 @@ class GenericBackend(BasePMBackend):
         """Get ticket status via generic API."""
         response = self._make_request("GET", f"/tickets/{ticket_id}")
         
-        return self.build_ticket_status(
-            id=str(response.get("id")),
-            status=response.get("status"),
-            assignee=response.get("assignee"),
-            labels=response.get("labels", []),
-            updated_at=response.get("updated_at"),
-        )
+        return self._ticket_data_to_status(response)
     
     def _list_tickets(
         self,
@@ -172,6 +170,8 @@ class GenericBackend(BasePMBackend):
         status: Optional[str] = None,
         assignee: Optional[str] = None,
         limit: Optional[int] = None,
+        *,
+        backend_tag: str = "generic",
     ) -> list[TicketStatus]:
         """List tickets via generic API."""
         params = {}
@@ -189,13 +189,7 @@ class GenericBackend(BasePMBackend):
         
         tickets = []
         for ticket_data in response.get("tickets", []):
-            tickets.append(self.build_ticket_status(
-                id=str(ticket_data.get("id")),
-                status=ticket_data.get("status"),
-                assignee=ticket_data.get("assignee"),
-                labels=ticket_data.get("labels", []),
-                updated_at=ticket_data.get("updated_at"),
-            ))
+            tickets.append(self._ticket_data_to_status(ticket_data))
         
         return tickets
     
@@ -207,12 +201,16 @@ class GenericBackend(BasePMBackend):
         
         tickets = []
         for ticket_data in response.get("tickets", []):
-            tickets.append(self.build_ticket_status(
-                id=str(ticket_data.get("id")),
-                status=ticket_data.get("status"),
-                assignee=ticket_data.get("assignee"),
-                labels=ticket_data.get("labels", []),
-                updated_at=ticket_data.get("updated_at"),
-            ))
+            tickets.append(self._ticket_data_to_status(ticket_data))
         
         return tickets
+
+    def _ticket_data_to_status(self, ticket_data: Dict[str, Any]) -> TicketStatus:
+        """Convert a generic API ticket payload into TicketStatus."""
+        return self.build_ticket_status(
+            id=str(ticket_data.get("id")),
+            status=ticket_data.get("status"),
+            assignee=ticket_data.get("assignee"),
+            labels=ticket_data.get("labels", []),
+            updated_at=ticket_data.get("updated_at"),
+        )

@@ -16,8 +16,8 @@ from .sprint_generator import SprintGenerator
 from .external_tools import ExternalToolRunner, AnalysisResults
 from ..models import Strategy
 
-from .generators.metrics_extractor import extract_key_metrics
-from .generators.strategy_builder import (
+from .generators import (
+    extract_key_metrics,
     generate_goal,
     generate_goals,
     generate_quality_gates,
@@ -25,7 +25,7 @@ from .generators.strategy_builder import (
     parse_effort,
     generate_target_metrics,
     generate_risks,
-    generate_success_criteria
+    generate_success_criteria,
 )
 
 class PlanfileGenerator:
