@@ -1,7 +1,7 @@
-# vallm batch | 220f | 99✓ 7⚠ 68✗ | 2026-03-27
+# vallm batch | 224f | 99✓ 7⚠ 71✗ | 2026-03-27
 
 SUMMARY:
-  scanned: 220  passed: 99 (45.0%)  warnings: 7  errors: 68  unsupported: 53
+  scanned: 224  passed: 99 (44.2%)  warnings: 7  errors: 71  unsupported: 54
 
 WARNINGS[7]{path,score}:
   examples/bash-generation/verify_planfile.sh,0.97
@@ -26,7 +26,7 @@ WARNINGS[7]{path,score}:
     issues[1]{rule,severity,message,line}:
       complexity.maintainability,warning,Low maintainability index: 19.9 (threshold: 20),
 
-ERRORS[68]{path,score}:
+ERRORS[71]{path,score}:
   examples/advanced-usage/ci-strategy.yaml,0.00
     issues[1]{rule,severity,message,line}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
@@ -160,6 +160,11 @@ ERRORS[68]{path,score}:
       python.import.resolvable,error,Module 'parsers.yaml_parser' not found,14
       python.import.resolvable,error,Module 'parsers.json_parser' not found,15
       python.import.resolvable,error,Module 'parsers.toon_parser' not found,16
+  planfile/api/server.py,0.74
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile' not found,14
+      python.import.resolvable,error,Module 'planfile.server_common' not found,15
+      python.import.resolvable,error,Module 'fastapi' not found,9
   planfile/integrations/gitlab.py,0.74
     issues[3]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.integrations.base' not found,10
@@ -193,10 +198,6 @@ ERRORS[68]{path,score}:
       python.import.resolvable,error,Module 'models' not found,6
       python.import.resolvable,error,Module 'text_parser' not found,7
       python.import.resolvable,error,Module 'toon_parser' not found,8
-  planfile/api/server.py,0.79
-    issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'planfile' not found,14
-      python.import.resolvable,error,Module 'fastapi' not found,9
   planfile/cli/cmd/cmd_generate.py,0.79
     issues[4]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.llm.generator' not found,17
@@ -224,6 +225,12 @@ ERRORS[68]{path,score}:
       python.import.resolvable,error,Module 'planfile.integrations.jira' not found,11
       python.import.resolvable,error,Module 'planfile.integrations.gitlab' not found,12
       python.import.resolvable,error,Module 'planfile.integrations.generic' not found,13
+  planfile/importers/json_importer.py,0.79
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.importers.common' not found,5
+  planfile/importers/yaml_importer.py,0.79
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile.importers.common' not found,5
   planfile/utils/priorities.py,0.79
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.models' not found,2
@@ -261,6 +268,11 @@ ERRORS[68]{path,score}:
       python.import.resolvable,error,Module 'planfile.core.models' not found,9
       python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,10
       python.import.resolvable,error,Module 'planfile.loaders.cli_loader' not found,103
+  planfile/integrations/config.py,0.84
+    issues[3]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'github' not found,115
+      python.import.resolvable,error,Module 'gitlab' not found,118
+      python.import.resolvable,error,Module 'jira' not found,121
   planfile/analysis/sprint_generator.py,0.86
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models' not found,8
@@ -305,6 +317,10 @@ ERRORS[68]{path,score}:
       python.import.resolvable,error,Module 'planfile.loaders.yaml_loader' not found,10
       python.import.resolvable,error,Module 'planfile.runner' not found,11
       python.import.resolvable,error,Module 'planfile.cli.cmd.cmd_utils' not found,12
+  planfile/mcp/server.py,0.88
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'planfile' not found,12
+      python.import.resolvable,error,Module 'planfile.server_common' not found,13
   planfile/analysis/parsers/text_parser.py,0.89
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models' not found,5
@@ -347,9 +363,6 @@ ERRORS[68]{path,score}:
   examples/ecosystem/03_proxy_routing.py,0.93
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'aiohttp' not found,9
-  planfile/mcp/server.py,0.93
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'planfile' not found,12
   examples/test_llm_adapters.py,0.94
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.llm.adapters' not found,16
@@ -357,9 +370,10 @@ ERRORS[68]{path,score}:
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'analysis.generator' not found,24
 
-UNSUPPORTED[5]{bucket,count}:
+UNSUPPORTED[6]{bucket,count}:
   *.md,38
   Dockerfile*,1
   *.txt,2
   *.yml,2
+  *.example,1
   other,10

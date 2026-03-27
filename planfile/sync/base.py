@@ -25,29 +25,12 @@ class PMBackend(Protocol):
     """Protocol for PM system backends."""
     
     @abstractmethod
-    def create_ticket(
-        self,
-        title: str,
-        body: str,
-        labels: Optional[List[str]] = None,
-        priority: Optional[str] = None,
-        assignee: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> TicketRef:
+    def create_ticket(self, **kwargs) -> TicketRef:
         """Create a new ticket."""
         ...
     
     @abstractmethod
-    def update_ticket(
-        self,
-        ticket_id: str,
-        title: Optional[str] = None,
-        body: Optional[str] = None,
-        status: Optional[str] = None,
-        labels: Optional[List[str]] = None,
-        priority: Optional[str] = None,
-        assignee: Optional[str] = None,
-    ) -> None:
+    def update_ticket(self, **kwargs) -> None:
         """Update an existing ticket."""
         ...
     
@@ -57,13 +40,7 @@ class PMBackend(Protocol):
         ...
     
     @abstractmethod
-    def list_tickets(
-        self,
-        labels: Optional[List[str]] = None,
-        status: Optional[str] = None,
-        assignee: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[TicketStatus]:
+    def list_tickets(self, **kwargs) -> List[TicketStatus]:
         """List tickets with filters."""
         ...
     
@@ -110,3 +87,41 @@ class BasePMBackend(ABC):
                           if not k.startswith("_")}
         
         return public_metadata
+
+    def build_ticket_ref(
+        self,
+        *,
+        id: str,
+        url: Optional[str] = None,
+        key: Optional[str] = None,
+        status: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> TicketRef:
+        """Build a TicketRef with normalized metadata."""
+        return TicketRef(
+            id=id,
+            url=url,
+            key=key,
+            status=status,
+            metadata=self.prepare_metadata(metadata),
+        )
+
+    def build_ticket_status(
+        self,
+        *,
+        id: str,
+        status: str,
+        assignee: Optional[str] = None,
+        labels: Optional[List[str]] = None,
+        updated_at: Optional[str] = None,
+        **extra: Any,
+    ) -> TicketStatus:
+        """Build a TicketStatus with consistent defaults."""
+        return TicketStatus(
+            id=id,
+            status=status,
+            assignee=assignee,
+            labels=labels or [],
+            updated_at=updated_at,
+            **extra,
+        )

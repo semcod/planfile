@@ -10,7 +10,7 @@ project:
 integrations:
   github:
     # Repository in format "owner/repo"
-    repo: "myorg/myproject"
+    repo: "semcod/planfile"
     
     # GitHub token (set GITHUB_TOKEN environment variable)
     # token: "${GITHUB_TOKEN}"

@@ -12,22 +12,13 @@ except ImportError:
     raise ImportError("FastAPI required: pip install fastapi uvicorn")
 
 from planfile import Planfile, Ticket, TicketStatus
+from planfile.server_common import get_planfile
 
 app = FastAPI(
     title="planfile",
     description="Universal ticket standard — REST API",
     version="0.2.0",
 )
-
-_pf: Optional[Planfile] = None
-
-
-def _get_pf() -> Planfile:
-    global _pf
-    if _pf is None:
-        _pf = Planfile.auto_discover()
-    return _pf
-
 
 # ── Schemas ──
 
@@ -52,7 +43,7 @@ def list_tickets(
     sprint: str = Query("current"),
     status: Optional[str] = Query(None),
 ):
-    pf = _get_pf()
+    pf = get_planfile()
     filters = {}
     if status:
         filters["status"] = status
@@ -62,14 +53,14 @@ def list_tickets(
 
 @app.post("/tickets", status_code=201)
 def create_ticket(body: TicketCreate):
-    pf = _get_pf()
+    pf = get_planfile()
     ticket = pf.create_ticket(**body.model_dump())
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
 @app.get("/tickets/{ticket_id}")
 def get_ticket(ticket_id: str):
-    pf = _get_pf()
+    pf = get_planfile()
     ticket = pf.get_ticket(ticket_id)
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
@@ -78,7 +69,7 @@ def get_ticket(ticket_id: str):
 
 @app.patch("/tickets/{ticket_id}")
 def update_ticket(ticket_id: str, body: TicketUpdate):
-    pf = _get_pf()
+    pf = get_planfile()
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     ticket = pf.update_ticket(ticket_id, **updates)
     if not ticket:
@@ -88,7 +79,7 @@ def update_ticket(ticket_id: str, body: TicketUpdate):
 
 @app.delete("/tickets/{ticket_id}", status_code=204)
 def delete_ticket(ticket_id: str):
-    pf = _get_pf()
+    pf = get_planfile()
     ok = pf.store.delete_ticket(ticket_id)
     if not ok:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
@@ -96,7 +87,7 @@ def delete_ticket(ticket_id: str):
 
 @app.post("/tickets/{ticket_id}/move")
 def move_ticket(ticket_id: str, to_sprint: str = Query(...)):
-    pf = _get_pf()
+    pf = get_planfile()
     ok = pf.store.move_ticket(ticket_id, to_sprint)
     if not ok:
         raise HTTPException(404, f"Ticket {ticket_id} not found")

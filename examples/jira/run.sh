@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# GitHub Integration Example
+# Jira Integration Example
 # Demonstrates planfile with separate integration and ticket configs
 
 set -e
 
-echo "🚀 GitHub Integration Example"
-echo "============================="
+echo "🚀 Jira Integration Example"
+echo "============================"
 
 # Check if we're in the right directory
 if [ ! -f "tickets.planfile.yaml" ]; then
-    echo "❌ Error: tickets.planfile.yaml not found. Run from examples/github/"
+    echo "❌ Error: tickets.planfile.yaml not found. Run from examples/jira/"
     exit 1
 fi
 
@@ -18,7 +18,7 @@ fi
 if [ ! -f ".env" ]; then
     echo "⚠️  .env file not found. Copy .env.example to .env:"
     echo "   cp .env.example .env"
-    echo "   Then edit .env with your GitHub token"
+    echo "   Then edit .env with your Jira credentials"
     echo ""
     echo "Continuing with demo mode (no actual sync)..."
 else
@@ -31,7 +31,7 @@ fi
 # Show configuration
 echo "📋 Configuration:"
 echo "----------------"
-echo "Integration config: github.planfile.yaml"
+echo "Integration config: jira.planfile.yaml"
 echo "Tickets config: tickets.planfile.yaml"
 echo "Environment: .env"
 
@@ -60,16 +60,20 @@ echo "---------------------"
 python3 -c "
 import yaml
 import os
-with open('github.planfile.yaml') as f:
+with open('jira.planfile.yaml') as f:
     config = yaml.safe_load(f)
-    github = config['integrations']['github']
-    sync = github['sync']
+    jira = config['integrations']['jira']
+    sync = jira['sync']
     
-    print(f'Repository: {github[\"repo\"]}')
-    print(f'Token: {\"✅ Set\" if \"GITHUB_TOKEN\" in os.environ else \"❌ Not set\"}')
+    print(f'URL: {jira[\"url\"]}')
+    print(f'Project: {jira[\"project\"]}')
+    print(f'Email: {\"✅ Set\" if \"JIRA_EMAIL\" in os.environ else \"❌ Not set\"}')
+    print(f'Token: {\"✅ Set\" if \"JIRA_TOKEN\" in os.environ else \"❌ Not set\"}')
+    print(f'Issue Type: {sync[\"default_issue_type\"]}')
     print(f'Sync settings:')
     for key, value in sync.items():
-        print(f'  {key}: {value}')
+        if key != 'default_issue_type':
+            print(f'  {key}: {value}')
 " 2>/dev/null || echo "Install python3-yaml to see detailed config"
 
 # Instructions
@@ -77,12 +81,12 @@ echo ""
 echo "📝 To Use This Example:"
 echo "-----------------------"
 echo "1. Copy .env.example to .env"
-echo "2. Add your GitHub token to .env"
-echo "3. Update repository in github.planfile.yaml"
+echo "2. Add your Jira credentials to .env"
+echo "3. Update project and URL in jira.planfile.yaml"
 echo "4. Install dependencies:"
-echo "   pip install PyGithub"
+echo "   pip install jira"
 echo "5. Run sync with:"
-echo "   planfile sync github --dry-run  # Test without making changes"
-echo "   planfile sync github             # Actual sync"
+echo "   planfile sync jira --dry-run  # Test without making changes"
+echo "   planfile sync jira             # Actual sync"
 echo ""
 echo "📖 See README.md for more details"

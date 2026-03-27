@@ -58,11 +58,11 @@ def _parse_toon_sections(lines: List[str], file_path: Path, metrics: List[Extrac
     """Parse structural sections in toon files."""
     section_handlers = {
         'health': _parse_health_section,
-        'refactor': _parse_refactor_section,
-        'warnings': _parse_warnings_section,
-        'errors': _parse_errors_section,
+        'refactor': _skip_section,
+        'warnings': _skip_section,
+        'errors': _skip_section,
         'summary': _parse_summary_section,
-        'duplicates': _parse_duplicates_section,
+        'duplicates': _skip_section,
     }
     
     current_section = None
@@ -115,22 +115,9 @@ def _parse_health_section(line: str, line_num: int, file_path: Path, metrics: Li
             ))
 
 
-def _parse_refactor_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
-    """Parse refactor section."""
-    # Implementation for refactor section parsing
-    pass
-
-
-def _parse_warnings_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
-    """Parse warnings section."""
-    # Implementation for warnings section parsing
-    pass
-
-
-def _parse_errors_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
-    """Parse errors section."""
-    # Implementation for errors section parsing
-    pass
+def _skip_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
+    """Skip sections that are intentionally not parsed yet."""
+    return
 
 
 def _parse_summary_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
@@ -166,11 +153,6 @@ def _parse_summary_section(line: str, line_num: int, file_path: Path, metrics: L
                 tags=["duplication", "cleanup"]
             ))
 
-
-def _parse_duplicates_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
-    """Parse duplicates section."""
-    # Implementation for duplicates section parsing
-    pass
 
 def analyze_toon(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedMetric], List[ExtractedTask]]:
     """Analyze Toon format files with enhanced parsing."""

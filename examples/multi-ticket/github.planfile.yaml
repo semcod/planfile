@@ -1,14 +1,12 @@
 # GitHub Integration Configuration
-# This file contains GitHub-specific integration settings
+# Used for automated tool tasks
 
 integrations:
   github:
     # Repository in format "owner/repo"
-    # Can be overridden by GITHUB_REPO environment variable
     repo: "semcod/planfile"
     
     # GitHub token (automatically loaded from GITHUB_TOKEN env var)
-    # token: "${GITHUB_TOKEN}"
     
     # Sync settings
     sync:
@@ -19,7 +17,7 @@ integrations:
       import_issues: true
       
       # Labels to add to created issues
-      default_labels: ["planfile", "managed"]
+      default_labels: ["planfile", "automated"]
       
       # Map planfile priorities to GitHub labels
       priority_labels:

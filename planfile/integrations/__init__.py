@@ -1,32 +1,4 @@
-"""Integrations with external PM systems.
+"""Backward-compatible import shim for :mod:`planfile.sync`."""
 
-Re-exports from softreck-shared for backward compatibility.
-"""
-
-try:
-    from softreck_shared.integrations import (
-        TicketRef,
-        TicketStatus,
-        PMBackend,
-        GenericBackend,
-        GitHubBackend,
-    )
-except ImportError:
-    # Fallback to local implementations
-    from .base import TicketRef, TicketStatus, PMBackend
-    from .generic import GenericBackend
-    from .github import GitHubBackend
-
-# Platform-specific implementations
-from .jira import JiraBackend
-from .gitlab import GitLabBackend
-
-__all__ = [
-    "TicketRef",
-    "TicketStatus",
-    "PMBackend",
-    "GenericBackend",
-    "GitHubBackend",
-    "JiraBackend",
-    "GitLabBackend",
-]
+from planfile.sync import *  # noqa: F401,F403
+from planfile.sync import __all__ as __all__

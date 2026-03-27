@@ -1,0 +1,38 @@
+# GitLab Integration Configuration
+# Used for CI/CD and infrastructure tasks
+
+integrations:
+  gitlab:
+    # GitLab instance URL
+    url: "https://gitlab.com"
+    
+    # Project ID (numeric)
+    project_id: 123456
+    
+    # GitLab token (automatically loaded from GITLAB_TOKEN env var)
+    
+    # Sync settings
+    sync:
+      # Sync planfile tickets to GitLab issues
+      create_issues: true
+      
+      # Sync GitLab issues back to planfile
+      import_issues: true
+      
+      # Labels to add to created issues
+      default_labels: ["planfile", "cicd", "infrastructure"]
+      
+      # Map planfile priorities to GitLab labels
+      priority_labels:
+        critical: "priority::critical"
+        high: "priority::high"
+        normal: "priority::normal"
+        low: "priority::low"
+      
+      # Map planfile statuses to GitLab labels
+      status_labels:
+        open: null
+        in_progress: "status::in-progress"
+        review: "status::review"
+        done: "status::done"
+        blocked: "status::blocked"

@@ -1,0 +1,128 @@
+# Multi-Integration Project Configuration
+# This file contains project info and tickets routed to different integrations
+
+project:
+  name: "Multi-Integration Demo"
+  description: "Example project routing tickets to GitHub, GitLab, and Jira"
+  prefix: "MT"
+
+# Current sprint
+sprint:
+  id: "sprint-001"
+  name: "Multi-Platform Sprint"
+  status: "active"
+  start_date: "2026-03-27"
+  end_date: "2026-04-10"
+  
+  # Sprint tickets with integration routing
+  tickets:
+    # Human-facing tasks - routed to Jira
+    MT-001:
+      title: "User authentication flow"
+      description: "Implement OAuth2 authentication for end users"
+      status: "in_progress"
+      priority: "critical"
+      labels: ["feature", "security", "user-facing"]
+      integration: "jira"
+      acceptance_criteria:
+        - "Users can login with Google/GitHub"
+        - "Token refresh works automatically"
+        - "Logout clears all session data"
+      
+    MT-002:
+      title: "Dashboard UI redesign"
+      description: "Update the main dashboard with new design system"
+      status: "open"
+      priority: "high"
+      labels: ["ui", "design", "user-facing"]
+      integration: "jira"
+      
+    # Automated tool tasks - routed to GitHub
+    MT-003:
+      title: "Add automated code formatting"
+      description: "Configure pre-commit hooks for black, isort, and flake8"
+      status: "done"
+      priority: "normal"
+      labels: ["tools", "automation", "code-quality"]
+      integration: "github"
+      
+    MT-004:
+      title: "Create GitHub Actions for testing"
+      description: "Set up CI pipeline with automated test execution"
+      status: "in_progress"
+      priority: "high"
+      labels: ["ci", "github-actions", "automation"]
+      integration: "github"
+      
+    MT-005:
+      title: "Implement API rate limiting"
+      description: "Add rate limiting middleware to prevent abuse"
+      status: "open"
+      priority: "high"
+      labels: ["backend", "security", "automation"]
+      integration: "github"
+      
+    # CI/CD and infrastructure tasks - routed to GitLab
+    MT-006:
+      title: "Set up Kubernetes deployment"
+      description: "Configure Helm charts for production deployment"
+      status: "open"
+      priority: "critical"
+      labels: ["infrastructure", "kubernetes", "cicd"]
+      integration: "gitlab"
+      
+    MT-007:
+      title: "Configure monitoring stack"
+      description: "Deploy Prometheus and Grafana for observability"
+      status: "open"
+      priority: "high"
+      labels: ["monitoring", "infrastructure", "cicd"]
+      integration: "gitlab"
+      
+    MT-008:
+      title: "Database migration scripts"
+      description: "Create automated database migration pipeline"
+      status: "done"
+      priority: "normal"
+      labels: ["database", "cicd", "infrastructure"]
+      integration: "gitlab"
+
+# Backlog tickets
+backlog:
+  tickets:
+    # More human tasks for Jira
+    MT-009:
+      title: "Mobile app offline support"
+      description: "Enable offline mode for mobile applications"
+      status: "open"
+      priority: "normal"
+      labels: ["mobile", "feature", "user-facing"]
+      integration: "jira"
+      
+    # More automation for GitHub
+    MT-010:
+      title: "Automated dependency updates"
+      description: "Set up Dependabot for automated PR creation"
+      status: "open"
+      priority: "low"
+      labels: ["tools", "automation", "dependencies"]
+      integration: "github"
+      
+    # More infrastructure for GitLab
+    MT-011:
+      title: "Backup and disaster recovery"
+      description: "Implement automated backup strategy"
+      status: "open"
+      priority: "high"
+      labels: ["infrastructure", "backup", "cicd"]
+      integration: "gitlab"
+      
+    # Cross-platform task (sync to all)
+    MT-012:
+      title: "Security audit compliance"
+      description: "Annual security audit and compliance checks"
+      status: "open"
+      priority: "critical"
+      labels: ["security", "compliance", "audit"]
+      integration: ["jira", "github", "gitlab"]
+      sync_to: ["jira", "github", "gitlab"]

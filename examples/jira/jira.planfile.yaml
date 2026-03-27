@@ -1,0 +1,45 @@
+# Jira Integration Configuration
+# This file contains Jira-specific integration settings
+
+integrations:
+  jira:
+    # Jira instance URL
+    # Can be overridden by JIRA_URL environment variable
+    url: "https://yourdomain.atlassian.net"
+    
+    # Jira project key
+    # Can be overridden by JIRA_PROJECT environment variable
+    project: "PROJ"
+    
+    # Jira credentials (automatically loaded from env vars)
+    # email: "${JIRA_EMAIL}"
+    # token: "${JIRA_TOKEN}"
+    
+    # Sync settings
+    sync:
+      # Sync planfile tickets to Jira issues
+      create_issues: true
+      
+      # Sync Jira issues back to planfile
+      import_issues: true
+      
+      # Issue type for created issues
+      default_issue_type: "Task"
+      
+      # Map planfile priorities to Jira priorities
+      priority_map:
+        critical: "Highest"
+        high: "High"
+        normal: "Medium"
+        low: "Low"
+      
+      # Map planfile statuses to Jira workflow statuses
+      status_map:
+        open: "To Do"
+        in_progress: "In Progress"
+        review: "In Review"
+        done: "Done"
+        blocked: "Blocked"
+      
+      # Labels to add to created issues
+      default_labels: ["planfile", "managed"]

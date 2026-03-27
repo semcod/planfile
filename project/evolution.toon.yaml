@@ -1,4 +1,4 @@
-# code2llm/evolution | 525 func | 65f | 2026-03-27
+# code2llm/evolution | 534 func | 66f | 2026-03-27
 
 NEXT[10] (ranked by impact):
   [1] !  SPLIT-FUNC      table  CC=21  fan=15
@@ -76,4 +76,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.0 → now CC̄=3.9
+  prev CC̄=3.9 → now CC̄=3.9

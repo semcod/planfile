@@ -1,0 +1,70 @@
+# Project and Ticket Configuration
+# This file contains project info and tickets
+
+project:
+  name: "GitLab Integration Demo"
+  description: "Example project showing GitLab ticket synchronization"
+  prefix: "GL"
+
+# Current sprint
+sprint:
+  id: "sprint-001"
+  name: "GitLab Integration Sprint"
+  status: "active"
+  start_date: "2026-03-27"
+  end_date: "2026-04-10"
+  
+  # Sprint tickets
+  tickets:
+    GL-001:
+      title: "Set up GitLab integration"
+      description: "Configure planfile to sync with GitLab Issues"
+      status: "done"
+      priority: "high"
+      labels: ["setup", "integration"]
+      
+    GL-002:
+      title: "Configure GitLab webhooks"
+      description: "Set up webhooks for real-time sync between GitLab and planfile"
+      status: "in_progress"
+      priority: "high"
+      labels: ["webhook", "sync"]
+      acceptance_criteria:
+        - "Webhook receives issue events"
+        - "Changes are reflected in planfile"
+        - "Sync happens within 5 seconds"
+      
+    GL-003:
+      title: "Test GitLab issue creation"
+      description: "Verify that planfile tickets create GitLab issues correctly"
+      status: "open"
+      priority: "normal"
+      labels: ["testing"]
+      acceptance_criteria:
+        - "Issue title matches planfile ticket"
+        - "Description is properly formatted"
+        - "Labels are applied correctly"
+      
+    GL-004:
+      title: "Document GitLab integration"
+      description: "Write documentation for setting up GitLab integration"
+      status: "open"
+      priority: "low"
+      labels: ["documentation"]
+
+# Backlog tickets
+backlog:
+  tickets:
+    GL-005:
+      title: "Add GitLab milestone support"
+      description: "Sync planfile sprints with GitLab milestones"
+      status: "open"
+      priority: "normal"
+      labels: ["enhancement", "milestone"]
+      
+    GL-006:
+      title: "Support GitLab issue templates"
+      description: "Use GitLab issue templates when creating issues"
+      status: "open"
+      priority: "low"
+      labels: ["enhancement", "templates"]

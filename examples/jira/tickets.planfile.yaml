@@ -1,0 +1,70 @@
+# Project and Ticket Configuration
+# This file contains project info and tickets
+
+project:
+  name: "Jira Integration Demo"
+  description: "Example project showing Jira ticket synchronization"
+  prefix: "JR"
+
+# Current sprint
+sprint:
+  id: "sprint-001"
+  name: "Jira Integration Sprint"
+  status: "active"
+  start_date: "2026-03-27"
+  end_date: "2026-04-10"
+  
+  # Sprint tickets
+  tickets:
+    JR-001:
+      title: "Set up Jira integration"
+      description: "Configure planfile to sync with Jira issues"
+      status: "done"
+      priority: "high"
+      labels: ["setup", "integration"]
+      
+    JR-002:
+      title: "Configure Jira webhooks"
+      description: "Set up webhooks for real-time sync between Jira and planfile"
+      status: "in_progress"
+      priority: "high"
+      labels: ["webhook", "sync"]
+      acceptance_criteria:
+        - "Webhook receives issue events"
+        - "Changes are reflected in planfile"
+        - "Sync happens within 5 seconds"
+      
+    JR-003:
+      title: "Test Jira issue creation"
+      description: "Verify that planfile tickets create Jira issues correctly"
+      status: "open"
+      priority: "normal"
+      labels: ["testing"]
+      acceptance_criteria:
+        - "Issue summary matches planfile ticket title"
+        - "Description is properly formatted"
+        - "Issue type is set correctly"
+      
+    JR-004:
+      title: "Document Jira integration"
+      description: "Write documentation for setting up Jira integration"
+      status: "open"
+      priority: "low"
+      labels: ["documentation"]
+
+# Backlog tickets
+backlog:
+  tickets:
+    JR-005:
+      title: "Add Jira sprint support"
+      description: "Sync planfile sprints with Jira sprints"
+      status: "open"
+      priority: "normal"
+      labels: ["enhancement", "sprint"]
+      
+    JR-006:
+      title: "Support Jira issue types"
+      description: "Configure different issue types (Story, Bug, Epic)"
+      status: "open"
+      priority: "low"
+      labels: ["enhancement", "issue-types"]

@@ -99,12 +99,12 @@ class GitLabBackend(BasePMBackend):
                     issue.assignee_id = users[0].id
                     issue.save()
             
-            return TicketRef(
+            return self.build_ticket_ref(
                 id=str(issue.iid),
                 url=issue.web_url,
                 key=f"Issue #{issue.iid}",
                 status=issue.state,
-                metadata=self.prepare_metadata(metadata)
+                metadata=metadata,
             )
         except GitlabError as e:
             raise RuntimeError(f"Failed to create GitLab issue: {e}")
@@ -168,12 +168,12 @@ class GitLabBackend(BasePMBackend):
         try:
             issue = self.project.issues.get(ticket_id)
             
-            return TicketStatus(
+            return self.build_ticket_status(
                 id=str(issue.iid),
                 status=issue.state,
                 assignee=issue.assignee["username"] if issue.assignee else None,
                 labels=issue.labels or [],
-                updated_at=issue.updated_at.isoformat() if issue.updated_at else None
+                updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
             )
         except GitlabError as e:
             raise RuntimeError(f"Failed to get GitLab issue {ticket_id}: {e}")
@@ -205,12 +205,12 @@ class GitLabBackend(BasePMBackend):
             
             tickets = []
             for issue in issues:
-                tickets.append(TicketStatus(
+                tickets.append(self.build_ticket_status(
                     id=str(issue.iid),
                     status=issue.state,
                     assignee=issue.assignee["username"] if issue.assignee else None,
                     labels=issue.labels or [],
-                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None
+                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
                 ))
             
             return tickets
@@ -224,12 +224,12 @@ class GitLabBackend(BasePMBackend):
             
             tickets = []
             for issue in issues:
-                tickets.append(TicketStatus(
+                tickets.append(self.build_ticket_status(
                     id=str(issue.iid),
                     status=issue.state,
                     assignee=issue.assignee["username"] if issue.assignee else None,
                     labels=issue.labels or [],
-                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None
+                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
                 ))
             
             return tickets

@@ -10,6 +10,7 @@ import json
 from typing import Optional
 
 from planfile import Planfile, Ticket, TicketSource
+from planfile.server_common import get_planfile
 
 
 # ── MCP tool definitions (JSON-Schema) ──
@@ -85,19 +86,9 @@ TOOLS = [
 
 # ── Handler dispatch ──
 
-_pf: Optional[Planfile] = None
-
-
-def _get_pf() -> Planfile:
-    global _pf
-    if _pf is None:
-        _pf = Planfile.auto_discover()
-    return _pf
-
-
 def handle_tool_call(name: str, arguments: dict) -> dict:
     """Dispatch an MCP tool call and return the result dict."""
-    pf = _get_pf()
+    pf = get_planfile()
 
     if name == "planfile_list_tickets":
         filters = {}

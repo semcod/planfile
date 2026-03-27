@@ -86,12 +86,12 @@ class GitHubBackend(BasePMBackend):
             assignee=assignee
         )
         
-        return TicketRef(
+        return self.build_ticket_ref(
             id=str(issue.number),
             url=issue.html_url,
             key=f"{self.repo.full_name}#{issue.number}",
             status=issue.state,
-            metadata=self.prepare_metadata(metadata)
+            metadata=metadata,
         )
     
     def update_ticket(
@@ -144,12 +144,12 @@ class GitHubBackend(BasePMBackend):
         """Get GitHub issue status."""
         issue = self.repo.get_issue(int(ticket_id))
         
-        return TicketStatus(
+        return self.build_ticket_status(
             id=str(issue.number),
             status=issue.state,
             assignee=issue.assignee.login if issue.assignee else None,
             labels=[label.name for label in issue.labels],
-            updated_at=issue.updated_at.isoformat() if issue.updated_at else None
+            updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
         )
     
     def list_tickets(
@@ -173,12 +173,12 @@ class GitHubBackend(BasePMBackend):
             if limit and len(tickets) >= limit:
                 break
             
-            tickets.append(TicketStatus(
+            tickets.append(self.build_ticket_status(
                 id=str(issue.number),
                 status=issue.state,
                 assignee=issue.assignee.login if issue.assignee else None,
                 labels=[label.name for label in issue.labels],
-                updated_at=issue.updated_at.isoformat() if issue.updated_at else None
+                updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
             ))
         
         return tickets
@@ -190,12 +190,12 @@ class GitHubBackend(BasePMBackend):
         tickets = []
         for issue in issues:
             if query.lower() in issue.title.lower() or query.lower() in issue.body.lower():
-                tickets.append(TicketStatus(
+                tickets.append(self.build_ticket_status(
                     id=str(issue.number),
                     status=issue.state,
                     assignee=issue.assignee.login if issue.assignee else None,
                     labels=[label.name for label in issue.labels],
-                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None
+                    updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
                 ))
         
         return tickets

@@ -1,21 +1,21 @@
-# code2llm | 83f 11671L | python:76,shell:5,javascript:2 | 2026-03-27
-# CC̄=3.9 | critical:13/634 | dups:6 | cycles:0
+# code2llm | 84f 11753L | python:77,shell:5,javascript:2 | 2026-03-27
+# CC̄=3.9 | critical:13/644 | dups:6 | cycles:0
 
 HEALTH[20]:
   🔴 DUP   6 classes duplicated
   🟡 CC    update_ticket CC=15 (limit:15)
   🟡 CC    update_ticket CC=15 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
+  🟡 CC    table CC=19 (limit:15)
+  🟡 CC    table_body_rows CC=19 (limit:15)
+  🟡 CC    no_rows CC=19 (limit:15)
+  🟡 CC    filter_handler CC=19 (limit:15)
   🟡 CC    table CC=21 (limit:15)
   🟡 CC    table_body_rows CC=21 (limit:15)
   🟡 CC    no_rows CC=21 (limit:15)
   🟡 CC    footer CC=21 (limit:15)
   🟡 CC    ratio_columns CC=21 (limit:15)
   🟡 CC    filter_handler CC=21 (limit:15)
-  🟡 CC    table CC=19 (limit:15)
-  🟡 CC    table_body_rows CC=19 (limit:15)
-  🟡 CC    no_rows CC=19 (limit:15)
-  🟡 CC    filter_handler CC=19 (limit:15)
   🟡 CC    table CC=21 (limit:15)
   🟡 CC    table_body_rows CC=21 (limit:15)
   🟡 CC    no_rows CC=21 (limit:15)
@@ -27,16 +27,16 @@ REFACTOR[2]:
   1. rm duplicates  (-6 dup classes)
   2. split 19 high-CC methods  (CC>15)
 
-PIPELINES[388]:
-  [1] Src [validate_strategy]: validate_strategy
+PIPELINES[397]:
+  [1] Src [planfile_generate]: planfile_generate
       PURITY: 100% pure
-  [2] Src [analyze_generated_code]: analyze_generated_code
+  [2] Src [planfile_apply]: planfile_apply
       PURITY: 100% pure
-  [3] Src [_is_llx_available]: _is_llx_available
+  [3] Src [planfile_review]: planfile_review
       PURITY: 100% pure
-  [4] Src [_parse_llx_analysis]: _parse_llx_analysis
+  [4] Src [main]: main
       PURITY: 100% pure
-  [5] Src [_basic_code_analysis]: _basic_code_analysis
+  [5] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
 
 LAYERS:
@@ -76,6 +76,7 @@ LAYERS:
   │ code2llm_importer          129L  1C    9m  CC=13     ←1
   │ cmd_generate               128L  0C    2m  CC=14     ←0
   │ file_analyzer              125L  1C   10m  CC=7      ←0
+  │ config                     124L  1C   11m  CC=7      ←0
   │ text_parser                119L  0C    1m  CC=13     ←3
   │ cmd_template               118L  0C    2m  CC=1      ←0
   │ base                       112L  4C    9m  CC=4      ←0  ×DUP
@@ -99,9 +100,7 @@ LAYERS:
   │ metrics_extractor           43L  0C    6m  CC=9      ←1
   │ state                       41L  1C    5m  CC=3      ←0
   │ cmd_validate                39L  0C    1m  CC=9      ←0
-  │ yaml_importer               35L  0C    2m  CC=6      ←1
-  │ json_importer               35L  0C    2m  CC=6      ←1
-  │ common                      34L  0C    2m  CC=6      ←0
+  │ common                      34L  0C    2m  CC=6      ←2
   │ __init__                    32L  0C    0m  CC=0.0    ←0
   │ __init__                    32L  0C    0m  CC=0.0    ←0
   │ json_parser                 31L  0C    1m  CC=2      ←1
@@ -110,6 +109,8 @@ LAYERS:
   │ execution                   23L  0C    0m  CC=0.0    ←0
   │ __init__                    23L  0C    0m  CC=0.0    ←0
   │ extra_commands              20L  0C    1m  CC=1      ←0
+  │ yaml_importer               14L  0C    1m  CC=1      ←1
+  │ json_importer               14L  0C    1m  CC=1      ←1
   │ models                      12L  0C    0m  CC=0.0    ←0
   │ __init__                    12L  0C    0m  CC=0.0    ←0
   │ __init__                     7L  0C    0m  CC=0.0    ←0
