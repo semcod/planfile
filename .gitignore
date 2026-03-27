@@ -236,3 +236,20 @@ examples/*/generated.yaml
 examples/*/external*.yaml
 examples/*/full-analysis.yaml
 examples/quick-start/quick-start.yaml
+
+# Goal recovery directory
+.goal/recovery/
+
+# Large files removed by Goal recovery
+planfile-from-files.yaml
+planfile/.planfile_analysis/analysis_summary.json
+examples/integrated-functionality/generated.yaml
+Storage
+examples/strategies/.planfile_analysis/analysis_summary.json
+examples/quick-start/quick-start.yaml
+examples/integrated-functionality/external-tools-strategy.yaml
+examples/demo-without-keys/local-strategy.yaml
+examples/integrated-functionality/external.yaml
+.planfile_analysis/analysis_summary.json
+examples/external-tools/full-analysis.yaml
+size
