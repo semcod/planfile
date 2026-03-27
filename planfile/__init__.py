@@ -18,6 +18,8 @@ from .models import Strategy as StrategyV1, Sprint, TaskPattern, TaskType, Model
 from .models_v2 import Strategy as StrategyV2, Task, Goal, QualityGate, ModelTier as ModelTierV2
 
 # Executors
+from . import runner
+from . import executor_standalone
 from .runner import load_valid_strategy, run_strategy, verify_strategy_post_execution
 from .executor_standalone import StrategyExecutor, execute_strategy, TaskResult, LLMClient
 from .executor_standalone import create_openai_client, create_litellm_client

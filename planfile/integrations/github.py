@@ -9,7 +9,7 @@ except ImportError:
     Issue = None
     Repository = None  # pip install PyGithub
 
-from planfile.integrations.base import BasePMBackend, TicketRef, TicketStatus
+from .base import BasePMBackend, TicketRef, TicketStatus
 
 
 class GitHubBackend(BasePMBackend):

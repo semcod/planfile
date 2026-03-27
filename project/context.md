@@ -4,12 +4,12 @@
 
 - **Project**: /home/tom/github/semcod/planfile
 - **Primary Language**: python
-- **Languages**: python: 53, shell: 17, javascript: 3
+- **Languages**: python: 53, shell: 20, javascript: 3
 - **Analysis Mode**: static
-- **Total Functions**: 504
+- **Total Functions**: 524
 - **Total Classes**: 52
-- **Modules**: 73
-- **Entry Points**: 418
+- **Modules**: 76
+- **Entry Points**: 432
 
 ## Architecture by Module
 
@@ -26,7 +26,7 @@
 - **File**: `coverage_html_cb_6fb7b396.js`
 
 ### planfile.llm.adapters
-- **Functions**: 18
+- **Functions**: 23
 - **Classes**: 6
 - **File**: `adapters.py`
 
@@ -39,6 +39,10 @@
 - **Functions**: 17
 - **Classes**: 6
 - **File**: `01_full_workflow.sh`
+
+### planfile.loaders.yaml_loader
+- **Functions**: 15
+- **File**: `yaml_loader.py`
 
 ### planfile.models_v2
 - **Functions**: 14
@@ -59,10 +63,6 @@
 - **Classes**: 3
 - **File**: `executor_standalone.py`
 
-### planfile.loaders.yaml_loader
-- **Functions**: 11
-- **File**: `yaml_loader.py`
-
 ### planfile.ci_runner
 - **Functions**: 10
 - **Classes**: 3
@@ -77,6 +77,15 @@
 - **Classes**: 1
 - **File**: `file_analyzer.py`
 
+### planfile.analysis.sprint_generator
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `sprint_generator.py`
+
+### planfile.analysis.parsers.toon_parser
+- **Functions**: 10
+- **File**: `toon_parser.py`
+
 ### planfile.cli.auto_loop
 - **Functions**: 9
 - **File**: `auto_loop.py`
@@ -86,25 +95,15 @@
 - **Classes**: 1
 - **File**: `jira.py`
 
+### planfile.integrations.generic
+- **Functions**: 9
+- **Classes**: 1
+- **File**: `generic.py`
+
 ### examples.ecosystem.04_llx_integration
 - **Functions**: 9
 - **Classes**: 2
 - **File**: `04_llx_integration.py`
-
-### planfile.integrations.base
-- **Functions**: 9
-- **Classes**: 4
-- **File**: `base.py`
-
-### planfile.integrations.generic
-- **Functions**: 8
-- **Classes**: 1
-- **File**: `generic.py`
-
-### examples.llx_validator
-- **Functions**: 7
-- **Classes**: 1
-- **File**: `llx_validator.py`
 
 ## Key Entry Points
 
@@ -112,7 +111,7 @@ Main execution flows into the system:
 
 ### planfile.cli.extra_commands.add_extra_commands
 > Add extra commands to the CLI app.
-- **Calls**: app.command, app.command, app.command, app.command, app.command, app.command, typer.Argument, typer.Option
+- **Calls**: app.command, app.command, app.command, app.command, app.command, app.command, typer.Typer, examples_app.command
 
 ### planfile.cli.cmd.cmd_init.init_strategy_cli
 > Interactive wizard — tworzy strategię przez zadawanie pytań.
@@ -188,10 +187,6 @@ This command will:
 > Example: Budget tracking with proxy.
 - **Calls**: examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, ProxyClient, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print
 
-### planfile.llm.adapters.LLMTestRunner.generate_report
-> Generate a test report.
-- **Calls**: report.append, report.append, report.append, results.items, report.append, results.items, None.join, report.append
-
 ### planfile.models_v2.Strategy.get_stats
 > Get strategy statistics.
 - **Calls**: len, sum, len, sum, hasattr, durations.append, hasattr, sum
@@ -199,6 +194,10 @@ This command will:
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
 > Parse code2llm analysis.toon.yaml output.
 - **Calls**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists, self._mock_code2llm_data, open, f.read
+
+### planfile.analysis.parsers.toon_parser._parse_summary_section
+> Parse summary section for metrics.
+- **Calls**: re.search, re.search, metrics.append, int, metrics.append, issues.append, ExtractedMetric, int
 
 ### planfile.ci_runner.CIRunner.check_strategy_completion
 > Check if strategy goals are met.
@@ -308,6 +307,11 @@ _parse_llx_output [examples.ecosystem.04_llx_integration.LLXIntegration]
 - **Methods**: 10
 - **Key Methods**: planfile.analysis.file_analyzer.FileAnalyzer.__init__, planfile.analysis.file_analyzer.FileAnalyzer.analyze_file, planfile.analysis.file_analyzer.FileAnalyzer._analyze_toon, planfile.analysis.file_analyzer.FileAnalyzer._analyze_yaml, planfile.analysis.file_analyzer.FileAnalyzer._analyze_json, planfile.analysis.file_analyzer.FileAnalyzer._analyze_text, planfile.analysis.file_analyzer.FileAnalyzer._extract_from_yaml_structure, planfile.analysis.file_analyzer.FileAnalyzer._extract_from_json_structure, planfile.analysis.file_analyzer.FileAnalyzer.analyze_directory, planfile.analysis.file_analyzer.FileAnalyzer._generate_summary
 
+### planfile.analysis.sprint_generator.SprintGenerator
+> Generates sprints and tickets from extracted information.
+- **Methods**: 10
+- **Key Methods**: planfile.analysis.sprint_generator.SprintGenerator.__init__, planfile.analysis.sprint_generator.SprintGenerator.generate_sprints, planfile.analysis.sprint_generator.SprintGenerator._group_issues_by_priority, planfile.analysis.sprint_generator.SprintGenerator._get_high_and_quality_issues, planfile.analysis.sprint_generator.SprintGenerator._get_remaining_medium_issues, planfile.analysis.sprint_generator.SprintGenerator._create_sprint, planfile.analysis.sprint_generator.SprintGenerator._map_category_to_task_type, planfile.analysis.sprint_generator.SprintGenerator._get_highest_priority, planfile.analysis.sprint_generator.SprintGenerator._estimate_effort, planfile.analysis.sprint_generator.SprintGenerator.generate_tickets
+
 ### planfile.models_v2.Strategy
 > Main strategy configuration - simplified and more flexible.
 - **Methods**: 10
@@ -319,6 +323,11 @@ _parse_llx_output [examples.ecosystem.04_llx_integration.LLXIntegration]
 - **Methods**: 9
 - **Key Methods**: planfile.ci_runner.CIRunner.__init__, planfile.ci_runner.CIRunner.run_tests, planfile.ci_runner.CIRunner.run_code_analysis, planfile.ci_runner.CIRunner.generate_bug_report, planfile.ci_runner.CIRunner.create_bug_tickets, planfile.ci_runner.CIRunner.auto_fix_bugs, planfile.ci_runner.CIRunner.check_strategy_completion, planfile.ci_runner.CIRunner.run_loop, planfile.ci_runner.CIRunner.save_results
 
+### planfile.llm.adapters.LLMTestRunner
+> Run tests across multiple LLM adapters.
+- **Methods**: 9
+- **Key Methods**: planfile.llm.adapters.LLMTestRunner.__init__, planfile.llm.adapters.LLMTestRunner.register_adapter, planfile.llm.adapters.LLMTestRunner.test_strategy_with_all_adapters, planfile.llm.adapters.LLMTestRunner.generate_report, planfile.llm.adapters.LLMTestRunner._generate_header, planfile.llm.adapters.LLMTestRunner._generate_summary_table, planfile.llm.adapters.LLMTestRunner._generate_detailed_results, planfile.llm.adapters.LLMTestRunner._generate_successful_tests_section, planfile.llm.adapters.LLMTestRunner._generate_failed_tests_section
+
 ### planfile.integrations.jira.JiraBackend
 > Jira integration backend.
 - **Methods**: 9
@@ -327,19 +336,14 @@ _parse_llx_output [examples.ecosystem.04_llx_integration.LLXIntegration]
 
 ### planfile.integrations.generic.GenericBackend
 > Generic HTTP API backend for PM systems.
-- **Methods**: 8
-- **Key Methods**: planfile.integrations.generic.GenericBackend.__init__, planfile.integrations.generic.GenericBackend._validate_config, planfile.integrations.generic.GenericBackend._make_request, planfile.integrations.generic.GenericBackend.create_ticket, planfile.integrations.generic.GenericBackend.update_ticket, planfile.integrations.generic.GenericBackend.get_ticket, planfile.integrations.generic.GenericBackend.list_tickets, planfile.integrations.generic.GenericBackend.search_tickets
+- **Methods**: 9
+- **Key Methods**: planfile.integrations.generic.GenericBackend.__init__, planfile.integrations.generic.GenericBackend._validate_config, planfile.integrations.generic.GenericBackend._make_request, planfile.integrations.generic.GenericBackend.create_ticket, planfile.integrations.generic.GenericBackend.update_ticket, planfile.integrations.generic.GenericBackend._build_update_data, planfile.integrations.generic.GenericBackend.get_ticket, planfile.integrations.generic.GenericBackend.list_tickets, planfile.integrations.generic.GenericBackend.search_tickets
 - **Inherits**: BasePMBackend
 
 ### planfile.executor_standalone.StrategyExecutor
 > Standalone strategy executor.
 - **Methods**: 7
 - **Key Methods**: planfile.executor_standalone.StrategyExecutor.__init__, planfile.executor_standalone.StrategyExecutor._default_config, planfile.executor_standalone.StrategyExecutor.execute_strategy, planfile.executor_standalone.StrategyExecutor._execute_task, planfile.executor_standalone.StrategyExecutor._select_model, planfile.executor_standalone.StrategyExecutor._build_prompt, planfile.executor_standalone.StrategyExecutor._get_project_metrics
-
-### planfile.analysis.sprint_generator.SprintGenerator
-> Generates sprints and tickets from extracted information.
-- **Methods**: 7
-- **Key Methods**: planfile.analysis.sprint_generator.SprintGenerator.__init__, planfile.analysis.sprint_generator.SprintGenerator.generate_sprints, planfile.analysis.sprint_generator.SprintGenerator._create_sprint, planfile.analysis.sprint_generator.SprintGenerator._map_category_to_task_type, planfile.analysis.sprint_generator.SprintGenerator._get_highest_priority, planfile.analysis.sprint_generator.SprintGenerator._estimate_effort, planfile.analysis.sprint_generator.SprintGenerator.generate_tickets
 
 ### planfile.integrations.gitlab.GitLabBackend
 > GitLab Issues integration backend.
@@ -381,11 +385,6 @@ _parse_llx_output [examples.ecosystem.04_llx_integration.LLXIntegration]
 - **Key Methods**: planfile.integrations.base.PMBackend.create_ticket, planfile.integrations.base.PMBackend.update_ticket, planfile.integrations.base.PMBackend.get_ticket, planfile.integrations.base.PMBackend.list_tickets, planfile.integrations.base.PMBackend.search_tickets
 - **Inherits**: Protocol
 
-### planfile.llm.adapters.LLMTestRunner
-> Run tests across multiple LLM adapters.
-- **Methods**: 4
-- **Key Methods**: planfile.llm.adapters.LLMTestRunner.__init__, planfile.llm.adapters.LLMTestRunner.register_adapter, planfile.llm.adapters.LLMTestRunner.test_strategy_with_all_adapters, planfile.llm.adapters.LLMTestRunner.generate_report
-
 ### examples.ecosystem.03_proxy_routing.ProxyClient
 > Client for interacting with Proxym API.
 - **Methods**: 4
@@ -406,6 +405,10 @@ _parse_llx_output [examples.ecosystem.04_llx_integration.LLXIntegration]
 
 Key functions that process and transform data:
 
+### planfile.examples.example_validate_strategy
+> Load and validate an existing strategy.
+- **Output to**: planfile.runner.load_valid_strategy, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, len
+
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
 - **Output to**: self._is_llx_available, subprocess.run, str, str
@@ -414,9 +417,20 @@ Key functions that process and transform data:
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
 
-### planfile.examples.example_validate_strategy
-> Load and validate an existing strategy.
-- **Output to**: planfile.runner.load_valid_strategy, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, examples.bash-generation.verify_planfile.print, len
+### planfile.loaders.yaml_loader._transform_task_patterns
+> Transform task patterns in the data.
+- **Output to**: None.items, ModelHints, TaskType
+
+### planfile.loaders.yaml_loader._transform_sprints
+> Transform sprints in the data.
+
+### planfile.loaders.yaml_loader._transform_goal
+> Transform goal field in the data.
+- **Output to**: isinstance, isinstance, Goal
+
+### planfile.loaders.yaml_loader._format_validation_error
+> Format validation error with context.
+- **Output to**: hasattr, callable, e.errors, ValueError, ValueError
 
 ### planfile.loaders.yaml_loader._validate_sprints
 > Validate sprint section.
@@ -492,20 +506,6 @@ Args:
 > Validate a strategy YAML file.
 - **Output to**: typer.Argument, typer.Option, planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print
 
-### planfile.analysis.parsers.toon_parser._parse_toon_header
-> Parse health and metrics tags from toon header line.
-- **Output to**: re.search, re.search, float, metrics.append, int
-
-### planfile.analysis.parsers.toon_parser._parse_toon_sections
-> Parse structural sections in toon files.
-- **Output to**: enumerate, line.strip, line.startswith, line.startswith, re.search
-
-### examples.ecosystem.04_llx_integration.LLXIntegration._parse_llx_output
-> Parse LLX analysis output.
-- **Output to**: None.split, ProjectMetrics, output.strip, line.split, value.strip
-
-### docker-entrypoint.validate_config
-
 ## Behavioral Patterns
 
 ### recursion_extract_from_yaml_structure
@@ -517,7 +517,7 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
-- `planfile.cli.extra_commands.add_extra_commands` - 118 calls
+- `planfile.cli.extra_commands.add_extra_commands` - 207 calls
 - `planfile.cli.cmd.cmd_init.init_strategy_cli` - 70 calls
 - `examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
@@ -538,9 +538,7 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.analysis.parsers.yaml_parser.analyze_yaml` - 20 calls
 - `planfile.models_v2.Strategy.to_llx_format` - 20 calls
 - `examples.ecosystem.03_proxy_routing.example_budget_tracking` - 19 calls
-- `planfile.llm.adapters.LLMTestRunner.generate_report` - 18 calls
 - `planfile.models_v2.Strategy.get_stats` - 18 calls
-- `planfile.loaders.yaml_loader.load_strategy_yaml` - 17 calls
 - `planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output` - 17 calls
 - `planfile.ci_runner.CIRunner.check_strategy_completion` - 15 calls
 - `planfile.loaders.cli_loader.export_results_to_markdown` - 15 calls
@@ -557,6 +555,8 @@ Functions exposed as public API (no underscore prefix):
 - `htmlcov.coverage_html_cb_6fb7b396.sortColumn` - 15 calls
 - `htmlcov.coverage_html_cb_6fb7b396.table` - 15 calls
 - `htmlcov.coverage_html_cb_6fb7b396.table_body_rows` - 15 calls
+- `htmlcov.coverage_html_cb_6fb7b396.no_rows` - 15 calls
+- `htmlcov.coverage_html_cb_6fb7b396.filter_handler` - 15 calls
 
 ## System Interactions
 

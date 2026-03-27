@@ -27,18 +27,18 @@ flowchart TD
         mcp_server_example__planfile_apply["planfile_apply"]
         mcp_server_example__planfile_review["planfile_review"]
         mcp_server_example__main["main"]
+        planfile__ci_runner__CIRunner__run_tests["run_tests"]
+        planfile__ci_runner__CIRunner__run_code_analysis["run_code_analysis"]
+        planfile__ci_runner__CIRunner__generate_bug_report["generate_bug_report"]
+        planfile__ci_runner__CIRunner__create_bug_tickets["create_bug_tickets"]
+        planfile__ci_runner__CIRunner__auto_fix_bugs["auto_fix_bugs"]
+        planfile__ci_runner__CIRunner__check_strategy_completion["check_strategy_completion"]
+        planfile__ci_runner__CIRunner__run_loop["run_loop"]
+        planfile__ci_runner__CIRunner__save_results["save_results"]
+        planfile__ci_runner__main["main"]
         planfile__executor_standalone__LLMClient__chat["chat"]
         planfile__executor_standalone__StrategyExecutor___default_config["_default_config"]
-        planfile__executor_standalone__StrategyExecutor__execute_strategy["execute_strategy"]
-        planfile__executor_standalone__StrategyExecutor___execute_task["_execute_task"]
-        planfile__executor_standalone__StrategyExecutor___select_model["_select_model"]
-        planfile__executor_standalone__StrategyExecutor___build_prompt["_build_prompt"]
-        planfile__executor_standalone__StrategyExecutor___get_project_metrics["_get_project_metrics"]
-        planfile__executor_standalone__create_openai_client["create_openai_client"]
-        planfile__executor_standalone__create_litellm_client["create_litellm_client"]
-        planfile__executor_standalone__execute_strategy["execute_strategy"]
-        planfile__loaders__yaml_loader__load_strategy_yaml{{load_strategy_yaml CC=18}}
-        ...["+268 more"]
+        ...["+283 more"]
     end
 
     subgraph Exporters
@@ -46,4 +46,4 @@ flowchart TD
         planfile__models_v2__Strategy__export["export"]
     end
 
-    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__executor_standalone__LLMClient__chat,planfile__executor_standalone__StrategyExecutor___default_config,planfile__executor_standalone__StrategyExecutor__execute_strategy,planfile__executor_standalone__StrategyExecutor___execute_task,planfile__executor_standalone__StrategyExecutor___select_model,planfile__executor_standalone__StrategyExecutor___build_prompt entry
+    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__ci_runner__CIRunner__run_tests,planfile__ci_runner__CIRunner__run_code_analysis,planfile__ci_runner__CIRunner__generate_bug_report,planfile__ci_runner__CIRunner__create_bug_tickets,planfile__ci_runner__CIRunner__auto_fix_bugs,planfile__ci_runner__CIRunner__check_strategy_completion entry

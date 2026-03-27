@@ -2,6 +2,7 @@ import yaml
 from pathlib import Path
 from typing import Tuple, List, Any
 
+from ... import models
 from ..models import ExtractedIssue, ExtractedMetric, ExtractedTask
 from .text_parser import analyze_text
 from .toon_parser import analyze_toon

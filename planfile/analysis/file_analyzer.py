@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Union, Tuple
 
+from . import models
+from . import parsers
 from .models import ExtractedIssue, ExtractedMetric, ExtractedTask
 from .parsers.text_parser import analyze_text
 from .parsers.yaml_parser import analyze_yaml, extract_from_yaml_structure

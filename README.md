@@ -1,3 +1,11 @@
+now:
+
+![img_1.png](img_1.png)
+
+before:
+
+![img.png](img.png)
+
 # Planfile
 
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
@@ -6,7 +14,9 @@
 [![PyPI Downloads](https://img.shields.io/pypi/dm/planfile)](https://pypi.org/project/planfile/)
 [![CI/CD](https://github.com/semcod/planfile/workflows/CI%2FCD%20with%20Auto%20Bug-Fix%20Loop/badge.svg)](https://github.com/semcod/planfile/actions)
 [![Code Coverage](https://img.shields.io/codecov/c/github/semcod/planfile)](https://codecov.io/gh/semcod/planfile)
-[![Code Quality](https://img.shields.io/codecov/c/github/semcod/planfile)](https://codecov.io/gh/semcod/planfile)
+[![Code Quality](https://img.shields.io/badge/CC%CC%84-4.1-brightgreen)](https://github.com/semcod/planfile)
+[![Functions](https://img.shields.io/badge/functions-395-blue)](https://github.com/semcod/planfile)
+[![Modules](https://img.shields.io/badge/modules-56-blue)](https://github.com/semcod/planfile)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![MyPy](https://img.shields.io/badge/mypy-checked-blue)](https://mypy.readthedocs.io/)
@@ -23,6 +33,14 @@
 
 **Planfile** is an SDLC automation platform that provides strategic project management with CI/CD integration and automated bug-fix loops. It manages sprints and strategies across external ticket systems like GitHub, Jira, and GitLab.
 
+## 📊 Project Metrics
+
+- **56 modules** with **395 functions**
+- **Cyclomatic Complexity**: CC̄=4.1 (improved from 4.2)
+- **Critical functions**: 15 (target: ≤4)
+- **Zero circular dependencies**
+- **Languages**: Python (53), Shell (17), JavaScript (3)
+
 ## ✨ Features
 
 - 🎯 **Strategy Modeling**: Define strategies and sprints in YAML with task patterns
@@ -34,6 +52,11 @@
 - 🎨 **Rich Output**: Beautiful terminal output with progress bars and tables
 - 🐳 **Docker Support**: Containerized deployment with Ollama integration
 - 🔧 **Extensible**: Easy to add new backends and custom integrations
+- 🔍 **Code Analysis**: Integration with external tools (code2llm, vallm, redup)
+- 🌐 **MCP Server**: Model Context Protocol server integration
+- 🤖 **LLX Integration**: Advanced code analysis and model selection
+- 🌉 **Proxy Routing**: Smart model routing via Proxym API
+- 📈 **Metrics-Driven**: Project metrics analysis for informed planning
 
 ## 📦 Installation
 
@@ -175,18 +198,56 @@ docker-compose exec sprintstrat-runner planfile auto loop \
 
 - [CI/CD Integration Guide](docs/CI_CD_INTEGRATION.md)
 - [API Reference](docs/API.md)
+- [CLI Reference](docs/CLI.md)
 - [Examples](examples/)
+- [Architecture Overview](docs/summaries/)
+- [Migration Guide](MIGRATION_GUIDE.md)
+- [Changelog](CHANGELOG.md)
 
 ## 🔧 Configuration
 
-### Strategy Schema
+### Strategy Schema (v2)
 
 The `strategy.yaml` file supports:
 
-- **Sprints**: Time-boxed development periods
-- **Task Patterns**: Reusable task templates
+- **Sprints**: Time-boxed development periods with embedded tasks
+- **Goals**: Project objectives with success criteria
 - **Quality Gates**: Definition of done criteria
-- **Success Metrics**: KPIs for strategy completion
+- **Model Hints**: AI model suggestions for different phases
+
+### Example Strategy (v2)
+
+```yaml
+name: "My Project Strategy"
+project_type: "web"
+domain: "fintech"
+goal:
+  title: "Launch secure payment platform"
+  description: "Build and deploy a secure payment processing system"
+  success_metrics:
+    - "99.9% uptime"
+    - "<100ms response time"
+
+sprints:
+  - id: 1
+    name: "Core Infrastructure"
+    length_days: 14
+    objectives: ["Set up project structure", "Implement authentication"]
+    tasks:
+      - type: "feature"
+        title: "Setup project structure"
+        description: "Create basic project layout and configuration"
+        estimate: 2
+        priority: "high"
+        model_hints:
+          small: "gpt-4o-mini"
+          large: "gpt-4o"
+
+quality_gates:
+  - name: "Code Coverage"
+    criteria: ["coverage >= 80%"]
+    required: true
+```
 
 ### Backend Configuration
 
@@ -208,19 +269,25 @@ jira:
 
 ## 🤖 AI Integration
 
-Planfile integrates with LLM services for:
+Planfile integrates with multiple LLM services:
 
-- **Bug Analysis**: Detailed error analysis and root cause identification
+- **Multiple Providers**: OpenAI, Anthropic, LiteLLM, Local LLMs
+- **Smart Routing**: Automatic model selection via Proxym proxy
+- **Code Analysis**: LLX integration for advanced metrics
 - **Auto-Fix**: Automatic code generation for bug fixes
-- **Strategy Optimization**: AI-powered recommendations for strategy improvements
+- **Strategy Generation**: AI-powered strategy creation
 
 ```bash
 # Enable AI features
 export OPENAI_API_KEY=your_key
 export ANTHROPIC_API_KEY=your_key
+export PROXY_API_URL=http://localhost:9999
 
 # Run with auto-fix
 planfile auto loop --strategy strategy.yaml --auto-fix
+
+# Generate strategy with AI
+planfile strategy generate ./my-project --model gpt-4o
 ```
 
 ## 📊 Examples
@@ -316,16 +383,43 @@ ruff format src/ tests/
 ### Project Structure
 
 ```
-strategy/
-├── strategy/           # Main package
-│   ├── cli/           # CLI commands
-│   ├── integrations/  # Backend integrations
-│   ├── loaders/       # YAML/JSON loaders
-│   └── utils/         # Utilities
-├── examples/           # Example strategies
-├── tests/             # Test suite
-├── docs/              # Documentation
-└── docker/            # Docker files
+planfile/
+├── planfile/              # Main package
+│   ├── analysis/          # Code analysis components
+│   │   ├── external_tools.py    # External tool integrations
+│   │   ├── generator.py         # Strategy generation
+│   │   ├── file_analyzer.py     # File analysis
+│   │   ├── sprint_generator.py  # Sprint generation
+│   │   ├── parsers/             # YAML/JSON/Toon parsers
+│   │   └── generators/          # Metrics extractors
+│   ├── cli/               # CLI commands
+│   │   ├── cmd/           # Core commands (init, generate, apply, etc.)
+│   │   ├── auto_loop.py   # CI/CD automation
+│   │   └── extra_commands.py # Additional utilities
+│   ├── integrations/      # Backend integrations
+│   │   ├── github.py      # GitHub Issues
+│   │   ├── jira.py        # Jira
+│   │   ├── gitlab.py      # GitLab
+│   │   └── generic.py     # Generic HTTP API
+│   ├── llm/               # LLM integrations
+│   │   ├── adapters.py    # Multiple LLM adapters
+│   │   ├── client.py      # LLM client
+│   │   └── generator.py   # Strategy generation
+│   ├── loaders/           # Data loaders
+│   │   ├── yaml_loader.py # YAML loading/saving
+│   │   └── cli_loader.py  # JSON/Markdown export
+│   ├── models.py          # Core data models
+│   ├── models_v2.py       # Simplified models
+│   ├── runner.py          # Strategy execution
+│   ├── ci_runner.py       # CI/CD automation
+│   └── executor_standalone.py # Standalone executor
+├── examples/              # Usage examples
+│   ├── quick-start/       # Basic examples
+│   ├── ecosystem/         # Integration examples
+│   └── advanced-usage/    # Advanced features
+├── tests/                 # Test suite
+├── docs/                  # Documentation
+└── project/               # Project analysis output
 ```
 
 ## 📄 License

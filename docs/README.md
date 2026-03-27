@@ -1,7 +1,7 @@
 <!-- code2docs:start --># planfile
 
-![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-310-green)
-> **310** functions | **52** classes | **70** files | CC̄ = 4.2
+![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-330-green)
+> **330** functions | **52** classes | **73** files | CC̄ = 4.0
 
 > Auto-generated project documentation from source code analysis.
 
@@ -154,7 +154,7 @@ Content outside the markers is preserved when regenerating. Enable this with `sy
 
 ```
 planfile/
-├── mcp-server-example    ├── examples    ├── llx_validator├── planfile/    ├── runner    ├── executor_standalone        ├── yaml_loader    ├── ci_runner    ├── loaders/        ├── cli_loader        ├── generator    ├── analysis/        ├── external_tools        ├── models        ├── file_analyzer        ├── sprint_generator        ├── commands        ├── auto_loop    ├── cli/        ├── __main__        ├── extra_commands        ├── adapters        ├── prompts    ├── llm/        ├── client        ├── generator    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── cmd_review            ├── cmd_utils            ├── cmd_init            ├── cmd_apply            ├── cmd_generate            ├── cmd_validate        ├── generators/            ├── metrics_extractor            ├── toon_parser        ├── parsers/            ├── yaml_parser            ├── json_parser            ├── text_parser        ├── 02_mcp_integration        ├── 04_llx_integration        ├── 03_proxy_routing├── cleanup_redundant├── docker-entrypoint├── auto_generate_planfile├── run_examples├── project    ├── validate_with_llx        ├── run        ├── run        ├── run        ├── run        ├── ci-workflow        ├── run        ├── 01_full_workflow        ├── run        ├── run        ├── run        ├── verify_planfile    ├── models    ├── models_v2        ├── base```
+├── mcp-server-example    ├── examples    ├── llx_validator├── planfile/    ├── runner    ├── executor_standalone        ├── yaml_loader    ├── ci_runner    ├── loaders/        ├── cli_loader        ├── generator    ├── analysis/        ├── external_tools        ├── models        ├── file_analyzer        ├── sprint_generator        ├── commands        ├── auto_loop    ├── cli/        ├── __main__        ├── adapters        ├── generator        ├── extra_commands    ├── llm/        ├── prompts        ├── client    ├── utils/        ├── priorities        ├── metrics    ├── integrations/        ├── gitlab        ├── jira        ├── github        ├── generic            ├── cmd_review            ├── cmd_utils            ├── cmd_init            ├── cmd_apply            ├── cmd_generate            ├── cmd_validate        ├── generators/            ├── metrics_extractor            ├── toon_parser        ├── parsers/            ├── yaml_parser            ├── json_parser            ├── text_parser        ├── 02_mcp_integration        ├── 04_llx_integration        ├── 03_proxy_routing├── cleanup_redundant├── docker-entrypoint├── auto_generate_planfile├── run_examples├── project    ├── run    ├── validate_with_llx        ├── run        ├── run        ├── run        ├── run        ├── ci-workflow        ├── run        ├── 01_full_workflow        ├── run        ├── run_fixed        ├── run        ├── run        ├── run_fixed        ├── verify_planfile    ├── models_v2    ├── models        ├── base```
 
 ## API Overview
 
@@ -192,14 +192,6 @@ planfile/
 - **`User`** — —
 - **`UserService`** — —
 - **`UserController`** — —
-- **`TaskType`** — Type of task in the strategy.
-- **`ModelTier`** — Model tier for different phases of work.
-- **`ModelHints`** — AI model hints for different phases of task execution.
-- **`TaskPattern`** — A pattern for generating tasks.
-- **`Sprint`** — A sprint in the strategy.
-- **`Goal`** — Project goal definition.
-- **`QualityGate`** — Quality gate definition.
-- **`Strategy`** — Main strategy configuration.
 - **`TaskType`** — Type of task in the planfile.
 - **`ModelTier`** — Model tier for different phases of work.
 - **`ModelHints`** — AI model hints for different phases of task execution.
@@ -208,6 +200,14 @@ planfile/
 - **`QualityGate`** — Quality gate definition.
 - **`Goal`** — Project goal definition.
 - **`Strategy`** — Main strategy configuration - simplified and more flexible.
+- **`TaskType`** — Type of task in the strategy.
+- **`ModelTier`** — Model tier for different phases of work.
+- **`ModelHints`** — AI model hints for different phases of task execution.
+- **`TaskPattern`** — A pattern for generating tasks.
+- **`Sprint`** — A sprint in the strategy.
+- **`Goal`** — Project goal definition.
+- **`QualityGate`** — Quality gate definition.
+- **`Strategy`** — Main strategy configuration.
 - **`TicketRef`** — Reference to a created/updated ticket.
 - **`TicketStatus`** — Status of a ticket.
 - **`PMBackend`** — Protocol for PM system backends.
@@ -254,6 +254,7 @@ planfile/
 - `get_backend(backend_type)` — Get backend instance by type.
 - `auto_loop(strategy, project_path, backend, max_iterations)` — Run automated CI/CD loop: test → ticket → fix → retest.
 - `ci_status(project_path)` — Check current CI status without running tests.
+- `generate_strategy(project_path)` — Generate a complete strategy from project analysis.
 - `export_to_csv(strategy, file_path)` — Export strategy to CSV format.
 - `export_to_html(strategy, file_path)` — Export strategy to HTML format.
 - `compare_strategies(s1, s2)` — Compare two strategies and return differences.
@@ -262,7 +263,6 @@ planfile/
 - `add_extra_commands(app)` — Add extra commands to the CLI app.
 - `build_strategy_prompt(metrics, sprints, focus)` — Build a structured prompt for strategy generation.
 - `call_llm(prompt, model, temperature)` — Call LLM via LiteLLM. Falls back to llx proxy if available.
-- `generate_strategy(project_path)` — Generate a complete strategy from project analysis.
 - `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
 - `map_priority_to_system(priority, system)` — Map generic priority to system-specific priority.
 - `get_priority_color(priority)` — Get color code for priority (for UI display).
@@ -334,6 +334,7 @@ planfile/
 📄 `examples.advanced-usage.run`
 📄 `examples.bash-generation.verify_planfile` (4 functions)
 📄 `examples.cli-commands.run`
+📄 `examples.cli-commands.run_fixed`
 📄 `examples.comprehensive-example.run`
 📄 `examples.demo-without-keys.run`
 📄 `examples.ecosystem.01_full_workflow` (17 functions, 6 classes)
@@ -345,6 +346,8 @@ planfile/
 📄 `examples.llm-integration.run`
 📄 `examples.llx_validator` (7 functions, 1 classes)
 📄 `examples.quick-start.run`
+📄 `examples.quick-start.run_fixed`
+📄 `examples.run`
 📄 `examples.validate_with_llx` (1 functions)
 📄 `mcp-server-example` (4 functions)
 📦 `planfile`
@@ -358,9 +361,9 @@ planfile/
 📦 `planfile.analysis.parsers`
 📄 `planfile.analysis.parsers.json_parser` (1 functions)
 📄 `planfile.analysis.parsers.text_parser` (1 functions)
-📄 `planfile.analysis.parsers.toon_parser` (3 functions)
+📄 `planfile.analysis.parsers.toon_parser` (10 functions)
 📄 `planfile.analysis.parsers.yaml_parser` (2 functions)
-📄 `planfile.analysis.sprint_generator` (7 functions, 1 classes)
+📄 `planfile.analysis.sprint_generator` (10 functions, 1 classes)
 📄 `planfile.ci_runner` (10 functions, 3 classes)
 📦 `planfile.cli`
 📄 `planfile.cli.__main__`
@@ -377,18 +380,18 @@ planfile/
 📄 `planfile.executor_standalone` (12 functions, 3 classes)
 📦 `planfile.integrations`
 📄 `planfile.integrations.base` (9 functions, 4 classes)
-📄 `planfile.integrations.generic` (8 functions, 1 classes)
+📄 `planfile.integrations.generic` (9 functions, 1 classes)
 📄 `planfile.integrations.github` (7 functions, 1 classes)
 📄 `planfile.integrations.gitlab` (7 functions, 1 classes)
 📄 `planfile.integrations.jira` (9 functions, 1 classes)
 📦 `planfile.llm`
-📄 `planfile.llm.adapters` (18 functions, 6 classes)
+📄 `planfile.llm.adapters` (23 functions, 6 classes)
 📄 `planfile.llm.client` (1 functions)
 📄 `planfile.llm.generator` (6 functions)
 📄 `planfile.llm.prompts` (1 functions)
 📦 `planfile.loaders`
 📄 `planfile.loaders.cli_loader` (10 functions)
-📄 `planfile.loaders.yaml_loader` (11 functions)
+📄 `planfile.loaders.yaml_loader` (15 functions)
 📄 `planfile.models` (5 functions, 8 classes)
 📄 `planfile.models_v2` (14 functions, 8 classes)
 📄 `planfile.runner` (6 functions)
@@ -401,7 +404,7 @@ planfile/
 ## Requirements
 
 - Python >= >=3.10
-- typer >=0.12- rich >=13.0- pydantic >=2.0- pydantic-settings >=2.0- pyyaml >=6.0- requests >=2.31- httpx >=0.27
+- typer >=0.12- rich >=13.0- pydantic >=2.0- pydantic-settings >=2.0- pyyaml >=6.0- requests >=2.31- httpx >=0.27- softreck-shared >=0.1.0
 
 ## Contributing
 
