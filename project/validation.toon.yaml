@@ -1,7 +1,7 @@
-# vallm batch | 276f | 190✓ 13⚠ 14✗ | 2026-03-27
+# vallm batch | 275f | 189✓ 13⚠ 14✗ | 2026-03-27
 
 SUMMARY:
-  scanned: 276  passed: 190 (68.8%)  warnings: 13  errors: 14  unsupported: 72
+  scanned: 275  passed: 189 (68.7%)  warnings: 13  errors: 14  unsupported: 72
 
 WARNINGS[13]{path,score}:
   planfile/cli/cmd/cmd_sync.py,0.87

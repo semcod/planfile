@@ -6,7 +6,7 @@ SUMMARY:
   dup_groups:    3
   dup_fragments: 9
   saved_lines:   34
-  scan_ms:       2081
+  scan_ms:       3126
 
 DUPLICATES[3] (ranked by impact):
   [9eff6742b4323da5]   STRU  github  L=7 N=4 saved=21 sim=1.00
@@ -14,19 +14,19 @@ DUPLICATES[3] (ranked by impact):
       planfile/cli/cmd/cmd_sync.py:36-42  (gitlab)
       planfile/cli/cmd/cmd_sync.py:46-52  (jira)
       planfile/cli/cmd/cmd_sync.py:56-62  (markdown)
-  [d32dae4fd2e94d5b]   STRU  import_yaml  L=7 N=2 saved=7 sim=1.00
-      planfile/importers/yaml_importer.py:8-14  (import_yaml)
+  [d32dae4fd2e94d5b]   STRU  import_json  L=7 N=2 saved=7 sim=1.00
       planfile/importers/json_importer.py:8-14  (import_json)
+      planfile/importers/yaml_importer.py:8-14  (import_yaml)
   [11d76056cd91522d]   EXAC  _validate_config  L=3 N=3 saved=6 sim=1.00
-      planfile/sync/base.py:62-64  (_validate_config)
       planfile/sync/mock.py:18-20  (_validate_config)
+      planfile/sync/base.py:62-64  (_validate_config)
       planfile/sync/markdown_backend.py:40-43  (_validate_config)
 
 REFACTOR[3] (ranked by priority):
   [1] ○ extract_function   → planfile/cli/cmd/utils/github.py
       WHY: 4 occurrences of 7-line block across 1 files — saves 21 lines
       FILES: planfile/cli/cmd/cmd_sync.py
-  [2] ○ extract_function   → planfile/importers/utils/import_yaml.py
+  [2] ○ extract_function   → planfile/importers/utils/import_json.py
       WHY: 2 occurrences of 7-line block across 2 files — saves 7 lines
       FILES: planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
   [3] ○ extract_function   → planfile/sync/utils/_validate_config.py

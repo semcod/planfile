@@ -342,9 +342,6 @@ D:
     e: generate_strategy_cli,generate_from_files_cmd
     generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
     generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;external_tools;compact;verbose)
-  planfile/sync/jira.py:
-    e: JiraBackend
-    JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),_create_ticket(6),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend...
   planfile/importers/code2llm_importer.py:
     e: EvolutionParser,import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health
     EvolutionParser: __init__(1),parse(1),_process_line(1),_handle_outside(1),_handle_in_next(1)  # State machine parser for evolution.toon NEXT[] sections...
@@ -357,6 +354,9 @@ D:
     create_examples_app()
     _discover_examples(examples_dir)
     _execute_example(ex)
+  planfile/sync/jira.py:
+    e: JiraBackend
+    JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),_create_ticket(6),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend...
   planfile/analysis/parsers/text_parser.py:
     e: analyze_text
     analyze_text(file_path)
@@ -403,9 +403,6 @@ D:
     _save_results_if_needed(results;output)
     auto_loop(strategy;project_path;backend;max_iterations;auto_fix;llx_command;output;dry_run)
     ci_status(project_path)
-  planfile/integrations/config.py:
-    e: IntegrationConfig
-    IntegrationConfig: __init__(1),load_dotenv(0),_expand_env_vars(1),discover_configs(0),load_configs(0),get_integration_config(1),get_project_config(0),get_sprint_config(0),get_backlog_config(0),_deep_merge(2),validate_integration(1),has_configured_integrations(0),get_default_backend(0),get_integration_backend(1)  # Manages integration configuration with support for multiple ...
   planfile/cli/cmd/cmd_review.py:
     e: review_strategy_cli
     review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
@@ -417,6 +414,9 @@ D:
     e: _display_tickets,register_ticket_commands
     _display_tickets(tickets;fmt)
     register_ticket_commands(app)
+  planfile/integrations/config.py:
+    e: IntegrationConfig
+    IntegrationConfig: __init__(1),load_dotenv(0),_expand_env_vars(1),discover_configs(0),load_configs(0),get_integration_config(1),get_project_config(0),get_sprint_config(0),get_backlog_config(0),_deep_merge(2),validate_integration(1),has_configured_integrations(0),get_default_backend(0),get_integration_backend(1)  # Manages integration configuration with support for multiple ...
   planfile/analysis/sprint_generator.py:
     e: SprintGenerator
     SprintGenerator: __init__(0),generate_sprints(2),_group_issues_by_priority(1),_get_high_and_quality_issues(1),_get_remaining_medium_issues(1),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information...
@@ -467,18 +467,6 @@ D:
     TestResult:  # Result of running tests...
     BugReport:  # Generated bug report from test failures...
     CIRunner: __init__(7),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop and ticket creation...
-  planfile/loaders/cli_loader.py:
-    e: load_from_json,save_to_json,load_strategy_from_json,save_strategy_to_json,_md_header,_md_summary,_md_tasks,_md_sprints,_md_metrics,export_results_to_markdown
-    load_from_json(file_path)
-    save_to_json(data;file_path)
-    load_strategy_from_json(file_path)
-    save_strategy_to_json(strategy;file_path)
-    _md_header(results)
-    _md_summary(results)
-    _md_tasks(results)
-    _md_sprints(results)
-    _md_metrics(results)
-    export_results_to_markdown(results;file_path)
   planfile/loaders/yaml_loader.py:
     e: load_yaml,save_yaml,load_strategy_yaml,_transform_task_patterns,_transform_sprints,_transform_goal,_format_validation_error,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,_check_required_keys,_validate_sprints,_validate_gates,_validate_task_patterns,validate_strategy_schema
     load_yaml(file_path)
@@ -496,6 +484,18 @@ D:
     _validate_gates(data;issues)
     _validate_task_patterns(data;issues)
     validate_strategy_schema(file_path)
+  planfile/loaders/cli_loader.py:
+    e: load_from_json,save_to_json,load_strategy_from_json,save_strategy_to_json,_md_header,_md_summary,_md_tasks,_md_sprints,_md_metrics,export_results_to_markdown
+    load_from_json(file_path)
+    save_to_json(data;file_path)
+    load_strategy_from_json(file_path)
+    save_strategy_to_json(strategy;file_path)
+    _md_header(results)
+    _md_summary(results)
+    _md_tasks(results)
+    _md_sprints(results)
+    _md_metrics(results)
+    export_results_to_markdown(results;file_path)
   planfile/analysis/file_analyzer.py:
     e: FileAnalyzer
     FileAnalyzer: __init__(0),analyze_file(1),_analyze_toon(1),_analyze_yaml(1),_analyze_json(1),_analyze_text(1),_extract_from_yaml_structure(3),_extract_from_json_structure(3),analyze_directory(2),_generate_summary(3)  # Analyzes YAML/JSON files to extract issues and metrics...
@@ -537,6 +537,11 @@ D:
     TicketStatus(BaseModel):  # Status of a ticket...
     PMBackend(Protocol): create_ticket(1),update_ticket(0),get_ticket(1),list_tickets(0),search_tickets(1)  # Protocol for PM system backends...
     BasePMBackend(ABC): __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1),create_ticket(1),_create_ticket(6),update_ticket(7),_update_ticket(7),get_ticket(1),_get_ticket(1),list_tickets(4),_list_tickets(4),search_tickets(1),_search_tickets(1),build_ticket_ref(0),build_ticket_status(0)  # Base class for PM backends with common functionality...
+  planfile/importers/vallm_importer.py:
+    e: VallmParser,import_vallm,_auto_labels
+    VallmParser: __init__(1),parse(1),_process_line(1),_is_file_entry(1),_is_issue_entry(1),_parse_file_entry(1),_parse_issue_entry(1),_determine_priority(1)  # Parser for vallm validation.toon files...
+    import_vallm(toon_path;auto_priority)
+    _auto_labels(rule)
   planfile/llm/client.py:
     e: call_llm
     call_llm(prompt;model;temperature)
@@ -556,11 +561,6 @@ D:
     delete_ticket(ticket_id)
     move_ticket(ticket_id;to_sprint)
     health()
-  planfile/importers/vallm_importer.py:
-    e: VallmParser,import_vallm,_auto_labels
-    VallmParser: __init__(1),parse(1),_process_line(1),_is_file_entry(1),_is_issue_entry(1),_parse_file_entry(1),_parse_issue_entry(1),_determine_priority(1)  # Parser for vallm validation.toon files...
-    import_vallm(toon_path;auto_priority)
-    _auto_labels(rule)
   planfile/sync/state.py:
     e: SyncState
     SyncState: __init__(2),get_last_sync(0),save_sync(1),get_remote_id(1),get_local_id(1)  # Persist mapping between local ticket IDs and remote IDs...
@@ -569,9 +569,6 @@ D:
     ExtractedIssue: __post_init__(0)  # Represents an issue extracted from a file...
     ExtractedMetric:  # Represents a metric extracted from a file...
     ExtractedTask: __post_init__(0)  # Represents a task extracted from a file...
-  planfile/server_common.py:
-    e: get_planfile
-    get_planfile(start_path)
   planfile/examples.py:
     e: example_create_strategy,example_validate_strategy,example_run_strategy,example_verify_strategy,example_programmatic_strategy
     example_create_strategy()
@@ -579,6 +576,9 @@ D:
     example_run_strategy()
     example_verify_strategy()
     example_programmatic_strategy()
+  planfile/server_common.py:
+    e: get_planfile
+    get_planfile(start_path)
   planfile/cli/commands.py:
     e: version_callback,main_callback,main
     version_callback(value)
@@ -610,13 +610,13 @@ D:
     OpenRouterAdapter(BaseLLMAdapter):
     LocalLLMAdapter(BaseLLMAdapter):
     LLMTestRunner: __init__(0),register_adapter(2)
+  planfile/cli/cmd/cmd_health.py:
+    e: create_health_app
+    create_health_app()
   planfile/cli/cmd/cmd_template.py:
     e: generate_template,register_template_commands
     generate_template(project_type;domain)
     register_template_commands(app)
-  planfile/cli/cmd/cmd_health.py:
-    e: create_health_app
-    create_health_app()
   planfile/execution.py:
   planfile/models.py:
   planfile/sync/__init__.py:
@@ -628,13 +628,13 @@ D:
   planfile/llm/__init__.py:
   planfile/utils/__init__.py:
   planfile/mcp/__init__.py:
-  planfile/integrations/__init__.py:
   planfile/integrations/base.py:
-  planfile/integrations/jira.py:
+  planfile/integrations/__init__.py:
   planfile/integrations/gitlab.py:
   planfile/integrations/github.py:
   planfile/integrations/generic.py:
   planfile/api/__init__.py:
+  planfile/integrations/jira.py:
   planfile/analysis/generators/__init__.py:
   planfile/analysis/parsers/__init__.py:
   cleanup_redundant.sh:

@@ -408,7 +408,7 @@ sprints:
 
 ```bash
 # Clone repository
-git clone https://github.com/semcod/strategy
+git clone https://github.com/semcod/planfile
 cd strategy
 
 # Create virtual environment
@@ -479,8 +479,8 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## 📞 Support
 
 - 📖 [Documentation](docs/)
-- 🐛 [Issue Tracker](https://github.com/semcod/strategy/issues)
-- 💬 [Discussions](https://github.com/semcod/strategy/discussions)
+- 🐛 [Issue Tracker](https://github.com/semcod/planfile/issues)
+- 💬 [Discussions](https://github.com/semcod/planfile/discussions)
 
 ## 🏆 Acknowledgments
 

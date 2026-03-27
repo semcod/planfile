@@ -31,9 +31,9 @@ flowchart TD
     planfile__loaders -->|2| examples__gitlab
     planfile__llm -->|2| examples__ecosystem
     planfile__cli -->|2| planfile__runner
-    examples__llx_validator -->|1| examples__gitlab
     planfile__server_common -->|1| planfile__Planfile
     planfile -->|1| planfile__Planfile
+    examples__llx_validator -->|1| examples__gitlab
     planfile__runner -->|1| planfile__core
     planfile__ci -->|1| planfile__loaders
     planfile__ci -->|1| planfile__Planfile

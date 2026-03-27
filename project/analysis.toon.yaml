@@ -5,7 +5,6 @@ HEALTH[20]:
   🟡 CC    _update_ticket CC=15 (limit:15)
   🟡 CC    _create_ticket CC=15 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
-  🟡 CC    _apply_filters CC=20 (limit:15)
   🟡 CC    _find_readme_content CC=16 (limit:15)
   🟡 CC    _detect_quality_gates CC=47 (limit:15)
   🟡 CC    _analyze_directory_structure CC=20 (limit:15)
@@ -13,29 +12,30 @@ HEALTH[20]:
   🟡 CC    _detect_from_pyproject CC=28 (limit:15)
   🟡 CC    _infer_python_project_type CC=17 (limit:15)
   🟡 CC    get_detected_values CC=15 (limit:15)
+  🟡 CC    _apply_filters CC=20 (limit:15)
+  🟡 CC    sync_integration CC=40 (limit:15)
+  🟡 CC    sync_to_external CC=23 (limit:15)
+  🟡 CC    sync_from_external CC=20 (limit:15)
   🟡 CC    init_strategy_cli CC=19 (limit:15)
   🟡 CC    table CC=19 (limit:15)
   🟡 CC    table_body_rows CC=19 (limit:15)
   🟡 CC    no_rows CC=19 (limit:15)
   🟡 CC    filter_handler CC=19 (limit:15)
   🟡 CC    table CC=21 (limit:15)
-  🟡 CC    table_body_rows CC=21 (limit:15)
-  🟡 CC    no_rows CC=21 (limit:15)
-  🟡 CC    footer CC=21 (limit:15)
 
 REFACTOR[1]:
   1. split 20 high-CC methods  (CC>15)
 
 PIPELINES[411]:
-  [1] Src [validate_strategy]: validate_strategy
+  [1] Src [planfile_generate]: planfile_generate
       PURITY: 100% pure
-  [2] Src [analyze_generated_code]: analyze_generated_code
+  [2] Src [planfile_apply]: planfile_apply
       PURITY: 100% pure
-  [3] Src [_is_llx_available]: _is_llx_available
+  [3] Src [planfile_review]: planfile_review
       PURITY: 100% pure
-  [4] Src [_parse_llx_analysis]: _parse_llx_analysis
+  [4] Src [main]: main
       PURITY: 100% pure
-  [5] Src [_basic_code_analysis]: _basic_code_analysis
+  [5] Src [example_create_strategy]: example_create_strategy
       PURITY: 100% pure
 
 LAYERS:
@@ -82,8 +82,8 @@ LAYERS:
   │ cmd_utils                  100L  0C    5m  CC=7      ←2
   │ server                      99L  2C    7m  CC=4      ←0
   │ cmd_review                  97L  0C    1m  CC=10     ←0
-  │ cmd_compare                 96L  0C    2m  CC=10     ←0
   │ vallm_importer              96L  1C   10m  CC=4      ←1
+  │ cmd_compare                 96L  0C    2m  CC=10     ←0
   │ cmd_health                  83L  0C    1m  CC=1      ←1
   │ adapters                    80L  6C    5m  CC=1      ←0
   │ yaml_parser                 80L  0C    2m  CC=9      ←2
@@ -114,11 +114,11 @@ LAYERS:
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ base                         1L  0C    0m  CC=0.0    ←0
-  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ gitlab                       1L  0C    0m  CC=0.0    ←0
   │ github                       1L  0C    0m  CC=0.0    ←0
   │ generic                      1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
+  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
@@ -153,8 +153,8 @@ COUPLING:
         run_examples                  ←1                                                                                                                                                              ──
   CYCLES: none
   HUB: planfile.loaders/ (fan-in=15)
-  HUB: planfile.importers/ (fan-in=5)
   HUB: planfile/ (fan-in=16)
+  HUB: planfile.importers/ (fan-in=5)
   SMELL: planfile.cli/ fan-out=25 → split needed
   SMELL: planfile/ fan-out=8 → split needed
 
