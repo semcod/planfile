@@ -76,7 +76,13 @@ class ExternalToolRunner:
             str(self.project_path),
             "-f", "all",
             "-o", str(self.output_dir),
-            "--no-chunk"
+            "--no-chunk",
+            "--exclude", ".git",
+            "--exclude", "__pycache__",
+            "--exclude", "*.pyc",
+            "--exclude", "node_modules",
+            "--exclude", ".pytest_cache",
+            "--exclude", ".planfile_analysis"
         ]
         
         try:

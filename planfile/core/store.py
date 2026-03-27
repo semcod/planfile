@@ -234,6 +234,36 @@ class PlanfileStore:
             tickets = [Ticket(**t) for t in sprint_data.get("tickets", {}).values()]
         return self._apply_filters(tickets, **filters)
 
+    def _apply_filters(self, tickets, **filters):
+        """Apply filters to a list of tickets."""
+        filtered = tickets
+        
+        if "status" in filters:
+            status = filters["status"]
+            filtered = [t for t in filtered if t.status == status]
+        
+        if "labels" in filters:
+            labels = filters["labels"]
+            filtered = [t for t in filtered if any(l in t.labels for l in labels)]
+        
+        if "assignee" in filters:
+            assignee = filters["assignee"]
+            filtered = [t for t in filtered if t.assignee == assignee]
+        
+        if "source" in filters:
+            source = filters["source"]
+            filtered = [t for t in filtered if t.source == source]
+        
+        if "priority" in filters:
+            priority = filters["priority"]
+            filtered = [t for t in filtered if t.priority == priority]
+        
+        if "type" in filters:
+            ticket_type = filters["type"]
+            filtered = [t for t in filtered if t.type == ticket_type]
+        
+        return filtered
+
     def move_ticket(self, ticket_id: str, to_sprint: str) -> bool:
         """Move ticket between sprints."""
         ticket = self.get_ticket(ticket_id)

@@ -40,7 +40,8 @@ class PlanfileGenerator:
                                      project_path: str = ".",
                                      project_name: str = None,
                                      max_sprints: int = 4,
-                                     focus_area: str = None) -> Strategy:
+                                     focus_area: str = None,
+                                     compact: bool = False) -> Strategy:
         """Generate planfile using external analysis tools (code2llm, vallm, redup)."""
         print("=" * 60)
         print("GENERATING PLANFILE WITH EXTERNAL TOOLS")
@@ -59,7 +60,8 @@ class PlanfileGenerator:
             project_name=project_name,
             max_sprints=max_sprints,
             focus_area=focus_area,
-            external_metrics=self._extract_external_metrics(external_results)
+            external_metrics=self._extract_external_metrics(external_results, compact),
+            compact=compact
         )
     
     def _external_to_internal_analysis(self, results: AnalysisResults) -> Dict[str, Any]:
@@ -126,25 +128,52 @@ class PlanfileGenerator:
             }
         }
     
-    def _extract_external_metrics(self, results: AnalysisResults) -> Dict[str, Any]:
-        """Extract metrics from external tool results."""
-        return {
-            'average_cc': results.cc_average,
-            'critical_functions': results.critical_functions,
-            'high_cc_functions': results.high_cc_functions,
-            'validation_errors': results.validation_errors,
-            'validation_warnings': results.validation_warnings,
-            'duplication_groups': results.duplication_groups,
-            'saved_lines': results.saved_lines,
-            'pass_rate': results.pass_rate
-        }
+    def _extract_external_metrics(self, results: AnalysisResults, compact: bool = False) -> Dict[str, Any]:
+        """Extract metrics from external tool results, keeping only essential data."""
+        if compact:
+            # In compact mode, only keep summary metrics
+            return {
+                'average_cc': results.cc_average,
+                'critical_functions': results.critical_functions,
+                'high_cc_count': len(results.high_cc_functions),
+                'validation_errors': results.validation_errors,
+                'validation_warnings': results.validation_warnings,
+                'duplication_groups': results.duplication_groups,
+                'saved_lines': results.saved_lines,
+                'pass_rate': results.pass_rate
+            }
+        else:
+            # Strip down high_cc_functions to essential fields only
+            compact_high_cc = []
+            for func in results.high_cc_functions[:50]:  # Limit to top 50 functions
+                compact_func = {
+                    'name': func.get('name', 'unknown'),
+                    'cc': func.get('cc', 0)
+                }
+                # Only include file path if available
+                if 'file' in func:
+                    compact_func['file'] = func['file']
+                compact_high_cc.append(compact_func)
+            
+            return {
+                'average_cc': results.cc_average,
+                'critical_functions': results.critical_functions,
+                'high_cc_functions': compact_high_cc,  # Now limited and stripped
+                'high_cc_count': len(results.high_cc_functions),  # Keep total count
+                'validation_errors': results.validation_errors,
+                'validation_warnings': results.validation_warnings,
+                'duplication_groups': results.duplication_groups,
+                'saved_lines': results.saved_lines,
+                'pass_rate': results.pass_rate
+            }
     
     def generate_from_analysis(self, 
                              analysis_path: str,
                              project_name: str = None,
                              max_sprints: int = 4,
                              focus_area: str = None,
-                             external_metrics: Optional[Dict[str, Any]] = None) -> Strategy:
+                             external_metrics: Optional[Dict[str, Any]] = None,
+                             compact: bool = False) -> Strategy:
         """Generate planfile from analyzed files."""
         # Analyze files
         analysis_result = self.analyzer.analyze_directory(Path(analysis_path))
@@ -179,6 +208,7 @@ class PlanfileGenerator:
     def generate_from_current_project(self,
                                     project_path: str = ".",
                                     patterns: List[str] = None,
+                                    compact: bool = False,
                                     **kwargs) -> Strategy:
         """Generate planfile by analyzing current project files."""
         if patterns is None:
@@ -189,12 +219,15 @@ class PlanfileGenerator:
         temp_dir = Path(project_path) / ".planfile_analysis"
         temp_dir.mkdir(exist_ok=True)
         
-        with open(temp_dir / "analysis_summary.json", 'w') as f:
-            serializable_result = self._make_serializable(analysis_result)
-            json.dump(serializable_result, f, indent=2, default=str)
+        # Only save analysis summary if not in compact mode
+        if not compact:
+            with open(temp_dir / "analysis_summary.json", 'w') as f:
+                serializable_result = self._make_serializable(analysis_result)
+                json.dump(serializable_result, f, indent=2, default=str)
         
         return self.generate_from_analysis(
             analysis_path=str(temp_dir),
+            compact=compact,
             **kwargs
         )
     

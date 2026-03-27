@@ -1,9 +1,18 @@
-# vallm batch | 270f | 164✓ 10⚠ 35✗ | 2026-03-27
+# vallm batch | 276f | 190✓ 13⚠ 14✗ | 2026-03-27
 
 SUMMARY:
-  scanned: 270  passed: 164 (60.7%)  warnings: 10  errors: 35  unsupported: 71
+  scanned: 276  passed: 190 (68.8%)  warnings: 13  errors: 14  unsupported: 72
 
-WARNINGS[10]{path,score}:
+WARNINGS[13]{path,score}:
+  planfile/cli/cmd/cmd_sync.py,0.87
+    issues[7]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 40 (max: 15),93
+      complexity.cyclomatic,warning,sync_to_external has cyclomatic complexity 23 (max: 15),226
+      complexity.cyclomatic,warning,sync_from_external has cyclomatic complexity 20 (max: 15),313
+      complexity.lizard_cc,warning,sync_integration: CC=40 exceeds limit 15,93
+      complexity.lizard_length,warning,sync_integration: 102 lines exceeds limit 100,93
+      complexity.lizard_cc,warning,sync_to_external: CC=23 exceeds limit 15,226
+      complexity.lizard_cc,warning,sync_from_external: CC=20 exceeds limit 15,313
   examples/test_llm_adapters.py,0.93
     issues[3]{rule,severity,message,line}:
       complexity.cyclomatic,warning,main has cyclomatic complexity 32 (max: 15),25
@@ -14,12 +23,9 @@ WARNINGS[10]{path,score}:
       complexity.cyclomatic,warning,init_strategy_cli has cyclomatic complexity 19 (max: 15),130
       complexity.lizard_cc,warning,init_strategy_cli: CC=19 exceeds limit 15,130
       complexity.lizard_length,warning,init_strategy_cli: 161 lines exceeds limit 100,130
-  planfile/cli/cmd/cmd_sync.py,0.93
-    issues[4]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 38 (max: 15),81
-      complexity.cyclomatic,warning,sync_from_external has cyclomatic complexity 20 (max: 15),254
-      complexity.lizard_cc,warning,sync_integration: CC=38 exceeds limit 15,81
-      complexity.lizard_cc,warning,sync_from_external: CC=20 exceeds limit 15,254
+  examples/advanced-usage/final-strategy.yaml,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_length,warning,_report: 287 lines exceeds limit 100,137
   examples/bash-generation/verify_planfile.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
@@ -36,6 +42,13 @@ WARNINGS[10]{path,score}:
   examples/validate_with_llx.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
+  planfile/builder.py,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_length,warning,ask_llm_questions: 119 lines exceeds limit 100,64
+  planfile/core/store.py,0.97
+    issues[2]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_apply_filters has cyclomatic complexity 20 (max: 15),237
+      complexity.lizard_cc,warning,_apply_filters: CC=20 exceeds limit 15,237
   run_examples.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,setup_environment: 141 lines exceeds limit 100,109
@@ -43,48 +56,13 @@ WARNINGS[10]{path,score}:
     issues[1]{rule,severity,message,line}:
       complexity.maintainability,warning,Low maintainability index: 19.9 (threshold: 20),
 
-ERRORS[35]{path,score}:
-  examples/advanced-usage/ci-strategy.yaml,0.00
-    issues[1]{rule,severity,message,line}:
-      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
-  examples/demo-without-keys/local-strategy.yaml,0.00
-    issues[1]{rule,severity,message,line}:
-      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
-  examples/integrated-functionality/generated-from-examples.yaml,0.00
-    issues[1]{rule,severity,message,line}:
-      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
+ERRORS[14]{path,score}:
   examples/llm-integration/llm-config.yaml,0.00
     issues[1]{rule,severity,message,line}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
   test-integrated.yaml,0.00
     issues[1]{rule,severity,message,line}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
-  planfile/analysis/__init__.py,0.57
-    issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'file_analyzer' not found,10
-      python.import.resolvable,error,Module 'sprint_generator' not found,11
-      python.import.resolvable,error,Module 'generator' not found,12
-      python.import.resolvable,error,Module 'external_tools' not found,13
-  planfile/analysis/generators/__init__.py,0.57
-    issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'metrics_extractor' not found,1
-      python.import.resolvable,error,Module 'strategy_builder' not found,2
-  planfile/analysis/parsers/__init__.py,0.57
-    issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'toon_parser' not found,1
-      python.import.resolvable,error,Module 'yaml_parser' not found,2
-      python.import.resolvable,error,Module 'json_parser' not found,3
-      python.import.resolvable,error,Module 'text_parser' not found,4
-  planfile/cli/__main__.py,0.57
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'commands' not found,2
-  planfile/__init__.py,0.64
-    issues[5]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'core.models' not found,18
-      python.import.resolvable,error,Module 'core.store' not found,23
-      python.import.resolvable,error,Module 'runner' not found,33
-      python.import.resolvable,error,Module 'executor_standalone' not found,34
-      python.import.resolvable,error,Module 'executor_standalone' not found,35
   planfile/examples.py,0.64
     issues[5]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'llx.planfile' not found,9
@@ -92,19 +70,6 @@ ERRORS[35]{path,score}:
       python.import.resolvable,error,Module 'llx.planfile' not found,35
       python.import.resolvable,error,Module 'llx.planfile' not found,48
       python.import.resolvable,error,Module 'llx.planfile.models' not found,66
-  planfile/sync/__init__.py,0.66
-    issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'base' not found,7
-      python.import.resolvable,error,Module 'generic' not found,8
-      python.import.resolvable,error,Module 'jira' not found,12
-      python.import.resolvable,error,Module 'gitlab' not found,13
-  planfile/analysis/file_analyzer.py,0.73
-    issues[5]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,12
-      python.import.resolvable,error,Module 'parsers.text_parser' not found,13
-      python.import.resolvable,error,Module 'parsers.yaml_parser' not found,14
-      python.import.resolvable,error,Module 'parsers.json_parser' not found,15
-      python.import.resolvable,error,Module 'parsers.toon_parser' not found,16
   planfile/llm/client.py,0.74
     issues[3]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,17
@@ -114,32 +79,6 @@ ERRORS[35]{path,score}:
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'mcp.server' not found,3
       python.import.resolvable,error,Module 'mcp.server.stdio' not found,4
-  planfile/analysis/parsers/yaml_parser.py,0.79
-    issues[3]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,6
-      python.import.resolvable,error,Module 'text_parser' not found,7
-      python.import.resolvable,error,Module 'toon_parser' not found,8
-  planfile/analysis/generator.py,0.82
-    issues[5]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'file_analyzer' not found,14
-      python.import.resolvable,error,Module 'sprint_generator' not found,15
-      python.import.resolvable,error,Module 'external_tools' not found,16
-      python.import.resolvable,error,Module 'models' not found,17
-      python.import.resolvable,error,Module 'generators' not found,19
-  planfile/analysis/parsers/json_parser.py,0.83
-    issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,5
-      python.import.resolvable,error,Module 'yaml_parser' not found,6
-  planfile/analysis/parsers/toon_parser.py,0.83
-    issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,5
-      python.import.resolvable,error,Module 'text_parser' not found,6
-  planfile/llm/generator.py,0.83
-    issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,15
-      python.import.resolvable,error,Module 'llx' not found,66
-      python.import.resolvable,error,Module 'llx' not found,87
-      python.import.resolvable,error,Module 'llx.analysis.collector' not found,88
   planfile/sync/gitlab.py,0.83
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'gitlab' not found,4
@@ -148,41 +87,21 @@ ERRORS[35]{path,score}:
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'jira' not found,4
       python.import.resolvable,error,Module 'jira.exceptions' not found,5
-  planfile/analysis/sprint_generator.py,0.86
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,8
-  planfile/executor_standalone.py,0.86
+  planfile/llm/generator.py,0.87
     issues[3]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'core.models' not found,10
+      python.import.resolvable,error,Module 'llx' not found,66
+      python.import.resolvable,error,Module 'llx' not found,87
+      python.import.resolvable,error,Module 'llx.analysis.collector' not found,88
+  planfile/executor_standalone.py,0.90
+    issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'openai' not found,285
       python.import.resolvable,error,Module 'litellm' not found,303
-  planfile/runner.py,0.86
-    issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,9
-      python.import.resolvable,error,Module 'integrations.base' not found,10
-  planfile/builder.py,0.88
-    issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,10
-      python.import.resolvable,error,Module 'models' not found,304
-  planfile/analysis/parsers/text_parser.py,0.89
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'models' not found,5
-  planfile/integrations/config.py,0.89
-    issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'gitlab' not found,118
-      python.import.resolvable,error,Module 'jira' not found,121
   planfile/api/server.py,0.91
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'fastapi' not found,9
   examples/ecosystem/03_proxy_routing.py,0.93
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'aiohttp' not found,9
-  planfile/sync/github.py,0.93
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'base' not found,12
-  planfile/cli/cmd/cmd_health.py,0.94
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'analysis.generator' not found,24
   tests/llm_adapters.py,0.95
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,14
@@ -194,7 +113,7 @@ ERRORS[35]{path,score}:
       python.import.resolvable,error,Module 'litellm' not found,24
 
 UNSUPPORTED[6]{bucket,count}:
-  *.md,43
+  *.md,44
   Dockerfile*,1
   *.txt,2
   *.yml,2

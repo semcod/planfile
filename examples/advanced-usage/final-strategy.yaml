@@ -12,6 +12,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
 - id: 2
   name: Foundation & Setup
   objectives:
@@ -21,6 +22,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
 - id: 3
   name: Core Features
   objectives:
@@ -30,6 +32,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 3 weeks
+  start_date: null
 - id: 4
   name: Polish & Deploy
   objectives:
@@ -39,6 +42,1131 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
+tasks:
+  critical_refactors: []
+  standard_refactors: []
+  bug_fixes:
+  - name: Issue in issues[3].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[3].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[4].title
+    description: 'Bug: ,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[4].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[5].title
+    description: 'Bug: report:\n- Description: {issue_description}\n- Ste...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[5].description
+    description: 'report:\n- Description: {issue_description}\n- Steps to reproduce:
+      {reproduction_steps}\n- Expected behavior: {expected_behavior}",'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[5].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[23].title
+    description: "Bug: -fix loop \u2014 ticket-aware refactor...."
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[23].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[24].title
+    description: 'Bug: Report:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[24].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[25].title
+    description: 'Bug: report from test failures."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[25].description
+    description: report from test failures."""
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[25].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[26].title
+    description: 'Bug: -fix loop and ticket creation."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[26].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[27].title
+    description: 'Bug: _report(self, test_result: TestResult, metrics: Di...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[27].description
+    description: '_report(self, test_result: TestResult, metrics: Dict[str, Any])
+      -> BugReport:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[27].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[28].title
+    description: 'Bug: report using LLM."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[28].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[29].title
+    description: 'Bug: report:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[29].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[30].title
+    description: 'Bug: _data = json.loads(result.stdout)...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[30].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[31].title
+    description: 'Bug: Report(...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[31].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[32].title
+    description: 'Bug: _data["title"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[32].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[33].title
+    description: 'Bug: _data["description"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[33].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[34].title
+    description: 'Bug: _data.get("files", []),...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[34].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[35].title
+    description: 'Bug: _data.get("severity", "medium")...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[35].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[36].title
+    description: 'Bug: Report(...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[36].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[37].title
+    description: 'Bug: _tickets(self, bug_report: BugReport) -> List[str]...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[37].description
+    description: '_tickets(self, bug_report: BugReport) -> List[str]:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[37].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[38].title
+    description: 'Bug: tickets in configured backends AND local planfile....'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[38].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[39].title
+    description: 'Bug: _report.title,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[39].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[40].title
+    description: 'Bug: _report.severity in ("high", "critical") else "nor...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[40].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[41].title
+    description: 'Bug: _report.description[:500],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[41].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[42].title
+    description: 'Bug: _report.files,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[42].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[43].title
+    description: 'Bug: ", "auto-generated", f"severity-{bug_report.severi...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[43].description
+    description: '", "auto-generated", f"severity-{bug_report.severity}"],'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[43].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[44].title
+    description: 'Bug: _report.description,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[44].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[45].title
+    description: 'Bug: _report.title,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[45].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[46].title
+    description: 'Bug: _report.description,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[46].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].title
+    description: 'Bug: ", "auto-generated", f"severity-{bug_report.severi...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].description
+    description: '", "auto-generated", f"severity-{bug_report.severity}"],'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[47].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[48].title
+    description: 'Bug: _report.severity in ("high", "critical") else "med...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[48].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[49].title
+    description: 'Bug: s(self, bug_report: BugReport) -> bool:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[49].description
+    description: 's(self, bug_report: BugReport) -> bool:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[49].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[50].title
+    description: 'Bug: s using LLM."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[50].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[51].title
+    description: 'Bug: in the codebase:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[51].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].title
+    description: 'Bug: {bug_report.title}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].description
+    description: '{bug_report.title}'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[52].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[53].title
+    description: 'Bug: _report.description}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[53].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[54].title
+    description: 'Bug: _report.test_names}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[54].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[55].title
+    description: 'Bug: _report = self.generate_bug_report(test_result, me...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[55].description
+    description: _report = self.generate_bug_report(test_result, metrics)
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[55].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[56].title
+    description: 'Bug: _tickets(bug_report)...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[56].description
+    description: _tickets(bug_report)
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[56].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[57].title
+    description: 'Bug: s(bug_report)...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[57].description
+    description: s(bug_report)
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[57].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[59].title
+    description: 'Test: /analysis failures....'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[59].description
+    description: /analysis failures.
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[63].title
+    description: 'Test: failures."""...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[63].description
+    description: failures."""
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[70].title
+    description: 'Test: _name = line.split("FAILED")[1].strip()...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[70].description
+    description: _name = line.split("FAILED")[1].strip()
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[73].title
+    description: 'Test: s=failed_tests,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[73].description
+    description: s=failed_tests,
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[74].description
+    description: '_result: TestResult, metrics: Dict[str, Any]) -> BugReport:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[75].title
+    description: 'Test: s": test_result.failed_tests,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[75].description
+    description: 's": test_result.failed_tests,'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[78].title
+    description: 'Test: failures and code metrics, create a bug report:...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[78].description
+    description: 'failures and code metrics, create a bug report:'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[79].title
+    description: 'Test: s: {context[''failed_tests'']}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[79].description
+    description: 's: {context[''failed_tests'']}'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[81].title
+    description: 'Test: _names=test_result.failed_tests,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[81].description
+    description: _names=test_result.failed_tests,
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[82].title
+    description: 'Test: s failed: {len(test_result.failed_tests)} failures...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[82].description
+    description: 's failed: {len(test_result.failed_tests)} failures",'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[83].title
+    description: 'Test: s failed: {'', ''.join(test_result.failed_tests)}",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[83].description
+    description: 's failed: {'', ''.join(test_result.failed_tests)}",'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[84].title
+    description: 'Test: _names=test_result.failed_tests,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[84].description
+    description: _names=test_result.failed_tests,
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[85].title
+    description: 'Test: s: {bug_report.test_names}...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[85].description
+    description: 's: {bug_report.test_names}'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[94].title
+    description: 'Bug: pattern...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[94].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[95].title
+    description: 'Bug: _title = self._call_llx(...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[95].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[96].title
+    description: 'Bug: tasks. "...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[96].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[97].title
+    description: 'Bug: _desc = self._call_llx(...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[97].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[98].title
+    description: 'Bug: tasks. "...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[98].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[99].title
+    description: 'Bug: _pattern"] = {...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[99].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[100].title
+    description: 'Bug: _title,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[100].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[101].title
+    description: 'Bug: _desc...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[101].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[102].title
+    description: 'Bug: pattern...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[102].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[103].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[103].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[104].title
+    description: 'Bug: ,...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[104].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[105].title
+    description: 'Bug: _pattern"]["title"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[105].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[106].title
+    description: 'Bug: _pattern"]["description"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[106].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[107].title
+    description: 'Bug: ", "tech_debt"]...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[107].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[109].title
+    description: 'Bug: ": "Bug",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[109].description
+    description: '": "Bug",'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[109].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[123].title
+    description: 'Todo: ", "task", "bug"] for label in labels):...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[123].description
+    description: '", "task", "bug"] for label in labels):'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[135].title
+    description: 'Bug: "] for label in labels):...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[135].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[142].title
+    description: 'Bug: '',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[142].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[147].title
+    description: 'Bug: , feature, refactor, test, docs, etc....'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[147].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[154].title
+    description: 'Bug: s and issues''...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[154].description
+    description: s and issues'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[154].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[155].title
+    description: 'Bug: s and errors"],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[155].description
+    description: s and errors"],
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[155].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[156].title
+    description: 'Bug: '': ''bugfix'',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[156].description
+    description: ''': ''bugfix'','
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[156].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[168].title
+    description: 'Bug: = "bug"...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[168].description
+    description: = "bug"
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[168].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[196].title
+    description: 'Bug: reports with LLM...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[196].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[199].description
+    description: s = "Pass" if iteration["tests_passed"] else f"Fail ({len(iteration.get('failed_tests',
+      []))})"
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[203].title
+    description: 'Test: s fail, generate bug reports with LLM...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[203].description
+    description: s fail, generate bug reports with LLM
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[245].title
+    description: 'Doc: ker build -t app . succeeds", "No build errors"]...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[245].description
+    description: ker build -t app . succeeds", "No build errors"]
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[250].title
+    description: 'Doc: s build without errors", "API docs generated"]...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[250].description
+    description: s build without errors", "API docs generated"]
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[270].title
+    description: 'Bug: fix, security...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[270].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[272].title
+    description: 'Refactor: , test, docs, feature, bugfix, security...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[272].description
+    description: ', test, docs, feature, bugfix, security'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[276].title
+    description: 'Test: , docs, feature, bugfix, security...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[276].description
+    description: ', docs, feature, bugfix, security'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[279].title
+    description: 'Doc: s, feature, bugfix, security...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[279].description
+    description: s, feature, bugfix, security
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[281].title
+    description: 'Bug: ": {"boost": 2, "base": "high"},...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[281].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[289].title
+    description: 'Bug: ging...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[289].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[314].title
+    description: 'Bug: _fixes'': [],...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[314].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[315].title
+    description: 'Bug: '':...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[315].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[316].title
+    description: 'Bug: _fixes''].append(task)...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[316].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[317].title
+    description: 'Bug: s",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[317].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[325].title
+    description: 'Refactor: ing may introduce new bugs",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[325].description
+    description: ing may introduce new bugs",
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[349].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[349].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[361].title
+    description: 'Bug: '', ''issue'']):...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[361].description
+    description: ''', ''issue'']):'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[361].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[362].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[362].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[363].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[363].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[364].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[364].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[365].title
+    description: 'Bug: ",...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[365].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[370].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[371].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[372].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[373].title
+    description: 'Fixme: '': ''bug'',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[373].description
+    description: ''': ''bug'','
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[373].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[377].title
+    description: 'Bug: '': re.compile(r''(?i)BUG\s*[:#]?\s*(.+)'', re.MULTIL...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[377].description
+    description: ''': re.compile(r''(?i)BUG\s*[:#]?\s*(.+)'', re.MULTILINE),'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[377].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[378].title
+    description: 'Bug: '': ''critical'',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[378].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[379].title
+    description: 'Bug: '',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[379].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[380].title
+    description: 'Bug: '': ''bug'',...'
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[380].description
+    description: ''': ''bug'','
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  - name: Issue in issues[380].category
+    description: bug
+    file_path: ../../planfile/.planfile_analysis/analysis_summary.json
+    line_number: null
+    estimated_hours: 4
+  test_writing: []
+  documentation: []
 quality_gates:
 - name: Critical Functions
   description: No functions should have CC > 15

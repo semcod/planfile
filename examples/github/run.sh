@@ -50,7 +50,11 @@ with open('tickets.planfile.yaml') as f:
     print(f'Name: {project[\"name\"]}')
     print(f'Prefix: {project[\"prefix\"]}')
     print(f'Sprint: {sprint[\"name\"]} ({sprint[\"status\"]})')
-    print(f'Tickets: {len(sprint[\"tickets\"])} in sprint, {len(config[\"backlog\"][\"tickets\"])} in backlog')
+    print(f'Tickets: {len(sprint[\"tickets\"])} in sprint')
+    if 'backlog' in config and 'tickets' in config['backlog']:
+        print(f', {len(config[\"backlog\"][\"tickets\"])} in backlog')
+    else:
+        print(', 0 in backlog')
 "
 
 # Show integration config

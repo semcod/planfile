@@ -49,8 +49,24 @@ def save_yaml(data: Dict[str, Any], file_path: Union[str, Path]) -> None:
     path = Path(file_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     
-    with open(path, "w", encoding="utf-8") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False, indent=2)
+    # Check data size before dumping (detect potential circular refs)
+    try:
+        import sys
+        data_size = sys.getsizeof(data)
+        if data_size > 50 * 1024 * 1024:  # 50MB threshold
+            print(f"Warning: Large data structure detected ({data_size/1024/1024:.1f}MB)")
+    except:
+        pass
+    
+    # Use safe_dump to prevent issues with circular references
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False, indent=2)
+    except Exception as e:
+        # Fallback to regular dump with error handling
+        print(f"Error with safe_dump: {e}")
+        with open(path, "w", encoding="utf-8") as f:
+            yaml.dump(data, f, default_flow_style=False, sort_keys=False, indent=2)
 
 
 def load_strategy_yaml(file_path: Union[str, Path]) -> Strategy:

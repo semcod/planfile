@@ -11,7 +11,7 @@ sprint:
       sprint: current
       source:
         tool: human
-        timestamp: '2026-03-27T07:59:35.337441'
+        timestamp: '2026-03-27T10:29:25.981798'
         context: {}
       description: Manual test ticket
       acceptance_criteria: []
@@ -20,8 +20,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:35.338423'
-      updated_at: '2026-03-27T07:59:35.338425'
+      created_at: '2026-03-27T10:29:25.982730'
+      updated_at: '2026-03-27T10:29:25.982733'
     PLF-002:
       id: PLF-002
       title: From stdin
@@ -30,7 +30,7 @@ sprint:
       sprint: current
       source:
         tool: test
-        timestamp: '2026-03-27T07:59:36.515744'
+        timestamp: '2026-03-27T10:29:27.549358'
         context: {}
       description: Imported via stdin
       acceptance_criteria: []
@@ -39,8 +39,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:36.515760'
-      updated_at: '2026-03-27T07:59:36.515762'
+      created_at: '2026-03-27T10:29:27.549379'
+      updated_at: '2026-03-27T10:29:27.549381'
     PLF-003:
       id: PLF-003
       title: 'python.complexity.mccabe: planfile/core/store.py'
@@ -49,7 +49,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.324371'
+        timestamp: '2026-03-27T10:29:28.785469'
         context:
           file: planfile/core/store.py
           rule: python.complexity.mccabe
@@ -62,8 +62,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.324397'
-      updated_at: '2026-03-27T07:59:37.324398'
+      created_at: '2026-03-27T10:29:28.785505'
+      updated_at: '2026-03-27T10:29:28.785507'
     PLF-004:
       id: PLF-004
       title: 'python.complexity.mccabe: planfile/importers/code2llm_importer.py'
@@ -72,7 +72,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.331814'
+        timestamp: '2026-03-27T10:29:28.795692'
         context:
           file: planfile/importers/code2llm_importer.py
           rule: python.complexity.mccabe
@@ -85,8 +85,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.331828'
-      updated_at: '2026-03-27T07:59:37.331829'
+      created_at: '2026-03-27T10:29:28.795722'
+      updated_at: '2026-03-27T10:29:28.795724'
     PLF-005:
       id: PLF-005
       title: 'python.complexity.mccabe: planfile/importers/vallm_importer.py'
@@ -95,7 +95,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.339274'
+        timestamp: '2026-03-27T10:29:28.808614'
         context:
           file: planfile/importers/vallm_importer.py
           rule: python.complexity.mccabe
@@ -108,8 +108,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.339284'
-      updated_at: '2026-03-27T07:59:37.339285'
+      created_at: '2026-03-27T10:29:28.808634'
+      updated_at: '2026-03-27T10:29:28.808636'
     PLF-006:
       id: PLF-006
       title: 'python.complexity.mccabe: planfile/integrations/gitlab.py'
@@ -118,7 +118,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.348233'
+        timestamp: '2026-03-27T10:29:28.820313'
         context:
           file: planfile/integrations/gitlab.py
           rule: python.complexity.mccabe
@@ -131,8 +131,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.348242'
-      updated_at: '2026-03-27T07:59:37.348243'
+      created_at: '2026-03-27T10:29:28.820325'
+      updated_at: '2026-03-27T10:29:28.820326'
     PLF-007:
       id: PLF-007
       title: 'python.import.missing: planfile/integrations/gitlab.py'
@@ -141,7 +141,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.360407'
+        timestamp: '2026-03-27T10:29:28.831838'
         context:
           file: planfile/integrations/gitlab.py
           rule: python.import.missing
@@ -155,8 +155,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.360419'
-      updated_at: '2026-03-27T07:59:37.360420'
+      created_at: '2026-03-27T10:29:28.831862'
+      updated_at: '2026-03-27T10:29:28.831864'
     PLF-008:
       id: PLF-008
       title: 'python.complexity.mccabe: planfile/integrations/github.py'
@@ -165,7 +165,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.373292'
+        timestamp: '2026-03-27T10:29:28.849902'
         context:
           file: planfile/integrations/github.py
           rule: python.complexity.mccabe
@@ -178,8 +178,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.373305'
-      updated_at: '2026-03-27T07:59:37.373306'
+      created_at: '2026-03-27T10:29:28.849916'
+      updated_at: '2026-03-27T10:29:28.849917'
     PLF-009:
       id: PLF-009
       title: 'python.import.missing: planfile/integrations/github.py'
@@ -188,7 +188,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.388267'
+        timestamp: '2026-03-27T10:29:28.865978'
         context:
           file: planfile/integrations/github.py
           rule: python.import.missing
@@ -202,8 +202,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.388279'
-      updated_at: '2026-03-27T07:59:37.388280'
+      created_at: '2026-03-27T10:29:28.865998'
+      updated_at: '2026-03-27T10:29:28.866000'
     PLF-010:
       id: PLF-010
       title: 'python.bug.undefined-variable: planfile/utils/metrics.py'
@@ -212,7 +212,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.409410'
+        timestamp: '2026-03-27T10:29:28.885951'
         context:
           file: planfile/utils/metrics.py
           rule: python.bug.undefined-variable
@@ -225,8 +225,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.409422'
-      updated_at: '2026-03-27T07:59:37.409424'
+      created_at: '2026-03-27T10:29:28.885966'
+      updated_at: '2026-03-27T10:29:28.885968'
     PLF-011:
       id: PLF-011
       title: 'python.performance.loop: planfile/utils/metrics.py'
@@ -235,7 +235,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.427961'
+        timestamp: '2026-03-27T10:29:28.908547'
         context:
           file: planfile/utils/metrics.py
           rule: python.performance.loop
@@ -248,8 +248,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.427974'
-      updated_at: '2026-03-27T07:59:37.427975'
+      created_at: '2026-03-27T10:29:28.908569'
+      updated_at: '2026-03-27T10:29:28.908570'
     PLF-012:
       id: PLF-012
       title: 'python.style.line-too-long: planfile/analysis/parsers/toon_parser.py'
@@ -258,7 +258,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.448042'
+        timestamp: '2026-03-27T10:29:28.930694'
         context:
           file: planfile/analysis/parsers/toon_parser.py
           rule: python.style.line-too-long
@@ -271,8 +271,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.448054'
-      updated_at: '2026-03-27T07:59:37.448055'
+      created_at: '2026-03-27T10:29:28.930719'
+      updated_at: '2026-03-27T10:29:28.930721'
     PLF-013:
       id: PLF-013
       title: 'python.style.black: planfile/cli/commands.py'
@@ -281,7 +281,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.471603'
+        timestamp: '2026-03-27T10:29:28.955325'
         context:
           file: planfile/cli/commands.py
           rule: python.style.black
@@ -294,8 +294,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.471616'
-      updated_at: '2026-03-27T07:59:37.471617'
+      created_at: '2026-03-27T10:29:28.955341'
+      updated_at: '2026-03-27T10:29:28.955342'
     PLF-014:
       id: PLF-014
       title: 'python.import.missing: planfile/cli/commands.py'
@@ -304,7 +304,7 @@ sprint:
       sprint: current
       source:
         tool: vallm
-        timestamp: '2026-03-27T07:59:37.496208'
+        timestamp: '2026-03-27T10:29:28.982742'
         context:
           file: planfile/cli/commands.py
           rule: python.import.missing
@@ -318,5 +318,5 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:37.496223'
-      updated_at: '2026-03-27T07:59:37.496224'
+      created_at: '2026-03-27T10:29:28.982757'
+      updated_at: '2026-03-27T10:29:28.982759'

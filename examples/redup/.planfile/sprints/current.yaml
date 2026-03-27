@@ -11,7 +11,7 @@ sprint:
       sprint: current
       source:
         tool: human
-        timestamp: '2026-03-27T07:59:26.805744'
+        timestamp: '2026-03-27T10:29:33.666018'
         context: {}
       description: Manual test ticket
       acceptance_criteria: []
@@ -20,8 +20,8 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:26.806784'
-      updated_at: '2026-03-27T07:59:26.806787'
+      created_at: '2026-03-27T10:29:33.667089'
+      updated_at: '2026-03-27T10:29:33.667092'
     PLF-002:
       id: PLF-002
       title: From stdin
@@ -30,7 +30,7 @@ sprint:
       sprint: current
       source:
         tool: test
-        timestamp: '2026-03-27T07:59:28.002134'
+        timestamp: '2026-03-27T10:29:35.377347'
         context: {}
       description: Imported via stdin
       acceptance_criteria: []
@@ -39,5 +39,5 @@ sprint:
       blocks: []
       sync: {}
       history: []
-      created_at: '2026-03-27T07:59:28.002149'
-      updated_at: '2026-03-27T07:59:28.002151'
+      created_at: '2026-03-27T10:29:35.377366'
+      updated_at: '2026-03-27T10:29:35.377368'

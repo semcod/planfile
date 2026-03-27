@@ -17,16 +17,12 @@ flowchart TD
         planfile__cli__commands__main_callback["main_callback"]
         planfile__cli__commands__main["main"]
         planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
-        planfile__cli__cmd__cmd_review__review_strategy_cli["review_strategy_cli"]
-        planfile__cli__cmd__cmd_utils__get_backend["get_backend"]
-        ...["+55 more"]
+        planfile__cli__project_detector___find_readme_description["_find_readme_description"]
+        planfile__cli__project_detector___find_readme_content["_find_readme_content"]
+        ...["+57 more"]
     end
 
     subgraph Core
-        mcp_server_example__planfile_generate["planfile_generate"]
-        mcp_server_example__planfile_apply["planfile_apply"]
-        mcp_server_example__planfile_review["planfile_review"]
-        mcp_server_example__main["main"]
         planfile__Planfile__auto_discover["auto_discover"]
         planfile__Planfile__create_ticket["create_ticket"]
         planfile__Planfile__get_ticket["get_ticket"]
@@ -34,11 +30,15 @@ flowchart TD
         planfile__Planfile__update_ticket["update_ticket"]
         planfile__Planfile__create_tickets_bulk["create_tickets_bulk"]
         planfile__quick_ticket["quick_ticket"]
+        mcp_server_example__planfile_generate["planfile_generate"]
+        mcp_server_example__planfile_apply["planfile_apply"]
+        mcp_server_example__planfile_review["planfile_review"]
+        mcp_server_example__main["main"]
         planfile__sync__state__SyncState__get_last_sync["get_last_sync"]
         planfile__sync__state__SyncState__save_sync["save_sync"]
         planfile__sync__state__SyncState__get_remote_id["get_remote_id"]
         planfile__sync__state__SyncState__get_local_id["get_local_id"]
-        ...["+338 more"]
+        ...["+366 more"]
     end
 
     subgraph Exporters
@@ -46,4 +46,4 @@ flowchart TD
         planfile__core__models__Strategy__export["export"]
     end
 
-    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__Planfile__auto_discover,planfile__Planfile__create_ticket,planfile__Planfile__get_ticket,planfile__Planfile__list_tickets,planfile__Planfile__update_ticket,planfile__Planfile__create_tickets_bulk entry
+    class planfile__Planfile__auto_discover,planfile__Planfile__create_ticket,planfile__Planfile__get_ticket,planfile__Planfile__list_tickets,planfile__Planfile__update_ticket,planfile__Planfile__create_tickets_bulk,planfile__quick_ticket,mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review entry

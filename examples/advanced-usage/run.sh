@@ -11,7 +11,7 @@ planfile generate-from-files ../../planfile --project-name "ci-pipeline" --focus
 
 echo "--------------------------------------------------"
 echo "[Pipeline Phase 2] Health Validation"
-planfile health ci-strategy.yaml || echo "Health check had warnings/errors, but continuing for demo purposes..."
+planfile health check ci-strategy.yaml || echo "Health check had warnings/errors, but continuing for demo purposes..."
 
 echo "--------------------------------------------------"
 echo "[Pipeline Phase 3] Merge with Security Template"
@@ -24,6 +24,6 @@ planfile merge ci-strategy.yaml security-baseline.yaml --name "Combined Project+
 echo "--------------------------------------------------"
 echo "[Pipeline Phase 4] Apply Strategy (Dry-Run)"
 # Dry run to see what tickets/tasks would be created
-planfile apply final-strategy.yaml . --dry-run
+planfile apply final-strategy.yaml . --dry-run --backend mock
 
 echo "✅ ADVANCED PIPELINE COMPLETED!"

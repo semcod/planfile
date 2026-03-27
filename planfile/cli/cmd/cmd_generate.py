@@ -52,6 +52,7 @@ def generate_from_files_cmd(
     focus: Optional[str] = typer.Option(None, help="Focus area: quality, security, performance, testing, documentation"),
     patterns: Optional[List[str]] = typer.Option(None, help="File patterns to analyze"),
     external_tools: bool = typer.Option(False, "--external-tools", help="Use external tools (code2llm, vallm)"),
+    compact: bool = typer.Option(False, "--compact", help="Generate compact YAML with minimal data"),
     verbose: bool = typer.Option(False, help="Verbose output"),
 ):
     """Generate planfile from file analysis (no LLM required)."""
@@ -76,8 +77,7 @@ def generate_from_files_cmd(
                 project_name=project_name,
                 max_sprints=max_sprints,
                 focus_area=focus,
-                # generate_with_external_tools expects patterns as string lists if supported, but currently it doesn't take patterns
-                # if the method is not allowing patterns, this is omitted.
+                compact=compact
             )
         else:
             strategy = generator.generate_from_current_project(
@@ -85,7 +85,8 @@ def generate_from_files_cmd(
                 project_name=project_name,
                 max_sprints=max_sprints,
                 focus_area=focus,
-                patterns=patterns
+                patterns=patterns,
+                compact=compact
             )
         
         save_strategy_yaml(strategy, output)

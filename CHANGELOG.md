@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.47] - 2026-03-27
+
+### Docs
+- Update docs/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update examples/advanced-usage/ci-strategy.yaml
+- Update examples/advanced-usage/final-strategy.yaml
+- Update examples/advanced-usage/run.sh
+- Update examples/advanced-usage/security-baseline.yaml
+- Update examples/demo-without-keys/local-strategy.yaml
+- Update examples/external-tools/run.sh
+- Update examples/github/run.sh
+- Update examples/integrated-functionality/generated-from-examples.yaml
+- Update examples/redup/.planfile/sprints/backlog.yaml
+- Update examples/redup/.planfile/sprints/current.yaml
+- ... and 21 more files
+
 ## [0.1.46] - 2026-03-27
 
 ### Docs
