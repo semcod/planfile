@@ -5,9 +5,12 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 import subprocess
 import json
+import time
+import hashlib
+from functools import lru_cache
 
-from .models import Strategy, Sprint, TaskPattern
-from .integrations.base import PMBackend
+from planfile.models import Strategy, Sprint, TaskPattern
+from planfile.integrations.base import PMBackend
 
 
 def load_valid_strategy(path: str) -> Strategy:
@@ -100,6 +103,24 @@ def verify_strategy_post_execution(
     return issues
 
 
+@lru_cache(maxsize=32)
+def _get_project_hash(project_path: str) -> str:
+    """Get a hash of project files for cache invalidation."""
+    path = Path(project_path)
+    if not path.exists():
+        return ""
+    
+    # Simple hash based on file count and mod time of key files
+    file_count = 0
+    latest_mod = 0
+    for file_path in path.rglob("*"):
+        if file_path.is_file() and not file_path.name.startswith("."):
+            file_count += 1
+            latest_mod = max(latest_mod, file_path.stat().st_mtime)
+    
+    return hashlib.md5(f"{file_count}-{latest_mod}".encode()).hexdigest()[:16]
+
+
 def analyze_project_metrics(project_path: str) -> Dict[str, Any]:
     """
     Analyze project metrics using available tools.
@@ -121,25 +142,57 @@ def analyze_project_metrics(project_path: str) -> Dict[str, Any]:
     if not path.exists():
         return metrics
     
-    # Count files
-    for file_path in path.rglob("*"):
-        if file_path.is_file() and not file_path.name.startswith("."):
-            metrics["file_count"] += 1
-    
-    # Try to get test coverage if pytest coverage exists
+    # Count files (optimized with rg if available)
     try:
         result = subprocess.run(
-            ["python", "-m", "pytest", "--cov=.", "--cov-report=json"],
+            ["rg", "--files", "--type", "py", "--count"],
             cwd=path,
             capture_output=True,
-            text=True
+            text=True,
+            timeout=5  # Add timeout
+        )
+        if result.returncode == 0:
+            metrics["file_count"] = int(result.stdout.strip())
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        # Fallback to manual counting
+        for file_path in path.rglob("*"):
+            if file_path.is_file() and not file_path.name.startswith("."):
+                metrics["file_count"] += 1
+    
+    # Try to get test coverage if pytest coverage exists (with caching)
+    project_hash = _get_project_hash(project_path)
+    cache_file = Path.home() / ".planfile_cache" / f"coverage_{project_hash}.json"
+    
+    try:
+        # Try cache first
+        if cache_file.exists():
+            cache_data = json.loads(cache_file.read_text())
+            if time.time() - cache_data.get("timestamp", 0) < 300:  # 5 minutes cache
+                metrics["test_coverage"] = cache_data["coverage"]
+                return metrics
+        
+        # Run pytest coverage with timeout
+        result = subprocess.run(
+            ["python", "-m", "pytest", "--cov=.", "--cov-report=json", "--quiet"],
+            cwd=path,
+            capture_output=True,
+            text=True,
+            timeout=30  # 30 second timeout
         )
         if result.returncode == 0:
             coverage_file = path / "coverage.json"
             if coverage_file.exists():
                 coverage_data = json.loads(coverage_file.read_text())
-                metrics["test_coverage"] = coverage_data.get("totals", {}).get("percent_covered", 0)
-    except:
+                coverage = coverage_data.get("totals", {}).get("percent_covered", 0)
+                metrics["test_coverage"] = coverage
+                
+                # Cache the result
+                cache_file.parent.mkdir(exist_ok=True)
+                cache_file.write_text(json.dumps({
+                    "coverage": coverage,
+                    "timestamp": time.time()
+                }))
+    except (subprocess.TimeoutExpired, Exception):
         pass
     
     return metrics

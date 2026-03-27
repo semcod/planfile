@@ -7,7 +7,7 @@ import logging
 import time
 import json
 
-from .core.models import Strategy, Task, ModelTier
+from planfile.core.models import Strategy, Task, ModelTier
 
 logger = logging.getLogger(__name__)
 

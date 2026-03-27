@@ -13,26 +13,28 @@ __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 # Core models (single source of truth)
-from .core.models import (
+from planfile.core.models import (
     Strategy, Sprint, Task, TaskPattern, TaskType,
     ModelHints, ModelTier, Goal, QualityGate,
     Ticket, TicketStatus, TicketSource,
 )
-from .core.store import PlanfileStore
+from planfile.core.store import PlanfileStore
 
 # Backward compat aliases
 StrategyV1 = Strategy
 StrategyV2 = Strategy
 ModelTierV2 = ModelTier
 
-# Executors
-from . import runner
-from . import executor_standalone
-from .runner import load_valid_strategy, run_strategy, verify_strategy_post_execution
-from .executor_standalone import StrategyExecutor, execute_strategy, TaskResult, LLMClient
-from .executor_standalone import create_openai_client, create_litellm_client
+# Lazy loading for executors to improve startup performance
+if TYPE_CHECKING:
+    from planfile import runner
+    from planfile import executor_standalone
+    from planfile.runner import load_valid_strategy, run_strategy, verify_strategy_post_execution
+    from planfile.executor_standalone import StrategyExecutor, execute_strategy, TaskResult, LLMClient
+    from planfile.executor_standalone import create_openai_client, create_litellm_client
 
 
 class Planfile:
@@ -96,9 +98,43 @@ __all__ = [
     "Ticket", "TicketStatus", "TicketSource",
     # Store & API
     "PlanfileStore", "Planfile", "quick_ticket",
-    # Executors
+    # Executors (lazy loaded)
     "StrategyExecutor", "execute_strategy", "TaskResult", "LLMClient",
     "create_openai_client", "create_litellm_client",
-    # Runner
+    # Runner (lazy loaded)
     "load_valid_strategy", "run_strategy", "verify_strategy_post_execution",
 ]
+
+# Lazy loading functions for executors
+def __getattr__(name):
+    """Lazy import executor modules when accessed."""
+    if name in ["runner", "executor_standalone"]:
+        import importlib
+        return importlib.import_module(f"planfile.{name}")
+    elif name in ["load_valid_strategy", "run_strategy", "verify_strategy_post_execution"]:
+        from planfile.runner import load_valid_strategy, run_strategy, verify_strategy_post_execution
+        if name == "load_valid_strategy":
+            return load_valid_strategy
+        elif name == "run_strategy":
+            return run_strategy
+        else:
+            return verify_strategy_post_execution
+    elif name in ["StrategyExecutor", "execute_strategy", "TaskResult", "LLMClient", 
+                 "create_openai_client", "create_litellm_client"]:
+        from planfile.executor_standalone import (
+            StrategyExecutor, execute_strategy, TaskResult, LLMClient,
+            create_openai_client, create_litellm_client
+        )
+        if name == "StrategyExecutor":
+            return StrategyExecutor
+        elif name == "execute_strategy":
+            return execute_strategy
+        elif name == "TaskResult":
+            return TaskResult
+        elif name == "LLMClient":
+            return LLMClient
+        elif name == "create_openai_client":
+            return create_openai_client
+        else:
+            return create_litellm_client
+    raise AttributeError(f"module 'planfile' has no attribute '{name}'")

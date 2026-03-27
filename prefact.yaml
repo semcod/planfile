@@ -1,0 +1,31 @@
+package_name: planfile
+
+include:
+  - "**/*.py"
+
+exclude:
+  - "**/.venv/**"
+  - "**/venv/**"
+  - "**/site-packages/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/__pycache__/**"
+
+rules:
+  relative-imports:
+    enabled: true
+    severity: warning
+  unused-imports:
+    enabled: false
+  duplicate-imports:
+    enabled: false
+  wildcard-imports:
+    enabled: false
+  sorted-imports:
+    enabled: false
+  string-concat:
+    enabled: false
+  print-statements:
+    enabled: false
+  missing-return-type:
+    enabled: false

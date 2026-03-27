@@ -5,7 +5,7 @@ Creates sprints and tickets from extracted analysis data.
 
 from typing import Dict, List, Any
 from dataclasses import asdict
-from .models import ExtractedIssue
+from planfile.analysis.models import ExtractedIssue
 
 
 class SprintGenerator:

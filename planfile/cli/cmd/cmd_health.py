@@ -21,7 +21,7 @@ def create_health_app():
     ):
         """Check project health and suggest improvements."""
         try:
-            from ...analysis.generator import generator
+            from planfile.analysis.generator import generator
             
             console.print("[bold]Analyzing project health...[/bold]")
             

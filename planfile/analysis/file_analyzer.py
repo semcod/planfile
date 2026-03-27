@@ -7,13 +7,13 @@ import os
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Union, Tuple
 
-from . import models
-from . import parsers
-from .models import ExtractedIssue, ExtractedMetric, ExtractedTask
-from .parsers.text_parser import analyze_text
-from .parsers.yaml_parser import analyze_yaml, extract_from_yaml_structure
-from .parsers.json_parser import analyze_json
-from .parsers.toon_parser import analyze_toon
+from planfile.analysis import models
+from planfile.analysis import parsers
+from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
+from planfile.analysis.parsers.text_parser import analyze_text
+from planfile.analysis.parsers.yaml_parser import analyze_yaml, extract_from_yaml_structure
+from planfile.analysis.parsers.json_parser import analyze_json
+from planfile.analysis.parsers.toon_parser import analyze_toon
 
 class FileAnalyzer:
     """Analyzes YAML/JSON files to extract issues and metrics."""

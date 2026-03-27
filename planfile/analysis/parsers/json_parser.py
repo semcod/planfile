@@ -2,8 +2,8 @@ import json
 from pathlib import Path
 from typing import Tuple, List, Any
 
-from ..models import ExtractedIssue, ExtractedMetric, ExtractedTask
-from .yaml_parser import extract_from_yaml_structure
+from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
+from planfile.analysis.parsers.yaml_parser import extract_from_yaml_structure
 
 def analyze_json(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedMetric], List[ExtractedTask]]:
     """Analyze JSON file."""

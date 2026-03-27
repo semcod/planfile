@@ -2,8 +2,8 @@ import re
 from pathlib import Path
 from typing import Tuple, List, Any
 
-from ..models import ExtractedIssue, ExtractedMetric, ExtractedTask
-from .text_parser import analyze_text
+from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
+from planfile.analysis.parsers.text_parser import analyze_text
 
 def _parse_toon_header(line: str, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
     """Parse health and metrics tags from toon header line."""

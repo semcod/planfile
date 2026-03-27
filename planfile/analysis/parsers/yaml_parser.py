@@ -2,10 +2,10 @@ import yaml
 from pathlib import Path
 from typing import Tuple, List, Any
 
-from ... import models
-from ..models import ExtractedIssue, ExtractedMetric, ExtractedTask
-from .text_parser import analyze_text
-from .toon_parser import analyze_toon
+from planfile import models
+from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
+from planfile.analysis.parsers.text_parser import analyze_text
+from planfile.analysis.parsers.toon_parser import analyze_toon
 
 def extract_from_yaml_structure(data: Any, path: str, parent_key: str = "") -> List[ExtractedIssue]:
     """Extract issues from YAML structure."""

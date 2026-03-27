@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from ..models import Strategy
+from planfile.models import Strategy
 
 from planfile.llm.prompts import build_strategy_prompt
 from planfile.llm.client import call_llm

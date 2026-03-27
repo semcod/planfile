@@ -135,13 +135,13 @@ class IntegrationConfig:
         
         # Import and initialize the appropriate backend
         if integration_name == "github":
-            from .github import GitHubBackend
+            from planfile.integrations.github import GitHubBackend
             return GitHubBackend(**config)
         elif integration_name == "gitlab":
-            from .gitlab import GitLabBackend
+            from planfile.integrations.gitlab import GitLabBackend
             return GitLabBackend(**config)
         elif integration_name == "jira":
-            from .jira import JiraBackend
+            from planfile.integrations.jira import JiraBackend
             return JiraBackend(**config)
         
         raise ValueError(f"Unknown integration: {integration_name}")

@@ -5,9 +5,9 @@ This module registers additional command groups to the main CLI app.
 Commands are organized into separate modules for better maintainability.
 """
 
-from .cmd.cmd_health import create_health_app
-from .cmd.cmd_examples import create_examples_app
-from .cmd.cmd_sync import create_sync_app
+from planfile.cli.cmd.cmd_health import create_health_app
+from planfile.cli.cmd.cmd_examples import create_examples_app
+from planfile.cli.cmd.cmd_sync import create_sync_app
 
 
 def add_extra_commands(app):

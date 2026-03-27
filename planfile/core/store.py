@@ -3,8 +3,10 @@
 import yaml
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 from filelock import FileLock
+import threading
+import copy
 
 from planfile.core.models import Ticket, TicketStatus, TicketSource
 
@@ -85,6 +87,10 @@ class PlanfileStore:
     def __init__(self, project_path: str = "."):
         self.root = Path(project_path).resolve()
         self.planfile_dir = self.root / PLANFILE_DIR
+        self._cache: Dict[str, Any] = {}
+        self._cache_lock = threading.Lock()
+        self._cache_timeout = 30  # seconds
+        self._max_cache_size = 100  # Maximum number of files to cache
 
     def init(self):
         """Create .planfile/ structure."""
@@ -117,24 +123,63 @@ class PlanfileStore:
     def is_initialized(self) -> bool:
         return self.planfile_dir.exists()
 
+    def _get_file_mtime(self, file_path: str) -> float:
+        """Get file modification time for cache invalidation."""
+        path = Path(file_path)
+        return path.stat().st_mtime if path.exists() else 0
+    
+    def _read_yaml_cached(self, file_path: Path) -> Dict[str, Any]:
+        """Read YAML file with caching."""
+        path_str = str(file_path)
+        current_mtime = self._get_file_mtime(path_str)
+        
+        with self._cache_lock:
+            if path_str in self._cache:
+                cached_data, cached_mtime = self._cache[path_str]
+                if cached_mtime == current_mtime:
+                    return copy.deepcopy(cached_data)
+        
+        # File changed or not in cache, read it
+        data = self._read_yaml(file_path)
+        
+        with self._cache_lock:
+            # Enforce cache size limit
+            if len(self._cache) >= self._max_cache_size:
+                # Remove oldest entry (simple FIFO)
+                oldest_key = next(iter(self._cache))
+                del self._cache[oldest_key]
+            
+            self._cache[path_str] = (data, current_mtime)
+            
+        return copy.deepcopy(data)
+    
+    def _invalidate_cache(self, file_path: Path = None):
+        """Invalidate cache for a file or all files."""
+        with self._cache_lock:
+            if file_path:
+                self._cache.pop(str(file_path), None)
+            else:
+                self._cache.clear()
+
     # ─── Ticket CRUD ───
 
     def create_ticket(self, ticket: Ticket) -> Ticket:
         """Add ticket to its sprint file."""
         sprint_file = self._sprint_file(ticket.sprint)
-        data = self._read_yaml(sprint_file)
+        data = self._read_yaml_cached(sprint_file)
         sprint_data = data.get("sprint", data)
         sprint_data.setdefault("tickets", {})[ticket.id] = ticket.model_dump(
             mode="json", exclude_none=True)
         if "sprint" in data:
             data["sprint"] = sprint_data
         self._write_yaml(sprint_file, data)
+        self._invalidate_cache(sprint_file)
         return ticket
 
     def get_ticket(self, ticket_id: str) -> Optional[Ticket]:
         """Find ticket across all sprint files."""
         for sprint_file in self._all_sprint_files():
-            data = self._read_yaml(sprint_file)
+            data = self._read_yaml_cached(sprint_file)
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
@@ -144,7 +189,7 @@ class PlanfileStore:
     def update_ticket(self, ticket_id: str, **updates) -> Optional[Ticket]:
         """Update ticket fields."""
         for sprint_file in self._all_sprint_files():
-            data = self._read_yaml(sprint_file)
+            data = self._read_yaml_cached(sprint_file)
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
@@ -153,13 +198,14 @@ class PlanfileStore:
                 if "sprint" in data:
                     data["sprint"] = sprint_data
                 self._write_yaml(sprint_file, data)
+                self._invalidate_cache(sprint_file)
                 return Ticket(**tickets[ticket_id])
         return None
 
     def delete_ticket(self, ticket_id: str) -> bool:
         """Delete ticket from its sprint file."""
         for sprint_file in self._all_sprint_files():
-            data = self._read_yaml(sprint_file)
+            data = self._read_yaml_cached(sprint_file)
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
@@ -167,6 +213,7 @@ class PlanfileStore:
                 if "sprint" in data:
                     data["sprint"] = sprint_data
                 self._write_yaml(sprint_file, data)
+                self._invalidate_cache(sprint_file)
                 return True
         return False
 
@@ -175,14 +222,14 @@ class PlanfileStore:
         if sprint == "all":
             tickets = []
             for sprint_file in self._all_sprint_files():
-                data = self._read_yaml(sprint_file)
+                data = self._read_yaml_cached(sprint_file)
                 sprint_data = data.get("sprint", data)
                 tickets.extend(
                     Ticket(**t) for t in sprint_data.get("tickets", {}).values()
                 )
         else:
             sprint_file = self._sprint_file(sprint)
-            data = self._read_yaml(sprint_file)
+            data = self._read_yaml_cached(sprint_file)
             sprint_data = data.get("sprint", data)
             tickets = [Ticket(**t) for t in sprint_data.get("tickets", {}).values()]
         return self._apply_filters(tickets, **filters)

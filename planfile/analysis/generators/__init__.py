@@ -1,5 +1,5 @@
-from .metrics_extractor import extract_key_metrics
-from .strategy_builder import (
+from planfile.analysis.generators.metrics_extractor import extract_key_metrics
+from planfile.analysis.generators.strategy_builder import (
     generate_goal,
     generate_goals,
     generate_quality_gates,

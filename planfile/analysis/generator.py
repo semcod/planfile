@@ -11,12 +11,12 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
-from .file_analyzer import FileAnalyzer
-from .sprint_generator import SprintGenerator
-from .external_tools import ExternalToolRunner, AnalysisResults
-from ..models import Strategy
+from planfile.analysis.file_analyzer import FileAnalyzer
+from planfile.analysis.sprint_generator import SprintGenerator
+from planfile.analysis.external_tools import ExternalToolRunner, AnalysisResults
+from planfile.models import Strategy
 
-from .generators import (
+from planfile.analysis.generators import (
     extract_key_metrics,
     generate_goal,
     generate_goals,

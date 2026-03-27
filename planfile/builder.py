@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 import json
 
-from .models import Strategy, Goal, Sprint, TaskPattern, TaskType, ModelHints
+from planfile.models import Strategy, Goal, Sprint, TaskPattern, TaskType, ModelHints
 
 
 class LLXStrategyBuilder:
@@ -301,7 +301,7 @@ class LLXStrategyBuilder:
         # Build quality gates
         quality_gates = []
         for gate_data in answers.get("quality_gates", []):
-            from .models import QualityGate
+            from planfile.models import QualityGate
             quality_gates.append(QualityGate(**gate_data))
         
         # Create strategy

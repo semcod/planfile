@@ -4,13 +4,13 @@ Canonical location for all PM backend integrations.
 """
 
 # Use local implementations
-from .base import TicketRef, TicketStatus, PMBackend
-from .generic import GenericBackend
-from .github import GitHubBackend
+from planfile.sync.base import TicketRef, TicketStatus, PMBackend
+from planfile.sync.generic import GenericBackend
+from planfile.sync.github import GitHubBackend
 
 # Platform-specific implementations
-from .jira import JiraBackend
-from .gitlab import GitLabBackend
+from planfile.sync.jira import JiraBackend
+from planfile.sync.gitlab import GitLabBackend
 
 __all__ = [
     "TicketRef",

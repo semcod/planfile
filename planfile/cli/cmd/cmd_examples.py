@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from rich.progress import Progress
 
 console = Console()
 
@@ -175,14 +176,20 @@ def _execute_example(ex: Dict[str, Any]) -> tuple:
             os.chdir(ex['path'].parent)
             cmd = ["bash", script.name] if script.suffix == ".sh" else ["python3", script.name]
             
+        # Add timeout to prevent hanging
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True
         )
-        output, _ = process.communicate()
-        return process.returncode == 0, output
+        try:
+            output, _ = process.communicate(timeout=60)  # 60 second timeout
+            return process.returncode == 0, output
+        except subprocess.TimeoutExpired:
+            process.kill()
+            output, _ = process.communicate()
+            return False, f"Example timed out after 60 seconds.\nOutput:\n{output}"
     except Exception as e:
         return False, str(e)
     finally:

@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import Tuple, List
 
-from ..models import ExtractedIssue, ExtractedMetric, ExtractedTask
+from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
 
 # Pattern matchers for common issue formats
 ISSUE_PATTERNS = {
