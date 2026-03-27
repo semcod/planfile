@@ -1,43 +1,43 @@
-# code2llm/evolution | 510 func | 63f | 2026-03-27
+# code2llm/evolution | 529 func | 65f | 2026-03-27
 
 NEXT[10] (ranked by impact):
   [1] !  SPLIT-FUNC      sync_integration  CC=21  fan=24
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 504
 
-  [2] !  SPLIT-FUNC      table  CC=21  fan=15
+  [2] !! SPLIT-FUNC      _detect_from_pyproject  CC=26  fan=16
+      WHY: CC=26 exceeds 15
+      EFFORT: ~1h  IMPACT: 416
+
+  [3] !  SPLIT-FUNC      table  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [3] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
+  [4] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [4] !  SPLIT-FUNC      no_rows  CC=21  fan=15
+  [5] !  SPLIT-FUNC      no_rows  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [5] !  SPLIT-FUNC      footer  CC=21  fan=15
+  [6] !  SPLIT-FUNC      footer  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [6] !  SPLIT-FUNC      ratio_columns  CC=21  fan=15
+  [7] !  SPLIT-FUNC      ratio_columns  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [7] !  SPLIT-FUNC      filter_handler  CC=21  fan=15
+  [8] !  SPLIT-FUNC      filter_handler  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [8] !  SPLIT-FUNC      table  CC=19  fan=15
+  [9] !  SPLIT-FUNC      table  CC=19  fan=15
       WHY: CC=19 exceeds 15
       EFFORT: ~1h  IMPACT: 285
 
-  [9] !  SPLIT-FUNC      table_body_rows  CC=19  fan=15
-      WHY: CC=19 exceeds 15
-      EFFORT: ~1h  IMPACT: 285
-
-  [10] !  SPLIT-FUNC      no_rows  CC=19  fan=15
+  [10] !  SPLIT-FUNC      table_body_rows  CC=19  fan=15
       WHY: CC=19 exceeds 15
       EFFORT: ~1h  IMPACT: 285
 
@@ -45,10 +45,10 @@ NEXT[10] (ranked by impact):
 RISKS[0]: none
 
 METRICS-TARGET:
-  CC̄:          3.8 → ≤2.7
-  max-CC:      21 → ≤10
+  CC̄:          3.9 → ≤2.7
+  max-CC:      26 → ≤13
   god-modules: 0 → 0
-  high-CC(≥15): 13 → ≤6
+  high-CC(≥15): 15 → ≤7
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -76,4 +76,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=3.9 → now CC̄=3.8
+  prev CC̄=3.8 → now CC̄=3.9

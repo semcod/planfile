@@ -16,14 +16,17 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
+from planfile.cli.project_detector import detect_project, get_detected_values
+
 console = Console()
 
 
 # ── helpers ───────────────────────────────────────────────────────────────
 
-def _choice(prompt: str, options: list[tuple[str, str]], default: str | None = None) -> str:
+def _choice(prompt: str, options: list[tuple[str, str]], default: str | None = None, detected: bool = False) -> str:
     """Present a numbered multiple-choice prompt and return the chosen key."""
-    console.print(f"\n[bold cyan]{prompt}[/bold cyan]")
+    detected_marker = " [dim](auto-detected)[/dim]" if detected else ""
+    console.print(f"\n[bold cyan]{prompt}[/bold cyan]{detected_marker}")
     for i, (key, label) in enumerate(options, 1):
         marker = f"[dim]({i})[/dim]"
         console.print(f"  {marker} {label}")
@@ -44,10 +47,11 @@ def _choice(prompt: str, options: list[tuple[str, str]], default: str | None = N
         console.print(f"  [red]Wpisz liczbę od 1 do {len(options)}[/red]")
 
 
-def _ask(prompt: str, default: str | None = None, required: bool = False) -> str:
-    """Ask a free-text question."""
+def _ask(prompt: str, default: str | None = None, required: bool = False, detected: bool = False) -> str:
+    """Ask a free-text question with optional auto-detected indicator."""
+    detected_marker = " [dim](auto-detected)[/dim]" if detected else ""
     hint = f" [dim](enter = {default})[/dim]" if default else ""
-    console.print(f"\n[bold cyan]{prompt}[/bold cyan]{hint}")
+    console.print(f"\n[bold cyan]{prompt}[/bold cyan]{detected_marker}{hint}")
     while True:
         val = Prompt.ask("  >", default=default or "")
         if val or not required:
@@ -131,6 +135,7 @@ def init_strategy_cli(
     Interactive wizard — tworzy strategię przez zadawanie pytań.
 
     Nie wymaga szablonu. Pyta o typ projektu, cele, sprinty i bramki jakości.
+    Automatycznie wykrywa dane projektu z pyproject.toml, package.json lub README.
     """
     console.print(Panel(
         "[bold]planfile init[/bold] — Interaktywny kreator strategii\n"
@@ -138,9 +143,16 @@ def init_strategy_cli(
         border_style="cyan",
     ))
 
+    # ── Auto-detekcja projektu ────────────────────────────────────────────
+    detected = get_detected_values()
+    
+    if detected["has_detection"]:
+        source = detected["source"]
+        console.print(f"\n[dim]ℹ️ Wykryto dane projektu z {source}[/dim]")
+
     # ── 1. Podstawowe informacje ──────────────────────────────────────────
-    name = _ask("Nazwa projektu", required=True)
-    description = _ask("Krótki opis projektu (opcjonalnie)")
+    name = _ask("Nazwa projektu", default=detected["name"], required=True, detected=bool(detected["name"]))
+    description = _ask("Krótki opis projektu (opcjonalnie)", default=detected["description"], detected=bool(detected["description"]))
 
     project_type = _choice(
         "Typ projektu",
@@ -151,10 +163,11 @@ def init_strategy_cli(
             ("library", "Biblioteka / pakiet Python"),
             ("custom",  "Własny (zdefiniuję sprinty ręcznie)"),
         ],
-        default="api",
+        default=detected["project_type"] or "api",
+        detected=bool(detected["project_type"]),
     )
 
-    domain = _ask("Domena biznesowa (np. e-commerce, finance, devtools)", default="backend")
+    domain = _ask("Domena biznesowa (np. e-commerce, finance, devtools)", default=detected["domain"], detected=bool(detected["domain"]))
     goal_short = _ask("Cel w jednym zdaniu", required=True)
 
     # ── 2. Sprinty ───────────────────────────────────────────────────────

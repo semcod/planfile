@@ -1,7 +1,7 @@
-# vallm batch | 238f | 148✓ 10⚠ 34✗ | 2026-03-27
+# vallm batch | 269f | 164✓ 10⚠ 35✗ | 2026-03-27
 
 SUMMARY:
-  scanned: 238  passed: 148 (62.2%)  warnings: 10  errors: 34  unsupported: 56
+  scanned: 269  passed: 164 (61.0%)  warnings: 10  errors: 35  unsupported: 70
 
 WARNINGS[10]{path,score}:
   examples/test_llm_adapters.py,0.93
@@ -27,7 +27,7 @@ WARNINGS[10]{path,score}:
       complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
   planfile/cli/cmd/cmd_init.py,0.97
     issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,init_strategy_cli: 143 lines exceeds limit 100,126
+      complexity.lizard_length,warning,init_strategy_cli: 143 lines exceeds limit 100,129
   planfile/cli/cmd/cmd_sync.py,0.97
     issues[2]{rule,severity,message,line}:
       complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 21 (max: 15),79
@@ -39,7 +39,7 @@ WARNINGS[10]{path,score}:
     issues[1]{rule,severity,message,line}:
       complexity.maintainability,warning,Low maintainability index: 19.9 (threshold: 20),
 
-ERRORS[34]{path,score}:
+ERRORS[35]{path,score}:
   examples/advanced-usage/ci-strategy.yaml,0.00
     issues[1]{rule,severity,message,line}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
@@ -74,13 +74,6 @@ ERRORS[34]{path,score}:
   planfile/cli/__main__.py,0.57
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'commands' not found,2
-  planfile/sync/__init__.py,0.57
-    issues[5]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'base' not found,7
-      python.import.resolvable,error,Module 'generic' not found,8
-      python.import.resolvable,error,Module 'github' not found,9
-      python.import.resolvable,error,Module 'jira' not found,12
-      python.import.resolvable,error,Module 'gitlab' not found,13
   planfile/__init__.py,0.64
     issues[5]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'core.models' not found,18
@@ -95,12 +88,12 @@ ERRORS[34]{path,score}:
       python.import.resolvable,error,Module 'llx.planfile' not found,35
       python.import.resolvable,error,Module 'llx.planfile' not found,48
       python.import.resolvable,error,Module 'llx.planfile.models' not found,66
-  planfile/sync/github.py,0.71
+  planfile/sync/__init__.py,0.66
     issues[4]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'base' not found,12
-      python.import.resolvable,error,Module 'github' not found,4
-      python.import.resolvable,error,Module 'github.Issue' not found,5
-      python.import.resolvable,error,Module 'github.Repository' not found,6
+      python.import.resolvable,error,Module 'base' not found,7
+      python.import.resolvable,error,Module 'generic' not found,8
+      python.import.resolvable,error,Module 'jira' not found,12
+      python.import.resolvable,error,Module 'gitlab' not found,13
   planfile/analysis/file_analyzer.py,0.73
     issues[5]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models' not found,12
@@ -122,14 +115,13 @@ ERRORS[34]{path,score}:
       python.import.resolvable,error,Module 'models' not found,6
       python.import.resolvable,error,Module 'text_parser' not found,7
       python.import.resolvable,error,Module 'toon_parser' not found,8
-  planfile/analysis/generator.py,0.80
-    issues[6]{rule,severity,message,line}:
+  planfile/analysis/generator.py,0.82
+    issues[5]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'file_analyzer' not found,14
       python.import.resolvable,error,Module 'sprint_generator' not found,15
       python.import.resolvable,error,Module 'external_tools' not found,16
       python.import.resolvable,error,Module 'models' not found,17
-      python.import.resolvable,error,Module 'generators.metrics_extractor' not found,19
-      python.import.resolvable,error,Module 'generators.strategy_builder' not found,20
+      python.import.resolvable,error,Module 'generators' not found,19
   planfile/analysis/parsers/json_parser.py,0.83
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models' not found,5
@@ -152,11 +144,6 @@ ERRORS[34]{path,score}:
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'jira' not found,4
       python.import.resolvable,error,Module 'jira.exceptions' not found,5
-  planfile/integrations/config.py,0.84
-    issues[3]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'github' not found,115
-      python.import.resolvable,error,Module 'gitlab' not found,118
-      python.import.resolvable,error,Module 'jira' not found,121
   planfile/analysis/sprint_generator.py,0.86
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models' not found,8
@@ -176,15 +163,25 @@ ERRORS[34]{path,score}:
   planfile/analysis/parsers/text_parser.py,0.89
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'models' not found,5
+  planfile/integrations/config.py,0.89
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'gitlab' not found,118
+      python.import.resolvable,error,Module 'jira' not found,121
   planfile/api/server.py,0.91
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'fastapi' not found,9
   examples/ecosystem/03_proxy_routing.py,0.93
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'aiohttp' not found,9
+  planfile/sync/github.py,0.93
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'base' not found,12
   planfile/cli/cmd/cmd_health.py,0.94
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'analysis.generator' not found,24
+  planfile/cli/project_detector.py,0.95
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'tomli' not found,72
   tests/llm_adapters.py,0.95
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,14
@@ -193,9 +190,9 @@ ERRORS[34]{path,score}:
       python.import.resolvable,error,Module 'litellm' not found,24
 
 UNSUPPORTED[6]{bucket,count}:
-  *.md,37
+  *.md,42
   Dockerfile*,1
   *.txt,2
   *.yml,2
   *.example,4
-  other,10
+  other,19

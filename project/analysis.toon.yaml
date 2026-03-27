@@ -1,10 +1,11 @@
-# code2llm | 86f 10993L | python:79,shell:5,javascript:2 | 2026-03-27
-# CC̄=3.8 | critical:13/623 | dups:0 | cycles:0
+# code2llm | 88f 11536L | python:81,shell:5,javascript:2 | 2026-03-27
+# CC̄=3.9 | critical:15/642 | dups:0 | cycles:0
 
-HEALTH[19]:
-  🟡 CC    update_ticket CC=15 (limit:15)
+HEALTH[20]:
+  🟡 CC    _update_ticket CC=15 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
-  🟡 CC    sync_integration CC=21 (limit:15)
+  🟡 CC    _detect_from_pyproject CC=26 (limit:15)
+  🟡 CC    _infer_python_project_type CC=17 (limit:15)
   🟡 CC    table CC=21 (limit:15)
   🟡 CC    table_body_rows CC=21 (limit:15)
   🟡 CC    no_rows CC=21 (limit:15)
@@ -23,9 +24,9 @@ HEALTH[19]:
   🟡 CC    filter_handler CC=21 (limit:15)
 
 REFACTOR[1]:
-  1. split 19 high-CC methods  (CC>15)
+  1. split 20 high-CC methods  (CC>15)
 
-PIPELINES[372]:
+PIPELINES[377]:
   [1] Src [planfile_generate]: planfile_generate
       PURITY: 100% pure
   [2] Src [planfile_apply]: planfile_apply
@@ -34,7 +35,7 @@ PIPELINES[372]:
       PURITY: 100% pure
   [4] Src [main]: main
       PURITY: 100% pure
-  [5] Src [example_create_strategy]: example_create_strategy
+  [5] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
 
 LAYERS:
@@ -42,26 +43,28 @@ LAYERS:
   │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
   │ !! coverage_html_cb_6fb7b396.js   733L  0C   64m  CC=19     ←0
   │
-  planfile/                       CC̄=3.8    ←in:16  →out:7
+  planfile/                       CC̄=3.9    ←in:16  →out:8  !! split
   │ !! models                     492L  11C   17m  CC=15     ←2
   │ executor_standalone        336L  3C   12m  CC=8      ←0
+  │ !! project_detector           332L  1C   10m  CC=26     ←0
   │ ci                         318L  3C    9m  CC=7      ←0
   │ yaml_loader                303L  0C   15m  CC=7      ←9
   │ cmd_init                   299L  0C    4m  CC=12     ←0
   │ runner                     284L  0C    6m  CC=12     ←4
-  │ jira                       283L  1C    9m  CC=13     ←0
+  │ jira                       279L  1C   10m  CC=13     ←0
   │ external_tools             267L  2C   13m  CC=12     ←0
   │ store                      256L  7C   27m  CC=5      ←0
   │ auto_loop                  252L  0C    9m  CC=10     ←1
   │ generator                  243L  1C   17m  CC=14     ←0
-  │ base                       238L  4C   21m  CC=4      ←0
-  │ !! gitlab                     237L  1C    7m  CC=15     ←0
+  │ base                       239L  4C   21m  CC=4      ←0
+  │ !! gitlab                     232L  1C    8m  CC=15     ←0
   │ metrics                    229L  0C    5m  CC=8      ←0
-  │ generic                    218L  1C    9m  CC=6      ←0
+  │ redup_importer             222L  0C    5m  CC=11     ←1
+  │ generic                    216L  1C   10m  CC=6      ←0
   │ !! cmd_sync                   213L  0C    9m  CC=21     ←2
   │ server                     212L  0C    4m  CC=14     ←0
-  │ github                     201L  1C    7m  CC=14     ←0
   │ cmd_ticket                 199L  0C    2m  CC=10     ←0
+  │ github                     197L  1C    8m  CC=14     ←0
   │ cli_loader                 194L  0C   10m  CC=7      ←1
   │ sprint_generator           190L  1C   10m  CC=9      ←0
   │ cmd_examples               189L  0C    3m  CC=13     ←1
@@ -96,7 +99,7 @@ LAYERS:
   │ cmd_validate                39L  0C    1m  CC=9      ←0
   │ common                      34L  0C    2m  CC=6      ←2
   │ json_parser                 31L  0C    1m  CC=2      ←1
-  │ __init__                    26L  0C    2m  CC=7      ←1
+  │ __init__                    29L  0C    2m  CC=8      ←1
   │ __init__                    26L  0C    0m  CC=0.0    ←0
   │ extra_commands              25L  0C    1m  CC=1      ←0
   │ execution                   23L  0C    0m  CC=0.0    ←0
@@ -113,11 +116,11 @@ LAYERS:
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ base                         1L  0C    0m  CC=0.0    ←0
-  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ gitlab                       1L  0C    0m  CC=0.0    ←0
-  │ github                       1L  0C    0m  CC=0.0    ←0
-  │ __init__                     1L  0C    0m  CC=0.0    ←0
+  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ generic                      1L  0C    0m  CC=0.0    ←0
+  │ __init__                     1L  0C    0m  CC=0.0    ←0
+  │ github                       1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
@@ -138,10 +141,10 @@ LAYERS:
 COUPLING:
                             planfile.cli            planfile    planfile.loaders        planfile.api  planfile.importers       planfile.core        planfile.llm        planfile.mcp        run_examples
         planfile.cli                  ──                   9                  14                                                                               1                                       1  !! fan-out
-            planfile                  ←9                  ──                   1                  ←6                   4                   2                                      ←1                      hub
+            planfile                  ←9                  ──                   1                  ←6                   5                   2                                      ←1                      hub
     planfile.loaders                 ←14                  ←1                  ──                                                                                                                          hub
         planfile.api                                       6                                      ──                                                                                                    
-  planfile.importers                                      ←4                                                          ──                                                                                
+  planfile.importers                                      ←5                                                          ──                                                                                  hub
        planfile.core                                      ←2                                                                              ──                                                            
         planfile.llm                  ←1                                                                                                                      ──                                        
         planfile.mcp                                       1                                                                                                                      ──                    
@@ -149,6 +152,8 @@ COUPLING:
   CYCLES: none
   HUB: planfile/ (fan-in=16)
   HUB: planfile.loaders/ (fan-in=15)
+  HUB: planfile.importers/ (fan-in=5)
+  SMELL: planfile/ fan-out=8 → split needed
   SMELL: planfile.cli/ fan-out=25 → split needed
 
 EXTERNAL:

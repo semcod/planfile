@@ -4,12 +4,12 @@
 
 - **Project**: /home/tom/github/semcod/planfile
 - **Primary Language**: python
-- **Languages**: python: 83, shell: 24, javascript: 3
+- **Languages**: python: 85, shell: 27, javascript: 3
 - **Analysis Mode**: static
-- **Total Functions**: 623
-- **Total Classes**: 61
-- **Modules**: 110
-- **Entry Points**: 504
+- **Total Functions**: 642
+- **Total Classes**: 62
+- **Modules**: 115
+- **Entry Points**: 510
 
 ## Architecture by Module
 
@@ -73,6 +73,16 @@
 - **Classes**: 1
 - **File**: `config.py`
 
+### planfile.sync.jira
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `jira.py`
+
+### planfile.sync.generic
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `generic.py`
+
 ### planfile.loaders.cli_loader
 - **Functions**: 10
 - **File**: `cli_loader.py`
@@ -87,39 +97,29 @@
 - **Classes**: 1
 - **File**: `sprint_generator.py`
 
+### planfile.cli.project_detector
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `project_detector.py`
+
 ### planfile.importers.vallm_importer
 - **Functions**: 10
 - **Classes**: 1
 - **File**: `vallm_importer.py`
 
-### planfile.ci
-- **Functions**: 9
-- **Classes**: 3
-- **File**: `ci.py`
-
-### planfile.sync.jira
-- **Functions**: 9
-- **Classes**: 1
-- **File**: `jira.py`
-
-### planfile.sync.generic
-- **Functions**: 9
-- **Classes**: 1
-- **File**: `generic.py`
-
 ## Key Entry Points
 
 Main execution flows into the system:
-
-### planfile.cli.cmd.cmd_ticket.register_ticket_commands
-> Register ticket subcommands on the typer app.
-- **Calls**: typer.Typer, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, app.add_typer
 
 ### planfile.cli.cmd.cmd_init.init_strategy_cli
 > Interactive wizard — tworzy strategię przez zadawanie pytań.
 
 Nie wymaga szablonu. Pyta o typ projektu, cele, sprinty i bramki jakości.
 - **Calls**: typer.Option, typer.Option, console.print, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._choice, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask
+
+### planfile.cli.cmd.cmd_ticket.register_ticket_commands
+> Register ticket subcommands on the typer app.
+- **Calls**: typer.Typer, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, app.add_typer
 
 ### examples.ecosystem.04_llx_integration.example_metric_driven_planning
 > Example: Generate strategy based on actual project metrics.
@@ -234,16 +234,16 @@ This command will:
 
 Key execution flows identified:
 
-### Flow 1: register_ticket_commands
-```
-register_ticket_commands [planfile.cli.cmd.cmd_ticket]
-```
-
-### Flow 2: init_strategy_cli
+### Flow 1: init_strategy_cli
 ```
 init_strategy_cli [planfile.cli.cmd.cmd_init]
   └─> _ask
   └─> _ask
+```
+
+### Flow 2: register_ticket_commands
+```
+register_ticket_commands [planfile.cli.cmd.cmd_ticket]
 ```
 
 ### Flow 3: example_metric_driven_planning
@@ -326,6 +326,18 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 - **Methods**: 11
 - **Key Methods**: planfile.integrations.config.IntegrationConfig.__init__, planfile.integrations.config.IntegrationConfig.load_dotenv, planfile.integrations.config.IntegrationConfig.discover_configs, planfile.integrations.config.IntegrationConfig.load_configs, planfile.integrations.config.IntegrationConfig.get_integration_config, planfile.integrations.config.IntegrationConfig.get_project_config, planfile.integrations.config.IntegrationConfig.get_sprint_config, planfile.integrations.config.IntegrationConfig.get_backlog_config, planfile.integrations.config.IntegrationConfig._deep_merge, planfile.integrations.config.IntegrationConfig.validate_integration
 
+### planfile.sync.jira.JiraBackend
+> Jira integration backend.
+- **Methods**: 10
+- **Key Methods**: planfile.sync.jira.JiraBackend.__init__, planfile.sync.jira.JiraBackend._validate_config, planfile.sync.jira.JiraBackend._map_priority_to_jira, planfile.sync.jira.JiraBackend._map_task_type_to_jira, planfile.sync.jira.JiraBackend._create_ticket, planfile.sync.jira.JiraBackend._update_ticket, planfile.sync.jira.JiraBackend._get_ticket, planfile.sync.jira.JiraBackend._issue_to_ticket_status, planfile.sync.jira.JiraBackend._list_tickets, planfile.sync.jira.JiraBackend._search_tickets
+- **Inherits**: BasePMBackend
+
+### planfile.sync.generic.GenericBackend
+> Generic HTTP API backend for PM systems.
+- **Methods**: 10
+- **Key Methods**: planfile.sync.generic.GenericBackend.__init__, planfile.sync.generic.GenericBackend._validate_config, planfile.sync.generic.GenericBackend._make_request, planfile.sync.generic.GenericBackend._create_ticket, planfile.sync.generic.GenericBackend._update_ticket, planfile.sync.generic.GenericBackend._build_update_data, planfile.sync.generic.GenericBackend._get_ticket, planfile.sync.generic.GenericBackend._list_tickets, planfile.sync.generic.GenericBackend._search_tickets, planfile.sync.generic.GenericBackend._ticket_data_to_status
+- **Inherits**: BasePMBackend
+
 ### planfile.analysis.file_analyzer.FileAnalyzer
 > Analyzes YAML/JSON files to extract issues and metrics.
 - **Methods**: 10
@@ -341,16 +353,16 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 - **Methods**: 9
 - **Key Methods**: planfile.ci.CIRunner.__init__, planfile.ci.CIRunner.run_tests, planfile.ci.CIRunner.run_code_analysis, planfile.ci.CIRunner.generate_bug_report, planfile.ci.CIRunner.create_bug_tickets, planfile.ci.CIRunner.auto_fix_bugs, planfile.ci.CIRunner.check_strategy_completion, planfile.ci.CIRunner.run_loop, planfile.ci.CIRunner.save_results
 
-### planfile.sync.jira.JiraBackend
-> Jira integration backend.
-- **Methods**: 9
-- **Key Methods**: planfile.sync.jira.JiraBackend.__init__, planfile.sync.jira.JiraBackend._validate_config, planfile.sync.jira.JiraBackend._map_priority_to_jira, planfile.sync.jira.JiraBackend._map_task_type_to_jira, planfile.sync.jira.JiraBackend.create_ticket, planfile.sync.jira.JiraBackend.update_ticket, planfile.sync.jira.JiraBackend.get_ticket, planfile.sync.jira.JiraBackend.list_tickets, planfile.sync.jira.JiraBackend.search_tickets
+### planfile.sync.github.GitHubBackend
+> GitHub Issues integration backend.
+- **Methods**: 8
+- **Key Methods**: planfile.sync.github.GitHubBackend.__init__, planfile.sync.github.GitHubBackend._validate_config, planfile.sync.github.GitHubBackend._create_ticket, planfile.sync.github.GitHubBackend._update_ticket, planfile.sync.github.GitHubBackend._get_ticket, planfile.sync.github.GitHubBackend._issue_to_ticket_status, planfile.sync.github.GitHubBackend._list_tickets, planfile.sync.github.GitHubBackend._search_tickets
 - **Inherits**: BasePMBackend
 
-### planfile.sync.generic.GenericBackend
-> Generic HTTP API backend for PM systems.
-- **Methods**: 9
-- **Key Methods**: planfile.sync.generic.GenericBackend.__init__, planfile.sync.generic.GenericBackend._validate_config, planfile.sync.generic.GenericBackend._make_request, planfile.sync.generic.GenericBackend.create_ticket, planfile.sync.generic.GenericBackend.update_ticket, planfile.sync.generic.GenericBackend._build_update_data, planfile.sync.generic.GenericBackend.get_ticket, planfile.sync.generic.GenericBackend.list_tickets, planfile.sync.generic.GenericBackend.search_tickets
+### planfile.sync.gitlab.GitLabBackend
+> GitLab Issues integration backend.
+- **Methods**: 8
+- **Key Methods**: planfile.sync.gitlab.GitLabBackend.__init__, planfile.sync.gitlab.GitLabBackend._validate_config, planfile.sync.gitlab.GitLabBackend._create_ticket, planfile.sync.gitlab.GitLabBackend._update_ticket, planfile.sync.gitlab.GitLabBackend._get_ticket, planfile.sync.gitlab.GitLabBackend._issue_to_ticket_status, planfile.sync.gitlab.GitLabBackend._list_tickets, planfile.sync.gitlab.GitLabBackend._search_tickets
 - **Inherits**: BasePMBackend
 
 ### planfile.importers.vallm_importer.VallmParser
@@ -367,18 +379,6 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 > Standalone strategy executor.
 - **Methods**: 7
 - **Key Methods**: planfile.executor_standalone.StrategyExecutor.__init__, planfile.executor_standalone.StrategyExecutor._default_config, planfile.executor_standalone.StrategyExecutor.execute_strategy, planfile.executor_standalone.StrategyExecutor._execute_task, planfile.executor_standalone.StrategyExecutor._select_model, planfile.executor_standalone.StrategyExecutor._build_prompt, planfile.executor_standalone.StrategyExecutor._get_project_metrics
-
-### planfile.sync.github.GitHubBackend
-> GitHub Issues integration backend.
-- **Methods**: 7
-- **Key Methods**: planfile.sync.github.GitHubBackend.__init__, planfile.sync.github.GitHubBackend._validate_config, planfile.sync.github.GitHubBackend.create_ticket, planfile.sync.github.GitHubBackend.update_ticket, planfile.sync.github.GitHubBackend.get_ticket, planfile.sync.github.GitHubBackend.list_tickets, planfile.sync.github.GitHubBackend.search_tickets
-- **Inherits**: BasePMBackend
-
-### planfile.sync.gitlab.GitLabBackend
-> GitLab Issues integration backend.
-- **Methods**: 7
-- **Key Methods**: planfile.sync.gitlab.GitLabBackend.__init__, planfile.sync.gitlab.GitLabBackend._validate_config, planfile.sync.gitlab.GitLabBackend.create_ticket, planfile.sync.gitlab.GitLabBackend.update_ticket, planfile.sync.gitlab.GitLabBackend.get_ticket, planfile.sync.gitlab.GitLabBackend.list_tickets, planfile.sync.gitlab.GitLabBackend.search_tickets
-- **Inherits**: BasePMBackend
 
 ### examples.llx_validator.LLXValidator
 > Use LLX to validate generated code and strategies.
@@ -404,10 +404,6 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 
 Key functions that process and transform data:
 
-### planfile.examples.example_validate_strategy
-> Load and validate an existing strategy.
-- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
-
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
 - **Output to**: self._is_llx_available, subprocess.run, str, str
@@ -415,6 +411,10 @@ Key functions that process and transform data:
 ### examples.llx_validator.LLXValidator._parse_llx_analysis
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
+
+### planfile.examples.example_validate_strategy
+> Load and validate an existing strategy.
+- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
 
 ### planfile.sync.github.GitHubBackend._validate_config
 > Validate GitHub configuration.
@@ -458,9 +458,9 @@ Args:
     file_path: Path to strategy YAML f
 - **Output to**: planfile.loaders.yaml_loader._check_required_keys, planfile.loaders.yaml_loader._validate_sprints, planfile.loaders.yaml_loader._validate_gates, planfile.loaders.yaml_loader._validate_task_patterns, planfile.loaders.yaml_loader.load_yaml
 
-### planfile.sync.gitlab.GitLabBackend._validate_config
-> Validate GitLab configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError
+### planfile.sync.generic.GenericBackend._validate_config
+> Validate generic backend configuration.
+- **Output to**: self.config.get, ValueError
 
 ### planfile.analysis.generator.PlanfileGenerator._parse_effort
 - **Output to**: parse_effort
@@ -477,31 +477,31 @@ Args:
 > Parse redup duplication.toon.yaml output.
 - **Output to**: AnalysisResults, re.search, re.search, dup_file.exists, self._mock_redup_data
 
-### planfile.sync.generic.GenericBackend._validate_config
-> Validate generic backend configuration.
-- **Output to**: self.config.get, ValueError
+### planfile.sync.gitlab.GitLabBackend._validate_config
+> Validate GitLab configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError
 
-### planfile.importers.code2llm_importer._parse_evolution
-> Parse NEXT[] section from evolution.toon.
-- **Output to**: EvolutionParser, parser.parse
+### planfile.importers.redup_importer._parse_toon_format
+> Parse redup toon.yaml format into structured data.
+- **Output to**: re.search, re.search, re.search, re.search, None.strip
 
-### planfile.importers.code2llm_importer.EvolutionParser.parse
-> Parse content and return tickets.
-- **Output to**: content.split, self._process_line, self.tickets.append, planfile.importers.code2llm_importer._evolution_item_to_ticket
+### planfile.importers.redup_importer._parse_duplicates
+> Parse DUPLICATES section.
+- **Output to**: text.split, line.strip, re.match, duplicates.append, duplicates.append
 
-### planfile.importers.code2llm_importer.EvolutionParser._process_line
-> Process a single line based on current state.
-- **Output to**: self._handle_outside, self._handle_in_next
-
-### planfile.importers.code2llm_importer._parse_health
-> Parse HEALTH[] section from analysis.toon.
-- **Output to**: content.split, None.split, tickets.append, int, line.strip
+### planfile.importers.redup_importer._parse_refactor
+> Parse REFACTOR section.
+- **Output to**: text.split, line.strip, re.match, refactor_items.append, refactor_items.append
 
 ### planfile.core.models.ModelHints.convert_str_to_tier
 - **Output to**: field_validator, isinstance
 
 ### planfile.core.models.Sprint.convert_tasks
 - **Output to**: field_validator, isinstance, isinstance, isinstance, tasks.append
+
+### planfile.core.models.Strategy.validate_sprint_ids
+> Ensure sprint IDs are unique.
+- **Output to**: field_validator, len, len, ValueError, isinstance
 
 ## Behavioral Patterns
 
@@ -524,8 +524,8 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
-- `planfile.cli.cmd.cmd_ticket.register_ticket_commands` - 70 calls
 - `planfile.cli.cmd.cmd_init.init_strategy_cli` - 70 calls
+- `planfile.cli.cmd.cmd_ticket.register_ticket_commands` - 70 calls
 - `examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
 - `planfile.cli.cmd.cmd_examples.create_examples_app` - 46 calls
@@ -556,7 +556,7 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.loaders.cli_loader.export_results_to_markdown` - 15 calls
 - `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 15 calls
 - `planfile.cli.cmd.cmd_utils.get_backend` - 15 calls
-- `planfile.cli.cmd.cmd_sync.all` - 15 calls
+- `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.sortColumn` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.table` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows` - 15 calls
@@ -571,11 +571,11 @@ How components interact:
 
 ```mermaid
 graph TD
-    register_ticket_comm --> Typer
-    register_ticket_comm --> command
     init_strategy_cli --> Option
     init_strategy_cli --> print
     init_strategy_cli --> _ask
+    register_ticket_comm --> Typer
+    register_ticket_comm --> command
     example_metric_drive --> print
     example_metric_drive --> LLXIntegration
     example_strategy_gen --> print

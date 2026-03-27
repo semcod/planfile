@@ -1,12 +1,12 @@
-# redup/duplication | 2 groups | 65f 10687L | 2026-03-27
+# redup/duplication | 2 groups | 67f 11230L | 2026-03-27
 
 SUMMARY:
-  files_scanned: 65
-  total_lines:   10687
+  files_scanned: 67
+  total_lines:   11230
   dup_groups:    2
   dup_fragments: 5
   saved_lines:   21
-  scan_ms:       1640
+  scan_ms:       2021
 
 DUPLICATES[2] (ranked by impact):
   [9eff6742b4323da5]   STRU  github  L=7 N=3 saved=14 sim=1.00
