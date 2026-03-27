@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planfile"
-version = "0.1.36"
+version = "0.1.37"
 description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 license = "Apache-2.0"
@@ -31,6 +31,7 @@ dependencies = [
     "httpx>=0.27",
     "softreck-shared>=0.1.0",
     "filelock>=3.0",
+    "python-dotenv>=1.0",
 ]
 
 [project.scripts]

@@ -1,0 +1,37 @@
+# GitHub Integration Configuration
+# This file contains GitHub-specific integration settings
+
+integrations:
+  github:
+    # Repository in format "owner/repo"
+    # Can be overridden by GITHUB_REPO environment variable
+    repo: "myorg/myproject"
+    
+    # GitHub token (automatically loaded from GITHUB_TOKEN env var)
+    # token: "${GITHUB_TOKEN}"
+    
+    # Sync settings
+    sync:
+      # Sync planfile tickets to GitHub issues
+      create_issues: true
+      
+      # Sync GitHub issues back to planfile
+      import_issues: true
+      
+      # Labels to add to created issues
+      default_labels: ["planfile", "managed"]
+      
+      # Map planfile priorities to GitHub labels
+      priority_labels:
+        critical: "priority/critical"
+        high: "priority/high"
+        normal: "priority/normal"
+        low: "priority/low"
+      
+      # Map planfile statuses to GitHub labels
+      status_labels:
+        open: null
+        in_progress: "status/in-progress"
+        review: "status/review"
+        done: "status/done"
+        blocked: "status/blocked"

@@ -4,12 +4,12 @@
 
 - **Project**: /home/tom/github/semcod/planfile
 - **Primary Language**: python
-- **Languages**: python: 79, shell: 20, javascript: 3
+- **Languages**: python: 80, shell: 20, javascript: 3
 - **Analysis Mode**: static
-- **Total Functions**: 624
-- **Total Classes**: 67
-- **Modules**: 102
-- **Entry Points**: 511
+- **Total Functions**: 634
+- **Total Classes**: 68
+- **Modules**: 103
+- **Entry Points**: 520
 
 ## Architecture by Module
 
@@ -77,6 +77,11 @@
 - **Classes**: 1
 - **File**: `sprint_generator.py`
 
+### planfile.importers.vallm_importer
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `vallm_importer.py`
+
 ### planfile.analysis.parsers.toon_parser
 - **Functions**: 10
 - **File**: `toon_parser.py`
@@ -101,23 +106,19 @@
 - **Classes**: 1
 - **File**: `code2llm_importer.py`
 
-### planfile.cli.auto_loop
-- **Functions**: 9
-- **File**: `auto_loop.py`
-
 ## Key Entry Points
 
 Main execution flows into the system:
-
-### planfile.cli.cmd.cmd_ticket.register_ticket_commands
-> Register ticket subcommands on the typer app.
-- **Calls**: typer.Typer, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, app.add_typer
 
 ### planfile.cli.cmd.cmd_init.init_strategy_cli
 > Interactive wizard — tworzy strategię przez zadawanie pytań.
 
 Nie wymaga szablonu. Pyta o typ projektu, cele, sprinty i bramki jakości.
 - **Calls**: typer.Option, typer.Option, console.print, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._choice, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask
+
+### planfile.cli.cmd.cmd_ticket.register_ticket_commands
+> Register ticket subcommands on the typer app.
+- **Calls**: typer.Typer, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, app.add_typer
 
 ### examples.ecosystem.04_llx_integration.example_metric_driven_planning
 > Example: Generate strategy based on actual project metrics.
@@ -232,16 +233,16 @@ This command will:
 
 Key execution flows identified:
 
-### Flow 1: register_ticket_commands
-```
-register_ticket_commands [planfile.cli.cmd.cmd_ticket]
-```
-
-### Flow 2: init_strategy_cli
+### Flow 1: init_strategy_cli
 ```
 init_strategy_cli [planfile.cli.cmd.cmd_init]
   └─> _ask
   └─> _ask
+```
+
+### Flow 2: register_ticket_commands
+```
+register_ticket_commands [planfile.cli.cmd.cmd_ticket]
 ```
 
 ### Flow 3: example_metric_driven_planning
@@ -352,6 +353,11 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 - **Key Methods**: planfile.integrations.generic.GenericBackend.__init__, planfile.integrations.generic.GenericBackend._validate_config, planfile.integrations.generic.GenericBackend._make_request, planfile.integrations.generic.GenericBackend.create_ticket, planfile.integrations.generic.GenericBackend.update_ticket, planfile.integrations.generic.GenericBackend._build_update_data, planfile.integrations.generic.GenericBackend.get_ticket, planfile.integrations.generic.GenericBackend.list_tickets, planfile.integrations.generic.GenericBackend.search_tickets
 - **Inherits**: BasePMBackend
 
+### planfile.importers.vallm_importer.VallmParser
+> Parser for vallm validation.toon files.
+- **Methods**: 8
+- **Key Methods**: planfile.importers.vallm_importer.VallmParser.__init__, planfile.importers.vallm_importer.VallmParser.parse, planfile.importers.vallm_importer.VallmParser._process_line, planfile.importers.vallm_importer.VallmParser._is_file_entry, planfile.importers.vallm_importer.VallmParser._is_issue_entry, planfile.importers.vallm_importer.VallmParser._parse_file_entry, planfile.importers.vallm_importer.VallmParser._parse_issue_entry, planfile.importers.vallm_importer.VallmParser._determine_priority
+
 ### planfile.Planfile
 > Main entry point — convenience wrapper around PlanfileStore.
 - **Methods**: 7
@@ -395,11 +401,6 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 > Integration with LLX for code analysis and model selection.
 - **Methods**: 6
 - **Key Methods**: examples.ecosystem.04_llx_integration.LLXIntegration.__init__, examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project, examples.ecosystem.04_llx_integration.LLXIntegration._parse_llx_output, examples.ecosystem.04_llx_integration.LLXIntegration._basic_analysis, examples.ecosystem.04_llx_integration.LLXIntegration.select_model, examples.ecosystem.04_llx_integration.LLXIntegration.get_task_scope
-
-### planfile.sync.state.SyncState
-> Persist mapping between local ticket IDs and remote IDs.
-- **Methods**: 5
-- **Key Methods**: planfile.sync.state.SyncState.__init__, planfile.sync.state.SyncState.get_last_sync, planfile.sync.state.SyncState.save_sync, planfile.sync.state.SyncState.get_remote_id, planfile.sync.state.SyncState.get_local_id
 
 ## Data Transformation Functions
 
@@ -486,25 +487,25 @@ Args:
 > Parse HEALTH[] section from analysis.toon.
 - **Output to**: content.split, None.split, tickets.append, int, line.strip
 
+### planfile.importers.vallm_importer.VallmParser.parse
+> Parse content and extract tickets.
+- **Output to**: content.split, self._process_line, line.strip
+
+### planfile.importers.vallm_importer.VallmParser._process_line
+> Process a single line from the content.
+- **Output to**: self._is_file_entry, self._parse_file_entry, self._is_issue_entry, self._parse_issue_entry
+
+### planfile.importers.vallm_importer.VallmParser._parse_file_entry
+> Parse a file entry and update current_file.
+- **Output to**: line.rsplit, len, float, None.strip
+
+### planfile.importers.vallm_importer.VallmParser._parse_issue_entry
+> Parse an issue entry and create a ticket.
+- **Output to**: line.split, self.tickets.append, len, self._determine_priority, planfile.importers.vallm_importer._auto_labels
+
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
 > Parse code2llm analysis.toon.yaml output.
 - **Output to**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists
-
-### planfile.analysis.external_tools.ExternalToolRunner.parse_vallm_output
-> Parse vallm validation.toon.yaml output.
-- **Output to**: AnalysisResults, re.search, validation_file.exists, self._mock_vallm_data, open
-
-### planfile.analysis.external_tools.ExternalToolRunner.parse_redup_output
-> Parse redup duplication.toon.yaml output.
-- **Output to**: AnalysisResults, re.search, re.search, dup_file.exists, self._mock_redup_data
-
-### planfile.cli.auto_loop._validate_strategy
-> Validate strategy file exists.
-- **Output to**: strategy.exists, console.print, typer.Exit
-
-### planfile.llm.generator._parse_strategy_response
-> Parse LLM YAML response into Strategy model.
-- **Output to**: planfile.llm.generator._fix_yaml_formatting, yaml.safe_load, Strategy, None.split, None.split
 
 ## Behavioral Patterns
 
@@ -522,8 +523,8 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
-- `planfile.cli.cmd.cmd_ticket.register_ticket_commands` - 70 calls
 - `planfile.cli.cmd.cmd_init.init_strategy_cli` - 70 calls
+- `planfile.cli.cmd.cmd_ticket.register_ticket_commands` - 70 calls
 - `examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
 - `planfile.cli.cmd.cmd_examples.create_examples_app` - 46 calls
@@ -569,11 +570,11 @@ How components interact:
 
 ```mermaid
 graph TD
-    register_ticket_comm --> Typer
-    register_ticket_comm --> command
     init_strategy_cli --> Option
     init_strategy_cli --> print
     init_strategy_cli --> _ask
+    register_ticket_comm --> Typer
+    register_ticket_comm --> command
     example_metric_drive --> print
     example_metric_drive --> LLXIntegration
     example_strategy_gen --> print

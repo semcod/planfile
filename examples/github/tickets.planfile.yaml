@@ -1,0 +1,70 @@
+# Project and Ticket Configuration
+# This file contains project info and tickets
+
+project:
+  name: "GitHub Integration Demo"
+  description: "Example project showing GitHub ticket synchronization"
+  prefix: "GH"
+
+# Current sprint
+sprint:
+  id: "sprint-001"
+  name: "GitHub Integration Sprint"
+  status: "active"
+  start_date: "2026-03-27"
+  end_date: "2026-04-10"
+  
+  # Sprint tickets
+  tickets:
+    GH-001:
+      title: "Set up GitHub integration"
+      description: "Configure planfile to sync with GitHub Issues"
+      status: "done"
+      priority: "high"
+      labels: ["setup", "integration"]
+      
+    GH-002:
+      title: "Create GitHub webhook for bi-directional sync"
+      description: "Set up webhook to sync changes from GitHub back to planfile"
+      status: "in_progress"
+      priority: "high"
+      labels: ["webhook", "sync"]
+      acceptance_criteria:
+        - "Webhook receives issue updates"
+        - "Changes are reflected in planfile"
+        - "Sync happens within 5 seconds"
+      
+    GH-003:
+      title: "Test GitHub issue creation"
+      description: "Verify that planfile tickets create GitHub issues correctly"
+      status: "open"
+      priority: "normal"
+      labels: ["testing"]
+      acceptance_criteria:
+        - "Issue title matches planfile ticket"
+        - "Description is properly formatted"
+        - "Labels are applied correctly"
+      
+    GH-004:
+      title: "Document GitHub integration setup"
+      description: "Write documentation for setting up GitHub integration"
+      status: "open"
+      priority: "low"
+      labels: ["documentation"]
+
+# Backlog tickets
+backlog:
+  tickets:
+    GH-005:
+      title: "Add GitHub milestone support"
+      description: "Sync planfile sprints with GitHub milestones"
+      status: "open"
+      priority: "normal"
+      labels: ["enhancement", "milestone"]
+      
+    GH-006:
+      title: "Support GitHub issue templates"
+      description: "Use GitHub issue templates when creating issues"
+      status: "open"
+      priority: "low"
+      labels: ["enhancement", "templates"]

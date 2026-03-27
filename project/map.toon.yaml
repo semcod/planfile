@@ -1,10 +1,10 @@
-# planfile | 82f 11590L | python:75,javascript:2,shell:5 | 2026-03-27
-# stats: 515 func | 0 cls | 82 mod | CC̄=4.0 | critical:14 | cycles:0
+# planfile | 83f 11671L | python:76,javascript:2,shell:5 | 2026-03-27
+# stats: 525 func | 0 cls | 83 mod | CC̄=3.9 | critical:13 | cycles:0
 # alerts[5]: fan-out init_strategy_cli=27; fan-out register_ticket_commands=25; fan-out create_examples_app=23; fan-out auto_loop=21; fan-out review_strategy_cli=21
 # hotspots[5]: init_strategy_cli fan=27; register_ticket_commands fan=25; create_examples_app fan=23; auto_loop fan=21; review_strategy_cli fan=21
-# evolution: CC̄ 4.1→4.0 (improved -0.1)
+# evolution: CC̄ 4.0→3.9 (improved -0.1)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[82]:
+M[83]:
   auto_generate_planfile.sh,124
   cleanup_redundant.sh,71
   docker-entrypoint.sh,174
@@ -48,14 +48,15 @@ M[82]:
   planfile/cli/extra_commands.py,20
   planfile/core/__init__.py,7
   planfile/core/models.py,492
-  planfile/core/store.py,255
+  planfile/core/store.py,256
   planfile/examples.py,141
   planfile/execution.py,23
   planfile/executor_standalone.py,336
   planfile/importers/__init__.py,26
-  planfile/importers/code2llm_importer.py,125
+  planfile/importers/code2llm_importer.py,129
+  planfile/importers/common.py,34
   planfile/importers/json_importer.py,35
-  planfile/importers/vallm_importer.py,54
+  planfile/importers/vallm_importer.py,96
   planfile/importers/yaml_importer.py,35
   planfile/integrations/__init__.py,32
   planfile/integrations/base.py,112
@@ -245,10 +246,6 @@ D:
     ctxs()
     ctxs_text()
     width()
-  planfile/importers/vallm_importer.py:
-    e: import_vallm,_auto_labels
-    import_vallm(toon_path;auto_priority)
-    _auto_labels(rule)
   planfile/sync/gitlab.py:
     e: GitLabBackend
     GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
@@ -291,6 +288,13 @@ D:
   planfile/sync/jira.py:
     e: JiraBackend
     JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Jira integration backend...
+  planfile/importers/code2llm_importer.py:
+    e: EvolutionParser,import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health
+    EvolutionParser: __init__(1),parse(1),_process_line(1),_handle_outside(1),_handle_in_next(1)  # State machine parser for evolution.toon NEXT[] sections...
+    import_code2llm(toon_path;auto_priority;sprint)
+    _parse_evolution(content;auto_priority)
+    _evolution_item_to_ticket(item;auto_priority)
+    _parse_health(content;auto_priority)
   planfile/integrations/jira.py:
     e: JiraBackend
     JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Jira integration backend...
@@ -321,13 +325,6 @@ D:
     _ask(prompt;default;required)
     _ask_list(prompt;example)
     init_strategy_cli(output;yes)
-  planfile/importers/code2llm_importer.py:
-    e: EvolutionParser,import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health
-    EvolutionParser: __init__(1),parse(1),_process_line(1),_handle_outside(1),_handle_in_next(1)  # State machine parser for evolution.toon NEXT[] sections...
-    import_code2llm(toon_path;auto_priority;sprint)
-    _parse_evolution(content;auto_priority)
-    _evolution_item_to_ticket(item;auto_priority)
-    _parse_health(content;auto_priority)
   planfile/analysis/parsers/toon_parser.py:
     e: _parse_toon_header,_parse_toon_sections,_determine_section,_parse_health_section,_parse_refactor_section,_parse_warnings_section,_parse_errors_section,_parse_summary_section,_parse_duplicates_section,analyze_toon
     _parse_toon_header(line;file_path;metrics;issues)
@@ -451,6 +448,10 @@ D:
   planfile/sync/generic.py:
     e: GenericBackend
     GenericBackend(BasePMBackend): __init__(3),_validate_config(0),_make_request(4),create_ticket(6),update_ticket(7),_build_update_data(6),get_ticket(1),list_tickets(4),search_tickets(1)  # Generic HTTP API backend for PM systems...
+  planfile/importers/common.py:
+    e: normalize_ticket_dict,load_structured_tickets
+    normalize_ticket_dict(item)
+    load_structured_tickets(path;loader)
   planfile/importers/yaml_importer.py:
     e: import_yaml,_normalize
     import_yaml(path)
@@ -475,14 +476,14 @@ D:
     export_to_html(strategy;file_path)
     register_export_commands(app)
   planfile/core/store.py:
-    e: PlanfileStore,TicketFilter,StatusFilter,PriorityFilter,SourceFilter,LabelsFilter,TicketFilterChain
-    PlanfileStore: __init__(1),init(0),is_initialized(0),create_ticket(1),get_ticket(1),update_ticket(1),delete_ticket(1),list_tickets(1),move_ticket(2),next_id(0),_sprint_file(1),_all_sprint_files(0),_read_yaml(1),_write_yaml(2),_apply_filters(4)  # Read/write tickets and sprints to .planfile/ YAML files...
+    e: TicketFilter,StatusFilter,PriorityFilter,SourceFilter,LabelsFilter,TicketFilterChain,PlanfileStore
     TicketFilter: apply(1)  # Base class for ticket filters...
     StatusFilter(TicketFilter): __init__(1),apply(1)  # Filter tickets by status...
     PriorityFilter(TicketFilter): __init__(1),apply(1)  # Filter tickets by priority...
     SourceFilter(TicketFilter): __init__(1),apply(1)  # Filter tickets by source tool...
     LabelsFilter(TicketFilter): __init__(1),apply(1)  # Filter tickets by labels...
     TicketFilterChain: __init__(0),add_filter(1),apply(1)  # Chain of ticket filters...
+    PlanfileStore: __init__(1),init(0),is_initialized(0),create_ticket(1),get_ticket(1),update_ticket(1),delete_ticket(1),list_tickets(1),move_ticket(2),next_id(0),_sprint_file(1),_all_sprint_files(0),_read_yaml(1),_write_yaml(2),_apply_filters(4)  # Read/write tickets and sprints to .planfile/ YAML files...
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)
@@ -496,6 +497,11 @@ D:
     e: Planfile,quick_ticket
     Planfile: __init__(1),auto_discover(1),create_ticket(1),get_ticket(1),list_tickets(0),update_ticket(1),create_tickets_bulk(3)  # Main entry point — convenience wrapper around PlanfileStore...
     quick_ticket(title;tool)
+  planfile/importers/vallm_importer.py:
+    e: VallmParser,import_vallm,_auto_labels
+    VallmParser: __init__(1),parse(1),_process_line(1),_is_file_entry(1),_is_issue_entry(1),_parse_file_entry(1),_parse_issue_entry(1),_determine_priority(1)  # Parser for vallm validation.toon files...
+    import_vallm(toon_path;auto_priority)
+    _auto_labels(rule)
   planfile/llm/client.py:
     e: call_llm
     call_llm(prompt;model;temperature)

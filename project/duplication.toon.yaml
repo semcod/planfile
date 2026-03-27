@@ -1,17 +1,17 @@
-# redup/duplication | 45 groups | 66f 11253L | 2026-03-27
+# redup/duplication | 45 groups | 67f 11333L | 2026-03-27
 
 SUMMARY:
-  files_scanned: 66
-  total_lines:   11253
+  files_scanned: 67
+  total_lines:   11333
   dup_groups:    45
-  dup_fragments: 92
-  saved_lines:   967
-  scan_ms:       1642
+  dup_fragments: 93
+  saved_lines:   978
+  scan_ms:       1691
 
 DUPLICATES[45] (ranked by impact):
   [bc644dc50ef05dba] ! EXAC  create_ticket  L=60 N=2 saved=60 sim=1.00
-      planfile/integrations/jira.py:91-150  (create_ticket)
       planfile/sync/jira.py:91-150  (create_ticket)
+      planfile/integrations/jira.py:91-150  (create_ticket)
   [acbb66c91b59b36b] ! EXAC  create_ticket  L=58 N=2 saved=58 sim=1.00
       planfile/sync/gitlab.py:53-110  (create_ticket)
       planfile/integrations/gitlab.py:53-110  (create_ticket)
@@ -19,8 +19,8 @@ DUPLICATES[45] (ranked by impact):
       planfile/sync/gitlab.py:112-164  (update_ticket)
       planfile/integrations/gitlab.py:112-164  (update_ticket)
   [c119d65689891c13] ! EXAC  update_ticket  L=46 N=2 saved=46 sim=1.00
-      planfile/integrations/jira.py:152-197  (update_ticket)
       planfile/sync/jira.py:152-197  (update_ticket)
+      planfile/integrations/jira.py:152-197  (update_ticket)
   [dd3c733a843420b1] ! EXAC  create_ticket  L=46 N=2 saved=46 sim=1.00
       planfile/integrations/github.py:50-95  (create_ticket)
       planfile/sync/github.py:50-95  (create_ticket)
@@ -28,23 +28,23 @@ DUPLICATES[45] (ranked by impact):
       planfile/integrations/github.py:97-141  (update_ticket)
       planfile/sync/github.py:97-141  (update_ticket)
   [f87634a6dcb3f988] ! EXAC  list_tickets  L=43 N=2 saved=43 sim=1.00
-      planfile/integrations/jira.py:215-257  (list_tickets)
       planfile/sync/jira.py:215-257  (list_tickets)
+      planfile/integrations/jira.py:215-257  (list_tickets)
   [1226fa6f71b203d5] ! EXAC  list_tickets  L=38 N=2 saved=38 sim=1.00
       planfile/sync/gitlab.py:181-218  (list_tickets)
       planfile/integrations/gitlab.py:181-218  (list_tickets)
   [ab9142a27d5ed9a5] ! EXAC  __init__  L=35 N=2 saved=35 sim=1.00
-      planfile/integrations/generic.py:11-45  (__init__)
       planfile/sync/generic.py:11-45  (__init__)
+      planfile/integrations/generic.py:11-45  (__init__)
   [99cb098f06ddebbf] ! EXAC  __init__  L=33 N=2 saved=33 sim=1.00
-      planfile/integrations/jira.py:16-48  (__init__)
       planfile/sync/jira.py:16-48  (__init__)
+      planfile/integrations/jira.py:16-48  (__init__)
   [f2bf6d5636080cc0] ! EXAC  create_ticket  L=32 N=2 saved=32 sim=1.00
-      planfile/integrations/generic.py:74-105  (create_ticket)
       planfile/sync/generic.py:74-105  (create_ticket)
+      planfile/integrations/generic.py:74-105  (create_ticket)
   [90b1bb6e42b24b20] ! EXAC  list_tickets  L=32 N=2 saved=32 sim=1.00
-      planfile/integrations/generic.py:169-200  (list_tickets)
       planfile/sync/generic.py:169-200  (list_tickets)
+      planfile/integrations/generic.py:169-200  (list_tickets)
   [0bfbb0670f5badb5]   EXAC  list_tickets  L=30 N=2 saved=30 sim=1.00
       planfile/integrations/github.py:155-184  (list_tickets)
       planfile/sync/github.py:155-184  (list_tickets)
@@ -52,17 +52,21 @@ DUPLICATES[45] (ranked by impact):
       planfile/sync/gitlab.py:16-43  (__init__)
       planfile/integrations/gitlab.py:16-43  (__init__)
   [0291fee9e32a12d8]   EXAC  _build_update_data  L=26 N=2 saved=26 sim=1.00
-      planfile/integrations/generic.py:130-155  (_build_update_data)
       planfile/sync/generic.py:130-155  (_build_update_data)
+      planfile/integrations/generic.py:130-155  (_build_update_data)
   [ee29633e25866e4b]   EXAC  search_tickets  L=25 N=2 saved=25 sim=1.00
-      planfile/integrations/jira.py:259-283  (search_tickets)
       planfile/sync/jira.py:259-283  (search_tickets)
+      planfile/integrations/jira.py:259-283  (search_tickets)
   [a053c86870357056]   EXAC  update_ticket  L=22 N=2 saved=22 sim=1.00
-      planfile/integrations/generic.py:107-128  (update_ticket)
       planfile/sync/generic.py:107-128  (update_ticket)
+      planfile/integrations/generic.py:107-128  (update_ticket)
+  [f710c7935461d24c]   STRU  _normalize  L=11 N=3 saved=22 sim=1.00
+      planfile/importers/yaml_importer.py:25-35  (_normalize)
+      planfile/importers/common.py:6-17  (normalize_ticket_dict)
+      planfile/importers/json_importer.py:25-35  (_normalize)
   [b0dd3b4d94964bef]   EXAC  _make_request  L=21 N=2 saved=21 sim=1.00
-      planfile/integrations/generic.py:52-72  (_make_request)
       planfile/sync/generic.py:52-72  (_make_request)
+      planfile/integrations/generic.py:52-72  (_make_request)
   [20ee27e4b43d33d2]   EXAC  __init__  L=20 N=2 saved=20 sim=1.00
       planfile/integrations/github.py:18-37  (__init__)
       planfile/sync/github.py:18-37  (__init__)
@@ -70,8 +74,8 @@ DUPLICATES[45] (ranked by impact):
       planfile/sync/gitlab.py:220-237  (search_tickets)
       planfile/integrations/gitlab.py:220-237  (search_tickets)
   [948f5fe227aab7ec]   EXAC  search_tickets  L=17 N=2 saved=17 sim=1.00
-      planfile/integrations/generic.py:202-218  (search_tickets)
       planfile/sync/generic.py:202-218  (search_tickets)
+      planfile/integrations/generic.py:202-218  (search_tickets)
   [c5273ca1dc4b303d]   STRU  import_yaml  L=17 N=2 saved=17 sim=1.00
       planfile/importers/yaml_importer.py:6-22  (import_yaml)
       planfile/importers/json_importer.py:6-22  (import_json)
@@ -79,73 +83,70 @@ DUPLICATES[45] (ranked by impact):
       planfile/integrations/github.py:186-201  (search_tickets)
       planfile/sync/github.py:186-201  (search_tickets)
   [50d65d24b1015347]   EXAC  get_ticket  L=15 N=2 saved=15 sim=1.00
-      planfile/integrations/jira.py:199-213  (get_ticket)
       planfile/sync/jira.py:199-213  (get_ticket)
+      planfile/integrations/jira.py:199-213  (get_ticket)
   [0ac16cd1850e9380]   EXAC  get_ticket  L=14 N=2 saved=14 sim=1.00
       planfile/sync/gitlab.py:166-179  (get_ticket)
       planfile/integrations/gitlab.py:166-179  (get_ticket)
-  [03e50abbefc66004]   EXAC  map_priority  L=14 N=2 saved=14 sim=1.00
-      planfile/integrations/base.py:88-101  (map_priority)
-      planfile/sync/base.py:88-101  (map_priority)
   [cd82f5f1aa11081f]   EXAC  _map_priority_to_jira  L=14 N=2 saved=14 sim=1.00
-      planfile/integrations/jira.py:64-77  (_map_priority_to_jira)
       planfile/sync/jira.py:64-77  (_map_priority_to_jira)
+      planfile/integrations/jira.py:64-77  (_map_priority_to_jira)
+  [03e50abbefc66004]   EXAC  map_priority  L=14 N=2 saved=14 sim=1.00
+      planfile/sync/base.py:88-101  (map_priority)
+      planfile/integrations/base.py:88-101  (map_priority)
   [75850906dd9e9e31]   EXAC  _validate_config  L=13 N=2 saved=13 sim=1.00
-      planfile/integrations/jira.py:50-62  (_validate_config)
       planfile/sync/jira.py:50-62  (_validate_config)
+      planfile/integrations/jira.py:50-62  (_validate_config)
   [3767eb04b6cbba18]   EXAC  update_ticket  L=12 N=2 saved=12 sim=1.00
-      planfile/integrations/base.py:41-52  (update_ticket)
       planfile/sync/base.py:41-52  (update_ticket)
+      planfile/integrations/base.py:41-52  (update_ticket)
   [5b18dadd74919494]   STRU  _parse_refactor_section  L=4 N=4 saved=12 sim=1.00
       planfile/analysis/parsers/toon_parser.py:118-121  (_parse_refactor_section)
       planfile/analysis/parsers/toon_parser.py:124-127  (_parse_warnings_section)
       planfile/analysis/parsers/toon_parser.py:130-133  (_parse_errors_section)
       planfile/analysis/parsers/toon_parser.py:170-173  (_parse_duplicates_section)
-  [83809568d4ce2bb5]   EXAC  _normalize  L=11 N=2 saved=11 sim=1.00
-      planfile/importers/yaml_importer.py:25-35  (_normalize)
-      planfile/importers/json_importer.py:25-35  (_normalize)
-  [2f261f0d429898fa]   EXAC  create_ticket  L=11 N=2 saved=11 sim=1.00
-      planfile/integrations/base.py:28-38  (create_ticket)
-      planfile/sync/base.py:28-38  (create_ticket)
-  [f580fa6c967d968b]   EXAC  get_ticket  L=11 N=2 saved=11 sim=1.00
-      planfile/integrations/generic.py:157-167  (get_ticket)
-      planfile/sync/generic.py:157-167  (get_ticket)
   [6fd03c93823a5176]   EXAC  _map_task_type_to_jira  L=11 N=2 saved=11 sim=1.00
-      planfile/integrations/jira.py:79-89  (_map_task_type_to_jira)
       planfile/sync/jira.py:79-89  (_map_task_type_to_jira)
+      planfile/integrations/jira.py:79-89  (_map_task_type_to_jira)
+  [2f261f0d429898fa]   EXAC  create_ticket  L=11 N=2 saved=11 sim=1.00
+      planfile/sync/base.py:28-38  (create_ticket)
+      planfile/integrations/base.py:28-38  (create_ticket)
+  [f580fa6c967d968b]   EXAC  get_ticket  L=11 N=2 saved=11 sim=1.00
+      planfile/sync/generic.py:157-167  (get_ticket)
+      planfile/integrations/generic.py:157-167  (get_ticket)
   [81be34305a3781f3]   EXAC  get_ticket  L=11 N=2 saved=11 sim=1.00
       planfile/integrations/github.py:143-153  (get_ticket)
       planfile/sync/github.py:143-153  (get_ticket)
   [4a2ce2d9c3b5f99f]   EXAC  prepare_metadata  L=10 N=2 saved=10 sim=1.00
-      planfile/integrations/base.py:103-112  (prepare_metadata)
       planfile/sync/base.py:103-112  (prepare_metadata)
+      planfile/integrations/base.py:103-112  (prepare_metadata)
   [03476464a790d6cb]   EXAC  _validate_config  L=10 N=2 saved=10 sim=1.00
       planfile/integrations/github.py:39-48  (_validate_config)
       planfile/sync/github.py:39-48  (_validate_config)
   [46862b90137c2eff]   EXAC  list_tickets  L=9 N=2 saved=9 sim=1.00
-      planfile/integrations/base.py:60-68  (list_tickets)
       planfile/sync/base.py:60-68  (list_tickets)
+      planfile/integrations/base.py:60-68  (list_tickets)
   [59cf138c89c44e3d]   EXAC  _validate_config  L=7 N=2 saved=7 sim=1.00
       planfile/sync/gitlab.py:45-51  (_validate_config)
       planfile/integrations/gitlab.py:45-51  (_validate_config)
   [b14c8089bff3d753]   EXAC  _get_pf  L=5 N=2 saved=5 sim=1.00
-      planfile/mcp/server.py:91-95  (_get_pf)
       planfile/api/server.py:25-29  (_get_pf)
+      planfile/mcp/server.py:91-95  (_get_pf)
   [5cf77ccaee0016c9]   EXAC  _validate_config  L=4 N=2 saved=4 sim=1.00
-      planfile/integrations/generic.py:47-50  (_validate_config)
       planfile/sync/generic.py:47-50  (_validate_config)
+      planfile/integrations/generic.py:47-50  (_validate_config)
   [cbe03dd42d077abd]   EXAC  get_ticket  L=3 N=2 saved=3 sim=1.00
-      planfile/integrations/base.py:55-57  (get_ticket)
       planfile/sync/base.py:55-57  (get_ticket)
+      planfile/integrations/base.py:55-57  (get_ticket)
   [abdc207e4d05a3fd]   EXAC  search_tickets  L=3 N=2 saved=3 sim=1.00
-      planfile/integrations/base.py:71-73  (search_tickets)
       planfile/sync/base.py:71-73  (search_tickets)
+      planfile/integrations/base.py:71-73  (search_tickets)
   [9469ad3af40b572c]   EXAC  __init__  L=3 N=2 saved=3 sim=1.00
-      planfile/integrations/base.py:79-81  (__init__)
       planfile/sync/base.py:79-81  (__init__)
+      planfile/integrations/base.py:79-81  (__init__)
   [11d76056cd91522d]   EXAC  _validate_config  L=3 N=2 saved=3 sim=1.00
-      planfile/integrations/base.py:84-86  (_validate_config)
       planfile/sync/base.py:84-86  (_validate_config)
+      planfile/integrations/base.py:84-86  (_validate_config)
 
 REFACTOR[45] (ranked by priority):
   [1] ◐ extract_class      → planfile/utils/create_ticket.py
@@ -199,57 +200,57 @@ REFACTOR[45] (ranked by priority):
   [17] ○ extract_class      → planfile/utils/update_ticket.py
       WHY: 2 occurrences of 22-line block across 2 files — saves 22 lines
       FILES: planfile/integrations/generic.py, planfile/sync/generic.py
-  [18] ○ extract_class      → planfile/utils/_make_request.py
+  [18] ○ extract_function   → planfile/importers/utils/_normalize.py
+      WHY: 3 occurrences of 11-line block across 3 files — saves 22 lines
+      FILES: planfile/importers/common.py, planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
+  [19] ○ extract_class      → planfile/utils/_make_request.py
       WHY: 2 occurrences of 21-line block across 2 files — saves 21 lines
       FILES: planfile/integrations/generic.py, planfile/sync/generic.py
-  [19] ○ extract_class      → planfile/utils/__init__.py
+  [20] ○ extract_class      → planfile/utils/__init__.py
       WHY: 2 occurrences of 20-line block across 2 files — saves 20 lines
       FILES: planfile/integrations/github.py, planfile/sync/github.py
-  [20] ○ extract_class      → planfile/utils/search_tickets.py
+  [21] ○ extract_class      → planfile/utils/search_tickets.py
       WHY: 2 occurrences of 18-line block across 2 files — saves 18 lines
       FILES: planfile/integrations/gitlab.py, planfile/sync/gitlab.py
-  [21] ○ extract_class      → planfile/utils/search_tickets.py
+  [22] ○ extract_class      → planfile/utils/search_tickets.py
       WHY: 2 occurrences of 17-line block across 2 files — saves 17 lines
       FILES: planfile/integrations/generic.py, planfile/sync/generic.py
-  [22] ○ extract_function   → planfile/importers/utils/import_yaml.py
+  [23] ○ extract_function   → planfile/importers/utils/import_yaml.py
       WHY: 2 occurrences of 17-line block across 2 files — saves 17 lines
       FILES: planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
-  [23] ○ extract_class      → planfile/utils/search_tickets.py
+  [24] ○ extract_class      → planfile/utils/search_tickets.py
       WHY: 2 occurrences of 16-line block across 2 files — saves 16 lines
       FILES: planfile/integrations/github.py, planfile/sync/github.py
-  [24] ○ extract_class      → planfile/utils/get_ticket.py
+  [25] ○ extract_class      → planfile/utils/get_ticket.py
       WHY: 2 occurrences of 15-line block across 2 files — saves 15 lines
       FILES: planfile/integrations/jira.py, planfile/sync/jira.py
-  [25] ○ extract_class      → planfile/utils/get_ticket.py
+  [26] ○ extract_class      → planfile/utils/get_ticket.py
       WHY: 2 occurrences of 14-line block across 2 files — saves 14 lines
       FILES: planfile/integrations/gitlab.py, planfile/sync/gitlab.py
-  [26] ○ extract_class      → planfile/utils/map_priority.py
-      WHY: 2 occurrences of 14-line block across 2 files — saves 14 lines
-      FILES: planfile/integrations/base.py, planfile/sync/base.py
   [27] ○ extract_class      → planfile/utils/_map_priority_to_jira.py
       WHY: 2 occurrences of 14-line block across 2 files — saves 14 lines
       FILES: planfile/integrations/jira.py, planfile/sync/jira.py
-  [28] ○ extract_class      → planfile/utils/_validate_config.py
+  [28] ○ extract_class      → planfile/utils/map_priority.py
+      WHY: 2 occurrences of 14-line block across 2 files — saves 14 lines
+      FILES: planfile/integrations/base.py, planfile/sync/base.py
+  [29] ○ extract_class      → planfile/utils/_validate_config.py
       WHY: 2 occurrences of 13-line block across 2 files — saves 13 lines
       FILES: planfile/integrations/jira.py, planfile/sync/jira.py
-  [29] ○ extract_class      → planfile/utils/update_ticket.py
+  [30] ○ extract_class      → planfile/utils/update_ticket.py
       WHY: 2 occurrences of 12-line block across 2 files — saves 12 lines
       FILES: planfile/integrations/base.py, planfile/sync/base.py
-  [30] ○ extract_function   → planfile/analysis/parsers/utils/_parse_refactor_section.py
+  [31] ○ extract_function   → planfile/analysis/parsers/utils/_parse_refactor_section.py
       WHY: 4 occurrences of 4-line block across 1 files — saves 12 lines
       FILES: planfile/analysis/parsers/toon_parser.py
-  [31] ○ extract_function   → planfile/importers/utils/_normalize.py
-      WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
-      FILES: planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
-  [32] ○ extract_class      → planfile/utils/create_ticket.py
-      WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
-      FILES: planfile/integrations/base.py, planfile/sync/base.py
-  [33] ○ extract_class      → planfile/utils/get_ticket.py
-      WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
-      FILES: planfile/integrations/generic.py, planfile/sync/generic.py
-  [34] ○ extract_class      → planfile/utils/_map_task_type_to_jira.py
+  [32] ○ extract_class      → planfile/utils/_map_task_type_to_jira.py
       WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
       FILES: planfile/integrations/jira.py, planfile/sync/jira.py
+  [33] ○ extract_class      → planfile/utils/create_ticket.py
+      WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
+      FILES: planfile/integrations/base.py, planfile/sync/base.py
+  [34] ○ extract_class      → planfile/utils/get_ticket.py
+      WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
+      FILES: planfile/integrations/generic.py, planfile/sync/generic.py
   [35] ○ extract_class      → planfile/utils/get_ticket.py
       WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
       FILES: planfile/integrations/github.py, planfile/sync/github.py
@@ -286,4 +287,4 @@ REFACTOR[45] (ranked by priority):
 
 METRICS-TARGET:
   dup_groups:  45 → 0
-  saved_lines: 967 lines recoverable
+  saved_lines: 978 lines recoverable

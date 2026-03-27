@@ -1,7 +1,7 @@
-# planfile | 515 func | 64f | 14020L | python | 2026-03-27
+# planfile | 525 func | 65f | 14001L | python | 2026-03-27
 
 HEALTH:
-  CC̄=4.0  critical=52 (limit:10)  dup=8  cycles=0
+  CC̄=3.9  critical=51 (limit:10)  dup=8  cycles=0
 
 ALERTS[20]:
   !!! high_fan_out     init_strategy_cli = 27 (limit:10)
@@ -15,7 +15,7 @@ ALERTS[20]:
   !!  cc_exceeded      no_rows = 21 (limit:15)
   !!  cc_exceeded      footer = 21 (limit:15)
 
-MODULES[82] (top by size):
+MODULES[83] (top by size):
   M[htmlcov/coverage_html_cb_dd2e7eb5.js] 735L C:0 F:65 CC↑21 D:0 (javascript)
   M[htmlcov/coverage_html_cb_6fb7b396.js] 733L C:0 F:64 CC↑19 D:0 (javascript)
   M[planfile/core/models.py] 492L C:11 F:17 CC↑15 D:0 (python)
@@ -31,7 +31,7 @@ MODULES[82] (top by size):
   M[planfile/core/store.py] 256L C:7 F:27 CC↑5 D:0 (python)
   M[planfile/cli/auto_loop.py] 252L C:0 F:9 CC↑10 D:1 (python)
   M[planfile/analysis/generator.py] 243L C:1 F:17 CC↑14 D:0 (python)
-  LANGS: python:75/shell:5/javascript:2
+  LANGS: python:76/shell:5/javascript:2
 
 HOTSPOTS[10]:
   ★ init_strategy_cli fan=27  // Interactive wizard — tworzy strategię przez zadawanie pytań.
@@ -49,8 +49,8 @@ REFACTOR[15]:
   [1] H/H Split god module htmlcov/coverage_html_cb_dd2e7eb5.js (735L, 0 classes)
   [2] H/H Split god module htmlcov/coverage_html_cb_6fb7b396.js (733L, 0 classes)
   [3] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
-  [4] M/L Split import_vallm (CC=16 → target CC<10)
-  [5] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
+  [4] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
+  [5] M/L Split Strategy.get_stats (CC=15 → target CC<10)
 
 EVOLUTION:
-  2026-03-27 CC̄=4.0 crit=52 14020L // Automated analysis
+  2026-03-27 CC̄=3.9 crit=51 14001L // Automated analysis

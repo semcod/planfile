@@ -1,9 +1,9 @@
-# vallm batch | 216f | 95✓ 8⚠ 68✗ | 2026-03-27
+# vallm batch | 220f | 99✓ 7⚠ 68✗ | 2026-03-27
 
 SUMMARY:
-  scanned: 216  passed: 95 (44.0%)  warnings: 8  errors: 68  unsupported: 53
+  scanned: 220  passed: 99 (45.0%)  warnings: 7  errors: 68  unsupported: 53
 
-WARNINGS[8]{path,score}:
+WARNINGS[7]{path,score}:
   examples/bash-generation/verify_planfile.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
@@ -19,10 +19,6 @@ WARNINGS[8]{path,score}:
   planfile/cli/cmd/cmd_init.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,init_strategy_cli: 143 lines exceeds limit 100,126
-  planfile/importers/vallm_importer.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,import_vallm has cyclomatic complexity 16 (max: 15),4
-      complexity.lizard_cc,warning,import_vallm: CC=16 exceeds limit 15,4
   run_examples.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,setup_environment: 141 lines exceeds limit 100,109
@@ -362,8 +358,8 @@ ERRORS[68]{path,score}:
       python.import.resolvable,error,Module 'analysis.generator' not found,24
 
 UNSUPPORTED[5]{bucket,count}:
-  *.md,37
+  *.md,38
   Dockerfile*,1
   *.txt,2
   *.yml,2
-  other,11
+  other,10
