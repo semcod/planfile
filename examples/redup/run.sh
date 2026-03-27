@@ -25,16 +25,15 @@ project:
   description: "Example project showing redup integration"
   prefix: "RD"
 
-sprint:
-  id: "sprint-001"
-  name: "Code Quality Sprint"
-  status: "active"
-  start_date: "2026-03-27"
-  end_date: "2026-04-10"
-  tickets: {}
-
-backlog:
-  tickets: {}
+strategy:
+  goals:
+    - "Eliminate code duplication"
+    - "Improve code maintainability"
+  
+  quality_gates:
+    - "0 duplicate groups"
+    - "100% unique code"
+    - "No patterns > 3 lines"
 EOF
 
 # Full pipeline test

@@ -9,7 +9,7 @@
 - **Total Functions**: 642
 - **Total Classes**: 62
 - **Modules**: 115
-- **Entry Points**: 510
+- **Entry Points**: 509
 
 ## Architecture by Module
 
@@ -97,15 +97,15 @@
 - **Classes**: 1
 - **File**: `sprint_generator.py`
 
-### planfile.cli.project_detector
-- **Functions**: 10
-- **Classes**: 1
-- **File**: `project_detector.py`
-
 ### planfile.importers.vallm_importer
 - **Functions**: 10
 - **Classes**: 1
 - **File**: `vallm_importer.py`
+
+### planfile.cli.project_detector
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `project_detector.py`
 
 ## Key Entry Points
 
@@ -115,7 +115,8 @@ Main execution flows into the system:
 > Interactive wizard — tworzy strategię przez zadawanie pytań.
 
 Nie wymaga szablonu. Pyta o typ projektu, cele, sprinty i bramki jakości.
-- **Calls**: typer.Option, typer.Option, console.print, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._choice, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask
+Automatycznie 
+- **Calls**: typer.Option, typer.Option, console.print, planfile.cli.project_detector.get_detected_values, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._choice, planfile.cli.cmd.cmd_init._ask
 
 ### planfile.cli.cmd.cmd_ticket.register_ticket_commands
 > Register ticket subcommands on the typer app.
@@ -238,7 +239,10 @@ Key execution flows identified:
 ```
 init_strategy_cli [planfile.cli.cmd.cmd_init]
   └─> _ask
-  └─> _ask
+  └─ →> get_detected_values
+      └─> detect_project
+          └─> _detect_from_pyproject
+          └─> _detect_from_package_json
 ```
 
 ### Flow 2: register_ticket_commands
@@ -404,6 +408,10 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 
 Key functions that process and transform data:
 
+### planfile.examples.example_validate_strategy
+> Load and validate an existing strategy.
+- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
+
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
 - **Output to**: self._is_llx_available, subprocess.run, str, str
@@ -411,10 +419,6 @@ Key functions that process and transform data:
 ### examples.llx_validator.LLXValidator._parse_llx_analysis
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
-
-### planfile.examples.example_validate_strategy
-> Load and validate an existing strategy.
-- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
 
 ### planfile.sync.github.GitHubBackend._validate_config
 > Validate GitHub configuration.
@@ -462,6 +466,10 @@ Args:
 > Validate generic backend configuration.
 - **Output to**: self.config.get, ValueError
 
+### planfile.sync.gitlab.GitLabBackend._validate_config
+> Validate GitLab configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError
+
 ### planfile.analysis.generator.PlanfileGenerator._parse_effort
 - **Output to**: parse_effort
 
@@ -476,10 +484,6 @@ Args:
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_redup_output
 > Parse redup duplication.toon.yaml output.
 - **Output to**: AnalysisResults, re.search, re.search, dup_file.exists, self._mock_redup_data
-
-### planfile.sync.gitlab.GitLabBackend._validate_config
-> Validate GitLab configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError
 
 ### planfile.importers.redup_importer._parse_toon_format
 > Parse redup toon.yaml format into structured data.
@@ -524,7 +528,7 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
-- `planfile.cli.cmd.cmd_init.init_strategy_cli` - 70 calls
+- `planfile.cli.cmd.cmd_init.init_strategy_cli` - 76 calls
 - `planfile.cli.cmd.cmd_ticket.register_ticket_commands` - 70 calls
 - `examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
@@ -557,13 +561,13 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 15 calls
 - `planfile.cli.cmd.cmd_utils.get_backend` - 15 calls
 - `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls
+- `planfile.cli.cmd.cmd_sync.all` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.sortColumn` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.table` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.no_rows` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.footer` - 15 calls
 - `htmlcov.coverage_html_cb_dd2e7eb5.ratio_columns` - 15 calls
-- `htmlcov.coverage_html_cb_dd2e7eb5.filter_handler` - 15 calls
 
 ## System Interactions
 
@@ -573,6 +577,7 @@ How components interact:
 graph TD
     init_strategy_cli --> Option
     init_strategy_cli --> print
+    init_strategy_cli --> get_detected_values
     init_strategy_cli --> _ask
     register_ticket_comm --> Typer
     register_ticket_comm --> command
@@ -600,7 +605,6 @@ graph TD
     _parse_llx_output --> strip
     register_stats_comma --> command
     register_stats_comma --> Argument
-    register_stats_comma --> load_strategy_yaml
 ```
 
 ## Reverse Engineering Guidelines

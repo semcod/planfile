@@ -128,7 +128,7 @@ _FOCUS_QUALITY_GATES: dict[str, list[dict]] = {
 # ── main command ──────────────────────────────────────────────────────────
 
 def init_strategy_cli(
-    output: str = typer.Option("strategy.yaml", "--output", "-o", help="Output file path"),
+    output: str = typer.Option("planfile.yaml", "--output", "-o", help="Output file path"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation before saving"),
 ):
     """
@@ -139,7 +139,7 @@ def init_strategy_cli(
     """
     console.print(Panel(
         "[bold]planfile init[/bold] — Interaktywny kreator strategii\n"
-        "[dim]Odpowiedz na pytania, a wygeneruję plik strategy.yaml[/dim]",
+        "[dim]Odpowiedz na pytania, a wygeneruję plik planfile.yaml[/dim]",
         border_style="cyan",
     ))
 
@@ -168,7 +168,7 @@ def init_strategy_cli(
     )
 
     domain = _ask("Domena biznesowa (np. e-commerce, finance, devtools)", default=detected["domain"], detected=bool(detected["domain"]))
-    goal_short = _ask("Cel w jednym zdaniu", required=True)
+    goal_short = _ask("Cel w jednym zdaniu", default=detected["goal"], required=True, detected=bool(detected["goal"]))
 
     # ── 2. Sprinty ───────────────────────────────────────────────────────
     sprints_data: list[dict] = []
@@ -219,9 +219,16 @@ def init_strategy_cli(
             ("performance", "Wydajność"),
             ("none",        "Brak szczególnego priorytetu"),
         ],
-        default="tdd",
+        default="tdd" if detected["has_tests"] else "none",
+        detected=detected["has_tests"],
     )
-
+    
+    # Show detected quality gates if any
+    if detected["quality_gates"]:
+        console.print(f"\n[dim]Wykryto {len(detected['quality_gates'])} bramek jakości z plików projektu:[/dim]")
+        for gate in detected["quality_gates"]:
+            console.print(f"  [dim]• {gate['name']}[/dim]")
+    
     extra_gates = _ask_list(
         "Dodatkowe bramki jakości (opcjonalnie, enter = pomiń)",
         example="Docker image builds, API docs generated"
@@ -236,7 +243,8 @@ def init_strategy_cli(
             ("balanced", "Zbalansowane (claude-sonnet, gpt-4o)"),
             ("premium",  "Premium (claude-opus, gpt-4)"),
         ],
-        default="cheap",
+        default=detected["model_tier"] or "cheap",
+        detected=bool(detected.get("model_tier")),
     )
 
     # ── Budowanie YAML ────────────────────────────────────────────────────
@@ -250,7 +258,19 @@ def init_strategy_cli(
             "objectives": s.get("objectives", []),
         })
 
+    # Start with focus quality gates
     quality_gates = list(_FOCUS_QUALITY_GATES.get(focus, []))
+    
+    # Add detected quality gates from project files
+    for gate in detected["quality_gates"]:
+        quality_gates.append({
+            "name": gate["name"],
+            "description": gate["description"],
+            "criteria": gate["criteria"],
+            "required": gate["required"],
+        })
+    
+    # Add extra gates from user input
     for gate_text in extra_gates:
         quality_gates.append({
             "name": gate_text,

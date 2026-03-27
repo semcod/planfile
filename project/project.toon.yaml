@@ -1,10 +1,10 @@
-# planfile | 529 func | 65f | 13866L | python | 2026-03-27
+# planfile | 529 func | 65f | 13879L | python | 2026-03-27
 
 HEALTH:
   CC̄=3.9  critical=47 (limit:10)  dup=1  cycles=0
 
 ALERTS[20]:
-  !!! high_fan_out     init_strategy_cli = 27 (limit:10)
+  !!! high_fan_out     init_strategy_cli = 29 (limit:10)
   !!! cc_exceeded      _detect_from_pyproject = 26 (limit:15)
   !!! high_fan_out     register_ticket_commands = 25 (limit:10)
   !!! high_fan_out     sync_integration = 24 (limit:10)
@@ -12,18 +12,18 @@ ALERTS[20]:
   !!! high_fan_out     auto_loop = 21 (limit:10)
   !!! high_fan_out     review_strategy_cli = 21 (limit:10)
   !!! high_fan_out     analyze_text = 20 (limit:10)
+  !!  cc_exceeded      sync_integration = 21 (limit:15)
   !!  cc_exceeded      table = 21 (limit:15)
-  !!  cc_exceeded      table_body_rows = 21 (limit:15)
 
 MODULES[88] (top by size):
   M[htmlcov/coverage_html_cb_dd2e7eb5.js] 735L C:0 F:65 CC↑21 D:0 (javascript)
   M[htmlcov/coverage_html_cb_6fb7b396.js] 733L C:0 F:64 CC↑19 D:0 (javascript)
   M[planfile/core/models.py] 492L C:11 F:17 CC↑15 D:0 (python)
   M[planfile/executor_standalone.py] 336L C:3 F:12 CC↑8 D:0 (python)
-  M[planfile/cli/project_detector.py] 332L C:1 F:10 CC↑26 D:0 (python)
+  M[planfile/cli/project_detector.py] 332L C:1 F:10 CC↑26 D:1 (python)
   M[planfile/ci.py] 318L C:3 F:9 CC↑7 D:0 (python)
+  M[planfile/cli/cmd/cmd_init.py] 312L C:0 F:4 CC↑14 D:0 (python)
   M[planfile/loaders/yaml_loader.py] 303L C:0 F:15 CC↑7 D:9 (python)
-  M[planfile/cli/cmd/cmd_init.py] 299L C:0 F:4 CC↑12 D:0 (python)
   M[run_examples.sh] 286L C:0 F:13 CC↑0 D:1 (shell)
   M[planfile/runner.py] 284L C:0 F:6 CC↑12 D:4 (python)
   M[planfile/sync/jira.py] 279L C:1 F:10 CC↑13 D:0 (python)
@@ -34,7 +34,7 @@ MODULES[88] (top by size):
   LANGS: python:81/shell:5/javascript:2
 
 HOTSPOTS[10]:
-  ★ init_strategy_cli fan=27  // Interactive wizard — tworzy strategię przez zadawanie pytań.
+  ★ init_strategy_cli fan=29  // Interactive wizard — tworzy strategię przez zadawanie pytań.
 
 Nie wymaga szablon
   ★ register_ticket_commands fan=25  // Register ticket subcommands on the typer app.
@@ -53,4 +53,4 @@ REFACTOR[15]:
   [5] M/L Split Strategy.get_stats (CC=15 → target CC<10)
 
 EVOLUTION:
-  2026-03-27 CC̄=3.9 crit=47 13866L // Automated analysis
+  2026-03-27 CC̄=3.9 crit=47 13879L // Automated analysis

@@ -154,7 +154,7 @@ Content outside the markers is preserved when regenerating. Enable this with `sy
 
 ```
 planfile/
-    ├── server_common├── mcp-server-example    ├── examples    ├── execution    ├── llx_validator├── planfile/    ├── models    ├── runner        ├── state    ├── sync/    ├── executor_standalone    ├── ci        ├── github        ├── jira        ├── gitlab        ├── yaml_loader    ├── loaders/        ├── cli_loader        ├── generic        ├── generator    ├── analysis/        ├── external_tools        ├── file_analyzer        ├── models    ├── core/        ├── sprint_generator        ├── redup_importer        ├── common        ├── store    ├── importers/        ├── models        ├── yaml_importer        ├── json_importer        ├── auto_loop        ├── commands        ├── extra_commands        ├── vallm_importer    ├── cli/        ├── __main__        ├── code2llm_importer        ├── base        ├── adapters        ├── prompts    ├── llm/        ├── client    ├── utils/        ├── generator        ├── project_detector        ├── priorities    ├── mcp/        ├── base    ├── integrations/        ├── metrics        ├── server        ├── config        ├── gitlab        ├── generic    ├── api/        ├── github        ├── server        ├── jira            ├── cmd_review            ├── cmd_utils            ├── cmd_compare            ├── cmd_apply            ├── cmd_sync            ├── cmd_init            ├── cmd_ticket            ├── cmd_export            ├── cmd_stats            ├── cmd_template            ├── cmd_health            ├── cmd_examples        ├── generators/            ├── cmd_validate        ├── parsers/            ├── metrics_extractor            ├── cmd_generate            ├── json_parser            ├── toon_parser        ├── 02_mcp_integration        ├── 04_llx_integration        ├── 03_proxy_routing├── cleanup_redundant├── auto_generate_planfile├── docker-entrypoint├── project    ├── run├── run_examples    ├── validate_with_llx        ├── run        ├── run        ├── run        ├── run        ├── run        ├── run        ├── run        ├── run        ├── run        ├── ci-workflow        ├── run        ├── run        ├── 01_full_workflow        ├── run        ├── run_fixed        ├── run        ├── run        ├── run_fixed        ├── run        ├── verify_planfile            ├── yaml_parser            ├── text_parser```
+├── mcp-server-example    ├── server_common    ├── examples    ├── llx_validator    ├── execution├── planfile/    ├── models    ├── runner        ├── state    ├── sync/    ├── executor_standalone    ├── ci        ├── github        ├── jira        ├── yaml_loader        ├── generic    ├── loaders/        ├── cli_loader        ├── external_tools    ├── analysis/        ├── gitlab        ├── generator        ├── models        ├── file_analyzer    ├── core/        ├── sprint_generator        ├── redup_importer        ├── common        ├── store    ├── importers/        ├── yaml_importer        ├── models        ├── json_importer        ├── code2llm_importer        ├── auto_loop        ├── extra_commands        ├── commands    ├── cli/        ├── __main__        ├── adapters        ├── vallm_importer        ├── prompts    ├── llm/        ├── client        ├── generator    ├── utils/        ├── base        ├── priorities    ├── mcp/        ├── project_detector        ├── base    ├── integrations/        ├── metrics        ├── config        ├── server        ├── jira        ├── gitlab    ├── api/        ├── github        ├── server        ├── generic            ├── cmd_utils            ├── cmd_review            ├── cmd_compare            ├── cmd_apply            ├── cmd_ticket            ├── cmd_init            ├── cmd_export            ├── cmd_stats            ├── cmd_examples            ├── cmd_health            ├── cmd_template        ├── generators/            ├── cmd_validate            ├── cmd_generate        ├── parsers/            ├── metrics_extractor            ├── yaml_parser            ├── json_parser            ├── toon_parser            ├── text_parser        ├── 02_mcp_integration├── cleanup_redundant├── docker-entrypoint├── auto_generate_planfile├── run_examples├── project    ├── run    ├── validate_with_llx        ├── run        ├── run        ├── run        ├── run        ├── run        ├── run        ├── run        ├── run        ├── run        ├── ci-workflow        ├── run        ├── 01_full_workflow        ├── run        ├── run        ├── run_fixed        ├── run        ├── run        ├── run_fixed        ├── verify_planfile        ├── run        ├── 03_proxy_routing            ├── cmd_sync        ├── 04_llx_integration```
 
 ## API Overview
 
@@ -171,15 +171,15 @@ planfile/
 - **`CIRunner`** — CI/CD runner with automated bug-fix loop and ticket creation.
 - **`GitHubBackend`** — GitHub Issues integration backend.
 - **`JiraBackend`** — Jira integration backend.
-- **`GitLabBackend`** — GitLab Issues integration backend.
 - **`GenericBackend`** — Generic HTTP API backend for PM systems.
-- **`PlanfileGenerator`** — Generate comprehensive planfile from file analysis.
 - **`AnalysisResults`** — Results from external tool analysis.
 - **`ExternalToolRunner`** — Runner for external code analysis tools.
-- **`FileAnalyzer`** — Analyzes YAML/JSON files to extract issues and metrics.
+- **`GitLabBackend`** — GitLab Issues integration backend.
+- **`PlanfileGenerator`** — Generate comprehensive planfile from file analysis.
 - **`ExtractedIssue`** — Represents an issue extracted from a file.
 - **`ExtractedMetric`** — Represents a metric extracted from a file.
 - **`ExtractedTask`** — Represents a task extracted from a file.
+- **`FileAnalyzer`** — Analyzes YAML/JSON files to extract issues and metrics.
 - **`SprintGenerator`** — Generates sprints and tickets from extracted information.
 - **`TicketFilter`** — Base class for ticket filters.
 - **`StatusFilter`** — Filter tickets by status.
@@ -199,37 +199,37 @@ planfile/
 - **`TicketStatus`** — Status of a ticket.
 - **`TicketSource`** — Who/what created the ticket.
 - **`Ticket`** — Atomic unit of work in planfile.
-- **`VallmParser`** — Parser for vallm validation.toon files.
 - **`EvolutionParser`** — State machine parser for evolution.toon NEXT[] sections.
-- **`TicketRef`** — Reference to a created/updated ticket.
-- **`TicketStatus`** — Status of a ticket.
-- **`PMBackend`** — Protocol for PM system backends.
-- **`BasePMBackend`** — Base class for PM backends with common functionality.
 - **`LLMTestResult`** — —
 - **`BaseLLMAdapter`** — —
 - **`LiteLLMAdapter`** — —
 - **`OpenRouterAdapter`** — —
 - **`LocalLLMAdapter`** — —
 - **`LLMTestRunner`** — —
+- **`VallmParser`** — Parser for vallm validation.toon files.
+- **`TicketRef`** — Reference to a created/updated ticket.
+- **`TicketStatus`** — Status of a ticket.
+- **`PMBackend`** — Protocol for PM system backends.
+- **`BasePMBackend`** — Base class for PM backends with common functionality.
 - **`DetectedProject`** — Container for detected project information.
 - **`IntegrationConfig`** — Manages integration configuration with support for multiple config files.
 - **`TicketCreate`** — —
 - **`TicketUpdate`** — —
-- **`ProjectMetrics`** — Project metrics from LLX analysis.
-- **`LLXIntegration`** — Integration with LLX for code analysis and model selection.
-- **`ProxyClient`** — Client for interacting with Proxym API.
 - **`UserType`** — —
 - **`User`** — —
 - **`UserService`** — —
 - **`UserController`** — —
+- **`ProxyClient`** — Client for interacting with Proxym API.
+- **`ProjectMetrics`** — Project metrics from LLX analysis.
+- **`LLXIntegration`** — Integration with LLX for code analysis and model selection.
 
 ### Functions
 
-- `get_planfile(start_path)` — Return a cached Planfile instance discovered from the project tree.
 - `planfile_generate(arguments)` — —
 - `planfile_apply(arguments)` — —
 - `planfile_review(arguments)` — —
 - `main()` — —
+- `get_planfile(start_path)` — Return a cached Planfile instance discovered from the project tree.
 - `example_create_strategy()` — Create a strategy using LLX with local LLM.
 - `example_validate_strategy()` — Load and validate an existing strategy.
 - `example_run_strategy()` — Run strategy to create tickets (dry run).
@@ -266,23 +266,23 @@ planfile/
 - `import_from_source(path, source)` — Auto-detect format and import tickets.
 - `import_yaml(path)` — Parse a YAML file containing ticket data.
 - `import_json(path)` — Parse a JSON file containing ticket data.
+- `import_code2llm(toon_path, auto_priority, sprint)` — Parse evolution.toon NEXT[] → ticket dicts.
 - `get_backend(backend_type)` — Get backend instance by type.
 - `auto_loop(strategy, project_path, backend, max_iterations)` — Run automated CI/CD loop: test → ticket → fix → retest.
 - `ci_status(project_path)` — Check current CI status without running tests.
+- `add_extra_commands(app)` — Add health, examples, and sync command groups to the CLI app.
 - `version_callback(value)` — —
 - `main_callback(version)` — —
 - `main()` — Main CLI entry point.
-- `add_extra_commands(app)` — Add health, examples, and sync command groups to the CLI app.
 - `import_vallm(toon_path, auto_priority)` — Parse vallm validation.toon ERRORS[] → ticket dicts.
-- `import_code2llm(toon_path, auto_priority, sprint)` — Parse evolution.toon NEXT[] → ticket dicts.
 - `build_strategy_prompt(metrics, sprints, focus)` — Build a structured prompt for strategy generation.
 - `call_llm(prompt, model, temperature)` — Call LLM via LiteLLM. Falls back to llx proxy if available.
 - `generate_strategy(project_path)` — Generate a complete strategy from project analysis.
-- `detect_project(project_path)` — Auto-detect project information from various sources.
-- `get_detected_values()` — Get detected project values as a dictionary for use in CLI.
 - `calculate_task_priority(base_priority, task_type, sprint_id, weight_factors)` — Calculate task priority based on type, sprint, and base priority.
 - `map_priority_to_system(priority, system)` — Map generic priority to system-specific priority.
 - `get_priority_color(priority)` — Get color code for priority (for UI display).
+- `detect_project(project_path)` — Auto-detect project information from various sources.
+- `get_detected_values()` — Get detected project values as a dictionary for use in CLI.
 - `analyze_project_metrics(project_path)` — Analyze project metrics for strategy review.
 - `calculate_strategy_health(strategy_results)` — Calculate health metrics for a strategy execution.
 - `handle_tool_call(name, arguments)` — Dispatch an MCP tool call and return the result dict.
@@ -294,48 +294,37 @@ planfile/
 - `delete_ticket(ticket_id)` — —
 - `move_ticket(ticket_id, to_sprint)` — —
 - `health()` — —
-- `review_strategy_cli(strategy_path, project_path, backend, config_file)` — Review strategy execution and progress.
 - `get_backend(backend_type, config)` — Get backend instance by type and config.
+- `review_strategy_cli(strategy_path, project_path, backend, config_file)` — Review strategy execution and progress.
 - `compare_strategies(s1, s2)` — Compare two strategies and return differences.
 - `register_compare_commands(app)` — Register compare command on the typer app.
 - `apply_strategy_cli(strategy_path, project_path, backend, config_file)` — Apply a strategy to create tickets.
-- `create_sync_app()` — Create the sync command app.
-- `github(directory, dry_run, direction)` — Sync tickets with GitHub Issues.
-- `gitlab(directory, dry_run, direction)` — Sync tickets with GitLab Issues.
-- `jira(directory, dry_run, direction)` — Sync tickets with Jira.
-- `all(directory, dry_run, direction)` — Sync tickets with all configured integrations.
-- `sync_integration(integration_name, directory, dry_run, direction)` — Sync with a specific integration.
-- `sync_to_external(backend, tickets, dry_run)` — Sync planfile tickets to external system.
-- `sync_from_external(backend, store, dry_run)` — Sync tickets from external system to planfile.
-- `find_planfile_ticket(external_ticket, store)` — Find corresponding planfile ticket for external ticket.
-- `init_strategy_cli(output, yes)` — Interactive wizard — tworzy strategię przez zadawanie pytań.
 - `register_ticket_commands(app)` — Register ticket subcommands on the typer app.
+- `init_strategy_cli(output, yes)` — Interactive wizard — tworzy strategię przez zadawanie pytań.
 - `export_to_csv(strategy, file_path)` — Export strategy to CSV format.
 - `export_to_html(strategy, file_path)` — Export strategy to HTML format.
 - `register_export_commands(app)` — Register export and merge commands on the typer app.
 - `calculate_strategy_stats(strategy)` — Calculate statistics for a strategy.
 - `register_stats_commands(app)` — Register stats command on the typer app.
+- `create_examples_app()` — Create and return the examples sub-app.
+- `create_health_app()` — Create and return the health sub-app.
 - `generate_template(project_type, domain)` — Generate a strategy template based on project type and domain.
 - `register_template_commands(app)` — Register template command on the typer app.
-- `create_health_app()` — Create and return the health sub-app.
-- `create_examples_app()` — Create and return the examples sub-app.
 - `validate_strategy_cli(strategy_path, verbose)` — Validate a strategy YAML file.
-- `extract_key_metrics(analysis_result, external_metrics)` — Extract key metrics from analysis.
 - `generate_strategy_cli(project_path, output, model, sprints)` — Generate strategy.yaml from project analysis + LLM.
 - `generate_from_files_cmd(project_path, output, project_name, max_sprints)` — Generate planfile from file analysis (no LLM required).
+- `extract_key_metrics(analysis_result, external_metrics)` — Extract key metrics from analysis.
+- `extract_from_yaml_structure(data, path, parent_key)` — Extract issues from YAML structure.
+- `analyze_yaml(file_path)` — Analyze YAML file with better error handling.
 - `analyze_json(file_path)` — Analyze JSON file.
 - `analyze_toon(file_path)` — Analyze Toon format files with enhanced parsing.
+- `analyze_text(file_path)` — Analyze text content for TODOs, FIXMEs, and metrics.
 - `run_mcp_tool(tool_name, arguments)` — Simulate running an MCP tool.
 - `simulate_planfile_generate(args)` — Simulate planfile generate tool.
 - `simulate_planfile_apply(args)` — Simulate planfile apply tool.
 - `simulate_planfile_review(args)` — Simulate planfile review tool.
 - `example_mcp_session()` — Example of an LLM agent using planfile MCP tools.
 - `create_mcp_tool_definitions()` — Create MCP tool definitions for integration.
-- `example_metric_driven_planning()` — Example: Generate strategy based on actual project metrics.
-- `create_llx_config_example()` — Create example LLX configuration for planfile integration.
-- `example_strategy_generation_with_proxy()` — Example: Generate strategy using proxy for smart model routing.
-- `create_proxy_config_example()` — Create example proxy configuration for planfile integration.
-- `example_budget_tracking()` — Example: Budget tracking with proxy.
 - `check_env()` — —
 - `validate_config()` — —
 - `setup_workspace()` — —
@@ -358,7 +347,6 @@ planfile/
 - `print()` — —
 - `print()` — —
 - `print()` — —
-- `print()` — —
 - `create_user()` — —
 - `get_user()` — —
 - `update_user()` — —
@@ -369,11 +357,23 @@ planfile/
 - `export_to_json()` — —
 - `import_from_json()` — —
 - `get_statistics()` — —
+- `print()` — —
 - `validate_planfile()` — —
 - `print()` — —
-- `extract_from_yaml_structure(data, path, parent_key)` — Extract issues from YAML structure.
-- `analyze_yaml(file_path)` — Analyze YAML file with better error handling.
-- `analyze_text(file_path)` — Analyze text content for TODOs, FIXMEs, and metrics.
+- `example_strategy_generation_with_proxy()` — Example: Generate strategy using proxy for smart model routing.
+- `create_proxy_config_example()` — Create example proxy configuration for planfile integration.
+- `example_budget_tracking()` — Example: Budget tracking with proxy.
+- `create_sync_app()` — Create the sync command app.
+- `github(directory, dry_run, direction)` — Sync tickets with GitHub Issues.
+- `gitlab(directory, dry_run, direction)` — Sync tickets with GitLab Issues.
+- `jira(directory, dry_run, direction)` — Sync tickets with Jira.
+- `all(directory, dry_run, direction)` — Sync tickets with all configured integrations.
+- `sync_integration(integration_name, directory, dry_run, direction)` — Sync with a specific integration.
+- `sync_to_external(backend, tickets, dry_run)` — Sync planfile tickets to external system.
+- `sync_from_external(backend, store, dry_run)` — Sync tickets from external system to planfile.
+- `find_planfile_ticket(external_ticket, store)` — Find corresponding planfile ticket for external ticket.
+- `example_metric_driven_planning()` — Example: Generate strategy based on actual project metrics.
+- `create_llx_config_example()` — Create example LLX configuration for planfile integration.
 
 
 ## Project Structure

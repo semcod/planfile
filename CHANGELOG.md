@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.42] - 2026-03-27
+
+### Docs
+- Update docs/ARCHITECTURE_PROPOSAL.md
+- Update docs/README.md
+- Update project/context.md
+
+### Other
+- Update examples/code2llm/run.sh
+- Update examples/github/planfile.yaml
+- Update examples/github/planfile.yaml.old
+- Update examples/redup/.planfile/sprints/backlog.yaml
+- Update examples/redup/.planfile/sprints/current.yaml
+- Update examples/redup/planfile.yaml
+- Update examples/redup/run.sh
+- Update examples/vallm/.planfile/sprints/current.yaml
+- Update examples/vallm/planfile.yaml
+- Update examples/vallm/run.sh
+- ... and 14 more files
+
 ## [0.1.41] - 2026-03-27
 
 ### Docs

@@ -25,16 +25,16 @@ project:
   description: "Example project showing code2llm integration"
   prefix: "C2L"
 
-sprint:
-  id: "sprint-001"
-  name: "Code Analysis Sprint"
-  status: "active"
-  start_date: "2026-03-27"
-  end_date: "2026-04-10"
-  tickets: {}
-
-backlog:
-  tickets: {}
+strategy:
+  goals:
+    - "Refactor high complexity code"
+    - "Improve code maintainability"
+    - "Reduce technical debt"
+  
+  quality_gates:
+    - "CC̄ ≤ 3.0"
+    - "vallm validation ≥ 95%"
+    - "0 god modules"
 EOF
 
 # Full pipeline test

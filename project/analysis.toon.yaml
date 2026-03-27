@@ -1,4 +1,4 @@
-# code2llm | 88f 11536L | python:81,shell:5,javascript:2 | 2026-03-27
+# code2llm | 88f 11549L | python:81,shell:5,javascript:2 | 2026-03-27
 # CC̄=3.9 | critical:15/642 | dups:0 | cycles:0
 
 HEALTH[20]:
@@ -6,6 +6,7 @@ HEALTH[20]:
   🟡 CC    get_stats CC=15 (limit:15)
   🟡 CC    _detect_from_pyproject CC=26 (limit:15)
   🟡 CC    _infer_python_project_type CC=17 (limit:15)
+  🟡 CC    sync_integration CC=21 (limit:15)
   🟡 CC    table CC=21 (limit:15)
   🟡 CC    table_body_rows CC=21 (limit:15)
   🟡 CC    no_rows CC=21 (limit:15)
@@ -21,12 +22,11 @@ HEALTH[20]:
   🟡 CC    no_rows CC=21 (limit:15)
   🟡 CC    footer CC=21 (limit:15)
   🟡 CC    ratio_columns CC=21 (limit:15)
-  🟡 CC    filter_handler CC=21 (limit:15)
 
 REFACTOR[1]:
   1. split 20 high-CC methods  (CC>15)
 
-PIPELINES[377]:
+PIPELINES[376]:
   [1] Src [planfile_generate]: planfile_generate
       PURITY: 100% pure
   [2] Src [planfile_apply]: planfile_apply
@@ -35,7 +35,7 @@ PIPELINES[377]:
       PURITY: 100% pure
   [4] Src [main]: main
       PURITY: 100% pure
-  [5] Src [validate_strategy]: validate_strategy
+  [5] Src [example_create_strategy]: example_create_strategy
       PURITY: 100% pure
 
 LAYERS:
@@ -43,13 +43,13 @@ LAYERS:
   │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
   │ !! coverage_html_cb_6fb7b396.js   733L  0C   64m  CC=19     ←0
   │
-  planfile/                       CC̄=3.9    ←in:16  →out:8  !! split
+  planfile/                       CC̄=4.0    ←in:16  →out:8  !! split
   │ !! models                     492L  11C   17m  CC=15     ←2
   │ executor_standalone        336L  3C   12m  CC=8      ←0
-  │ !! project_detector           332L  1C   10m  CC=26     ←0
+  │ !! project_detector           332L  1C   10m  CC=26     ←1
   │ ci                         318L  3C    9m  CC=7      ←0
+  │ cmd_init                   312L  0C    4m  CC=14     ←0
   │ yaml_loader                303L  0C   15m  CC=7      ←9
-  │ cmd_init                   299L  0C    4m  CC=12     ←0
   │ runner                     284L  0C    6m  CC=12     ←4
   │ jira                       279L  1C   10m  CC=13     ←0
   │ external_tools             267L  2C   13m  CC=12     ←0
@@ -83,9 +83,9 @@ LAYERS:
   │ __init__                   104L  1C    8m  CC=4      ←3
   │ server                      99L  2C    7m  CC=4      ←0
   │ cmd_review                  97L  0C    1m  CC=10     ←0
+  │ vallm_importer              96L  1C   10m  CC=4      ←1
   │ cmd_utils                   96L  0C    5m  CC=6      ←2
   │ cmd_compare                 96L  0C    2m  CC=10     ←0
-  │ vallm_importer              96L  1C   10m  CC=4      ←1
   │ cmd_health                  83L  0C    1m  CC=1      ←1
   │ adapters                    80L  6C    5m  CC=1      ←0
   │ yaml_parser                 80L  0C    2m  CC=9      ←2
@@ -116,8 +116,8 @@ LAYERS:
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ base                         1L  0C    0m  CC=0.0    ←0
-  │ gitlab                       1L  0C    0m  CC=0.0    ←0
   │ jira                         1L  0C    0m  CC=0.0    ←0
+  │ gitlab                       1L  0C    0m  CC=0.0    ←0
   │ generic                      1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ github                       1L  0C    0m  CC=0.0    ←0
@@ -150,8 +150,8 @@ COUPLING:
         planfile.mcp                                       1                                                                                                                      ──                    
         run_examples                  ←1                                                                                                                                                              ──
   CYCLES: none
-  HUB: planfile/ (fan-in=16)
   HUB: planfile.loaders/ (fan-in=15)
+  HUB: planfile/ (fan-in=16)
   HUB: planfile.importers/ (fan-in=5)
   SMELL: planfile/ fan-out=8 → split needed
   SMELL: planfile.cli/ fan-out=25 → split needed

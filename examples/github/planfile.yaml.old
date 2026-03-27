@@ -1,0 +1,105 @@
+# GitHub Integration Example
+# This example demonstrates how to sync planfile with GitHub Issues
+
+project:
+  name: "GitHub Integration Demo"
+  description: "Example project showing GitHub ticket synchronization"
+  prefix: "GH"
+
+# GitHub integration configuration
+integrations:
+  github:
+    # Repository in format "owner/repo"
+    repo: "semcod/planfile"
+    
+    # GitHub token (set GITHUB_TOKEN environment variable)
+    # token: "${GITHUB_TOKEN}"
+    
+    # Sync settings
+    sync:
+      # Sync planfile tickets to GitHub issues
+      create_issues: true
+      
+      # Sync GitHub issues back to planfile
+      import_issues: true
+      
+      # Labels to add to created issues
+      default_labels: ["planfile", "managed"]
+      
+      # Map planfile priorities to GitHub labels
+      priority_labels:
+        critical: "priority/critical"
+        high: "priority/high"
+        normal: "priority/normal"
+        low: "priority/low"
+      
+      # Map planfile statuses to GitHub labels
+      status_labels:
+        open: null
+        in_progress: "status/in-progress"
+        review: "status/review"
+        done: "status/done"
+        blocked: "status/blocked"
+
+# Current sprint
+sprint:
+  id: "sprint-001"
+  name: "GitHub Integration Sprint"
+  status: "active"
+  start_date: "2026-03-27"
+  end_date: "2026-04-10"
+  
+  # Sprint tickets
+  tickets:
+    PLF-001:
+      title: "Set up GitHub integration"
+      description: "Configure planfile to sync with GitHub Issues"
+      status: "done"
+      priority: "high"
+      labels: ["setup", "integration"]
+      
+    PLF-002:
+      title: "Create GitHub webhook for bi-directional sync"
+      description: "Set up webhook to sync changes from GitHub back to planfile"
+      status: "in_progress"
+      priority: "high"
+      labels: ["webhook", "sync"]
+      acceptance_criteria:
+        - "Webhook receives issue updates"
+        - "Changes are reflected in planfile"
+        - "Sync happens within 5 seconds"
+      
+    PLF-003:
+      title: "Test GitHub issue creation"
+      description: "Verify that planfile tickets create GitHub issues correctly"
+      status: "open"
+      priority: "normal"
+      labels: ["testing"]
+      acceptance_criteria:
+        - "Issue title matches planfile ticket"
+        - "Description is properly formatted"
+        - "Labels are applied correctly"
+      
+    PLF-004:
+      title: "Document GitHub integration setup"
+      description: "Write documentation for setting up GitHub integration"
+      status: "open"
+      priority: "low"
+      labels: ["documentation"]
+
+# Backlog tickets
+backlog:
+  tickets:
+    PLF-005:
+      title: "Add GitHub milestone support"
+      description: "Sync planfile sprints with GitHub milestones"
+      status: "open"
+      priority: "normal"
+      labels: ["enhancement", "milestone"]
+      
+    PLF-006:
+      title: "Support GitHub issue templates"
+      description: "Use GitHub issue templates when creating issues"
+      status: "open"
+      priority: "low"
+      labels: ["enhancement", "templates"]
