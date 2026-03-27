@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.45] - 2026-03-27
+
+### Docs
+- Update PERFORMANCE.md
+
+### Other
+- Update examples/demo-without-keys/local-strategy.yaml
+- Update examples/run.sh
+- Update planfile/.planfile_analysis/analysis_summary.json
+- Update planfile/__init__.py
+- Update planfile/analysis/__init__.py
+- Update planfile/analysis/file_analyzer.py
+- Update planfile/analysis/generator.py
+- Update planfile/analysis/generators/__init__.py
+- Update planfile/analysis/parsers/__init__.py
+- Update planfile/analysis/parsers/json_parser.py
+- ... and 17 more files
+
 ## [0.1.44] - 2026-03-27
 
 ### Docs
