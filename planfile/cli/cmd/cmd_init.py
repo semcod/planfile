@@ -6,9 +6,7 @@ a strategy YAML without requiring any pre-existing template.
 """
 from __future__ import annotations
 
-import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -16,7 +14,7 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
-from planfile.cli.project_detector import detect_project, get_detected_values
+from planfile.cli.project_detector import get_detected_values
 
 console = Console()
 
@@ -130,7 +128,7 @@ _FOCUS_QUALITY_GATES: dict[str, list[dict]] = {
 def init_strategy_cli(
     output: str = typer.Option("planfile.yaml", "--output", "-o", help="Output file path"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation before saving"),
-):
+) -> None:
     """
     Interactive wizard — tworzy strategię przez zadawanie pytań.
 
@@ -145,7 +143,7 @@ def init_strategy_cli(
 
     # ── Auto-detekcja projektu ────────────────────────────────────────────
     detected = get_detected_values()
-    
+
     if detected["has_detection"]:
         source = detected["source"]
         console.print(f"\n[dim]ℹ️ Wykryto dane projektu z {source}[/dim]")
@@ -178,7 +176,7 @@ def init_strategy_cli(
         for i in range(1, n_sprints + 1):
             console.print(f"\n[bold]Sprint {i}[/bold]")
             s_name = _ask(f"  Nazwa sprintu {i}", default=f"Sprint {i}", required=True)
-            s_dur  = _ask(f"  Czas trwania", default="2 tygodnie")
+            s_dur  = _ask("  Czas trwania", default="2 tygodnie")
             s_objs = _ask_list(
                 f"  Cele sprintu {i} (oddzielone przecinkami)",
                 example="Zaprojektuj architekturę, Skonfiguruj CI/CD"
@@ -222,13 +220,13 @@ def init_strategy_cli(
         default="tdd" if detected["has_tests"] else "none",
         detected=detected["has_tests"],
     )
-    
+
     # Show detected quality gates if any
     if detected["quality_gates"]:
         console.print(f"\n[dim]Wykryto {len(detected['quality_gates'])} bramek jakości z plików projektu:[/dim]")
         for gate in detected["quality_gates"]:
             console.print(f"  [dim]• {gate['name']}[/dim]")
-    
+
     extra_gates = _ask_list(
         "Dodatkowe bramki jakości (opcjonalnie, enter = pomiń)",
         example="Docker image builds, API docs generated"
@@ -260,7 +258,7 @@ def init_strategy_cli(
 
     # Start with focus quality gates
     quality_gates = list(_FOCUS_QUALITY_GATES.get(focus, []))
-    
+
     # Add detected quality gates from project files
     for gate in detected["quality_gates"]:
         quality_gates.append({
@@ -269,7 +267,7 @@ def init_strategy_cli(
             "criteria": gate["criteria"],
             "required": gate["required"],
         })
-    
+
     # Add extra gates from user input
     for gate_text in extra_gates:
         quality_gates.append({

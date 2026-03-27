@@ -5,14 +5,9 @@ tests/llm_adapters.py.  This file is kept for backward compatibility
 but may be removed in a future version.
 """
 
-import os
-import json
-import asyncio
 import warnings
-from typing import Dict, List, Any, Optional, Union
 from dataclasses import dataclass
-from pathlib import Path
-import time
+from typing import Any
 
 warnings.warn(
     "planfile.llm.adapters is deprecated — use tests/llm_adapters.py instead.",
@@ -41,21 +36,21 @@ class LLMTestResult:
     model: str
     success: bool
     response_time: float
-    token_count: Optional[int] = None
-    cost: Optional[float] = None
-    error: Optional[str] = None
-    response: Optional[str] = None
+    token_count: int | None = None
+    cost: float | None = None
+    error: str | None = None
+    response: str | None = None
 
 
 class BaseLLMAdapter:
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.name = self.__class__.__name__
 
     async def test_strategy_generation(self, strategy_prompt: str, model: str = None) -> LLMTestResult:
         raise NotImplementedError
 
-    def get_available_models(self) -> List[str]:
+    def get_available_models(self) -> list[str]:
         raise NotImplementedError
 
 
@@ -73,8 +68,8 @@ class LocalLLMAdapter(BaseLLMAdapter):
 
 class LLMTestRunner:
     def __init__(self):
-        self.adapters: Dict[str, BaseLLMAdapter] = {}
-        self.results: List[LLMTestResult] = []
+        self.adapters: dict[str, BaseLLMAdapter] = {}
+        self.results: list[LLMTestResult] = []
 
     def register_adapter(self, name: str, adapter: BaseLLMAdapter):
         self.adapters[name] = adapter

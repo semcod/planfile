@@ -3,11 +3,12 @@ Example usage of LLX strategy integration.
 """
 from pathlib import Path
 
+
 # Example 1: Create strategy interactively
-def example_create_strategy():
+def example_create_strategy() -> None:
     """Create a strategy using LLX with local LLM."""
     from llx.planfile import create_strategy_command
-    
+
     # This will prompt user interactively
     create_strategy_command(
         output="my_strategy.yaml",
@@ -17,10 +18,10 @@ def example_create_strategy():
 
 
 # Example 2: Load and validate strategy
-def example_validate_strategy():
+def example_validate_strategy() -> None:
     """Load and validate an existing strategy."""
     from llx.planfile import load_valid_strategy
-    
+
     try:
         strategy = load_valid_strategy("my_strategy.yaml")
         print(f"Strategy '{strategy.name}' is valid!")
@@ -30,10 +31,10 @@ def example_validate_strategy():
 
 
 # Example 3: Run strategy (dry run)
-def example_run_strategy():
+def example_run_strategy() -> None:
     """Run strategy to create tickets (dry run)."""
     from llx.planfile import run_strategy
-    
+
     run_strategy(
         strategy_path="my_strategy.yaml",
         project_path=".",
@@ -43,17 +44,17 @@ def example_run_strategy():
 
 
 # Example 4: Verify strategy after execution
-def example_verify_strategy():
+def example_verify_strategy() -> None:
     """Verify strategy execution."""
     from llx.planfile import load_valid_strategy, verify_strategy_post_execution
-    
+
     strategy = load_valid_strategy("my_strategy.yaml")
     issues = verify_strategy_post_execution(
         strategy=strategy,
         project_path=".",
         backend="github"
     )
-    
+
     if issues:
         print("Issues found:", issues)
     else:
@@ -61,20 +62,17 @@ def example_verify_strategy():
 
 
 # Example 5: Programmatic strategy creation
-def example_programmatic_strategy():
+def example_programmatic_strategy() -> None:
     """Create strategy programmatically without LLM."""
-    from llx.planfile.models import (
-        Strategy, Goal, Sprint, TaskPattern,
-        TaskType, ModelHints
-    )
-    
+    from llx.planfile.models import Goal, ModelHints, Sprint, Strategy, TaskPattern, TaskType
+
     # Create goal
     goal = Goal(
         short="Build a REST API for user management",
         quality=["Test coverage > 90%", "All endpoints documented"],
         delivery=["Deploy to staging in 2 weeks", "Production ready in 4 weeks"]
     )
-    
+
     # Create task patterns
     patterns = [
         TaskPattern(
@@ -95,7 +93,7 @@ def example_programmatic_strategy():
             priority="high"
         )
     ]
-    
+
     # Create sprints
     sprints = [
         Sprint(
@@ -111,7 +109,7 @@ def example_programmatic_strategy():
             tasks=["api_endpoint"]
         )
     ]
-    
+
     # Create strategy
     strategy = Strategy(
         name="User Management API",
@@ -121,7 +119,7 @@ def example_programmatic_strategy():
         sprints=sprints,
         tasks={"patterns": patterns}
     )
-    
+
     # Save to YAML
     output = Path("programmatic_strategy.yaml")
     output.write_text(strategy.model_dump_yaml())
@@ -132,7 +130,7 @@ if __name__ == "__main__":
     # Run examples
     print("LLX Strategy Integration Examples")
     print("=" * 40)
-    
+
     # Uncomment to run examples
     # example_create_strategy()
     # example_validate_strategy()

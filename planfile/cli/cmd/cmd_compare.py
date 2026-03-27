@@ -1,7 +1,7 @@
 """Compare strategies CLI command — extracted from extra_commands.py."""
 
 import json
-from typing import Dict, Any, Optional
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -13,7 +13,7 @@ from planfile.loaders.yaml_loader import load_strategy_yaml
 console = Console()
 
 
-def compare_strategies(s1: Strategy, s2: Strategy) -> Dict[str, Any]:
+def compare_strategies(s1: Strategy, s2: Strategy) -> dict[str, Any]:
     """Compare two strategies and return differences."""
     comparison = {
         'common_elements': [],
@@ -55,8 +55,8 @@ def register_compare_commands(app: typer.Typer) -> None:
     def compare_cmd(
         strategy1: str = typer.Argument(..., help="First strategy file"),
         strategy2: str = typer.Argument(..., help="Second strategy file"),
-        output: Optional[str] = typer.Option(None, help="Save comparison to file"),
-    ):
+        output: str | None = typer.Option(None, help="Save comparison to file"),
+    ) -> None:
         """Compare two strategies."""
         try:
             s1 = load_strategy_yaml(strategy1)

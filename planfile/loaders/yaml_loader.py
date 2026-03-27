@@ -1,17 +1,22 @@
-import yaml
 from pathlib import Path
-from typing import Dict, Any, Union
+from typing import Any
+
+import yaml
 from pydantic import ValidationError
 
 from planfile.core.models import (
-    Strategy, Sprint, TaskPattern, TaskType, ModelHints, ModelTier,
-    QualityGate, Goal,
+    Goal,
+    ModelHints,
+    Strategy,
+    TaskPattern,
+    TaskType,
 )
+
 # Backward compat alias used internally
 StrategyV2 = Strategy
 
 
-def load_yaml(file_path: Union[str, Path]) -> Dict[str, Any]:
+def load_yaml(file_path: str | Path) -> dict[str, Any]:
     """
     Load YAML file and return as dictionary.
     
@@ -26,11 +31,11 @@ def load_yaml(file_path: Union[str, Path]) -> Dict[str, Any]:
         yaml.YAMLError: If YAML is invalid
     """
     path = Path(file_path)
-    
+
     if not path.exists():
         raise FileNotFoundError(f"Strategy file not found: {path}")
-    
-    with open(path, "r", encoding="utf-8") as f:
+
+    with open(path, encoding="utf-8") as f:
         try:
             content = yaml.safe_load(f)
             return content or {}
@@ -38,7 +43,7 @@ def load_yaml(file_path: Union[str, Path]) -> Dict[str, Any]:
             raise yaml.YAMLError(f"Invalid YAML in {path}: {e}")
 
 
-def save_yaml(data: Dict[str, Any], file_path: Union[str, Path]) -> None:
+def save_yaml(data: dict[str, Any], file_path: str | Path) -> None:
     """
     Save dictionary to YAML file.
     
@@ -48,7 +53,7 @@ def save_yaml(data: Dict[str, Any], file_path: Union[str, Path]) -> None:
     """
     path = Path(file_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Check data size before dumping (detect potential circular refs)
     try:
         import sys
@@ -57,7 +62,7 @@ def save_yaml(data: Dict[str, Any], file_path: Union[str, Path]) -> None:
             print(f"Warning: Large data structure detected ({data_size/1024/1024:.1f}MB)")
     except:
         pass
-    
+
     # Use safe_dump to prevent issues with circular references
     try:
         with open(path, "w", encoding="utf-8") as f:
@@ -69,7 +74,7 @@ def save_yaml(data: Dict[str, Any], file_path: Union[str, Path]) -> None:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False, indent=2)
 
 
-def load_strategy_yaml(file_path: Union[str, Path]) -> Strategy:
+def load_strategy_yaml(file_path: str | Path) -> Strategy:
     """
     Load strategy from YAML file.
     
@@ -83,50 +88,50 @@ def load_strategy_yaml(file_path: Union[str, Path]) -> Strategy:
         ValidationError: If strategy is invalid
     """
     data = load_yaml(file_path)
-    
+
     # Transform data for StrategyV2
     _transform_task_patterns(data)
     _transform_sprints(data)
     _transform_goal(data)
-    
+
     try:
         return StrategyV2(**data)
     except Exception as e:
         raise _format_validation_error(e, file_path)
 
 
-def _transform_task_patterns(data: Dict) -> None:
+def _transform_task_patterns(data: dict) -> None:
     """Transform task patterns in the data."""
     if "tasks" not in data:
         return
-    
+
     for category, patterns in data["tasks"].items():
         for pattern in patterns:
             # Convert model_hints if present
             if "model_hints" in pattern:
                 pattern["model_hints"] = ModelHints(**pattern["model_hints"])
-            
+
             # Convert type to enum
             if "type" in pattern:
                 pattern["type"] = TaskType(pattern["type"])
 
 
-def _transform_sprints(data: Dict) -> None:
+def _transform_sprints(data: dict) -> None:
     """Transform sprints in the data."""
     if "sprints" not in data:
         return
-    
+
     for sprint in data["sprints"]:
         # Ensure tasks is a list
         if "tasks" not in sprint:
             sprint["tasks"] = []
 
 
-def _transform_goal(data: Dict) -> None:
+def _transform_goal(data: dict) -> None:
     """Transform goal field in the data."""
     if 'goal' not in data:
         return
-    
+
     if isinstance(data['goal'], str):
         # Keep as string
         pass
@@ -135,7 +140,7 @@ def _transform_goal(data: Dict) -> None:
         data['goal'] = Goal(**data['goal'])
 
 
-def _format_validation_error(e: Exception, file_path: Union[str, Path]) -> ValueError:
+def _format_validation_error(e: Exception, file_path: str | Path) -> ValueError:
     """Format validation error with context."""
     if hasattr(e, 'errors') and callable(e.errors):
         # Pydantic validation error
@@ -148,7 +153,7 @@ def _format_validation_error(e: Exception, file_path: Union[str, Path]) -> Value
         return ValueError(f"Invalid strategy in {file_path}: {e}")
 
 
-def save_strategy_yaml(strategy: Union[Strategy, Dict], file_path: Union[str, Path]) -> None:
+def save_strategy_yaml(strategy: Strategy | dict, file_path: str | Path) -> None:
     """
     Save strategy to YAML file.
     
@@ -160,18 +165,18 @@ def save_strategy_yaml(strategy: Union[Strategy, Dict], file_path: Union[str, Pa
         data = strategy
     else:
         data = strategy.model_dump()
-    
+
     # Convert enums to strings
     if "tasks" in data:
         for category, patterns in data["tasks"].items():
             for pattern in patterns:
                 if "type" in pattern:
                     pattern["type"] = pattern["type"].value
-    
+
     save_yaml(data, file_path)
 
 
-def load_tasks_yaml(file_path: Union[str, Path]) -> Dict[str, list[TaskPattern]]:
+def load_tasks_yaml(file_path: str | Path) -> dict[str, list[TaskPattern]]:
     """
     Load task patterns from YAML file.
     
@@ -182,7 +187,7 @@ def load_tasks_yaml(file_path: Union[str, Path]) -> Dict[str, list[TaskPattern]]
         Dictionary of task patterns by category
     """
     data = load_yaml(file_path)
-    
+
     tasks = {}
     for category, patterns in data.items():
         tasks[category] = []
@@ -190,19 +195,19 @@ def load_tasks_yaml(file_path: Union[str, Path]) -> Dict[str, list[TaskPattern]]
             # Convert model_hints if present
             if "model_hints" in pattern:
                 pattern["model_hints"] = ModelHints(**pattern["model_hints"])
-            
+
             # Convert type to enum
             if "type" in pattern:
                 pattern["type"] = TaskType(pattern["type"])
-            
+
             tasks[category].append(TaskPattern(**pattern))
-    
+
     return tasks
 
 
 def merge_strategy_with_tasks(
     strategy: Strategy,
-    tasks_file: Union[str, Path]
+    tasks_file: str | Path
 ) -> Strategy:
     """
     Merge additional task patterns into a planfile.
@@ -215,13 +220,13 @@ def merge_strategy_with_tasks(
         Strategy with merged tasks
     """
     additional_tasks = load_tasks_yaml(tasks_file)
-    
+
     # Merge tasks
     for category, patterns in additional_tasks.items():
         if category not in planfile.tasks:
             planfile.tasks[category] = []
         planfile.tasks[category].extend(patterns)
-    
+
     return strategy
 
 
@@ -237,7 +242,7 @@ def _validate_sprints(data: dict, issues: list[str]) -> None:
     """Validate sprint section."""
     if "sprints" not in data:
         return
-    
+
     sprint_ids = set()
     for i, sprint in enumerate(data["sprints"]):
         if "id" not in sprint:
@@ -246,7 +251,7 @@ def _validate_sprints(data: dict, issues: list[str]) -> None:
             if sprint["id"] in sprint_ids:
                 issues.append(f"Duplicate sprint ID: {sprint['id']}")
             sprint_ids.add(sprint["id"])
-        
+
         if "name" not in sprint:
             issues.append(f"Sprint {i} missing required field: name")
 
@@ -255,7 +260,7 @@ def _validate_gates(data: dict, issues: list[str]) -> None:
     """Validate quality gates section."""
     if "quality_gates" not in data:
         return
-    
+
     for i, gate in enumerate(data["quality_gates"]):
         if "metric" not in gate:
             issues.append(f"Quality gate {i} missing required field: metric")
@@ -269,7 +274,7 @@ def _validate_task_patterns(data: dict, issues: list[str]) -> None:
     """Validate task patterns section."""
     if "tasks" not in data:
         return
-    
+
     for category, patterns in data["tasks"].items():
         for i, pattern in enumerate(patterns):
             if "id" not in pattern:
@@ -280,7 +285,7 @@ def _validate_task_patterns(data: dict, issues: list[str]) -> None:
                 issues.append(f"Task pattern {category}[{i}] missing required field: description")
 
 
-def validate_strategy_schema(file_path: Union[str, Path]) -> list[str]:
+def validate_strategy_schema(file_path: str | Path) -> list[str]:
     """
     Validate strategy YAML file and return list of issues.
     
@@ -291,29 +296,29 @@ def validate_strategy_schema(file_path: Union[str, Path]) -> list[str]:
         List of validation issues (empty if valid)
     """
     issues = []
-    
+
     try:
         data = load_yaml(file_path)
     except Exception as e:
         return [f"Failed to load YAML: {e}"]
-    
+
     # Check required fields
     _check_required_keys(data, issues)
-    
+
     # Validate sprints
     _validate_sprints(data, issues)
-    
+
     # Validate quality gates
     _validate_gates(data, issues)
-    
+
     # Validate task patterns
     _validate_task_patterns(data, issues)
-    
+
     # Try to validate with Pydantic
     if not issues:
         try:
             load_strategy_yaml(file_path)
         except ValidationError as e:
             issues.extend(str(e).split("\n"))
-    
+
     return issues

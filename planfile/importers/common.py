@@ -1,6 +1,7 @@
 """Shared helpers for ticket importers."""
 
-from typing import Callable, Any
+from collections.abc import Callable
+from typing import Any
 
 
 def normalize_ticket_dict(item: dict) -> dict:

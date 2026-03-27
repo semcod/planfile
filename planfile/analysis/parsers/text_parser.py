@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Tuple, List
 
 from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
 
@@ -27,23 +26,23 @@ METRIC_PATTERNS = {
     'performance': re.compile(r'(\d+\.?\d*)\s*(ms|sec|s)', re.IGNORECASE),
 }
 
-def analyze_text(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedMetric], List[ExtractedTask]]:
+def analyze_text(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedMetric], list[ExtractedTask]]:
     """Analyze text content for TODOs, FIXMEs, and metrics."""
     issues = []
     metrics = []
     tasks = []
-    
+
     try:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(file_path, encoding='utf-8', errors='ignore') as f:
             content = f.read()
             lines = content.split('\n')
-        
+
         # Extract issues from patterns
         for pattern_name, pattern in ISSUE_PATTERNS.items():
             for match in pattern.finditer(content):
                 line_num = content[:match.start()].count('\n') + 1
                 description = match.group(1).strip()
-                
+
                 # Determine priority based on pattern
                 priority_map = {
                     'fixme': 'critical',
@@ -55,7 +54,7 @@ def analyze_text(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedM
                     'test': 'low',
                     'doc': 'low'
                 }
-                
+
                 category_map = {
                     'fixme': 'bug',
                     'bug': 'bug',
@@ -66,7 +65,7 @@ def analyze_text(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedM
                     'test': 'test',
                     'doc': 'documentation'
                 }
-                
+
                 issues.append(ExtractedIssue(
                     title=f"{pattern_name.title()}: {description[:50]}...",
                     description=description,
@@ -76,7 +75,7 @@ def analyze_text(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedM
                     line_number=line_num,
                     tags=[pattern_name]
                 ))
-        
+
         # Extract metrics
         for metric_name, pattern in METRIC_PATTERNS.items():
             for match in pattern.finditer(content):
@@ -91,7 +90,7 @@ def analyze_text(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedM
                         status=status,
                         file_path=str(file_path)
                     ))
-                    
+
                     if value < 80:
                         issues.append(ExtractedIssue(
                             title=f"Increase test coverage from {value}% to 80%",
@@ -111,9 +110,9 @@ def analyze_text(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedM
                         status="warning" if value > 10 else "good",
                         file_path=str(file_path)
                     ))
-        
+
     except Exception:
         # Skip files that can't be read as text
         pass
-    
+
     return issues, metrics, tasks

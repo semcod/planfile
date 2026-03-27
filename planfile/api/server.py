@@ -3,7 +3,6 @@
 Run with: uvicorn planfile.api.server:app --reload
 """
 
-from typing import Optional
 
 try:
     from fastapi import FastAPI, HTTPException, Query
@@ -11,7 +10,6 @@ try:
 except ImportError:
     raise ImportError("FastAPI required: pip install fastapi uvicorn")
 
-from planfile import Planfile, Ticket, TicketStatus
 from planfile.server_common import get_planfile
 
 app = FastAPI(
@@ -31,9 +29,9 @@ class TicketCreate(BaseModel):
 
 
 class TicketUpdate(BaseModel):
-    status: Optional[str] = None
-    priority: Optional[str] = None
-    title: Optional[str] = None
+    status: str | None = None
+    priority: str | None = None
+    title: str | None = None
 
 
 # ── Endpoints ──
@@ -41,7 +39,7 @@ class TicketUpdate(BaseModel):
 @app.get("/tickets")
 def list_tickets(
     sprint: str = Query("current"),
-    status: Optional[str] = Query(None),
+    status: str | None = Query(None),
 ):
     pf = get_planfile()
     filters = {}

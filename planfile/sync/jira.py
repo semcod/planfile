@@ -1,5 +1,6 @@
 import os
-from typing import Optional, List, Dict, Any
+from typing import Any
+
 try:
     from jira import JIRA
     from jira.exceptions import JIRAError
@@ -12,13 +13,13 @@ from planfile.sync.base import BasePMBackend, TicketRef, TicketStatus
 
 class JiraBackend(BasePMBackend):
     """Jira integration backend."""
-    
+
     def __init__(
         self,
         base_url: str,
-        email: Optional[str] = None,
-        token: Optional[str] = None,
-        project: Optional[str] = None,
+        email: str | None = None,
+        token: str | None = None,
+        project: str | None = None,
         **kwargs
     ):
         """
@@ -32,7 +33,7 @@ class JiraBackend(BasePMBackend):
         """
         if JIRA is None:
             raise ImportError("jira is required. Install with: pip install jira")
-            
+
         config = {
             "base_url": base_url,
             "email": email or os.environ.get("JIRA_EMAIL"),
@@ -41,31 +42,31 @@ class JiraBackend(BasePMBackend):
             **kwargs
         }
         super().__init__(config)
-        
+
         self.jira = JIRA(
             server=self.config["base_url"],
             basic_auth=(self.config["email"], self.config["token"])
         )
-    
+
     def _validate_config(self) -> None:
         """Validate Jira configuration."""
         if not self.config.get("base_url"):
             raise ValueError("Jira base URL is required")
-        
+
         if not self.config.get("email"):
             raise ValueError("Jira email is required")
-        
+
         if not self.config.get("token"):
             raise ValueError("Jira token is required")
-        
+
         if not self.config.get("project"):
             raise ValueError("Jira project key is required")
-    
-    def _map_priority_to_jira(self, priority: Optional[str]) -> str:
+
+    def _map_priority_to_jira(self, priority: str | None) -> str:
         """Map generic priority to Jira priority."""
         if not priority:
             return "Medium"
-        
+
         priority_map = self.config.get("priority_map", {
             "lowest": "Lowest",
             "low": "Low",
@@ -73,9 +74,9 @@ class JiraBackend(BasePMBackend):
             "high": "High",
             "highest": "Highest",
         })
-        
+
         return priority_map.get(priority.lower(), "Medium")
-    
+
     def _map_task_type_to_jira(self, task_type: str) -> str:
         """Map task type to Jira issue type."""
         type_map = self.config.get("type_map", {
@@ -85,17 +86,17 @@ class JiraBackend(BasePMBackend):
             "chore": "Task",
             "documentation": "Task",
         })
-        
+
         return type_map.get(task_type.lower(), "Task")
-    
+
     def _create_ticket(
         self,
         title: str,
         body: str,
-        labels: Optional[List[str]] = None,
-        priority: Optional[str] = None,
-        assignee: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        labels: list[str] | None = None,
+        priority: str | None = None,
+        assignee: str | None = None,
+        metadata: dict[str, Any] | None = None,
         *,
         backend_tag: str = "jira",
     ) -> TicketRef:
@@ -106,41 +107,41 @@ class JiraBackend(BasePMBackend):
             "description": body,
             "issuetype": {"name": "Task"},  # Default type
         }
-        
+
         # Add priority
         if priority:
             issue_dict["priority"] = {"name": self._map_priority_to_jira(priority)}
-        
+
         # Add labels
         if labels:
             issue_dict["labels"] = labels
-        
+
         # Add strategy metadata to description
         if metadata:
             metadata_section = "\n\n---\n\n*Strategy Metadata:*\n"
             for key, value in metadata.items():
                 if key != "model_hints" and key != "type":
                     metadata_section += f"* {key}: {value}\n"
-            
+
             if "type" in metadata:
                 issue_dict["issuetype"] = {"name": self._map_task_type_to_jira(metadata["type"])}
-            
+
             if "model_hints" in metadata:
                 metadata_section += "\n*Model Hints:*\n"
                 for phase, tier in metadata["model_hints"].items():
                     if tier:
                         metadata_section += f"* {phase}: {tier}\n"
-            
+
             issue_dict["description"] += metadata_section
-        
+
         # Create issue
         try:
             issue = self.jira.create_issue(fields=issue_dict)
-            
+
             # Assign if specified
             if assignee:
                 self.jira.assign_issue(issue, assignee)
-            
+
             return self.build_ticket_ref(
                 id=issue.id,
                 url=f"{self.config['base_url']}/browse/{issue.key}",
@@ -150,41 +151,41 @@ class JiraBackend(BasePMBackend):
             )
         except JIRAError as e:
             raise RuntimeError(f"Failed to create Jira issue: {e}")
-    
+
     def _update_ticket(
         self,
         ticket_id: str,
-        title: Optional[str] = None,
-        body: Optional[str] = None,
-        status: Optional[str] = None,
-        labels: Optional[List[str]] = None,
-        priority: Optional[str] = None,
-        assignee: Optional[str] = None,
+        title: str | None = None,
+        body: str | None = None,
+        status: str | None = None,
+        labels: list[str] | None = None,
+        priority: str | None = None,
+        assignee: str | None = None,
         *,
         backend_tag: str = "jira",
     ) -> None:
         """Update an existing Jira issue."""
         try:
             issue = self.jira.issue(ticket_id)
-            
+
             # Update fields
             fields = {}
-            
+
             if title:
                 fields["summary"] = title
-            
+
             if body:
                 fields["description"] = body
-            
+
             if priority:
                 fields["priority"] = {"name": self._map_priority_to_jira(priority)}
-            
+
             if labels is not None:
                 fields["labels"] = labels
-            
+
             if fields:
                 issue.update(fields=fields)
-            
+
             # Update status (transition)
             if status:
                 transitions = self.jira.transitions(issue)
@@ -192,19 +193,19 @@ class JiraBackend(BasePMBackend):
                     if transition["name"].lower() == status.lower():
                         self.jira.transition_issue(issue, transition["id"])
                         break
-            
+
             # Update assignee
             if assignee:
                 self.jira.assign_issue(issue, assignee)
-                
+
         except JIRAError as e:
             raise RuntimeError(f"Failed to update Jira issue {ticket_id}: {e}")
-    
+
     def _get_ticket(self, ticket_id: str) -> TicketStatus:
         """Get Jira issue status."""
         try:
             issue = self.jira.issue(ticket_id)
-            
+
             return self._issue_to_ticket_status(issue)
         except JIRAError as e:
             raise RuntimeError(f"Failed to get Jira issue {ticket_id}: {e}")
@@ -219,61 +220,61 @@ class JiraBackend(BasePMBackend):
             labels=issue.fields.labels or [],
             updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None,
         )
-    
+
     def _list_tickets(
         self,
-        labels: Optional[List[str]] = None,
-        status: Optional[str] = None,
-        assignee: Optional[str] = None,
-        limit: Optional[int] = None,
+        labels: list[str] | None = None,
+        status: str | None = None,
+        assignee: str | None = None,
+        limit: int | None = None,
         *,
         backend_tag: str = "jira",
-    ) -> List[TicketStatus]:
+    ) -> list[TicketStatus]:
         """List Jira issues with filters."""
         jql = f'project = {self.config["project"]}'
-        
+
         if status:
             jql += f' AND status = "{status}"'
-        
+
         if labels:
             for label in labels:
                 jql += f' AND labels = "{label}"'
-        
+
         if assignee:
             jql += f' AND assignee = "{assignee}"'
-        
+
         jql += " ORDER BY updated DESC"
-        
+
         try:
             issues = self.jira.search_issues(
                 jql,
                 maxResults=limit or 50,
                 fields=["summary", "status", "assignee", "labels", "updated"]
             )
-            
+
             tickets = []
             for issue in issues:
                 tickets.append(self._issue_to_ticket_status(issue))
-            
+
             return tickets
         except JIRAError as e:
             raise RuntimeError(f"Failed to list Jira issues: {e}")
-    
-    def _search_tickets(self, query: str, *, backend_tag: str = "jira") -> List[TicketStatus]:
+
+    def _search_tickets(self, query: str, *, backend_tag: str = "jira") -> list[TicketStatus]:
         """Search Jira issues."""
         jql = f'project = {self.config["project"]} AND text ~ "{query}" ORDER BY updated DESC'
-        
+
         try:
             issues = self.jira.search_issues(
                 jql,
                 maxResults=50,
                 fields=["summary", "status", "assignee", "labels", "updated"]
             )
-            
+
             tickets = []
             for issue in issues:
                 tickets.append(self._issue_to_ticket_status(issue))
-            
+
             return tickets
         except JIRAError as e:
             raise RuntimeError(f"Failed to search Jira issues: {e}")

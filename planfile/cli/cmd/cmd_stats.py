@@ -1,6 +1,6 @@
 """Strategy statistics CLI command — extracted from extra_commands.py."""
 
-from typing import Dict, Any
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -12,7 +12,7 @@ from planfile.loaders.yaml_loader import load_strategy_yaml
 console = Console()
 
 
-def calculate_strategy_stats(strategy: Strategy) -> Dict[str, Any]:
+def calculate_strategy_stats(strategy: Strategy) -> dict[str, Any]:
     """Calculate statistics for a strategy."""
     stats = {
         'total_sprints': len(strategy.sprints),
@@ -46,7 +46,7 @@ def register_stats_commands(app: typer.Typer) -> None:
     @app.command("stats")
     def stats_cmd(
         strategy_file: str = typer.Argument(..., help="Strategy file to analyze"),
-    ):
+    ) -> None:
         """Show strategy statistics."""
         try:
             strategy = load_strategy_yaml(strategy_file)

@@ -1,28 +1,28 @@
-# vallm batch | 275f | 189✓ 13⚠ 14✗ | 2026-03-27
+# vallm batch | 275f | 189✓ 14⚠ 14✗ | 2026-03-27
 
 SUMMARY:
-  scanned: 275  passed: 189 (68.7%)  warnings: 13  errors: 14  unsupported: 72
+  scanned: 275  passed: 189 (68.7%)  warnings: 14  errors: 14  unsupported: 72
 
-WARNINGS[13]{path,score}:
+WARNINGS[14]{path,score}:
   planfile/cli/cmd/cmd_sync.py,0.87
     issues[7]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 40 (max: 15),93
-      complexity.cyclomatic,warning,sync_to_external has cyclomatic complexity 23 (max: 15),226
-      complexity.cyclomatic,warning,sync_from_external has cyclomatic complexity 20 (max: 15),313
-      complexity.lizard_cc,warning,sync_integration: CC=40 exceeds limit 15,93
-      complexity.lizard_length,warning,sync_integration: 102 lines exceeds limit 100,93
-      complexity.lizard_cc,warning,sync_to_external: CC=23 exceeds limit 15,226
-      complexity.lizard_cc,warning,sync_from_external: CC=20 exceeds limit 15,313
+      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 40 (max: 15),94
+      complexity.cyclomatic,warning,sync_to_external has cyclomatic complexity 23 (max: 15),227
+      complexity.cyclomatic,warning,sync_from_external has cyclomatic complexity 20 (max: 15),314
+      complexity.lizard_cc,warning,sync_integration: CC=40 exceeds limit 15,94
+      complexity.lizard_length,warning,sync_integration: 102 lines exceeds limit 100,94
+      complexity.lizard_cc,warning,sync_to_external: CC=23 exceeds limit 15,227
+      complexity.lizard_cc,warning,sync_from_external: CC=20 exceeds limit 15,314
   examples/test_llm_adapters.py,0.93
     issues[3]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,main has cyclomatic complexity 32 (max: 15),25
-      complexity.lizard_cc,warning,main: CC=32 exceeds limit 15,25
-      complexity.lizard_length,warning,main: 142 lines exceeds limit 100,25
+      complexity.cyclomatic,warning,main has cyclomatic complexity 32 (max: 15),19
+      complexity.lizard_cc,warning,main: CC=32 exceeds limit 15,19
+      complexity.lizard_length,warning,main: 142 lines exceeds limit 100,19
   planfile/cli/cmd/cmd_init.py,0.93
     issues[3]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,init_strategy_cli has cyclomatic complexity 19 (max: 15),130
-      complexity.lizard_cc,warning,init_strategy_cli: CC=19 exceeds limit 15,130
-      complexity.lizard_length,warning,init_strategy_cli: 161 lines exceeds limit 100,130
+      complexity.cyclomatic,warning,init_strategy_cli has cyclomatic complexity 19 (max: 15),128
+      complexity.lizard_cc,warning,init_strategy_cli: CC=19 exceeds limit 15,128
+      complexity.lizard_length,warning,init_strategy_cli: 161 lines exceeds limit 100,128
   examples/advanced-usage/final-strategy.yaml,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,_report: 287 lines exceeds limit 100,137
@@ -42,19 +42,23 @@ WARNINGS[13]{path,score}:
   examples/validate_with_llx.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
+  planfile/analysis/generator.py,0.97
+    issues[2]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_make_serializable has cyclomatic complexity 19 (max: 15),260
+      complexity.lizard_cc,warning,_make_serializable: CC=19 exceeds limit 15,260
   planfile/builder.py,0.97
     issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,ask_llm_questions: 119 lines exceeds limit 100,64
+      complexity.lizard_length,warning,ask_llm_questions: 119 lines exceeds limit 100,62
   planfile/core/store.py,0.97
     issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_apply_filters has cyclomatic complexity 20 (max: 15),237
-      complexity.lizard_cc,warning,_apply_filters: CC=20 exceeds limit 15,237
+      complexity.cyclomatic,warning,_apply_filters has cyclomatic complexity 20 (max: 15),245
+      complexity.lizard_cc,warning,_apply_filters: CC=20 exceeds limit 15,245
   run_examples.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,setup_environment: 141 lines exceeds limit 100,109
   planfile/core/models.py,0.98
     issues[1]{rule,severity,message,line}:
-      complexity.maintainability,warning,Low maintainability index: 19.9 (threshold: 20),
+      complexity.maintainability,warning,Low maintainability index: 18.8 (threshold: 20),
 
 ERRORS[14]{path,score}:
   examples/llm-integration/llm-config.yaml,0.00
@@ -65,52 +69,52 @@ ERRORS[14]{path,score}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
   planfile/examples.py,0.64
     issues[5]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'llx.planfile' not found,9
-      python.import.resolvable,error,Module 'llx.planfile' not found,22
-      python.import.resolvable,error,Module 'llx.planfile' not found,35
-      python.import.resolvable,error,Module 'llx.planfile' not found,48
-      python.import.resolvable,error,Module 'llx.planfile.models' not found,66
+      python.import.resolvable,error,Module 'llx.planfile' not found,10
+      python.import.resolvable,error,Module 'llx.planfile' not found,23
+      python.import.resolvable,error,Module 'llx.planfile' not found,36
+      python.import.resolvable,error,Module 'llx.planfile' not found,49
+      python.import.resolvable,error,Module 'llx.planfile.models' not found,67
   planfile/llm/client.py,0.74
     issues[3]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,17
-      python.import.resolvable,error,Module 'llx.routing.client' not found,54
-      python.import.resolvable,error,Module 'llx.config' not found,55
+      python.import.resolvable,error,Module 'llx.config' not found,54
+      python.import.resolvable,error,Module 'llx.routing.client' not found,55
   mcp-server-example.py,0.79
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'mcp.server' not found,3
       python.import.resolvable,error,Module 'mcp.server.stdio' not found,4
   planfile/sync/gitlab.py,0.83
     issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'gitlab' not found,4
-      python.import.resolvable,error,Module 'gitlab.exceptions' not found,5
+      python.import.resolvable,error,Module 'gitlab' not found,5
+      python.import.resolvable,error,Module 'gitlab.exceptions' not found,6
   planfile/sync/jira.py,0.83
     issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'jira' not found,4
-      python.import.resolvable,error,Module 'jira.exceptions' not found,5
-  planfile/llm/generator.py,0.87
+      python.import.resolvable,error,Module 'jira' not found,5
+      python.import.resolvable,error,Module 'jira.exceptions' not found,6
+  planfile/api/server.py,0.86
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'fastapi' not found,8
+  planfile/llm/generator.py,0.86
     issues[3]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'llx' not found,66
-      python.import.resolvable,error,Module 'llx' not found,87
-      python.import.resolvable,error,Module 'llx.analysis.collector' not found,88
+      python.import.resolvable,error,Module 'llx' not found,65
+      python.import.resolvable,error,Module 'llx' not found,86
+      python.import.resolvable,error,Module 'llx.analysis.collector' not found,87
   planfile/executor_standalone.py,0.90
     issues[2]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'openai' not found,285
       python.import.resolvable,error,Module 'litellm' not found,303
-  planfile/api/server.py,0.91
+  examples/ecosystem/03_proxy_routing.py,0.91
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'fastapi' not found,9
-  examples/ecosystem/03_proxy_routing.py,0.93
+      python.import.resolvable,error,Module 'aiohttp' not found,11
+  planfile/llm/adapters.py,0.91
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'aiohttp' not found,9
-  tests/llm_adapters.py,0.95
+      python.import.resolvable,error,Module 'litellm' not found,19
+  tests/llm_adapters.py,0.94
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'litellm' not found,14
-  planfile/cli/project_detector.py,0.96
+      python.import.resolvable,error,Module 'litellm' not found,12
+  planfile/cli/project_detector.py,0.95
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'tomli' not found,398
-  planfile/llm/adapters.py,0.96
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'litellm' not found,24
+      python.import.resolvable,error,Module 'tomli' not found,397
 
 UNSUPPORTED[6]{bucket,count}:
   *.md,44

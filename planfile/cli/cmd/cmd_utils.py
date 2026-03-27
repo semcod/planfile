@@ -1,16 +1,16 @@
-import os
 import json
-import typer
+import os
 from pathlib import Path
-from typing import Optional, List
+
+import typer
 from rich.console import Console
 
-from planfile.models import Strategy
-from planfile.loaders.yaml_loader import load_strategy_yaml
-from planfile.integrations.github import GitHubBackend
-from planfile.integrations.jira import JiraBackend
-from planfile.integrations.gitlab import GitLabBackend
 from planfile.integrations.generic import GenericBackend
+from planfile.integrations.github import GitHubBackend
+from planfile.integrations.gitlab import GitLabBackend
+from planfile.integrations.jira import JiraBackend
+from planfile.loaders.yaml_loader import load_strategy_yaml
+from planfile.models import Strategy
 from planfile.sync.mock import MockBackend
 
 console = Console()
@@ -28,7 +28,7 @@ def get_backend(backend_type: str, config: dict):
     backend_class = BACKEND_REGISTRY.get(backend_type)
     if not backend_class:
         raise ValueError(f"Unknown backend type: {backend_type}")
-        
+
     if backend_type == "github":
         return backend_class(repo=config["repo"], token=config.get("token"))
     elif backend_type == "jira":
@@ -50,10 +50,10 @@ def _load_and_validate_strategy(strategy_path: Path) -> Strategy:
         console.print(f"[red]✗[/red] Failed to load strategy: {e}")
         raise typer.Exit(1)
 
-def _load_backend_config(backend: str, config_file: Optional[Path]) -> dict:
+def _load_backend_config(backend: str, config_file: Path | None) -> dict:
     """Load backend configuration from file or environment."""
     backend_config = {}
-    
+
     if config_file:
         with open(config_file) as f:
             backend_config = json.load(f)
@@ -76,14 +76,14 @@ def _load_backend_config(backend: str, config_file: Optional[Path]) -> dict:
                 "token": os.environ.get("GITLAB_TOKEN"),
                 "project_id": os.environ.get("GITLAB_PROJECT_ID")
             }
-    
+
     return backend_config
 
-def _parse_sprint_filter(sprint_filter: Optional[str]) -> Optional[List[int]]:
+def _parse_sprint_filter(sprint_filter: str | None) -> list[int] | None:
     """Parse sprint filter from string."""
     if not sprint_filter:
         return None
-    
+
     try:
         return [int(s.strip()) for s in sprint_filter.split(",")]
     except ValueError:

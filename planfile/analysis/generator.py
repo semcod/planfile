@@ -3,39 +3,35 @@ Main planfile generator from code analysis.
 Integrates file analysis and sprint generation to create complete strategies.
 """
 
-import os
-import sys
 import json
-import yaml
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from datetime import datetime
+from typing import Any
 
+from planfile.analysis.external_tools import AnalysisResults, ExternalToolRunner
 from planfile.analysis.file_analyzer import FileAnalyzer
-from planfile.analysis.sprint_generator import SprintGenerator
-from planfile.analysis.external_tools import ExternalToolRunner, AnalysisResults
-from planfile.models import Strategy
-
 from planfile.analysis.generators import (
     extract_key_metrics,
     generate_goal,
     generate_goals,
     generate_quality_gates,
-    generate_tasks,
-    parse_effort,
-    generate_target_metrics,
     generate_risks,
     generate_success_criteria,
+    generate_target_metrics,
+    generate_tasks,
+    parse_effort,
 )
+from planfile.analysis.sprint_generator import SprintGenerator
+from planfile.models import Strategy
+
 
 class PlanfileGenerator:
     """Generate comprehensive planfile from file analysis."""
-    
+
     def __init__(self):
         self.analyzer = FileAnalyzer()
         self.generator = SprintGenerator()
-        self.external_runner: Optional[ExternalToolRunner] = None
-    
+        self.external_runner: ExternalToolRunner | None = None
+
     def generate_with_external_tools(self,
                                      project_path: str = ".",
                                      project_name: str = None,
@@ -46,14 +42,14 @@ class PlanfileGenerator:
         print("=" * 60)
         print("GENERATING PLANFILE WITH EXTERNAL TOOLS")
         print("=" * 60)
-        
+
         # Run external tools
         self.external_runner = ExternalToolRunner(Path(project_path))
         external_results = self.external_runner.run_all()
-        
+
         # Convert external results to internal format
         analysis_result = self._external_to_internal_analysis(external_results)
-        
+
         # Generate strategy from combined analysis
         return self.generate_from_analysis(
             analysis_path=str(self.external_runner.output_dir),
@@ -63,23 +59,23 @@ class PlanfileGenerator:
             external_metrics=self._extract_external_metrics(external_results, compact),
             compact=compact
         )
-    
-    def _external_to_internal_analysis(self, results: AnalysisResults) -> Dict[str, Any]:
+
+    def _external_to_internal_analysis(self, results: AnalysisResults) -> dict[str, Any]:
         """Convert external tool results to internal analysis format."""
         issues = []
         metrics = []
-        
+
         # Create issues from high CC functions
         for func in results.high_cc_functions:
             issues.append({
                 'title': f"Refactor {func['name']} (CC={func['cc']})",
-                'description': f"Function has high cyclomatic complexity",
+                'description': "Function has high cyclomatic complexity",
                 'priority': 'critical' if func['cc'] > 20 else 'high',
                 'category': 'refactor',
                 'effort_estimate': f"{max(2, func['cc'] // 5)}h",
                 'file_path': 'analysis.toon.yaml'
             })
-        
+
         if results.validation_errors > 0:
             issues.append({
                 'title': f"Fix {results.validation_errors} validation errors",
@@ -89,7 +85,7 @@ class PlanfileGenerator:
                 'effort_estimate': f"{max(1, results.validation_errors // 5)}d",
                 'file_path': 'validation.toon.yaml'
             })
-        
+
         if results.validation_warnings > 0:
             issues.append({
                 'title': f"Address {results.validation_warnings} validation warnings",
@@ -99,7 +95,7 @@ class PlanfileGenerator:
                 'effort_estimate': f"{max(1, results.validation_warnings // 3)}d",
                 'file_path': 'validation.toon.yaml'
             })
-        
+
         if results.duplication_groups > 0:
             issues.append({
                 'title': f"Remove {results.duplication_groups} code duplication groups",
@@ -109,7 +105,7 @@ class PlanfileGenerator:
                 'effort_estimate': f"{results.duplication_groups * 2}h",
                 'file_path': 'duplication.toon.yaml'
             })
-        
+
         return {
             'issues': issues,
             'metrics': metrics,
@@ -127,8 +123,8 @@ class PlanfileGenerator:
                 'total_tasks': 0
             }
         }
-    
-    def _extract_external_metrics(self, results: AnalysisResults, compact: bool = False) -> Dict[str, Any]:
+
+    def _extract_external_metrics(self, results: AnalysisResults, compact: bool = False) -> dict[str, Any]:
         """Extract metrics from external tool results, keeping only essential data."""
         if compact:
             # In compact mode, only keep summary metrics
@@ -154,7 +150,7 @@ class PlanfileGenerator:
                 if 'file' in func:
                     compact_func['file'] = func['file']
                 compact_high_cc.append(compact_func)
-            
+
             return {
                 'average_cc': results.cc_average,
                 'critical_functions': results.critical_functions,
@@ -166,13 +162,13 @@ class PlanfileGenerator:
                 'saved_lines': results.saved_lines,
                 'pass_rate': results.pass_rate
             }
-    
-    def generate_from_analysis(self, 
+
+    def generate_from_analysis(self,
                              analysis_path: str,
                              project_name: str = None,
                              max_sprints: int = 4,
                              focus_area: str = None,
-                             external_metrics: Optional[Dict[str, Any]] = None,
+                             external_metrics: dict[str, Any] | None = None,
                              compact: bool = False) -> Strategy:
         """Generate planfile from analyzed files."""
         # Analyze files
@@ -180,10 +176,10 @@ class PlanfileGenerator:
         summary = analysis_result['summary']
         sprints = self.generator.generate_sprints(analysis_result, max_sprints)
         tickets = self.generator.generate_tickets(analysis_result)
-        
+
         metrics = self._extract_key_metrics(analysis_result, external_metrics)
         project_name = project_name or Path(analysis_path).name
-        
+
         strategy_data = {
             'name': f'{project_name.title()} Improvement Plan',
             'project_name': project_name,
@@ -202,76 +198,76 @@ class PlanfileGenerator:
             'risks': self._generate_risks(analysis_result),
             'success_criteria': self._generate_success_criteria(metrics)
         }
-        
+
         return self._create_strategy_object(strategy_data)
-    
+
     def generate_from_current_project(self,
                                     project_path: str = ".",
-                                    patterns: List[str] = None,
+                                    patterns: list[str] = None,
                                     compact: bool = False,
                                     **kwargs) -> Strategy:
         """Generate planfile by analyzing current project files."""
         if patterns is None:
             patterns = ['*.yaml', '*.yml', '*.json', '*.toon.yaml', '*.toon.yml', '*.py']
-        
+
         analysis_result = self.analyzer.analyze_directory(Path(project_path), patterns)
-        
+
         temp_dir = Path(project_path) / ".planfile_analysis"
         temp_dir.mkdir(exist_ok=True)
-        
+
         # Only save analysis summary if not in compact mode
         if not compact:
             with open(temp_dir / "analysis_summary.json", 'w') as f:
                 serializable_result = self._make_serializable(analysis_result)
                 json.dump(serializable_result, f, indent=2, default=str)
-        
+
         return self.generate_from_analysis(
             analysis_path=str(temp_dir),
             compact=compact,
             **kwargs
         )
-    
-    def _extract_key_metrics(self, analysis_result: Dict[str, Any], external_metrics: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    def _extract_key_metrics(self, analysis_result: dict[str, Any], external_metrics: dict[str, Any] | None = None) -> dict[str, Any]:
         return extract_key_metrics(analysis_result, external_metrics)
-    
-    def _generate_goal(self, summary: Dict[str, Any], metrics: Dict[str, Any], focus_area: Optional[str]) -> str:
+
+    def _generate_goal(self, summary: dict[str, Any], metrics: dict[str, Any], focus_area: str | None) -> str:
         return generate_goal(summary, metrics, focus_area)
-    
-    def _generate_goals(self, summary: Dict[str, Any], metrics: Dict[str, Any], focus_area: Optional[str]) -> List[str]:
+
+    def _generate_goals(self, summary: dict[str, Any], metrics: dict[str, Any], focus_area: str | None) -> list[str]:
         return generate_goals(summary, metrics, focus_area)
-    
-    def _generate_quality_gates(self, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+
+    def _generate_quality_gates(self, metrics: dict[str, Any]) -> list[dict[str, Any]]:
         return generate_quality_gates(metrics)
-    
-    def _generate_tasks(self, analysis_result: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+
+    def _generate_tasks(self, analysis_result: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
         return generate_tasks(analysis_result)
-    
-    def _parse_effort(self, effort: Optional[str]) -> int:
+
+    def _parse_effort(self, effort: str | None) -> int:
         return parse_effort(effort)
-    
-    def _generate_target_metrics(self, current: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _generate_target_metrics(self, current: dict[str, Any]) -> dict[str, Any]:
         return generate_target_metrics(current)
-    
-    def _generate_risks(self, analysis_result: Dict[str, Any]) -> List[Dict[str, str]]:
+
+    def _generate_risks(self, analysis_result: dict[str, Any]) -> list[dict[str, str]]:
         return generate_risks(analysis_result)
-    
-    def _generate_success_criteria(self, metrics: Dict[str, Any]) -> List[str]:
+
+    def _generate_success_criteria(self, metrics: dict[str, Any]) -> list[str]:
         return generate_success_criteria(metrics)
-    
-    def _create_strategy_object(self, strategy_data: Dict[str, Any]) -> Strategy:
+
+    def _create_strategy_object(self, strategy_data: dict[str, Any]) -> Strategy:
         return strategy_data
-    
+
     def _make_serializable(self, obj: Any, visited: set = None) -> Any:
         """Convert object to serializable format with cycle detection."""
         if visited is None:
             visited = set()
-        
+
         # Prevent infinite recursion
         obj_id = id(obj)
         if obj_id in visited:
             return f"<circular_reference_{obj_id}>"
         visited.add(obj_id)
-        
+
         if hasattr(obj, '__dict__'):
             result = {}
             for k, v in obj.__dict__.items():

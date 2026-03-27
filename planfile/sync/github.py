@@ -1,5 +1,6 @@
 import os
-from typing import Optional, List, Dict, Any
+from typing import Any
+
 try:
     from github import Github
     from github.Issue import Issue
@@ -14,8 +15,8 @@ from planfile.sync.base import BasePMBackend, TicketRef, TicketStatus
 
 class GitHubBackend(BasePMBackend):
     """GitHub Issues integration backend."""
-    
-    def __init__(self, repo: str, token: Optional[str] = None, **kwargs):
+
+    def __init__(self, repo: str, token: str | None = None, **kwargs):
         """
         Initialize GitHub backend.
         
@@ -25,32 +26,32 @@ class GitHubBackend(BasePMBackend):
         """
         if Github is None:
             raise ImportError("PyGithub is required. Install with: pip install PyGithub")
-            
+
         config = {
             "repo": repo,
             "token": token or os.environ.get("GITHUB_TOKEN"),
             **kwargs
         }
         super().__init__(config)
-        
+
         self.github = Github(self.config["token"])
         self.repo: Repository = self.github.get_repo(repo)
-    
+
     def _validate_config(self) -> None:
         """Validate GitHub configuration."""
         if not self.config.get("token"):
             raise ValueError("GitHub token is required")
-        
+
         if not self.config.get("repo"):
             raise ValueError("Repository is required")
-        
+
         if "/" not in self.config["repo"]:
             raise ValueError("Repository must be in format 'owner/repo'")
-    
-    def _ensure_labels_exist(self, labels: List[str]):
+
+    def _ensure_labels_exist(self, labels: list[str]):
         """Ensure labels exist in the repository, create them if needed."""
         existing_labels = {label.name for label in self.repo.get_labels()}
-        
+
         for label in labels:
             if label not in existing_labels:
                 try:
@@ -63,43 +64,43 @@ class GitHubBackend(BasePMBackend):
                 except Exception:
                     # If label creation fails, skip this label
                     pass
-    
+
     def _create_ticket(
         self,
         title: str,
         body: str,
-        labels: Optional[List[str]] = None,
-        priority: Optional[str] = None,
+        labels: list[str] | None = None,
+        priority: str | None = None,
         backend_tag: str = "github",
-        assignee: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        assignee: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> TicketRef:
         """Create a new GitHub issue."""
         # Prepare labels - start fresh to avoid duplicates
         issue_labels = []
-        
+
         # Add original labels (clean format)
         if labels:
             for label in labels:
                 # Skip old priority format labels
                 if not label.startswith("priority: "):
                     issue_labels.append(label)
-        
+
         # Add priority as label if specified (use simpler format)
         if priority:
             priority_label = f"priority-{priority}"
             if priority_label not in issue_labels:
                 issue_labels.append(priority_label)
-        
+
         # Add default labels
         if "planfile" not in issue_labels:
             issue_labels.append("planfile")
         if "managed" not in issue_labels:
             issue_labels.append("managed")
-        
+
         # Ensure all labels exist
         self._ensure_labels_exist(issue_labels)
-        
+
         # Add strategy metadata to body
         if metadata:
             metadata_section = "\n\n---\n\n**Strategy Metadata:**\n"
@@ -112,20 +113,20 @@ class GitHubBackend(BasePMBackend):
                     if tier:
                         metadata_section += f"- {phase}: {tier}\n"
             body += metadata_section
-        
+
         # Create issue
         create_kwargs = {
             "title": title,
             "body": body,
             "labels": issue_labels
         }
-        
+
         # Only add assignee if it's not None
         if assignee:
             create_kwargs["assignee"] = assignee
-            
+
         issue: Issue = self.repo.create_issue(**create_kwargs)
-        
+
         return self.build_ticket_ref(
             id=str(issue.number),
             url=issue.html_url,
@@ -133,58 +134,58 @@ class GitHubBackend(BasePMBackend):
             status=issue.state,
             metadata=metadata,
         )
-    
+
     def _update_ticket(
         self,
         ticket_id: str,
-        title: Optional[str] = None,
-        body: Optional[str] = None,
-        status: Optional[str] = None,
-        labels: Optional[List[str]] = None,
-        priority: Optional[str] = None,
+        title: str | None = None,
+        body: str | None = None,
+        status: str | None = None,
+        labels: list[str] | None = None,
+        priority: str | None = None,
         backend_tag: str = "github",
-        assignee: Optional[str] = None,
+        assignee: str | None = None,
     ) -> None:
         """Update an existing GitHub issue."""
         issue = self.repo.get_issue(int(ticket_id))
-        
+
         # Update title
         if title:
             issue.edit(title=title)
-        
+
         # Update body
         if body:
             issue.edit(body=body)
-        
+
         # Update labels
         if labels is not None or priority:
             current_labels = [label.name for label in issue.labels]
-            
+
             # Remove existing priority labels
             current_labels = [l for l in current_labels if not l.startswith("priority: ")]
-            
+
             # Add new labels
             new_labels = labels or []
             if priority:
                 new_labels.append(f"priority: {priority}")
-            
+
             issue.set_labels(*current_labels, *new_labels)
-        
+
         # Update state (open/close)
         if status:
             if status.lower() == "closed":
                 issue.edit(state="closed")
             elif status.lower() == "open":
                 issue.edit(state="open")
-        
+
         # Update assignee
         if assignee:
             issue.edit(assignee=assignee)
-    
+
     def _get_ticket(self, ticket_id: str) -> TicketStatus:
         """Get GitHub issue status."""
         issue = self.repo.get_issue(int(ticket_id))
-        
+
         return self._issue_to_ticket_status(issue)
 
     def _issue_to_ticket_status(self, issue: Issue) -> TicketStatus:
@@ -196,41 +197,41 @@ class GitHubBackend(BasePMBackend):
             labels=[label.name for label in issue.labels],
             updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
         )
-    
+
     def _list_tickets(
         self,
-        labels: Optional[List[str]] = None,
-        status: Optional[str] = None,
+        labels: list[str] | None = None,
+        status: str | None = None,
         backend_tag: str = "github",
-        assignee: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[TicketStatus]:
+        assignee: str | None = None,
+        limit: int | None = None,
+    ) -> list[TicketStatus]:
         """List GitHub issues with filters."""
         state = "all" if not status else status.lower()
-        
+
         issues = self.repo.get_issues(
             state=state,
             labels=labels,
             assignee=assignee
         )
-        
+
         tickets = []
         # GitHub listing path
         for issue in issues:
             if limit and len(tickets) >= limit:
                 break
             tickets.append(self._issue_to_ticket_status(issue))
-        
+
         return tickets
-    
-    def _search_tickets(self, query: str) -> List[TicketStatus]:
+
+    def _search_tickets(self, query: str) -> list[TicketStatus]:
         """Search GitHub issues."""
         issues = self.repo.get_issues(state="all")
-        
+
         tickets = []
         # GitHub search path
         for issue in issues:
             if query.lower() in issue.title.lower() or query.lower() in issue.body.lower():
                 tickets.append(self._issue_to_ticket_status(issue))
-        
+
         return tickets

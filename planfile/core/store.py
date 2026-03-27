@@ -1,80 +1,88 @@
 """YAML-based ticket storage in .planfile/ directory."""
 
-import yaml
-from pathlib import Path
-from datetime import datetime
-from typing import Optional, Dict, Any
-from filelock import FileLock
-import threading
 import copy
+import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
-from planfile.core.models import Ticket, TicketStatus, TicketSource
+import yaml
+from filelock import FileLock
+
+from planfile.core.models import Ticket
 
 PLANFILE_DIR = ".planfile"
+
+# Constants
+CACHE_TIMEOUT_SECONDS = 30
+MAX_CACHE_SIZE = 100
+INITIAL_SPRINT_ID = 1
+INITIAL_TICKET_ID = 1
+FILE_LOCK_TIMEOUT = 5
 
 
 class TicketFilter:
     """Base class for ticket filters."""
-    
-    def apply(self, tickets):
+
+    def apply(self, tickets) -> list[Ticket]:
         """Apply filter to tickets."""
         raise NotImplementedError
 
 
 class StatusFilter(TicketFilter):
     """Filter tickets by status."""
-    
+
     def __init__(self, status):
         self.status = status
-    
-    def apply(self, tickets):
-        return [t for t in tickets 
+
+    def apply(self, tickets) -> list[Ticket]:
+        return [t for t in tickets
                 if t.status == self.status or t.status.value == self.status]
 
 
 class PriorityFilter(TicketFilter):
     """Filter tickets by priority."""
-    
+
     def __init__(self, priority):
         self.priority = priority
-    
-    def apply(self, tickets):
+
+    def apply(self, tickets) -> list[Ticket]:
         return [t for t in tickets if t.priority == self.priority]
 
 
 class SourceFilter(TicketFilter):
     """Filter tickets by source tool."""
-    
+
     def __init__(self, source):
         self.source = source
-    
-    def apply(self, tickets):
-        return [t for t in tickets 
+
+    def apply(self, tickets) -> list[Ticket]:
+        return [t for t in tickets
                 if t.source and t.source.tool == self.source]
 
 
 class LabelsFilter(TicketFilter):
     """Filter tickets by labels."""
-    
+
     def __init__(self, labels):
         self.label_set = set(labels)
-    
-    def apply(self, tickets):
-        return [t for t in tickets 
+
+    def apply(self, tickets) -> list[Ticket]:
+        return [t for t in tickets
                 if self.label_set.intersection(set(t.labels))]
 
 
 class TicketFilterChain:
     """Chain of ticket filters."""
-    
+
     def __init__(self):
         self.filters = []
-    
+
     def add_filter(self, filter_obj):
         """Add a filter to the chain."""
         self.filters.append(filter_obj)
-    
-    def apply(self, tickets):
+
+    def apply(self, tickets) -> list[Ticket]:
         """Apply all filters in sequence."""
         for filter_obj in self.filters:
             tickets = filter_obj.apply(tickets)
@@ -87,10 +95,10 @@ class PlanfileStore:
     def __init__(self, project_path: str = "."):
         self.root = Path(project_path).resolve()
         self.planfile_dir = self.root / PLANFILE_DIR
-        self._cache: Dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}
         self._cache_lock = threading.Lock()
-        self._cache_timeout = 30  # seconds
-        self._max_cache_size = 100  # Maximum number of files to cache
+        self._cache_timeout = CACHE_TIMEOUT_SECONDS  # seconds
+        self._max_cache_size = MAX_CACHE_SIZE  # Maximum number of files to cache
 
     def init(self):
         """Create .planfile/ structure."""
@@ -117,7 +125,7 @@ class PlanfileStore:
             self._write_yaml(config, {
                 "project": self.root.name,
                 "prefix": "PLF",
-                "next_id": 1,
+                "next_id": INITIAL_TICKET_ID,
             })
 
     def is_initialized(self) -> bool:
@@ -127,32 +135,32 @@ class PlanfileStore:
         """Get file modification time for cache invalidation."""
         path = Path(file_path)
         return path.stat().st_mtime if path.exists() else 0
-    
-    def _read_yaml_cached(self, file_path: Path) -> Dict[str, Any]:
+
+    def _read_yaml_cached(self, file_path: Path) -> dict[str, Any]:
         """Read YAML file with caching."""
         path_str = str(file_path)
         current_mtime = self._get_file_mtime(path_str)
-        
+
         with self._cache_lock:
             if path_str in self._cache:
                 cached_data, cached_mtime = self._cache[path_str]
                 if cached_mtime == current_mtime:
                     return copy.deepcopy(cached_data)
-        
+
         # File changed or not in cache, read it
         data = self._read_yaml(file_path)
-        
+
         with self._cache_lock:
             # Enforce cache size limit
             if len(self._cache) >= self._max_cache_size:
                 # Remove oldest entry (simple FIFO)
                 oldest_key = next(iter(self._cache))
                 del self._cache[oldest_key]
-            
+
             self._cache[path_str] = (data, current_mtime)
-            
+
         return copy.deepcopy(data)
-    
+
     def _invalidate_cache(self, file_path: Path = None):
         """Invalidate cache for a file or all files."""
         with self._cache_lock:
@@ -176,7 +184,7 @@ class PlanfileStore:
         self._invalidate_cache(sprint_file)
         return ticket
 
-    def get_ticket(self, ticket_id: str) -> Optional[Ticket]:
+    def get_ticket(self, ticket_id: str) -> Ticket | None:
         """Find ticket across all sprint files."""
         for sprint_file in self._all_sprint_files():
             data = self._read_yaml_cached(sprint_file)
@@ -186,7 +194,7 @@ class PlanfileStore:
                 return Ticket(**tickets[ticket_id])
         return None
 
-    def update_ticket(self, ticket_id: str, **updates) -> Optional[Ticket]:
+    def update_ticket(self, ticket_id: str, **updates) -> Ticket | None:
         """Update ticket fields."""
         for sprint_file in self._all_sprint_files():
             data = self._read_yaml_cached(sprint_file)
@@ -237,31 +245,31 @@ class PlanfileStore:
     def _apply_filters(self, tickets, **filters):
         """Apply filters to a list of tickets."""
         filtered = tickets
-        
+
         if "status" in filters:
             status = filters["status"]
             filtered = [t for t in filtered if t.status == status]
-        
+
         if "labels" in filters:
             labels = filters["labels"]
             filtered = [t for t in filtered if any(l in t.labels for l in labels)]
-        
+
         if "assignee" in filters:
             assignee = filters["assignee"]
             filtered = [t for t in filtered if t.assignee == assignee]
-        
+
         if "source" in filters:
             source = filters["source"]
             filtered = [t for t in filtered if t.source == source]
-        
+
         if "priority" in filters:
             priority = filters["priority"]
             filtered = [t for t in filtered if t.priority == priority]
-        
+
         if "type" in filters:
             ticket_type = filters["type"]
             filtered = [t for t in filtered if t.type == ticket_type]
-        
+
         return filtered
 
     def move_ticket(self, ticket_id: str, to_sprint: str) -> bool:
@@ -279,7 +287,7 @@ class PlanfileStore:
     def next_id(self) -> str:
         config = self._read_yaml(self.planfile_dir / "config.yaml")
         prefix = config.get("prefix", "PLF")
-        num = config.get("next_id", 1)
+        num = config.get("next_id", INITIAL_TICKET_ID)
         config["next_id"] = num + 1
         self._write_yaml(self.planfile_dir / "config.yaml", config)
         return f"{prefix}-{num:03d}"
@@ -300,13 +308,13 @@ class PlanfileStore:
     def _read_yaml(self, path: Path) -> dict:
         if not path.exists():
             return {}
-        lock = FileLock(str(path) + ".lock", timeout=5)
+        lock = FileLock(str(path) + ".lock", timeout=FILE_LOCK_TIMEOUT)
         with lock:
             return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
     def _write_yaml(self, path: Path, data: dict):
         path.parent.mkdir(parents=True, exist_ok=True)
-        lock = FileLock(str(path) + ".lock", timeout=5)
+        lock = FileLock(str(path) + ".lock", timeout=FILE_LOCK_TIMEOUT)
         with lock:
             try:
                 # Use safe_dump to prevent circular reference issues

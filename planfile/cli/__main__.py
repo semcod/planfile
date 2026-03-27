@@ -1,4 +1,3 @@
-from planfile.cli import commands
 from planfile.cli.commands import main
 
 if __name__ == "__main__":

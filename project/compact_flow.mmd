@@ -30,18 +30,18 @@ flowchart TD
     planfile__examples ==>|4| planfile__runner
     planfile__core -->|3| examples__gitlab
     planfile__loaders -->|2| examples__gitlab
-    planfile__llm -->|2| examples__ecosystem
     planfile__cli -->|2| planfile__runner
-    examples__llx_validator -->|1| examples__gitlab
+    planfile__llm -->|2| examples__ecosystem
     planfile__server_common -->|1| planfile__Planfile
-    planfile__runner -->|1| planfile__core
+    examples__llx_validator -->|1| examples__gitlab
     planfile -->|1| planfile__Planfile
+    planfile__runner -->|1| planfile__core
     planfile__executor_standalone -->|1| planfile__core
     planfile__ci -->|1| planfile__loaders
     planfile__ci -->|1| planfile__Planfile
     planfile__ci -->|1| planfile__runner
-    planfile__llm -->|1| examples__gitlab
     planfile__mcp -->|1| planfile__server_common
     planfile__cli -->|1| planfile__importers
-    planfile__cli -->|1| run_examples
+    planfile__llm -->|1| examples__gitlab
     planfile__cli -->|1| planfile__llm
+    planfile__cli -->|1| run_examples

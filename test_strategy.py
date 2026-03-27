@@ -1,9 +1,10 @@
 """
 Simple test to verify the strategy package structure.
 """
-from planfile.models import Strategy, TaskPattern, TaskType, Sprint
-from planfile.loaders.yaml_loader import load_strategy_yaml
 from pathlib import Path
+
+from planfile.loaders.yaml_loader import load_strategy_yaml
+from planfile.models import Sprint, Strategy, TaskPattern, TaskType
 
 
 def test_basic_models():
@@ -34,7 +35,7 @@ def test_basic_models():
             ]
         }
     )
-    
+
     assert strategy.name == "Test Strategy"
     assert len(strategy.sprints) == 1
     assert strategy.get_task_patterns()[0].id == "test-task"
@@ -44,7 +45,7 @@ def test_basic_models():
 def test_yaml_loading():
     """Test YAML loading functionality."""
     example_path = Path(__file__).parent / "examples" / "strategies" / "onboarding.yaml"
-    
+
     if example_path.exists():
         strategy = load_strategy_yaml(example_path)
         assert strategy.name == "Onboarding Strategy"

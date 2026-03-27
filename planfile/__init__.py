@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.49"
+__version__ = "0.1.50"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -17,9 +17,18 @@ from typing import TYPE_CHECKING
 
 # Core models (single source of truth)
 from planfile.core.models import (
-    Strategy, Sprint, Task, TaskPattern, TaskType,
-    ModelHints, ModelTier, Goal, QualityGate,
-    Ticket, TicketStatus, TicketSource,
+    Goal,
+    ModelHints,
+    ModelTier,
+    QualityGate,
+    Sprint,
+    Strategy,
+    Task,
+    TaskPattern,
+    TaskType,
+    Ticket,
+    TicketSource,
+    TicketStatus,
 )
 from planfile.core.store import PlanfileStore
 
@@ -30,11 +39,16 @@ ModelTierV2 = ModelTier
 
 # Lazy loading for executors to improve startup performance
 if TYPE_CHECKING:
-    from planfile import runner
-    from planfile import executor_standalone
+    from planfile import executor_standalone, runner
+    from planfile.executor_standalone import (
+        LLMClient,
+        StrategyExecutor,
+        TaskResult,
+        create_litellm_client,
+        create_openai_client,
+        execute_strategy,
+    )
     from planfile.runner import load_valid_strategy, run_strategy, verify_strategy_post_execution
-    from planfile.executor_standalone import StrategyExecutor, execute_strategy, TaskResult, LLMClient
-    from planfile.executor_standalone import create_openai_client, create_litellm_client
 
 
 class Planfile:
@@ -112,18 +126,26 @@ def __getattr__(name):
         import importlib
         return importlib.import_module(f"planfile.{name}")
     elif name in ["load_valid_strategy", "run_strategy", "verify_strategy_post_execution"]:
-        from planfile.runner import load_valid_strategy, run_strategy, verify_strategy_post_execution
+        from planfile.runner import (
+            load_valid_strategy,
+            run_strategy,
+            verify_strategy_post_execution,
+        )
         if name == "load_valid_strategy":
             return load_valid_strategy
         elif name == "run_strategy":
             return run_strategy
         else:
             return verify_strategy_post_execution
-    elif name in ["StrategyExecutor", "execute_strategy", "TaskResult", "LLMClient", 
+    elif name in ["StrategyExecutor", "execute_strategy", "TaskResult", "LLMClient",
                  "create_openai_client", "create_litellm_client"]:
         from planfile.executor_standalone import (
-            StrategyExecutor, execute_strategy, TaskResult, LLMClient,
-            create_openai_client, create_litellm_client
+            LLMClient,
+            StrategyExecutor,
+            TaskResult,
+            create_litellm_client,
+            create_openai_client,
+            execute_strategy,
         )
         if name == "StrategyExecutor":
             return StrategyExecutor

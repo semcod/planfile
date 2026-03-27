@@ -1,13 +1,13 @@
 """Standalone strategy executor that works without LLX dependencies."""
 
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Callable
-from dataclasses import dataclass
 import logging
 import time
-import json
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
-from planfile.core.models import Strategy, Task, ModelTier
+from planfile.core.models import Strategy, Task
 
 logger = logging.getLogger(__name__)
 
@@ -19,14 +19,14 @@ class TaskResult:
     status: str  # "success", "failed", "skipped", "dry_run"
     model_used: str
     response: str = ""
-    error: Optional[str] = None
-    execution_time: Optional[float] = None
+    error: str | None = None
+    execution_time: float | None = None
 
 
 class LLMClient:
     """Simple LLM client interface."""
-    
-    def __init__(self, client_func: Callable, config: Dict[str, Any] = None):
+
+    def __init__(self, client_func: Callable, config: dict[str, Any] = None):
         """Initialize with a client function.
         
         Args:
@@ -35,16 +35,16 @@ class LLMClient:
         """
         self.client_func = client_func
         self.config = config or {}
-    
-    def chat(self, messages: List[Dict[str, str]], model: str) -> str:
+
+    def chat(self, messages: list[dict[str, str]], model: str) -> str:
         """Send chat messages and return response."""
         return self.client_func(messages, model)
 
 
 class StrategyExecutor:
     """Standalone strategy executor."""
-    
-    def __init__(self, client: Optional[LLMClient] = None, config: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, client: LLMClient | None = None, config: dict[str, Any] | None = None):
         """Initialize executor.
         
         Args:
@@ -53,8 +53,8 @@ class StrategyExecutor:
         """
         self.client = client
         self.config = config or self._default_config()
-    
-    def _default_config(self) -> Dict[str, Any]:
+
+    def _default_config(self) -> dict[str, Any]:
         """Default configuration."""
         return {
             'model_map': {
@@ -70,17 +70,17 @@ class StrategyExecutor:
                 'anthropic': None
             }
         }
-    
+
     def execute_strategy(
         self,
-        strategy: Union[Strategy, str, Path, Dict],
-        project_path: Union[str, Path] = ".",
+        strategy: Strategy | str | Path | dict,
+        project_path: str | Path = ".",
         *,
         dry_run: bool = False,
-        sprint_filter: Optional[int] = None,
-        model_override: Optional[str] = None,
-        on_progress: Optional[Callable[[str], None]] = None
-    ) -> List[TaskResult]:
+        sprint_filter: int | None = None,
+        model_override: str | None = None,
+        on_progress: Callable[[str], None] | None = None
+    ) -> list[TaskResult]:
         """Execute a strategy.
         
         Args:
@@ -97,46 +97,46 @@ class StrategyExecutor:
         # Load strategy if needed
         if not isinstance(strategy, Strategy):
             strategy = Strategy.load_flexible(strategy)
-        
+
         results = []
-        
+
         # Process sprints
         for sprint in strategy.sprints:
             if sprint_filter and sprint.id != sprint_filter:
                 continue
-            
+
             if on_progress:
                 on_progress(f"Sprint {sprint.id}: {sprint.name}")
-            
+
             # Process tasks
             for task in sprint.tasks:
                 if on_progress:
                     on_progress(f"  Task: {task.name}")
-                
+
                 result = self._execute_task(
-                    task, 
-                    project_path, 
-                    dry_run, 
+                    task,
+                    project_path,
+                    dry_run,
                     model_override
                 )
                 results.append(result)
-        
+
         return results
-    
+
     def _execute_task(
         self,
         task: Task,
-        project_path: Union[str, Path],
+        project_path: str | Path,
         dry_run: bool,
-        model_override: Optional[str] = None
+        model_override: str | None = None
     ) -> TaskResult:
         """Execute a single task."""
         start_time = time.time()
-        
+
         try:
             # Select model
             model = model_override or self._select_model(task)
-            
+
             if dry_run:
                 return TaskResult(
                     task_name=task.name,
@@ -144,10 +144,10 @@ class StrategyExecutor:
                     model_used=model,
                     execution_time=time.time() - start_time
                 )
-            
+
             # Build prompt
             prompt = self._build_prompt(task, project_path)
-            
+
             # Execute if client available
             if self.client:
                 response = self.client.chat(
@@ -161,7 +161,7 @@ class StrategyExecutor:
                          f"Task type: {task.type}\n" \
                          f"Description: {task.description}\n\n" \
                          f"This is a simulated response. Configure a client to get actual LLM responses."
-            
+
             return TaskResult(
                 task_name=task.name,
                 status="success",
@@ -169,7 +169,7 @@ class StrategyExecutor:
                 response=content,
                 execution_time=time.time() - start_time
             )
-            
+
         except Exception as e:
             logger.error(f"Task execution failed: {e}")
             return TaskResult(
@@ -179,20 +179,20 @@ class StrategyExecutor:
                 error=str(e),
                 execution_time=time.time() - start_time
             )
-    
+
     def _select_model(self, task: Task) -> str:
         """Select model based on task hints and type."""
         # Get model hint from task
         hints = task.model_hints or {}
         hint = hints.get('implementation') or hints.get('design', 'balanced')
-        
+
         # Normalize hint
         if hint == 'free':
             hint = 'cheap'
-        
+
         # Get model map
         model_map = self.config.get('model_map', {})
-        
+
         # Select model based on task type if no hint
         if not hints:
             if task.type in ['chore', 'documentation']:
@@ -201,14 +201,14 @@ class StrategyExecutor:
                 hint = 'balanced'
             else:
                 hint = 'balanced'
-        
+
         return model_map.get(hint, model_map.get('balanced', 'openai/gpt-4o-mini'))
-    
-    def _build_prompt(self, task: Task, project_path: Union[str, Path]) -> str:
+
+    def _build_prompt(self, task: Task, project_path: str | Path) -> str:
         """Build execution prompt for task."""
         # Try to get project metrics if available
         metrics = self._get_project_metrics(project_path)
-        
+
         prompt = f"""## Task: {task.name}
 
 Type: {task.type}
@@ -218,7 +218,7 @@ Description:
 {task.description}
 
 """
-        
+
         if metrics:
             prompt += f"""
 ## Project Context
@@ -228,7 +228,7 @@ Description:
 - Max complexity: {metrics.get('max_cc', 'N/A')}
 
 """
-        
+
         prompt += """
 ## Instructions
 Please execute this task. Provide:
@@ -238,35 +238,35 @@ Please execute this task. Provide:
 
 Focus on practical, actionable steps.
 """
-        
+
         return prompt
-    
-    def _get_project_metrics(self, project_path: Union[str, Path]) -> Optional[Dict]:
+
+    def _get_project_metrics(self, project_path: str | Path) -> dict | None:
         """Get project metrics if available."""
         try:
             path = Path(project_path)
             py_files = list(path.rglob("*.py"))
-            
+
             # Simple metrics calculation
             total_lines = 0
             max_cc = 0
             total_files = len(py_files)
-            
+
             for py_file in py_files:
                 if py_file.is_file():
                     try:
                         content = py_file.read_text(encoding='utf-8')
                         lines = len(content.splitlines())
                         total_lines += lines
-                        
+
                         # Simple CC estimation (count control flow keywords)
                         cc = content.count(' if ') + content.count(' for ') + content.count(' while ') + content.count(' except ')
                         max_cc = max(max_cc, cc)
                     except Exception:
                         pass
-            
+
             avg_cc = max_cc / total_files if total_files > 0 else 0
-            
+
             return {
                 'total_files': total_files,
                 'total_lines': total_lines,
@@ -283,7 +283,7 @@ def create_openai_client(api_key: str, model: str = "gpt-4o-mini") -> LLMClient:
     """Create an OpenAI client."""
     try:
         import openai
-        
+
         def client_func(messages, model):
             client = openai.OpenAI(api_key=api_key)
             response = client.chat.completions.create(
@@ -291,7 +291,7 @@ def create_openai_client(api_key: str, model: str = "gpt-4o-mini") -> LLMClient:
                 messages=messages
             )
             return response.choices[0].message.content
-        
+
         return LLMClient(client_func)
     except ImportError:
         raise ImportError("OpenAI library not installed. Install with: pip install openai")
@@ -301,7 +301,7 @@ def create_litellm_client(api_key: str = None, model: str = "gpt-4o-mini") -> LL
     """Create a LiteLLM client."""
     try:
         import litellm
-        
+
         def client_func(messages, model):
             response = litellm.completion(
                 model=model,
@@ -309,7 +309,7 @@ def create_litellm_client(api_key: str = None, model: str = "gpt-4o-mini") -> LL
                 api_key=api_key
             )
             return response.choices[0].message.content
-        
+
         return LLMClient(client_func)
     except ImportError:
         raise ImportError("LiteLLM library not installed. Install with: pip install litellm")
@@ -317,14 +317,14 @@ def create_litellm_client(api_key: str = None, model: str = "gpt-4o-mini") -> LL
 
 # Convenience function for backward compatibility
 def execute_strategy(
-    strategy_path: Union[str, Path],
-    project_path: Union[str, Path] = ".",
+    strategy_path: str | Path,
+    project_path: str | Path = ".",
     *,
     dry_run: bool = False,
-    sprint_filter: Optional[int] = None,
-    client: Optional[LLMClient] = None,
+    sprint_filter: int | None = None,
+    client: LLMClient | None = None,
     **kwargs
-) -> List[TaskResult]:
+) -> list[TaskResult]:
     """Execute strategy from file - convenience function."""
     executor = StrategyExecutor(client=client)
     return executor.execute_strategy(

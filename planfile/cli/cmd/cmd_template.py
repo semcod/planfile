@@ -102,7 +102,7 @@ def register_template_commands(app: typer.Typer) -> None:
         project_type: str = typer.Argument(..., help="Project type: web, mobile, ml, api"),
         domain: str = typer.Argument(..., help="Project domain"),
         output: str = typer.Option("template.yaml", help="Output file"),
-    ):
+    ) -> None:
         """Generate a strategy template."""
         try:
             strategy = generate_template(project_type, domain)

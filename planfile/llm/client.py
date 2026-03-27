@@ -51,8 +51,8 @@ def call_llm(prompt: str, model: str, temperature: float = 0.2) -> str:
 
     # Try 3: llx client
     try:
-        from llx.routing.client import LlxClient, ChatMessage
         from llx.config import LlxConfig
+        from llx.routing.client import ChatMessage, LlxClient
         with LlxClient(LlxConfig.load()) as client:
             response = client.chat([ChatMessage(role="user", content=prompt)], model=model)
             return response.content

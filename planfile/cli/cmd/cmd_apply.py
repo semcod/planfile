@@ -1,21 +1,21 @@
 import json
-import typer
 import logging
 from pathlib import Path
-from typing import Optional, List
+
+import typer
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress
+from rich.table import Table
 
-from planfile.models import Strategy
-from planfile.runner import apply_strategy_to_tickets
 from planfile.cli.cmd.cmd_utils import (
     _load_and_validate_strategy,
     _load_backend_config,
     _parse_sprint_filter,
-    _select_backend
+    _select_backend,
 )
+from planfile.models import Strategy
+from planfile.runner import apply_strategy_to_tickets
 
 console = Console()
 
@@ -24,21 +24,21 @@ def _execute_apply_strategy(
     project_path: Path,
     backend: str,
     dry_run: bool,
-    sprint_ids: Optional[List[int]]
+    sprint_ids: list[int] | None
 ) -> dict:
     """Execute strategy application with progress bar."""
     with Progress() as progress:
         task = progress.add_task("Applying planfile...", total=100)
-        
+
         results = apply_strategy_to_tickets(
             strategy=strategy,
             project_path=str(project_path),
             backend=backend,
             dry_run=dry_run
         )
-        
+
         progress.update(task, completed=100)
-    
+
     return results
 
 def _display_apply_results(results: dict) -> None:
@@ -51,7 +51,7 @@ def _display_apply_results(results: dict) -> None:
         f"Dry Run: {results['dry_run']}",
         title="Summary"
     ))
-    
+
     if results["created"]:
         table = Table(title="Created Tickets")
         table.add_column("Sprint", style="cyan")
@@ -59,7 +59,7 @@ def _display_apply_results(results: dict) -> None:
         table.add_column("Title", style="green")
         table.add_column("Type", style="blue")
         table.add_column("Priority", style="yellow")
-        
+
         for ticket in results["created"]:
             table.add_row(
                 str(ticket["sprint"]),
@@ -68,15 +68,15 @@ def _display_apply_results(results: dict) -> None:
                 ticket["type"],
                 ticket["priority"]
             )
-        
+
         console.print(table)
-    
+
     if results["errors"]:
         console.print("\n[red]Errors:[/red]")
         for error in results["errors"]:
             console.print(f"  • {error}")
 
-def _save_results(results: dict, output: Optional[Path]) -> None:
+def _save_results(results: dict, output: Path | None) -> None:
     """Save results to file if specified."""
     if output:
         with open(output, "w") as f:
@@ -87,25 +87,25 @@ def apply_strategy_cli(
     strategy_path: Path = typer.Argument(..., help="Path to strategy YAML file"),
     project_path: Path = typer.Argument(..., help="Path to project directory"),
     backend: str = typer.Option("github", help="Backend type (github, jira, gitlab, generic)"),
-    config_file: Optional[Path] = typer.Option(None, help="Backend config file"),
+    config_file: Path | None = typer.Option(None, help="Backend config file"),
     dry_run: bool = typer.Option(False, help="Simulate without creating tickets"),
-    sprint_filter: Optional[str] = typer.Option(None, help="Comma-separated sprint IDs to process"),
-    output: Optional[Path] = typer.Option(None, help="Output results to file"),
+    sprint_filter: str | None = typer.Option(None, help="Comma-separated sprint IDs to process"),
+    output: Path | None = typer.Option(None, help="Output results to file"),
     verbose: bool = typer.Option(False, help="Verbose output"),
-):
+) -> None:
     """Apply a strategy to create tickets."""
-    
+
     if verbose:
         logging.basicConfig(level=logging.INFO)
-    
+
     strategy = _load_and_validate_strategy(strategy_path)
     backend_config = _load_backend_config(backend, config_file)
-    
+
     # Mock backend doesn't need configuration
     if backend != "mock" and not all(v for v in backend_config.values() if v is not None):
         console.print("[red]✗[/red] Missing backend configuration. Use --config-file or set environment variables.")
         raise typer.Exit(1)
-    
+
     sprint_ids = _parse_sprint_filter(sprint_filter)
     backends = _select_backend(backend, backend_config)
     results = _execute_apply_strategy(strategy, project_path, backend, dry_run, sprint_ids)

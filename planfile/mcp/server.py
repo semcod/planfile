@@ -7,11 +7,9 @@ Run with: python -m planfile.mcp.server
 """
 
 import json
-from typing import Optional
 
-from planfile import Planfile, Ticket, TicketSource
+from planfile import TicketSource
 from planfile.server_common import get_planfile
-
 
 # ── MCP tool definitions (JSON-Schema) ──
 
@@ -158,7 +156,6 @@ def _write_jsonrpc(obj: dict):
 
 def main():
     """Run a minimal MCP stdio server."""
-    import sys
 
     while True:
         msg = _read_jsonrpc()

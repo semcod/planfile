@@ -1,7 +1,6 @@
 """Export and merge CLI commands — extracted from extra_commands.py."""
 
 import json
-from typing import List, Optional
 
 import typer
 from rich.console import Console
@@ -85,7 +84,7 @@ def register_export_commands(app: typer.Typer) -> None:
         strategy_file: str = typer.Argument(..., help="Strategy file to export"),
         output: str = typer.Option(..., help="Output file path"),
         format: str = typer.Option("markdown", help="Export format: yaml, json, csv, html, markdown"),
-    ):
+    ) -> None:
         """Export strategy to various formats."""
         try:
             strategy = load_strategy_yaml(strategy_file)
@@ -115,10 +114,10 @@ def register_export_commands(app: typer.Typer) -> None:
 
     @app.command("merge")
     def merge_cmd(
-        files: List[str] = typer.Argument(..., help="Paths to strategy files to merge"),
+        files: list[str] = typer.Argument(..., help="Paths to strategy files to merge"),
         output: str = typer.Option("merged-strategy.yaml", "--output", "-o", help="Output file path"),
-        name: Optional[str] = typer.Option(None, "--name", "-n", help="Name for the merged strategy"),
-    ):
+        name: str | None = typer.Option(None, "--name", "-n", help="Name for the merged strategy"),
+    ) -> None:
         """Merge multiple planfile strategies into one."""
         try:
             if len(files) < 2:

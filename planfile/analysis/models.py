@@ -3,7 +3,6 @@ Data models for file analysis.
 These dataclasses represent extracted issues, metrics, and tasks from file analysis.
 """
 
-from typing import List, Optional, Union
 from dataclasses import dataclass
 
 
@@ -15,9 +14,9 @@ class ExtractedIssue:
     priority: str  # critical, high, medium, low
     category: str  # bug, feature, refactor, test, docs, etc.
     file_path: str
-    line_number: Optional[int] = None
-    effort_estimate: Optional[str] = None
-    tags: List[str] = None
+    line_number: int | None = None
+    effort_estimate: str | None = None
+    tags: list[str] = None
 
     def __post_init__(self):
         if self.tags is None:
@@ -28,9 +27,9 @@ class ExtractedIssue:
 class ExtractedMetric:
     """Represents a metric extracted from a file."""
     name: str
-    value: Union[float, int, str]
-    threshold: Optional[Union[float, int, str]] = None
-    status: Optional[str] = None  # good, warning, critical
+    value: float | int | str
+    threshold: float | int | str | None = None
+    status: str | None = None  # good, warning, critical
     file_path: str = None
 
 
@@ -40,8 +39,8 @@ class ExtractedTask:
     name: str
     description: str
     type: str  # development, testing, review, documentation
-    dependencies: List[str] = None
-    acceptance_criteria: List[str] = None
+    dependencies: list[str] = None
+    acceptance_criteria: list[str] = None
 
     def __post_init__(self):
         if self.dependencies is None:

@@ -5,15 +5,15 @@ Demonstrates how planfile can be used as MCP tools for LLM agents
 """
 
 import json
-import subprocess
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
-def run_mcp_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+
+def run_mcp_tool(tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     """Simulate running an MCP tool."""
     print(f"\n🔧 MCP Tool: {tool_name}")
     print(f"Arguments: {json.dumps(arguments, indent=2)}")
-    
+
     if tool_name == "planfile_generate":
         return simulate_planfile_generate(arguments)
     elif tool_name == "planfile_apply":
@@ -23,13 +23,13 @@ def run_mcp_tool(tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
     else:
         return {"error": f"Unknown tool: {tool_name}"}
 
-def simulate_planfile_generate(args: Dict[str, Any]) -> Dict[str, Any]:
+def simulate_planfile_generate(args: dict[str, Any]) -> dict[str, Any]:
     """Simulate planfile generate tool."""
     project_path = args.get("project_path", ".")
     model = args.get("model", "anthropic/claude-sonnet-4")
     sprints = args.get("sprints", 3)
     focus = args.get("focus", "complexity")
-    
+
     # Simulate project analysis
     metrics = {
         "total_files": 25,
@@ -40,7 +40,7 @@ def simulate_planfile_generate(args: Dict[str, Any]) -> Dict[str, Any]:
         "god_modules": 2,
         "dup_groups": 5
     }
-    
+
     # Generate strategy based on metrics
     strategy = {
         "project": {
@@ -51,7 +51,7 @@ def simulate_planfile_generate(args: Dict[str, Any]) -> Dict[str, Any]:
         "sprints": [],
         "quality_gates": []
     }
-    
+
     # Generate sprints
     for i in range(sprints):
         sprint = {
@@ -60,7 +60,7 @@ def simulate_planfile_generate(args: Dict[str, Any]) -> Dict[str, Any]:
             "goal": "Reduce complexity and improve code quality" if i == 0 else "Refactor god modules" if i == 1 else "Add tests and documentation",
             "task_patterns": []
         }
-        
+
         # Add tasks based on focus
         if focus == "complexity":
             if i == 0:
@@ -87,9 +87,9 @@ def simulate_planfile_generate(args: Dict[str, Any]) -> Dict[str, Any]:
                         "model_hints": {"planning": "balanced", "implementation": "balanced"}
                     }
                 ]
-        
+
         strategy["sprints"].append(sprint)
-    
+
     # Add quality gates
     strategy["quality_gates"] = [
         {
@@ -105,11 +105,11 @@ def simulate_planfile_generate(args: Dict[str, Any]) -> Dict[str, Any]:
             "operator": ">="
         }
     ]
-    
+
     # Save strategy
     output_file = args.get("output", "strategy.yaml")
     print(f"✓ Strategy generated and saved to: {output_file}")
-    
+
     return {
         "success": True,
         "strategy": strategy,
@@ -117,12 +117,12 @@ def simulate_planfile_generate(args: Dict[str, Any]) -> Dict[str, Any]:
         "output_file": output_file
     }
 
-def simulate_planfile_apply(args: Dict[str, Any]) -> Dict[str, Any]:
+def simulate_planfile_apply(args: dict[str, Any]) -> dict[str, Any]:
     """Simulate planfile apply tool."""
     strategy_path = args.get("strategy_path", "strategy.yaml")
     backend = args.get("backend", "github")
     dry_run = args.get("dry_run", True)
-    
+
     # Simulate loading strategy
     strategy = {
         "sprints": [
@@ -130,10 +130,10 @@ def simulate_planfile_apply(args: Dict[str, Any]) -> Dict[str, Any]:
             {"id": "sprint-2", "task_patterns": [{"name": "Task 3"}]}
         ]
     }
-    
+
     tickets = []
     total_tasks = 0
-    
+
     for sprint in strategy["sprints"]:
         for task in sprint["task_patterns"]:
             total_tasks += 1
@@ -144,7 +144,7 @@ def simulate_planfile_apply(args: Dict[str, Any]) -> Dict[str, Any]:
                 print(f"  ✓ Created ticket: {task['name']} -> {ticket_url}")
             else:
                 print(f"  📍 Would create ticket: {task['name']}")
-    
+
     return {
         "success": True,
         "backend": backend,
@@ -154,11 +154,11 @@ def simulate_planfile_apply(args: Dict[str, Any]) -> Dict[str, Any]:
         "message": f"{'Dry run completed' if dry_run else f'Created {len(tickets)} tickets'}"
     }
 
-def simulate_planfile_review(args: Dict[str, Any]) -> Dict[str, Any]:
+def simulate_planfile_review(args: dict[str, Any]) -> dict[str, Any]:
     """Simulate planfile review tool."""
     strategy_path = args.get("strategy_path", "strategy.yaml")
     project_path = args.get("project_path", ".")
-    
+
     # Simulate collecting metrics
     current_metrics = {
         "avg_cc": 4.1,  # Improved from 5.2
@@ -166,18 +166,18 @@ def simulate_planfile_review(args: Dict[str, Any]) -> Dict[str, Any]:
         "test_coverage": 65,  # Added coverage
         "god_modules": 1,     # Reduced from 2
     }
-    
+
     # Calculate progress
     total_tasks = 10
     completed_tasks = 4
     progress = (completed_tasks / total_tasks) * 100
-    
+
     # Check quality gates
     quality_gates = [
         {"name": "Complexity Gate", "threshold": 3.0, "current": current_metrics["avg_cc"], "passed": False},
         {"name": "Coverage Gate", "threshold": 80, "current": current_metrics["test_coverage"], "passed": False}
     ]
-    
+
     return {
         "success": True,
         "progress": {
@@ -201,7 +201,7 @@ def example_mcp_session():
     print("=" * 60)
     print("MCP Tools Integration Example")
     print("=" * 60)
-    
+
     # Agent's plan
     agent_plan = """
     Agent: I need to refactor this Python project to reduce complexity.
@@ -211,14 +211,14 @@ def example_mcp_session():
     2. Apply the strategy to create tickets in GitHub
     3. Review progress after initial work
     """
-    
+
     print(agent_plan)
-    
+
     # Step 1: Generate strategy
     print("\n" + "=" * 40)
     print("STEP 1: Generate Strategy")
     print("=" * 40)
-    
+
     result1 = run_mcp_tool("planfile_generate", {
         "project_path": "./my-project",
         "model": "anthropic/claude-sonnet-4",
@@ -226,39 +226,39 @@ def example_mcp_session():
         "focus": "complexity",
         "output": "refactor-strategy.yaml"
     })
-    
+
     print(f"Result: {json.dumps(result1, indent=2)}")
-    
+
     # Step 2: Apply strategy
     print("\n" + "=" * 40)
     print("STEP 2: Apply Strategy")
     print("=" * 40)
-    
+
     result2 = run_mcp_tool("planfile_apply", {
         "strategy_path": "refactor-strategy.yaml",
         "backend": "github",
         "dry_run": True
     })
-    
+
     print(f"Result: {json.dumps(result2, indent=2)}")
-    
+
     # Step 3: Review progress
     print("\n" + "=" * 40)
     print("STEP 3: Review Progress")
     print("=" * 40)
-    
+
     result3 = run_mcp_tool("planfile_review", {
         "strategy_path": "refactor-strategy.yaml",
         "project_path": "./my-project"
     })
-    
+
     print(f"Result: {json.dumps(result3, indent=2)}")
-    
+
     # Agent's conclusion
     print("\n" + "=" * 40)
     print("AGENT'S CONCLUSION")
     print("=" * 40)
-    
+
     conclusion = """
     Agent: Based on the review:
     - Progress is at 40% (4/10 tasks complete)
@@ -272,7 +272,7 @@ def example_mcp_session():
     
     The MCP tools provided a complete workflow for managing the refactoring process!
     """
-    
+
     print(conclusion)
 
 def create_mcp_tool_definitions():
@@ -319,13 +319,13 @@ def create_mcp_tool_definitions():
             }
         }
     ]
-    
+
     # Save tool definitions
     with open("mcp-tools.json", "w") as f:
         json.dump(tools, f, indent=2)
-    
+
     print("\n✅ MCP tool definitions saved to: mcp-tools.json")
-    
+
     # Create example MCP server integration
     server_code = '''
 # Example MCP Server Integration
@@ -355,10 +355,10 @@ if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
 '''
-    
+
     with open("mcp-server-example.py", "w") as f:
         f.write(server_code)
-    
+
     print("✅ MCP server example saved to: mcp-server-example.py")
 
 if __name__ == "__main__":

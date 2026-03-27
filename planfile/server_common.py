@@ -1,10 +1,9 @@
 """Shared helpers for planfile API and MCP servers."""
 
-from typing import Optional
 
 from planfile import Planfile
 
-_planfile: Optional[Planfile] = None
+_planfile: Planfile | None = None
 
 
 def get_planfile(start_path: str = ".") -> Planfile:

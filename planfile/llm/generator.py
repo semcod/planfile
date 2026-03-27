@@ -9,13 +9,12 @@ Flow:
 """
 
 from pathlib import Path
-from typing import Any
 
 import yaml
-from planfile.models import Strategy
 
-from planfile.llm.prompts import build_strategy_prompt
 from planfile.llm.client import call_llm
+from planfile.llm.prompts import build_strategy_prompt
+from planfile.models import Strategy
 
 
 def generate_strategy(
@@ -105,7 +104,7 @@ def _parse_strategy_response(response: str) -> Strategy:
 
     # Fix common YAML formatting issues
     yaml_text = _fix_yaml_formatting(yaml_text)
-    
+
     data = yaml.safe_load(yaml_text)
     return Strategy(**data)
 
@@ -114,7 +113,7 @@ def _fix_yaml_formatting(yaml_text: str) -> str:
     """Fix common YAML formatting issues from LLM responses."""
     lines = yaml_text.split('\n')
     fixed_lines = []
-    
+
     for i, line in enumerate(lines):
         # Fix missing newlines after colons in list items
         if ': objectives:' in line and i > 0:
@@ -123,9 +122,9 @@ def _fix_yaml_formatting(yaml_text: str) -> str:
             if prev_line.startswith('- '):
                 # Insert newline before objectives
                 fixed_lines.append('')  # Add empty line
-        
+
         fixed_lines.append(line)
-    
+
     return '\n'.join(fixed_lines)
 
 

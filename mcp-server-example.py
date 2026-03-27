@@ -2,7 +2,8 @@
 # Example MCP Server Integration
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from planfile.mcp import handle_planfile_generate, handle_planfile_apply, handle_planfile_review
+
+from planfile.mcp import handle_planfile_apply, handle_planfile_generate, handle_planfile_review
 
 app = Server("planfile-mcp")
 

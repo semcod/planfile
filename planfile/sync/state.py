@@ -1,8 +1,9 @@
 """Track bidirectional sync state between planfile and external PM systems."""
 
-import yaml
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import yaml
 
 
 class SyncState:

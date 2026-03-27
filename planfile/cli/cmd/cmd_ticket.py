@@ -2,7 +2,6 @@
 
 import json
 import sys
-from typing import Optional
 
 import typer
 import yaml
@@ -12,7 +11,7 @@ from rich.table import Table
 console = Console()
 
 
-def _display_tickets(tickets, fmt: str = "table"):
+def _display_tickets(tickets, fmt: str = "table") -> None:
     """Display tickets in the requested format."""
     if fmt == "json":
         console.print(json.dumps(
@@ -76,9 +75,9 @@ def register_ticket_commands(app: typer.Typer) -> None:
                                      help="critical | high | normal | low"),
         sprint: str = typer.Option("current", "-s", "--sprint"),
         source: str = typer.Option("human", help="Source tool name"),
-        label: Optional[list[str]] = typer.Option(None, "-l", "--label"),
+        label: list[str] | None = typer.Option(None, "-l", "--label"),
         description: str = typer.Option("", "-d", "--description"),
-    ):
+    ) -> None:
         """Create a new ticket."""
         from planfile import Planfile, TicketSource
         pf = Planfile.auto_discover()
@@ -93,11 +92,11 @@ def register_ticket_commands(app: typer.Typer) -> None:
     @ticket_app.command("list")
     def ticket_list(
         sprint: str = typer.Option("current", "-s", "--sprint"),
-        status: Optional[str] = typer.Option(None, help="open|in_progress|review|done|blocked|all"),
-        source: Optional[str] = typer.Option(None, help="Filter by source tool"),
-        label: Optional[list[str]] = typer.Option(None, "-l", "--label"),
+        status: str | None = typer.Option(None, help="open|in_progress|review|done|blocked|all"),
+        source: str | None = typer.Option(None, help="Filter by source tool"),
+        label: list[str] | None = typer.Option(None, "-l", "--label"),
         fmt: str = typer.Option("table", "--format", help="table | json | yaml"),
-    ):
+    ) -> None:
         """List tickets with optional filters."""
         from planfile import Planfile
         pf = Planfile.auto_discover()
@@ -115,7 +114,7 @@ def register_ticket_commands(app: typer.Typer) -> None:
     def ticket_show(
         ticket_id: str = typer.Argument(..., help="Ticket ID (e.g. PLF-001)"),
         fmt: str = typer.Option("yaml", "--format", help="yaml | json"),
-    ):
+    ) -> None:
         """Show details of a single ticket."""
         from planfile import Planfile
         pf = Planfile.auto_discover()
@@ -132,10 +131,10 @@ def register_ticket_commands(app: typer.Typer) -> None:
     @ticket_app.command("update")
     def ticket_update(
         ticket_id: str = typer.Argument(..., help="Ticket ID"),
-        status: Optional[str] = typer.Option(None, help="New status"),
-        priority: Optional[str] = typer.Option(None, "-p", "--priority"),
-        title: Optional[str] = typer.Option(None, help="New title"),
-    ):
+        status: str | None = typer.Option(None, help="New status"),
+        priority: str | None = typer.Option(None, "-p", "--priority"),
+        title: str | None = typer.Option(None, help="New title"),
+    ) -> None:
         """Update ticket fields."""
         from planfile import Planfile
         pf = Planfile.auto_discover()
@@ -159,7 +158,7 @@ def register_ticket_commands(app: typer.Typer) -> None:
     def ticket_move(
         ticket_id: str = typer.Argument(..., help="Ticket ID"),
         to_sprint: str = typer.Argument(..., help="Target sprint"),
-    ):
+    ) -> None:
         """Move ticket to another sprint."""
         from planfile import Planfile
         pf = Planfile.auto_discover()
@@ -174,8 +173,8 @@ def register_ticket_commands(app: typer.Typer) -> None:
     def ticket_import(
         source: str = typer.Option(..., help="Source tool name"),
         sprint: str = typer.Option("current", "-s", "--sprint"),
-        from_file: Optional[str] = typer.Option(None, "--from", help="Import from file"),
-    ):
+        from_file: str | None = typer.Option(None, "--from", help="Import from file"),
+    ) -> None:
         """Import tickets from tool output (stdin JSON or file)."""
         from planfile import Planfile
         pf = Planfile.auto_discover()

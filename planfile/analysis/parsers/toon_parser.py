@@ -1,11 +1,11 @@
 import re
 from pathlib import Path
-from typing import Tuple, List, Any
 
 from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
 from planfile.analysis.parsers.text_parser import analyze_text
 
-def _parse_toon_header(line: str, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
+
+def _parse_toon_header(line: str, file_path: Path, metrics: list[ExtractedMetric], issues: list[ExtractedIssue]) -> None:
     """Parse health and metrics tags from toon header line."""
     if 'CC̄=' in line:
         cc_match = re.search(r'CC̄=(\d+\.?\d*)', line)
@@ -19,7 +19,7 @@ def _parse_toon_header(line: str, file_path: Path, metrics: List[ExtractedMetric
                 status=status,
                 file_path=str(file_path)
             ))
-            
+
             if cc_value > 3.5:
                 issues.append(ExtractedIssue(
                     title=f"Reduce average CC from {cc_value} to ≤ 3.5",
@@ -30,7 +30,7 @@ def _parse_toon_header(line: str, file_path: Path, metrics: List[ExtractedMetric
                     effort_estimate=f"{int((cc_value - 3.5) * 10)}h",
                     tags=["complexity", "quality"]
                 ))
-    
+
     if 'critical:' in line:
         critical_match = re.search(r'critical:(\d+)', line)
         if critical_match:
@@ -42,7 +42,7 @@ def _parse_toon_header(line: str, file_path: Path, metrics: List[ExtractedMetric
                 status="critical" if critical_count > 0 else "good",
                 file_path=str(file_path)
             ))
-            
+
             if critical_count > 0:
                 issues.append(ExtractedIssue(
                     title=f"Refactor {critical_count} critical functions",
@@ -54,7 +54,7 @@ def _parse_toon_header(line: str, file_path: Path, metrics: List[ExtractedMetric
                     tags=["complexity", "critical"]
                 ))
 
-def _parse_toon_sections(lines: List[str], file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
+def _parse_toon_sections(lines: list[str], file_path: Path, metrics: list[ExtractedMetric], issues: list[ExtractedIssue]) -> None:
     """Parse structural sections in toon files."""
     section_handlers = {
         'health': _parse_health_section,
@@ -64,14 +64,14 @@ def _parse_toon_sections(lines: List[str], file_path: Path, metrics: List[Extrac
         'summary': _parse_summary_section,
         'duplicates': _skip_section,
     }
-    
+
     current_section = None
     for i, line in enumerate(lines):
         line = line.strip()
-        
+
         # Determine current section
         current_section = _determine_section(line, current_section)
-        
+
         # Parse line if we're in a section
         if current_section and current_section in section_handlers:
             section_handlers[current_section](line, i, file_path, metrics, issues)
@@ -96,7 +96,7 @@ def _determine_section(line: str, current_section: str) -> str:
     return current_section
 
 
-def _parse_health_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
+def _parse_health_section(line: str, line_num: int, file_path: Path, metrics: list[ExtractedMetric], issues: list[ExtractedIssue]) -> None:
     """Parse health section for CC violations."""
     if 'CC=' in line and 'limit:' in line:
         func_match = re.search(r'(\w+)\s+CC=(\d+)', line)
@@ -115,12 +115,12 @@ def _parse_health_section(line: str, line_num: int, file_path: Path, metrics: Li
             ))
 
 
-def _skip_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
+def _skip_section(line: str, line_num: int, file_path: Path, metrics: list[ExtractedMetric], issues: list[ExtractedIssue]) -> None:
     """Skip sections that are intentionally not parsed yet."""
     return
 
 
-def _parse_summary_section(line: str, line_num: int, file_path: Path, metrics: List[ExtractedMetric], issues: List[ExtractedIssue]) -> None:
+def _parse_summary_section(line: str, line_num: int, file_path: Path, metrics: list[ExtractedMetric], issues: list[ExtractedIssue]) -> None:
     """Parse summary section for metrics."""
     if 'files_scanned:' in line:
         files_match = re.search(r'files_scanned:\s*(\d+)', line)
@@ -130,7 +130,7 @@ def _parse_summary_section(line: str, line_num: int, file_path: Path, metrics: L
                 value=int(files_match.group(1)),
                 file_path=str(file_path)
             ))
-    
+
     if 'dup_groups:' in line:
         dup_match = re.search(r'dup_groups:\s*(\d+)', line)
         if dup_match and int(dup_match.group(1)) > 0:
@@ -142,7 +142,7 @@ def _parse_summary_section(line: str, line_num: int, file_path: Path, metrics: L
                 status="warning" if dup_count > 0 else "good",
                 file_path=str(file_path)
             ))
-            
+
             issues.append(ExtractedIssue(
                 title=f"Remove {dup_count} code duplication groups",
                 description="Extract duplicated code into reusable functions",
@@ -154,29 +154,29 @@ def _parse_summary_section(line: str, line_num: int, file_path: Path, metrics: L
             ))
 
 
-def analyze_toon(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedMetric], List[ExtractedTask]]:
+def analyze_toon(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedMetric], list[ExtractedTask]]:
     """Analyze Toon format files with enhanced parsing."""
     issues = []
     metrics = []
     tasks = []
-    
+
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             content = f.read()
-        
+
         lines = content.split('\n')
-        
+
         for line in lines[:5]:
             if line.strip() and not line.startswith('#'):
                 _parse_toon_header(line, file_path, metrics, issues)
-        
+
         _parse_toon_sections(lines, file_path, metrics, issues)
-        
+
         text_issues, text_metrics, text_tasks = analyze_text(file_path)
         issues.extend(text_issues)
         metrics.extend(text_metrics)
         tasks.extend(text_tasks)
-        
+
     except Exception as e:
         issues.append(ExtractedIssue(
             title=f"Failed to analyze {file_path.name}",
@@ -185,5 +185,5 @@ def analyze_toon(file_path: Path) -> Tuple[List[ExtractedIssue], List[ExtractedM
             category="bug",
             file_path=str(file_path)
         ))
-    
+
     return issues, metrics, tasks

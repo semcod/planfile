@@ -1,18 +1,19 @@
 """
 Auto-loop CLI command for sprintstrat.
 """
-import typer
+import os
 from pathlib import Path
-from typing import Optional, List, Any
+from typing import Any
+
+import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from planfile.ci import CIRunner
 from planfile.integrations.github import GitHubBackend
-from planfile.integrations.jira import JiraBackend
 from planfile.integrations.gitlab import GitLabBackend
-import os
+from planfile.integrations.jira import JiraBackend
 
 console = Console()
 app = typer.Typer(help="Automated CI/CD commands")
@@ -49,7 +50,7 @@ def _validate_strategy(strategy: Path) -> None:
         raise typer.Exit(1)
 
 
-def _initialize_backends(backend: List[str]) -> dict:
+def _initialize_backends(backend: list[str]) -> dict:
     """Initialize PM backends."""
     backends = {}
     for b in backend:
@@ -70,13 +71,13 @@ def _display_summary_table(results: dict) -> None:
     table.add_column("Tests", style="yellow")
     table.add_column("Coverage", style="blue")
     table.add_column("Tickets", style="magenta")
-    
+
     for iteration in results["iterations"]:
         status = "✅" if iteration["tests_passed"] else "❌"
         tests = "Pass" if iteration["tests_passed"] else f"Fail ({len(iteration.get('failed_tests', []))})"
         coverage = f"{iteration.get('coverage', 0):.1f}%"
         tickets = str(len(iteration.get("tickets_created", [])))
-        
+
         table.add_row(
             str(iteration["iteration"]),
             status,
@@ -84,7 +85,7 @@ def _display_summary_table(results: dict) -> None:
             coverage,
             tickets
         )
-    
+
     console.print(table)
 
 
@@ -108,7 +109,7 @@ def _display_ticket_summary(results: dict) -> None:
             console.print(f"  ... and {len(results['tickets_created']) - 5} more")
 
 
-def _save_results_if_needed(results: dict, output: Optional[Path]) -> None:
+def _save_results_if_needed(results: dict, output: Path | None) -> None:
     """Save results to file if needed."""
     if output or not results["success"]:
         output_path = output or Path("ci-results.json")
@@ -122,19 +123,19 @@ def _save_results_if_needed(results: dict, output: Optional[Path]) -> None:
 def auto_loop(
     strategy: Path = typer.Argument(..., help="Strategy YAML file"),
     project_path: Path = typer.Argument(".", help="Project directory"),
-    backend: List[str] = typer.Option([], "--backend", "-b", 
+    backend: list[str] = typer.Option([], "--backend", "-b",
                                      help="PM backends (github, jira, gitlab)"),
-    max_iterations: int = typer.Option(10, "--max-iterations", "-m", 
+    max_iterations: int = typer.Option(10, "--max-iterations", "-m",
                                       help="Maximum loop iterations"),
-    auto_fix: bool = typer.Option(False, "--auto-fix", "-a", 
+    auto_fix: bool = typer.Option(False, "--auto-fix", "-a",
                                  help="Enable LLM auto-fix"),
-    llx_command: str = typer.Option("llx", "--llx", "-l", 
+    llx_command: str = typer.Option("llx", "--llx", "-l",
                                    help="LLX command to use"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", 
+    output: Path | None = typer.Option(None, "--output", "-o",
                                         help="Save results to file"),
-    dry_run: bool = typer.Option(False, "--dry-run", "-d", 
+    dry_run: bool = typer.Option(False, "--dry-run", "-d",
                                 help="Simulate without creating tickets")
-):
+) -> None:
     """
     Run automated CI/CD loop: test → ticket → fix → retest.
     
@@ -152,17 +153,17 @@ def auto_loop(
     console.print(f"Max iterations: {max_iterations}")
     console.print(f"Auto-fix: {'enabled' if auto_fix else 'disabled'}")
     console.print()
-    
+
     # Validate strategy exists
     _validate_strategy(strategy)
-    
+
     # Initialize backends
     backends = _initialize_backends(backend)
-    
+
     if not backends and not dry_run:
         console.print("[yellow]⚠️  No backends configured - will run in dry-run mode[/yellow]")
         dry_run = True
-    
+
     # Create runner
     runner = CIRunner(
         strategy_path=str(strategy),
@@ -172,7 +173,7 @@ def auto_loop(
         max_iterations=max_iterations,
         auto_fix=auto_fix
     )
-    
+
     # Run loop with progress
     with Progress(
         SpinnerColumn(),
@@ -180,31 +181,31 @@ def auto_loop(
         console=console
     ) as progress:
         task = progress.add_task("Running CI/CD loop...", total=None)
-        
+
         if dry_run:
             console.print("\n[yellow]🔶 DRY RUN MODE - No tickets will be created[/yellow]")
-        
+
         results = runner.run_loop()
         progress.update(task, completed=True)
-    
+
     # Display results
     console.print("\n[bold]📊 Results Summary[/bold]")
     console.print("=" * 50)
-    
+
     # Summary table
     _display_summary_table(results)
-    
+
     # Final status
     _display_final_status(results, strategy)
-    
+
     # Ticket summary
     _display_ticket_summary(results)
-    
+
     # Save results
     if output or not results["success"]:
         output_path = output or Path("ci-results.json")
         runner.save_results(results, str(output_path))
-    
+
     # Exit with appropriate code
     raise typer.Exit(0 if results["success"] else 1)
 
@@ -212,27 +213,27 @@ def auto_loop(
 @app.command("ci-status")
 def ci_status(
     project_path: Path = typer.Argument(".", help="Project directory"),
-):
+) -> None:
     """Check current CI status without running tests."""
     console.print("[bold blue]🔍 CI Status Check[/bold blue]")
-    
+
     # Check for recent results
     results_file = project_path / "ci-results.json"
     if results_file.exists():
         import json
         results = json.loads(results_file.read_text())
-        
+
         console.print(f"\nLast run: {results.get('timestamp', 'Unknown')}")
         console.print(f"Status: {results.get('final_status', 'Unknown')}")
         console.print(f"Iterations: {results.get('total_iterations', 0)}")
-        
+
         if results.get("success"):
             console.print("[green]✅ Last run successful[/green]")
         else:
             console.print("[red]❌ Last run failed[/red]")
     else:
         console.print("No CI results found")
-    
+
     # Check test coverage
     coverage_file = project_path / "coverage.json"
     if coverage_file.exists():
@@ -240,7 +241,7 @@ def ci_status(
         coverage_data = json.loads(coverage_file.read_text())
         coverage = coverage_data.get("totals", {}).get("percent_covered", 0)
         console.print(f"\nCurrent coverage: {coverage:.1f}%")
-    
+
     # Check for strategy
     strategy_files = list(project_path.glob("**/strategy*.yaml"))
     if strategy_files:

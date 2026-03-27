@@ -1,116 +1,116 @@
-# code2llm | 90f 13216L | python:83,shell:5,javascript:2 | 2026-03-27
+# code2llm | 90f 13251L | python:83,shell:5,javascript:2 | 2026-03-27
 # CC̄=4.3 | critical:27/685 | dups:0 | cycles:0
 
 HEALTH[20]:
-  🔴 GOD   planfile/core/models.py = 502L, 11 classes, 17m, max CC=15
+  🔴 GOD   planfile/core/models.py = 515L, 11 classes, 17m, max CC=15
   🟡 CC    _update_ticket CC=15 (limit:15)
   🟡 CC    _create_ticket CC=15 (limit:15)
   🟡 CC    _make_serializable CC=19 (limit:15)
-  🟡 CC    _apply_filters CC=20 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
-  🟡 CC    init_strategy_cli CC=19 (limit:15)
+  🟡 CC    _apply_filters CC=20 (limit:15)
+  🟡 CC    _find_readme_content CC=16 (limit:15)
+  🟡 CC    _detect_quality_gates CC=47 (limit:15)
+  🟡 CC    _analyze_directory_structure CC=20 (limit:15)
+  🟡 CC    _detect_model_tier CC=19 (limit:15)
+  🟡 CC    _detect_from_pyproject CC=28 (limit:15)
+  🟡 CC    _infer_python_project_type CC=17 (limit:15)
+  🟡 CC    get_detected_values CC=15 (limit:15)
   🟡 CC    sync_integration CC=40 (limit:15)
   🟡 CC    sync_to_external CC=23 (limit:15)
   🟡 CC    sync_from_external CC=20 (limit:15)
+  🟡 CC    init_strategy_cli CC=19 (limit:15)
   🟡 CC    extract_from_yaml_structure CC=15 (limit:15)
-  🟡 CC    table CC=19 (limit:15)
-  🟡 CC    table_body_rows CC=19 (limit:15)
-  🟡 CC    no_rows CC=19 (limit:15)
-  🟡 CC    filter_handler CC=19 (limit:15)
   🟡 CC    table CC=21 (limit:15)
   🟡 CC    table_body_rows CC=21 (limit:15)
-  🟡 CC    no_rows CC=21 (limit:15)
-  🟡 CC    footer CC=21 (limit:15)
-  🟡 CC    ratio_columns CC=21 (limit:15)
 
 REFACTOR[2]:
   1. split planfile/core/models.py  (god module)
   2. split 19 high-CC methods  (CC>15)
 
 PIPELINES[411]:
-  [1] Src [validate_strategy]: validate_strategy
+  [1] Src [planfile_generate]: planfile_generate
       PURITY: 100% pure
-  [2] Src [analyze_generated_code]: analyze_generated_code
+  [2] Src [planfile_apply]: planfile_apply
       PURITY: 100% pure
-  [3] Src [_is_llx_available]: _is_llx_available
+  [3] Src [planfile_review]: planfile_review
       PURITY: 100% pure
-  [4] Src [_parse_llx_analysis]: _parse_llx_analysis
+  [4] Src [main]: main
       PURITY: 100% pure
-  [5] Src [_basic_code_analysis]: _basic_code_analysis
+  [5] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
 
 LAYERS:
   planfile/                       CC̄=4.5    ←in:16  →out:8  !! split
-  │ !! project_detector           753L  2C   16m  CC=47     ←1
-  │ !! models                     502L  11C   17m  CC=15     ←2
-  │ !! cmd_sync                   439L  0C   11m  CC=40     ←2
+  │ !! project_detector           752L  2C   16m  CC=47     ←1
+  │ !! models                     515L  11C   17m  CC=15     ←2
+  │ !! cmd_sync                   440L  0C   11m  CC=40     ←2
   │ runner                     406L  0C    7m  CC=14     ←4
-  │ !! store                      348L  7C   34m  CC=20     ←0
+  │ !! store                      356L  7C   34m  CC=20     ←0
   │ markdown_backend           346L  1C   15m  CC=12     ←0
   │ executor_standalone        336L  3C   12m  CC=8      ←0
-  │ !! cmd_init                   332L  0C    4m  CC=19     ←0
-  │ yaml_loader                319L  0C   15m  CC=7      ←9
-  │ ci                         318L  3C    9m  CC=7      ←0
-  │ !! generator                  306L  1C   17m  CC=19     ←0
-  │ jira                       279L  1C   10m  CC=13     ←0
-  │ external_tools             273L  2C   13m  CC=12     ←0
-  │ auto_loop                  252L  0C    9m  CC=10     ←1
-  │ !! github                     236L  1C    9m  CC=15     ←0
-  │ base                       236L  4C   21m  CC=4      ←0
-  │ !! gitlab                     232L  1C    8m  CC=15     ←0
-  │ metrics                    229L  0C    5m  CC=8      ←0
-  │ redup_importer             222L  0C    5m  CC=11     ←1
+  │ !! cmd_init                   330L  0C    4m  CC=19     ←0
+  │ yaml_loader                324L  0C   15m  CC=7      ←9
+  │ ci                         315L  3C    9m  CC=7      ←0
+  │ !! generator                  302L  1C   17m  CC=19     ←0
+  │ jira                       280L  1C   10m  CC=13     ←0
+  │ external_tools             272L  2C   13m  CC=12     ←0
+  │ auto_loop                  253L  0C    9m  CC=10     ←1
+  │ !! github                     237L  1C    9m  CC=15     ←0
+  │ base                       237L  4C   21m  CC=4      ←0
+  │ !! gitlab                     233L  1C    8m  CC=15     ←0
+  │ metrics                    227L  0C    5m  CC=8      ←0
+  │ redup_importer             221L  0C    5m  CC=11     ←1
   │ generic                    216L  1C   10m  CC=6      ←0
-  │ server                     212L  0C    4m  CC=14     ←0
-  │ cmd_ticket                 199L  0C    2m  CC=10     ←0
-  │ cmd_examples               196L  0C    3m  CC=13     ←1
+  │ server                     209L  0C    4m  CC=14     ←0
+  │ cmd_ticket                 198L  0C    2m  CC=10     ←0
+  │ cmd_examples               195L  0C    3m  CC=13     ←1
   │ cli_loader                 194L  0C   10m  CC=7      ←1
-  │ sprint_generator           190L  1C   10m  CC=9      ←0
+  │ sprint_generator           191L  1C   10m  CC=9      ←0
+  │ config                     189L  1C   14m  CC=10     ←0
   │ toon_parser                189L  0C    7m  CC=11     ←2
-  │ config                     188L  1C   14m  CC=10     ←0
-  │ mock                       165L  1C    7m  CC=11     ←0
-  │ generator                  146L  0C    6m  CC=8      ←1
-  │ cmd_export                 144L  0C    3m  CC=6      ←0
-  │ examples                   141L  0C    5m  CC=2      ←0
-  │ __init__                   140L  1C    9m  CC=11     ←3
-  │ file_analyzer              129L  1C   10m  CC=9      ←0
+  │ mock                       164L  1C    7m  CC=11     ←0
+  │ __init__                   162L  1C    9m  CC=11     ←3
+  │ generator                  145L  0C    6m  CC=8      ←1
+  │ cmd_export                 143L  0C    3m  CC=6      ←0
+  │ examples                   139L  0C    5m  CC=2      ←0
   │ code2llm_importer          129L  1C    9m  CC=13     ←1
   │ cmd_generate               129L  0C    2m  CC=14     ←0
-  │ text_parser                119L  0C    1m  CC=13     ←3
+  │ file_analyzer              127L  1C   10m  CC=9      ←0
   │ cmd_template               118L  0C    2m  CC=1      ←0
+  │ text_parser                118L  0C    1m  CC=13     ←3
   │ cmd_apply                  113L  0C    4m  CC=6      ←0
   │ priorities                 111L  0C    3m  CC=4      ←0
   │ cmd_utils                  100L  0C    5m  CC=7      ←2
-  │ server                      99L  2C    7m  CC=4      ←0
+  │ server                      97L  2C    7m  CC=4      ←0
   │ cmd_review                  97L  0C    1m  CC=10     ←0
-  │ vallm_importer              96L  1C   10m  CC=4      ←1
   │ cmd_compare                 96L  0C    2m  CC=10     ←0
-  │ !! yaml_parser                 94L  0C    2m  CC=15     ←2
-  │ cmd_health                  83L  0C    1m  CC=1      ←1
-  │ adapters                    80L  6C    5m  CC=1      ←0
-  │ commands                    79L  0C    3m  CC=2      ←0
+  │ vallm_importer              96L  1C   10m  CC=4      ←1
+  │ !! yaml_parser                 95L  0C    2m  CC=15     ←2
+  │ cmd_health                  79L  0C    1m  CC=1      ←1
   │ cmd_stats                   76L  0C    2m  CC=7      ←0
+  │ adapters                    75L  6C    5m  CC=1      ←0
+  │ commands                    70L  0C    3m  CC=2      ←0
   │ prompts                     63L  0C    1m  CC=5      ←1
   │ client                      63L  0C    1m  CC=4      ←1
-  │ models                      50L  3C    2m  CC=3      ←0
-  │ state                       45L  1C    5m  CC=3      ←0
-  │ metrics_extractor           43L  0C    6m  CC=9      ←1
-  │ cmd_validate                39L  0C    1m  CC=9      ←0
-  │ common                      34L  0C    2m  CC=6      ←2
+  │ models                      49L  3C    2m  CC=3      ←0
+  │ state                       46L  1C    5m  CC=3      ←0
+  │ metrics_extractor           44L  0C    6m  CC=9      ←1
+  │ cmd_validate                40L  0C    1m  CC=9      ←0
+  │ common                      35L  0C    2m  CC=6      ←2
+  │ __init__                    32L  0C    0m  CC=0.0    ←0
   │ json_parser                 31L  0C    1m  CC=2      ←1
   │ __init__                    29L  0C    2m  CC=8      ←1
-  │ __init__                    26L  0C    0m  CC=0.0    ←0
   │ extra_commands              25L  0C    1m  CC=1      ←0
   │ __init__                    25L  0C    0m  CC=0.0    ←0
   │ execution                   23L  0C    0m  CC=0.0    ←0
   │ __init__                    23L  0C    0m  CC=0.0    ←0
-  │ server_common               15L  0C    1m  CC=2      ←2
+  │ models                      21L  0C    0m  CC=0.0    ←0
+  │ __init__                    15L  0C    0m  CC=0.0    ←0
+  │ server_common               14L  0C    1m  CC=2      ←2
   │ yaml_importer               14L  0C    1m  CC=1      ←1
   │ json_importer               14L  0C    1m  CC=1      ←1
-  │ models                      12L  0C    0m  CC=0.0    ←0
   │ __init__                    12L  0C    0m  CC=0.0    ←0
-  │ __init__                     7L  0C    0m  CC=0.0    ←0
-  │ __main__                     5L  0C    0m  CC=0.0    ←0
+  │ __main__                     4L  0C    0m  CC=0.0    ←0
   │ __init__                     4L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
@@ -133,7 +133,7 @@ LAYERS:
   │ docker-entrypoint.sh       174L  0C    5m  CC=0.0    ←0
   │ auto_generate_planfile.sh   124L  0C    0m  CC=0.0    ←0
   │ cleanup_redundant.sh        71L  0C    0m  CC=0.0    ←0
-  │ mcp-server-example          27L  0C    4m  CC=1      ←0
+  │ mcp-server-example          28L  0C    4m  CC=1      ←0
   │ project.sh                  24L  0C    0m  CC=0.0    ←0
   │
   ── zero ──
@@ -153,11 +153,11 @@ COUPLING:
         planfile.mcp                                       1                                                                                                                      ──                    
         run_examples                  ←1                                                                                                                                                              ──
   CYCLES: none
-  HUB: planfile/ (fan-in=16)
   HUB: planfile.importers/ (fan-in=5)
+  HUB: planfile/ (fan-in=16)
   HUB: planfile.loaders/ (fan-in=15)
-  SMELL: planfile/ fan-out=8 → split needed
   SMELL: planfile.cli/ fan-out=25 → split needed
+  SMELL: planfile/ fan-out=8 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon

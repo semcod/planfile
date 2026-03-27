@@ -5,27 +5,24 @@ Merged logic from ci_runner.py (453L) + auto_loop.py display helpers.
 Creates planfile tickets from test/analysis failures.
 """
 
-import os
-import sys
-import subprocess
 import json
+import subprocess
 import time
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
-from planfile.core.models import Strategy, TaskType
-from planfile.runner import apply_strategy_to_tickets, review_strategy
 from planfile.loaders.yaml_loader import load_strategy_yaml
+from planfile.runner import review_strategy
 
 
 @dataclass
 class TestResult:
     """Result of running tests."""
     passed: bool
-    failed_tests: List[str]
+    failed_tests: list[str]
     coverage: float
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
     output: str
 
 
@@ -34,8 +31,8 @@ class BugReport:
     """Generated bug report from test failures."""
     title: str
     description: str
-    files: List[str]
-    test_names: List[str]
+    files: list[str]
+    test_names: list[str]
     severity: str
 
 
@@ -46,7 +43,7 @@ class CIRunner:
         self,
         strategy_path: str,
         project_path: str,
-        backends: Dict[str, Any] = None,
+        backends: dict[str, Any] = None,
         llx_command: str = "llx",
         max_iterations: int = 10,
         auto_fix: bool = False,
@@ -107,7 +104,7 @@ class CIRunner:
             output=result.stdout + result.stderr
         )
 
-    def run_code_analysis(self) -> Dict[str, Any]:
+    def run_code_analysis(self) -> dict[str, Any]:
         """Run code2llm and vallm analysis."""
         metrics = {}
 
@@ -133,7 +130,7 @@ class CIRunner:
 
         return metrics
 
-    def generate_bug_report(self, test_result: TestResult, metrics: Dict[str, Any]) -> BugReport:
+    def generate_bug_report(self, test_result: TestResult, metrics: dict[str, Any]) -> BugReport:
         """Generate bug report using LLM."""
         context = {
             "failed_tests": test_result.failed_tests,
@@ -178,7 +175,7 @@ Respond in JSON format:
                 severity="medium"
             )
 
-    def create_bug_tickets(self, bug_report: BugReport) -> List[str]:
+    def create_bug_tickets(self, bug_report: BugReport) -> list[str]:
         """Create bug tickets in configured backends AND local planfile."""
         ticket_urls = []
 
@@ -237,7 +234,7 @@ Focus on the failed tests and make minimal changes to fix them.
 
         return result.returncode == 0
 
-    def check_strategy_completion(self) -> Tuple[bool, List[str]]:
+    def check_strategy_completion(self) -> tuple[bool, list[str]]:
         """Check if strategy goals are met."""
         review = review_strategy(
             strategy=self.strategy,
@@ -256,7 +253,7 @@ Focus on the failed tests and make minimal changes to fix them.
 
         return len(issues) == 0, issues
 
-    def run_loop(self) -> Dict[str, Any]:
+    def run_loop(self) -> dict[str, Any]:
         """Run the main CI/CD loop."""
         results = {
             "iterations": [],
@@ -311,7 +308,7 @@ Focus on the failed tests and make minimal changes to fix them.
 
         return results
 
-    def save_results(self, results: Dict[str, Any], output_path: Optional[str] = None):
+    def save_results(self, results: dict[str, Any], output_path: str | None = None) -> None:
         """Save results to file."""
         if not output_path:
             output_path = self.project_path / "ci-results.json"

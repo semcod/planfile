@@ -49,6 +49,2554 @@ sprints:
     model_hints:
       planning: premium
       implementation: premium
+  - id: ticket-4a9b3842
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-4d72bb66
+    name: Fix string-concat issues
+    description: Resolve 6 string-concat issues in /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    rule_id: string-concat
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1d12c733
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-4adeb88d
+    name: Fix llm-hallucinations issues
+    description: Resolve 1 llm-hallucinations issues in /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    rule_id: llm-hallucinations
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5854a43d
+    name: Fix magic-numbers issues
+    description: Resolve 15 magic-numbers issues in /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    rule_id: magic-numbers
+    count: 15
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5b6370f6
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-faba83d0
+    name: Fix ai-boilerplate issues
+    description: Resolve 3 ai-boilerplate issues in /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/02_mcp_integration.py
+    rule_id: ai-boilerplate
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2bf9f839
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-528feae8
+    name: Fix string-concat issues
+    description: Resolve 4 string-concat issues in /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    rule_id: string-concat
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c8151e11
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c68be4d9
+    name: Fix magic-numbers issues
+    description: Resolve 10 magic-numbers issues in /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    rule_id: magic-numbers
+    count: 10
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-f4b0c052
+    name: Fix llm-generated-code issues
+    description: Resolve 2 llm-generated-code issues in /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    rule_id: llm-generated-code
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e1315260
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/03_proxy_routing.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-cfd5a1db
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d758ef6c
+    name: Fix string-concat issues
+    description: Resolve 8 string-concat issues in /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    rule_id: string-concat
+    count: 8
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-f7196314
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-90a9eca4
+    name: Fix llm-hallucinations issues
+    description: Resolve 1 llm-hallucinations issues in /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    rule_id: llm-hallucinations
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-baacdd9d
+    name: Fix magic-numbers issues
+    description: Resolve 13 magic-numbers issues in /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    rule_id: magic-numbers
+    count: 13
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-40fef6ab
+    name: Fix llm-generated-code issues
+    description: Resolve 2 llm-generated-code issues in /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    rule_id: llm-generated-code
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-fc7c16f9
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/ecosystem/04_llx_integration.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-a96102b5
+    name: Fix smart-return-type issues
+    description: Resolve 4 smart-return-type issues in /home/tom/github/semcod/planfile/examples/interactive-tests/test_interactive_mode.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/interactive-tests/test_interactive_mode.py
+    rule_id: smart-return-type
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-643abcdb
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/examples/interactive-tests/test_interactive_mode.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/interactive-tests/test_interactive_mode.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-65ff2e98
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/examples/interactive-tests/test_interactive_mode.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/interactive-tests/test_interactive_mode.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-897ceba9
+    name: Fix ai-boilerplate issues
+    description: Resolve 2 ai-boilerplate issues in /home/tom/github/semcod/planfile/examples/interactive-tests/test_interactive_mode.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/interactive-tests/test_interactive_mode.py
+    rule_id: ai-boilerplate
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-aea66e08
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/examples/llx_validator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/llx_validator.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8d6108f8
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/examples/llx_validator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/llx_validator.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b2e32f30
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/examples/llx_validator.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/llx_validator.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5fdd561a
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in /home/tom/github/semcod/planfile/examples/llx_validator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/llx_validator.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-770ea9fb
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/examples/llx_validator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/llx_validator.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-94f03f3e
+    name: Fix string-concat issues
+    description: Resolve 4 string-concat issues in /home/tom/github/semcod/planfile/examples/test_litellm_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_litellm_integration.py
+    rule_id: string-concat
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-9f2c2205
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/examples/test_litellm_integration.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_litellm_integration.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-acf76316
+    name: Fix llm-hallucinations issues
+    description: Resolve 1 llm-hallucinations issues in /home/tom/github/semcod/planfile/examples/test_litellm_integration.py
+    task_type: bugfix
+    priority: critical
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_litellm_integration.py
+    rule_id: llm-hallucinations
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-99041042
+    name: Fix ai-boilerplate issues
+    description: Resolve 2 ai-boilerplate issues in /home/tom/github/semcod/planfile/examples/test_litellm_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_litellm_integration.py
+    rule_id: ai-boilerplate
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1510e5cc
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/examples/test_llm_adapters.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_llm_adapters.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e552615b
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/examples/test_llm_adapters.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_llm_adapters.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b3ae0f86
+    name: Fix ai-boilerplate issues
+    description: Resolve 2 ai-boilerplate issues in /home/tom/github/semcod/planfile/examples/test_llm_adapters.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_llm_adapters.py
+    rule_id: ai-boilerplate
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d1037f8c
+    name: Fix smart-return-type issues
+    description: Resolve 4 smart-return-type issues in /home/tom/github/semcod/planfile/examples/test_strategies.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_strategies.py
+    rule_id: smart-return-type
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-609c0fab
+    name: Fix string-concat issues
+    description: Resolve 3 string-concat issues in /home/tom/github/semcod/planfile/examples/test_strategies.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_strategies.py
+    rule_id: string-concat
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3ebd8fdd
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/examples/test_strategies.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_strategies.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b87003d2
+    name: Fix ai-boilerplate issues
+    description: Resolve 2 ai-boilerplate issues in /home/tom/github/semcod/planfile/examples/test_strategies.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/examples/test_strategies.py
+    rule_id: ai-boilerplate
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-db89d283
+    name: Fix ai-boilerplate issues
+    description: Resolve 2 ai-boilerplate issues in /home/tom/github/semcod/planfile/mcp-server-example.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/mcp-server-example.py
+    rule_id: ai-boilerplate
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-cd1b6f20
+    name: Fix smart-return-type issues
+    description: Resolve 4 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/__init__.py
+    rule_id: smart-return-type
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-34302951
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/planfile/analysis/__init__.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/__init__.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-75f7c2b8
+    name: Fix duplicate-imports issues
+    description: Resolve 1 duplicate-imports issues in /home/tom/github/semcod/planfile/planfile/analysis/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/__init__.py
+    rule_id: duplicate-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8e26b0ed
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/analysis/external_tools.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/external_tools.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1722839b
+    name: Fix magic-numbers issues
+    description: Resolve 10 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/analysis/external_tools.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/external_tools.py
+    rule_id: magic-numbers
+    count: 10
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d8ce3b10
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/analysis/external_tools.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/external_tools.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-fd0965a0
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/planfile/analysis/file_analyzer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/file_analyzer.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-aac67a2c
+    name: Fix unused-imports issues
+    description: Resolve 15 unused-imports issues in /home/tom/github/semcod/planfile/planfile/analysis/file_analyzer.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/file_analyzer.py
+    rule_id: unused-imports
+    count: 15
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-dff037fe
+    name: Fix unused-imports issues
+    description: Resolve 12 unused-imports issues in /home/tom/github/semcod/planfile/planfile/analysis/generator.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/generator.py
+    rule_id: unused-imports
+    count: 12
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b7797be1
+    name: Fix magic-numbers issues
+    description: Resolve 3 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/analysis/generator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/generator.py
+    rule_id: magic-numbers
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-9b0c7658
+    name: Fix magic-numbers issues
+    description: Resolve 3 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/analysis/generators/strategy_builder.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/generators/strategy_builder.py
+    rule_id: magic-numbers
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-cc2e353e
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/analysis/parsers/json_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/parsers/json_parser.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-50176518
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/planfile/analysis/parsers/text_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/parsers/text_parser.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d9fadc4e
+    name: Fix magic-numbers issues
+    description: Resolve 7 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/analysis/parsers/text_parser.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/parsers/text_parser.py
+    rule_id: magic-numbers
+    count: 7
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-30a21535
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/planfile/analysis/parsers/toon_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/parsers/toon_parser.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8b23a719
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/analysis/parsers/toon_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/parsers/toon_parser.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-85db1dac
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/analysis/parsers/toon_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/parsers/toon_parser.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-89f61730
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/analysis/parsers/yaml_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/parsers/yaml_parser.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8d7be98c
+    name: Fix magic-numbers issues
+    description: Resolve 3 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/analysis/parsers/yaml_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/parsers/yaml_parser.py
+    rule_id: magic-numbers
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5eb79314
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/planfile/analysis/sprint_generator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/sprint_generator.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-9ddd4894
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/analysis/sprint_generator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/analysis/sprint_generator.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c85aaab2
+    name: Fix smart-return-type issues
+    description: Resolve 7 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/api/server.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/api/server.py
+    rule_id: smart-return-type
+    count: 7
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-27ba606b
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/planfile/api/server.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/api/server.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8ef56a87
+    name: Fix magic-numbers issues
+    description: Resolve 6 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/api/server.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/api/server.py
+    rule_id: magic-numbers
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3f058adc
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/builder.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/builder.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-66671a4f
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/planfile/builder.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/builder.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-f948231d
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in /home/tom/github/semcod/planfile/planfile/builder.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/builder.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c5bc23ac
+    name: Fix magic-numbers issues
+    description: Resolve 7 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/builder.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/builder.py
+    rule_id: magic-numbers
+    count: 7
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-255826ac
+    name: Fix llm-generated-code issues
+    description: Resolve 6 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/builder.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/builder.py
+    rule_id: llm-generated-code
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1db80d8f
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/ci.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/ci.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8d0fb9b0
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/planfile/ci.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/ci.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d6bef869
+    name: Fix unused-imports issues
+    description: Resolve 15 unused-imports issues in /home/tom/github/semcod/planfile/planfile/ci.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/ci.py
+    rule_id: unused-imports
+    count: 15
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-98277254
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/ci.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/ci.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c92e9bdf
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/cli/__main__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/__main__.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e26661c1
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/planfile/cli/__main__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/__main__.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c1e4c46e
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/auto_loop.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/auto_loop.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-79e4a456
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/cli/auto_loop.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/auto_loop.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-be3f07ad
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_apply.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_apply.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-0d4c8c76
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_compare.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_compare.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-26249380
+    name: Fix string-concat issues
+    description: Resolve 4 string-concat issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_compare.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_compare.py
+    rule_id: string-concat
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e357004b
+    name: Fix smart-return-type issues
+    description: Resolve 3 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_examples.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_examples.py
+    rule_id: smart-return-type
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-cf34ab93
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_examples.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_examples.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3b6369c5
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_export.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_export.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e81027f6
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_generate.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_generate.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-0bf5dfa7
+    name: Fix llm-hallucinations issues
+    description: Resolve 1 llm-hallucinations issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_generate.py
+    task_type: bugfix
+    priority: critical
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_generate.py
+    rule_id: llm-hallucinations
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b5828bd1
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_health.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_health.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-088c9715
+    name: Fix unused-imports issues
+    description: Resolve 21 unused-imports issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_health.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_health.py
+    rule_id: unused-imports
+    count: 21
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3a0b120f
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_init.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_init.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e2507aae
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_init.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_init.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-dddc1e79
+    name: Fix unused-imports issues
+    description: Resolve 10 unused-imports issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_init.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_init.py
+    rule_id: unused-imports
+    count: 10
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-801d7441
+    name: Fix magic-numbers issues
+    description: Resolve 3 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_init.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_init.py
+    rule_id: magic-numbers
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2a702143
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_review.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_review.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-17036c34
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_stats.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_stats.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8b6049de
+    name: Fix smart-return-type issues
+    description: Resolve 10 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_sync.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_sync.py
+    rule_id: smart-return-type
+    count: 10
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2cc82f49
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_template.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_template.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1a0c2b98
+    name: Fix smart-return-type issues
+    description: Resolve 6 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_ticket.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_ticket.py
+    rule_id: smart-return-type
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-511f6124
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_utils.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_utils.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b78dbc51
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_validate.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/cmd/cmd_validate.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-9acc51db
+    name: Fix smart-return-type issues
+    description: Resolve 3 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/commands.py
+    rule_id: smart-return-type
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-fdd18a06
+    name: Fix unused-imports issues
+    description: Resolve 17 unused-imports issues in /home/tom/github/semcod/planfile/planfile/cli/commands.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/commands.py
+    rule_id: unused-imports
+    count: 17
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1268d95c
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/planfile/cli/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/commands.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d260acb0
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/cli/extra_commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/extra_commands.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2e7c10b5
+    name: Fix llm-hallucinations issues
+    description: Resolve 1 llm-hallucinations issues in /home/tom/github/semcod/planfile/planfile/cli/extra_commands.py
+    task_type: bugfix
+    priority: critical
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/extra_commands.py
+    rule_id: llm-hallucinations
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e0f31a45
+    name: Fix string-concat issues
+    description: Resolve 5 string-concat issues in /home/tom/github/semcod/planfile/planfile/cli/project_detector.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/project_detector.py
+    rule_id: string-concat
+    count: 5
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d6e45ad1
+    name: Fix unused-imports issues
+    description: Resolve 1 unused-imports issues in /home/tom/github/semcod/planfile/planfile/cli/project_detector.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/project_detector.py
+    rule_id: unused-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-359156e8
+    name: Fix magic-numbers issues
+    description: Resolve 11 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/cli/project_detector.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/project_detector.py
+    rule_id: magic-numbers
+    count: 11
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c8ce217a
+    name: Fix llm-generated-code issues
+    description: Resolve 4 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/cli/project_detector.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/cli/project_detector.py
+    rule_id: llm-generated-code
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-9e280699
+    name: Fix unused-imports issues
+    description: Resolve 36 unused-imports issues in /home/tom/github/semcod/planfile/planfile/core/__init__.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/core/__init__.py
+    rule_id: unused-imports
+    count: 36
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-aca7d7a9
+    name: Fix smart-return-type issues
+    description: Resolve 6 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/core/models.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/core/models.py
+    rule_id: smart-return-type
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-91ad1c1f
+    name: Fix string-concat issues
+    description: Resolve 6 string-concat issues in /home/tom/github/semcod/planfile/planfile/core/models.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/core/models.py
+    rule_id: string-concat
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-97529746
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/core/models.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/core/models.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e0466fc2
+    name: Fix smart-return-type issues
+    description: Resolve 10 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/core/store.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/core/store.py
+    rule_id: smart-return-type
+    count: 10
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-220e1c4c
+    name: Fix string-concat issues
+    description: Resolve 3 string-concat issues in /home/tom/github/semcod/planfile/planfile/core/store.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/core/store.py
+    rule_id: string-concat
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-68b7e53b
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in /home/tom/github/semcod/planfile/planfile/core/store.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/core/store.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-6f454211
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/core/store.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/core/store.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ed676465
+    name: Fix smart-return-type issues
+    description: Resolve 5 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/examples.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/examples.py
+    rule_id: smart-return-type
+    count: 5
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-dcc03c19
+    name: Fix llm-hallucinations issues
+    description: Resolve 5 llm-hallucinations issues in /home/tom/github/semcod/planfile/planfile/examples.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/examples.py
+    rule_id: llm-hallucinations
+    count: 5
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-782dc40a
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/examples.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/examples.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c0a69197
+    name: Fix llm-generated-code issues
+    description: Resolve 5 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/examples.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/examples.py
+    rule_id: llm-generated-code
+    count: 5
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2a9af2c9
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/planfile/examples.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/examples.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e8c5867d
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/executor_standalone.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/executor_standalone.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-95940f3f
+    name: Fix string-concat issues
+    description: Resolve 3 string-concat issues in /home/tom/github/semcod/planfile/planfile/executor_standalone.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/executor_standalone.py
+    rule_id: string-concat
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2fcf4702
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in /home/tom/github/semcod/planfile/planfile/executor_standalone.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/executor_standalone.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-57272017
+    name: Fix llm-generated-code issues
+    description: Resolve 3 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/executor_standalone.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/executor_standalone.py
+    rule_id: llm-generated-code
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2312bb66
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/importers/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/importers/__init__.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1b085b57
+    name: Fix magic-numbers issues
+    description: Resolve 4 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/importers/code2llm_importer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/importers/code2llm_importer.py
+    rule_id: magic-numbers
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-bf1df627
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/planfile/importers/redup_importer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/importers/redup_importer.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3278b827
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/importers/redup_importer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/importers/redup_importer.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d89f0697
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/importers/redup_importer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/importers/redup_importer.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-6bef873e
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/importers/redup_importer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/importers/redup_importer.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-632301bc
+    name: Fix wildcard-imports issues
+    description: Resolve 1 wildcard-imports issues in /home/tom/github/semcod/planfile/planfile/integrations/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/integrations/__init__.py
+    rule_id: wildcard-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-71797195
+    name: Fix wildcard-imports issues
+    description: Resolve 1 wildcard-imports issues in /home/tom/github/semcod/planfile/planfile/integrations/base.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/integrations/base.py
+    rule_id: wildcard-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-71d8cf4f
+    name: Fix smart-return-type issues
+    description: Resolve 4 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/integrations/config.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/integrations/config.py
+    rule_id: smart-return-type
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-52b89665
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/integrations/config.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/integrations/config.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-0584432e
+    name: Fix wildcard-imports issues
+    description: Resolve 1 wildcard-imports issues in /home/tom/github/semcod/planfile/planfile/integrations/generic.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/integrations/generic.py
+    rule_id: wildcard-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-29313dab
+    name: Fix wildcard-imports issues
+    description: Resolve 1 wildcard-imports issues in /home/tom/github/semcod/planfile/planfile/integrations/github.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/integrations/github.py
+    rule_id: wildcard-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3f2517cb
+    name: Fix wildcard-imports issues
+    description: Resolve 1 wildcard-imports issues in /home/tom/github/semcod/planfile/planfile/integrations/gitlab.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/integrations/gitlab.py
+    rule_id: wildcard-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-f7f54966
+    name: Fix wildcard-imports issues
+    description: Resolve 1 wildcard-imports issues in /home/tom/github/semcod/planfile/planfile/integrations/jira.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/integrations/jira.py
+    rule_id: wildcard-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b037db5e
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/llm/adapters.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/llm/adapters.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-04c691a1
+    name: Fix unused-imports issues
+    description: Resolve 22 unused-imports issues in /home/tom/github/semcod/planfile/planfile/llm/adapters.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/llm/adapters.py
+    rule_id: unused-imports
+    count: 22
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-40537e0f
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/llm/client.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/llm/client.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ec6d262d
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/llm/generator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/llm/generator.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5e636ae8
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/llm/generator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/llm/generator.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c7778d50
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/loaders/cli_loader.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/loaders/cli_loader.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-990e48e1
+    name: Fix llm-generated-code issues
+    description: Resolve 5 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/loaders/cli_loader.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/loaders/cli_loader.py
+    rule_id: llm-generated-code
+    count: 5
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ad161015
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/planfile/loaders/yaml_loader.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/loaders/yaml_loader.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c27a223f
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/loaders/yaml_loader.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/loaders/yaml_loader.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-7795bed1
+    name: Fix llm-generated-code issues
+    description: Resolve 7 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/loaders/yaml_loader.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/loaders/yaml_loader.py
+    rule_id: llm-generated-code
+    count: 7
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-61b62b62
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c6604941
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-612a4154
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-065abc62
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-98ba531c
+    name: Fix ai-boilerplate issues
+    description: Resolve 2 ai-boilerplate issues in /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/mcp/server.py
+    rule_id: ai-boilerplate
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-9278955c
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/runner.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/runner.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-55469c9e
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/planfile/runner.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/runner.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-a2a77d1a
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in /home/tom/github/semcod/planfile/planfile/runner.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/runner.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b758b57d
+    name: Fix magic-numbers issues
+    description: Resolve 9 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/runner.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/runner.py
+    rule_id: magic-numbers
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-4debab76
+    name: Fix llm-generated-code issues
+    description: Resolve 5 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/runner.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/runner.py
+    rule_id: llm-generated-code
+    count: 5
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-de3dac3c
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/planfile/sync/generic.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/generic.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-777617f3
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/sync/generic.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/generic.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3a8218f9
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/sync/github.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/github.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-517ab9a8
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/planfile/sync/gitlab.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/gitlab.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5df0e093
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/sync/gitlab.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/gitlab.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-f1c92c27
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/sync/gitlab.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/gitlab.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d2308ee7
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in /home/tom/github/semcod/planfile/planfile/sync/jira.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/jira.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-759e383c
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/sync/jira.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/jira.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-4976ef06
+    name: Fix string-concat issues
+    description: Resolve 5 string-concat issues in /home/tom/github/semcod/planfile/planfile/sync/markdown_backend.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/markdown_backend.py
+    rule_id: string-concat
+    count: 5
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8b9be4b3
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/sync/markdown_backend.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/markdown_backend.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-383192cb
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in /home/tom/github/semcod/planfile/planfile/sync/mock.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/mock.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-573ba79c
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/planfile/sync/state.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/sync/state.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5af98960
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/planfile/utils/metrics.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/utils/metrics.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-90d9dd67
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/planfile/utils/metrics.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/utils/metrics.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-993622dc
+    name: Fix llm-generated-code issues
+    description: Resolve 2 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/utils/metrics.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/utils/metrics.py
+    rule_id: llm-generated-code
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-48cbc948
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/planfile/utils/priorities.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/utils/priorities.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3001e0e6
+    name: Fix llm-generated-code issues
+    description: Resolve 3 llm-generated-code issues in /home/tom/github/semcod/planfile/planfile/utils/priorities.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/planfile/utils/priorities.py
+    rule_id: llm-generated-code
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e56b4116
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/test_improvements.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_improvements.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-6286358b
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/test_improvements.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/test_improvements.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5a627642
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/test_improvements.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_improvements.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-cb843ab1
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/test_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_integration.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-334dbf4e
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in /home/tom/github/semcod/planfile/test_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_integration.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c45cc40e
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/test_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_integration.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-55eb2eed
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/test_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_integration.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-29661926
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/test_markdown_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_markdown_integration.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-606424c7
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/test_markdown_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_markdown_integration.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ace71cd4
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/test_markdown_integration.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_markdown_integration.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d0357c59
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/test_planfile_final.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_planfile_final.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-0360a1fe
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in /home/tom/github/semcod/planfile/test_planfile_final.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_planfile_final.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-4744f89f
+    name: Fix unused-imports issues
+    description: Resolve 3 unused-imports issues in /home/tom/github/semcod/planfile/test_planfile_final.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_planfile_final.py
+    rule_id: unused-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-fc1c75dc
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/test_planfile_final.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_planfile_final.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-14079c50
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/test_strategy.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_strategy.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8cda0645
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in /home/tom/github/semcod/planfile/test_strategy.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/test_strategy.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b7a4bf92
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in /home/tom/github/semcod/planfile/tests/llm_adapters.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/tests/llm_adapters.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e2dee270
+    name: Fix unused-imports issues
+    description: Resolve 9 unused-imports issues in /home/tom/github/semcod/planfile/tests/llm_adapters.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/tests/llm_adapters.py
+    rule_id: unused-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-7c3fcd11
+    name: Fix magic-numbers issues
+    description: Resolve 8 magic-numbers issues in /home/tom/github/semcod/planfile/tests/llm_adapters.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - /home/tom/github/semcod/planfile/tests/llm_adapters.py
+    rule_id: magic-numbers
+    count: 8
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d418ec5e
+    name: Fix smart-return-type issues
+    description: Resolve 2 smart-return-type issues in /home/tom/github/semcod/planfile/tests/test_strategy.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - /home/tom/github/semcod/planfile/tests/test_strategy.py
+    rule_id: smart-return-type
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
 - id: sprint-2
   name: Quality Improvements
   duration: 2 weeks

@@ -4,13 +4,26 @@ Planfile core models — merged from models.py + models_v2.py + new Ticket type.
 This is the single canonical source for all planfile data models.
 """
 
-from enum import Enum
-from typing import List, Dict, Optional, Any, Union
-from pathlib import Path
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
 import yaml
+from pydantic import BaseModel, Field, field_validator
+
+
+# Constants
+DEFAULT_SPRINT_LENGTH_DAYS = 14
+DEFAULT_STRATEGY_VERSION = "1.0.0"
+INITIAL_SPRINT_ID = 1
+INITIAL_TICKET_ID = 1
+SECONDS_PER_WEEK = 7
+CACHE_TIMEOUT_SECONDS = 30
+MAX_CACHE_SIZE = 100
+FILE_LOCK_TIMEOUT = 5
+DAYS_PER_WEEK = 7
+JSON_INDENT = 2
 
 
 class TaskType(str, Enum):
@@ -35,14 +48,14 @@ class ModelTier(str, Enum):
 
 class ModelHints(BaseModel):
     """AI model hints for different phases of task execution."""
-    design: Optional[ModelTier] = None
-    implementation: Optional[ModelTier] = None
-    review: Optional[ModelTier] = None
-    triage: Optional[ModelTier] = None
+    design: ModelTier | None = None
+    implementation: ModelTier | None = None
+    review: ModelTier | None = None
+    triage: ModelTier | None = None
 
     @field_validator('*', mode='before')
     @classmethod
-    def convert_str_to_tier(cls, v):
+    def convert_str_to_tier(cls, v) -> Any:
         if isinstance(v, str) and v not in ModelTier.__members__:
             if v == "free":
                 return ModelTier.cheap
@@ -54,14 +67,14 @@ class Task(BaseModel):
     name: str = Field(..., description="Task name")
     description: str = Field(..., description="Task description")
     type: TaskType = Field(TaskType.feature, description="Type of task")
-    priority: Optional[str] = Field("medium", description="Priority: low, medium, high")
-    model_hints: Optional[Dict[str, str]] = Field(default_factory=dict, description="Model preferences")
-    estimate: Optional[str] = Field(None, description="Estimate (e.g., '3d', '1w')")
-    tags: List[str] = Field(default_factory=list, description="Tags for organization")
+    priority: str | None = Field("medium", description="Priority: low, medium, high")
+    model_hints: dict[str, str] | None = Field(default_factory=dict, description="Model preferences")
+    estimate: str | None = Field(None, description="Estimate (e.g., '3d', '1w')")
+    tags: list[str] = Field(default_factory=list, description="Tags for organization")
 
     @field_validator('model_hints', mode='before')
     @classmethod
-    def normalize_model_hints(cls, v):
+    def normalize_model_hints(cls, v) -> dict[str, str] | None:
         if isinstance(v, str):
             return {"implementation": v}
         elif isinstance(v, dict):
@@ -75,17 +88,17 @@ TaskPattern = Task
 
 class Sprint(BaseModel):
     """A sprint in the planfile."""
-    id: Union[int, str] = Field(..., description="Sprint number or ID")
+    id: int | str = Field(..., description="Sprint number or ID")
     name: str = Field(..., description="Sprint name")
-    objectives: List[str] = Field(default_factory=list, description="Sprint objectives")
-    tasks: List[Task] = Field(default_factory=list, description="Tasks in this sprint")
-    length_days: Optional[int] = Field(14, description="Sprint length in days")
-    duration: Optional[str] = Field(None, description="Sprint duration (e.g., '2 weeks')")
-    start_date: Optional[str] = Field(None, description="Start date (ISO format)")
+    objectives: list[str] = Field(default_factory=list, description="Sprint objectives")
+    tasks: list[Task] = Field(default_factory=list, description="Tasks in this sprint")
+    length_days: int | None = Field(DEFAULT_SPRINT_LENGTH_DAYS, description="Sprint length in days")
+    duration: str | None = Field(None, description="Sprint duration (e.g., '2 weeks')")
+    start_date: str | None = Field(None, description="Start date (ISO format)")
 
     @field_validator('tasks', mode='before')
     @classmethod
-    def convert_tasks(cls, v):
+    def convert_tasks(cls, v) -> list[Task]:
         if isinstance(v, list):
             tasks = []
             for item in v:
@@ -114,8 +127,8 @@ class Sprint(BaseModel):
 class QualityGate(BaseModel):
     """Quality gate definition."""
     name: str = Field(..., description="Gate name")
-    description: Optional[str] = Field(None, description="Gate description")
-    criteria: Union[str, List[str]] = Field(..., description="Criteria to pass the gate")
+    description: str | None = Field(None, description="Gate description")
+    criteria: str | list[str] = Field(..., description="Criteria to pass the gate")
     required: bool = Field(True, description="Whether this gate is required")
 
     @field_validator('criteria', mode='before')
@@ -129,38 +142,38 @@ class QualityGate(BaseModel):
 class Goal(BaseModel):
     """Project goal definition."""
     short: str = Field(..., description="Short goal description")
-    quality: List[str] = Field(default_factory=list, description="Quality goals")
-    delivery: List[str] = Field(default_factory=list, description="Delivery goals")
-    metrics: List[str] = Field(default_factory=list, description="Metric goals")
+    quality: list[str] = Field(default_factory=list, description="Quality goals")
+    delivery: list[str] = Field(default_factory=list, description="Delivery goals")
+    metrics: list[str] = Field(default_factory=list, description="Metric goals")
 
 
 class Strategy(BaseModel):
     """Main strategy configuration - simplified and more flexible."""
     name: str = Field(..., description="Strategy name")
-    version: Optional[str] = Field("1.0.0", description="Strategy version")
-    project_type: Optional[str] = Field("software", description="Type of project")
-    domain: Optional[str] = Field("software", description="Business domain")
+    version: str | None = Field(DEFAULT_STRATEGY_VERSION, description="Strategy version")
+    project_type: str | None = Field("software", description="Type of project")
+    domain: str | None = Field("software", description="Business domain")
 
     # Goal can be string or Goal object
-    goal: Optional[str] = Field(None, description="Main goal of this strategy")
-    description: Optional[str] = Field(None, description="Detailed description")
+    goal: str | None = Field(None, description="Main goal of this strategy")
+    description: str | None = Field(None, description="Detailed description")
 
     # Sprints - the main structure
-    sprints: List[Sprint] = Field(default_factory=list, description="Sprints in this strategy")
+    sprints: list[Sprint] = Field(default_factory=list, description="Sprints in this strategy")
 
     # Task patterns (v1 compat)
-    tasks: Dict[str, Any] = Field(
+    tasks: dict[str, Any] = Field(
         default_factory=dict,
         description="Task patterns by category (v1 compat)"
     )
 
     # Quality gates
-    quality_gates: List[QualityGate] = Field(default_factory=list, description="Quality gates")
+    quality_gates: list[QualityGate] = Field(default_factory=list, description="Quality gates")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
-    def get_task_patterns(self, category: str = None) -> List[Task]:
+    def get_task_patterns(self, category: str = None) -> list[Task]:
         """Get all tasks from all sprints (or patterns by category for v1 compat)."""
         if category and isinstance(self.tasks, dict):
             return self.tasks.get(category, [])
@@ -169,7 +182,7 @@ class Strategy(BaseModel):
             all_tasks.extend(sprint.tasks)
         return all_tasks
 
-    def get_sprint(self, sprint_id: int) -> Optional[Sprint]:
+    def get_sprint(self, sprint_id: int) -> Sprint | None:
         """Get sprint by ID."""
         for sprint in self.sprints:
             if sprint.id == sprint_id:
@@ -217,7 +230,7 @@ class Strategy(BaseModel):
         data = convert_enums(data)
         return yaml.dump(data, default_flow_style=False, sort_keys=False)
 
-    def to_llx_format(self) -> Dict:
+    def to_llx_format(self) -> dict:
         """Convert to LLX-compatible format."""
         data = self.model_dump(mode='json')
 
@@ -253,7 +266,7 @@ class Strategy(BaseModel):
 
         return data
 
-    def compare(self, other: 'Strategy') -> Dict[str, Any]:
+    def compare(self, other: 'Strategy') -> dict[str, Any]:
         """Compare with another strategy and return differences."""
         comparison = {
             'common_elements': [],
@@ -299,7 +312,7 @@ class Strategy(BaseModel):
 
         return comparison
 
-    def merge(self, others: List['Strategy'], name: str = None) -> 'Strategy':
+    def merge(self, others: list['Strategy'], name: str = None) -> 'Strategy':
         """Merge with other strategies to create a combined strategy."""
         if not others:
             return self
@@ -317,7 +330,7 @@ class Strategy(BaseModel):
             all_sprints.append(other.model_dump().get('sprints', []))
 
         merged_sprints = []
-        sprint_id = 1
+        sprint_id = INITIAL_SPRINT_ID
         for sprints in all_sprints:
             for sprint in sprints:
                 sprint_copy = sprint.copy()
@@ -362,13 +375,13 @@ class Strategy(BaseModel):
                 return yaml.dump(self.model_dump(), default_flow_style=False, sort_keys=False)
         elif format.lower() == 'json':
             import json
-            return json.dumps(self.model_dump(), indent=2, default=str)
+            return json.dumps(self.model_dump(), indent=JSON_INDENT, default=str)
         elif format.lower() == 'dict':
             return self.model_dump()
         else:
             raise ValueError(f"Unsupported export format: {format}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get strategy statistics."""
         stats = {
             'total_sprints': len(self.sprints),
@@ -396,7 +409,7 @@ class Strategy(BaseModel):
                 if 'week' in duration_str:
                     try:
                         weeks = int(duration_str.split()[0])
-                        durations.append(weeks * 7)
+                        durations.append(weeks * DAYS_PER_WEEK)
                     except (ValueError, IndexError):
                         pass
                 elif 'day' in duration_str:
@@ -413,7 +426,7 @@ class Strategy(BaseModel):
         return stats
 
     @classmethod
-    def load_flexible(cls, data: Union[Dict, str, Path]) -> "Strategy":
+    def load_flexible(cls, data: dict | str | Path) -> "Strategy":
         """Load strategy from various formats with error tolerance."""
         if isinstance(data, (str, Path)):
             data = yaml.safe_load(Path(data).read_text(encoding="utf-8"))
@@ -425,7 +438,7 @@ class Strategy(BaseModel):
             if 'goal' in data and isinstance(data['goal'], dict):
                 data['goal'] = Goal(**data['goal'])
 
-            data.setdefault('version', '1.0.0')
+            data.setdefault('version', DEFAULT_STRATEGY_VERSION)
             data.setdefault('project_type', 'software')
             data.setdefault('domain', 'software')
 
@@ -434,7 +447,7 @@ class Strategy(BaseModel):
         raise ValueError("Invalid strategy data")
 
     @staticmethod
-    def _convert_old_format(data: Dict) -> Dict:
+    def _convert_old_format(data: dict) -> dict:
         """Convert old format with separate task patterns to new format."""
         task_patterns = {tp['id']: tp for tp in data.get('tasks', {}).get('patterns', [])}
 
@@ -472,7 +485,7 @@ class TicketStatus(str, Enum):
 class TicketSource(BaseModel):
     """Who/what created the ticket."""
     tool: str                          # "code2llm" | "vallm" | "llx" | "human"
-    version: Optional[str] = None
+    version: str | None = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     context: dict = Field(default_factory=dict)
 
@@ -485,18 +498,18 @@ class Ticket(BaseModel):
     priority: str = "normal"           # critical | high | normal | low
     sprint: str = "current"            # current | backlog | sprint-XXX
 
-    source: Optional[TicketSource] = None
+    source: TicketSource | None = None
     description: str = ""
-    acceptance_criteria: List[str] = Field(default_factory=list)
-    labels: List[str] = Field(default_factory=list)
+    acceptance_criteria: list[str] = Field(default_factory=list)
+    labels: list[str] = Field(default_factory=list)
 
-    blocked_by: List[str] = Field(default_factory=list)
-    blocks: List[str] = Field(default_factory=list)
+    blocked_by: list[str] = Field(default_factory=list)
+    blocks: list[str] = Field(default_factory=list)
 
-    llm_hints: Optional[ModelHints] = None
+    llm_hints: ModelHints | None = None
 
     sync: dict = Field(default_factory=dict)  # {"github": {"issue": 142}}
-    history: List[dict] = Field(default_factory=list)
+    history: list[dict] = Field(default_factory=list)
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

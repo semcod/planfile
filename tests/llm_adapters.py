@@ -3,12 +3,10 @@ LiteLLM adapters for testing planfile with various LLM providers.
 """
 
 import os
-import json
-import asyncio
-from typing import Dict, List, Any, Optional, Union
+import time
 from dataclasses import dataclass
 from pathlib import Path
-import time
+from typing import Any
 
 try:
     import litellm
@@ -32,56 +30,56 @@ class LLMTestResult:
     model: str
     success: bool
     response_time: float
-    token_count: Optional[int] = None
-    cost: Optional[float] = None
-    error: Optional[str] = None
-    response: Optional[str] = None
+    token_count: int | None = None
+    cost: float | None = None
+    error: str | None = None
+    response: str | None = None
 
 
 class BaseLLMAdapter:
     """Base class for LLM adapters."""
-    
-    def __init__(self, config: Dict[str, Any]):
+
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.name = self.__class__.__name__
-    
+
     async def test_strategy_generation(
-        self, 
-        strategy_prompt: str, 
+        self,
+        strategy_prompt: str,
         model: str = None
     ) -> LLMTestResult:
         """Test strategy generation with the adapter."""
         raise NotImplementedError
-    
-    def get_available_models(self) -> List[str]:
+
+    def get_available_models(self) -> list[str]:
         """Get list of available models."""
         raise NotImplementedError
 
 
 class LiteLLMAdapter(BaseLLMAdapter):
     """Adapter for LiteLLM providers."""
-    
-    def __init__(self, config: Dict[str, Any]):
+
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         if not HAS_LITELLM:
             raise ImportError("litellm is required. Install with: pip install litellm")
-        
+
         # Configure LiteLLM
         if 'api_base' in config:
             litellm.api_base = config['api_base']
         if 'api_key' in config:
             litellm.api_key = config['api_key']
-    
+
     async def test_strategy_generation(
-        self, 
-        strategy_prompt: str, 
+        self,
+        strategy_prompt: str,
         model: str = None
     ) -> LLMTestResult:
         """Test strategy generation using LiteLLM."""
         model = model or self.config.get('default_model', 'gpt-3.5-turbo')
-        
+
         start_time = time.time()
-        
+
         try:
             response = await litellm.acompletion(
                 model=model,
@@ -98,9 +96,9 @@ class LiteLLMAdapter(BaseLLMAdapter):
                 temperature=0.3,
                 max_tokens=4000
             )
-            
+
             end_time = time.time()
-            
+
             return LLMTestResult(
                 provider="LiteLLM",
                 model=model,
@@ -110,7 +108,7 @@ class LiteLLMAdapter(BaseLLMAdapter):
                 cost=response._hidden_params.get('response_cost', None),
                 response=response.choices[0].message.content
             )
-            
+
         except Exception as e:
             end_time = time.time()
             return LLMTestResult(
@@ -120,8 +118,8 @@ class LiteLLMAdapter(BaseLLMAdapter):
                 response_time=end_time - start_time,
                 error=str(e)
             )
-    
-    def get_available_models(self) -> List[str]:
+
+    def get_available_models(self) -> list[str]:
         """Get LiteLLM supported models."""
         return [
             # OpenAI
@@ -144,32 +142,32 @@ class LiteLLMAdapter(BaseLLMAdapter):
 
 class OpenRouterAdapter(BaseLLMAdapter):
     """Adapter for OpenRouter API."""
-    
-    def __init__(self, config: Dict[str, Any]):
+
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.api_key = config.get('api_key') or os.environ.get('OPENROUTER_API_KEY')
         self.base_url = "https://openrouter.ai/api/v1"
-        
+
         if not self.api_key:
             raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY or pass in config")
-    
+
     async def test_strategy_generation(
-        self, 
-        strategy_prompt: str, 
+        self,
+        strategy_prompt: str,
         model: str = None
     ) -> LLMTestResult:
         """Test strategy generation using OpenRouter."""
         if not HAS_HTTPX:
             raise ImportError("httpx is required. Install with: pip install httpx")
-        
+
         model = model or self.config.get('default_model', 'anthropic/claude-3-haiku')
-        
+
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "HTTP-Referer": "https://github.com/wronai/planfile",
             "X-Title": "Planfile Strategy Generation"
         }
-        
+
         payload = {
             "model": model,
             "messages": [
@@ -185,9 +183,9 @@ class OpenRouterAdapter(BaseLLMAdapter):
             "temperature": 0.3,
             "max_tokens": 4000
         }
-        
+
         start_time = time.time()
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -197,10 +195,10 @@ class OpenRouterAdapter(BaseLLMAdapter):
                     timeout=120.0
                 )
                 response.raise_for_status()
-                
+
                 data = response.json()
                 end_time = time.time()
-                
+
                 return LLMTestResult(
                     provider="OpenRouter",
                     model=model,
@@ -209,7 +207,7 @@ class OpenRouterAdapter(BaseLLMAdapter):
                     token_count=data.get('usage', {}).get('total_tokens'),
                     response=data['choices'][0]['message']['content']
                 )
-                
+
         except Exception as e:
             end_time = time.time()
             return LLMTestResult(
@@ -219,8 +217,8 @@ class OpenRouterAdapter(BaseLLMAdapter):
                 response_time=end_time - start_time,
                 error=str(e)
             )
-    
-    def get_available_models(self) -> List[str]:
+
+    def get_available_models(self) -> list[str]:
         """Get OpenRouter available models."""
         return [
             "anthropic/claude-3-opus",
@@ -237,28 +235,28 @@ class OpenRouterAdapter(BaseLLMAdapter):
 
 class LocalLLMAdapter(BaseLLMAdapter):
     """Adapter for local LLM servers (Ollama, LM Studio, etc.)."""
-    
-    def __init__(self, config: Dict[str, Any]):
+
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.base_url = config.get('base_url', 'http://localhost:11434')
         self.provider = config.get('provider', 'ollama')
-    
+
     async def test_strategy_generation(
-        self, 
-        strategy_prompt: str, 
+        self,
+        strategy_prompt: str,
         model: str = None
     ) -> LLMTestResult:
         """Test strategy generation using local LLM."""
         if not HAS_HTTPX:
             raise ImportError("httpx is required. Install with: pip install httpx")
-        
+
         model = model or self.config.get('default_model', 'llama2')
-        
+
         if self.provider == 'ollama':
             return await self._test_ollama(strategy_prompt, model)
         else:
             return await self._test_openai_compatible(strategy_prompt, model)
-    
+
     async def _test_ollama(self, strategy_prompt: str, model: str) -> LLMTestResult:
         """Test with Ollama API."""
         payload = {
@@ -270,9 +268,9 @@ class LocalLLMAdapter(BaseLLMAdapter):
                 "num_predict": 4000
             }
         }
-        
+
         start_time = time.time()
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -281,10 +279,10 @@ class LocalLLMAdapter(BaseLLMAdapter):
                     timeout=120.0
                 )
                 response.raise_for_status()
-                
+
                 data = response.json()
                 end_time = time.time()
-                
+
                 return LLMTestResult(
                     provider="Ollama",
                     model=model,
@@ -292,7 +290,7 @@ class LocalLLMAdapter(BaseLLMAdapter):
                     response_time=end_time - start_time,
                     response=data.get('response', '')
                 )
-                
+
         except Exception as e:
             end_time = time.time()
             return LLMTestResult(
@@ -302,7 +300,7 @@ class LocalLLMAdapter(BaseLLMAdapter):
                 response_time=end_time - start_time,
                 error=str(e)
             )
-    
+
     async def _test_openai_compatible(self, strategy_prompt: str, model: str) -> LLMTestResult:
         """Test with OpenAI-compatible API."""
         payload = {
@@ -320,9 +318,9 @@ class LocalLLMAdapter(BaseLLMAdapter):
             "temperature": 0.3,
             "max_tokens": 4000
         }
-        
+
         start_time = time.time()
-        
+
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -331,10 +329,10 @@ class LocalLLMAdapter(BaseLLMAdapter):
                     timeout=120.0
                 )
                 response.raise_for_status()
-                
+
                 data = response.json()
                 end_time = time.time()
-                
+
                 return LLMTestResult(
                     provider="Local",
                     model=model,
@@ -343,7 +341,7 @@ class LocalLLMAdapter(BaseLLMAdapter):
                     token_count=data.get('usage', {}).get('total_tokens'),
                     response=data['choices'][0]['message']['content']
                 )
-                
+
         except Exception as e:
             end_time = time.time()
             return LLMTestResult(
@@ -353,8 +351,8 @@ class LocalLLMAdapter(BaseLLMAdapter):
                 response_time=end_time - start_time,
                 error=str(e)
             )
-    
-    def get_available_models(self) -> List[str]:
+
+    def get_available_models(self) -> list[str]:
         """Get local models."""
         if self.provider == 'ollama':
             return ['llama2', 'codellama', 'mistral', 'vicuna']
@@ -363,25 +361,25 @@ class LocalLLMAdapter(BaseLLMAdapter):
 
 class LLMTestRunner:
     """Run tests across multiple LLM adapters."""
-    
+
     def __init__(self):
-        self.adapters: Dict[str, BaseLLMAdapter] = {}
-        self.results: List[LLMTestResult] = []
-    
+        self.adapters: dict[str, BaseLLMAdapter] = {}
+        self.results: list[LLMTestResult] = []
+
     def register_adapter(self, name: str, adapter: BaseLLMAdapter):
         """Register an LLM adapter."""
         self.adapters[name] = adapter
-    
+
     async def test_strategy_with_all_adapters(
-        self, 
+        self,
         strategy_file: Path,
-        models_per_adapter: Dict[str, List[str]] = None
-    ) -> Dict[str, List[LLMTestResult]]:
+        models_per_adapter: dict[str, list[str]] = None
+    ) -> dict[str, list[LLMTestResult]]:
         """Test a strategy with all registered adapters."""
         # Read strategy file
-        with open(strategy_file, 'r') as f:
+        with open(strategy_file) as f:
             strategy_content = f.read()
-        
+
         # Create test prompt
         prompt = f"""
         Generate a comprehensive software development strategy based on this template:
@@ -390,30 +388,30 @@ class LLMTestRunner:
         
         Please create a new strategy for a different project type while maintaining the same structure and quality.
         """
-        
+
         results = {}
-        
+
         for adapter_name, adapter in self.adapters.items():
             print(f"\n🔄 Testing with {adapter_name}...")
             adapter_results = []
-            
+
             models = models_per_adapter.get(adapter_name, [None])
-            
+
             for model in models:
                 result = await adapter.test_strategy_generation(prompt, model)
                 adapter_results.append(result)
-                
+
                 status = "✅" if result.success else "❌"
                 print(f"  {status} {model or 'default'}: {result.response_time:.2f}s")
-                
+
                 if result.error:
                     print(f"    Error: {result.error}")
-            
+
             results[adapter_name] = adapter_results
-        
+
         return results
-    
-    def generate_report(self, results: Dict[str, List[LLMTestResult]]) -> str:
+
+    def generate_report(self, results: dict[str, list[LLMTestResult]]) -> str:
         """Generate a test report."""
         report_sections = [
             self._generate_header(),
@@ -421,17 +419,17 @@ class LLMTestRunner:
             self._generate_detailed_results(results),
         ]
         return "\n".join(report_sections)
-    
+
     def _generate_header(self) -> str:
         """Generate report header."""
         return "# LLM Adapter Test Report\n"
-    
-    def _generate_summary_table(self, results: Dict[str, List[LLMTestResult]]) -> str:
+
+    def _generate_summary_table(self, results: dict[str, list[LLMTestResult]]) -> str:
         """Generate summary table section."""
         report = ["## Summary\n"]
         report.append("| Adapter | Model | Success | Time (s) | Tokens | Cost |")
         report.append("|---------|-------|---------|----------|--------|------|")
-        
+
         for adapter_name, adapter_results in results.items():
             for result in adapter_results:
                 report.append(
@@ -439,28 +437,28 @@ class LLMTestRunner:
                     f"{'✅' if result.success else '❌'} | {result.response_time:.2f} | "
                     f"{result.token_count or '-'} | ${result.cost or '-'} |"
                 )
-        
+
         return "\n".join(report)
-    
-    def _generate_detailed_results(self, results: Dict[str, List[LLMTestResult]]) -> str:
+
+    def _generate_detailed_results(self, results: dict[str, list[LLMTestResult]]) -> str:
         """Generate detailed results section."""
         report = ["\n## Detailed Results\n"]
-        
+
         for adapter_name, adapter_results in results.items():
             report.append(f"### {adapter_name}\n")
-            
+
             successful = [r for r in adapter_results if r.success]
             failed = [r for r in adapter_results if not r.success]
-            
+
             if successful:
                 report.append(self._generate_successful_tests_section(successful))
-            
+
             if failed:
                 report.append(self._generate_failed_tests_section(failed))
-        
+
         return "\n".join(report)
-    
-    def _generate_successful_tests_section(self, successful: List[LLMTestResult]) -> str:
+
+    def _generate_successful_tests_section(self, successful: list[LLMTestResult]) -> str:
         """Generate successful tests section."""
         section = ["#### Successful Tests\n"]
         for result in successful:
@@ -472,8 +470,8 @@ class LLMTestRunner:
                 section.append(f"- Cost: ${result.cost:.4f}\n")
             section.append(f"- Response preview: {result.response[:200]}...\n")
         return "\n".join(section)
-    
-    def _generate_failed_tests_section(self, failed: List[LLMTestResult]) -> str:
+
+    def _generate_failed_tests_section(self, failed: list[LLMTestResult]) -> str:
         """Generate failed tests section."""
         section = ["#### Failed Tests\n"]
         for result in failed:
