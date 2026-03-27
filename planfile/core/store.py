@@ -237,20 +237,30 @@ class PlanfileStore:
                 encoding="utf-8",
             )
 
-    @staticmethod
-    def _apply_filters(tickets, status=None, priority=None,
-                       source=None, labels=None, **kw):
-        """Apply filters to tickets using filter chain pattern."""
-        filter_chain = TicketFilterChain()
-        
-        if status:
-            filter_chain.add_filter(StatusFilter(status))
-        if priority:
-            filter_chain.add_filter(PriorityFilter(priority))
-        if source:
-            filter_chain.add_filter(SourceFilter(source))
-        if labels:
-            filter_chain.add_filter(LabelsFilter(labels))
-        
-        return filter_chain.apply(tickets)
+    def load_sprint(self, sprint: str = "current") -> dict:
+        """Load sprint data as dictionary."""
+        sprint_file = self._sprint_file(sprint)
+        data = self._read_yaml(sprint_file)
+        # Handle both old format {"sprint": {...}} and new format
+        sprint_data = data.get("sprint", data)
+        if not sprint_data:
+            return {"tickets": {}}
+        return sprint_data
 
+    def save_sprint(self, sprint: str, data: dict):
+        """Save sprint data to file."""
+        sprint_file = self._sprint_file(sprint)
+        # Wrap in old format for compatibility
+        if "sprint" not in data:
+            output = {"sprint": data}
+        else:
+            output = data
+        self._write_yaml(sprint_file, output)
+
+    def load_backlog(self) -> dict:
+        """Load backlog as dictionary."""
+        return self.load_sprint("backlog")
+
+    def save_backlog(self, data: dict):
+        """Save backlog data."""
+        self.save_sprint("backlog", data)

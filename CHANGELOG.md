@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.43] - 2026-03-27
+
+### Other
+- Update examples/github/github.planfile.yaml
+- Update examples/github/planfile.yaml.old
+- Update planfile/cli/cmd/cmd_sync.py
+- Update planfile/core/store.py
+
 ## [0.1.42] - 2026-03-27
 
 ### Docs

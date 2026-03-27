@@ -8,7 +8,7 @@ integrations:
     repo: "semcod/planfile"
     
     # GitHub token (automatically loaded from GITHUB_TOKEN env var)
-    # token: "${GITHUB_TOKEN}"
+    token: "${GITHUB_TOKEN}"
     
     # Sync settings
     sync:
