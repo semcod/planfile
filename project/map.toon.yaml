@@ -1,13 +1,15 @@
-# planfile | 78f 9989L | python:73,shell:5 | 2026-03-27
-# stats: 365 func | 0 cls | 78 mod | CC̄=4.0 | critical:6 | cycles:0
-# alerts[5]: fan-out add_extra_commands=59; fan-out init_strategy_cli=27; fan-out register_ticket_commands=25; fan-out auto_loop=21; fan-out review_strategy_cli=21
-# hotspots[5]: add_extra_commands fan=59; init_strategy_cli fan=27; register_ticket_commands fan=25; auto_loop fan=21; review_strategy_cli fan=21
-# evolution: CC̄ 3.9→4.0 (regressed +0.1)
+# planfile | 82f 11590L | python:75,javascript:2,shell:5 | 2026-03-27
+# stats: 515 func | 0 cls | 82 mod | CC̄=4.0 | critical:14 | cycles:0
+# alerts[5]: fan-out init_strategy_cli=27; fan-out register_ticket_commands=25; fan-out create_examples_app=23; fan-out auto_loop=21; fan-out review_strategy_cli=21
+# hotspots[5]: init_strategy_cli fan=27; register_ticket_commands fan=25; create_examples_app fan=23; auto_loop fan=21; review_strategy_cli fan=21
+# evolution: CC̄ 4.1→4.0 (improved -0.1)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[78]:
+M[82]:
   auto_generate_planfile.sh,124
   cleanup_redundant.sh,71
   docker-entrypoint.sh,174
+  htmlcov/coverage_html_cb_6fb7b396.js,733
+  htmlcov/coverage_html_cb_dd2e7eb5.js,735
   mcp-server-example.py,27
   planfile/__init__.py,104
   planfile/analysis/__init__.py,26
@@ -31,8 +33,10 @@ M[78]:
   planfile/cli/auto_loop.py,252
   planfile/cli/cmd/cmd_apply.py,108
   planfile/cli/cmd/cmd_compare.py,96
+  planfile/cli/cmd/cmd_examples.py,189
   planfile/cli/cmd/cmd_export.py,144
   planfile/cli/cmd/cmd_generate.py,128
+  planfile/cli/cmd/cmd_health.py,83
   planfile/cli/cmd/cmd_init.py,299
   planfile/cli/cmd/cmd_review.py,97
   planfile/cli/cmd/cmd_stats.py,76
@@ -41,15 +45,15 @@ M[78]:
   planfile/cli/cmd/cmd_utils.py,96
   planfile/cli/cmd/cmd_validate.py,39
   planfile/cli/commands.py,79
-  planfile/cli/extra_commands.py,265
+  planfile/cli/extra_commands.py,20
   planfile/core/__init__.py,7
   planfile/core/models.py,492
-  planfile/core/store.py,186
+  planfile/core/store.py,255
   planfile/examples.py,141
   planfile/execution.py,23
   planfile/executor_standalone.py,336
   planfile/importers/__init__.py,26
-  planfile/importers/code2llm_importer.py,88
+  planfile/importers/code2llm_importer.py,125
   planfile/importers/json_importer.py,35
   planfile/importers/vallm_importer.py,54
   planfile/importers/yaml_importer.py,35
@@ -84,12 +88,163 @@ M[78]:
   project.sh,21
   run_examples.sh,286
 D:
-  planfile/importers/code2llm_importer.py:
-    e: import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health
-    import_code2llm(toon_path;auto_priority;sprint)
-    _parse_evolution(content;auto_priority)
-    _evolution_item_to_ticket(item;auto_priority)
-    _parse_health(content;auto_priority)
+  htmlcov/coverage_html_cb_dd2e7eb5.js:
+    e: debounce,timeoutId,checkVisible,rect,viewBottom,viewTop,on_click,elt,getCellValue,cell,child,rowComparator,valueA,valueB,sortColumn,currentSortOrder,current_direction,stored_list,saved_filter_value,saved_hide100_value,table,table_body_rows,no_rows,footer,ratio_columns,filter_handler,totals,text,casefold,hide100,show,celltext,cell,places,stored_list,by_region,sorted_by_region,frag,btn,category,btn,helpCheck,classes,match,c,probe,begin,next_indicator,c,probe,probe_line,chunk_indicator,end,prev_indicator,begin,end,line,line,c,probe_line,the_indicator,probe,indicator,begin,element,temp_scroll_marker,marker_scale,line_height,scroll_marker,line_top,line_number,header,header_bottom,updateHeader,ctxs,ctxs_text,width
+    debounce()
+    timeoutId()
+    checkVisible()
+    rect()
+    viewBottom()
+    viewTop()
+    on_click()
+    elt()
+    getCellValue()
+    cell()
+    child()
+    rowComparator()
+    valueA()
+    valueB()
+    sortColumn()
+    currentSortOrder()
+    current_direction()
+    stored_list()
+    saved_filter_value()
+    saved_hide100_value()
+    table()
+    table_body_rows()
+    no_rows()
+    footer()
+    ratio_columns()
+    filter_handler()
+    totals()
+    text()
+    casefold()
+    hide100()
+    show()
+    celltext()
+    cell()
+    places()
+    stored_list()
+    by_region()
+    sorted_by_region()
+    frag()
+    btn()
+    category()
+    btn()
+    helpCheck()
+    classes()
+    match()
+    c()
+    probe()
+    begin()
+    next_indicator()
+    c()
+    probe()
+    probe_line()
+    chunk_indicator()
+    end()
+    prev_indicator()
+    begin()
+    end()
+    line()
+    line()
+    c()
+    probe_line()
+    the_indicator()
+    probe()
+    indicator()
+    begin()
+    element()
+    temp_scroll_marker()
+    marker_scale()
+    line_height()
+    scroll_marker()
+    line_top()
+    line_number()
+    header()
+    header_bottom()
+    updateHeader()
+    ctxs()
+    ctxs_text()
+    width()
+  htmlcov/coverage_html_cb_6fb7b396.js:
+    e: debounce,timeoutId,checkVisible,rect,viewBottom,viewTop,on_click,elt,getCellValue,cell,child,rowComparator,valueA,valueB,sortColumn,currentSortOrder,current_direction,stored_list,saved_filter_value,saved_hide100_value,table,table_body_rows,no_rows,filter_handler,totals,text,casefold,hide100,show,celltext,footer,cell,places,stored_list,by_region,sorted_by_region,frag,btn,category,btn,helpCheck,classes,match,c,probe,begin,next_indicator,c,probe,probe_line,chunk_indicator,end,prev_indicator,begin,end,line,line,c,probe_line,the_indicator,probe,indicator,begin,element,temp_scroll_marker,marker_scale,line_height,scroll_marker,line_top,line_number,header,header_bottom,updateHeader,ctxs,ctxs_text,width
+    debounce()
+    timeoutId()
+    checkVisible()
+    rect()
+    viewBottom()
+    viewTop()
+    on_click()
+    elt()
+    getCellValue()
+    cell()
+    child()
+    rowComparator()
+    valueA()
+    valueB()
+    sortColumn()
+    currentSortOrder()
+    current_direction()
+    stored_list()
+    saved_filter_value()
+    saved_hide100_value()
+    table()
+    table_body_rows()
+    no_rows()
+    filter_handler()
+    totals()
+    text()
+    casefold()
+    hide100()
+    show()
+    celltext()
+    footer()
+    cell()
+    places()
+    stored_list()
+    by_region()
+    sorted_by_region()
+    frag()
+    btn()
+    category()
+    btn()
+    helpCheck()
+    classes()
+    match()
+    c()
+    probe()
+    begin()
+    next_indicator()
+    c()
+    probe()
+    probe_line()
+    chunk_indicator()
+    end()
+    prev_indicator()
+    begin()
+    end()
+    line()
+    line()
+    c()
+    probe_line()
+    the_indicator()
+    probe()
+    indicator()
+    begin()
+    element()
+    temp_scroll_marker()
+    marker_scale()
+    line_height()
+    scroll_marker()
+    line_top()
+    line_number()
+    header()
+    header_bottom()
+    updateHeader()
+    ctxs()
+    ctxs_text()
+    width()
   planfile/importers/vallm_importer.py:
     e: import_vallm,_auto_labels
     import_vallm(toon_path;auto_priority)
@@ -97,9 +252,6 @@ D:
   planfile/sync/gitlab.py:
     e: GitLabBackend
     GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
-  planfile/core/store.py:
-    e: PlanfileStore
-    PlanfileStore: __init__(1),init(0),is_initialized(0),create_ticket(1),get_ticket(1),update_ticket(1),delete_ticket(1),list_tickets(1),move_ticket(2),next_id(0),_sprint_file(1),_all_sprint_files(0),_read_yaml(1),_write_yaml(2),_apply_filters(4)  # Read/write tickets and sprints to .planfile/ YAML files...
   planfile/integrations/gitlab.py:
     e: GitLabBackend
     GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # GitLab Issues integration backend...
@@ -142,6 +294,11 @@ D:
   planfile/integrations/jira.py:
     e: JiraBackend
     JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),create_ticket(6),update_ticket(7),get_ticket(1),list_tickets(4),search_tickets(1)  # Jira integration backend...
+  planfile/cli/cmd/cmd_examples.py:
+    e: create_examples_app,_discover_examples,_execute_example
+    create_examples_app()
+    _discover_examples(examples_dir)
+    _execute_example(ex)
   planfile/analysis/parsers/text_parser.py:
     e: analyze_text
     analyze_text(file_path)
@@ -164,6 +321,13 @@ D:
     _ask(prompt;default;required)
     _ask_list(prompt;example)
     init_strategy_cli(output;yes)
+  planfile/importers/code2llm_importer.py:
+    e: EvolutionParser,import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health
+    EvolutionParser: __init__(1),parse(1),_process_line(1),_handle_outside(1),_handle_in_next(1)  # State machine parser for evolution.toon NEXT[] sections...
+    import_code2llm(toon_path;auto_priority;sprint)
+    _parse_evolution(content;auto_priority)
+    _evolution_item_to_ticket(item;auto_priority)
+    _parse_health(content;auto_priority)
   planfile/analysis/parsers/toon_parser.py:
     e: _parse_toon_header,_parse_toon_sections,_determine_section,_parse_health_section,_parse_refactor_section,_parse_warnings_section,_parse_errors_section,_parse_summary_section,_parse_duplicates_section,analyze_toon
     _parse_toon_header(line;file_path;metrics;issues)
@@ -310,6 +474,15 @@ D:
     export_to_csv(strategy;file_path)
     export_to_html(strategy;file_path)
     register_export_commands(app)
+  planfile/core/store.py:
+    e: PlanfileStore,TicketFilter,StatusFilter,PriorityFilter,SourceFilter,LabelsFilter,TicketFilterChain
+    PlanfileStore: __init__(1),init(0),is_initialized(0),create_ticket(1),get_ticket(1),update_ticket(1),delete_ticket(1),list_tickets(1),move_ticket(2),next_id(0),_sprint_file(1),_all_sprint_files(0),_read_yaml(1),_write_yaml(2),_apply_filters(4)  # Read/write tickets and sprints to .planfile/ YAML files...
+    TicketFilter: apply(1)  # Base class for ticket filters...
+    StatusFilter(TicketFilter): __init__(1),apply(1)  # Filter tickets by status...
+    PriorityFilter(TicketFilter): __init__(1),apply(1)  # Filter tickets by priority...
+    SourceFilter(TicketFilter): __init__(1),apply(1)  # Filter tickets by source tool...
+    LabelsFilter(TicketFilter): __init__(1),apply(1)  # Filter tickets by labels...
+    TicketFilterChain: __init__(0),add_filter(1),apply(1)  # Chain of ticket filters...
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)
@@ -384,6 +557,9 @@ D:
     planfile_apply(arguments)
     planfile_review(arguments)
     main()
+  planfile/cli/extra_commands.py:
+    e: add_extra_commands
+    add_extra_commands(app)
   planfile/llm/adapters.py:
     e: LLMTestResult,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAdapter,LocalLLMAdapter,LLMTestRunner
     LLMTestResult:
@@ -392,13 +568,13 @@ D:
     OpenRouterAdapter(BaseLLMAdapter):
     LocalLLMAdapter(BaseLLMAdapter):
     LLMTestRunner: __init__(0),register_adapter(2)
-  planfile/cli/extra_commands.py:
-    e: add_extra_commands
-    add_extra_commands(app)
   planfile/cli/cmd/cmd_template.py:
     e: generate_template,register_template_commands
     generate_template(project_type;domain)
     register_template_commands(app)
+  planfile/cli/cmd/cmd_health.py:
+    e: create_health_app
+    create_health_app()
   planfile/execution.py:
   planfile/models.py:
   planfile/sync/__init__.py:

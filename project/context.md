@@ -4,18 +4,31 @@
 
 - **Project**: /home/tom/github/semcod/planfile
 - **Primary Language**: python
-- **Languages**: python: 77, shell: 20, javascript: 1
+- **Languages**: python: 79, shell: 20, javascript: 3
 - **Analysis Mode**: static
-- **Total Functions**: 474
-- **Total Classes**: 60
-- **Modules**: 98
-- **Entry Points**: 371
+- **Total Functions**: 624
+- **Total Classes**: 67
+- **Modules**: 102
+- **Entry Points**: 511
 
 ## Architecture by Module
+
+### htmlcov.coverage_html_cb_dd2e7eb5
+- **Functions**: 77
+- **File**: `coverage_html_cb_dd2e7eb5.js`
 
 ### examples.htmlcov.coverage_html_cb_dd2e7eb5
 - **Functions**: 77
 - **File**: `coverage_html_cb_dd2e7eb5.js`
+
+### htmlcov.coverage_html_cb_6fb7b396
+- **Functions**: 76
+- **File**: `coverage_html_cb_6fb7b396.js`
+
+### planfile.core.store
+- **Functions**: 27
+- **Classes**: 7
+- **File**: `store.py`
 
 ### planfile.analysis.generator
 - **Functions**: 17
@@ -35,11 +48,6 @@
 ### planfile.loaders.yaml_loader
 - **Functions**: 15
 - **File**: `yaml_loader.py`
-
-### planfile.core.store
-- **Functions**: 15
-- **Classes**: 1
-- **File**: `store.py`
 
 ### planfile.analysis.external_tools
 - **Functions**: 13
@@ -88,32 +96,18 @@
 - **Classes**: 3
 - **File**: `ci.py`
 
+### planfile.importers.code2llm_importer
+- **Functions**: 9
+- **Classes**: 1
+- **File**: `code2llm_importer.py`
+
 ### planfile.cli.auto_loop
 - **Functions**: 9
 - **File**: `auto_loop.py`
 
-### planfile.integrations.jira
-- **Functions**: 9
-- **Classes**: 1
-- **File**: `jira.py`
-
-### planfile.integrations.generic
-- **Functions**: 9
-- **Classes**: 1
-- **File**: `generic.py`
-
-### planfile.sync.base
-- **Functions**: 9
-- **Classes**: 4
-- **File**: `base.py`
-
 ## Key Entry Points
 
 Main execution flows into the system:
-
-### planfile.cli.extra_commands.add_extra_commands
-> Add health and examples commands to the CLI app.
-- **Calls**: app.command, typer.Typer, examples_app.command, examples_app.command, app.add_typer, typer.Argument, _get_examples_dir, examples_dir.iterdir
 
 ### planfile.cli.cmd.cmd_ticket.register_ticket_commands
 > Register ticket subcommands on the typer app.
@@ -216,79 +210,84 @@ This command will:
 > Generate planfile from analyzed files.
 - **Calls**: self.analyzer.analyze_directory, self.generator.generate_sprints, self.generator.generate_tickets, self._extract_key_metrics, self._create_strategy_object, Path, self._generate_goal, self._generate_goals
 
-### examples.htmlcov.coverage_html_cb_dd2e7eb5.sortColumn
-- **Calls**: examples.htmlcov.coverage_html_cb_dd2e7eb5.getAttribute, examples.htmlcov.coverage_html_cb_dd2e7eb5.forEach, examples.htmlcov.coverage_html_cb_dd2e7eb5.setAttribute, examples.htmlcov.coverage_html_cb_dd2e7eb5.indexOf, examples.htmlcov.coverage_html_cb_dd2e7eb5.from, examples.htmlcov.coverage_html_cb_dd2e7eb5.closest, examples.htmlcov.coverage_html_cb_dd2e7eb5.querySelectorAll, examples.htmlcov.coverage_html_cb_dd2e7eb5.sort
+### htmlcov.coverage_html_cb_dd2e7eb5.sortColumn
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.getAttribute, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.setAttribute, htmlcov.coverage_html_cb_dd2e7eb5.indexOf, htmlcov.coverage_html_cb_dd2e7eb5.from, htmlcov.coverage_html_cb_dd2e7eb5.closest, htmlcov.coverage_html_cb_dd2e7eb5.querySelectorAll, htmlcov.coverage_html_cb_dd2e7eb5.sort
 
-### examples.htmlcov.coverage_html_cb_dd2e7eb5.table
-- **Calls**: examples.htmlcov.coverage_html_cb_dd2e7eb5.map, examples.htmlcov.coverage_html_cb_dd2e7eb5.getElementById, examples.htmlcov.coverage_html_cb_dd2e7eb5.setItem, examples.htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, examples.htmlcov.coverage_html_cb_dd2e7eb5.stringify, examples.htmlcov.coverage_html_cb_dd2e7eb5.forEach, examples.htmlcov.coverage_html_cb_dd2e7eb5.contains, examples.htmlcov.coverage_html_cb_dd2e7eb5.includes
+### htmlcov.coverage_html_cb_dd2e7eb5.table
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
 
-### examples.htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows
-- **Calls**: examples.htmlcov.coverage_html_cb_dd2e7eb5.map, examples.htmlcov.coverage_html_cb_dd2e7eb5.getElementById, examples.htmlcov.coverage_html_cb_dd2e7eb5.setItem, examples.htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, examples.htmlcov.coverage_html_cb_dd2e7eb5.stringify, examples.htmlcov.coverage_html_cb_dd2e7eb5.forEach, examples.htmlcov.coverage_html_cb_dd2e7eb5.contains, examples.htmlcov.coverage_html_cb_dd2e7eb5.includes
+### htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
 
-### examples.htmlcov.coverage_html_cb_dd2e7eb5.no_rows
-- **Calls**: examples.htmlcov.coverage_html_cb_dd2e7eb5.map, examples.htmlcov.coverage_html_cb_dd2e7eb5.getElementById, examples.htmlcov.coverage_html_cb_dd2e7eb5.setItem, examples.htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, examples.htmlcov.coverage_html_cb_dd2e7eb5.stringify, examples.htmlcov.coverage_html_cb_dd2e7eb5.forEach, examples.htmlcov.coverage_html_cb_dd2e7eb5.contains, examples.htmlcov.coverage_html_cb_dd2e7eb5.includes
+### htmlcov.coverage_html_cb_dd2e7eb5.no_rows
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
 
-### examples.htmlcov.coverage_html_cb_dd2e7eb5.footer
-- **Calls**: examples.htmlcov.coverage_html_cb_dd2e7eb5.map, examples.htmlcov.coverage_html_cb_dd2e7eb5.getElementById, examples.htmlcov.coverage_html_cb_dd2e7eb5.setItem, examples.htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, examples.htmlcov.coverage_html_cb_dd2e7eb5.stringify, examples.htmlcov.coverage_html_cb_dd2e7eb5.forEach, examples.htmlcov.coverage_html_cb_dd2e7eb5.contains, examples.htmlcov.coverage_html_cb_dd2e7eb5.includes
+### htmlcov.coverage_html_cb_dd2e7eb5.footer
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
+
+### htmlcov.coverage_html_cb_dd2e7eb5.ratio_columns
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
 
 ## Process Flows
 
 Key execution flows identified:
 
-### Flow 1: add_extra_commands
-```
-add_extra_commands [planfile.cli.extra_commands]
-```
-
-### Flow 2: register_ticket_commands
+### Flow 1: register_ticket_commands
 ```
 register_ticket_commands [planfile.cli.cmd.cmd_ticket]
 ```
 
-### Flow 3: init_strategy_cli
+### Flow 2: init_strategy_cli
 ```
 init_strategy_cli [planfile.cli.cmd.cmd_init]
   └─> _ask
   └─> _ask
 ```
 
-### Flow 4: example_metric_driven_planning
+### Flow 3: example_metric_driven_planning
 ```
 example_metric_driven_planning [examples.ecosystem.04_llx_integration]
   └─ →> print
   └─ →> print
 ```
 
-### Flow 5: example_strategy_generation_with_proxy
+### Flow 4: example_strategy_generation_with_proxy
 ```
 example_strategy_generation_with_proxy [examples.ecosystem.03_proxy_routing]
   └─ →> print
   └─ →> print
 ```
 
-### Flow 6: generate_from_files_cmd
+### Flow 5: generate_from_files_cmd
 ```
 generate_from_files_cmd [planfile.cli.cmd.cmd_generate]
 ```
 
-### Flow 7: review_strategy_cli
+### Flow 6: review_strategy_cli
 ```
 review_strategy_cli [planfile.cli.cmd.cmd_review]
 ```
 
-### Flow 8: auto_loop
+### Flow 7: auto_loop
 ```
 auto_loop [planfile.cli.auto_loop]
 ```
 
-### Flow 9: register_export_commands
+### Flow 8: register_export_commands
 ```
 register_export_commands [planfile.cli.cmd.cmd_export]
 ```
 
-### Flow 10: ci_status
+### Flow 9: ci_status
 ```
 ci_status [planfile.cli.auto_loop]
+```
+
+### Flow 10: example_mcp_session
+```
+example_mcp_session [examples.ecosystem.02_mcp_integration]
+  └─ →> print
+  └─ →> print
 ```
 
 ## Key Classes
@@ -473,7 +472,15 @@ Args:
 
 ### planfile.importers.code2llm_importer._parse_evolution
 > Parse NEXT[] section from evolution.toon.
-- **Output to**: content.split, None.startswith, tickets.append, None.startswith, planfile.importers.code2llm_importer._evolution_item_to_ticket
+- **Output to**: EvolutionParser, parser.parse
+
+### planfile.importers.code2llm_importer.EvolutionParser.parse
+> Parse content and return tickets.
+- **Output to**: content.split, self._process_line, self.tickets.append, planfile.importers.code2llm_importer._evolution_item_to_ticket
+
+### planfile.importers.code2llm_importer.EvolutionParser._process_line
+> Process a single line based on current state.
+- **Output to**: self._handle_outside, self._handle_in_next
 
 ### planfile.importers.code2llm_importer._parse_health
 > Parse HEALTH[] section from analysis.toon.
@@ -499,14 +506,6 @@ Args:
 > Parse LLM YAML response into Strategy model.
 - **Output to**: planfile.llm.generator._fix_yaml_formatting, yaml.safe_load, Strategy, None.split, None.split
 
-### planfile.llm.generator._fix_yaml_formatting
-> Fix common YAML formatting issues from LLM responses.
-- **Output to**: yaml_text.split, enumerate, None.join, fixed_lines.append, prev_line.startswith
-
-### planfile.integrations.gitlab.GitLabBackend._validate_config
-> Validate GitLab configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError
-
 ## Behavioral Patterns
 
 ### recursion_extract_from_yaml_structure
@@ -523,16 +522,17 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
-- `planfile.cli.extra_commands.add_extra_commands` - 109 calls
 - `planfile.cli.cmd.cmd_ticket.register_ticket_commands` - 70 calls
 - `planfile.cli.cmd.cmd_init.init_strategy_cli` - 70 calls
 - `examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
+- `planfile.cli.cmd.cmd_examples.create_examples_app` - 46 calls
 - `planfile.cli.cmd.cmd_generate.generate_from_files_cmd` - 45 calls
 - `planfile.cli.cmd.cmd_review.review_strategy_cli` - 40 calls
 - `planfile.cli.auto_loop.auto_loop` - 39 calls
 - `planfile.cli.cmd.cmd_export.register_export_commands` - 38 calls
 - `planfile.analysis.parsers.text_parser.analyze_text` - 30 calls
+- `planfile.cli.cmd.cmd_health.create_health_app` - 28 calls
 - `planfile.cli.auto_loop.ci_status` - 27 calls
 - `examples.ecosystem.02_mcp_integration.example_mcp_session` - 26 calls
 - `planfile.cli.cmd.cmd_stats.register_stats_commands` - 25 calls
@@ -554,15 +554,14 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 15 calls
 - `planfile.cli.cmd.cmd_utils.get_backend` - 15 calls
 - `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls
-- `examples.htmlcov.coverage_html_cb_dd2e7eb5.sortColumn` - 15 calls
-- `examples.htmlcov.coverage_html_cb_dd2e7eb5.table` - 15 calls
-- `examples.htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows` - 15 calls
-- `examples.htmlcov.coverage_html_cb_dd2e7eb5.no_rows` - 15 calls
-- `examples.htmlcov.coverage_html_cb_dd2e7eb5.footer` - 15 calls
-- `examples.htmlcov.coverage_html_cb_dd2e7eb5.ratio_columns` - 15 calls
-- `examples.htmlcov.coverage_html_cb_dd2e7eb5.filter_handler` - 15 calls
-- `planfile.core.store.PlanfileStore.list_tickets` - 14 calls
-- `planfile.core.models.Strategy.compare` - 14 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.sortColumn` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.table` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.no_rows` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.footer` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.ratio_columns` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.filter_handler` - 15 calls
+- `htmlcov.coverage_html_cb_6fb7b396.sortColumn` - 15 calls
 
 ## System Interactions
 
@@ -570,9 +569,6 @@ How components interact:
 
 ```mermaid
 graph TD
-    add_extra_commands --> command
-    add_extra_commands --> Typer
-    add_extra_commands --> add_typer
     register_ticket_comm --> Typer
     register_ticket_comm --> command
     init_strategy_cli --> Option
@@ -600,6 +596,9 @@ graph TD
     _parse_llx_output --> split
     _parse_llx_output --> ProjectMetrics
     _parse_llx_output --> strip
+    register_stats_comma --> command
+    register_stats_comma --> Argument
+    register_stats_comma --> load_strategy_yaml
 ```
 
 ## Reverse Engineering Guidelines

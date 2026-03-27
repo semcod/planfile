@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.36] - 2026-03-27
+
+### Docs
+- Update docs/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update planfile/cli/cmd/cmd_examples.py
+- Update planfile/cli/cmd/cmd_health.py
+- Update planfile/cli/extra_commands.py
+- Update planfile/core/store.py
+- Update planfile/importers/code2llm_importer.py
+- Update planfile/importers/common.py
+- Update planfile/importers/vallm_importer.py
+- Update project/analysis.toon.yaml
+- Update project/calls.mmd
+- Update project/calls.png
+- ... and 11 more files
+
 ## [0.1.35] - 2026-03-27
 
 ### Docs

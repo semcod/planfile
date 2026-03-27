@@ -11,6 +11,74 @@ from planfile.core.models import Ticket, TicketStatus, TicketSource
 PLANFILE_DIR = ".planfile"
 
 
+class TicketFilter:
+    """Base class for ticket filters."""
+    
+    def apply(self, tickets):
+        """Apply filter to tickets."""
+        raise NotImplementedError
+
+
+class StatusFilter(TicketFilter):
+    """Filter tickets by status."""
+    
+    def __init__(self, status):
+        self.status = status
+    
+    def apply(self, tickets):
+        return [t for t in tickets 
+                if t.status == self.status or t.status.value == self.status]
+
+
+class PriorityFilter(TicketFilter):
+    """Filter tickets by priority."""
+    
+    def __init__(self, priority):
+        self.priority = priority
+    
+    def apply(self, tickets):
+        return [t for t in tickets if t.priority == self.priority]
+
+
+class SourceFilter(TicketFilter):
+    """Filter tickets by source tool."""
+    
+    def __init__(self, source):
+        self.source = source
+    
+    def apply(self, tickets):
+        return [t for t in tickets 
+                if t.source and t.source.tool == self.source]
+
+
+class LabelsFilter(TicketFilter):
+    """Filter tickets by labels."""
+    
+    def __init__(self, labels):
+        self.label_set = set(labels)
+    
+    def apply(self, tickets):
+        return [t for t in tickets 
+                if self.label_set.intersection(set(t.labels))]
+
+
+class TicketFilterChain:
+    """Chain of ticket filters."""
+    
+    def __init__(self):
+        self.filters = []
+    
+    def add_filter(self, filter_obj):
+        """Add a filter to the chain."""
+        self.filters.append(filter_obj)
+    
+    def apply(self, tickets):
+        """Apply all filters in sequence."""
+        for filter_obj in self.filters:
+            tickets = filter_obj.apply(tickets)
+        return tickets
+
+
 class PlanfileStore:
     """Read/write tickets and sprints to .planfile/ YAML files."""
 
@@ -172,15 +240,17 @@ class PlanfileStore:
     @staticmethod
     def _apply_filters(tickets, status=None, priority=None,
                        source=None, labels=None, **kw):
+        """Apply filters to tickets using filter chain pattern."""
+        filter_chain = TicketFilterChain()
+        
         if status:
-            tickets = [t for t in tickets if t.status == status or t.status.value == status]
+            filter_chain.add_filter(StatusFilter(status))
         if priority:
-            tickets = [t for t in tickets if t.priority == priority]
+            filter_chain.add_filter(PriorityFilter(priority))
         if source:
-            tickets = [t for t in tickets
-                       if t.source and t.source.tool == source]
+            filter_chain.add_filter(SourceFilter(source))
         if labels:
-            label_set = set(labels)
-            tickets = [t for t in tickets
-                       if label_set.intersection(set(t.labels))]
-        return tickets
+            filter_chain.add_filter(LabelsFilter(labels))
+        
+        return filter_chain.apply(tickets)
+

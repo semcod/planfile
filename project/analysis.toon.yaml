@@ -1,11 +1,9 @@
-# code2llm | 78f 9989L | python:73,shell:5 | 2026-03-27
-# CC̄=4.0 | critical:6/474 | dups:6 | cycles:0
+# code2llm | 82f 11590L | python:75,shell:5,javascript:2 | 2026-03-27
+# CC̄=4.0 | critical:14/624 | dups:6 | cycles:0
 
-HEALTH[13]:
+HEALTH[20]:
   🔴 DUP   6 classes duplicated
   🟡 CC    update_ticket CC=15 (limit:15)
-  🟡 CC    _apply_filters CC=15 (limit:15)
-  🟡 CC    _parse_evolution CC=18 (limit:15)
   🟡 CC    import_vallm CC=16 (limit:15)
   🟡 CC    update_ticket CC=15 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
@@ -15,25 +13,38 @@ HEALTH[13]:
   🟡 CC    footer CC=21 (limit:15)
   🟡 CC    ratio_columns CC=21 (limit:15)
   🟡 CC    filter_handler CC=21 (limit:15)
+  🟡 CC    table CC=19 (limit:15)
+  🟡 CC    table_body_rows CC=19 (limit:15)
+  🟡 CC    no_rows CC=19 (limit:15)
+  🟡 CC    filter_handler CC=19 (limit:15)
+  🟡 CC    table CC=21 (limit:15)
+  🟡 CC    table_body_rows CC=21 (limit:15)
+  🟡 CC    no_rows CC=21 (limit:15)
+  🟡 CC    footer CC=21 (limit:15)
+  🟡 CC    ratio_columns CC=21 (limit:15)
 
 REFACTOR[2]:
   1. rm duplicates  (-6 dup classes)
-  2. split 12 high-CC methods  (CC>15)
+  2. split 19 high-CC methods  (CC>15)
 
-PIPELINES[284]:
-  [1] Src [planfile_generate]: planfile_generate
+PIPELINES[381]:
+  [1] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
-  [2] Src [planfile_apply]: planfile_apply
+  [2] Src [analyze_generated_code]: analyze_generated_code
       PURITY: 100% pure
-  [3] Src [planfile_review]: planfile_review
+  [3] Src [_is_llx_available]: _is_llx_available
       PURITY: 100% pure
-  [4] Src [main]: main
+  [4] Src [_parse_llx_analysis]: _parse_llx_analysis
       PURITY: 100% pure
-  [5] Src [validate_strategy]: validate_strategy
+  [5] Src [_basic_code_analysis]: _basic_code_analysis
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=4.2    ←in:11  →out:7  ×DUP
+  htmlcov/                        CC̄=4.3    ←in:0  →out:0
+  │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
+  │ !! coverage_html_cb_6fb7b396.js   733L  0C   64m  CC=19     ←0
+  │
+  planfile/                       CC̄=4.1    ←in:11  →out:7  ×DUP
   │ !! models                     492L  11C   17m  CC=15     ←2
   │ executor_standalone        336L  3C   12m  CC=8      ←0
   │ ci                         318L  3C    9m  CC=7      ←0
@@ -43,7 +54,7 @@ LAYERS:
   │ jira                       283L  1C    9m  CC=13     ←0  ×DUP
   │ jira                       283L  1C    9m  CC=13     ←0  ×DUP
   │ external_tools             267L  2C   13m  CC=12     ←0
-  │ extra_commands             265L  0C    1m  CC=1      ←0
+  │ store                      255L  7C   27m  CC=5      ←0
   │ auto_loop                  252L  0C    9m  CC=10     ←1
   │ generator                  243L  1C   17m  CC=14     ←0
   │ !! gitlab                     237L  1C    7m  CC=15     ←0  ×DUP
@@ -58,12 +69,13 @@ LAYERS:
   │ cmd_ticket                 199L  0C    2m  CC=10     ←0
   │ cli_loader                 194L  0C   10m  CC=7      ←1
   │ sprint_generator           190L  1C   10m  CC=9      ←0
-  │ !! store                      186L  1C   15m  CC=15     ←0
+  │ cmd_examples               189L  0C    3m  CC=13     ←1
   │ generator                  146L  0C    6m  CC=8      ←1
   │ cmd_export                 144L  0C    3m  CC=6      ←0
   │ examples                   141L  0C    5m  CC=2      ←0
   │ cmd_generate               128L  0C    2m  CC=14     ←0
   │ file_analyzer              125L  1C   10m  CC=7      ←0
+  │ code2llm_importer          125L  1C    9m  CC=11     ←1
   │ text_parser                119L  0C    1m  CC=13     ←3
   │ cmd_template               118L  0C    2m  CC=1      ←0
   │ base                       112L  4C    9m  CC=4      ←0  ×DUP
@@ -75,7 +87,7 @@ LAYERS:
   │ cmd_review                  97L  0C    1m  CC=10     ←0
   │ cmd_utils                   96L  0C    5m  CC=6      ←2
   │ cmd_compare                 96L  0C    2m  CC=10     ←0
-  │ !! code2llm_importer           88L  0C    4m  CC=18     ←1
+  │ cmd_health                  83L  0C    1m  CC=1      ←1
   │ adapters                    80L  6C    5m  CC=1      ←0
   │ yaml_parser                 80L  0C    2m  CC=9      ←2
   │ commands                    79L  0C    3m  CC=2      ←0
@@ -96,6 +108,7 @@ LAYERS:
   │ __init__                    26L  0C    0m  CC=0.0    ←0
   │ execution                   23L  0C    0m  CC=0.0    ←0
   │ __init__                    23L  0C    0m  CC=0.0    ←0
+  │ extra_commands              20L  0C    1m  CC=1      ←0
   │ models                      12L  0C    0m  CC=0.0    ←0
   │ __init__                    12L  0C    0m  CC=0.0    ←0
   │ __init__                     7L  0C    0m  CC=0.0    ←0
@@ -132,8 +145,8 @@ COUPLING:
         planfile.mcp                                       1                                                                                                                      ──                    
         run_examples                  ←1                                                                                                                                                              ──
   CYCLES: none
-  HUB: planfile/ (fan-in=11)
   HUB: planfile.loaders/ (fan-in=15)
+  HUB: planfile/ (fan-in=11)
   SMELL: planfile.cli/ fan-out=25 → split needed
 
 EXTERNAL:

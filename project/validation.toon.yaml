@@ -1,9 +1,9 @@
-# vallm batch | 213f | 93✓ 9⚠ 68✗ | 2026-03-27
+# vallm batch | 216f | 95✓ 8⚠ 68✗ | 2026-03-27
 
 SUMMARY:
-  scanned: 213  passed: 93 (43.7%)  warnings: 9  errors: 68  unsupported: 52
+  scanned: 216  passed: 95 (44.0%)  warnings: 8  errors: 68  unsupported: 53
 
-WARNINGS[9]{path,score}:
+WARNINGS[8]{path,score}:
   examples/bash-generation/verify_planfile.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
@@ -19,10 +19,6 @@ WARNINGS[9]{path,score}:
   planfile/cli/cmd/cmd_init.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,init_strategy_cli: 143 lines exceeds limit 100,126
-  planfile/importers/code2llm_importer.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_parse_evolution has cyclomatic complexity 18 (max: 15),16
-      complexity.lizard_cc,warning,_parse_evolution: CC=18 exceeds limit 15,16
   planfile/importers/vallm_importer.py,0.97
     issues[2]{rule,severity,message,line}:
       complexity.cyclomatic,warning,import_vallm has cyclomatic complexity 16 (max: 15),4
@@ -361,13 +357,13 @@ ERRORS[68]{path,score}:
   examples/test_llm_adapters.py,0.94
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'planfile.llm.adapters' not found,16
-  planfile/cli/extra_commands.py,0.96
+  planfile/cli/cmd/cmd_health.py,0.94
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'analysis.generator' not found,32
+      python.import.resolvable,error,Module 'analysis.generator' not found,24
 
 UNSUPPORTED[5]{bucket,count}:
   *.md,37
   Dockerfile*,1
   *.txt,2
   *.yml,2
-  other,10
+  other,11
