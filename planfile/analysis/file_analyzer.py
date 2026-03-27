@@ -82,7 +82,11 @@ class FileAnalyzer:
         for pattern in patterns:
             for file_path in directory.rglob(pattern):
                 # Skip hidden files and common exclusions
-                if file_path.name.startswith('.') or any(skip in str(file_path) for skip in ['__pycache__', '.git', 'node_modules', '.pytest_cache']):
+                if file_path.name.startswith('.') or any(skip in str(file_path) for skip in ['__pycache__', '.git', 'node_modules', '.pytest_cache', '.planfile_analysis']):
+                    continue
+                
+                # Skip analysis files to prevent recursive analysis
+                if 'analysis_summary.json' in file_path.name or 'local-strategy.yaml' in file_path.name:
                     continue
                 
                 issues, metrics, tasks = self.analyze_file(file_path)

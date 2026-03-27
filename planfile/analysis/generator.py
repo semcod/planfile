@@ -261,16 +261,46 @@ class PlanfileGenerator:
     def _create_strategy_object(self, strategy_data: Dict[str, Any]) -> Strategy:
         return strategy_data
     
-    def _make_serializable(self, obj: Any) -> Any:
+    def _make_serializable(self, obj: Any, visited: set = None) -> Any:
+        """Convert object to serializable format with cycle detection."""
+        if visited is None:
+            visited = set()
+        
+        # Prevent infinite recursion
+        obj_id = id(obj)
+        if obj_id in visited:
+            return f"<circular_reference_{obj_id}>"
+        visited.add(obj_id)
+        
         if hasattr(obj, '__dict__'):
-            return {k: self._make_serializable(v) for k, v in obj.__dict__.items()}
+            result = {}
+            for k, v in obj.__dict__.items():
+                # Skip private attributes and large data structures
+                if k.startswith('_') or k in ['content', 'file_contents', 'raw_data']:
+                    continue
+                result[k] = self._make_serializable(v, visited)
+            return result
         elif isinstance(obj, dict):
-            return {k: self._make_serializable(v) for k, v in obj.items()}
+            result = {}
+            for k, v in obj.items():
+                # Skip large values
+                if isinstance(v, str) and len(v) > 1000:
+                    result[k] = f"<string_length_{len(v)}>"
+                else:
+                    result[k] = self._make_serializable(v, visited)
+            return result
         elif isinstance(obj, list):
-            return [self._make_serializable(item) for item in obj]
+            # Limit list size to prevent bloat
+            if len(obj) > 100:
+                return f"<list_length_{len(obj)}>"
+            return [self._make_serializable(item, visited) for item in obj]
+        elif isinstance(obj, (str, int, float, bool)) or obj is None:
+            if isinstance(obj, str) and len(obj) > 1000:
+                return f"<string_length_{len(obj)}>"
+            return obj
         elif hasattr(obj, '__name__'):
             return str(obj)
         else:
-            return obj
+            return f"<type_{type(obj).__name__}>"
 
 generator = PlanfileGenerator()

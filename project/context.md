@@ -165,6 +165,10 @@ This command will:
 > Register stats command on the typer app.
 - **Calls**: app.command, typer.Argument, planfile.loaders.yaml_loader.load_strategy_yaml, planfile.cli.cmd.cmd_stats.calculate_strategy_stats, Table, table.add_column, table.add_column, table.add_row
 
+### planfile.analysis.generator.PlanfileGenerator._make_serializable
+> Convert object to serializable format with cycle detection.
+- **Calls**: id, visited.add, hasattr, set, obj.__dict__.items, isinstance, self._make_serializable, obj.items
+
 ### planfile.core.models.Strategy.merge
 > Merge with other strategies to create a combined strategy.
 - **Calls**: self.model_dump, set, merged_data.get, Strategy, merged_data.get, all_sprints.append, merged_data.get, all_gates.append
@@ -226,9 +230,6 @@ This command will:
 - **Calls**: htmlcov.coverage_html_cb_6fb7b396.Array, htmlcov.coverage_html_cb_6fb7b396.fill, htmlcov.coverage_html_cb_6fb7b396.getElementById, htmlcov.coverage_html_cb_6fb7b396.setItem, htmlcov.coverage_html_cb_6fb7b396.toLowerCase, htmlcov.coverage_html_cb_6fb7b396.stringify, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.contains
 
 ### htmlcov.coverage_html_cb_6fb7b396.no_rows
-- **Calls**: htmlcov.coverage_html_cb_6fb7b396.Array, htmlcov.coverage_html_cb_6fb7b396.fill, htmlcov.coverage_html_cb_6fb7b396.getElementById, htmlcov.coverage_html_cb_6fb7b396.setItem, htmlcov.coverage_html_cb_6fb7b396.toLowerCase, htmlcov.coverage_html_cb_6fb7b396.stringify, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.contains
-
-### htmlcov.coverage_html_cb_6fb7b396.filter_handler
 - **Calls**: htmlcov.coverage_html_cb_6fb7b396.Array, htmlcov.coverage_html_cb_6fb7b396.fill, htmlcov.coverage_html_cb_6fb7b396.getElementById, htmlcov.coverage_html_cb_6fb7b396.setItem, htmlcov.coverage_html_cb_6fb7b396.toLowerCase, htmlcov.coverage_html_cb_6fb7b396.stringify, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.contains
 
 ## Process Flows
@@ -410,10 +411,6 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 
 Key functions that process and transform data:
 
-### planfile.examples.example_validate_strategy
-> Load and validate an existing strategy.
-- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
-
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
 - **Output to**: self._is_llx_available, subprocess.run, str, str
@@ -421,6 +418,10 @@ Key functions that process and transform data:
 ### examples.llx_validator.LLXValidator._parse_llx_analysis
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
+
+### planfile.examples.example_validate_strategy
+> Load and validate an existing strategy.
+- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
 
 ### planfile.sync.gitlab.GitLabBackend._validate_config
 > Validate GitLab configuration.
@@ -490,34 +491,36 @@ Args:
 ### planfile.analysis.generator.PlanfileGenerator._parse_effort
 - **Output to**: parse_effort
 
-### planfile.sync.base.BasePMBackend._validate_config
-> Validate backend configuration.
+### planfile.sync.mock.MockBackend._validate_config
+> Mock backend has no config requirements.
 
-### planfile.core.models.ModelHints.convert_str_to_tier
-- **Output to**: field_validator, isinstance
+### planfile.core.store.PlanfileStore._invalidate_cache
+> Invalidate cache for a file or all files.
+- **Output to**: self._cache.pop, self._cache.clear, str
 
-### planfile.core.models.Sprint.convert_tasks
-- **Output to**: field_validator, isinstance, isinstance, isinstance, tasks.append
+### planfile.importers.redup_importer._parse_toon_format
+> Parse redup toon.yaml format into structured data.
+- **Output to**: re.search, re.search, re.search, re.search, None.strip
 
-### planfile.core.models.Strategy.validate_sprint_ids
-> Ensure sprint IDs are unique.
-- **Output to**: field_validator, len, len, ValueError, isinstance
+### planfile.importers.redup_importer._parse_duplicates
+> Parse DUPLICATES section.
+- **Output to**: text.split, line.strip, re.match, duplicates.append, duplicates.append
 
-### planfile.core.models.Strategy.model_validate_yaml
-> Load strategy from YAML string.
-- **Output to**: yaml.safe_load, cls.model_validate, isinstance, isinstance, TaskType
+### planfile.importers.redup_importer._parse_refactor
+> Parse REFACTOR section.
+- **Output to**: text.split, line.strip, re.match, refactor_items.append, refactor_items.append
 
 ## Behavioral Patterns
-
-### recursion_extract_from_yaml_structure
-- **Type**: recursion
-- **Confidence**: 0.90
-- **Functions**: planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure
 
 ### recursion_load_dotenv
 - **Type**: recursion
 - **Confidence**: 0.90
 - **Functions**: planfile.integrations.config.IntegrationConfig.load_dotenv
+
+### recursion_extract_from_yaml_structure
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure
 
 ### state_machine_SyncState
 - **Type**: state_machine
@@ -551,6 +554,7 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.cli.cmd.cmd_compare.compare_strategies` - 22 calls
 - `planfile.cli.cmd.cmd_compare.register_compare_commands` - 22 calls
 - `planfile.cli.cmd.cmd_validate.validate_strategy_cli` - 22 calls
+- `planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure` - 21 calls
 - `planfile.core.models.Strategy.to_llx_format` - 20 calls
 - `planfile.cli.cmd.cmd_apply.apply_strategy_cli` - 20 calls
 - `planfile.cli.cmd.cmd_generate.generate_strategy_cli` - 20 calls
@@ -567,7 +571,6 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls
 - `htmlcov.coverage_html_cb_6fb7b396.sortColumn` - 15 calls
 - `htmlcov.coverage_html_cb_6fb7b396.table` - 15 calls
-- `htmlcov.coverage_html_cb_6fb7b396.table_body_rows` - 15 calls
 
 ## System Interactions
 

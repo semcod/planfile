@@ -308,11 +308,16 @@ class PlanfileStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         lock = FileLock(str(path) + ".lock", timeout=5)
         with lock:
-            path.write_text(
-                yaml.dump(data, default_flow_style=False,
-                          allow_unicode=True, sort_keys=False),
-                encoding="utf-8",
-            )
+            try:
+                # Use safe_dump to prevent circular reference issues
+                content = yaml.safe_dump(data, default_flow_style=False,
+                                         allow_unicode=True, sort_keys=False)
+            except Exception as e:
+                # Fallback to regular dump if safe_dump fails
+                print(f"Warning: safe_dump failed, using regular dump: {e}")
+                content = yaml.dump(data, default_flow_style=False,
+                                   allow_unicode=True, sort_keys=False)
+            path.write_text(content, encoding="utf-8")
 
     def load_sprint(self, sprint: str = "current") -> dict:
         """Load sprint data as dictionary."""

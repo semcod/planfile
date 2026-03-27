@@ -7,31 +7,45 @@ from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedT
 from planfile.analysis.parsers.text_parser import analyze_text
 from planfile.analysis.parsers.toon_parser import analyze_toon
 
-def extract_from_yaml_structure(data: Any, path: str, parent_key: str = "") -> List[ExtractedIssue]:
-    """Extract issues from YAML structure."""
+def extract_from_yaml_structure(data: Any, path: str, parent_key: str = "", visited: set = None) -> List[ExtractedIssue]:
+    """Extract issues from YAML structure with recursion protection."""
+    if visited is None:
+        visited = set()
+    
     issues = []
+    
+    # Prevent infinite recursion
+    if id(data) in visited:
+        return issues
+    visited.add(id(data))
     
     if isinstance(data, dict):
         for key, value in data.items():
             full_key = f"{parent_key}.{key}" if parent_key else key
             
-            # Look for common issue indicators
-            if isinstance(value, str):
-                if any(keyword in value.lower() for keyword in ['error', 'fail', 'bug', 'issue']):
-                    issues.append(ExtractedIssue(
-                        title=f"Issue in {full_key}",
-                        description=value,
-                        priority="medium",
-                        category="bug",
-                        file_path=path
-                    ))
+            # Skip if we're already processing issues (prevent self-reference)
+            if 'issues' in full_key.lower():
+                continue
             
-            # Recurse
-            issues.extend(extract_from_yaml_structure(value, path, full_key))
+            # Look for common issue indicators, but not in our own generated content
+            if isinstance(value, str) and len(value) < 500:  # Limit string length
+                if any(keyword in value.lower() for keyword in ['error', 'fail', 'bug', 'issue']):
+                    # Skip if this looks like our own generated issue
+                    if not any(skip in value.lower() for skip in ['extractedissue', 'file_path', 'priority:', 'category:']):
+                        issues.append(ExtractedIssue(
+                            title=f"Issue in {full_key}",
+                            description=value[:200],  # Limit description length
+                            priority="medium",
+                            category="bug",
+                            file_path=path
+                        ))
+            
+            # Recurse with protection
+            issues.extend(extract_from_yaml_structure(value, path, full_key, visited))
     
     elif isinstance(data, list):
         for i, item in enumerate(data):
-            issues.extend(extract_from_yaml_structure(item, path, f"{parent_key}[{i}]"))
+            issues.extend(extract_from_yaml_structure(item, path, f"{parent_key}[{i}]", visited))
     
     return issues
 

@@ -22,10 +22,14 @@ class SyncState:
         state["ticket_map"] = {**state.get("ticket_map", {}), **ticket_map}
         state["synced_at"] = datetime.utcnow().isoformat()
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
-        self.state_file.write_text(
-            yaml.dump(state, default_flow_style=False, sort_keys=False),
-            encoding="utf-8",
-        )
+        try:
+            # Use safe_dump to prevent circular reference issues
+            content = yaml.safe_dump(state, default_flow_style=False, sort_keys=False)
+        except Exception as e:
+            # Fallback to regular dump if safe_dump fails
+            print(f"Warning: safe_dump failed in save_sync, using regular dump: {e}")
+            content = yaml.dump(state, default_flow_style=False, sort_keys=False)
+        self.state_file.write_text(content, encoding="utf-8")
 
     def get_remote_id(self, local_id: str) -> str | None:
         """Look up remote ID for a local ticket."""

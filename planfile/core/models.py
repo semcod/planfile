@@ -354,7 +354,12 @@ class Strategy(BaseModel):
     def export(self, format: str = 'yaml') -> str:
         """Export strategy to specified format."""
         if format.lower() == 'yaml':
-            return yaml.dump(self.model_dump(), default_flow_style=False, sort_keys=False)
+            try:
+                return yaml.safe_dump(self.model_dump(), default_flow_style=False, sort_keys=False)
+            except Exception as e:
+                # Fallback to regular dump if safe_dump fails
+                print(f"Warning: safe_dump failed in export, using regular dump: {e}")
+                return yaml.dump(self.model_dump(), default_flow_style=False, sort_keys=False)
         elif format.lower() == 'json':
             import json
             return json.dumps(self.model_dump(), indent=2, default=str)
@@ -445,7 +450,12 @@ class Strategy(BaseModel):
 
     def to_yaml(self) -> str:
         """Export to YAML with clean formatting."""
-        return yaml.dump(self.model_dump(exclude_none=True), default_flow_style=False, sort_keys=False)
+        try:
+            return yaml.safe_dump(self.model_dump(exclude_none=True), default_flow_style=False, sort_keys=False)
+        except Exception as e:
+            # Fallback to regular dump if safe_dump fails
+            print(f"Warning: safe_dump failed in to_yaml, using regular dump: {e}")
+            return yaml.dump(self.model_dump(exclude_none=True), default_flow_style=False, sort_keys=False)
 
 
 # ─── Ticket types (new in Sprint 3) ───

@@ -5,51 +5,52 @@ NEXT[10] (ranked by impact):
       WHY: 753L, 2 classes, max CC=47
       EFFORT: ~4h  IMPACT: 35391
 
-  [2] !! SPLIT-FUNC      sync_integration  CC=40  fan=31
+  [2] !! SPLIT           planfile/core/models.py
+      WHY: 502L, 11 classes, max CC=15
+      EFFORT: ~4h  IMPACT: 7530
+
+  [3] !! SPLIT-FUNC      sync_integration  CC=40  fan=31
       WHY: CC=40 exceeds 15
       EFFORT: ~1h  IMPACT: 1240
 
-  [3] !! SPLIT-FUNC      _detect_from_pyproject  CC=28  fan=24
+  [4] !! SPLIT-FUNC      _detect_from_pyproject  CC=28  fan=24
       WHY: CC=28 exceeds 15
       EFFORT: ~1h  IMPACT: 672
 
-  [4] !! SPLIT-FUNC      _detect_quality_gates  CC=47  fan=13
+  [5] !! SPLIT-FUNC      _detect_quality_gates  CC=47  fan=13
       WHY: CC=47 exceeds 15
       EFFORT: ~1h  IMPACT: 611
 
-  [5] !  SPLIT-FUNC      init_strategy_cli  CC=19  fan=30
+  [6] !  SPLIT-FUNC      init_strategy_cli  CC=19  fan=30
       WHY: CC=19 exceeds 15
       EFFORT: ~1h  IMPACT: 570
 
-  [6] !  SPLIT-FUNC      sync_to_external  CC=23  fan=19
+  [7] !  SPLIT-FUNC      sync_to_external  CC=23  fan=19
       WHY: CC=23 exceeds 15
       EFFORT: ~1h  IMPACT: 437
 
-  [7] !  SPLIT-FUNC      sync_from_external  CC=20  fan=18
+  [8] !  SPLIT-FUNC      sync_from_external  CC=20  fan=18
       WHY: CC=20 exceeds 15
       EFFORT: ~1h  IMPACT: 360
 
-  [8] !  SPLIT-FUNC      table  CC=21  fan=15
+  [9] !  SPLIT-FUNC      table  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
-  [9] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
-
-  [10] !  SPLIT-FUNC      no_rows  CC=21  fan=15
+  [10] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
       WHY: CC=21 exceeds 15
       EFFORT: ~1h  IMPACT: 315
 
 
-RISKS[1]:
+RISKS[2]:
   ⚠ Splitting planfile/cli/project_detector.py may break 16 import paths
+  ⚠ Splitting planfile/core/models.py may break 17 import paths
 
 METRICS-TARGET:
-  CC̄:          4.2 → ≤2.9
+  CC̄:          4.3 → ≤3.0
   max-CC:      47 → ≤20
-  god-modules: 1 → 0
-  high-CC(≥15): 25 → ≤12
+  god-modules: 2 → 0
+  high-CC(≥15): 27 → ≤13
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -77,4 +78,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.2 → now CC̄=4.2
+  prev CC̄=4.2 → now CC̄=4.3

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.49] - 2026-03-27
+
+### Docs
+- Update project/context.md
+
+### Other
+- Update planfile/analysis/file_analyzer.py
+- Update planfile/analysis/generator.py
+- Update planfile/analysis/parsers/yaml_parser.py
+- Update planfile/core/models.py
+- Update planfile/core/store.py
+- Update planfile/sync/state.py
+- Update project.sh
+- Update project/analysis.toon.yaml
+- Update project/calls.mmd
+- Update project/calls.png
+- ... and 8 more files
+
 ## [0.1.48] - 2026-03-27
 
 ### Docs
