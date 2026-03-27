@@ -1,54 +1,55 @@
-# code2llm/evolution | 529 func | 65f | 2026-03-27
+# code2llm/evolution | 538 func | 65f | 2026-03-27
 
 NEXT[10] (ranked by impact):
-  [1] !  SPLIT-FUNC      sync_integration  CC=21  fan=24
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 504
+  [1] !! SPLIT           planfile/cli/project_detector.py
+      WHY: 753L, 2 classes, max CC=47
+      EFFORT: ~4h  IMPACT: 35391
 
-  [2] !! SPLIT-FUNC      _detect_from_pyproject  CC=26  fan=16
-      WHY: CC=26 exceeds 15
-      EFFORT: ~1h  IMPACT: 416
+  [2] !! SPLIT-FUNC      sync_integration  CC=38  fan=30
+      WHY: CC=38 exceeds 15
+      EFFORT: ~1h  IMPACT: 1140
 
-  [3] !  SPLIT-FUNC      table  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
+  [3] !! SPLIT-FUNC      _detect_from_pyproject  CC=28  fan=24
+      WHY: CC=28 exceeds 15
+      EFFORT: ~1h  IMPACT: 672
 
-  [4] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
+  [4] !! SPLIT-FUNC      _detect_quality_gates  CC=47  fan=13
+      WHY: CC=47 exceeds 15
+      EFFORT: ~1h  IMPACT: 611
 
-  [5] !  SPLIT-FUNC      no_rows  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
-
-  [6] !  SPLIT-FUNC      footer  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
-
-  [7] !  SPLIT-FUNC      ratio_columns  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
-
-  [8] !  SPLIT-FUNC      filter_handler  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
-
-  [9] !  SPLIT-FUNC      table  CC=19  fan=15
+  [5] !  SPLIT-FUNC      init_strategy_cli  CC=19  fan=30
       WHY: CC=19 exceeds 15
-      EFFORT: ~1h  IMPACT: 285
+      EFFORT: ~1h  IMPACT: 570
 
-  [10] !  SPLIT-FUNC      table_body_rows  CC=19  fan=15
-      WHY: CC=19 exceeds 15
-      EFFORT: ~1h  IMPACT: 285
+  [6] !  SPLIT-FUNC      table  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [7] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [8] !  SPLIT-FUNC      no_rows  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [9] !  SPLIT-FUNC      footer  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
+
+  [10] !  SPLIT-FUNC      ratio_columns  CC=21  fan=15
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 315
 
 
-RISKS[0]: none
+RISKS[1]:
+  ⚠ Splitting planfile/cli/project_detector.py may break 16 import paths
 
 METRICS-TARGET:
-  CC̄:          3.9 → ≤2.7
-  max-CC:      26 → ≤13
-  god-modules: 0 → 0
-  high-CC(≥15): 15 → ≤7
+  CC̄:          4.1 → ≤2.9
+  max-CC:      47 → ≤20
+  god-modules: 1 → 0
+  high-CC(≥15): 21 → ≤10
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -76,4 +77,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=3.9 → now CC̄=3.9
+  prev CC̄=3.9 → now CC̄=4.1

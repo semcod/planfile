@@ -5,6 +5,7 @@ import yaml
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
+import re
 
 
 class IntegrationConfig:
@@ -20,6 +21,24 @@ class IntegrationConfig:
         env_file = self.directory / ".env"
         if env_file.exists():
             load_dotenv(env_file)
+    
+    def _expand_env_vars(self, config: Any) -> Any:
+        """Recursively expand environment variables in configuration."""
+        if isinstance(config, dict):
+            return {k: self._expand_env_vars(v) for k, v in config.items()}
+        elif isinstance(config, list):
+            return [self._expand_env_vars(item) for item in config]
+        elif isinstance(config, str):
+            # Expand ${VAR_NAME} and $VAR_NAME patterns
+            def replace_env_var(match):
+                var_name = match.group(1) if match.group(1) else match.group(2)
+                return os.environ.get(var_name, match.group(0))
+            
+            # Match both ${VAR} and $VAR patterns
+            pattern = r'\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)'
+            return re.sub(pattern, replace_env_var, config)
+        else:
+            return config
     
     def discover_configs(self) -> List[Path]:
         """Discover all *.planfile.yaml files in the directory."""
@@ -39,6 +58,8 @@ class IntegrationConfig:
                 
             with open(config_file, 'r') as f:
                 file_config = yaml.safe_load(f) or {}
+                # Expand environment variables in the loaded config
+                file_config = self._expand_env_vars(file_config)
                 self._deep_merge(self.config, file_config)
         
         # Load ticket configs last
@@ -46,6 +67,8 @@ class IntegrationConfig:
             if config_file.name.startswith("tickets."):
                 with open(config_file, 'r') as f:
                     file_config = yaml.safe_load(f) or {}
+                    # Expand environment variables in the loaded config
+                    file_config = self._expand_env_vars(file_config)
                     self._deep_merge(self.config, file_config)
         
         return self.config

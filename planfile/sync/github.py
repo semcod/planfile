@@ -47,6 +47,23 @@ class GitHubBackend(BasePMBackend):
         if "/" not in self.config["repo"]:
             raise ValueError("Repository must be in format 'owner/repo'")
     
+    def _ensure_labels_exist(self, labels: List[str]):
+        """Ensure labels exist in the repository, create them if needed."""
+        existing_labels = {label.name for label in self.repo.get_labels()}
+        
+        for label in labels:
+            if label not in existing_labels:
+                try:
+                    # Create label with default color
+                    self.repo.create_label(
+                        name=label,
+                        color="0366d6",  # Default blue color
+                        description=f"Auto-created label for {label}"
+                    )
+                except Exception:
+                    # If label creation fails, skip this label
+                    pass
+    
     def _create_ticket(
         self,
         title: str,
@@ -58,13 +75,30 @@ class GitHubBackend(BasePMBackend):
         metadata: Optional[Dict[str, Any]] = None,
     ) -> TicketRef:
         """Create a new GitHub issue."""
-        # Prepare labels
-        issue_labels = labels or []
+        # Prepare labels - start fresh to avoid duplicates
+        issue_labels = []
         
-        # Add priority as label if specified
+        # Add original labels (clean format)
+        if labels:
+            for label in labels:
+                # Skip old priority format labels
+                if not label.startswith("priority: "):
+                    issue_labels.append(label)
+        
+        # Add priority as label if specified (use simpler format)
         if priority:
-            priority_label = f"priority: {priority}"
-            issue_labels.append(priority_label)
+            priority_label = f"priority-{priority}"
+            if priority_label not in issue_labels:
+                issue_labels.append(priority_label)
+        
+        # Add default labels
+        if "planfile" not in issue_labels:
+            issue_labels.append("planfile")
+        if "managed" not in issue_labels:
+            issue_labels.append("managed")
+        
+        # Ensure all labels exist
+        self._ensure_labels_exist(issue_labels)
         
         # Add strategy metadata to body
         if metadata:
@@ -80,12 +114,17 @@ class GitHubBackend(BasePMBackend):
             body += metadata_section
         
         # Create issue
-        issue: Issue = self.repo.create_issue(
-            title=title,
-            body=body,
-            labels=issue_labels,
-            assignee=assignee
-        )
+        create_kwargs = {
+            "title": title,
+            "body": body,
+            "labels": issue_labels
+        }
+        
+        # Only add assignee if it's not None
+        if assignee:
+            create_kwargs["assignee"] = assignee
+            
+        issue: Issue = self.repo.create_issue(**create_kwargs)
         
         return self.build_ticket_ref(
             id=str(issue.number),

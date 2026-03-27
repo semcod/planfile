@@ -108,6 +108,8 @@ def sync_integration(integration_name: str, directory: str, dry_run: bool, direc
     # Get tickets with integration filter
     all_tickets = []
     tickets_source = None
+    v1_source_file = None  # Track v1 file for saving back
+    v1_data = None  # Keep original v1 data structure
     
     # Try 1: New .planfile/ structure
     if store.is_initialized():
@@ -144,6 +146,8 @@ def sync_integration(integration_name: str, directory: str, dry_run: bool, direc
                 # Check for old format v1 with sprint section
                 if "sprint" in data and "tickets" in data.get("sprint", {}):
                     tickets_source = f"{Path(planfile_path).name} (sprint)"
+                    v1_source_file = planfile_path
+                    v1_data = data
                     for ticket_id, ticket in data["sprint"]["tickets"].items():
                         ticket_integration = ticket.get("integration", integration_name)
                         if isinstance(ticket_integration, list):
@@ -156,6 +160,8 @@ def sync_integration(integration_name: str, directory: str, dry_run: bool, direc
                 if "backlog" in data and "tickets" in data.get("backlog", {}):
                     if tickets_source is None:
                         tickets_source = f"{Path(planfile_path).name} (backlog)"
+                        v1_source_file = planfile_path
+                        v1_data = data
                     for ticket_id, ticket in data["backlog"]["tickets"].items():
                         ticket_integration = ticket.get("integration", integration_name)
                         if isinstance(ticket_integration, list):
@@ -184,12 +190,12 @@ def sync_integration(integration_name: str, directory: str, dry_run: bool, direc
     ) as progress:
         if direction in ["to", "both"]:
             task = progress.add_task("Syncing to external system...", total=None)
-            sync_to_external(backend, all_tickets, dry_run, store, integration_name)
+            sync_to_external(backend, all_tickets, dry_run, store, integration_name, v1_source_file, v1_data)
             progress.update(task, description="[green]✓ Synced to external system[/green]")
         
         if direction in ["from", "both"]:
             task = progress.add_task("Syncing from external system...", total=None)
-            sync_from_external(backend, store, dry_run, integration_name)
+            sync_from_external(backend, store, dry_run, integration_name, v1_source_file, v1_data)
             progress.update(task, description="[green]✓ Synced from external system[/green]")
     
     if not dry_run:
@@ -198,7 +204,7 @@ def sync_integration(integration_name: str, directory: str, dry_run: bool, direc
         console.print(f"\n✅ Dry run completed for {integration_name}")
 
 
-def sync_to_external(backend, tickets, dry_run: bool, store, integration_name: str):
+def sync_to_external(backend, tickets, dry_run: bool, store, integration_name: str, v1_source_file=None, v1_data=None):
     """Sync planfile tickets to external system."""
     # Initialize sync state
     sync_state = SyncState(Path(store.planfile_dir), integration_name)
@@ -213,45 +219,95 @@ def sync_to_external(backend, tickets, dry_run: bool, store, integration_name: s
                 external_id = sync_state.get_remote_id(ticket_id) or ticket.get("external_id")
                 if external_id:
                     # Update existing ticket
-                    backend.update_ticket(external_id, ticket)
-                    console.print(f"  ✓ Updated: {ticket_id} → {external_id}")
+                    try:
+                        backend.update_ticket(external_id, ticket)
+                        console.print(f"  ✓ Updated: {ticket_id} → {external_id}")
+                    except Exception as e:
+                        # If update fails (e.g., 404 Not Found), create new ticket
+                        if "404" in str(e) or "Not Found" in str(e):
+                            console.print(f"  ⚠️  Issue not found, creating new: {external_id}")
+                            external_ticket = backend.create_ticket(ticket)
+                            external_id = external_ticket.id if hasattr(external_ticket, 'id') else str(external_ticket.get('id'))
+                            console.print(f"  ✓ Created: {ticket_id} → {external_id}")
+                        elif "403" in str(e) or "Forbidden" in str(e) or "not accessible by personal access token" in str(e).lower():
+                            console.print(f"[red]❌ GitHub permission denied for {ticket_id}[/red]")
+                            console.print("[yellow]🔑 Your GitHub token lacks permission to create issues[/yellow]")
+                            console.print("[yellow]📝 To fix this:[/yellow]")
+                            console.print("[yellow]   1. Go to: https://github.com/settings/tokens[/yellow]")
+                            console.print("[yellow]   2. Click 'Generate new token (classic)'[/yellow]")
+                            console.print("[yellow]   3. Select 'repo' scope (or 'public_repo' for public repos)[/yellow]")
+                            console.print("[yellow]   4. Copy the new token[/yellow]")
+                            console.print("[yellow]   5. Update your .env file with the new token[/yellow]")
+                            console.print(f"[yellow]   6. Try again: planfile sync github[/yellow]")
+                            raise Exception(f"GitHub token lacks required permissions. See instructions above.")
+                        else:
+                            raise
                 else:
                     # Create new ticket
-                    external_ticket = backend.create_ticket(ticket)
-                    external_id = external_ticket.id if hasattr(external_ticket, 'id') else str(external_ticket.get('id'))
+                    try:
+                        external_ticket = backend.create_ticket(ticket)
+                        external_id = external_ticket.id if hasattr(external_ticket, 'id') else str(external_ticket.get('id'))
+                    except Exception as e:
+                        if "403" in str(e) or "Forbidden" in str(e) or "not accessible by personal access token" in str(e).lower():
+                            console.print(f"[red]❌ GitHub permission denied for {ticket_id}[/red]")
+                            console.print("[yellow]🔑 Your GitHub token lacks permission to create issues[/yellow]")
+                            console.print("[yellow]📝 To fix this:[/yellow]")
+                            console.print("[yellow]   1. Go to: https://github.com/settings/tokens[/yellow]")
+                            console.print("[yellow]   2. Click 'Generate new token (classic)'[/yellow]")
+                            console.print("[yellow]   3. Select 'repo' scope (or 'public_repo' for public repos)[/yellow]")
+                            console.print("[yellow]   4. Copy the new token[/yellow]")
+                            console.print("[yellow]   5. Update your .env file with the new token[/yellow]")
+                            console.print(f"[yellow]   6. Try again: planfile sync github[/yellow]")
+                            raise Exception(f"GitHub token lacks required permissions. See instructions above.")
+                        else:
+                            raise
                     
                     # Store mapping in sync state
                     ticket_map[ticket_id] = external_id
                     
-                    # Update ticket in store with external_id
+                    # Update ticket with external_id
                     ticket["external_id"] = external_id
                     ticket["backend"] = integration_name
                     
                     console.print(f"  ✓ Created: {ticket_id} → {external_id}")
             except Exception as e:
+                import traceback
                 console.print(f"  ✗ Failed to sync {ticket_id}: {e}")
+                # Show detailed error for debugging
+                if "403" not in str(e) and "Forbidden" not in str(e):
+                    console.print(f"    [dim]Error details: {traceback.format_exc()}[/dim]")
     
-    # Save sync state with new mappings
-    if ticket_map and not dry_run:
+    # Save changes
+    if not dry_run:
         sync_state.save_sync(ticket_map)
-        # Save updated store
-        store.save_sprint("current", store.load_sprint("current"))
-        store.save_backlog(store.load_backlog())
+        
+        if v1_source_file and v1_data:
+            # Save back to v1 format file
+            _save_v1_format(v1_source_file, v1_data)
+            console.print(f"  💾 Saved changes to {Path(v1_source_file).name}")
+        else:
+            # Save to new format
+            store.save_sprint("current", store.load_sprint("current"))
+            store.save_backlog(store.load_backlog())
 
 
-def sync_from_external(backend, store, dry_run: bool, integration_name: str):
+def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_source_file=None, v1_data=None):
     """Sync tickets from external system to planfile."""
     # Initialize sync state
     sync_state = SyncState(Path(store.planfile_dir), integration_name)
     imported_count = 0
     updated_count = 0
     
-    try:
-        external_tickets = backend.list_tickets()
-        
-        # Load current sprint and backlog
+    # Load sprint/backlog from appropriate source
+    if v1_source_file and v1_data:
+        sprint = v1_data.get("sprint", {"tickets": {}})
+        backlog = v1_data.get("backlog", {"tickets": {}})
+    else:
         sprint = store.load_sprint("current") or {"tickets": {}}
         backlog = store.load_backlog() or {"tickets": {}}
+    
+    try:
+        external_tickets = backend.list_tickets()
         
         for ext_ticket in external_tickets:
             ext_id = str(ext_ticket.get('id', ''))
@@ -310,11 +366,20 @@ def sync_from_external(backend, store, dry_run: bool, integration_name: str):
                 except Exception as e:
                     console.print(f"  ✗ Failed to import {ext_id}: {e}")
         
-        # Save updated store
-        if (imported_count > 0 or updated_count > 0) and not dry_run:
-            store.save_sprint("current", sprint)
-            store.save_backlog(backlog)
-            console.print(f"\n📥 Imported {imported_count} new tickets, updated {updated_count} existing")
+        # Save changes
+        if not dry_run and (imported_count > 0 or updated_count > 0):
+            if v1_source_file and v1_data:
+                # Update v1_data with modified sprint/backlog
+                if "sprint" in v1_data:
+                    v1_data["sprint"] = sprint
+                if "backlog" in v1_data:
+                    v1_data["backlog"] = backlog
+                _save_v1_format(v1_source_file, v1_data)
+                console.print(f"\n💾 Saved {imported_count} imported, {updated_count} updated to {Path(v1_source_file).name}")
+            else:
+                store.save_sprint("current", sprint)
+                store.save_backlog(backlog)
+                console.print(f"\n📥 Imported {imported_count} new tickets, updated {updated_count} existing")
                 
     except Exception as e:
         console.print(f"  ✗ Failed to import tickets: {e}")
@@ -347,3 +412,9 @@ def find_planfile_ticket(external_ticket, store, sync_state):
                 return ticket_id
     
     return None
+
+
+def _save_v1_format(file_path: str, data: dict):
+    """Save data back to v1 format YAML file."""
+    with open(file_path, 'w', encoding='utf-8') as f:
+        yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)

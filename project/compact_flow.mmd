@@ -7,8 +7,8 @@ flowchart TD
     planfile__analysis["planfile.analysis<br/>69 funcs"]
     planfile__api["planfile.api<br/>7 funcs"]
     planfile__ci["planfile.ci<br/>9 funcs"]
-    planfile__cli["planfile.cli<br/>64 funcs"]
-    planfile__core["planfile.core<br/>44 funcs"]
+    planfile__cli["planfile.cli<br/>70 funcs"]
+    planfile__core["planfile.core<br/>47 funcs"]
     planfile__examples["planfile.examples<br/>5 funcs"]
     planfile__executor_standalone["planfile.executor_standalone<br/>12 funcs"]
     planfile__importers["planfile.importers<br/>30 funcs"]
@@ -23,13 +23,13 @@ flowchart TD
     planfile__analysis ==>|15| examples__gitlab
     planfile__cli ==>|14| planfile__loaders
     planfile__examples ==>|6| examples__gitlab
-    planfile__cli ==>|6| planfile__Planfile
     planfile__api ==>|6| planfile__server_common
+    planfile__cli ==>|6| planfile__Planfile
     planfile__examples ==>|4| planfile__runner
     planfile__llm -->|2| examples__ecosystem
     planfile__cli -->|2| planfile__runner
-    planfile__server_common -->|1| planfile__Planfile
     examples__llx_validator -->|1| examples__gitlab
+    planfile__server_common -->|1| planfile__Planfile
     planfile -->|1| planfile__Planfile
     planfile__runner -->|1| planfile__core
     planfile__executor_standalone -->|1| planfile__core
@@ -37,7 +37,7 @@ flowchart TD
     planfile__ci -->|1| planfile__Planfile
     planfile__ci -->|1| planfile__runner
     planfile__llm -->|1| examples__gitlab
+    planfile__mcp -->|1| planfile__server_common
     planfile__cli -->|1| planfile__importers
     planfile__cli -->|1| run_examples
     planfile__cli -->|1| planfile__llm
-    planfile__mcp -->|1| planfile__server_common

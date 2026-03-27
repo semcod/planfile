@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.44] - 2026-03-27
+
+### Docs
+- Update docs/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update examples/github/.planfile/sync/github.state.yaml
+- Update examples/github/planfile-sync.sh
+- Update examples/github/tickets.planfile.yaml
+- Update planfile/cli/cmd/cmd_sync.py
+- Update planfile/integrations/config.py
+- Update planfile/sync/base.py
+- Update planfile/sync/github.py
+- Update project/analysis.toon.yaml
+- Update project/calls.mmd
+- Update project/calls.png
+- ... and 10 more files
+
 ## [0.1.43] - 2026-03-27
 
 ### Other

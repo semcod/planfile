@@ -26,7 +26,7 @@ class PMBackend(Protocol):
     """Protocol for PM system backends."""
     
     @abstractmethod
-    def create_ticket(self, **kwargs) -> TicketRef:
+    def create_ticket(self, ticket: Dict[str, Any], **kwargs) -> TicketRef:
         """Create a new ticket."""
         ...
     
@@ -89,23 +89,20 @@ class BasePMBackend(ABC):
         
         return public_metadata
 
-    def create_ticket(
-        self,
-        title: str,
-        body: str,
-        labels: Optional[List[str]] = None,
-        priority: Optional[str] = None,
-        assignee: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> TicketRef:
+    def create_ticket(self, ticket: Dict[str, Any], **kwargs) -> TicketRef:
         """Create a new ticket through the backend-specific implementation."""
+        # Extract title and body from ticket object
+        title = ticket.get("title", "")
+        body = ticket.get("description", "") or ticket.get("body", "")
+        
         return self._create_ticket(
             title=title,
             body=body,
-            labels=labels,
-            priority=priority,
-            assignee=assignee,
-            metadata=metadata,
+            labels=ticket.get("labels"),
+            priority=ticket.get("priority"),
+            assignee=ticket.get("assignee"),
+            metadata=ticket.get("metadata"),
+            **kwargs
         )
 
     @abstractmethod

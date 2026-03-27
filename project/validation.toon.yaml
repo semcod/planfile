@@ -1,7 +1,7 @@
-# vallm batch | 269f | 164✓ 10⚠ 35✗ | 2026-03-27
+# vallm batch | 270f | 164✓ 10⚠ 35✗ | 2026-03-27
 
 SUMMARY:
-  scanned: 269  passed: 164 (61.0%)  warnings: 10  errors: 35  unsupported: 70
+  scanned: 270  passed: 164 (60.7%)  warnings: 10  errors: 35  unsupported: 71
 
 WARNINGS[10]{path,score}:
   examples/test_llm_adapters.py,0.93
@@ -9,6 +9,17 @@ WARNINGS[10]{path,score}:
       complexity.cyclomatic,warning,main has cyclomatic complexity 32 (max: 15),25
       complexity.lizard_cc,warning,main: CC=32 exceeds limit 15,25
       complexity.lizard_length,warning,main: 142 lines exceeds limit 100,25
+  planfile/cli/cmd/cmd_init.py,0.93
+    issues[3]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,init_strategy_cli has cyclomatic complexity 19 (max: 15),130
+      complexity.lizard_cc,warning,init_strategy_cli: CC=19 exceeds limit 15,130
+      complexity.lizard_length,warning,init_strategy_cli: 161 lines exceeds limit 100,130
+  planfile/cli/cmd/cmd_sync.py,0.93
+    issues[4]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 38 (max: 15),81
+      complexity.cyclomatic,warning,sync_from_external has cyclomatic complexity 20 (max: 15),254
+      complexity.lizard_cc,warning,sync_integration: CC=38 exceeds limit 15,81
+      complexity.lizard_cc,warning,sync_from_external: CC=20 exceeds limit 15,254
   examples/bash-generation/verify_planfile.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
@@ -25,13 +36,6 @@ WARNINGS[10]{path,score}:
   examples/validate_with_llx.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
-  planfile/cli/cmd/cmd_init.py,0.97
-    issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,init_strategy_cli: 148 lines exceeds limit 100,130
-  planfile/cli/cmd/cmd_sync.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 21 (max: 15),79
-      complexity.lizard_cc,warning,sync_integration: CC=21 exceeds limit 15,79
   run_examples.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,setup_environment: 141 lines exceeds limit 100,109
@@ -179,18 +183,18 @@ ERRORS[35]{path,score}:
   planfile/cli/cmd/cmd_health.py,0.94
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'analysis.generator' not found,24
-  planfile/cli/project_detector.py,0.95
-    issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'tomli' not found,72
   tests/llm_adapters.py,0.95
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,14
+  planfile/cli/project_detector.py,0.96
+    issues[1]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'tomli' not found,398
   planfile/llm/adapters.py,0.96
     issues[1]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'litellm' not found,24
 
 UNSUPPORTED[6]{bucket,count}:
-  *.md,42
+  *.md,43
   Dockerfile*,1
   *.txt,2
   *.yml,2

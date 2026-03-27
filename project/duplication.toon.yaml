@@ -1,18 +1,18 @@
-# redup/duplication | 2 groups | 67f 11243L | 2026-03-27
+# redup/duplication | 2 groups | 67f 11830L | 2026-03-27
 
 SUMMARY:
   files_scanned: 67
-  total_lines:   11243
+  total_lines:   11830
   dup_groups:    2
   dup_fragments: 5
   saved_lines:   21
-  scan_ms:       1990
+  scan_ms:       2128
 
 DUPLICATES[2] (ranked by impact):
   [9eff6742b4323da5]   STRU  github  L=7 N=3 saved=14 sim=1.00
-      planfile/cli/cmd/cmd_sync.py:24-30  (github)
-      planfile/cli/cmd/cmd_sync.py:34-40  (gitlab)
-      planfile/cli/cmd/cmd_sync.py:44-50  (jira)
+      planfile/cli/cmd/cmd_sync.py:26-32  (github)
+      planfile/cli/cmd/cmd_sync.py:36-42  (gitlab)
+      planfile/cli/cmd/cmd_sync.py:46-52  (jira)
   [d32dae4fd2e94d5b]   STRU  import_yaml  L=7 N=2 saved=7 sim=1.00
       planfile/importers/yaml_importer.py:8-14  (import_yaml)
       planfile/importers/json_importer.py:8-14  (import_json)
