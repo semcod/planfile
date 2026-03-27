@@ -16,10 +16,10 @@ flowchart TD
         planfile__cli__auto_loop___save_results_if_needed["_save_results_if_needed"]
         planfile__cli__auto_loop__auto_loop["auto_loop"]
         planfile__cli__auto_loop__ci_status["ci_status"]
-        planfile__cli__extra_commands__export_to_csv["export_to_csv"]
-        planfile__cli__extra_commands__export_to_html["export_to_html"]
-        planfile__cli__extra_commands__compare_strategies["compare_strategies"]
-        ...["+20 more"]
+        planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
+        planfile__cli__cmd__cmd_review__review_strategy_cli["review_strategy_cli"]
+        planfile__cli__cmd__cmd_utils__get_backend["get_backend"]
+        ...["+26 more"]
     end
 
     subgraph Core
@@ -27,23 +27,23 @@ flowchart TD
         mcp_server_example__planfile_apply["planfile_apply"]
         mcp_server_example__planfile_review["planfile_review"]
         mcp_server_example__main["main"]
-        planfile__ci_runner__CIRunner__run_tests["run_tests"]
-        planfile__ci_runner__CIRunner__run_code_analysis["run_code_analysis"]
-        planfile__ci_runner__CIRunner__generate_bug_report["generate_bug_report"]
-        planfile__ci_runner__CIRunner__create_bug_tickets["create_bug_tickets"]
-        planfile__ci_runner__CIRunner__auto_fix_bugs["auto_fix_bugs"]
-        planfile__ci_runner__CIRunner__check_strategy_completion["check_strategy_completion"]
-        planfile__ci_runner__CIRunner__run_loop["run_loop"]
-        planfile__ci_runner__CIRunner__save_results["save_results"]
-        planfile__ci_runner__main["main"]
-        planfile__executor_standalone__LLMClient__chat["chat"]
-        planfile__executor_standalone__StrategyExecutor___default_config["_default_config"]
-        ...["+283 more"]
+        planfile__Planfile__auto_discover["auto_discover"]
+        planfile__Planfile__create_ticket["create_ticket"]
+        planfile__Planfile__get_ticket["get_ticket"]
+        planfile__Planfile__list_tickets["list_tickets"]
+        planfile__Planfile__update_ticket["update_ticket"]
+        planfile__Planfile__create_tickets_bulk["create_tickets_bulk"]
+        planfile__quick_ticket["quick_ticket"]
+        planfile__sync__state__SyncState__get_last_sync["get_last_sync"]
+        planfile__sync__state__SyncState__save_sync["save_sync"]
+        planfile__sync__state__SyncState__get_remote_id["get_remote_id"]
+        planfile__sync__state__SyncState__get_local_id["get_local_id"]
+        ...["+214 more"]
     end
 
     subgraph Exporters
         planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
-        planfile__models_v2__Strategy__export["export"]
+        planfile__core__models__Strategy__export["export"]
     end
 
-    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__ci_runner__CIRunner__run_tests,planfile__ci_runner__CIRunner__run_code_analysis,planfile__ci_runner__CIRunner__generate_bug_report,planfile__ci_runner__CIRunner__create_bug_tickets,planfile__ci_runner__CIRunner__auto_fix_bugs,planfile__ci_runner__CIRunner__check_strategy_completion entry
+    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__Planfile__auto_discover,planfile__Planfile__create_ticket,planfile__Planfile__get_ticket,planfile__Planfile__list_tickets,planfile__Planfile__update_ticket,planfile__Planfile__create_tickets_bulk entry

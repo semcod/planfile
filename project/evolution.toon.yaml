@@ -1,55 +1,34 @@
-# code2llm/evolution | 415 func | 43f | 2026-03-27
+# code2llm/evolution | 365 func | 60f | 2026-03-27
 
-NEXT[10] (ranked by impact):
-  [1] !! SPLIT           planfile/cli/extra_commands.py
-      WHY: 763L, 0 classes, max CC=10
-      EFFORT: ~4h  IMPACT: 7630
+NEXT[5] (ranked by impact):
+  [1] !  SPLIT-FUNC      import_vallm  CC=16  fan=12
+      WHY: CC=16 exceeds 15
+      EFFORT: ~1h  IMPACT: 192
 
-  [2] !  SPLIT-FUNC      table  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
+  [2] !  SPLIT-FUNC      _parse_evolution  CC=18  fan=10
+      WHY: CC=18 exceeds 15
+      EFFORT: ~1h  IMPACT: 180
 
-  [3] !  SPLIT-FUNC      table_body_rows  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
+  [3] !  SPLIT-FUNC      Strategy.get_stats  CC=15  fan=9
+      WHY: CC=15 exceeds 15
+      EFFORT: ~1h  IMPACT: 135
 
-  [4] !  SPLIT-FUNC      no_rows  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
+  [4] !  SPLIT-FUNC      GitLabBackend.update_ticket  CC=15  fan=7
+      WHY: CC=15 exceeds 15
+      EFFORT: ~1h  IMPACT: 105
 
-  [5] !  SPLIT-FUNC      footer  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
-
-  [6] !  SPLIT-FUNC      ratio_columns  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
-
-  [7] !  SPLIT-FUNC      filter_handler  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
-
-  [8] !  SPLIT-FUNC      table  CC=19  fan=15
-      WHY: CC=19 exceeds 15
-      EFFORT: ~1h  IMPACT: 285
-
-  [9] !  SPLIT-FUNC      table_body_rows  CC=19  fan=15
-      WHY: CC=19 exceeds 15
-      EFFORT: ~1h  IMPACT: 285
-
-  [10] !  SPLIT-FUNC      no_rows  CC=19  fan=15
-      WHY: CC=19 exceeds 15
-      EFFORT: ~1h  IMPACT: 285
+  [5] !  SPLIT-FUNC      GitLabBackend.update_ticket  CC=15  fan=7
+      WHY: CC=15 exceeds 15
+      EFFORT: ~1h  IMPACT: 105
 
 
-RISKS[1]:
-  ⚠ Splitting planfile/cli/extra_commands.py may break 6 import paths
+RISKS[0]: none
 
 METRICS-TARGET:
-  CC̄:          3.9 → ≤2.7
-  max-CC:      21 → ≤10
-  god-modules: 1 → 0
-  high-CC(≥15): 11 → ≤5
+  CC̄:          4.0 → ≤2.8
+  max-CC:      18 → ≤9
+  god-modules: 0 → 0
+  high-CC(≥15): 6 → ≤3
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -77,4 +56,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.1 → now CC̄=3.9
+  prev CC̄=3.9 → now CC̄=4.0

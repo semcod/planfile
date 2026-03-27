@@ -2,31 +2,40 @@ flowchart TD
     examples__bash_generation["examples.bash-generation<br/>2 funcs"]
     examples__ecosystem["examples.ecosystem<br/>34 funcs"]
     examples__llx_validator["examples.llx_validator<br/>7 funcs"]
+    planfile["planfile<br/>1 funcs"]
+    planfile__Planfile["planfile.Planfile<br/>7 funcs"]
     planfile__analysis["planfile.analysis<br/>72 funcs"]
-    planfile__ci_runner["planfile.ci_runner<br/>10 funcs"]
-    planfile__cli["planfile.cli<br/>35 funcs"]
+    planfile__api["planfile.api<br/>8 funcs"]
+    planfile__ci["planfile.ci<br/>9 funcs"]
+    planfile__cli["planfile.cli<br/>41 funcs"]
+    planfile__core["planfile.core<br/>32 funcs"]
     planfile__examples["planfile.examples<br/>5 funcs"]
     planfile__executor_standalone["planfile.executor_standalone<br/>12 funcs"]
-    planfile__llm["planfile.llm<br/>31 funcs"]
+    planfile__importers["planfile.importers<br/>12 funcs"]
+    planfile__llm["planfile.llm<br/>13 funcs"]
     planfile__loaders["planfile.loaders<br/>25 funcs"]
-    planfile__models["planfile.models<br/>5 funcs"]
-    planfile__models_v2["planfile.models_v2<br/>14 funcs"]
+    planfile__mcp["planfile.mcp<br/>5 funcs"]
     planfile__runner["planfile.runner<br/>6 funcs"]
     run_examples["run_examples<br/>13 funcs"]
     examples__ecosystem ==>|95| examples__bash_generation
-    planfile__ci_runner ==>|22| examples__bash_generation
     planfile__runner ==>|20| examples__bash_generation
     planfile__analysis ==>|15| examples__bash_generation
     planfile__cli ==>|14| planfile__loaders
     planfile__examples ==>|6| examples__bash_generation
+    planfile__cli ==>|6| planfile__Planfile
     planfile__examples ==>|4| planfile__runner
-    planfile__llm ==>|4| examples__bash_generation
     planfile__llm -->|2| examples__ecosystem
     planfile__cli -->|2| planfile__runner
     examples__llx_validator -->|1| examples__bash_generation
-    planfile__runner -->|1| planfile__models
-    planfile__ci_runner -->|1| planfile__loaders
-    planfile__ci_runner -->|1| planfile__runner
-    planfile__executor_standalone -->|1| planfile__models_v2
+    planfile -->|1| planfile__Planfile
+    planfile__runner -->|1| planfile__core
+    planfile__executor_standalone -->|1| planfile__core
+    planfile__ci -->|1| planfile__loaders
+    planfile__ci -->|1| planfile__Planfile
+    planfile__ci -->|1| planfile__runner
     planfile__cli -->|1| run_examples
+    planfile__llm -->|1| examples__bash_generation
+    planfile__mcp -->|1| planfile__Planfile
+    planfile__cli -->|1| planfile__importers
     planfile__cli -->|1| planfile__llm
+    planfile__api -->|1| planfile__Planfile

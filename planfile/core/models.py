@@ -8,7 +8,7 @@ from enum import Enum
 from typing import List, Dict, Optional, Any, Union
 from pathlib import Path
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator, validator
+from pydantic import BaseModel, Field, field_validator
 
 import yaml
 
@@ -176,7 +176,7 @@ class Strategy(BaseModel):
                 return sprint
         return None
 
-    @validator('sprints')
+    @field_validator('sprints')
     def validate_sprint_ids(cls, v):
         """Ensure sprint IDs are unique."""
         ids = [sprint.id for sprint in v if isinstance(sprint, Sprint)]

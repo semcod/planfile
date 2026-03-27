@@ -1,56 +1,56 @@
-# planfile | 415 func | 43f | 11844L | python | 2026-03-27
+# planfile | 365 func | 60f | 13054L | python | 2026-03-27
 
 HEALTH:
-  CC̄=3.9  critical=40 (limit:10)  dup=7  cycles=0
+  CC̄=4.0  critical=34 (limit:10)  dup=8  cycles=0
 
 ALERTS[20]:
-  !!! high_fan_out     add_extra_commands = 73 (limit:10)
+  !!! high_fan_out     add_extra_commands = 59 (limit:10)
   !!! high_fan_out     init_strategy_cli = 27 (limit:10)
+  !!! high_fan_out     register_ticket_commands = 25 (limit:10)
   !!! high_fan_out     auto_loop = 21 (limit:10)
   !!! high_fan_out     review_strategy_cli = 21 (limit:10)
   !!! high_fan_out     analyze_text = 20 (limit:10)
-  !!  cc_exceeded      table = 21 (limit:15)
-  !!  cc_exceeded      table_body_rows = 21 (limit:15)
-  !!  cc_exceeded      no_rows = 21 (limit:15)
-  !!  cc_exceeded      footer = 21 (limit:15)
-  !!  cc_exceeded      ratio_columns = 21 (limit:15)
+  !!  high_fan_out     Strategy.merge = 17 (limit:10)
+  !!  high_fan_out     register_export_commands = 16 (limit:10)
+  !   cc_exceeded      _parse_evolution = 18 (limit:15)
+  !   cc_exceeded      import_vallm = 16 (limit:15)
 
-MODULES[56] (top by size):
-  M[planfile/cli/extra_commands.py] 763L C:0 F:6 CC↑10 D:0 (python)
-  M[htmlcov/coverage_html_cb_dd2e7eb5.js] 735L C:0 F:65 CC↑21 D:0 (javascript)
-  M[htmlcov/coverage_html_cb_6fb7b396.js] 733L C:0 F:64 CC↑19 D:0 (javascript)
-  M[planfile/llm/adapters.py] 482L C:6 F:23 CC↑8 D:0 (python)
-  M[planfile/ci_runner.py] 453L C:3 F:10 CC↑9 D:0 (python)
-  M[planfile/models_v2.py] 426L C:8 F:14 CC↑12 D:0 (python)
+MODULES[78] (top by size):
+  M[planfile/core/models.py] 492L C:11 F:17 CC↑15 D:0 (python)
   M[planfile/executor_standalone.py] 336L C:3 F:12 CC↑8 D:0 (python)
-  M[planfile/loaders/yaml_loader.py] 301L C:0 F:15 CC↑7 D:6 (python)
+  M[planfile/ci.py] 318L C:3 F:9 CC↑7 D:0 (python)
+  M[planfile/loaders/yaml_loader.py] 303L C:0 F:15 CC↑7 D:9 (python)
   M[planfile/cli/cmd/cmd_init.py] 299L C:0 F:4 CC↑12 D:0 (python)
-  M[planfile/runner.py] 286L C:0 F:6 CC↑12 D:4 (python)
   M[run_examples.sh] 286L C:0 F:13 CC↑0 D:1 (shell)
+  M[planfile/runner.py] 284L C:0 F:6 CC↑12 D:4 (python)
   M[planfile/integrations/jira.py] 283L C:1 F:9 CC↑13 D:0 (python)
+  M[planfile/sync/jira.py] 283L C:1 F:9 CC↑13 D:0 (python)
   M[planfile/analysis/external_tools.py] 267L C:2 F:13 CC↑12 D:0 (python)
+  M[planfile/cli/extra_commands.py] 265L C:0 F:1 CC↑1 D:0 (python)
   M[planfile/cli/auto_loop.py] 252L C:0 F:9 CC↑10 D:1 (python)
-  M[planfile/analysis/generator.py] 247L C:1 F:17 CC↑14 D:0 (python)
-  LANGS: python:49/shell:5/javascript:2
+  M[planfile/analysis/generator.py] 243L C:1 F:17 CC↑14 D:0 (python)
+  M[planfile/integrations/gitlab.py] 237L C:1 F:7 CC↑15 D:0 (python)
+  M[planfile/sync/gitlab.py] 237L C:1 F:7 CC↑15 D:0 (python)
+  LANGS: python:73/shell:5
 
 HOTSPOTS[10]:
-  ★ add_extra_commands fan=73  // Add extra commands to the CLI app.
+  ★ add_extra_commands fan=59  // Add health and examples commands to the CLI app.
   ★ init_strategy_cli fan=27  // Interactive wizard — tworzy strategię przez zadawanie pytań.
 
 Nie wymaga szablon
+  ★ register_ticket_commands fan=25  // Register ticket subcommands on the typer app.
   ★ auto_loop fan=21  // Run automated CI/CD loop: test → ticket → fix → retest.
 
 This command will:
 1. R
   ★ review_strategy_cli fan=21  // Review strategy execution and progress.
-  ★ analyze_text fan=20  // Analysis pipeline, 20 stages
 
-REFACTOR[15]:
-  [1] H/H Split god module htmlcov/coverage_html_cb_dd2e7eb5.js (735L, 0 classes)
-  [2] H/H Split god module htmlcov/coverage_html_cb_6fb7b396.js (733L, 0 classes)
-  [3] H/H Split god module planfile/cli/extra_commands.py (763L, 0 classes)
-  [4] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
-  [5] M/L Split table (CC=21 → target CC<10)
+REFACTOR[9]:
+  [1] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
+  [2] M/L Split PlanfileStore._apply_filters (CC=15 → target CC<10)
+  [3] M/L Split _parse_evolution (CC=18 → target CC<10)
+  [4] M/L Split import_vallm (CC=16 → target CC<10)
+  [5] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
 
 EVOLUTION:
-  2026-03-27 CC̄=3.9 crit=40 11844L // Automated analysis
+  2026-03-27 CC̄=4.0 crit=34 13054L // Automated analysis
