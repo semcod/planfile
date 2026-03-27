@@ -270,15 +270,84 @@ def review_strategy(
     """
     Review strategy execution by checking ticket statuses.
     
-    This is a convenience function that creates a StrategyRunner
-    and reviews the planfile.
+    This is a convenience function that reviews the planfile
+    using the provided backends.
     """
-    runner = StrategyRunner(backends)
-    return runner.review_strategy(
-        strategy=strategy,
-        project_path=project_path,
-        backend_name=backend_name
-    )
+    results = {
+        "summary": {
+            "total_tickets": 0,
+            "completed": 0,
+            "in_progress": 0,
+            "not_started": 0,
+            "blocked": 0
+        },
+        "sprints": {},
+        "metrics": {}
+    }
+    
+    # Get the backend
+    backend = backends.get(backend_name)
+    if not backend:
+        raise ValueError(f"Backend '{backend_name}' not found")
+    
+    # Review each sprint
+    for sprint in strategy.sprints:
+        sprint_results = {
+            "name": sprint.name,
+            "status": "not_started",
+            "tickets": {}
+        }
+        
+        # Try to list tickets for this sprint
+        try:
+            # Use sprint labels to find tickets
+            labels = [f"sprint-{sprint.id}", sprint.name.lower().replace(" ", "-")]
+            tickets = backend.list_tickets(labels=labels)
+            
+            for ticket in tickets:
+                results["summary"]["total_tickets"] += 1
+                sprint_results["tickets"][ticket.id] = {
+                    "status": ticket.status,
+                    "key": ticket.key,
+                    "assignee": ticket.assignee
+                }
+                
+                # Update summary based on status
+                if ticket.status in ["done", "completed", "closed"]:
+                    results["summary"]["completed"] += 1
+                elif ticket.status in ["in progress", "in_progress", "started"]:
+                    results["summary"]["in_progress"] += 1
+                elif ticket.status in ["blocked", "blocked"]:
+                    results["summary"]["blocked"] += 1
+                else:
+                    results["summary"]["not_started"] += 1
+            
+            # Determine sprint status based on tickets
+            if sprint_results["tickets"]:
+                completed = sum(1 for t in sprint_results["tickets"].values() 
+                              if t["status"] in ["done", "completed", "closed"])
+                if completed == len(sprint_results["tickets"]):
+                    sprint_results["status"] = "completed"
+                elif completed > 0:
+                    sprint_results["status"] = "in_progress"
+                else:
+                    sprint_results["status"] = "not_started"
+            
+        except Exception as e:
+            print(f"Warning: Could not review sprint {sprint.id}: {e}")
+        
+        results["sprints"][sprint.id] = sprint_results
+    
+    # Calculate progress metrics
+    total = results["summary"]["total_tickets"]
+    if total > 0:
+        results["metrics"]["progress"] = {
+            "completion_rate": results["summary"]["completed"] / total,
+            "in_progress_rate": results["summary"]["in_progress"] / total,
+            "blocked_rate": results["summary"]["blocked"] / total
+        }
+    
+    return results
 
 
 def run_strategy(

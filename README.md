@@ -290,7 +290,53 @@ planfile auto loop --strategy strategy.yaml --auto-fix
 planfile strategy generate ./my-project --model gpt-4o
 ```
 
-## 📊 Examples
+## 📚 Examples
+
+Explore the `examples/` directory for comprehensive use cases:
+
+### Available Examples
+```bash
+# List all available examples
+planfile examples list
+
+# Run a specific example
+planfile examples run code2llm
+
+# Run all examples (with timeout protection)
+planfile examples run --all
+```
+
+### Featured Examples
+
+- **[code2llm](examples/code2llm/)** - Code analysis with LLM integration
+- **[bash-generation](examples/bash-generation/)** - Generate bash scripts from strategies  
+- **[cli-commands](examples/cli-commands/)** - CLI usage patterns
+- **[advanced-usage](examples/advanced-usage/)** - CI/CD integration examples
+- **[interactive-tests](examples/interactive-tests/)** - Interactive mode demonstrations
+- **[ecosystem](examples/ecosystem/)** - MCP, LLX, and proxy routing integrations
+
+### Quick Example
+
+```yaml
+# examples/quick-start.yaml
+name: "Quick Start Demo"
+project_type: "web"
+domain: "demo"
+goal: "Demonstrate planfile capabilities"
+
+sprints:
+  - id: 1
+    name: "Setup"
+    length_days: 7
+    tasks:
+      - type: "feature"
+        title: "Initialize project"
+        description: "Create basic project structure"
+        estimate: 1
+        priority: "high"
+```
+
+For more examples, see the [examples directory](examples/).
 
 ### Web Project Strategy
 

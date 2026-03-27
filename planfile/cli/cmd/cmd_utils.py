@@ -11,6 +11,7 @@ from planfile.integrations.github import GitHubBackend
 from planfile.integrations.jira import JiraBackend
 from planfile.integrations.gitlab import GitLabBackend
 from planfile.integrations.generic import GenericBackend
+from planfile.sync.mock import MockBackend
 
 console = Console()
 
@@ -18,7 +19,8 @@ BACKEND_REGISTRY = {
     "github": GitHubBackend,
     "jira": JiraBackend,
     "gitlab": GitLabBackend,
-    "generic": GenericBackend
+    "generic": GenericBackend,
+    "mock": MockBackend
 }
 
 def get_backend(backend_type: str, config: dict):
@@ -35,6 +37,8 @@ def get_backend(backend_type: str, config: dict):
         return backend_class(url=config.get("url", "https://gitlab.com"), token=config.get("token"), project_id=config.get("project_id"))
     elif backend_type == "generic":
         return backend_class(base_url=config["base_url"], api_key=config.get("api_key"), headers=config.get("headers"))
+    elif backend_type == "mock":
+        return backend_class()
 
 def _load_and_validate_strategy(strategy_path: Path) -> Strategy:
     """Load and validate strategy file."""

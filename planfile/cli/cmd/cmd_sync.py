@@ -53,6 +53,16 @@ def jira(
 
 
 @sync_app.command()
+def markdown(
+    directory: str = typer.Argument(".", help="Directory containing planfile configs"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
+    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
+):
+    """Sync tickets with markdown files (CHANGELOG.md, TODO.md)."""
+    sync_integration("markdown", directory, dry_run, direction)
+
+
+@sync_app.command()
 def all(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
@@ -62,11 +72,13 @@ def all(
     config = IntegrationConfig(directory)
     config.load_configs()
     
-    integrations = config.config.get("integrations", {}).keys()
+    # Check if any integrations are configured
+    if not config.has_configured_integrations():
+        console.print("[yellow]⚠️ No integrations configured, using default markdown backend[/yellow]")
+        sync_integration("markdown", directory, dry_run, direction)
+        return
     
-    if not integrations:
-        console.print("[yellow]⚠️ No integrations configured[/yellow]")
-        raise typer.Exit(1)
+    integrations = config.config.get("integrations", {}).keys()
     
     console.print(f"🔄 Syncing with integrations: {', '.join(integrations)}")
     
@@ -87,19 +99,26 @@ def sync_integration(integration_name: str, directory: str, dry_run: bool, direc
     config = IntegrationConfig(directory)
     config.load_configs()
     
-    # Validate integration
-    if not config.validate_integration(integration_name):
-        console.print(f"[red]❌ {integration_name} integration not configured or invalid[/red]")
-        raise typer.Exit(1)
-    
-    # Get backend
-    try:
-        backend = config.get_integration_backend(integration_name)
+    # Special handling for markdown backend (default when no integrations configured)
+    if integration_name == "markdown":
+        # Always allow markdown backend as it's the default
+        backend = config.get_default_backend()
         if show_header:
-            console.print(f"✅ Connected to {integration_name}")
-    except Exception as e:
-        console.print(f"[red]❌ Failed to connect to {integration_name}: {e}[/red]")
-        raise typer.Exit(1)
+            console.print(f"✅ Using default markdown backend (CHANGELOG.md, TODO.md)")
+    else:
+        # Validate integration for other backends
+        if not config.validate_integration(integration_name):
+            console.print(f"[red]❌ {integration_name} integration not configured or invalid[/red]")
+            raise typer.Exit(1)
+        
+        # Get backend
+        try:
+            backend = config.get_integration_backend(integration_name)
+            if show_header:
+                console.print(f"✅ Connected to {integration_name}")
+        except Exception as e:
+            console.print(f"[red]❌ Failed to connect to {integration_name}: {e}[/red]")
+            raise typer.Exit(1)
     
     # Load tickets - try multiple sources
     from planfile.core.store import PlanfileStore

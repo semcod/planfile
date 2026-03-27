@@ -16,7 +16,8 @@
       ],
       "tasks": [],
       "length_days": 14,
-      "duration": "2 weeks"
+      "duration": "2 weeks",
+      "start_date": null
     },
     {
       "id": 2,
@@ -28,7 +29,8 @@
       ],
       "tasks": [],
       "length_days": 14,
-      "duration": "3 weeks"
+      "duration": "3 weeks",
+      "start_date": null
     },
     {
       "id": 3,
@@ -40,9 +42,11 @@
       ],
       "tasks": [],
       "length_days": 14,
-      "duration": "2 weeks"
+      "duration": "2 weeks",
+      "start_date": null
     }
   ],
+  "tasks": {},
   "quality_gates": [
     {
       "name": "Code Quality",

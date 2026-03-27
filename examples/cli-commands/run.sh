@@ -16,11 +16,11 @@ planfile validate test-strategy.yaml
 
 echo "--------------------------------------------------"
 echo "2. Review Configuration"
-planfile review test-strategy.yaml
+planfile review test-strategy.yaml . --backend mock
 
 echo "--------------------------------------------------"
 echo "3. Apply Configuration (Dry run)"
-planfile apply test-strategy.yaml . --dry-run
+planfile apply test-strategy.yaml . --dry-run --backend mock
 
 echo "--------------------------------------------------"
 echo "4. Strategy Statistics"

@@ -114,6 +114,9 @@ class IntegrationConfig:
         config = self.get_integration_config(integration_name)
         
         if not config:
+            # Markdown integration is always valid as it has defaults
+            if integration_name == "markdown":
+                return True
             return False
         
         # Check for required fields based on integration type
@@ -123,11 +126,49 @@ class IntegrationConfig:
             return "url" in config and "project_id" in config
         elif integration_name == "jira":
             return "url" in config and "project" in config
+        elif integration_name == "markdown":
+            # Markdown integration is always valid with defaults
+            return True
         
         return True
     
+    def has_configured_integrations(self) -> bool:
+        """Check if any valid integrations are configured."""
+        if not self.config:
+            self.load_configs()
+        
+        integrations = self.config.get("integrations", {})
+        
+        # Check for any non-empty integration config
+        for name, config in integrations.items():
+            if config and isinstance(config, dict):
+                # Skip if it's just the markdown default
+                if name == "markdown" and config.get("is_default", False):
+                    continue
+                if any(v for v in config.values() if v is not None):
+                    return True
+        
+        return False
+    
+    def get_default_backend(self):
+        """Get the default markdown backend when no integrations are configured."""
+        from planfile.sync.markdown_backend import MarkdownFileBackend
+        
+        # Use default file paths or get from config if specified
+        changelog_file = self.config.get("integrations", {}).get("markdown", {}).get("changelog_file", "CHANGELOG.md")
+        todo_file = self.config.get("integrations", {}).get("markdown", {}).get("todo_file", "TODO.md")
+        
+        return MarkdownFileBackend(
+            changelog_file=changelog_file,
+            todo_file=todo_file
+        )
+    
     def get_integration_backend(self, integration_name: str):
         """Get initialized backend instance for an integration."""
+        # Special case for markdown backend
+        if integration_name == "markdown":
+            return self.get_default_backend()
+        
         config = self.get_integration_config(integration_name)
         
         if not self.validate_integration(integration_name):

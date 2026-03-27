@@ -14,6 +14,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
 - id: 2
   name: Core Features
   objectives:
@@ -23,6 +24,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 3 weeks
+  start_date: null
 - id: 3
   name: Polish & Deploy
   objectives:
@@ -32,6 +34,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
 - id: 4
   name: UI/UX Design
   objectives:
@@ -41,6 +44,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
 - id: 5
   name: Core Development
   objectives:
@@ -50,6 +54,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 4 weeks
+  start_date: null
 - id: 6
   name: Testing & Release
   objectives:
@@ -59,6 +64,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
 - id: 7
   name: Data Collection & Prep
   objectives:
@@ -68,6 +74,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
 - id: 8
   name: Model Development
   objectives:
@@ -77,6 +84,7 @@ sprints:
   tasks: []
   length_days: 14
   duration: 3 weeks
+  start_date: null
 - id: 9
   name: Deployment & Monitoring
   objectives:
@@ -86,6 +94,8 @@ sprints:
   tasks: []
   length_days: 14
   duration: 2 weeks
+  start_date: null
+tasks: {}
 quality_gates:
 - name: Code Quality
   description: Maintain high code quality

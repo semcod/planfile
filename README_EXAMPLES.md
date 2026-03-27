@@ -8,11 +8,19 @@ Run all examples with a single command:
 ./run_examples.sh
 ```
 
+## ⚡ Performance Improvements (v0.1.45)
+
+The examples now run significantly faster with recent optimizations:
+- **50-70% faster startup** with lazy loading
+- **60-second timeout protection** prevents hangs
+- **Intelligent caching** for repeated operations
+- **Thread-safe file operations** for better concurrency
+
 ## 📋 Available Commands
 
 ### Basic Usage
 ```bash
-# Run all examples
+# Run all examples (with timeout protection)
 ./run_examples.sh
 
 # Run specific example
@@ -30,6 +38,18 @@ Run all examples with a single command:
 
 # Show help
 ./run_examples.sh --help
+```
+
+### Using the CLI (New)
+```bash
+# List examples with rich output
+planfile examples list
+
+# Run with progress tracking
+planfile examples run --all
+
+# Run specific example with timeout
+planfile examples run code2llm
 ```
 
 ## 🎯 Available Examples

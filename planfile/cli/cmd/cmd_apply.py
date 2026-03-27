@@ -22,7 +22,7 @@ console = Console()
 def _execute_apply_strategy(
     strategy: Strategy,
     project_path: Path,
-    backends: dict,
+    backend: str,
     dry_run: bool,
     sprint_ids: Optional[List[int]]
 ) -> dict:
@@ -33,10 +33,8 @@ def _execute_apply_strategy(
         results = apply_strategy_to_tickets(
             strategy=strategy,
             project_path=str(project_path),
-            backends=backends,
-            backend_name="default",
-            dry_run=dry_run,
-            sprint_filter=sprint_ids
+            backend=backend,
+            dry_run=dry_run
         )
         
         progress.update(task, completed=100)
@@ -47,30 +45,36 @@ def _display_apply_results(results: dict) -> None:
     """Display strategy application results."""
     console.print("\n[bold]Strategy Applied Successfully![/bold]")
     console.print(Panel(
-        f"Strategy: {results['strategy']}\n"
-        f"Backend: {results['backend']}\n"
-        f"Created: {results['summary']['created']}\n"
-        f"Updated: {results['summary']['updated']}\n"
-        f"Errors: {results['summary']['errors']}",
+        f"Created: {len(results['created'])}\n"
+        f"Updated: {len(results['updated'])}\n"
+        f"Errors: {len(results['errors'])}\n"
+        f"Dry Run: {results['dry_run']}",
         title="Summary"
     ))
     
-    if results["tickets"]:
-        table = Table(title="Created/Updated Tickets")
+    if results["created"]:
+        table = Table(title="Created Tickets")
         table.add_column("Sprint", style="cyan")
         table.add_column("Task", style="magenta")
-        table.add_column("Ticket ID", style="green")
-        table.add_column("URL", style="blue")
+        table.add_column("Title", style="green")
+        table.add_column("Type", style="blue")
+        table.add_column("Priority", style="yellow")
         
-        for key, ticket in results["tickets"].items():
+        for ticket in results["created"]:
             table.add_row(
-                key.split("-")[1],
-                key.split("-")[3],
-                ticket.id,
-                ticket.url or "N/A"
+                str(ticket["sprint"]),
+                ticket["pattern"],
+                ticket["title"],
+                ticket["type"],
+                ticket["priority"]
             )
         
         console.print(table)
+    
+    if results["errors"]:
+        console.print("\n[red]Errors:[/red]")
+        for error in results["errors"]:
+            console.print(f"  • {error}")
 
 def _save_results(results: dict, output: Optional[Path]) -> None:
     """Save results to file if specified."""
@@ -97,12 +101,13 @@ def apply_strategy_cli(
     strategy = _load_and_validate_strategy(strategy_path)
     backend_config = _load_backend_config(backend, config_file)
     
-    if not all(v for v in backend_config.values() if v is not None):
+    # Mock backend doesn't need configuration
+    if backend != "mock" and not all(v for v in backend_config.values() if v is not None):
         console.print("[red]✗[/red] Missing backend configuration. Use --config-file or set environment variables.")
         raise typer.Exit(1)
     
     sprint_ids = _parse_sprint_filter(sprint_filter)
     backends = _select_backend(backend, backend_config)
-    results = _execute_apply_strategy(strategy, project_path, backends, dry_run, sprint_ids)
+    results = _execute_apply_strategy(strategy, project_path, backend, dry_run, sprint_ids)
     _display_apply_results(results)
     _save_results(results, output)

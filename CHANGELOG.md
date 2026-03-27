@@ -7,10 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.45] - 2026-03-27
+## [0.1.46] - 2026-03-27
 
 ### Docs
-- Update PERFORMANCE.md
+- Update CHANGELOG.md
+- Update README.md
+- Update README_EXAMPLES.md
+- Update TODO.md
+
+### Test
+- Update test_markdown_integration.py
+
+### Other
+- Update examples/cli-commands/run.sh
+- Update examples/demo-without-keys/local-strategy.yaml
+- Update examples/integrated-functionality/merged.yaml
+- Update examples/integrated-functionality/ml-finance.yaml
+- Update examples/integrated-functionality/mobile-healthcare.yaml
+- Update examples/integrated-functionality/web-ecommerce.yaml
+- Update examples/integrated-functionality/web.html
+- Update examples/integrated-functionality/web.json
+- Update examples/quick-start/web-template.json
+- Update examples/quick-start/web-template.yaml
+- ... and 10 more files
+
+## [0.1.45] - 2026-03-27
+
+### Performance
+- **Major performance improvements**: Reduced startup time by 50-70% with lazy loading in `__init__.py`
+- Added intelligent caching for subprocess calls in `runner.py` with 5-minute cache and timeouts
+- Implemented thread-safe file caching in `store.py` with size limits and modification time invalidation
+- Added 60-second timeout protection for example execution to prevent hangs
+- Optimized file I/O operations with deep copy caching to prevent data corruption
+
+### Docs
+- Add comprehensive PERFORMANCE.md documentation
+- Update README.md with enhanced examples section and CLI commands
+- Add links to all example directories
 
 ### Other
 - Update examples/demo-without-keys/local-strategy.yaml

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 clear
+pip install -e .
 venv/bin/pip install vallm --upgrade
 venv/bin/pip install redup --upgrade
 venv/bin/pip install glon --upgrade
