@@ -55,14 +55,14 @@
 - **Classes**: 2
 - **File**: `project_detector.py`
 
-### planfile.loaders.yaml_loader
-- **Functions**: 15
-- **File**: `yaml_loader.py`
-
 ### planfile.sync.markdown_backend
 - **Functions**: 15
 - **Classes**: 1
 - **File**: `markdown_backend.py`
+
+### planfile.loaders.yaml_loader
+- **Functions**: 15
+- **File**: `yaml_loader.py`
 
 ### planfile.integrations.config
 - **Functions**: 14
@@ -216,20 +216,20 @@ This command will:
 > Generate planfile from analyzed files.
 - **Calls**: self.analyzer.analyze_directory, self.generator.generate_sprints, self.generator.generate_tickets, self._extract_key_metrics, self._create_strategy_object, Path, self._generate_goal, self._generate_goals
 
-### htmlcov.coverage_html_cb_6fb7b396.sortColumn
-- **Calls**: htmlcov.coverage_html_cb_6fb7b396.getAttribute, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.setAttribute, htmlcov.coverage_html_cb_6fb7b396.indexOf, htmlcov.coverage_html_cb_6fb7b396.from, htmlcov.coverage_html_cb_6fb7b396.closest, htmlcov.coverage_html_cb_6fb7b396.querySelectorAll, htmlcov.coverage_html_cb_6fb7b396.sort
+### htmlcov.coverage_html_cb_dd2e7eb5.sortColumn
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.getAttribute, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.setAttribute, htmlcov.coverage_html_cb_dd2e7eb5.indexOf, htmlcov.coverage_html_cb_dd2e7eb5.from, htmlcov.coverage_html_cb_dd2e7eb5.closest, htmlcov.coverage_html_cb_dd2e7eb5.querySelectorAll, htmlcov.coverage_html_cb_dd2e7eb5.sort
 
-### htmlcov.coverage_html_cb_6fb7b396.table
-- **Calls**: htmlcov.coverage_html_cb_6fb7b396.Array, htmlcov.coverage_html_cb_6fb7b396.fill, htmlcov.coverage_html_cb_6fb7b396.getElementById, htmlcov.coverage_html_cb_6fb7b396.setItem, htmlcov.coverage_html_cb_6fb7b396.toLowerCase, htmlcov.coverage_html_cb_6fb7b396.stringify, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.contains
+### htmlcov.coverage_html_cb_dd2e7eb5.table
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
 
-### htmlcov.coverage_html_cb_6fb7b396.table_body_rows
-- **Calls**: htmlcov.coverage_html_cb_6fb7b396.Array, htmlcov.coverage_html_cb_6fb7b396.fill, htmlcov.coverage_html_cb_6fb7b396.getElementById, htmlcov.coverage_html_cb_6fb7b396.setItem, htmlcov.coverage_html_cb_6fb7b396.toLowerCase, htmlcov.coverage_html_cb_6fb7b396.stringify, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.contains
+### htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
 
-### htmlcov.coverage_html_cb_6fb7b396.no_rows
-- **Calls**: htmlcov.coverage_html_cb_6fb7b396.Array, htmlcov.coverage_html_cb_6fb7b396.fill, htmlcov.coverage_html_cb_6fb7b396.getElementById, htmlcov.coverage_html_cb_6fb7b396.setItem, htmlcov.coverage_html_cb_6fb7b396.toLowerCase, htmlcov.coverage_html_cb_6fb7b396.stringify, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.contains
+### htmlcov.coverage_html_cb_dd2e7eb5.no_rows
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
 
-### htmlcov.coverage_html_cb_6fb7b396.filter_handler
-- **Calls**: htmlcov.coverage_html_cb_6fb7b396.Array, htmlcov.coverage_html_cb_6fb7b396.fill, htmlcov.coverage_html_cb_6fb7b396.getElementById, htmlcov.coverage_html_cb_6fb7b396.setItem, htmlcov.coverage_html_cb_6fb7b396.toLowerCase, htmlcov.coverage_html_cb_6fb7b396.stringify, htmlcov.coverage_html_cb_6fb7b396.forEach, htmlcov.coverage_html_cb_6fb7b396.contains
+### htmlcov.coverage_html_cb_dd2e7eb5.footer
+- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.map, htmlcov.coverage_html_cb_dd2e7eb5.getElementById, htmlcov.coverage_html_cb_dd2e7eb5.setItem, htmlcov.coverage_html_cb_dd2e7eb5.toLowerCase, htmlcov.coverage_html_cb_dd2e7eb5.stringify, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.contains, htmlcov.coverage_html_cb_dd2e7eb5.includes
 
 ## Process Flows
 
@@ -410,6 +410,10 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 
 Key functions that process and transform data:
 
+### planfile.examples.example_validate_strategy
+> Load and validate an existing strategy.
+- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
+
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
 - **Output to**: self._is_llx_available, subprocess.run, str, str
@@ -418,20 +422,9 @@ Key functions that process and transform data:
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
 
-### planfile.examples.example_validate_strategy
-> Load and validate an existing strategy.
-- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
-
 ### planfile.sync.jira.JiraBackend._validate_config
 > Validate Jira configuration.
 - **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
-
-### planfile.sync.mock.MockBackend._validate_config
-> Mock backend has no config requirements.
-
-### planfile.sync.gitlab.GitLabBackend._validate_config
-> Validate GitLab configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError
 
 ### planfile.sync.github.GitHubBackend._validate_config
 > Validate GitHub configuration.
@@ -440,6 +433,13 @@ Key functions that process and transform data:
 ### planfile.sync.generic.GenericBackend._validate_config
 > Validate generic backend configuration.
 - **Output to**: self.config.get, ValueError
+
+### planfile.sync.markdown_backend.MarkdownFileBackend._validate_config
+> Validate markdown backend configuration.
+
+### planfile.sync.markdown_backend.MarkdownFileBackend._format_ticket_entry
+> Format a ticket entry for markdown file.
+- **Output to**: None.get, lines.append, lines.append, lines.append, lines.append
 
 ### planfile.loaders.yaml_loader._transform_task_patterns
 > Transform task patterns in the data.
@@ -475,16 +475,6 @@ Args:
     file_path: Path to strategy YAML f
 - **Output to**: planfile.loaders.yaml_loader._check_required_keys, planfile.loaders.yaml_loader._validate_sprints, planfile.loaders.yaml_loader._validate_gates, planfile.loaders.yaml_loader._validate_task_patterns, planfile.loaders.yaml_loader.load_yaml
 
-### planfile.sync.markdown_backend.MarkdownFileBackend._validate_config
-> Validate markdown backend configuration.
-
-### planfile.sync.markdown_backend.MarkdownFileBackend._format_ticket_entry
-> Format a ticket entry for markdown file.
-- **Output to**: None.get, lines.append, lines.append, lines.append, lines.append
-
-### planfile.analysis.generator.PlanfileGenerator._parse_effort
-- **Output to**: parse_effort
-
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
 > Parse code2llm analysis.toon.yaml output.
 - **Output to**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists
@@ -497,6 +487,19 @@ Args:
 > Parse redup duplication.toon.yaml output.
 - **Output to**: AnalysisResults, re.search, re.search, dup_file.exists, self._mock_redup_data
 
+### planfile.analysis.generator.PlanfileGenerator._parse_effort
+- **Output to**: parse_effort
+
+### planfile.sync.base.BasePMBackend._validate_config
+> Validate backend configuration.
+
+### planfile.sync.mock.MockBackend._validate_config
+> Mock backend has no config requirements.
+
+### planfile.core.store.PlanfileStore._invalidate_cache
+> Invalidate cache for a file or all files.
+- **Output to**: self._cache.pop, self._cache.clear, str
+
 ### planfile.importers.redup_importer._parse_toon_format
 > Parse redup toon.yaml format into structured data.
 - **Output to**: re.search, re.search, re.search, re.search, None.strip
@@ -504,10 +507,6 @@ Args:
 ### planfile.importers.redup_importer._parse_duplicates
 > Parse DUPLICATES section.
 - **Output to**: text.split, line.strip, re.match, duplicates.append, duplicates.append
-
-### planfile.importers.redup_importer._parse_refactor
-> Parse REFACTOR section.
-- **Output to**: text.split, line.strip, re.match, refactor_items.append, refactor_items.append
 
 ## Behavioral Patterns
 
@@ -555,8 +554,8 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.cli.cmd.cmd_validate.validate_strategy_cli` - 22 calls
 - `planfile.core.models.Strategy.to_llx_format` - 20 calls
 - `planfile.cli.cmd.cmd_apply.apply_strategy_cli` - 20 calls
-- `planfile.analysis.parsers.yaml_parser.analyze_yaml` - 20 calls
 - `planfile.cli.cmd.cmd_generate.generate_strategy_cli` - 20 calls
+- `planfile.analysis.parsers.yaml_parser.analyze_yaml` - 20 calls
 - `planfile.core.models.Strategy.get_stats` - 19 calls
 - `examples.ecosystem.03_proxy_routing.example_budget_tracking` - 19 calls
 - `planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output` - 17 calls
@@ -567,9 +566,9 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.loaders.cli_loader.export_results_to_markdown` - 15 calls
 - `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 15 calls
 - `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls
-- `htmlcov.coverage_html_cb_6fb7b396.sortColumn` - 15 calls
-- `htmlcov.coverage_html_cb_6fb7b396.table` - 15 calls
-- `htmlcov.coverage_html_cb_6fb7b396.table_body_rows` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.sortColumn` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.table` - 15 calls
+- `htmlcov.coverage_html_cb_dd2e7eb5.table_body_rows` - 15 calls
 
 ## System Interactions
 

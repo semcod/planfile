@@ -6,7 +6,7 @@ SUMMARY:
   dup_groups:    3
   dup_fragments: 9
   saved_lines:   34
-  scan_ms:       2081
+  scan_ms:       3787
 
 DUPLICATES[3] (ranked by impact):
   [9eff6742b4323da5]   STRU  github  L=7 N=4 saved=21 sim=1.00
@@ -18,8 +18,8 @@ DUPLICATES[3] (ranked by impact):
       planfile/importers/yaml_importer.py:8-14  (import_yaml)
       planfile/importers/json_importer.py:8-14  (import_json)
   [11d76056cd91522d]   EXAC  _validate_config  L=3 N=3 saved=6 sim=1.00
-      planfile/sync/base.py:62-64  (_validate_config)
       planfile/sync/mock.py:18-20  (_validate_config)
+      planfile/sync/base.py:62-64  (_validate_config)
       planfile/sync/markdown_backend.py:40-43  (_validate_config)
 
 REFACTOR[3] (ranked by priority):
