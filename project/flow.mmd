@@ -4,6 +4,10 @@ flowchart TD
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph CLI
+        planfile__cli__commands__version_callback["version_callback"]
+        planfile__cli__commands__main_callback["main_callback"]
+        planfile__cli__commands__main["main"]
+        planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
         planfile__cli__auto_loop__get_backend["get_backend"]
         planfile__cli__auto_loop___validate_strategy["_validate_strategy"]
         planfile__cli__auto_loop___initialize_backends["_initialize_backends"]
@@ -13,13 +17,9 @@ flowchart TD
         planfile__cli__auto_loop___save_results_if_needed["_save_results_if_needed"]
         planfile__cli__auto_loop__auto_loop["auto_loop"]
         planfile__cli__auto_loop__ci_status["ci_status"]
-        planfile__cli__commands__version_callback["version_callback"]
-        planfile__cli__commands__main_callback["main_callback"]
-        planfile__cli__commands__main["main"]
-        planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
         planfile__cli__cmd__cmd_review__review_strategy_cli["review_strategy_cli"]
         planfile__cli__cmd__cmd_utils__get_backend["get_backend"]
-        ...["+30 more"]
+        ...["+39 more"]
     end
 
     subgraph Core
@@ -38,7 +38,7 @@ flowchart TD
         planfile__sync__state__SyncState__save_sync["save_sync"]
         planfile__sync__state__SyncState__get_remote_id["get_remote_id"]
         planfile__sync__state__SyncState__get_local_id["get_local_id"]
-        ...["+362 more"]
+        ...["+335 more"]
     end
 
     subgraph Exporters

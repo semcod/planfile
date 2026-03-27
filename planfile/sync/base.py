@@ -15,6 +15,7 @@ class TicketRef(BaseModel):
 class TicketStatus(BaseModel):
     """Status of a ticket."""
     id: str
+    key: Optional[str] = None
     status: str
     assignee: Optional[str] = None
     labels: List[str] = []
@@ -88,6 +89,117 @@ class BasePMBackend(ABC):
         
         return public_metadata
 
+    def create_ticket(
+        self,
+        title: str,
+        body: str,
+        labels: Optional[List[str]] = None,
+        priority: Optional[str] = None,
+        assignee: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> TicketRef:
+        """Create a new ticket through the backend-specific implementation."""
+        return self._create_ticket(
+            title=title,
+            body=body,
+            labels=labels,
+            priority=priority,
+            assignee=assignee,
+            metadata=metadata,
+        )
+
+    @abstractmethod
+    def _create_ticket(
+        self,
+        title: str,
+        body: str,
+        labels: Optional[List[str]] = None,
+        priority: Optional[str] = None,
+        assignee: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> TicketRef:
+        """Create a new ticket."""
+        ...
+
+    def update_ticket(
+        self,
+        ticket_id: str,
+        title: Optional[str] = None,
+        body: Optional[str] = None,
+        status: Optional[str] = None,
+        labels: Optional[List[str]] = None,
+        priority: Optional[str] = None,
+        assignee: Optional[str] = None,
+    ) -> None:
+        """Update an existing ticket through the backend-specific implementation."""
+        return self._update_ticket(
+            ticket_id=ticket_id,
+            title=title,
+            body=body,
+            status=status,
+            labels=labels,
+            priority=priority,
+            assignee=assignee,
+        )
+
+    @abstractmethod
+    def _update_ticket(
+        self,
+        ticket_id: str,
+        title: Optional[str] = None,
+        body: Optional[str] = None,
+        status: Optional[str] = None,
+        labels: Optional[List[str]] = None,
+        priority: Optional[str] = None,
+        assignee: Optional[str] = None,
+    ) -> None:
+        """Update an existing ticket."""
+        ...
+
+    def get_ticket(self, ticket_id: str) -> TicketStatus:
+        """Get ticket status through the backend-specific implementation."""
+        return self._get_ticket(ticket_id)
+
+    @abstractmethod
+    def _get_ticket(self, ticket_id: str) -> TicketStatus:
+        """Get ticket status."""
+        ...
+
+    def list_tickets(
+        self,
+        labels: Optional[List[str]] = None,
+        status: Optional[str] = None,
+        assignee: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> List[TicketStatus]:
+        """List tickets with filters through the backend-specific implementation."""
+        return self._list_tickets(
+            labels=labels,
+            status=status,
+            assignee=assignee,
+            limit=limit,
+        )
+
+    @abstractmethod
+    def _list_tickets(
+        self,
+        labels: Optional[List[str]] = None,
+        status: Optional[str] = None,
+        assignee: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> List[TicketStatus]:
+        """List tickets with filters."""
+        ...
+
+    def search_tickets(self, query: str) -> List[TicketStatus]:
+        """Search tickets through the backend-specific implementation."""
+        return self._search_tickets(query)
+
+    @abstractmethod
+    def _search_tickets(self, query: str) -> List[TicketStatus]:
+        """Search tickets by query."""
+        ...
+
     def build_ticket_ref(
         self,
         *,
@@ -110,18 +222,18 @@ class BasePMBackend(ABC):
         self,
         *,
         id: str,
+        key: Optional[str] = None,
         status: str,
         assignee: Optional[str] = None,
         labels: Optional[List[str]] = None,
         updated_at: Optional[str] = None,
-        **extra: Any,
     ) -> TicketStatus:
         """Build a TicketStatus with consistent defaults."""
         return TicketStatus(
             id=id,
+            key=key,
             status=status,
             assignee=assignee,
             labels=labels or [],
             updated_at=updated_at,
-            **extra,
         )

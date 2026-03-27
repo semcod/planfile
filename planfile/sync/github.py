@@ -47,7 +47,7 @@ class GitHubBackend(BasePMBackend):
         if "/" not in self.config["repo"]:
             raise ValueError("Repository must be in format 'owner/repo'")
     
-    def create_ticket(
+    def _create_ticket(
         self,
         title: str,
         body: str,
@@ -94,7 +94,7 @@ class GitHubBackend(BasePMBackend):
             metadata=metadata,
         )
     
-    def update_ticket(
+    def _update_ticket(
         self,
         ticket_id: str,
         title: Optional[str] = None,
@@ -140,7 +140,7 @@ class GitHubBackend(BasePMBackend):
         if assignee:
             issue.edit(assignee=assignee)
     
-    def get_ticket(self, ticket_id: str) -> TicketStatus:
+    def _get_ticket(self, ticket_id: str) -> TicketStatus:
         """Get GitHub issue status."""
         issue = self.repo.get_issue(int(ticket_id))
         
@@ -152,7 +152,7 @@ class GitHubBackend(BasePMBackend):
             updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
         )
     
-    def list_tickets(
+    def _list_tickets(
         self,
         labels: Optional[List[str]] = None,
         status: Optional[str] = None,
@@ -183,7 +183,7 @@ class GitHubBackend(BasePMBackend):
         
         return tickets
     
-    def search_tickets(self, query: str) -> List[TicketStatus]:
+    def _search_tickets(self, query: str) -> List[TicketStatus]:
         """Search GitHub issues."""
         issues = self.repo.get_issues(state="all")
         

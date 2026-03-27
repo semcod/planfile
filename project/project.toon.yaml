@@ -1,21 +1,21 @@
-# planfile | 534 func | 66f | 14083L | python | 2026-03-27
+# planfile | 510 func | 63f | 13323L | python | 2026-03-27
 
 HEALTH:
-  CC̄=3.9  critical=51 (limit:10)  dup=8  cycles=0
+  CC̄=3.8  critical=45 (limit:10)  dup=1  cycles=0
 
 ALERTS[20]:
   !!! high_fan_out     init_strategy_cli = 27 (limit:10)
   !!! high_fan_out     register_ticket_commands = 25 (limit:10)
+  !!! high_fan_out     sync_integration = 24 (limit:10)
   !!! high_fan_out     create_examples_app = 23 (limit:10)
   !!! high_fan_out     auto_loop = 21 (limit:10)
   !!! high_fan_out     review_strategy_cli = 21 (limit:10)
   !!! high_fan_out     analyze_text = 20 (limit:10)
+  !!  cc_exceeded      sync_integration = 21 (limit:15)
   !!  cc_exceeded      table = 21 (limit:15)
   !!  cc_exceeded      table_body_rows = 21 (limit:15)
-  !!  cc_exceeded      no_rows = 21 (limit:15)
-  !!  cc_exceeded      footer = 21 (limit:15)
 
-MODULES[84] (top by size):
+MODULES[86] (top by size):
   M[htmlcov/coverage_html_cb_dd2e7eb5.js] 735L C:0 F:65 CC↑21 D:0 (javascript)
   M[htmlcov/coverage_html_cb_6fb7b396.js] 733L C:0 F:64 CC↑19 D:0 (javascript)
   M[planfile/core/models.py] 492L C:11 F:17 CC↑15 D:0 (python)
@@ -25,32 +25,32 @@ MODULES[84] (top by size):
   M[planfile/cli/cmd/cmd_init.py] 299L C:0 F:4 CC↑12 D:0 (python)
   M[run_examples.sh] 286L C:0 F:13 CC↑0 D:1 (shell)
   M[planfile/runner.py] 284L C:0 F:6 CC↑12 D:4 (python)
-  M[planfile/integrations/jira.py] 283L C:1 F:9 CC↑13 D:0 (python)
   M[planfile/sync/jira.py] 283L C:1 F:9 CC↑13 D:0 (python)
   M[planfile/analysis/external_tools.py] 267L C:2 F:13 CC↑12 D:0 (python)
   M[planfile/core/store.py] 256L C:7 F:27 CC↑5 D:0 (python)
   M[planfile/cli/auto_loop.py] 252L C:0 F:9 CC↑10 D:1 (python)
   M[planfile/analysis/generator.py] 243L C:1 F:17 CC↑14 D:0 (python)
-  LANGS: python:77/shell:5/javascript:2
+  M[planfile/sync/base.py] 238L C:4 F:21 CC↑4 D:0 (python)
+  LANGS: python:79/shell:5/javascript:2
 
 HOTSPOTS[10]:
   ★ init_strategy_cli fan=27  // Interactive wizard — tworzy strategię przez zadawanie pytań.
 
 Nie wymaga szablon
   ★ register_ticket_commands fan=25  // Register ticket subcommands on the typer app.
+  ★ sync_integration fan=24  // Sync with a specific integration.
   ★ create_examples_app fan=23  // Create and return the examples sub-app.
   ★ auto_loop fan=21  // Run automated CI/CD loop: test → ticket → fix → retest.
 
 This command will:
 1. R
-  ★ review_strategy_cli fan=21  // Review strategy execution and progress.
 
 REFACTOR[15]:
   [1] H/H Split god module htmlcov/coverage_html_cb_dd2e7eb5.js (735L, 0 classes)
   [2] H/H Split god module htmlcov/coverage_html_cb_6fb7b396.js (733L, 0 classes)
   [3] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
-  [4] M/L Split GitLabBackend.update_ticket (CC=15 → target CC<10)
-  [5] M/L Split Strategy.get_stats (CC=15 → target CC<10)
+  [4] M/L Split Strategy.get_stats (CC=15 → target CC<10)
+  [5] M/L Split sync_integration (CC=21 → target CC<10)
 
 EVOLUTION:
-  2026-03-27 CC̄=3.9 crit=51 14083L // Automated analysis
+  2026-03-27 CC̄=3.8 crit=45 13323L // Automated analysis

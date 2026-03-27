@@ -88,7 +88,7 @@ class JiraBackend(BasePMBackend):
         
         return type_map.get(task_type.lower(), "Task")
     
-    def create_ticket(
+    def _create_ticket(
         self,
         title: str,
         body: str,
@@ -139,17 +139,17 @@ class JiraBackend(BasePMBackend):
             if assignee:
                 self.jira.assign_issue(issue, assignee)
             
-            return TicketRef(
+            return self.build_ticket_ref(
                 id=issue.id,
                 url=f"{self.config['base_url']}/browse/{issue.key}",
                 key=issue.key,
                 status=issue.fields.status.name,
-                metadata=self.prepare_metadata(metadata)
+                metadata=metadata,
             )
         except JIRAError as e:
             raise RuntimeError(f"Failed to create Jira issue: {e}")
     
-    def update_ticket(
+    def _update_ticket(
         self,
         ticket_id: str,
         title: Optional[str] = None,
@@ -196,23 +196,23 @@ class JiraBackend(BasePMBackend):
         except JIRAError as e:
             raise RuntimeError(f"Failed to update Jira issue {ticket_id}: {e}")
     
-    def get_ticket(self, ticket_id: str) -> TicketStatus:
+    def _get_ticket(self, ticket_id: str) -> TicketStatus:
         """Get Jira issue status."""
         try:
             issue = self.jira.issue(ticket_id)
             
-            return TicketStatus(
+            return self.build_ticket_status(
                 id=issue.id,
                 key=issue.key,
                 status=issue.fields.status.name,
                 assignee=issue.fields.assignee.displayName if issue.fields.assignee else None,
                 labels=issue.fields.labels or [],
-                updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None
+                updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None,
             )
         except JIRAError as e:
             raise RuntimeError(f"Failed to get Jira issue {ticket_id}: {e}")
     
-    def list_tickets(
+    def _list_tickets(
         self,
         labels: Optional[List[str]] = None,
         status: Optional[str] = None,
@@ -243,20 +243,20 @@ class JiraBackend(BasePMBackend):
             
             tickets = []
             for issue in issues:
-                tickets.append(TicketStatus(
+                tickets.append(self.build_ticket_status(
                     id=issue.id,
                     key=issue.key,
                     status=issue.fields.status.name,
                     assignee=issue.fields.assignee.displayName if issue.fields.assignee else None,
                     labels=issue.fields.labels or [],
-                    updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None
+                    updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None,
                 ))
             
             return tickets
         except JIRAError as e:
             raise RuntimeError(f"Failed to list Jira issues: {e}")
     
-    def search_tickets(self, query: str) -> List[TicketStatus]:
+    def _search_tickets(self, query: str) -> List[TicketStatus]:
         """Search Jira issues."""
         jql = f'project = {self.config["project"]} AND text ~ "{query}" ORDER BY updated DESC'
         
@@ -269,13 +269,13 @@ class JiraBackend(BasePMBackend):
             
             tickets = []
             for issue in issues:
-                tickets.append(TicketStatus(
+                tickets.append(self.build_ticket_status(
                     id=issue.id,
                     key=issue.key,
                     status=issue.fields.status.name,
                     assignee=issue.fields.assignee.displayName if issue.fields.assignee else None,
                     labels=issue.fields.labels or [],
-                    updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None
+                    updated_at=issue.fields.updated.isoformat() if issue.fields.updated else None,
                 ))
             
             return tickets

@@ -50,7 +50,7 @@ class GitLabBackend(BasePMBackend):
         if not self.config.get("project_id"):
             raise ValueError("GitLab project ID is required")
     
-    def create_ticket(
+    def _create_ticket(
         self,
         title: str,
         body: str,
@@ -109,7 +109,7 @@ class GitLabBackend(BasePMBackend):
         except GitlabError as e:
             raise RuntimeError(f"Failed to create GitLab issue: {e}")
     
-    def update_ticket(
+    def _update_ticket(
         self,
         ticket_id: str,
         title: Optional[str] = None,
@@ -163,7 +163,7 @@ class GitLabBackend(BasePMBackend):
         except GitlabError as e:
             raise RuntimeError(f"Failed to update GitLab issue {ticket_id}: {e}")
     
-    def get_ticket(self, ticket_id: str) -> TicketStatus:
+    def _get_ticket(self, ticket_id: str) -> TicketStatus:
         """Get GitLab issue status."""
         try:
             issue = self.project.issues.get(ticket_id)
@@ -178,7 +178,7 @@ class GitLabBackend(BasePMBackend):
         except GitlabError as e:
             raise RuntimeError(f"Failed to get GitLab issue {ticket_id}: {e}")
     
-    def list_tickets(
+    def _list_tickets(
         self,
         labels: Optional[List[str]] = None,
         status: Optional[str] = None,
@@ -217,7 +217,7 @@ class GitLabBackend(BasePMBackend):
         except GitlabError as e:
             raise RuntimeError(f"Failed to list GitLab issues: {e}")
     
-    def search_tickets(self, query: str) -> List[TicketStatus]:
+    def _search_tickets(self, query: str) -> List[TicketStatus]:
         """Search GitLab issues."""
         try:
             issues = self.project.issues.list(search=query, state="all", per_page=50)
