@@ -1,0 +1,322 @@
+sprint:
+  id: sprint-001
+  name: Sprint 1
+  status: active
+  tickets:
+    PLF-001:
+      id: PLF-001
+      title: Test ticket
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: human
+        timestamp: '2026-03-27T07:24:56.294443'
+        context: {}
+      description: Manual test ticket
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:56.295367'
+      updated_at: '2026-03-27T07:24:56.295369'
+    PLF-002:
+      id: PLF-002
+      title: From stdin
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: test
+        timestamp: '2026-03-27T07:24:57.490960'
+        context: {}
+      description: Imported via stdin
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:57.490974'
+      updated_at: '2026-03-27T07:24:57.490976'
+    PLF-003:
+      id: PLF-003
+      title: 'python.complexity.mccabe: planfile/core/store.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.297590'
+        context:
+          file: planfile/core/store.py
+          rule: python.complexity.mccabe
+          message: Function '_apply_filters' is too complex (CC=15)
+      description: Function '_apply_filters' is too complex (CC=15)
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.297616'
+      updated_at: '2026-03-27T07:24:58.297617'
+    PLF-004:
+      id: PLF-004
+      title: 'python.complexity.mccabe: planfile/importers/code2llm_importer.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.303511'
+        context:
+          file: planfile/importers/code2llm_importer.py
+          rule: python.complexity.mccabe
+          message: Function '_parse_evolution' is too complex (CC=18)
+      description: Function '_parse_evolution' is too complex (CC=18)
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.303524'
+      updated_at: '2026-03-27T07:24:58.303525'
+    PLF-005:
+      id: PLF-005
+      title: 'python.complexity.mccabe: planfile/importers/vallm_importer.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.310699'
+        context:
+          file: planfile/importers/vallm_importer.py
+          rule: python.complexity.mccabe
+          message: Function 'import_vallm' is too complex (CC=16)
+      description: Function 'import_vallm' is too complex (CC=16)
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.310718'
+      updated_at: '2026-03-27T07:24:58.310719'
+    PLF-006:
+      id: PLF-006
+      title: 'python.complexity.mccabe: planfile/integrations/gitlab.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.319778'
+        context:
+          file: planfile/integrations/gitlab.py
+          rule: python.complexity.mccabe
+          message: Function 'update_ticket' is too complex (CC=15)
+      description: Function 'update_ticket' is too complex (CC=15)
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.319788'
+      updated_at: '2026-03-27T07:24:58.319790'
+    PLF-007:
+      id: PLF-007
+      title: 'python.import.missing: planfile/integrations/gitlab.py'
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.330532'
+        context:
+          file: planfile/integrations/gitlab.py
+          rule: python.import.missing
+          message: Missing required import 'requests'
+      description: Missing required import 'requests'
+      acceptance_criteria: []
+      labels:
+      - python
+      - import-error
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.330542'
+      updated_at: '2026-03-27T07:24:58.330543'
+    PLF-008:
+      id: PLF-008
+      title: 'python.complexity.mccabe: planfile/integrations/github.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.343866'
+        context:
+          file: planfile/integrations/github.py
+          rule: python.complexity.mccabe
+          message: Function 'create_ticket' is too complex (CC=18)
+      description: Function 'create_ticket' is too complex (CC=18)
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.343878'
+      updated_at: '2026-03-27T07:24:58.343880'
+    PLF-009:
+      id: PLF-009
+      title: 'python.import.missing: planfile/integrations/github.py'
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.358378'
+        context:
+          file: planfile/integrations/github.py
+          rule: python.import.missing
+          message: Missing required import 'github'
+      description: Missing required import 'github'
+      acceptance_criteria: []
+      labels:
+      - python
+      - import-error
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.358387'
+      updated_at: '2026-03-27T07:24:58.358388'
+    PLF-010:
+      id: PLF-010
+      title: 'python.bug.undefined-variable: planfile/utils/metrics.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.375772'
+        context:
+          file: planfile/utils/metrics.py
+          rule: python.bug.undefined-variable
+          message: Use of undefined variable 'metrics_data'
+      description: Use of undefined variable 'metrics_data'
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.375786'
+      updated_at: '2026-03-27T07:24:58.375787'
+    PLF-011:
+      id: PLF-011
+      title: 'python.performance.loop: planfile/utils/metrics.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.396613'
+        context:
+          file: planfile/utils/metrics.py
+          rule: python.performance.loop
+          message: Inefficient nested loop detected
+      description: Inefficient nested loop detected
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.396623'
+      updated_at: '2026-03-27T07:24:58.396625'
+    PLF-012:
+      id: PLF-012
+      title: 'python.style.line-too-long: planfile/analysis/parsers/toon_parser.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.419525'
+        context:
+          file: planfile/analysis/parsers/toon_parser.py
+          rule: python.style.line-too-long
+          message: Line too long (120 > 79 characters)
+      description: Line too long (120 > 79 characters)
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.419538'
+      updated_at: '2026-03-27T07:24:58.419539'
+    PLF-013:
+      id: PLF-013
+      title: 'python.style.black: planfile/cli/commands.py'
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.442046'
+        context:
+          file: planfile/cli/commands.py
+          rule: python.style.black
+          message: Line does not conform to black style
+      description: Line does not conform to black style
+      acceptance_criteria: []
+      labels:
+      - python
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.442060'
+      updated_at: '2026-03-27T07:24:58.442061'
+    PLF-014:
+      id: PLF-014
+      title: 'python.import.missing: planfile/cli/commands.py'
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: vallm
+        timestamp: '2026-03-27T07:24:58.465688'
+        context:
+          file: planfile/cli/commands.py
+          rule: python.import.missing
+          message: Missing required import 'typer'
+      description: Missing required import 'typer'
+      acceptance_criteria: []
+      labels:
+      - python
+      - import-error
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:58.465709'
+      updated_at: '2026-03-27T07:24:58.465709'

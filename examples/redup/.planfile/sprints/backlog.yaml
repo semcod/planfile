@@ -1,0 +1,139 @@
+sprint:
+  id: backlog
+  name: Backlog
+  status: active
+  tickets:
+    PLF-003:
+      id: PLF-003
+      title: Extract base class to eliminate code duplication
+      status: open
+      priority: critical
+      sprint: backlog
+      source:
+        tool: redup
+        timestamp: '2026-03-27T08:27:03.828128'
+        context:
+          saved_lines: 24
+          refactor_action: extract_base_class
+          target: planfile/integrations/base.py
+          files:
+          - planfile/integrations/github.py
+          - planfile/integrations/gitlab.py
+          - planfile/integrations/jira.py
+      description: '3 occurrences of 12-line block across 3 files — saves 24 lines
+
+
+        Affected files:
+
+        - planfile/integrations/github.py
+
+        - planfile/integrations/gitlab.py
+
+        - planfile/integrations/jira.py
+
+
+        Target location: planfile/integrations/base.py'
+      acceptance_criteria:
+      - Extract duplicated code to shared location
+      - Update all files to use extracted code
+      - Verify functionality remains unchanged
+      - Run tests to ensure no regressions
+      labels:
+      - refactoring
+      - code-quality
+      - duplication
+      - high-impact
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:27:03.830207'
+      updated_at: '2026-03-27T07:27:03.830214'
+    PLF-004:
+      id: PLF-004
+      title: Extract function to eliminate code duplication
+      status: open
+      priority: high
+      sprint: backlog
+      source:
+        tool: redup
+        timestamp: '2026-03-27T08:27:03.828157'
+        context:
+          saved_lines: 16
+          refactor_action: extract_function
+          target: planfile/integrations/utils/config.py
+          files:
+          - planfile/integrations/github.py
+          - planfile/integrations/gitlab.py
+          - planfile/integrations/jira.py
+      description: '3 occurrences of 8-line block across 3 files — saves 16 lines
+
+
+        Affected files:
+
+        - planfile/integrations/github.py
+
+        - planfile/integrations/gitlab.py
+
+        - planfile/integrations/jira.py
+
+
+        Target location: planfile/integrations/utils/config.py'
+      acceptance_criteria:
+      - Extract duplicated code to shared location
+      - Update all files to use extracted code
+      - Verify functionality remains unchanged
+      - Run tests to ensure no regressions
+      labels:
+      - refactoring
+      - code-quality
+      - duplication
+      - high-impact
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:27:03.840915'
+      updated_at: '2026-03-27T07:27:03.840918'
+    PLF-005:
+      id: PLF-005
+      title: Extract function to eliminate code duplication
+      status: open
+      priority: low
+      sprint: backlog
+      source:
+        tool: redup
+        timestamp: '2026-03-27T08:27:03.828171'
+        context:
+          saved_lines: 5
+          refactor_action: extract_function
+          target: planfile/cli/utils/error_handler.py
+          files:
+          - planfile/cli/cmd/cmd_sync.py
+          - planfile/cli/cmd/cmd_examples.py
+      description: '2 occurrences of 6-line block across 2 files — saves 5 lines
+
+
+        Affected files:
+
+        - planfile/cli/cmd/cmd_sync.py
+
+        - planfile/cli/cmd/cmd_examples.py
+
+
+        Target location: planfile/cli/utils/error_handler.py'
+      acceptance_criteria:
+      - Extract duplicated code to shared location
+      - Update all files to use extracted code
+      - Verify functionality remains unchanged
+      - Run tests to ensure no regressions
+      labels:
+      - refactoring
+      - code-quality
+      - duplication
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:27:03.846403'
+      updated_at: '2026-03-27T07:27:03.846405'

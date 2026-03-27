@@ -1,0 +1,99 @@
+# Validation file generated from planfile project analysis
+# Generated on: 2026-03-27
+
+ERRORS[
+planfile/core/store.py,0.85
+  python.complexity.mccabe,error,Function '_apply_filters' is too complex (CC=15),1
+  python.style.unused-import,warning,Import 'os' is unused,1
+  python.design.duplicate,warning,Filter classes could be extracted,3
+
+planfile/importers/code2llm_importer.py,0.78
+  python.complexity.mccabe,error,Function '_parse_evolution' is too complex (CC=18),1
+  python.bug.off-by-one,warning,Potential off-by-one error in line parsing,2
+  python.style.unnecessary-comprehension,warning,List comprehension could be simplified,1
+
+planfile/importers/vallm_importer.py,0.92
+  python.complexity.mccabe,error,Function 'import_vallm' is too complex (CC=16),1
+  python.performance.string-concatenation,warning,Use f-strings instead of string concatenation,3
+  python.style.long-line,warning,Line exceeds 100 characters,2
+
+planfile/integrations/gitlab.py,0.88
+  python.complexity.mccabe,error,Function 'update_ticket' is too complex (CC=15),1
+  python.security.hardcoded-token,warning,Potential hardcoded token in comments,2
+  python.import.missing,error,Missing required import 'requests',1
+
+planfile/cli/extra_commands.py,0.95
+  python.style.unused-import,warning,Import 'typer' is unused,1
+  python.documentation.missing,warning,Function lacks docstring,2
+
+planfile/core/models.py,0.91
+  python.style.enum,warning,Use Enum instead of string constants,3
+  python.validation.missing-field,warning,Missing field validation in Ticket model,2
+
+planfile/cli/cmd/cmd_sync.py,0.83
+  python.import.relative,warning,Avoid relative imports,1
+  python.error.unhandled,warning,Unhandled exception in sync_to_external,2
+  python.style.long-line,warning,Line exceeds 100 characters,4
+
+planfile/integrations/github.py,0.87
+  python.security.hardcoded-token,warning,Potential hardcoded token in comments,2
+  python.complexity.mccabe,error,Function 'create_ticket' is too complex (CC=18),1
+  python.import.missing,error,Missing required import 'github',1
+
+planfile/analysis/generator.py,0.76
+  python.performance.inefficient-loop,warning,Inefficient nested loop detected,1
+  python.documentation.missing,warning,Function lacks docstring,3
+  python.style.unused-variable,warning,Variable 'result' is assigned but never used,1
+
+planfile/utils/metrics.py,0.65
+  python.bug.undefined-variable,error,Use of undefined variable 'metrics_data',1
+  python.performance.loop,error,Inefficient nested loop detected,2
+  python.style.long-line,warning,Line exceeds 100 characters,5
+
+planfile/analysis/parsers/toon_parser.py,0.88
+  python.style.line-too-long,error,Line too long (120 > 79 characters),8
+  python.documentation.missing,warning,Function lacks docstring,5
+  python.import.unused,warning,Import 're' is unused,1
+
+planfile/cli/commands.py,0.92
+  python.style.black,error,Line does not conform to black style,5
+  python.import.missing,error,Missing required import 'typer',2
+  python.error.unhandled,warning,Unhandled exception in main,1
+]
+
+# Summary statistics
+SUMMARY{
+  total_files: 11
+  total_errors: 9
+  total_warnings: 42
+  average_score: 0.845
+  critical_files: 2
+  most_common_issues:
+    - "complexity.mccabe": 5 occurrences
+    - "style.long-line": 12 occurrences
+    - "documentation.missing": 9 occurrences
+    - "import.missing": 3 occurrences
+}
+
+# Quality metrics
+QUALITY{
+  cyclomatic_complexity:
+    average: 4.2
+    max: 18
+    functions_above_10: 5
+    functions_above_15: 4
+  
+  test_coverage:
+    overall: 67%
+    core_modules: 72%
+    cli_modules: 45%
+  
+  code_duplication:
+    duplicated_lines: 234
+    duplication_percentage: 3.2%
+  
+  maintainability_index:
+    average: 78
+    min: 45
+    max: 95
+}

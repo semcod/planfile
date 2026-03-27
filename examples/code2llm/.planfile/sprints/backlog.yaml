@@ -1,0 +1,294 @@
+sprint:
+  id: backlog
+  name: Backlog
+  status: active
+  tickets:
+    PLF-003:
+      id: PLF-003
+      title: Remove duplicate integration backends
+      status: open
+      priority: critical
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.251858'
+        context:
+          impact: 9000
+          effort: '2'
+      description: Duplicated classes in planfile/sync/ and planfile/integrations/
+        causing maintenance overhead
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - remove
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.251883'
+      updated_at: '2026-03-27T07:24:53.251884'
+    PLF-004:
+      id: PLF-004
+      title: Refactor high cyclomatic complexity functions
+      status: open
+      priority: critical
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.259363'
+        context:
+          impact: 10000
+          effort: '5'
+      description: 19 functions with CC>15 need refactoring for maintainability
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - refactor
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.259377'
+      updated_at: '2026-03-27T07:24:53.259378'
+    PLF-005:
+      id: PLF-005
+      title: Implement sync command for integrations
+      status: open
+      priority: critical
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.263889'
+        context:
+          impact: 8000
+          effort: '3'
+      description: Missing sync command prevents external system synchronization
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - implement
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.263900'
+      updated_at: '2026-03-27T07:24:53.263901'
+    PLF-006:
+      id: PLF-006
+      title: Add python-dotenv dependency
+      status: open
+      priority: high
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.270130'
+        context:
+          impact: 3000
+          effort: '0.5'
+      description: Environment variable loading fails without explicit dependency
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - add
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.270147'
+      updated_at: '2026-03-27T07:24:53.270149'
+    PLF-007:
+      id: PLF-007
+      title: Create comprehensive integration examples
+      status: open
+      priority: high
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.278040'
+        context:
+          impact: 5000
+          effort: '2'
+      description: Users need clear examples for GitHub, GitLab, and Jira integrations
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - create
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.278052'
+      updated_at: '2026-03-27T07:24:53.278053'
+    PLF-008:
+      id: PLF-008
+      title: Refactor import_vallm function (CC=16)
+      status: open
+      priority: critical
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.287678'
+        context:
+          impact: 6000
+          effort: '1'
+      description: High complexity makes code hard to maintain and test
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - refactor
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.287688'
+      updated_at: '2026-03-27T07:24:53.287689'
+    PLF-009:
+      id: PLF-009
+      title: Refactor GitLabBackend.update_ticket (CC=15)
+      status: open
+      priority: high
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.299330'
+        context:
+          impact: 5000
+          effort: '1'
+      description: Complex function needs simplification for better maintainability
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - refactor
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.299341'
+      updated_at: '2026-03-27T07:24:53.299342'
+    PLF-010:
+      id: PLF-010
+      title: Add multi-ticket routing support
+      status: open
+      priority: critical
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.313961'
+        context:
+          impact: 7000
+          effort: '2'
+      description: Need to route tickets to different integrations based on type
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - add
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.313974'
+      updated_at: '2026-03-27T07:24:53.313975'
+    PLF-011:
+      id: PLF-011
+      title: Implement VallmParser state machine
+      status: open
+      priority: critical
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.328872'
+        context:
+          impact: 6000
+          effort: '1'
+      description: Current _parse_evolution function has high complexity (CC=18)
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - implement
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.328882'
+      updated_at: '2026-03-27T07:24:53.328883'
+    PLF-012:
+      id: PLF-012
+      title: Update documentation for new architecture
+      status: open
+      priority: high
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.350490'
+        context:
+          impact: 2000
+          effort: '1'
+      description: Separation of configs needs proper documentation
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - update
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.350503'
+      updated_at: '2026-03-27T07:24:53.350504'
+    PLF-013:
+      id: PLF-013
+      title: Add filter chain pattern for ticket filtering
+      status: open
+      priority: high
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.373486'
+        context:
+          impact: 5000
+          effort: '1'
+      description: _apply_filters function has high complexity (CC=15)
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - add
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.373501'
+      updated_at: '2026-03-27T07:24:53.373502'
+    PLF-014:
+      id: PLF-014
+      title: Create code2llm and vallm integration examples
+      status: open
+      priority: critical
+      sprint: backlog
+      source:
+        tool: code2llm
+        timestamp: '2026-03-27T07:24:53.393225'
+        context:
+          impact: 6000
+          effort: '1'
+      description: Users need examples for importing analysis results
+      acceptance_criteria: []
+      labels:
+      - tech-debt
+      - refactoring
+      - create
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:24:53.393234'
+      updated_at: '2026-03-27T07:24:53.393235'

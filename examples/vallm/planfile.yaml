@@ -1,0 +1,18 @@
+name: "Vallm Strategy"
+description: "Strategy for vallm integration example"
+
+project:
+  name: "Vallm Demo"
+  description: "Example project showing vallm integration"
+  prefix: "VL"
+
+sprint:
+  id: "sprint-001"
+  name: "Quality Sprint"
+  status: "active"
+  start_date: "2026-03-27"
+  end_date: "2026-04-10"
+  tickets: {}
+
+backlog:
+  tickets: {}

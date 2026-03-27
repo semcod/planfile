@@ -1,0 +1,43 @@
+sprint:
+  id: sprint-001
+  name: Sprint 1
+  status: active
+  tickets:
+    PLF-001:
+      id: PLF-001
+      title: Test ticket
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: human
+        timestamp: '2026-03-27T07:27:01.805878'
+        context: {}
+      description: Manual test ticket
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:27:01.806856'
+      updated_at: '2026-03-27T07:27:01.806858'
+    PLF-002:
+      id: PLF-002
+      title: From stdin
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: test
+        timestamp: '2026-03-27T07:27:03.041143'
+        context: {}
+      description: Imported via stdin
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-03-27T07:27:03.041160'
+      updated_at: '2026-03-27T07:27:03.041161'

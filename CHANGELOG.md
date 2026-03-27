@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.40] - 2026-03-27
+
+### Docs
+- Update examples/code2llm/README.md
+- Update examples/code2llm/code2llm_output/README.md
+- Update examples/code2llm/code2llm_output/context.md
+- Update examples/redup/README.md
+- Update examples/vallm/README.md
+
+### Other
+- Update examples/code2llm/.planfile/config.yaml
+- Update examples/code2llm/.planfile/config.yaml.lock
+- Update examples/code2llm/.planfile/sprints/backlog.yaml
+- Update examples/code2llm/.planfile/sprints/backlog.yaml.lock
+- Update examples/code2llm/.planfile/sprints/current.yaml
+- Update examples/code2llm/.planfile/sprints/current.yaml.lock
+- Update examples/code2llm/code2llm_output/analysis.toon.yaml
+- Update examples/code2llm/code2llm_output/evolution.toon.yaml
+- Update examples/code2llm/evolution.toon
+- Update examples/code2llm/planfile.yaml
+- ... and 21 more files
+
 ## [0.1.39] - 2026-03-27
 
 ### Other

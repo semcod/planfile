@@ -1,0 +1,37 @@
+# redup/duplication | 3 groups | 78f 15234L | 2026-03-27
+
+SUMMARY:
+  files_scanned: 78
+  total_lines:   15234
+  dup_groups:    3
+  dup_fragments: 7
+  saved_lines:   45
+  scan_ms:       2150
+
+DUPLICATES[3] (ranked by impact):
+  [9eff6742b4323da5]   STRU  github  L=12 N=3 saved=24 sim=1.00
+      planfile/integrations/github.py:45-56  (create_ticket)
+      planfile/integrations/gitlab.py:45-56  (create_ticket)
+      planfile/integrations/jira.py:45-56  (create_ticket)
+  [d32dae4fd2e94d5b]   STRU  validate_config  L=8 N=3 saved=16 sim=1.00
+      planfile/integrations/github.py:15-22  (validate_config)
+      planfile/integrations/gitlab.py:15-22  (validate_config)
+      planfile/integrations/jira.py:15-22  (validate_config)
+  [e8f3a2b1c4d5e6f7]   SIMILAR  error_handler  L=6 N=2 saved=5 sim=0.95
+      planfile/cli/cmd/cmd_sync.py:89-94  (handle_sync_error)
+      planfile/cli/cmd/cmd_examples.py:67-72  (handle_example_error)
+
+REFACTOR[3] (ranked by priority):
+  [1] ○ extract_base_class   → planfile/integrations/base.py
+      WHY: 3 occurrences of 12-line block across 3 files — saves 24 lines
+      FILES: planfile/integrations/github.py, planfile/integrations/gitlab.py, planfile/integrations/jira.py
+  [2] ○ extract_function   → planfile/integrations/utils/config.py
+      WHY: 3 occurrences of 8-line block across 3 files — saves 16 lines
+      FILES: planfile/integrations/github.py, planfile/integrations/gitlab.py, planfile/integrations/jira.py
+  [3] ○ extract_function   → planfile/cli/utils/error_handler.py
+      WHY: 2 occurrences of 6-line block across 2 files — saves 5 lines
+      FILES: planfile/cli/cmd/cmd_sync.py, planfile/cli/cmd/cmd_examples.py
+
+METRICS-TARGET:
+  dup_groups:  3 → 0
+  saved_lines: 45 lines recoverable

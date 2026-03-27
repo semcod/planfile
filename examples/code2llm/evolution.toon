@@ -1,0 +1,84 @@
+# Evolution file generated from planfile project analysis
+# Generated on: 2026-03-27
+
+NEXT[
+[H/H] Remove duplicate integration backends
+WHY: Duplicated classes in planfile/sync/ and planfile/integrations/ causing maintenance overhead
+EFFORT: 2 days
+IMPACT: 9000
+
+[H/H] Refactor high cyclomatic complexity functions
+WHY: 19 functions with CC>15 need refactoring for maintainability
+EFFORT: 5 days
+IMPACT: 10000
+
+[L/H] Implement sync command for integrations
+WHY: Missing sync command prevents external system synchronization
+EFFORT: 3 days
+IMPACT: 8000
+
+[H/L] Add python-dotenv dependency
+WHY: Environment variable loading fails without explicit dependency
+EFFORT: 0.5 days
+IMPACT: 3000
+
+[L/L] Create comprehensive integration examples
+WHY: Users need clear examples for GitHub, GitLab, and Jira integrations
+EFFORT: 2 days
+IMPACT: 5000
+
+[H/L] Refactor import_vallm function (CC=16)
+WHY: High complexity makes code hard to maintain and test
+EFFORT: 1 day
+IMPACT: 6000
+
+[H/L] Refactor GitLabBackend.update_ticket (CC=15)
+WHY: Complex function needs simplification for better maintainability
+EFFORT: 1 day
+IMPACT: 5000
+
+[L/H] Add multi-ticket routing support
+WHY: Need to route tickets to different integrations based on type
+EFFORT: 2 days
+IMPACT: 7000
+
+[H/L] Implement VallmParser state machine
+WHY: Current _parse_evolution function has high complexity (CC=18)
+EFFORT: 1 day
+IMPACT: 6000
+
+[L/L] Update documentation for new architecture
+WHY: Separation of configs needs proper documentation
+EFFORT: 1 day
+IMPACT: 2000
+
+[H/L] Add filter chain pattern for ticket filtering
+WHY: _apply_filters function has high complexity (CC=15)
+EFFORT: 1 day
+IMPACT: 5000
+
+[L/H] Create code2llm and vallm integration examples
+WHY: Users need examples for importing analysis results
+EFFORT: 1 day
+IMPACT: 6000
+]
+
+# Analysis Summary
+ANALYSIS{
+  total_files_analyzed: 127
+  total_functions: 892
+  high_cc_functions: 19
+  duplicate_classes: 6
+  average_cc: 4.2
+  test_coverage: 67%
+}
+
+# Technical Debt Metrics
+DEBT{
+  total_effort_days: 20.5
+  total_impact_score: 73000
+  priority_breakdown:
+    critical: 5 tasks
+    high: 4 tasks
+    normal: 2 tasks
+}

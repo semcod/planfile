@@ -14,6 +14,9 @@ def import_from_source(path: str, source: str, **kwargs) -> list[dict]:
         if source == "vallm":
             from planfile.importers.vallm_importer import import_vallm
             return import_vallm(path, **kwargs)
+        elif source == "redup":
+            from planfile.importers.redup_importer import import_redup
+            return import_redup(path, **kwargs)
         else:
             from planfile.importers.code2llm_importer import import_code2llm
             return import_code2llm(path, **kwargs)
