@@ -207,6 +207,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.52] - 2026-03-29
+
+### Test
+- Update test_chars.py
+- Update test_mixed_format.py
+- Update test_regex.py
+- Update test_regex2.py
+
+### Other
+- Update planfile/sync/markdown_backend.py
+- Update project/validation.toon.yaml
+
 ## [0.1.51] - 2026-03-29
 
 ### Docs

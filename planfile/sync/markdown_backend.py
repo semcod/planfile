@@ -299,8 +299,8 @@ class MarkdownFileBackend(BasePMBackend):
             with open(file_path, encoding='utf-8') as f:
                 content = f.read()
                 
-            # Check for structured ticket ID in content
-            if f"ID: `{ticket_id}`" in content:
+            # Check for structured ticket ID in content (both ID: and **ID:** formats)
+            if f"ID: `{ticket_id}`" in content or f"**ID:** `{ticket_id}`" in content:
                 return file_path
                 
             # Check for checkbox-style ticket by pattern matching
@@ -393,11 +393,12 @@ class MarkdownFileBackend(BasePMBackend):
                 with open(file_path, encoding='utf-8') as f:
                     content = f.read()
 
-                # Find all structured tickets with IDs
-                id_pattern = r"ID: `([^`]+)`"
+                # Find all structured tickets with IDs (supports **ID:** and ID: formats)
+                id_pattern = r"\*\*ID:\*\* `([^`]+)`|ID: `([^`]+)`"
                 for match in re.finditer(id_pattern, content):
-                    ticket_id = match.group(1)
-                    tickets.append(self._get_ticket(ticket_id))
+                    ticket_id = match.group(1) if match.group(1) else match.group(2)
+                    if ticket_id:
+                        tickets.append(self._get_ticket(ticket_id))
 
                     if limit and len(tickets) >= limit:
                         return tickets
@@ -441,11 +442,12 @@ class MarkdownFileBackend(BasePMBackend):
 
                 for section in sections:
                     if query_lower in section.lower():
-                        # Extract ticket ID
-                        id_match = re.search(r"ID: `([^`]+)`", section)
+                        # Extract ticket ID (supports **ID:** and ID: formats)
+                        id_match = re.search(r"\*\*ID:\*\* `([^`]+)`|ID: `([^`]+)`", section)
                         if id_match:
-                            ticket_id = id_match.group(1)
-                            tickets.append(self._get_ticket(ticket_id))
+                            ticket_id = id_match.group(1) if id_match.group(1) else id_match.group(2)
+                            if ticket_id:
+                                tickets.append(self._get_ticket(ticket_id))
 
                 # Search checkbox-style tickets
                 checkbox_pattern = r"^\s*-\s*\[([ xX])\]\s*(.+)$"
