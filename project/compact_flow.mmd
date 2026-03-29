@@ -17,7 +17,7 @@ flowchart TD
     planfile__mcp["planfile.mcp<br/>4 funcs"]
     planfile__runner["planfile.runner<br/>7 funcs"]
     planfile__server_common["planfile.server_common<br/>1 funcs"]
-    planfile__sync["planfile.sync<br/>85 funcs"]
+    planfile__sync["planfile.sync<br/>87 funcs"]
     run_examples["run_examples<br/>13 funcs"]
     examples__ecosystem ==>|95| examples__gitlab
     planfile__runner ==>|21| examples__gitlab
@@ -30,18 +30,18 @@ flowchart TD
     planfile__examples ==>|4| planfile__runner
     planfile__core -->|3| examples__gitlab
     planfile__loaders -->|2| examples__gitlab
-    planfile__cli -->|2| planfile__runner
     planfile__llm -->|2| examples__ecosystem
+    planfile__cli -->|2| planfile__runner
     planfile__server_common -->|1| planfile__Planfile
-    examples__llx_validator -->|1| examples__gitlab
     planfile -->|1| planfile__Planfile
+    examples__llx_validator -->|1| examples__gitlab
     planfile__runner -->|1| planfile__core
     planfile__executor_standalone -->|1| planfile__core
     planfile__ci -->|1| planfile__loaders
     planfile__ci -->|1| planfile__Planfile
     planfile__ci -->|1| planfile__runner
+    planfile__llm -->|1| examples__gitlab
     planfile__mcp -->|1| planfile__server_common
     planfile__cli -->|1| planfile__importers
-    planfile__llm -->|1| examples__gitlab
     planfile__cli -->|1| planfile__llm
     planfile__cli -->|1| run_examples

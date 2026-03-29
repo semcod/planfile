@@ -240,8 +240,21 @@ class MarkdownFileBackend(BasePMBackend):
         priority: str | None = None,
         assignee: str | None = None,
     ) -> None:
-        """Update an existing ticket in the markdown files."""
-        # Find which file contains the ticket
+        """Update an existing ticket in the markdown files.
+        
+        Supports both structured format and checkbox-style tickets.
+        """
+        # Check if it's a checkbox-style ticket
+        if re.match(r'^\w+-\d+-[a-f0-9]{8}$', ticket_id):
+            if status:
+                # Handle status update for checkbox
+                completed = status.lower() in ['completed', 'done', 'closed', 'resolved']
+                if self._toggle_checkbox_status(ticket_id, completed):
+                    return
+            # If status not provided or toggle failed, fall through to regular handling
+            raise ValueError(f"Cannot update checkbox ticket {ticket_id} - only status changes supported")
+
+        # Find which file contains the ticket (structured format)
         target_file = self._find_ticket_file(ticket_id)
         if not target_file:
             raise ValueError(f"Ticket not found: {ticket_id}")
@@ -275,21 +288,87 @@ class MarkdownFileBackend(BasePMBackend):
             f.write(new_content)
 
     def _find_ticket_file(self, ticket_id: str) -> Path | None:
-        """Find which file contains the given ticket ID."""
+        """Find which file contains the given ticket ID.
+        
+        Handles both structured tickets (with ID in content) and checkbox-style tickets.
+        """
         for file_path in [self.changelog_path, self.todo_path]:
-            if file_path.exists():
-                with open(file_path, encoding='utf-8') as f:
-                    if ticket_id in f.read():
-                        return file_path
+            if not file_path.exists():
+                continue
+                
+            with open(file_path, encoding='utf-8') as f:
+                content = f.read()
+                
+            # Check for structured ticket ID in content
+            if f"ID: `{ticket_id}`" in content:
+                return file_path
+                
+            # Check for checkbox-style ticket by pattern matching
+            if re.match(r'^\w+-\d+-[a-f0-9]{8}$', ticket_id):
+                # Parse line number from ticket ID
+                parts = ticket_id.rsplit('-', 1)
+                if len(parts) == 2:
+                    prefix, _ = parts
+                    try:
+                        line_num = int(prefix.split('-')[-1])
+                        lines = content.split('\n')
+                        if 1 <= line_num <= len(lines):
+                            line = lines[line_num - 1]
+                            # Check if line is a checkbox
+                            if re.match(r'^\s*-\s*\[[ xX]\]', line):
+                                return file_path
+                    except (ValueError, IndexError):
+                        pass
+                        
         return None
 
+    def _generate_checkbox_ticket_id(self, content: str, file_path: Path, line_num: int) -> str:
+        """Generate a unique ticket ID for checkbox-style tickets.
+        
+        Creates a stable ID based on file path, line number, and content hash.
+        """
+        import hashlib
+        
+        # Create a stable hash from content (first 50 chars)
+        content_hash = hashlib.md5(content[:50].encode()).hexdigest()[:8]
+        file_slug = re.sub(r'[^a-zA-Z0-9]', '-', file_path.stem)
+        return f"{file_slug}-{line_num}-{content_hash}"
+
     def _get_ticket(self, ticket_id: str) -> TicketStatus:
-        """Get ticket status from markdown files."""
+        """Get ticket status from markdown files.
+        
+        Handles both structured format (ID: `...`) and checkbox format (- [ ] / - [x]).
+        """
         target_file = self._find_ticket_file(ticket_id)
         if not target_file:
             raise ValueError(f"Ticket not found: {ticket_id}")
 
-        # Parse ticket status (simplified - assumes all are open)
+        with open(target_file, encoding='utf-8') as f:
+            content = f.read()
+
+        # Check if it's a checkbox-style ticket (pattern: file-line-hash)
+        if re.match(r'^\w+-\d+-[a-f0-9]{8}$', ticket_id):
+            # Find the checkbox line by line number from ID
+            parts = ticket_id.rsplit('-', 1)
+            if len(parts) == 2:
+                prefix, _ = parts
+                try:
+                    line_num = int(prefix.split('-')[-1])
+                    lines = content.split('\n')
+                    if 1 <= line_num <= len(lines):
+                        line = lines[line_num - 1]
+                        # Check if it's checked
+                        is_checked = re.match(r'^\s*-\s*\[[xX]\]', line) is not None
+                        status = "completed" if is_checked else "open"
+                        return self.build_ticket_status(
+                            id=ticket_id,
+                            status=status,
+                            updated_at=None
+                        )
+                except (ValueError, IndexError):
+                    pass
+
+        # Default: structured ticket (assumes open if found)
         return self.build_ticket_status(
             id=ticket_id,
             status="open",
@@ -303,7 +382,10 @@ class MarkdownFileBackend(BasePMBackend):
         assignee: str | None = None,
         limit: int | None = None,
     ) -> list[TicketStatus]:
-        """List tickets from markdown files."""
+        """List tickets from markdown files.
+        
+        Supports both structured format (with ID: `...`) and checkbox format (- [ ] / - [x]).
+        """
         tickets = []
 
         for file_path in [self.changelog_path, self.todo_path]:
@@ -311,7 +393,7 @@ class MarkdownFileBackend(BasePMBackend):
                 with open(file_path, encoding='utf-8') as f:
                     content = f.read()
 
-                # Find all ticket IDs
+                # Find all structured tickets with IDs
                 id_pattern = r"ID: `([^`]+)`"
                 for match in re.finditer(id_pattern, content):
                     ticket_id = match.group(1)
@@ -320,10 +402,32 @@ class MarkdownFileBackend(BasePMBackend):
                     if limit and len(tickets) >= limit:
                         return tickets
 
+                # Find all checkbox-style tickets (- [ ] or - [x])
+                checkbox_pattern = r"^\s*-\s*\[([ xX])\]\s*(.+)$"
+                for line_num, line in enumerate(content.split('\n'), 1):
+                    match = re.match(checkbox_pattern, line)
+                    if match:
+                        is_checked = match.group(1).lower() == 'x'
+                        ticket_content = match.group(2).strip()
+                        ticket_id = self._generate_checkbox_ticket_id(ticket_content, file_path, line_num)
+                        ticket_status = "completed" if is_checked else "open"
+                        
+                        tickets.append(self.build_ticket_status(
+                            id=ticket_id,
+                            status=ticket_status,
+                            updated_at=None
+                        ))
+
+                        if limit and len(tickets) >= limit:
+                            return tickets
+
         return tickets
 
     def _search_tickets(self, query: str) -> list[TicketStatus]:
-        """Search tickets by query in markdown files."""
+        """Search tickets by query in markdown files.
+        
+        Searches both structured format and checkbox-style tickets.
+        """
         tickets = []
         query_lower = query.lower()
 
@@ -332,7 +436,7 @@ class MarkdownFileBackend(BasePMBackend):
                 with open(file_path, encoding='utf-8') as f:
                     content = f.read()
 
-                # Find sections containing the query
+                # Find sections containing the query (structured format)
                 sections = re.split(r"## ", content)[1:]  # Skip header
 
                 for section in sections:
@@ -343,4 +447,70 @@ class MarkdownFileBackend(BasePMBackend):
                             ticket_id = id_match.group(1)
                             tickets.append(self._get_ticket(ticket_id))
 
+                # Search checkbox-style tickets
+                checkbox_pattern = r"^\s*-\s*\[([ xX])\]\s*(.+)$"
+                for line_num, line in enumerate(content.split('\n'), 1):
+                    match = re.match(checkbox_pattern, line)
+                    if match and query_lower in line.lower():
+                        is_checked = match.group(1).lower() == 'x'
+                        ticket_content = match.group(2).strip()
+                        ticket_id = self._generate_checkbox_ticket_id(ticket_content, file_path, line_num)
+                        ticket_status = "completed" if is_checked else "open"
+                        
+                        tickets.append(self.build_ticket_status(
+                            id=ticket_id,
+                            status=ticket_status,
+                            updated_at=None
+                        ))
+
         return tickets
+
+    def _toggle_checkbox_status(self, ticket_id: str, completed: bool) -> bool:
+        """Toggle the status of a checkbox-style ticket.
+        
+        Args:
+            ticket_id: The ticket ID (format: file-line-hash)
+            completed: True to check [x], False to uncheck [ ]
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        # Parse ticket ID to get line number
+        if not re.match(r'^\w+-\d+-[a-f0-9]{8}$', ticket_id):
+            return False
+            
+        target_file = self._find_ticket_file(ticket_id)
+        if not target_file:
+            return False
+            
+        try:
+            parts = ticket_id.rsplit('-', 1)
+            prefix, _ = parts
+            line_num = int(prefix.split('-')[-1])
+            
+            with open(target_file, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                
+            if not (1 <= line_num <= len(lines)):
+                return False
+                
+            line_idx = line_num - 1
+            line = lines[line_idx]
+            
+            # Check if it's a checkbox line (with or without trailing newline in pattern)
+            checkbox_match = re.match(r'^(\s*-\s*\[)([ xX])(\]\s*.+?)(\r?\n)?$', line)
+            if not checkbox_match:
+                return False
+                
+            # Replace checkbox status
+            new_mark = 'x' if completed else ' '
+            new_line = f"{checkbox_match.group(1)}{new_mark}{checkbox_match.group(3)}\n"
+            lines[line_idx] = new_line
+            
+            with open(target_file, 'w', encoding='utf-8') as f:
+                f.writelines(lines)
+                
+            return True
+            
+        except (ValueError, IndexError, IOError):
+            return False

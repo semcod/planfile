@@ -207,6 +207,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.51] - 2026-03-29
+
+### Docs
+- Update README.md
+- Update examples/checkbox-tickets/README.md
+- Update examples/checkbox-tickets/TODO.md
+- Update project/README.md
+- Update project/context.md
+
+### Test
+- Update test_checkbox_tickets.py
+
+### Other
+- Update examples/checkbox-tickets/demo.py
+- Update examples/checkbox-tickets/run.sh
+- Update planfile/sync/markdown_backend.py
+- Update project/analysis.toon.yaml
+- Update project/calls.mmd
+- Update project/calls.png
+- Update project/compact_flow.mmd
+- Update project/compact_flow.png
+- Update project/duplication.toon.yaml
+- Update project/evolution.toon.yaml
+- ... and 6 more files
+
 ## [0.1.50] - 2026-03-27
 
 ### Docs

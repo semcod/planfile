@@ -1,12 +1,12 @@
-# redup/duplication | 5 groups | 69f 12917L | 2026-03-27
+# redup/duplication | 5 groups | 70f 13196L | 2026-03-29
 
 SUMMARY:
-  files_scanned: 69
-  total_lines:   12917
+  files_scanned: 70
+  total_lines:   13196
   dup_groups:    5
   dup_fragments: 10
   saved_lines:   41
-  scan_ms:       2921
+  scan_ms:       5647
 
 DUPLICATES[5] (ranked by impact):
   [8db5047d0460fba7]   STRU  _map_priority_to_jira  L=16 N=2 saved=16 sim=1.00
@@ -19,8 +19,8 @@ DUPLICATES[5] (ranked by impact):
       planfile/sync/markdown_backend.py:0-5  (_validate_config)
       planfile/sync/mock.py:0-4  (_validate_config)
   [4d28bf1ae2ca147e]   STRU  __post_init__  L=5 N=2 saved=5 sim=1.00
-      planfile/analysis/external_tools.py:0-4  (__post_init__)
       planfile/analysis/models.py:0-4  (__post_init__)
+      planfile/analysis/external_tools.py:0-4  (__post_init__)
   [dd66daa2229bd051]   EXAC  __init__  L=4 N=2 saved=4 sim=1.00
       examples/llx_validator.py:0-3  (__init__)
       examples/ecosystem/04_llx_integration.py:0-3  (__init__)

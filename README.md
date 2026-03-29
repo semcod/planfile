@@ -31,6 +31,21 @@ before:
 [![Release Date](https://img.shields.io/github/release-date/semcod/planfile)](https://github.com/semcod/planfile/releases)
 [![Project Status](https://img.shields.io/badge/status-active-brightgreen)](https://github.com/semcod/planfile)
 
+
+## AI Cost Tracking
+
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.51-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-16.8h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+
+- 🤖 **LLM usage:** $7.5000 (53 commits)
+- 👤 **Human dev:** ~$1681 (16.8h @ $100/h, 30min dedup)
+
+Generated on 2026-03-29 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+
+---
+
+
+
 **Planfile** is an SDLC automation platform that provides strategic project management with CI/CD integration and automated bug-fix loops. It manages sprints and strategies across external ticket systems like GitHub, Jira, and GitLab.
 
 ## 📊 Project Metrics
@@ -308,6 +323,7 @@ planfile examples run --all
 
 ### Featured Examples
 
+- **[checkbox-tickets](examples/checkbox-tickets/)** - Native markdown checkbox support (`- [ ]` / `- [x]`)
 - **[code2llm](examples/code2llm/)** - Code analysis with LLM integration
 - **[bash-generation](examples/bash-generation/)** - Generate bash scripts from strategies  
 - **[cli-commands](examples/cli-commands/)** - CLI usage patterns
@@ -495,13 +511,6 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## License
 
 Licensed under Apache-2.0.
-
-
-Apache License 2.0 - see [LICENSE](LICENSE) for details.
-
 ## Author
 
 Tom Sapletta
-
-
-Created by **Tom Sapletta** - [tom@sapletta.com](mailto:tom@sapletta.com)
