@@ -1,5 +1,6 @@
 examples/demo-without-keys/local-strategy.yaml
 planfile/.planfile_analysis/analysis_summary.json
+.pyqual
 .idea
 litellm_config.yaml
 litellm-config.yaml

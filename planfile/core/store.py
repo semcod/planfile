@@ -201,7 +201,17 @@ class PlanfileStore:
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
-                tickets[ticket_id].update(updates)
+                # Convert updates to JSON-compatible types (e.g. Enums to strings)
+                json_updates = {}
+                for k, v in updates.items():
+                    if hasattr(v, 'value'): # Handle Enums
+                        json_updates[k] = v.value
+                    elif isinstance(v, datetime):
+                        json_updates[k] = v.isoformat()
+                    else:
+                        json_updates[k] = v
+                
+                tickets[ticket_id].update(json_updates)
                 tickets[ticket_id]["updated_at"] = datetime.utcnow().isoformat()
                 if "sprint" in data:
                     data["sprint"] = sprint_data
@@ -231,15 +241,19 @@ class PlanfileStore:
             tickets = []
             for sprint_file in self._all_sprint_files():
                 data = self._read_yaml_cached(sprint_file)
-                sprint_data = data.get("sprint", data)
+                if not data: continue
+                sprint_data = data.get("sprint") or data
+                tickets_dict = sprint_data.get("tickets") or {}
                 tickets.extend(
-                    Ticket(**t) for t in sprint_data.get("tickets", {}).values()
+                    Ticket(**t) for t in tickets_dict.values()
                 )
         else:
             sprint_file = self._sprint_file(sprint)
             data = self._read_yaml_cached(sprint_file)
-            sprint_data = data.get("sprint", data)
-            tickets = [Ticket(**t) for t in sprint_data.get("tickets", {}).values()]
+            if not data: return []
+            sprint_data = data.get("sprint") or data
+            tickets_dict = sprint_data.get("tickets") or {}
+            tickets = [Ticket(**t) for t in tickets_dict.values()]
         return self._apply_filters(tickets, **filters)
 
     def _apply_filters(self, tickets, **filters):

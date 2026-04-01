@@ -195,4 +195,218 @@ def register_ticket_commands(app: typer.Typer) -> None:
         created = pf.create_tickets_bulk(tickets, source=source, sprint=sprint)
         console.print(f"[green]✓[/green] Created {len(created)} tickets from {source}")
 
+    @ticket_app.command("done")
+    def ticket_done(
+        ticket_id: str = typer.Argument(..., help="Ticket ID to mark as done"),
+    ) -> None:
+        """Mark ticket as done (shortcut for update --status done)."""
+        from planfile import Planfile
+        pf = Planfile.auto_discover()
+        ticket = pf.update_ticket(ticket_id, status="done")
+        if not ticket:
+            console.print(f"[red]✗[/red] Ticket {ticket_id} not found.")
+            raise typer.Exit(1)
+        console.print(f"[green]✓[/green] Marked {ticket.id} as [green]done[/green]")
+
+    @ticket_app.command("start")
+    def ticket_start(
+        ticket_id: str = typer.Argument(..., help="Ticket ID to start working on"),
+    ) -> None:
+        """Mark ticket as in_progress (shortcut for update --status in_progress)."""
+        from planfile import Planfile
+        pf = Planfile.auto_discover()
+        ticket = pf.update_ticket(ticket_id, status="in_progress")
+        if not ticket:
+            console.print(f"[red]✗[/red] Ticket {ticket_id} not found.")
+            raise typer.Exit(1)
+        console.print(f"[green]✓[/green] Started {ticket.id} → [yellow]in_progress[/yellow]")
+
+    @ticket_app.command("block")
+    def ticket_block(
+        ticket_id: str = typer.Argument(..., help="Ticket ID to block"),
+        reason: str = typer.Option(None, "-r", "--reason", help="Block reason"),
+    ) -> None:
+        """Mark ticket as blocked (shortcut for update --status blocked)."""
+        from planfile import Planfile
+        pf = Planfile.auto_discover()
+        updates = {"status": "blocked"}
+        if reason:
+            updates["description"] = f"BLOCKED: {reason}"
+        ticket = pf.update_ticket(ticket_id, **updates)
+        if not ticket:
+            console.print(f"[red]✗[/red] Ticket {ticket_id} not found.")
+            raise typer.Exit(1)
+        console.print(f"[red]🚫[/red] Blocked {ticket.id}")
+
+    @ticket_app.command("review")
+    def ticket_review(
+        ticket_id: str = typer.Argument(..., help="Ticket ID to send for review"),
+    ) -> None:
+        """Mark ticket as ready for review (shortcut for update --status review)."""
+        from planfile import Planfile
+        pf = Planfile.auto_discover()
+        ticket = pf.update_ticket(ticket_id, status="review")
+        if not ticket:
+            console.print(f"[red]✗[/red] Ticket {ticket_id} not found.")
+            raise typer.Exit(1)
+        console.print(f"[blue]👀[/blue] Sent {ticket.id} to [blue]review[/blue]")
+
+    @ticket_app.command("import-todo")
+    def ticket_import_todo(
+        todo_file: str = typer.Option("TODO.md", "--file", help="TODO.md file path"),
+        sprint: str = typer.Option("current", "-s", "--sprint"),
+        dry_run: bool = typer.Option(False, "--dry-run", help="Preview without importing"),
+    ) -> None:
+        """Import tickets from TODO.md checkbox items into planfile."""
+        from planfile import Planfile
+        from pathlib import Path
+        import re
+
+        pf = Planfile.auto_discover()
+        todo_path = Path(todo_file)
+
+        if not todo_path.exists():
+            console.print(f"[red]✗[/red] File not found: {todo_file}")
+            raise typer.Exit(1)
+
+        content = todo_path.read_text(encoding="utf-8")
+        lines = content.split('\n')
+
+        imported = 0
+        skipped = 0
+
+        for line_num, line in enumerate(lines, 1):
+            # Match checkbox lines: - [ ] or - [x]
+            match = re.match(r'^(\s*)-\s*\[([ xX])\]\s*(.+)$', line)
+            if match:
+                is_checked = match.group(2).lower() == 'x'
+                task_text = match.group(3).strip()
+
+                if not task_text:
+                    continue
+
+                # Determine priority from prefix emojis
+                priority = "normal"
+                if task_text.startswith('🔴'):
+                    priority = "critical"
+                    task_text = task_text[2:].strip()
+                elif task_text.startswith('🟠'):
+                    priority = "high"
+                    task_text = task_text[2:].strip()
+                elif task_text.startswith('🟡'):
+                    priority = "medium"
+                    task_text = task_text[2:].strip()
+                elif task_text.startswith('🟢'):
+                    priority = "low"
+                    task_text = task_text[2:].strip()
+
+                # Skip if already exists (check by title)
+                existing = [t for t in pf.list_tickets(sprint=sprint) if t.title == task_text]
+                if existing:
+                    skipped += 1
+                    continue
+
+                if dry_run:
+                    status_str = "done" if is_checked else "open"
+                    console.print(f"  Would import: [{status_str}] {task_text}")
+                else:
+                    ticket = pf.create_ticket(
+                        title=task_text,
+                        priority=priority,
+                        sprint=sprint,
+                        status="done" if is_checked else "open",
+                        source={"tool": "todo-import", "context": {"source_file": todo_file, "line": line_num}}
+                    )
+                    console.print(f"  [green]✓[/green] Imported {ticket.id}: {ticket.title[:50]}")
+                    imported += 1
+
+        if dry_run:
+            console.print(f"\n[cyan]🔍 Dry run — would import {imported} tickets[/cyan]")
+        else:
+            console.print(f"\n[green]✓[/green] Imported {imported} tickets, skipped {skipped} duplicates")
+
+    @ticket_app.command("export-todo")
+    def ticket_export_todo(
+        todo_file: str = typer.Option("TODO.md", "--file", help="TODO.md file path"),
+        sprint: str = typer.Option("all", "-s", "--sprint", help="Sprint to export (current/backlog/all)"),
+        include_done: bool = typer.Option(True, "--include-done/--skip-done"),
+    ) -> None:
+        """Export planfile tickets to TODO.md format."""
+        from planfile import Planfile
+        from pathlib import Path
+        from datetime import datetime
+
+        pf = Planfile.auto_discover()
+
+        # Get tickets
+        if sprint == "all":
+            tickets = pf.list_tickets(sprint="all")
+        else:
+            tickets = pf.list_tickets(sprint=sprint)
+
+        if not include_done:
+            tickets = [t for t in tickets if t.status != "done"]
+
+        # Sort: open/in_progress first, then done
+        status_order = {"open": 0, "in_progress": 1, "review": 2, "blocked": 3, "done": 4}
+        tickets.sort(key=lambda t: (status_order.get(str(t.status), 5), t.priority != "critical", t.priority != "high"))
+
+        # Generate TODO.md content
+        lines = [
+            "# TODO",
+            "",
+            "<!-- AUTO-GENERATED FROM PLANFILE - DO NOT EDIT DIRECTLY -->",
+            "<!-- Use: planfile ticket export-todo to regenerate -->",
+            "<!-- Use: planfile ticket import-todo to import changes -->",
+            f"<!-- Generated: {datetime.now().isoformat()} -->",
+            "",
+        ]
+
+        # Priority emoji mapping
+        priority_emoji = {
+            "critical": "🔴",
+            "high": "🟠",
+            "medium": "🟡",
+            "low": "🟢",
+            "normal": "⚪"
+        }
+
+        # Group by status - handle both Enum and string status
+        def get_status_value(t):
+            status = t.status
+            return status.value if hasattr(status, 'value') else str(status)
+
+        pending = [t for t in tickets if get_status_value(t) != "done"]
+        done = [t for t in tickets if get_status_value(t) == "done"]
+
+        if pending:
+            lines.append("## Active Tasks")
+            lines.append("")
+            for t in pending:
+                emoji = priority_emoji.get(t.priority, "⚪")
+                checkbox = "[ ]"
+                lines.append(f"- {checkbox} {emoji} [{t.id}] {t.title}")
+            lines.append("")
+
+        if done and include_done:
+            lines.append("## Completed Tasks")
+            lines.append("")
+            for t in done:
+                emoji = priority_emoji.get(t.priority, "⚪")
+                lines.append(f"- [x] {emoji} [{t.id}] {t.title}")
+            lines.append("")
+
+        lines.append("---")
+        lines.append("")
+        lines.append("**Note:** This file is auto-generated from planfile. To modify tickets:")
+        lines.append("1. Use `planfile ticket create/update/done/start/block` commands")
+        lines.append("2. Or edit tickets in `.planfile/sprints/` and run `planfile ticket export-todo`")
+        lines.append("")
+
+        # Write file
+        todo_path = Path(todo_file)
+        todo_path.write_text('\n'.join(lines), encoding="utf-8")
+
+        console.print(f"[green]✓[/green] Exported {len(pending)} pending, {len(done)} done tickets to {todo_file}")
+
     app.add_typer(ticket_app, name="ticket")

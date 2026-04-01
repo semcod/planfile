@@ -1,4 +1,4 @@
-# code2llm/evolution | 574 func | 67f | 2026-03-29
+# code2llm/evolution | 445 func | 65f | 2026-04-01
 
 NEXT[10] (ranked by impact):
   [1] !! SPLIT           planfile/cli/project_detector.py
@@ -10,8 +10,8 @@ NEXT[10] (ranked by impact):
       EFFORT: ~4h  IMPACT: 7725
 
   [3] !! SPLIT           planfile/sync/markdown_backend.py
-      WHY: 516L, 1 classes, max CC=12
-      EFFORT: ~4h  IMPACT: 6192
+      WHY: 518L, 1 classes, max CC=13
+      EFFORT: ~4h  IMPACT: 6734
 
   [4] !! SPLIT-FUNC      sync_integration  CC=40  fan=31
       WHY: CC=40 exceeds 15
@@ -37,9 +37,9 @@ NEXT[10] (ranked by impact):
       WHY: CC=20 exceeds 15
       EFFORT: ~1h  IMPACT: 360
 
-  [10] !  SPLIT-FUNC      table  CC=21  fan=15
-      WHY: CC=21 exceeds 15
-      EFFORT: ~1h  IMPACT: 315
+  [10] !  SPLIT-FUNC      PlanfileGenerator._make_serializable  CC=19  fan=12
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 228
 
 
 RISKS[3]:
@@ -51,7 +51,7 @@ METRICS-TARGET:
   CC̄:          4.3 → ≤3.0
   max-CC:      47 → ≤20
   god-modules: 3 → 0
-  high-CC(≥15): 27 → ≤13
+  high-CC(≥15): 17 → ≤8
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):

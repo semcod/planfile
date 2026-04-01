@@ -1,13 +1,18 @@
-# code2llm | 90f 13421L | python:83,shell:5,javascript:2 | 2026-03-29
-# CC̄=4.3 | critical:27/687 | dups:0 | cycles:0
+# code2llm | 88f 11955L | python:83,shell:5 | 2026-04-01
+# CC̄=4.3 | critical:17/494 | dups:0 | cycles:0
 
-HEALTH[20]:
+HEALTH[19]:
   🔴 GOD   planfile/core/models.py = 515L, 11 classes, 17m, max CC=15
+  🟡 CC    demo_checkbox_tickets CC=15 (limit:15)
   🟡 CC    _create_ticket CC=15 (limit:15)
   🟡 CC    _update_ticket CC=15 (limit:15)
   🟡 CC    _make_serializable CC=19 (limit:15)
-  🟡 CC    _apply_filters CC=20 (limit:15)
+  🟡 CC    extract_from_yaml_structure CC=15 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
+  🟡 CC    _apply_filters CC=20 (limit:15)
+  🟡 CC    sync_integration CC=40 (limit:15)
+  🟡 CC    sync_to_external CC=23 (limit:15)
+  🟡 CC    sync_from_external CC=20 (limit:15)
   🟡 CC    _find_readme_content CC=16 (limit:15)
   🟡 CC    _detect_quality_gates CC=47 (limit:15)
   🟡 CC    _analyze_directory_structure CC=20 (limit:15)
@@ -15,34 +20,28 @@ HEALTH[20]:
   🟡 CC    _detect_from_pyproject CC=28 (limit:15)
   🟡 CC    _infer_python_project_type CC=17 (limit:15)
   🟡 CC    get_detected_values CC=15 (limit:15)
-  🟡 CC    sync_integration CC=40 (limit:15)
-  🟡 CC    sync_to_external CC=23 (limit:15)
-  🟡 CC    sync_from_external CC=20 (limit:15)
-  🟡 CC    extract_from_yaml_structure CC=15 (limit:15)
-  🟡 CC    table CC=21 (limit:15)
-  🟡 CC    table_body_rows CC=21 (limit:15)
-  🟡 CC    no_rows CC=21 (limit:15)
+  🟡 CC    init_strategy_cli CC=19 (limit:15)
 
 REFACTOR[2]:
   1. split planfile/core/models.py  (god module)
-  2. split 19 high-CC methods  (CC>15)
+  2. split 18 high-CC methods  (CC>15)
 
-PIPELINES[413]:
-  [1] Src [example_create_strategy]: example_create_strategy
+PIPELINES[280]:
+  [1] Src [planfile_generate]: planfile_generate
       PURITY: 100% pure
-  [2] Src [example_validate_strategy]: example_validate_strategy → load_valid_strategy → print
+  [2] Src [planfile_apply]: planfile_apply
       PURITY: 100% pure
-  [3] Src [example_run_strategy]: example_run_strategy → run_strategy → load_valid_strategy → print
+  [3] Src [planfile_review]: planfile_review
       PURITY: 100% pure
-  [4] Src [example_verify_strategy]: example_verify_strategy → load_valid_strategy → print
+  [4] Src [main]: main
       PURITY: 100% pure
-  [5] Src [example_programmatic_strategy]: example_programmatic_strategy → print
+  [5] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=4.5    ←in:16  →out:8  !! split
+  planfile/                       CC̄=4.6    ←in:16  →out:8  !! split
   │ !! project_detector           752L  2C   16m  CC=47     ←1
-  │ !! markdown_backend           516L  1C   17m  CC=12     ←0
+  │ !! markdown_backend           518L  1C   17m  CC=13     ←0
   │ !! models                     515L  11C   17m  CC=15     ←2
   │ !! cmd_sync                   440L  0C   11m  CC=40     ←2
   │ runner                     406L  0C    7m  CC=14     ←4
@@ -66,8 +65,8 @@ LAYERS:
   │ cmd_examples               195L  0C    3m  CC=13     ←1
   │ cli_loader                 194L  0C   10m  CC=7      ←1
   │ sprint_generator           191L  1C   10m  CC=9      ←0
-  │ config                     189L  1C   14m  CC=10     ←0
   │ toon_parser                189L  0C    7m  CC=11     ←2
+  │ config                     189L  1C   14m  CC=10     ←0
   │ mock                       164L  1C    7m  CC=11     ←0
   │ __init__                   162L  1C    9m  CC=11     ←3
   │ generator                  145L  0C    6m  CC=8      ←1
@@ -76,15 +75,15 @@ LAYERS:
   │ code2llm_importer          129L  1C    9m  CC=13     ←1
   │ cmd_generate               129L  0C    2m  CC=14     ←0
   │ file_analyzer              127L  1C   10m  CC=9      ←0
-  │ cmd_template               118L  0C    2m  CC=1      ←0
   │ text_parser                118L  0C    1m  CC=13     ←3
+  │ cmd_template               118L  0C    2m  CC=1      ←0
   │ cmd_apply                  113L  0C    4m  CC=6      ←0
   │ priorities                 111L  0C    3m  CC=4      ←0
   │ cmd_utils                  100L  0C    5m  CC=7      ←2
-  │ server                      97L  2C    7m  CC=4      ←0
   │ cmd_review                  97L  0C    1m  CC=10     ←0
-  │ vallm_importer              96L  1C   10m  CC=4      ←1
+  │ server                      97L  2C    7m  CC=4      ←0
   │ cmd_compare                 96L  0C    2m  CC=10     ←0
+  │ vallm_importer              96L  1C   10m  CC=4      ←1
   │ !! yaml_parser                 95L  0C    2m  CC=15     ←2
   │ cmd_health                  79L  0C    1m  CC=1      ←1
   │ cmd_stats                   76L  0C    2m  CC=7      ←0
@@ -118,15 +117,11 @@ LAYERS:
   │ gitlab                       1L  0C    0m  CC=0.0    ←0
   │ jira                         1L  0C    0m  CC=0.0    ←0
   │ github                       1L  0C    0m  CC=0.0    ←0
-  │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ generic                      1L  0C    0m  CC=0.0    ←0
+  │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
-  │
-  htmlcov/                        CC̄=4.3    ←in:0  →out:0
-  │ !! coverage_html_cb_dd2e7eb5.js   735L  0C   65m  CC=21     ←0
-  │ !! coverage_html_cb_6fb7b396.js   733L  0C   64m  CC=19     ←0
   │
   ./                              CC̄=0.2    ←in:0  →out:0
   │ run_examples.sh            286L  0C   13m  CC=0.0    ←1
@@ -153,8 +148,8 @@ COUPLING:
         planfile.mcp                                       1                                                                                                                      ──                    
         run_examples                  ←1                                                                                                                                                              ──
   CYCLES: none
-  HUB: planfile.loaders/ (fan-in=15)
   HUB: planfile.importers/ (fan-in=5)
+  HUB: planfile.loaders/ (fan-in=15)
   HUB: planfile/ (fan-in=16)
   SMELL: planfile.cli/ fan-out=25 → split needed
   SMELL: planfile/ fan-out=8 → split needed

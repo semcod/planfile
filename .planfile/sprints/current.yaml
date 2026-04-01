@@ -1,0 +1,688 @@
+sprint:
+  id: sprint-001
+  name: Sprint 1
+  status: active
+  tickets:
+    PLF-001:
+      id: PLF-001
+      title: Identify and remove unnecessary and generated files (`htmlcov/`, `.coverage`,
+        etc.)
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.830382'
+        context:
+          source_file: TODO.md
+          line: 4
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.830398'
+      updated_at: '2026-04-01T14:32:31.726662'
+    PLF-002:
+      id: PLF-002
+      title: Organize generated markdown summaries into `docs/summaries/` directory
+      status: in_progress
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.845653'
+        context:
+          source_file: TODO.md
+          line: 5
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.845661'
+      updated_at: '2026-04-01T14:32:32.241512'
+    PLF-003:
+      id: PLF-003
+      title: Run projects in `examples/*` to ensure base correctness
+      status: review
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.852166'
+        context:
+          source_file: TODO.md
+          line: 6
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.852176'
+      updated_at: '2026-04-01T14:32:32.759874'
+    PLF-004:
+      id: PLF-004
+      title: Refactor `planfile/analysis/file_analyzer.py` (God module)
+      status: blocked
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.860483'
+        context:
+          source_file: TODO.md
+          line: 7
+      description: 'BLOCKED: Waiting for dependencies'
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.860492'
+      updated_at: '2026-04-01T14:32:33.279432'
+    PLF-005:
+      id: PLF-005
+      title: Refactor `planfile/analysis/generator.py` (God module)
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.870485'
+        context:
+          source_file: TODO.md
+          line: 8
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.870494'
+      updated_at: '2026-04-01T14:29:16.870495'
+    PLF-006:
+      id: PLF-006
+      title: Refactor `planfile/cli/commands.py` (God module)
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.882303'
+        context:
+          source_file: TODO.md
+          line: 9
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.882312'
+      updated_at: '2026-04-01T14:29:16.882313'
+    PLF-007:
+      id: PLF-007
+      title: Split highest-CC functions (e.g., `_analyze_toon`, `_extract_key_metrics`)
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.896802'
+        context:
+          source_file: TODO.md
+          line: 10
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.896811'
+      updated_at: '2026-04-01T14:29:16.896812'
+    PLF-008:
+      id: PLF-008
+      title: Preserve module boundaries and update imports/exports as per `map.toon.yaml`
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.912213'
+        context:
+          source_file: TODO.md
+          line: 11
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.912225'
+      updated_at: '2026-04-01T14:29:16.912226'
+    PLF-009:
+      id: PLF-009
+      title: Implement `--version` flag for the CLI to display the current version
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.929193'
+        context:
+          source_file: TODO.md
+          line: 12
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.929202'
+      updated_at: '2026-04-01T14:29:16.929203'
+    PLF-010:
+      id: PLF-010
+      title: Add an extensible Backend Registry to remove complex `if/elif` statements
+        when creating integrations
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.947741'
+        context:
+          source_file: TODO.md
+          line: 13
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.947752'
+      updated_at: '2026-04-01T14:29:16.947753'
+    PLF-011:
+      id: PLF-011
+      title: '**Performance optimization**: Implement lazy loading in `__init__.py`
+        to reduce startup time by 50-70%'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.973842'
+        context:
+          source_file: TODO.md
+          line: 14
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.973856'
+      updated_at: '2026-04-01T14:29:16.973857'
+    PLF-012:
+      id: PLF-012
+      title: '**Performance optimization**: Add intelligent caching for subprocess
+        calls with timeouts in `runner.py`'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:16.998068'
+        context:
+          source_file: TODO.md
+          line: 15
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:16.998078'
+      updated_at: '2026-04-01T14:29:16.998079'
+    PLF-013:
+      id: PLF-013
+      title: '**Performance optimization**: Implement thread-safe file caching in
+        `store.py` with size limits'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.023608'
+        context:
+          source_file: TODO.md
+          line: 16
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.023619'
+      updated_at: '2026-04-01T14:29:17.023620'
+    PLF-014:
+      id: PLF-014
+      title: '**Performance optimization**: Add timeout protection (60s) for example
+        execution to prevent hangs'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.049774'
+        context:
+          source_file: TODO.md
+          line: 17
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.049784'
+      updated_at: '2026-04-01T14:29:17.049785'
+    PLF-015:
+      id: PLF-015
+      title: '**Documentation**: Create comprehensive PERFORMANCE.md guide with optimization
+        details'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.077007'
+        context:
+          source_file: TODO.md
+          line: 18
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.077024'
+      updated_at: '2026-04-01T14:29:17.077025'
+    PLF-016:
+      id: PLF-016
+      title: '**Documentation**: Update README.md with enhanced examples section and
+        CLI commands'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.111299'
+        context:
+          source_file: TODO.md
+          line: 19
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.111313'
+      updated_at: '2026-04-01T14:29:17.111315'
+    PLF-017:
+      id: PLF-017
+      title: '**Code Quality**: Fixed missing return type annotations in core modules
+        (planfile/core/, planfile/cli/, planfile/analysis/)'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.144393'
+        context:
+          source_file: TODO.md
+          line: 20
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.144404'
+      updated_at: '2026-04-01T14:29:17.144405'
+    PLF-018:
+      id: PLF-018
+      title: '**Code Quality**: Replaced magic numbers with named constants in core
+        modules'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.179112'
+        context:
+          source_file: TODO.md
+          line: 21
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.179128'
+      updated_at: '2026-04-01T14:29:17.179129'
+    PLF-019:
+      id: PLF-019
+      title: '**Code Quality**: Fixed LLM-style docstrings to follow Python conventions'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.219292'
+        context:
+          source_file: TODO.md
+          line: 22
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.219303'
+      updated_at: '2026-04-01T14:29:17.219304'
+    PLF-020:
+      id: PLF-020
+      title: '**Code Quality**: Reviewed and cleaned up imports (star imports are
+        intentional re-exports for backward compatibility)'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.256452'
+        context:
+          source_file: TODO.md
+          line: 23
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.256464'
+      updated_at: '2026-04-01T14:29:17.256465'
+    PLF-021:
+      id: PLF-021
+      title: '**Code Quality**: Ran ruff --fix to auto-resolve 2496 issues (unused
+        imports, f-string conversions)'
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.297848'
+        context:
+          source_file: TODO.md
+          line: 24
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.297858'
+      updated_at: '2026-04-01T14:29:17.297860'
+    PLF-022:
+      id: PLF-022
+      title: Consider implementing persistent cache warming for long-running processes
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.338048'
+        context:
+          source_file: TODO.md
+          line: 27
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.338061'
+      updated_at: '2026-04-01T14:29:17.338062'
+    PLF-023:
+      id: PLF-023
+      title: Add performance metrics collection for monitoring
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.380144'
+        context:
+          source_file: TODO.md
+          line: 28
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.380165'
+      updated_at: '2026-04-01T14:29:17.380166'
+    PLF-024:
+      id: PLF-024
+      title: Implement async I/O for large file operations (if needed)
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.427583'
+        context:
+          source_file: TODO.md
+          line: 29
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.427594'
+      updated_at: '2026-04-01T14:29:17.427594'
+    PLF-025:
+      id: PLF-025
+      title: Add connection pooling for external API calls (if needed)
+      status: done
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T14:29:17.473506'
+        context:
+          source_file: TODO.md
+          line: 30
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T14:29:17.473520'
+      updated_at: '2026-04-01T14:29:17.473521'
+    PLF-026:
+      id: PLF-026
+      title: Test ticket for new feature
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: human
+        timestamp: '2026-04-01T15:01:52.868977'
+        context: {}
+      description: This is a test description for the new ticket system
+      acceptance_criteria: []
+      labels:
+      - test,feature
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T15:01:52.871506'
+      updated_at: '2026-04-01T15:01:52.871512'
+    PLF-028:
+      id: PLF-028
+      title: Updated high priority task
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T15:06:52.056349'
+        context:
+          source_file: TODO_TEST.md
+          line: 6
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T15:06:52.056360'
+      updated_at: '2026-04-01T15:08:49.881558'
+    PLF-029:
+      id: PLF-029
+      title: Medium priority task - normal priority
+      status: open
+      priority: medium
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T15:06:52.107069'
+        context:
+          source_file: TODO_TEST.md
+          line: 7
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T15:06:52.107079'
+      updated_at: '2026-04-01T15:06:52.107080'
+    PLF-030:
+      id: PLF-030
+      title: Low priority task - can wait
+      status: open
+      priority: low
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T15:06:52.161200'
+        context:
+          source_file: TODO_TEST.md
+          line: 8
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T15:06:52.161212'
+      updated_at: '2026-04-01T15:06:52.161213'
+    PLF-031:
+      id: PLF-031
+      title: ⚪ Normal priority task - default priority
+      status: open
+      priority: normal
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T15:06:52.215979'
+        context:
+          source_file: TODO_TEST.md
+          line: 9
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T15:06:52.215992'
+      updated_at: '2026-04-01T15:06:52.215993'
+    PLF-032:
+      id: PLF-032
+      title: Completed critical task
+      status: done
+      priority: critical
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T15:06:52.285135'
+        context:
+          source_file: TODO_TEST.md
+          line: 10
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T15:06:52.285148'
+      updated_at: '2026-04-01T15:06:52.285149'
+    PLF-033:
+      id: PLF-033
+      title: Completed low priority task
+      status: done
+      priority: low
+      sprint: current
+      source:
+        tool: todo-import
+        timestamp: '2026-04-01T15:06:52.347727'
+        context:
+          source_file: TODO_TEST.md
+          line: 11
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T15:06:52.347738'
+      updated_at: '2026-04-01T15:06:52.347739'

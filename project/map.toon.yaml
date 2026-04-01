@@ -1,15 +1,13 @@
-# planfile | 90f 13421L | python:83,javascript:2,shell:5 | 2026-03-29
-# stats: 574 func | 0 cls | 90 mod | CC̄=4.3 | critical:27 | cycles:0
+# planfile | 88f 11955L | shell:5,python:83 | 2026-04-01
+# stats: 445 func | 0 cls | 88 mod | CC̄=4.3 | critical:17 | cycles:0
 # alerts[5]: CC _detect_quality_gates=47; CC sync_integration=40; fan-out sync_integration=31; fan-out init_strategy_cli=30; CC _detect_from_pyproject=28
 # hotspots[5]: sync_integration fan=31; init_strategy_cli fan=30; register_ticket_commands fan=25; _detect_from_pyproject fan=24; create_examples_app fan=23
 # evolution: CC̄ 4.3→4.3 (flat 0.0)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[90]:
+M[88]:
   auto_generate_planfile.sh,124
   cleanup_redundant.sh,71
   docker-entrypoint.sh,174
-  htmlcov/coverage_html_cb_6fb7b396.js,733
-  htmlcov/coverage_html_cb_dd2e7eb5.js,735
   mcp-server-example.py,28
   planfile/__init__.py,162
   planfile/analysis/__init__.py,32
@@ -87,7 +85,7 @@ M[90]:
   planfile/sync/github.py,237
   planfile/sync/gitlab.py,233
   planfile/sync/jira.py,280
-  planfile/sync/markdown_backend.py,516
+  planfile/sync/markdown_backend.py,518
   planfile/sync/mock.py,164
   planfile/sync/state.py,46
   planfile/utils/__init__.py,0
@@ -129,85 +127,6 @@ D:
     sync_from_external(backend;store;dry_run;integration_name;v1_source_file;v1_data)
     find_planfile_ticket(external_ticket;store;sync_state)
     _save_v1_format(file_path;data)
-  htmlcov/coverage_html_cb_dd2e7eb5.js:
-    e: debounce,timeoutId,checkVisible,rect,viewBottom,viewTop,on_click,elt,getCellValue,cell,child,rowComparator,valueA,valueB,sortColumn,currentSortOrder,current_direction,stored_list,saved_filter_value,saved_hide100_value,table,table_body_rows,no_rows,footer,ratio_columns,filter_handler,totals,text,casefold,hide100,show,celltext,cell,places,stored_list,by_region,sorted_by_region,frag,btn,category,btn,helpCheck,classes,match,c,probe,begin,next_indicator,c,probe,probe_line,chunk_indicator,end,prev_indicator,begin,end,line,line,c,probe_line,the_indicator,probe,indicator,begin,element,temp_scroll_marker,marker_scale,line_height,scroll_marker,line_top,line_number,header,header_bottom,updateHeader,ctxs,ctxs_text,width
-    debounce()
-    timeoutId()
-    checkVisible()
-    rect()
-    viewBottom()
-    viewTop()
-    on_click()
-    elt()
-    getCellValue()
-    cell()
-    child()
-    rowComparator()
-    valueA()
-    valueB()
-    sortColumn()
-    currentSortOrder()
-    current_direction()
-    stored_list()
-    saved_filter_value()
-    saved_hide100_value()
-    table()
-    table_body_rows()
-    no_rows()
-    footer()
-    ratio_columns()
-    filter_handler()
-    totals()
-    text()
-    casefold()
-    hide100()
-    show()
-    celltext()
-    cell()
-    places()
-    stored_list()
-    by_region()
-    sorted_by_region()
-    frag()
-    btn()
-    category()
-    btn()
-    helpCheck()
-    classes()
-    match()
-    c()
-    probe()
-    begin()
-    next_indicator()
-    c()
-    probe()
-    probe_line()
-    chunk_indicator()
-    end()
-    prev_indicator()
-    begin()
-    end()
-    line()
-    line()
-    c()
-    probe_line()
-    the_indicator()
-    probe()
-    indicator()
-    begin()
-    element()
-    temp_scroll_marker()
-    marker_scale()
-    line_height()
-    scroll_marker()
-    line_top()
-    line_number()
-    header()
-    header_bottom()
-    updateHeader()
-    ctxs()
-    ctxs_text()
-    width()
   planfile/core/store.py:
     e: TicketFilter,StatusFilter,PriorityFilter,SourceFilter,LabelsFilter,TicketFilterChain,PlanfileStore
     TicketFilter: apply(1)  # Base class for ticket filters...
@@ -220,84 +139,6 @@ D:
   planfile/analysis/generator.py:
     e: PlanfileGenerator
     PlanfileGenerator: __init__(0),generate_with_external_tools(5),_external_to_internal_analysis(1),_extract_external_metrics(2),generate_from_analysis(6),generate_from_current_project(3),_extract_key_metrics(2),_generate_goal(3),_generate_goals(3),_generate_quality_gates(1),_generate_tasks(1),_parse_effort(1),_generate_target_metrics(1),_generate_risks(1),_generate_success_criteria(1),_create_strategy_object(1),_make_serializable(2)  # Generate comprehensive planfile from file analysis...
-  htmlcov/coverage_html_cb_6fb7b396.js:
-    e: debounce,timeoutId,checkVisible,rect,viewBottom,viewTop,on_click,elt,getCellValue,cell,child,rowComparator,valueA,valueB,sortColumn,currentSortOrder,current_direction,stored_list,saved_filter_value,saved_hide100_value,table,table_body_rows,no_rows,filter_handler,totals,text,casefold,hide100,show,celltext,footer,cell,places,stored_list,by_region,sorted_by_region,frag,btn,category,btn,helpCheck,classes,match,c,probe,begin,next_indicator,c,probe,probe_line,chunk_indicator,end,prev_indicator,begin,end,line,line,c,probe_line,the_indicator,probe,indicator,begin,element,temp_scroll_marker,marker_scale,line_height,scroll_marker,line_top,line_number,header,header_bottom,updateHeader,ctxs,ctxs_text,width
-    debounce()
-    timeoutId()
-    checkVisible()
-    rect()
-    viewBottom()
-    viewTop()
-    on_click()
-    elt()
-    getCellValue()
-    cell()
-    child()
-    rowComparator()
-    valueA()
-    valueB()
-    sortColumn()
-    currentSortOrder()
-    current_direction()
-    stored_list()
-    saved_filter_value()
-    saved_hide100_value()
-    table()
-    table_body_rows()
-    no_rows()
-    filter_handler()
-    totals()
-    text()
-    casefold()
-    hide100()
-    show()
-    celltext()
-    footer()
-    cell()
-    places()
-    stored_list()
-    by_region()
-    sorted_by_region()
-    frag()
-    btn()
-    category()
-    btn()
-    helpCheck()
-    classes()
-    match()
-    c()
-    probe()
-    begin()
-    next_indicator()
-    c()
-    probe()
-    probe_line()
-    chunk_indicator()
-    end()
-    prev_indicator()
-    begin()
-    end()
-    line()
-    line()
-    c()
-    probe_line()
-    the_indicator()
-    probe()
-    indicator()
-    begin()
-    element()
-    temp_scroll_marker()
-    marker_scale()
-    line_height()
-    scroll_marker()
-    line_top()
-    line_number()
-    header()
-    header_bottom()
-    updateHeader()
-    ctxs()
-    ctxs_text()
-    width()
   planfile/cli/cmd/cmd_init.py:
     e: _choice,_ask,_ask_list,init_strategy_cli
     _choice(prompt;options;default;detected)
@@ -310,6 +151,10 @@ D:
   planfile/sync/gitlab.py:
     e: GitLabBackend
     GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),_create_ticket(7),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitLab Issues integration backend...
+  planfile/analysis/parsers/yaml_parser.py:
+    e: extract_from_yaml_structure,analyze_yaml
+    extract_from_yaml_structure(data;path;parent_key;visited)
+    analyze_yaml(file_path)
   planfile/core/models.py:
     e: TaskType,ModelTier,ModelHints,Task,Sprint,QualityGate,Goal,Strategy,TicketStatus,TicketSource,Ticket
     TaskType(str,Enum):  # Type of task in the planfile...
@@ -323,10 +168,6 @@ D:
     TicketStatus(str,Enum):  # Status of a ticket...
     TicketSource(BaseModel):  # Who/what created the ticket...
     Ticket(BaseModel):  # Atomic unit of work in planfile...
-  planfile/analysis/parsers/yaml_parser.py:
-    e: extract_from_yaml_structure,analyze_yaml
-    extract_from_yaml_structure(data;path;parent_key;visited)
-    analyze_yaml(file_path)
   planfile/runner.py:
     e: load_valid_strategy,verify_strategy_post_execution,_get_project_hash,analyze_project_metrics,apply_strategy_to_tickets,review_strategy,run_strategy
     load_valid_strategy(path)
@@ -336,19 +177,25 @@ D:
     apply_strategy_to_tickets(strategy;project_path;backend;dry_run)
     review_strategy(strategy;project_path;backends;backend_name)
     run_strategy(strategy_path;project_path;backend;dry_run)
+  planfile/cli/cmd/cmd_generate.py:
+    e: generate_strategy_cli,generate_from_files_cmd
+    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
+    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;external_tools;compact;verbose)
   planfile/mcp/server.py:
     e: handle_tool_call,_read_jsonrpc,_write_jsonrpc,main
     handle_tool_call(name;arguments)
     _read_jsonrpc()
     _write_jsonrpc(obj)
     main()
-  planfile/cli/cmd/cmd_generate.py:
-    e: generate_strategy_cli,generate_from_files_cmd
-    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
-    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;external_tools;compact;verbose)
   planfile/sync/jira.py:
     e: JiraBackend
     JiraBackend(BasePMBackend): __init__(4),_validate_config(0),_map_priority_to_jira(1),_map_task_type_to_jira(1),_create_ticket(6),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend...
+  planfile/sync/markdown_backend.py:
+    e: MarkdownFileBackend
+    MarkdownFileBackend(BasePMBackend): __init__(2),_validate_config(0),_ensure_files_exist(0),_create_ticket(6),_determine_target_file(3),_generate_ticket_id(2),_ticket_exists(2),_ticket_exists_by_title(2),_format_ticket_entry(7),_write_ticket_to_file(2),_update_ticket(7),_find_ticket_file(1),_generate_checkbox_ticket_id(3),_get_ticket(1),_list_tickets(4),_search_tickets(1),_toggle_checkbox_status(2)  # Backend for managing tickets in CHANGELOG.md and TODO.md fil...
+  planfile/analysis/parsers/text_parser.py:
+    e: analyze_text
+    analyze_text(file_path)
   planfile/importers/code2llm_importer.py:
     e: EvolutionParser,import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health
     EvolutionParser: __init__(1),parse(1),_process_line(1),_handle_outside(1),_handle_in_next(1)  # State machine parser for evolution.toon NEXT[] sections...
@@ -356,17 +203,11 @@ D:
     _parse_evolution(content;auto_priority)
     _evolution_item_to_ticket(item;auto_priority)
     _parse_health(content;auto_priority)
-  planfile/analysis/parsers/text_parser.py:
-    e: analyze_text
-    analyze_text(file_path)
   planfile/cli/cmd/cmd_examples.py:
     e: create_examples_app,_discover_examples,_execute_example
     create_examples_app()
     _discover_examples(examples_dir)
     _execute_example(ex)
-  planfile/sync/markdown_backend.py:
-    e: MarkdownFileBackend
-    MarkdownFileBackend(BasePMBackend): __init__(2),_validate_config(0),_ensure_files_exist(0),_create_ticket(6),_determine_target_file(3),_generate_ticket_id(2),_ticket_exists(2),_ticket_exists_by_title(2),_format_ticket_entry(7),_write_ticket_to_file(2),_update_ticket(7),_find_ticket_file(1),_generate_checkbox_ticket_id(3),_get_ticket(1),_list_tickets(4),_search_tickets(1),_toggle_checkbox_status(2)  # Backend for managing tickets in CHANGELOG.md and TODO.md fil...
   planfile/analysis/external_tools.py:
     e: AnalysisResults,ExternalToolRunner,run_external_analysis
     AnalysisResults: __post_init__(0)  # Results from external tool analysis...
@@ -380,13 +221,6 @@ D:
   planfile/sync/mock.py:
     e: MockBackend
     MockBackend(BasePMBackend): __init__(0),_validate_config(0),_create_ticket(6),_update_ticket(7),_get_ticket(1),_list_tickets(4),_search_tickets(1)  # Mock backend for examples and testing that doesn't require a...
-  planfile/importers/redup_importer.py:
-    e: import_redup,_parse_toon_format,_parse_duplicates,_parse_refactor,_create_refactor_ticket
-    import_redup(file_path)
-    _parse_toon_format(content)
-    _parse_duplicates(text)
-    _parse_refactor(text)
-    _create_refactor_ticket(item;index)
   planfile/analysis/parsers/toon_parser.py:
     e: _parse_toon_header,_parse_toon_sections,_determine_section,_parse_health_section,_skip_section,_parse_summary_section,analyze_toon
     _parse_toon_header(line;file_path;metrics;issues)
@@ -396,6 +230,13 @@ D:
     _skip_section(line;line_num;file_path;metrics;issues)
     _parse_summary_section(line;line_num;file_path;metrics;issues)
     analyze_toon(file_path)
+  planfile/importers/redup_importer.py:
+    e: import_redup,_parse_toon_format,_parse_duplicates,_parse_refactor,_create_refactor_ticket
+    import_redup(file_path)
+    _parse_toon_format(content)
+    _parse_duplicates(text)
+    _parse_refactor(text)
+    _create_refactor_ticket(item;index)
   planfile/cli/auto_loop.py:
     e: get_backend,_validate_strategy,_initialize_backends,_display_summary_table,_display_final_status,_display_ticket_summary,_save_results_if_needed,auto_loop,ci_status
     get_backend(backend_type)
@@ -407,9 +248,6 @@ D:
     _save_results_if_needed(results;output)
     auto_loop(strategy;project_path;backend;max_iterations;auto_fix;llx_command;output;dry_run)
     ci_status(project_path)
-  planfile/integrations/config.py:
-    e: IntegrationConfig
-    IntegrationConfig: __init__(1),load_dotenv(0),_expand_env_vars(1),discover_configs(0),load_configs(0),get_integration_config(1),get_project_config(0),get_sprint_config(0),get_backlog_config(0),_deep_merge(2),validate_integration(1),has_configured_integrations(0),get_default_backend(0),get_integration_backend(1)  # Manages integration configuration with support for multiple ...
   planfile/cli/cmd/cmd_review.py:
     e: review_strategy_cli
     review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
@@ -421,15 +259,15 @@ D:
     e: _display_tickets,register_ticket_commands
     _display_tickets(tickets;fmt)
     register_ticket_commands(app)
+  planfile/integrations/config.py:
+    e: IntegrationConfig
+    IntegrationConfig: __init__(1),load_dotenv(0),_expand_env_vars(1),discover_configs(0),load_configs(0),get_integration_config(1),get_project_config(0),get_sprint_config(0),get_backlog_config(0),_deep_merge(2),validate_integration(1),has_configured_integrations(0),get_default_backend(0),get_integration_backend(1)  # Manages integration configuration with support for multiple ...
   planfile/analysis/file_analyzer.py:
     e: FileAnalyzer
     FileAnalyzer: __init__(0),analyze_file(1),_analyze_toon(1),_analyze_yaml(1),_analyze_json(1),_analyze_text(1),_extract_from_yaml_structure(3),_extract_from_json_structure(3),analyze_directory(2),_generate_summary(3)  # Analyzes YAML/JSON files to extract issues and metrics...
   planfile/analysis/sprint_generator.py:
     e: SprintGenerator
     SprintGenerator: __init__(0),generate_sprints(2),_group_issues_by_priority(1),_get_high_and_quality_issues(1),_get_remaining_medium_issues(1),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information...
-  planfile/cli/cmd/cmd_validate.py:
-    e: validate_strategy_cli
-    validate_strategy_cli(strategy_path;verbose)
   planfile/analysis/generators/metrics_extractor.py:
     e: extract_key_metrics,_extract_cc_metrics,_extract_critical_metrics,_extract_validation_metrics,_extract_duplication_metrics,_extract_coverage_metrics
     extract_key_metrics(analysis_result;external_metrics)
@@ -438,6 +276,9 @@ D:
     _extract_validation_metrics(analysis_result;metrics)
     _extract_duplication_metrics(analysis_result;metrics)
     _extract_coverage_metrics(analysis_result;metrics)
+  planfile/cli/cmd/cmd_validate.py:
+    e: validate_strategy_cli
+    validate_strategy_cli(strategy_path;verbose)
   planfile/executor_standalone.py:
     e: TaskResult,LLMClient,StrategyExecutor,create_openai_client,create_litellm_client,execute_strategy
     TaskResult:  # Result of executing a task...
@@ -537,14 +378,14 @@ D:
     TicketStatus(BaseModel):  # Status of a ticket...
     PMBackend(Protocol): create_ticket(1),update_ticket(0),get_ticket(1),list_tickets(0),search_tickets(1)  # Protocol for PM system backends...
     BasePMBackend(ABC): __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1),create_ticket(1),_create_ticket(6),update_ticket(7),_update_ticket(7),get_ticket(1),_get_ticket(1),list_tickets(4),_list_tickets(4),search_tickets(1),_search_tickets(1),build_ticket_ref(0),build_ticket_status(0)  # Base class for PM backends with common functionality...
+  planfile/llm/client.py:
+    e: call_llm
+    call_llm(prompt;model;temperature)
   planfile/importers/vallm_importer.py:
     e: VallmParser,import_vallm,_auto_labels
     VallmParser: __init__(1),parse(1),_process_line(1),_is_file_entry(1),_is_issue_entry(1),_parse_file_entry(1),_parse_issue_entry(1),_determine_priority(1)  # Parser for vallm validation.toon files...
     import_vallm(toon_path;auto_priority)
     _auto_labels(rule)
-  planfile/llm/client.py:
-    e: call_llm
-    call_llm(prompt;model;temperature)
   planfile/utils/priorities.py:
     e: calculate_task_priority,map_priority_to_system,get_priority_color
     calculate_task_priority(base_priority;task_type;sprint_id;weight_factors)
@@ -579,14 +420,14 @@ D:
     example_run_strategy()
     example_verify_strategy()
     example_programmatic_strategy()
+  planfile/analysis/parsers/json_parser.py:
+    e: analyze_json
+    analyze_json(file_path)
   planfile/cli/commands.py:
     e: version_callback,main_callback,main
     version_callback(value)
     main_callback(version)
     main()
-  planfile/analysis/parsers/json_parser.py:
-    e: analyze_json
-    analyze_json(file_path)
   mcp-server-example.py:
     e: planfile_generate,planfile_apply,planfile_review,main
     planfile_generate(arguments)
@@ -602,6 +443,13 @@ D:
   planfile/cli/extra_commands.py:
     e: add_extra_commands
     add_extra_commands(app)
+  planfile/cli/cmd/cmd_template.py:
+    e: generate_template,register_template_commands
+    generate_template(project_type;domain)
+    register_template_commands(app)
+  planfile/cli/cmd/cmd_health.py:
+    e: create_health_app
+    create_health_app()
   planfile/llm/adapters.py:
     e: LLMTestResult,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAdapter,LocalLLMAdapter,LLMTestRunner
     LLMTestResult:
@@ -610,33 +458,7 @@ D:
     OpenRouterAdapter(BaseLLMAdapter):
     LocalLLMAdapter(BaseLLMAdapter):
     LLMTestRunner: __init__(0),register_adapter(2)
-  planfile/cli/cmd/cmd_template.py:
-    e: generate_template,register_template_commands
-    generate_template(project_type;domain)
-    register_template_commands(app)
-  planfile/cli/cmd/cmd_health.py:
-    e: create_health_app
-    create_health_app()
-  planfile/execution.py:
-  planfile/models.py:
-  planfile/sync/__init__.py:
-  planfile/loaders/__init__.py:
-  planfile/analysis/__init__.py:
-  planfile/core/__init__.py:
-  planfile/cli/__init__.py:
-  planfile/cli/__main__.py:
-  planfile/llm/__init__.py:
-  planfile/utils/__init__.py:
-  planfile/mcp/__init__.py:
-  planfile/integrations/base.py:
-  planfile/integrations/__init__.py:
-  planfile/integrations/gitlab.py:
-  planfile/integrations/jira.py:
-  planfile/integrations/github.py:
-  planfile/api/__init__.py:
-  planfile/integrations/generic.py:
-  planfile/analysis/generators/__init__.py:
-  planfile/analysis/parsers/__init__.py:
+  auto_generate_planfile.sh:
   cleanup_redundant.sh:
   docker-entrypoint.sh:
     e: check_env,validate_config,setup_workspace,run_command,main
@@ -645,7 +467,7 @@ D:
     setup_workspace()
     run_command()
     main()
-  auto_generate_planfile.sh:
+  project.sh:
   run_examples.sh:
     e: print_header,print_step,print_success,print_error,print_info,run_example,check_prerequisites,setup_environment,run_all_examples,run_specific_example,show_usage,list_examples,main
     print_header()
@@ -661,4 +483,23 @@ D:
     show_usage()
     list_examples()
     main()
-  project.sh:
+  planfile/execution.py:
+  planfile/models.py:
+  planfile/sync/__init__.py:
+  planfile/loaders/__init__.py:
+  planfile/analysis/__init__.py:
+  planfile/analysis/generators/__init__.py:
+  planfile/analysis/parsers/__init__.py:
+  planfile/core/__init__.py:
+  planfile/cli/__init__.py:
+  planfile/cli/__main__.py:
+  planfile/llm/__init__.py:
+  planfile/utils/__init__.py:
+  planfile/mcp/__init__.py:
+  planfile/integrations/base.py:
+  planfile/integrations/__init__.py:
+  planfile/integrations/gitlab.py:
+  planfile/integrations/jira.py:
+  planfile/integrations/github.py:
+  planfile/integrations/generic.py:
+  planfile/api/__init__.py:

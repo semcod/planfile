@@ -1,7 +1,7 @@
-# planfile | 574 func | 67f | 15935L | python | 2026-03-29
+# planfile | 445 func | 65f | 16179L | python | 2026-04-01
 
 HEALTH:
-  CC̄=4.3  critical=66 (limit:10)  dup=1  cycles=0
+  CC̄=4.3  critical=49 (limit:10)  dup=1  cycles=0
 
 ALERTS[20]:
   !!! cc_exceeded      _detect_quality_gates = 47 (limit:15)
@@ -15,11 +15,9 @@ ALERTS[20]:
   !!! high_fan_out     analyze_project_metrics = 22 (limit:10)
   !!! high_fan_out     auto_loop = 21 (limit:10)
 
-MODULES[90] (top by size):
+MODULES[88] (top by size):
   M[planfile/cli/project_detector.py] 752L C:2 F:16 CC↑47 D:1 (python)
-  M[htmlcov/coverage_html_cb_dd2e7eb5.js] 735L C:0 F:65 CC↑21 D:0 (javascript)
-  M[htmlcov/coverage_html_cb_6fb7b396.js] 733L C:0 F:64 CC↑19 D:0 (javascript)
-  M[planfile/sync/markdown_backend.py] 516L C:1 F:17 CC↑12 D:0 (python)
+  M[planfile/sync/markdown_backend.py] 518L C:1 F:17 CC↑13 D:0 (python)
   M[planfile/core/models.py] 515L C:11 F:17 CC↑15 D:0 (python)
   M[planfile/cli/cmd/cmd_sync.py] 440L C:0 F:11 CC↑40 D:2 (python)
   M[planfile/runner.py] 406L C:0 F:7 CC↑14 D:4 (python)
@@ -31,7 +29,9 @@ MODULES[90] (top by size):
   M[planfile/analysis/generator.py] 302L C:1 F:17 CC↑19 D:0 (python)
   M[run_examples.sh] 286L C:0 F:13 CC↑0 D:1 (shell)
   M[planfile/sync/jira.py] 280L C:1 F:10 CC↑13 D:0 (python)
-  LANGS: python:83/shell:5/javascript:2
+  M[planfile/analysis/external_tools.py] 272L C:2 F:13 CC↑12 D:0 (python)
+  M[planfile/cli/auto_loop.py] 253L C:0 F:9 CC↑10 D:1 (python)
+  LANGS: python:83/shell:5
 
 HOTSPOTS[10]:
   ★ sync_integration fan=31  // Sync with a specific integration.
@@ -43,11 +43,11 @@ Nie wymaga szablon
   ★ create_examples_app fan=23  // Create and return the examples sub-app.
 
 REFACTOR[15]:
-  [1] H/L Split _detect_quality_gates (CC=47 → target CC<10)
-  [2] H/L Split _detect_from_pyproject (CC=28 → target CC<10)
-  [3] H/L Split sync_integration (CC=40 → target CC<10)
+  [1] H/L Split sync_integration (CC=40 → target CC<10)
+  [2] H/L Split _detect_quality_gates (CC=47 → target CC<10)
+  [3] H/L Split _detect_from_pyproject (CC=28 → target CC<10)
   [4] H/H Split god module planfile/cli/project_detector.py (752L, 2 classes)
-  [5] H/H Split god module htmlcov/coverage_html_cb_dd2e7eb5.js (735L, 0 classes)
+  [5] H/H Split god module planfile/core/models.py (515L, 11 classes)
 
 EVOLUTION:
-  2026-03-29 CC̄=4.3 crit=66 15935L // Automated analysis
+  2026-04-01 CC̄=4.3 crit=49 16179L // Automated analysis

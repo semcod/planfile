@@ -4,26 +4,14 @@
 
 - **Project**: /home/tom/github/semcod/planfile
 - **Primary Language**: python
-- **Languages**: python: 87, shell: 28, javascript: 3
+- **Languages**: python: 88, shell: 29
 - **Analysis Mode**: static
-- **Total Functions**: 687
+- **Total Functions**: 494
 - **Total Classes**: 65
-- **Modules**: 118
-- **Entry Points**: 546
+- **Modules**: 117
+- **Entry Points**: 362
 
 ## Architecture by Module
-
-### htmlcov.coverage_html_cb_dd2e7eb5
-- **Functions**: 77
-- **File**: `coverage_html_cb_dd2e7eb5.js`
-
-### examples.htmlcov.coverage_html_cb_dd2e7eb5
-- **Functions**: 77
-- **File**: `coverage_html_cb_dd2e7eb5.js`
-
-### htmlcov.coverage_html_cb_6fb7b396
-- **Functions**: 76
-- **File**: `coverage_html_cb_6fb7b396.js`
 
 ### planfile.core.store
 - **Functions**: 34
@@ -34,6 +22,11 @@
 - **Functions**: 21
 - **Classes**: 4
 - **File**: `base.py`
+
+### examples.ecosystem.01_full_workflow
+- **Functions**: 17
+- **Classes**: 6
+- **File**: `01_full_workflow.sh`
 
 ### planfile.sync.markdown_backend
 - **Functions**: 17
@@ -50,11 +43,6 @@
 - **Classes**: 11
 - **File**: `models.py`
 
-### examples.ecosystem.01_full_workflow
-- **Functions**: 17
-- **Classes**: 6
-- **File**: `01_full_workflow.sh`
-
 ### planfile.cli.project_detector
 - **Functions**: 16
 - **Classes**: 2
@@ -69,14 +57,14 @@
 - **Classes**: 1
 - **File**: `config.py`
 
+### run_examples
+- **Functions**: 13
+- **File**: `run_examples.sh`
+
 ### planfile.analysis.external_tools
 - **Functions**: 13
 - **Classes**: 2
 - **File**: `external_tools.py`
-
-### run_examples
-- **Functions**: 13
-- **File**: `run_examples.sh`
 
 ### planfile.executor_standalone
 - **Functions**: 12
@@ -86,6 +74,11 @@
 ### planfile.cli.cmd.cmd_sync
 - **Functions**: 11
 - **File**: `cmd_sync.py`
+
+### planfile.sync.jira
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `jira.py`
 
 ### planfile.sync.generic
 - **Functions**: 10
@@ -105,6 +98,15 @@
 - **Functions**: 10
 - **Classes**: 1
 - **File**: `sprint_generator.py`
+
+### planfile.importers.vallm_importer
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `vallm_importer.py`
+
+### examples.jira.run
+- **Functions**: 9
+- **File**: `run.sh`
 
 ## Key Entry Points
 
@@ -132,6 +134,10 @@ Automatycznie
 ### planfile.cli.cmd.cmd_generate.generate_from_files_cmd
 > Generate planfile from file analysis (no LLM required).
 - **Calls**: typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option
+
+### examples.checkbox-tickets.demo.demo_checkbox_tickets
+> Demonstrate checkbox ticket parsing and manipulation.
+- **Calls**: console.print, todo_path.exists, console.print, tempfile.NamedTemporaryFile, f.write, Path, MarkdownFileBackend, console.print
 
 ### planfile.cli.cmd.cmd_review.review_strategy_cli
 > Review strategy execution and progress.
@@ -169,6 +175,12 @@ This command will:
 > Convert object to serializable format with cycle detection.
 - **Calls**: id, visited.add, hasattr, set, obj.__dict__.items, isinstance, self._make_serializable, obj.items
 
+### planfile.sync.markdown_backend.MarkdownFileBackend._search_tickets
+> Search tickets by query in markdown files.
+
+Searches both structured format and checkbox-style tickets.
+- **Calls**: query.lower, file_path.exists, enumerate, open, f.read, re.split, content.split, re.match
+
 ### planfile.core.models.Strategy.merge
 > Merge with other strategies to create a combined strategy.
 - **Calls**: self.model_dump, set, merged_data.get, Strategy, merged_data.get, all_sprints.append, merged_data.get, all_gates.append
@@ -181,11 +193,11 @@ This command will:
 > Validate a strategy YAML file.
 - **Calls**: typer.Argument, typer.Option, planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print, console.print, console.print, console.print
 
-### planfile.sync.markdown_backend.MarkdownFileBackend._search_tickets
-> Search tickets by query in markdown files.
+### planfile.sync.markdown_backend.MarkdownFileBackend._list_tickets
+> List tickets from markdown files.
 
-Searches both structured format and checkbox-style tickets.
-- **Calls**: query.lower, file_path.exists, enumerate, open, f.read, re.split, content.split, re.match
+Supports both structured format (with ID: `...`) and checkbox format (- [ ] / - [x]).
+- **Calls**: file_path.exists, re.finditer, enumerate, open, f.read, content.split, re.match, match.group
 
 ### planfile.core.models.Strategy.to_llx_format
 > Convert to LLX-compatible format.
@@ -199,19 +211,13 @@ Searches both structured format and checkbox-style tickets.
 > Generate strategy.yaml from project analysis + LLM.
 - **Calls**: typer.Argument, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, typer.Option, console.print
 
-### planfile.sync.markdown_backend.MarkdownFileBackend._list_tickets
-> List tickets from markdown files.
-
-Supports both structured format (with ID: `...`) and checkbox format (- [ ] / - [x]).
-- **Calls**: file_path.exists, re.finditer, enumerate, open, f.read, match.group, tickets.append, content.split
+### examples.ecosystem.03_proxy_routing.example_budget_tracking
+> Example: Budget tracking with proxy.
+- **Calls**: examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, ProxyClient, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print
 
 ### planfile.core.models.Strategy.get_stats
 > Get strategy statistics.
 - **Calls**: len, sum, len, sum, isinstance, hasattr, durations.append, sum
-
-### examples.ecosystem.03_proxy_routing.example_budget_tracking
-> Example: Budget tracking with proxy.
-- **Calls**: examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, ProxyClient, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print
 
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
 > Parse code2llm analysis.toon.yaml output.
@@ -237,9 +243,6 @@ Supports both structured format and checkbox-style tickets.
 ### planfile.analysis.generator.PlanfileGenerator.generate_from_analysis
 > Generate planfile from analyzed files.
 - **Calls**: self.analyzer.analyze_directory, self.generator.generate_sprints, self.generator.generate_tickets, self._extract_key_metrics, self._create_strategy_object, Path, self._generate_goal, self._generate_goals
-
-### htmlcov.coverage_html_cb_dd2e7eb5.sortColumn
-- **Calls**: htmlcov.coverage_html_cb_dd2e7eb5.getAttribute, htmlcov.coverage_html_cb_dd2e7eb5.forEach, htmlcov.coverage_html_cb_dd2e7eb5.setAttribute, htmlcov.coverage_html_cb_dd2e7eb5.indexOf, htmlcov.coverage_html_cb_dd2e7eb5.from, htmlcov.coverage_html_cb_dd2e7eb5.closest, htmlcov.coverage_html_cb_dd2e7eb5.querySelectorAll, htmlcov.coverage_html_cb_dd2e7eb5.sort
 
 ## Process Flows
 
@@ -279,31 +282,29 @@ example_strategy_generation_with_proxy [examples.ecosystem.03_proxy_routing]
 generate_from_files_cmd [planfile.cli.cmd.cmd_generate]
 ```
 
-### Flow 6: review_strategy_cli
+### Flow 6: demo_checkbox_tickets
+```
+demo_checkbox_tickets [examples.checkbox-tickets.demo]
+```
+
+### Flow 7: review_strategy_cli
 ```
 review_strategy_cli [planfile.cli.cmd.cmd_review]
 ```
 
-### Flow 7: auto_loop
+### Flow 8: auto_loop
 ```
 auto_loop [planfile.cli.auto_loop]
 ```
 
-### Flow 8: register_export_commands
+### Flow 9: register_export_commands
 ```
 register_export_commands [planfile.cli.cmd.cmd_export]
 ```
 
-### Flow 9: ci_status
+### Flow 10: ci_status
 ```
 ci_status [planfile.cli.auto_loop]
-```
-
-### Flow 10: example_mcp_session
-```
-example_mcp_session [examples.ecosystem.02_mcp_integration]
-  └─ →> print
-  └─ →> print
 ```
 
 ## Key Classes
@@ -346,6 +347,12 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 - **Methods**: 11
 - **Key Methods**: planfile.analysis.external_tools.ExternalToolRunner.__init__, planfile.analysis.external_tools.ExternalToolRunner.run_all, planfile.analysis.external_tools.ExternalToolRunner.run_code2llm, planfile.analysis.external_tools.ExternalToolRunner.run_vallm, planfile.analysis.external_tools.ExternalToolRunner.run_redup, planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output, planfile.analysis.external_tools.ExternalToolRunner.parse_vallm_output, planfile.analysis.external_tools.ExternalToolRunner.parse_redup_output, planfile.analysis.external_tools.ExternalToolRunner._mock_code2llm_data, planfile.analysis.external_tools.ExternalToolRunner._mock_vallm_data
 
+### planfile.sync.jira.JiraBackend
+> Jira integration backend.
+- **Methods**: 10
+- **Key Methods**: planfile.sync.jira.JiraBackend.__init__, planfile.sync.jira.JiraBackend._validate_config, planfile.sync.jira.JiraBackend._map_priority_to_jira, planfile.sync.jira.JiraBackend._map_task_type_to_jira, planfile.sync.jira.JiraBackend._create_ticket, planfile.sync.jira.JiraBackend._update_ticket, planfile.sync.jira.JiraBackend._get_ticket, planfile.sync.jira.JiraBackend._issue_to_ticket_status, planfile.sync.jira.JiraBackend._list_tickets, planfile.sync.jira.JiraBackend._search_tickets
+- **Inherits**: BasePMBackend
+
 ### planfile.sync.generic.GenericBackend
 > Generic HTTP API backend for PM systems.
 - **Methods**: 10
@@ -361,12 +368,6 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 > Generates sprints and tickets from extracted information.
 - **Methods**: 10
 - **Key Methods**: planfile.analysis.sprint_generator.SprintGenerator.__init__, planfile.analysis.sprint_generator.SprintGenerator.generate_sprints, planfile.analysis.sprint_generator.SprintGenerator._group_issues_by_priority, planfile.analysis.sprint_generator.SprintGenerator._get_high_and_quality_issues, planfile.analysis.sprint_generator.SprintGenerator._get_remaining_medium_issues, planfile.analysis.sprint_generator.SprintGenerator._create_sprint, planfile.analysis.sprint_generator.SprintGenerator._map_category_to_task_type, planfile.analysis.sprint_generator.SprintGenerator._get_highest_priority, planfile.analysis.sprint_generator.SprintGenerator._estimate_effort, planfile.analysis.sprint_generator.SprintGenerator.generate_tickets
-
-### planfile.sync.jira.JiraBackend
-> Jira integration backend.
-- **Methods**: 10
-- **Key Methods**: planfile.sync.jira.JiraBackend.__init__, planfile.sync.jira.JiraBackend._validate_config, planfile.sync.jira.JiraBackend._map_priority_to_jira, planfile.sync.jira.JiraBackend._map_task_type_to_jira, planfile.sync.jira.JiraBackend._create_ticket, planfile.sync.jira.JiraBackend._update_ticket, planfile.sync.jira.JiraBackend._get_ticket, planfile.sync.jira.JiraBackend._issue_to_ticket_status, planfile.sync.jira.JiraBackend._list_tickets, planfile.sync.jira.JiraBackend._search_tickets
-- **Inherits**: BasePMBackend
 
 ### planfile.ci.CIRunner
 > CI/CD runner with automated bug-fix loop and ticket creation.
@@ -420,9 +421,9 @@ example_mcp_session [examples.ecosystem.02_mcp_integration]
 
 Key functions that process and transform data:
 
-### planfile.examples.example_validate_strategy
-> Load and validate an existing strategy.
-- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
+### docker-entrypoint.validate_config
+
+### examples.validate_with_llx.validate_file
 
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
@@ -432,8 +433,22 @@ Key functions that process and transform data:
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
 
+### examples.bash-generation.verify_planfile.validate_planfile
+
+### planfile.examples.example_validate_strategy
+> Load and validate an existing strategy.
+- **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
+
+### examples.ecosystem.04_llx_integration.LLXIntegration._parse_llx_output
+> Parse LLX analysis output.
+- **Output to**: None.split, ProjectMetrics, output.strip, line.split, value.strip
+
 ### planfile.sync.mock.MockBackend._validate_config
 > Mock backend has no config requirements.
+
+### planfile.sync.jira.JiraBackend._validate_config
+> Validate Jira configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
 
 ### planfile.sync.github.GitHubBackend._validate_config
 > Validate GitHub configuration.
@@ -442,13 +457,6 @@ Key functions that process and transform data:
 ### planfile.sync.generic.GenericBackend._validate_config
 > Validate generic backend configuration.
 - **Output to**: self.config.get, ValueError
-
-### planfile.sync.markdown_backend.MarkdownFileBackend._validate_config
-> Validate markdown backend configuration.
-
-### planfile.sync.markdown_backend.MarkdownFileBackend._format_ticket_entry
-> Format a ticket entry for markdown file.
-- **Output to**: None.get, lines.append, lines.append, lines.append, lines.append
 
 ### planfile.sync.gitlab.GitLabBackend._validate_config
 > Validate GitLab configuration.
@@ -488,6 +496,13 @@ Args:
     file_path: Path to strategy YAML f
 - **Output to**: planfile.loaders.yaml_loader._check_required_keys, planfile.loaders.yaml_loader._validate_sprints, planfile.loaders.yaml_loader._validate_gates, planfile.loaders.yaml_loader._validate_task_patterns, planfile.loaders.yaml_loader.load_yaml
 
+### planfile.sync.markdown_backend.MarkdownFileBackend._validate_config
+> Validate markdown backend configuration.
+
+### planfile.sync.markdown_backend.MarkdownFileBackend._format_ticket_entry
+> Format a ticket entry for markdown file.
+- **Output to**: None.get, lines.append, lines.append, lines.append, lines.append
+
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
 > Parse code2llm analysis.toon.yaml output.
 - **Output to**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists
@@ -500,35 +515,17 @@ Args:
 > Parse redup duplication.toon.yaml output.
 - **Output to**: AnalysisResults, re.search, re.search, dup_file.exists, self._mock_redup_data
 
-### planfile.analysis.generator.PlanfileGenerator._parse_effort
-- **Output to**: parse_effort
-
-### planfile.core.store.PlanfileStore._invalidate_cache
-> Invalidate cache for a file or all files.
-- **Output to**: self._cache.pop, self._cache.clear, str
-
-### planfile.sync.jira.JiraBackend._validate_config
-> Validate Jira configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
-
-### planfile.sync.base.BasePMBackend._validate_config
-> Validate backend configuration.
-
-### planfile.importers.code2llm_importer._parse_evolution
-> Parse NEXT[] section from evolution.toon.
-- **Output to**: EvolutionParser, parser.parse
-
 ## Behavioral Patterns
-
-### recursion_load_dotenv
-- **Type**: recursion
-- **Confidence**: 0.90
-- **Functions**: planfile.integrations.config.IntegrationConfig.load_dotenv
 
 ### recursion_extract_from_yaml_structure
 - **Type**: recursion
 - **Confidence**: 0.90
 - **Functions**: planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure
+
+### recursion_load_dotenv
+- **Type**: recursion
+- **Confidence**: 0.90
+- **Functions**: planfile.integrations.config.IntegrationConfig.load_dotenv
 
 ### state_machine_SyncState
 - **Type**: state_machine
@@ -545,8 +542,9 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.cli.cmd.cmd_sync.sync_to_external` - 62 calls
 - `examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
-- `planfile.cli.cmd.cmd_generate.generate_from_files_cmd` - 46 calls
 - `planfile.cli.cmd.cmd_examples.create_examples_app` - 46 calls
+- `planfile.cli.cmd.cmd_generate.generate_from_files_cmd` - 46 calls
+- `examples.checkbox-tickets.demo.demo_checkbox_tickets` - 43 calls
 - `planfile.cli.cmd.cmd_review.review_strategy_cli` - 40 calls
 - `planfile.cli.auto_loop.auto_loop` - 39 calls
 - `planfile.cli.cmd.cmd_sync.sync_from_external` - 39 calls
@@ -563,12 +561,12 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.cli.cmd.cmd_compare.register_compare_commands` - 22 calls
 - `planfile.cli.cmd.cmd_validate.validate_strategy_cli` - 22 calls
 - `planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure` - 21 calls
+- `planfile.analysis.parsers.yaml_parser.analyze_yaml` - 20 calls
 - `planfile.core.models.Strategy.to_llx_format` - 20 calls
 - `planfile.cli.cmd.cmd_apply.apply_strategy_cli` - 20 calls
 - `planfile.cli.cmd.cmd_generate.generate_strategy_cli` - 20 calls
-- `planfile.analysis.parsers.yaml_parser.analyze_yaml` - 20 calls
-- `planfile.core.models.Strategy.get_stats` - 19 calls
 - `examples.ecosystem.03_proxy_routing.example_budget_tracking` - 19 calls
+- `planfile.core.models.Strategy.get_stats` - 19 calls
 - `planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output` - 17 calls
 - `planfile.mcp.server.handle_tool_call` - 17 calls
 - `planfile.core.models.Sprint.convert_tasks` - 16 calls
@@ -577,8 +575,7 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.loaders.cli_loader.export_results_to_markdown` - 15 calls
 - `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 15 calls
 - `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls
-- `htmlcov.coverage_html_cb_dd2e7eb5.sortColumn` - 15 calls
-- `htmlcov.coverage_html_cb_dd2e7eb5.table` - 15 calls
+- `planfile.core.models.Strategy.compare` - 14 calls
 
 ## System Interactions
 
@@ -598,6 +595,10 @@ graph TD
     example_strategy_gen --> ProxyClient
     generate_from_files_ --> Argument
     generate_from_files_ --> Option
+    demo_checkbox_ticket --> print
+    demo_checkbox_ticket --> exists
+    demo_checkbox_ticket --> NamedTemporaryFile
+    demo_checkbox_ticket --> write
     review_strategy_cli --> Argument
     review_strategy_cli --> Option
     auto_loop --> command
@@ -612,10 +613,6 @@ graph TD
     ci_status --> exists
     example_mcp_session --> print
     _parse_llx_output --> split
-    _parse_llx_output --> ProjectMetrics
-    _parse_llx_output --> strip
-    register_stats_comma --> command
-    register_stats_comma --> Argument
 ```
 
 ## Reverse Engineering Guidelines
