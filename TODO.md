@@ -3,13 +3,16 @@
 <!-- AUTO-GENERATED FROM PLANFILE - DO NOT EDIT DIRECTLY -->
 <!-- Use: planfile ticket export-todo to regenerate -->
 <!-- Use: planfile ticket import-todo to import changes -->
-<!-- Generated: 2026-04-01T17:11:55.071046 -->
+<!-- Generated: 2026-04-01T19:25:15.613291 -->
 
 ## Active Tasks
 
 - [ ] 🔴 [PLF-027] Critical priority task - must be done first
 - [ ] 🔴 [PLF-028] Updated high priority task
 - [ ] 🟠 [PLF-026] Test ticket for new feature
+- [ ] 🟠 [PLF-034] Test GitHub sync ticket
+- [ ] 🟠 [PLF-035] Test ticket for GitHub
+- [ ] 🟠 [PLF-036] GitHub sync test
 - [ ] ⚪ [PLF-002] Organize generated markdown summaries into `docs/summaries/` directory
 - [ ] ⚪ [PLF-003] Run projects in `examples/*` to ensure base correctness
 - [ ] ⚪ [PLF-004] Refactor `planfile/analysis/file_analyzer.py` (God module)

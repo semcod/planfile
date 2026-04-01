@@ -77,16 +77,23 @@ def register_ticket_commands(app: typer.Typer) -> None:
         source: str = typer.Option("human", help="Source tool name"),
         label: list[str] | None = typer.Option(None, "-l", "--label"),
         description: str = typer.Option("", "-d", "--description"),
+        integration: list[str] | None = typer.Option(None, "-i", "--integration",
+                                                     help="Integration(s) to sync with (e.g., github, gitlab)"),
     ) -> None:
         """Create a new ticket."""
         from planfile import Planfile, TicketSource
         pf = Planfile.auto_discover()
-        ticket = pf.create_ticket(
-            title=title, priority=priority, sprint=sprint,
-            source=TicketSource(tool=source),
-            labels=list(label) if label else [],
-            description=description,
-        )
+        ticket_data = {
+            "title": title,
+            "priority": priority,
+            "sprint": sprint,
+            "source": TicketSource(tool=source),
+            "labels": list(label) if label else [],
+            "description": description,
+        }
+        if integration:
+            ticket_data["integration"] = list(integration)
+        ticket = pf.create_ticket(**ticket_data)
         console.print(f"[green]✓[/green] Created {ticket.id}: {ticket.title}")
 
     @ticket_app.command("list")
@@ -298,6 +305,9 @@ def register_ticket_commands(app: typer.Typer) -> None:
                     task_text = task_text[2:].strip()
                 elif task_text.startswith('🟢'):
                     priority = "low"
+                    task_text = task_text[2:].strip()
+                elif task_text.startswith('⚪'):
+                    priority = "normal"
                     task_text = task_text[2:].strip()
 
                 # Skip if already exists (check by title)

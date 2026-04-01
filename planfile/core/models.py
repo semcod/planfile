@@ -506,6 +506,8 @@ class Ticket(BaseModel):
     blocked_by: list[str] = Field(default_factory=list)
     blocks: list[str] = Field(default_factory=list)
 
+    integration: list[str] | None = None  # Target integrations for sync (e.g., ["github"])
+
     llm_hints: ModelHints | None = None
 
     sync: dict = Field(default_factory=dict)  # {"github": {"issue": 142}}

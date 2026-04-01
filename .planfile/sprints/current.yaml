@@ -686,3 +686,67 @@ sprint:
       history: []
       created_at: '2026-04-01T15:06:52.347738'
       updated_at: '2026-04-01T15:06:52.347739'
+    PLF-034:
+      id: PLF-034
+      title: Test GitHub sync ticket
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: human
+        timestamp: '2026-04-01T16:27:57.494088'
+        context: {}
+      description: Testing automatic GitHub synchronization
+      acceptance_criteria: []
+      labels:
+      - github-test
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T16:27:57.497384'
+      updated_at: '2026-04-01T16:27:57.497388'
+    PLF-035:
+      id: PLF-035
+      title: Test ticket for GitHub
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: human
+        timestamp: '2026-04-01T16:33:45.914545'
+        context: {}
+      description: Testing GitHub integration flag
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-01T16:33:45.916778'
+      updated_at: '2026-04-01T16:33:45.916782'
+    PLF-036:
+      id: PLF-036
+      title: GitHub sync test
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: human
+        timestamp: '2026-04-01T16:37:59.888815'
+        context: {}
+      description: ''
+      acceptance_criteria: []
+      labels:
+      - priority-high
+      - planfile
+      - managed
+      blocked_by: []
+      blocks: []
+      integration:
+      - github
+      sync: {}
+      history: []
+      created_at: '2026-04-01T16:37:59.891340'
+      updated_at: '2026-04-01T16:37:59.891344'
+      assignee: null

@@ -24,3 +24,161 @@ sprint:
       history: []
       created_at: '2026-04-01T15:06:52.002879'
       updated_at: '2026-04-01T15:06:52.002880'
+    GITHUB-14:
+      title: No title
+      description: ''
+      status: open
+      assignee: null
+      labels:
+      - setup
+      - integration
+      - priority-high
+      - planfile
+      - managed
+      external_id: '14'
+      backend: github
+      integration: github
+    GITHUB-13:
+      title: No title
+      description: ''
+      status: open
+      assignee: null
+      labels:
+      - setup
+      - integration
+      - priority-high
+      - planfile
+      - managed
+      external_id: '13'
+      backend: github
+      integration: github
+    GITHUB-11:
+      title: No title
+      description: ''
+      status: closed
+      assignee: null
+      labels:
+      - setup
+      - integration
+      - priority-high
+      - planfile
+      - managed
+      external_id: '11'
+      backend: github
+      integration: github
+    GITHUB-9:
+      title: No title
+      description: ''
+      status: open
+      assignee: null
+      labels:
+      - setup
+      - integration
+      - priority-high
+      - planfile
+      - managed
+      external_id: '9'
+      backend: github
+      integration: github
+    GITHUB-8:
+      title: No title
+      description: ''
+      status: closed
+      assignee: null
+      labels:
+      - setup
+      - integration
+      - priority-high
+      - planfile
+      - managed
+      external_id: '8'
+      backend: github
+      integration: github
+    GITHUB-7:
+      title: No title
+      description: ''
+      status: closed
+      assignee: null
+      labels:
+      - setup
+      - integration
+      - 'priority: high'
+      - priority-high
+      - planfile
+      - managed
+      external_id: '7'
+      backend: github
+      integration: github
+    GITHUB-6:
+      title: No title
+      description: ''
+      status: open
+      assignee: null
+      labels:
+      - enhancement
+      - planfile
+      - managed
+      - 'priority: low'
+      - priority-low
+      - templates
+      external_id: '6'
+      backend: github
+      integration: github
+    GITHUB-5:
+      title: No title
+      description: ''
+      status: closed
+      assignee: null
+      labels:
+      - enhancement
+      - planfile
+      - managed
+      - 'priority: normal'
+      - priority-normal
+      - milestone
+      external_id: '5'
+      backend: github
+      integration: github
+    GITHUB-4:
+      title: No title
+      description: ''
+      status: closed
+      assignee: null
+      labels:
+      - documentation
+      - planfile
+      - managed
+      - 'priority: low'
+      - priority-low
+      external_id: '4'
+      backend: github
+      integration: github
+    GITHUB-3:
+      title: No title
+      description: ''
+      status: open
+      assignee: null
+      labels:
+      - planfile
+      - managed
+      - testing
+      - 'priority: normal'
+      - priority-normal
+      external_id: '3'
+      backend: github
+      integration: github
+    GITHUB-2:
+      title: No title
+      description: ''
+      status: closed
+      assignee: null
+      labels:
+      - 'priority: high'
+      - priority-high
+      - planfile
+      - managed
+      - webhook
+      - sync
+      external_id: '2'
+      backend: github
+      integration: github

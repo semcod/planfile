@@ -42,11 +42,13 @@ class IntegrationConfig:
             return config
 
     def discover_configs(self) -> list[Path]:
-        """Discover all *.planfile.yaml files in the directory."""
+        """Discover all *.planfile.yaml files in the directory and .planfile/ subdir."""
         configs = []
         for pattern in ["*.planfile.yaml", "*.planfile.yml"]:
             configs.extend(self.directory.glob(pattern))
-        return sorted(configs)
+            # Also search in .planfile/ subdirectory
+            configs.extend((self.directory / ".planfile").glob(pattern))
+        return sorted(set(configs))
 
     def load_configs(self) -> dict[str, Any]:
         """Load and merge all configuration files."""
@@ -178,6 +180,21 @@ class IntegrationConfig:
         # Import and initialize the appropriate backend
         if integration_name == "github":
             from planfile.integrations.github import GitHubBackend
+            # Auto-fetch token from gh CLI if not provided or is unexpanded env var
+            token = config.get("token", "")
+            if not token or "${" in token:
+                import subprocess
+                try:
+                    result = subprocess.run(
+                        ["gh", "auth", "token"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if result.returncode == 0:
+                        config = {**config, "token": result.stdout.strip()}
+                except (subprocess.SubprocessError, FileNotFoundError):
+                    pass  # gh not installed or not authenticated
             return GitHubBackend(**config)
         elif integration_name == "gitlab":
             from planfile.integrations.gitlab import GitLabBackend

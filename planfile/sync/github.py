@@ -209,11 +209,14 @@ class GitHubBackend(BasePMBackend):
         """List GitHub issues with filters."""
         state = "all" if not status else status.lower()
 
-        issues = self.repo.get_issues(
-            state=state,
-            labels=labels,
-            assignee=assignee
-        )
+        # Build kwargs - only include optional params if provided
+        kwargs = {"state": state}
+        if labels:
+            kwargs["labels"] = labels
+        if assignee:
+            kwargs["assignee"] = assignee
+
+        issues = self.repo.get_issues(**kwargs)
 
         tickets = []
         # GitHub listing path

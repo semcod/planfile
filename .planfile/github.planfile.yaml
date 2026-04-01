@@ -1,0 +1,19 @@
+# GitHub Issues Integration
+integrations:
+  github:
+    # Token from environment variable GITHUB_TOKEN or gh CLI authentication
+    repo: semcod/planfile
+    token: ${GITHUB_TOKEN}
+
+    # Optional: default labels for new issues
+    default_labels:
+      - planfile
+
+    # Optional: issue template
+    issue_template: |
+      ## Description
+      {description}
+
+      ## Source
+      Ticket: {ticket_id}
+      Imported from: planfile

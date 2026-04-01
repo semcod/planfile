@@ -137,22 +137,24 @@ def sync_integration(integration_name: str, directory: str, dry_run: bool, direc
         sprint = store.load_sprint("current")
         if sprint:
             for ticket_id, ticket in sprint.get("tickets", {}).items():
-                ticket_integration = ticket.get("integration", integration_name)
-                if isinstance(ticket_integration, list):
-                    if integration_name in ticket_integration:
+                ticket_integration = ticket.get("integration")
+                if ticket_integration:  # Only sync if integration is explicitly set
+                    if isinstance(ticket_integration, list):
+                        if integration_name in ticket_integration:
+                            all_tickets.append((ticket_id, ticket))
+                    elif ticket_integration == integration_name:
                         all_tickets.append((ticket_id, ticket))
-                elif ticket_integration == integration_name:
-                    all_tickets.append((ticket_id, ticket))
 
         backlog = store.load_backlog()
         if backlog:
             for ticket_id, ticket in backlog.get("tickets", {}).items():
-                ticket_integration = ticket.get("integration", integration_name)
-                if isinstance(ticket_integration, list):
-                    if integration_name in ticket_integration:
+                ticket_integration = ticket.get("integration")
+                if ticket_integration:  # Only sync if integration is explicitly set
+                    if isinstance(ticket_integration, list):
+                        if integration_name in ticket_integration:
+                            all_tickets.append((ticket_id, ticket))
+                    elif ticket_integration == integration_name:
                         all_tickets.append((ticket_id, ticket))
-                elif ticket_integration == integration_name:
-                    all_tickets.append((ticket_id, ticket))
 
     # Try 2: Old format v1 (*.planfile.yaml files with sprint/backlog sections)
     if not all_tickets:
@@ -328,10 +330,35 @@ def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_
 
     try:
         external_tickets = backend.list_tickets()
+        
+        if external_tickets is None:
+            console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
+            return
+        
+        external_tickets = list(external_tickets)  # Ensure it's a list
+        
+        if not external_tickets:
+            console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
+            return
 
         for ext_ticket in external_tickets:
-            ext_id = str(ext_ticket.get('id', ''))
-            ext_title = ext_ticket.get('title', 'No title')
+            # Handle both dict and Pydantic model
+            if hasattr(ext_ticket, 'id'):
+                # Pydantic model
+                ext_id = str(ext_ticket.id)
+                ext_title = ext_ticket.title if hasattr(ext_ticket, 'title') else 'No title'
+                ext_status = ext_ticket.status if hasattr(ext_ticket, 'status') else 'open'
+                ext_assignee = ext_ticket.assignee if hasattr(ext_ticket, 'assignee') else None
+                ext_labels = ext_ticket.labels if hasattr(ext_ticket, 'labels') else []
+                ext_description = ext_ticket.description if hasattr(ext_ticket, 'description') else ''
+            else:
+                # Dict
+                ext_id = str(ext_ticket.get('id', ''))
+                ext_title = ext_ticket.get('title', 'No title')
+                ext_status = ext_ticket.get('status', 'open')
+                ext_assignee = ext_ticket.get('assignee')
+                ext_labels = ext_ticket.get('labels', [])
+                ext_description = ext_ticket.get('description', '')
 
             # Check if already imported using sync state
             planfile_id = sync_state.get_local_id(ext_id)
@@ -347,15 +374,15 @@ def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_
                         # Update existing ticket
                         if planfile_id in sprint.get("tickets", {}):
                             sprint["tickets"][planfile_id].update({
-                                "status": ext_ticket.get("status", "open"),
-                                "assignee": ext_ticket.get("assignee"),
-                                "labels": ext_ticket.get("labels", []),
+                                "status": ext_status,
+                                "assignee": ext_assignee,
+                                "labels": ext_labels,
                             })
                         elif planfile_id in backlog.get("tickets", {}):
                             backlog["tickets"][planfile_id].update({
-                                "status": ext_ticket.get("status", "open"),
-                                "assignee": ext_ticket.get("assignee"),
-                                "labels": ext_ticket.get("labels", []),
+                                "status": ext_status,
+                                "assignee": ext_assignee,
+                                "labels": ext_labels,
                             })
                         updated_count += 1
                         console.print(f"  ✓ Updated: {planfile_id} from {ext_id}")
@@ -366,10 +393,10 @@ def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_
                         # Create ticket data
                         ticket_data = {
                             "title": ext_title,
-                            "description": ext_ticket.get("description", ""),
-                            "status": ext_ticket.get("status", "open"),
-                            "assignee": ext_ticket.get("assignee"),
-                            "labels": ext_ticket.get("labels", []),
+                            "description": ext_description,
+                            "status": ext_status,
+                            "assignee": ext_assignee,
+                            "labels": ext_labels,
                             "external_id": ext_id,
                             "backend": integration_name,
                             "integration": integration_name,
@@ -402,7 +429,9 @@ def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_
                 console.print(f"\n📥 Imported {imported_count} new tickets, updated {updated_count} existing")
 
     except Exception as e:
+        import traceback
         console.print(f"  ✗ Failed to import tickets: {e}")
+        console.print(f"    [dim]{traceback.format_exc()}[/dim]")
 
 
 def find_planfile_ticket(external_ticket, store, sync_state) -> str | None:
