@@ -125,7 +125,7 @@ bump-major:
 	bump2version major
 
 publish:
-	python -m build
+	python3 -m build
 	twine upload dist/*
 
 # CI/CD Pipeline helpers
@@ -173,7 +173,7 @@ test-github:
 		echo "Set GITHUB_TOKEN and GITHUB_REPO"; \
 		exit 1; \
 	fi
-	python -m tests.integration.test_github
+	python3 -m tests.integration.test_github
 
 test-jira:
 	@echo "Testing Jira integration..."
@@ -190,7 +190,7 @@ docs:
 
 serve-docs:
 	@echo "Serving documentation..."
-	cd docs/_build/html && python -m http.server 8080
+	cd docs/_build/html && python3 -m http.server 8080
 
 # Quick start
 quick-start:

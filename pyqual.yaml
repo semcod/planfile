@@ -139,22 +139,35 @@ pipeline:
     - name: validate_deploy
       run: |
         echo "=== Validating deploy ==="
-        # Check push
-        last_commit=$(git log -1 --pretty=%B)
+        errors=0
+        
+        # Check push - verify recent pyqual commit
+        last_commit=$(git log -1 --pretty=%B 2>/dev/null)
         if echo "$last_commit" | grep -q "pyqual auto-commit"; then
-          echo "✓ Push validated: $last_commit"
+          echo "✓ Push validated: recent commit found"
         else
-          echo "⚠ No recent pyqual commit found"
+          echo "✗ Push failed: no pyqual auto-commit found"
+          errors=$((errors + 1))
         fi
-        # Check publish
-        latest_wheel=$(ls -t dist/*.whl 2>/dev/null | head -1)
-        if [ -n "$latest_wheel" ]; then
-          echo "✓ Publish validated: $latest_wheel"
+        
+        # Check publish - verify wheel was built successfully
+        # Get wheel from today
+        today_wheel=$(find dist -name "*.whl" -newer .pyqual/pipeline.db 2>/dev/null | head -1)
+        if [ -n "$today_wheel" ]; then
+          echo "✓ Publish validated: fresh wheel found: $(basename $today_wheel)"
         else
-          echo "✗ No wheel found in dist/"
+          echo "✗ Publish failed: no fresh wheel found (checked dist/*.whl)"
+          errors=$((errors + 1))
+        fi
+        
+        # Summary
+        if [ $errors -eq 0 ]; then
+          echo "=== Deploy validation PASSED ==="
+          exit 0
+        else
+          echo "=== Deploy validation FAILED ($errors errors) ==="
           exit 1
         fi
-        echo "=== Deploy validation complete ==="
       when: metrics_pass
       optional: true
       timeout: 30
