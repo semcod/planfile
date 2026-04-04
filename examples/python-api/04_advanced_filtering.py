@@ -32,10 +32,6 @@ def example_basic_filtering():
     # Filter by sprint
     current_sprint = pf.list_tickets(sprint="current")
     print(f"Current sprint: {len(current_sprint)}")
-    
-    # Filter by assignee
-    my_tickets = pf.list_tickets(assignee="john.doe")
-    print(f"Assigned to john.doe: {len(my_tickets)}")
     print()
 
 
@@ -45,21 +41,15 @@ def example_combined_filters():
     
     pf = Planfile.auto_discover(".")
     
-    # High priority bugs in current sprint
-    urgent_bugs = pf.list_tickets(
+    # High priority open tickets in current sprint (using labels for categorization)
+    urgent_tickets = pf.list_tickets(
         status="open",
         priority="high",
-        type="bug",
         sprint="current"
     )
-    print(f"Urgent bugs in current sprint: {len(urgent_bugs)}")
-    for t in urgent_bugs[:3]:
+    print(f"Urgent tickets in current sprint: {len(urgent_tickets)}")
+    for t in urgent_tickets[:3]:
         print(f"  {t.id}: {t.title}")
-    print()
-    
-    # Unassigned tickets
-    unassigned = pf.list_tickets(assignee=None, status="open")
-    print(f"Unassigned open tickets: {len(unassigned)}")
     print()
 
 
@@ -102,16 +92,17 @@ def example_export_filtered():
     
     # Export to CSV format
     print("CSV Export:")
-    print("id,title,priority,type,assignee")
+    print("id,title,priority,labels")
     for t in sprint_tickets[:5]:
-        print(f"{t.id},{t.title[:30]},{t.priority},{t.type or 'task'},{t.assignee or 'unassigned'}")
+        labels_str = "|".join(t.labels) if t.labels else "none"
+        print(f"{t.id},{t.title[:30]},{t.priority},{labels_str}")
     
     print("\nMarkdown Export:")
     print("## Sprint Tickets (High/Critical Priority)\n")
     for t in sprint_tickets[:5]:
         print(f"- **{t.id}** [{t.priority}] {t.title}")
-        if t.assignee:
-            print(f"  - Assignee: @{t.assignee}")
+        if t.labels:
+            print(f"  - Labels: {', '.join(t.labels)}")
     print()
 
 
@@ -136,11 +127,15 @@ def example_statistics():
     for priority, count in priority_counts.most_common():
         print(f"  {priority}: {count}")
     
-    # Count by type
-    type_counts = Counter(t.type for t in all_tickets if t.type)
-    print("\nBy Type:")
-    for ttype, count in type_counts.most_common():
-        print(f"  {ttype}: {count}")
+    # Count by labels (client-side)
+    from collections import Counter
+    all_labels = []
+    for t in all_tickets:
+        all_labels.extend(t.labels or [])
+    label_counts = Counter(all_labels)
+    print("\nBy Label:")
+    for label, count in label_counts.most_common(10):
+        print(f"  {label}: {count}")
     
     print()
 

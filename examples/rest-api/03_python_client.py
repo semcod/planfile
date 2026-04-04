@@ -106,11 +106,9 @@ class PlanfileClient:
         self._request("DELETE", f"/tickets/{ticket_id}")
 
 
-def example_basic_operations():
+def example_basic_operations(client):
     """Basic CRUD operations."""
     print("=== Python Client: Basic Operations ===\n")
-    
-    client = PlanfileClient()
     
     # Health check
     health = client.health()
@@ -140,11 +138,9 @@ def example_basic_operations():
     return ticket['id']
 
 
-def example_bulk_operations():
+def example_bulk_operations(client):
     """Bulk create and list."""
     print("\n=== Python Client: Bulk Operations ===\n")
-    
-    client = PlanfileClient()
     
     # Bulk create
     tickets = []
@@ -169,11 +165,9 @@ def example_bulk_operations():
     return tickets
 
 
-def example_workflow(ticket_id: str):
+def example_workflow(client, ticket_id):
     """Complete ticket workflow."""
     print("\n=== Python Client: Workflow Example ===\n")
-    
-    client = PlanfileClient()
     
     # 1. New ticket
     ticket = client.get_ticket(ticket_id)
@@ -196,11 +190,9 @@ def example_workflow(ticket_id: str):
     print(f"\nFinal state: {final['status']} in {final.get('sprint', 'unknown')}")
 
 
-def example_error_handling():
+def example_error_handling(client):
     """Handle API errors gracefully."""
     print("\n=== Python Client: Error Handling ===\n")
-    
-    client = PlanfileClient()
     
     try:
         # Try to get non-existent ticket
@@ -221,14 +213,26 @@ def main():
     print("Planfile REST API - Python Client")
     print("="*60 + "\n")
     
+    # Read port from file if available
+    import os
+    port_file = "/tmp/planfile_server_port"
+    base_url = "http://localhost:8000"
+    if os.path.exists(port_file):
+        with open(port_file) as f:
+            port = f.read().strip()
+            base_url = f"http://localhost:{port}"
+    
     lib = "httpx" if HAS_HTTPX else "requests"
-    print(f"Using: {lib}\n")
+    print(f"Using: {lib}")
+    print(f"Server: {base_url}\n")
+    
+    client = PlanfileClient(base_url)
     
     try:
-        ticket_id = example_basic_operations()
-        bulk_ids = example_bulk_operations()
-        example_workflow(ticket_id)
-        example_error_handling()
+        ticket_id = example_basic_operations(client)
+        bulk_ids = example_bulk_operations(client)
+        example_workflow(client, ticket_id)
+        example_error_handling(client)
         
         print("\n" + "="*60)
         print("All Python client examples completed!")
@@ -238,6 +242,7 @@ def main():
         print(f"\n✗ Error: {e}")
         print("\nMake sure the server is running:")
         print("  ./01_start_server.sh")
+        import sys
         sys.exit(1)
 
 

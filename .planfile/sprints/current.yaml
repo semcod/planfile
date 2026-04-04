@@ -750,3 +750,477 @@ sprint:
       created_at: '2026-04-01T16:37:59.891340'
       updated_at: '2026-04-01T16:37:59.891344'
       assignee: null
+    PLF-037:
+      id: PLF-037
+      title: Fix authentication bug
+      status: open
+      priority: high
+      sprint: current
+      description: Users cannot login with OAuth provider
+      acceptance_criteria: []
+      labels:
+      - bug
+      - backend
+      - security
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:12:21.690459'
+      updated_at: '2026-04-04T06:12:21.690467'
+    PLF-038:
+      id: PLF-038
+      title: 'Production alert: High memory usage on prod-01'
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: monitoring-system
+        timestamp: '2026-04-04T06:12:21.767629'
+        context:
+          server: prod-01
+          metric: memory
+          threshold: 90%
+          duration: 5m
+      description: ''
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:12:21.769030'
+      updated_at: '2026-04-04T06:12:21.769033'
+    PLF-039:
+      id: PLF-039
+      title: Login button not working on mobile
+      status: open
+      priority: high
+      sprint: current
+      description: Users report login button is unresponsive on iOS Safari
+      acceptance_criteria: []
+      labels:
+      - bug
+      - mobile
+      - ios
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:12:36.408230'
+      updated_at: '2026-04-04T06:12:36.408235'
+    PLF-040:
+      id: PLF-040
+      title: Add dark mode support
+      status: open
+      priority: medium
+      sprint: current
+      description: Implement system-wide dark mode toggle
+      acceptance_criteria: []
+      labels:
+      - feature
+      - ui
+      - accessibility
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:12:36.478769'
+      updated_at: '2026-04-04T06:12:36.478772'
+    PLF-041:
+      id: PLF-041
+      title: Update API documentation
+      status: open
+      priority: low
+      sprint: current
+      description: Add examples for new endpoints
+      acceptance_criteria: []
+      labels:
+      - docs
+      - api
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:12:36.550755'
+      updated_at: '2026-04-04T06:12:36.550758'
+    PLF-042:
+      id: PLF-042
+      title: Login button not working on mobile
+      status: in_progress
+      priority: high
+      sprint: current
+      description: Users report login button is unresponsive on iOS Safari
+      acceptance_criteria: []
+      labels:
+      - bug
+      - mobile
+      - ios
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:21.816916'
+      updated_at: '2026-04-04T06:13:22.164739'
+      comment: Started investigation
+    PLF-043:
+      id: PLF-043
+      title: Add dark mode support
+      status: open
+      priority: high
+      sprint: current
+      description: Implement system-wide dark mode toggle
+      acceptance_criteria: []
+      labels:
+      - feature
+      - ui
+      - accessibility
+      - sprint-goal
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:21.891117'
+      updated_at: '2026-04-04T06:13:22.248984'
+      assignee: jane.smith
+    PLF-044:
+      id: PLF-044
+      title: Update API documentation
+      status: open
+      priority: low
+      sprint: current
+      description: Add examples for new endpoints
+      acceptance_criteria: []
+      labels:
+      - docs
+      - api
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:21.962918'
+      updated_at: '2026-04-04T06:13:21.962922'
+    PLF-046:
+      id: PLF-046
+      title: Add dark mode support
+      status: open
+      priority: high
+      sprint: current
+      description: Implement system-wide dark mode toggle
+      acceptance_criteria: []
+      labels:
+      - feature
+      - ui
+      - accessibility
+      - sprint-goal
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:48.590809'
+      updated_at: '2026-04-04T06:13:48.945138'
+    PLF-047:
+      id: PLF-047
+      title: Update API documentation
+      status: open
+      priority: low
+      sprint: current
+      description: Add examples for new endpoints
+      acceptance_criteria: []
+      labels:
+      - docs
+      - api
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:48.671028'
+      updated_at: '2026-04-04T06:13:48.671031'
+    PLF-048:
+      id: PLF-048
+      title: Database connection timeout
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: jira-migration
+        timestamp: '2026-04-04T06:13:48.973423'
+        context: {}
+      description: Intermittent timeouts during peak hours
+      acceptance_criteria: []
+      labels:
+      - bug
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:48.973432'
+      updated_at: '2026-04-04T06:13:48.973433'
+    PLF-049:
+      id: PLF-049
+      title: Implement user search
+      status: open
+      priority: medium
+      sprint: current
+      source:
+        tool: jira-migration
+        timestamp: '2026-04-04T06:13:49.049003'
+        context: {}
+      description: Add fuzzy search to user directory
+      acceptance_criteria: []
+      labels:
+      - feature
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:49.049017'
+      updated_at: '2026-04-04T06:13:49.049018'
+    PLF-050:
+      id: PLF-050
+      title: Refactor auth module
+      status: open
+      priority: low
+      sprint: current
+      source:
+        tool: jira-migration
+        timestamp: '2026-04-04T06:13:49.129195'
+        context: {}
+      description: Reduce code complexity in auth.py
+      acceptance_criteria: []
+      labels:
+      - chore
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:49.129208'
+      updated_at: '2026-04-04T06:13:49.129209'
+    PLF-051:
+      id: PLF-051
+      title: '[deploy-tool] Error: Deployment failed: Database connection error'
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: deploy-tool
+        timestamp: '2026-04-04T06:14:01.940519'
+        context:
+          environment: production
+          version: 2.1.0
+          server: prod-01
+          exception: Failed to connect to production database
+          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration.py\"\
+            , line 83, in example_cli_tool_integration\n    raise RuntimeError(\"\
+            Failed to connect to production database\")\nRuntimeError: Failed to connect\
+            \ to production database\n"
+      description: 'Deployment failed: Database connection error'
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:14:01.942430'
+      updated_at: '2026-04-04T06:14:01.942433'
+    PLF-052:
+      id: PLF-052
+      title: '🚨 CPU Usage: 95 exceeds 90'
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: system-monitor-metrics
+        timestamp: '2026-04-04T06:14:02.027090'
+        context:
+          metric: CPU Usage
+          value: 95
+          threshold: 90
+          timestamp: '2026-04-04T08:14:02.026906'
+      description: Metric CPU Usage exceeded threshold
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:14:02.028646'
+      updated_at: '2026-04-04T06:14:02.028649'
+    PLF-053:
+      id: PLF-053
+      title: '🚨 Memory Usage: 88 exceeds 85'
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: system-monitor-metrics
+        timestamp: '2026-04-04T06:14:02.116863'
+        context:
+          metric: Memory Usage
+          value: 88
+          threshold: 85
+          timestamp: '2026-04-04T08:14:02.116702'
+      description: Metric Memory Usage exceeded threshold
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:14:02.117871'
+      updated_at: '2026-04-04T06:14:02.117873'
+    PLF-054:
+      id: PLF-054
+      title: '🚨 Disk Usage: 92 exceeds 90'
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: system-monitor-metrics
+        timestamp: '2026-04-04T06:14:02.204337'
+        context:
+          metric: Disk Usage
+          value: 92
+          threshold: 90
+          timestamp: '2026-04-04T08:14:02.204157'
+      description: Metric Disk Usage exceeded threshold
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:14:02.205423'
+      updated_at: '2026-04-04T06:14:02.205425'
+    PLF-055:
+      id: PLF-055
+      title: '[ci-pipeline] Error: CI Pipeline failed: 2 tests failed'
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: ci-pipeline
+        timestamp: '2026-04-04T06:14:02.291257'
+        context:
+          failed_tests:
+          - tests/test_api.py::test_login
+          - tests/test_db.py::test_connection
+          total_tests: 3
+          branch: main
+          commit: abc123
+      description: 'CI Pipeline failed: 2 tests failed'
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:14:02.292417'
+      updated_at: '2026-04-04T06:14:02.292419'
+    PLF-056:
+      id: PLF-056
+      title: '[data-processor] process_data failed: Empty data provided'
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: data-processor
+        timestamp: '2026-04-04T06:14:02.381716'
+        context:
+          function: process_data
+          exception: Empty data provided
+          args: ([],)
+          kwargs: '{}'
+      description: Function process_data raised ValueError
+      acceptance_criteria: []
+      labels: []
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:14:02.382778'
+      updated_at: '2026-04-04T06:14:02.382781'
+    PLF-057:
+      id: PLF-057
+      title: '[my-service] DB connection error'
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: my-service
+        timestamp: '2026-04-04T06:22:30.892272'
+        context:
+          db: prod
+          exception: Database connection failed
+          exception_type: RuntimeError
+          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration_simple.py\"\
+            , line 24, in main\n    raise RuntimeError(\"Database connection failed\"\
+            )\nRuntimeError: Database connection failed\n"
+      description: DB connection error
+      acceptance_criteria: []
+      labels:
+      - error
+      - auto-generated
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:22:30.894280'
+      updated_at: '2026-04-04T06:22:30.894297'
+    PLF-058:
+      id: PLF-058
+      title: '🚨 CPU: 95 exceeds 90'
+      status: open
+      priority: critical
+      sprint: current
+      source:
+        tool: my-service-metrics
+        timestamp: '2026-04-04T06:22:31.007736'
+        context:
+          metric: CPU
+          value: 95
+          threshold: 90
+          timestamp: '2026-04-04T06:22:31.007714'
+          server: prod-01
+      description: Metric CPU exceeded threshold of 90
+      acceptance_criteria: []
+      labels:
+      - alert
+      - metric
+      - auto-generated
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:22:31.008845'
+      updated_at: '2026-04-04T06:22:31.008848'
+    PLF-059:
+      id: PLF-059
+      title: '[my-service] risky_operation failed: Something went wrong'
+      status: open
+      priority: high
+      sprint: current
+      source:
+        tool: my-service
+        timestamp: '2026-04-04T06:22:31.120689'
+        context:
+          function: risky_operation
+          args: ()
+          kwargs: '{}'
+          exception: Something went wrong
+          exception_type: ValueError
+          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/planfile/extensions/__init__.py\"\
+            , line 96, in wrapper\n    return func(*args, **kwargs)\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration_simple.py\"\
+            , line 39, in risky_operation\n    raise ValueError(\"Something went wrong\"\
+            )\nValueError: Something went wrong\n"
+      description: 'risky_operation failed: Something went wrong'
+      acceptance_criteria: []
+      labels:
+      - error
+      - auto-generated
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:22:31.121761'
+      updated_at: '2026-04-04T06:22:31.121763'

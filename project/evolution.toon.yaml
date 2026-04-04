@@ -1,56 +1,54 @@
-# code2llm/evolution | 445 func | 65f | 2026-04-01
+# code2llm/evolution | 475 func | 79f | 2026-04-04
 
 NEXT[10] (ranked by impact):
-  [1] !! SPLIT           planfile/cli/project_detector.py
-      WHY: 752L, 2 classes, max CC=47
-      EFFORT: ~4h  IMPACT: 35344
-
-  [2] !! SPLIT           planfile/core/models.py
-      WHY: 515L, 11 classes, max CC=15
-      EFFORT: ~4h  IMPACT: 7725
-
-  [3] !! SPLIT           planfile/sync/markdown_backend.py
+  [1] !! SPLIT           planfile/sync/markdown_backend.py
       WHY: 518L, 1 classes, max CC=13
       EFFORT: ~4h  IMPACT: 6734
 
-  [4] !! SPLIT-FUNC      sync_integration  CC=40  fan=31
-      WHY: CC=40 exceeds 15
-      EFFORT: ~1h  IMPACT: 1240
+  [2] !! SPLIT-FUNC      sync_integration  CC=42  fan=31
+      WHY: CC=42 exceeds 15
+      EFFORT: ~1h  IMPACT: 1302
 
-  [5] !! SPLIT-FUNC      _detect_from_pyproject  CC=28  fan=24
+  [3] !! SPLIT-FUNC      _detect_from_pyproject  CC=28  fan=24
       WHY: CC=28 exceeds 15
       EFFORT: ~1h  IMPACT: 672
 
-  [6] !! SPLIT-FUNC      _detect_quality_gates  CC=47  fan=13
-      WHY: CC=47 exceeds 15
-      EFFORT: ~1h  IMPACT: 611
-
-  [7] !  SPLIT-FUNC      init_strategy_cli  CC=19  fan=30
+  [4] !  SPLIT-FUNC      init_strategy_cli  CC=19  fan=30
       WHY: CC=19 exceeds 15
       EFFORT: ~1h  IMPACT: 570
 
-  [8] !  SPLIT-FUNC      sync_to_external  CC=23  fan=19
-      WHY: CC=23 exceeds 15
-      EFFORT: ~1h  IMPACT: 437
-
-  [9] !  SPLIT-FUNC      sync_from_external  CC=20  fan=18
-      WHY: CC=20 exceeds 15
-      EFFORT: ~1h  IMPACT: 360
-
-  [10] !  SPLIT-FUNC      PlanfileGenerator._make_serializable  CC=19  fan=12
+  [5] !  SPLIT-FUNC      PlanfileGenerator._make_serializable  CC=19  fan=12
       WHY: CC=19 exceeds 15
       EFFORT: ~1h  IMPACT: 228
 
+  [6] !  SPLIT-FUNC      sync_from_external  CC=15  fan=15
+      WHY: CC=15 exceeds 15
+      EFFORT: ~1h  IMPACT: 225
 
-RISKS[3]:
-  ⚠ Splitting planfile/cli/project_detector.py may break 16 import paths
+  [7] !  SPLIT-FUNC      extract_from_yaml_structure  CC=15  fan=14
+      WHY: CC=15 exceeds 15
+      EFFORT: ~1h  IMPACT: 210
+
+  [8] !  SPLIT-FUNC      PlanfileStore.list_tickets  CC=19  fan=11
+      WHY: CC=19 exceeds 15
+      EFFORT: ~1h  IMPACT: 209
+
+  [9] !  SPLIT-FUNC      _load_tickets_from_v1  CC=17  fan=11
+      WHY: CC=17 exceeds 15
+      EFFORT: ~1h  IMPACT: 187
+
+  [10] !  SPLIT-FUNC      _analyze_directory_structure  CC=20  fan=9
+      WHY: CC=20 exceeds 15
+      EFFORT: ~1h  IMPACT: 180
+
+
+RISKS[1]:
   ⚠ Splitting planfile/sync/markdown_backend.py may break 17 import paths
-  ⚠ Splitting planfile/core/models.py may break 17 import paths
 
 METRICS-TARGET:
   CC̄:          4.3 → ≤3.0
-  max-CC:      47 → ≤20
-  god-modules: 3 → 0
+  max-CC:      42 → ≤20
+  god-modules: 1 → 0
   high-CC(≥15): 17 → ≤8
   hub-types:   0 → ≤0
 
@@ -79,4 +77,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.3 → now CC̄=4.3
+  prev CC̄=4.4 → now CC̄=4.3

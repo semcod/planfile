@@ -1,23 +1,57 @@
-# vallm batch | 86f | 83✓ 6⚠ 3✗ | 2026-04-01
+# vallm batch | 329f | 248✓ 21⚠ 4✗ | 2026-04-04
 
 SUMMARY:
-  scanned: 86  passed: 83 (96.5%)  warnings: 6  errors: 3  unsupported: 0
+  scanned: 329  passed: 248 (75.4%)  warnings: 21  errors: 4  unsupported: 77
 
-WARNINGS[6]{path,score}:
-  planfile/cli/cmd/cmd_sync.py,0.87
-    issues[7]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 40 (max: 15),94
-      complexity.cyclomatic,warning,sync_to_external has cyclomatic complexity 23 (max: 15),227
-      complexity.cyclomatic,warning,sync_from_external has cyclomatic complexity 20 (max: 15),314
-      complexity.lizard_cc,warning,sync_integration: CC=40 exceeds limit 15,94
-      complexity.lizard_length,warning,sync_integration: 102 lines exceeds limit 100,94
-      complexity.lizard_cc,warning,sync_to_external: CC=23 exceeds limit 15,227
-      complexity.lizard_cc,warning,sync_from_external: CC=20 exceeds limit 15,314
+WARNINGS[21]{path,score}:
+  planfile/cli/cmd/cmd_sync.py,0.90
+    issues[5]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_load_tickets_from_v1 has cyclomatic complexity 17 (max: 15),153
+      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 42 (max: 15),199
+      complexity.lizard_cc,warning,_load_tickets_from_v1: CC=17 exceeds limit 15,153
+      complexity.lizard_cc,warning,sync_integration: CC=42 exceeds limit 15,199
+      complexity.lizard_length,warning,sync_integration: 104 lines exceeds limit 100,199
+  examples/test_llm_adapters.py,0.93
+    issues[3]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,main has cyclomatic complexity 32 (max: 15),19
+      complexity.lizard_cc,warning,main: CC=32 exceeds limit 15,19
+      complexity.lizard_length,warning,main: 142 lines exceeds limit 100,19
   planfile/cli/cmd/cmd_init.py,0.93
     issues[3]{rule,severity,message,line}:
       complexity.cyclomatic,warning,init_strategy_cli has cyclomatic complexity 19 (max: 15),128
       complexity.lizard_cc,warning,init_strategy_cli: CC=19 exceeds limit 15,128
       complexity.lizard_length,warning,init_strategy_cli: 161 lines exceeds limit 100,128
+  planfile/core/store.py,0.93
+    issues[5]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,list_tickets has cyclomatic complexity 19 (max: 15),238
+      complexity.cyclomatic,warning,_apply_filters has cyclomatic complexity 20 (max: 15),277
+      complexity.maintainability,warning,Low maintainability index: 18.4 (threshold: 20),
+      complexity.lizard_cc,warning,list_tickets: CC=19 exceeds limit 15,238
+      complexity.lizard_cc,warning,_apply_filters: CC=20 exceeds limit 15,277
+  test_mixed_format.py,0.93
+    issues[3]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,test_mixed_format_parsing has cyclomatic complexity 25 (max: 15),13
+      complexity.lizard_cc,warning,test_mixed_format_parsing: CC=25 exceeds limit 15,13
+      complexity.lizard_length,warning,test_mixed_format_parsing: 129 lines exceeds limit 100,13
+  examples/advanced-usage/final-strategy.yaml,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_length,warning,_report: 287 lines exceeds limit 100,137
+  examples/bash-generation/verify_planfile.sh,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
+  examples/ecosystem/04_llx_integration.py,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_length,warning,example_metric_driven_planning: 175 lines exceeds limit 100,176
+  examples/interactive-tests/test_interactive_mode.py,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_length,warning,test_interactive_mode: 131 lines exceeds limit 100,33
+  examples/test_litellm_integration.py,0.97
+    issues[2]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,generate_summary has cyclomatic complexity 19 (max: 15),222
+      complexity.lizard_cc,warning,generate_summary: CC=19 exceeds limit 15,222
+  examples/validate_with_llx.sh,0.97
+    issues[1]{rule,severity,message,line}:
+      complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
   planfile/analysis/generator.py,0.97
     issues[2]{rule,severity,message,line}:
       complexity.cyclomatic,warning,_make_serializable has cyclomatic complexity 19 (max: 15),260
@@ -25,24 +59,59 @@ WARNINGS[6]{path,score}:
   planfile/builder.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,ask_llm_questions: 119 lines exceeds limit 100,62
-  planfile/core/store.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_apply_filters has cyclomatic complexity 20 (max: 15),245
-      complexity.lizard_cc,warning,_apply_filters: CC=20 exceeds limit 15,245
-  planfile/core/models.py,0.98
+  planfile/cli/cmd/cmd_ticket.py,0.97
     issues[1]{rule,severity,message,line}:
-      complexity.maintainability,warning,Low maintainability index: 18.8 (threshold: 20),
-
-ERRORS[3]{path,score}:
-  planfile/sync/gitlab.py,0.83
+      complexity.lizard_cc,warning,register_ticket_commands.ticket_import_todo: CC=17 exceeds limit 15,262
+  planfile/cli/project_detector/inference.py,0.97
     issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'gitlab' not found,5
-      python.import.resolvable,error,Module 'gitlab.exceptions' not found,6
-  planfile/sync/jira.py,0.83
+      complexity.cyclomatic,warning,_infer_python_project_type has cyclomatic complexity 17 (max: 15),8
+      complexity.lizard_cc,warning,_infer_python_project_type: CC=17 exceeds limit 15,8
+  planfile/cli/project_detector/model_tier.py,0.97
     issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'jira' not found,5
-      python.import.resolvable,error,Module 'jira.exceptions' not found,6
-  planfile/cli/project_detector.py,0.95
+      complexity.cyclomatic,warning,_detect_model_tier has cyclomatic complexity 19 (max: 15),9
+      complexity.lizard_cc,warning,_detect_model_tier: CC=19 exceeds limit 15,9
+  planfile/cli/project_detector/pyproject.py,0.97
+    issues[2]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_detect_from_pyproject has cyclomatic complexity 28 (max: 15),17
+      complexity.lizard_cc,warning,_detect_from_pyproject: CC=28 exceeds limit 15,17
+  planfile/cli/project_detector/readme.py,0.97
+    issues[2]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_find_readme_content has cyclomatic complexity 16 (max: 15),9
+      complexity.lizard_cc,warning,_find_readme_content: CC=16 exceeds limit 15,9
+  planfile/cli/project_detector/structure.py,0.97
+    issues[2]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_analyze_directory_structure has cyclomatic complexity 20 (max: 15),8
+      complexity.lizard_cc,warning,_analyze_directory_structure: CC=20 exceeds limit 15,8
+  run_examples.sh,0.97
     issues[1]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'tomli' not found,397
+      complexity.lizard_length,warning,setup_environment: 141 lines exceeds limit 100,109
+  test_checkbox_tickets.py,0.98
+    issues[1]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,test_checkbox_ticket_parsing has cyclomatic complexity 16 (max: 15),8
 
+ERRORS[4]{path,score}:
+  examples/llm-integration/llm-config.yaml,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
+  test-integrated.yaml,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
+  planfile/examples.py,0.64
+    issues[5]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'llx.planfile' not found,10
+      python.import.resolvable,error,Module 'llx.planfile' not found,23
+      python.import.resolvable,error,Module 'llx.planfile' not found,36
+      python.import.resolvable,error,Module 'llx.planfile' not found,49
+      python.import.resolvable,error,Module 'llx.planfile.models' not found,67
+  mcp-server-example.py,0.79
+    issues[2]{rule,severity,message,line}:
+      python.import.resolvable,error,Module 'mcp.server' not found,3
+      python.import.resolvable,error,Module 'mcp.server.stdio' not found,4
+
+UNSUPPORTED[6]{bucket,count}:
+  *.md,49
+  Dockerfile*,1
+  *.txt,2
+  *.yml,2
+  *.example,4
+  other,19

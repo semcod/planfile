@@ -4,19 +4,24 @@
 
 - **Project**: /home/tom/github/semcod/planfile
 - **Primary Language**: python
-- **Languages**: python: 88, shell: 29
+- **Languages**: python: 114, shell: 33, javascript: 1
 - **Analysis Mode**: static
-- **Total Functions**: 494
-- **Total Classes**: 65
-- **Modules**: 117
-- **Entry Points**: 362
+- **Total Functions**: 594
+- **Total Classes**: 71
+- **Modules**: 148
+- **Entry Points**: 409
 
 ## Architecture by Module
 
 ### planfile.core.store
-- **Functions**: 34
+- **Functions**: 37
 - **Classes**: 7
 - **File**: `store.py`
+
+### examples.rest-api.04_javascript_client
+- **Functions**: 22
+- **Classes**: 1
+- **File**: `04_javascript_client.js`
 
 ### planfile.sync.base
 - **Functions**: 21
@@ -38,19 +43,14 @@
 - **Classes**: 1
 - **File**: `generator.py`
 
-### planfile.core.models
-- **Functions**: 17
-- **Classes**: 11
-- **File**: `models.py`
-
-### planfile.cli.project_detector
-- **Functions**: 16
-- **Classes**: 2
-- **File**: `project_detector.py`
-
 ### planfile.loaders.yaml_loader
 - **Functions**: 15
 - **File**: `yaml_loader.py`
+
+### examples.rest-api.03_python_client
+- **Functions**: 14
+- **Classes**: 1
+- **File**: `03_python_client.py`
 
 ### planfile.integrations.config
 - **Functions**: 14
@@ -66,19 +66,27 @@
 - **Classes**: 2
 - **File**: `external_tools.py`
 
+### planfile.cli.project_detector.gates
+- **Functions**: 13
+- **File**: `gates.py`
+
 ### planfile.executor_standalone
 - **Functions**: 12
 - **Classes**: 3
 - **File**: `executor_standalone.py`
 
-### planfile.cli.cmd.cmd_sync
-- **Functions**: 11
-- **File**: `cmd_sync.py`
+### planfile.sync.operations
+- **Functions**: 12
+- **File**: `operations.py`
 
-### planfile.sync.jira
-- **Functions**: 10
-- **Classes**: 1
-- **File**: `jira.py`
+### planfile.core.models.strategy
+- **Functions**: 12
+- **Classes**: 6
+- **File**: `strategy.py`
+
+### planfile.cli.cmd.cmd_sync
+- **Functions**: 12
+- **File**: `cmd_sync.py`
 
 ### planfile.sync.generic
 - **Functions**: 10
@@ -99,29 +107,20 @@
 - **Classes**: 1
 - **File**: `sprint_generator.py`
 
-### planfile.importers.vallm_importer
-- **Functions**: 10
-- **Classes**: 1
-- **File**: `vallm_importer.py`
-
-### examples.jira.run
-- **Functions**: 9
-- **File**: `run.sh`
-
 ## Key Entry Points
 
 Main execution flows into the system:
+
+### planfile.cli.cmd.cmd_ticket.register_ticket_commands
+> Register ticket subcommands on the typer app.
+- **Calls**: typer.Typer, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command
 
 ### planfile.cli.cmd.cmd_init.init_strategy_cli
 > Interactive wizard — tworzy strategię przez zadawanie pytań.
 
 Nie wymaga szablonu. Pyta o typ projektu, cele, sprinty i bramki jakości.
 Automatycznie 
-- **Calls**: typer.Option, typer.Option, console.print, planfile.cli.project_detector.get_detected_values, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._choice, planfile.cli.cmd.cmd_init._ask
-
-### planfile.cli.cmd.cmd_ticket.register_ticket_commands
-> Register ticket subcommands on the typer app.
-- **Calls**: typer.Typer, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, ticket_app.command, app.add_typer
+- **Calls**: typer.Option, typer.Option, console.print, planfile.cli.project_detector.main.get_detected_values, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._ask, planfile.cli.cmd.cmd_init._choice, planfile.cli.cmd.cmd_init._ask
 
 ### examples.ecosystem.04_llx_integration.example_metric_driven_planning
 > Example: Generate strategy based on actual project metrics.
@@ -155,6 +154,10 @@ This command will:
 > Register export and merge commands on the typer app.
 - **Calls**: app.command, app.command, typer.Argument, typer.Option, typer.Option, typer.Argument, typer.Option, typer.Option
 
+### examples.python-api.04_analytics_simple.main
+> Run simplified analytics examples.
+- **Calls**: examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, Planfile.auto_discover, examples.gitlab.run.print, pf.store.stats, examples.gitlab.run.print, examples.gitlab.run.print
+
 ### planfile.cli.auto_loop.ci_status
 > Check current CI status without running tests.
 - **Calls**: app.command, typer.Argument, console.print, results_file.exists, coverage_file.exists, list, json.loads, console.print
@@ -181,7 +184,7 @@ This command will:
 Searches both structured format and checkbox-style tickets.
 - **Calls**: query.lower, file_path.exists, enumerate, open, f.read, re.split, content.split, re.match
 
-### planfile.core.models.Strategy.merge
+### planfile.core.models.strategy.Strategy.merge
 > Merge with other strategies to create a combined strategy.
 - **Calls**: self.model_dump, set, merged_data.get, Strategy, merged_data.get, all_sprints.append, merged_data.get, all_gates.append
 
@@ -193,15 +196,28 @@ Searches both structured format and checkbox-style tickets.
 > Validate a strategy YAML file.
 - **Calls**: typer.Argument, typer.Option, planfile.loaders.yaml_loader.load_strategy_yaml, console.print, console.print, console.print, console.print, console.print
 
+### examples.rest-api.03_python_client.main
+> Run all examples.
+- **Calls**: examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, os.path.exists, examples.gitlab.run.print, examples.gitlab.run.print, PlanfileClient, examples.rest-api.03_python_client.example_basic_operations
+
 ### planfile.sync.markdown_backend.MarkdownFileBackend._list_tickets
 > List tickets from markdown files.
 
 Supports both structured format (with ID: `...`) and checkbox format (- [ ] / - [x]).
 - **Calls**: file_path.exists, re.finditer, enumerate, open, f.read, content.split, re.match, match.group
 
-### planfile.core.models.Strategy.to_llx_format
-> Convert to LLX-compatible format.
-- **Calls**: self.model_dump, isinstance, data.get, data.get, isinstance, data.get, goal.setdefault, goal.setdefault
+### planfile.core.store.PlanfileStore.export
+> Export tickets to various formats.
+
+Args:
+    format: "json", "csv", or "markdown"
+    sprint: Filter by sprint (None = all)
+    **filters: Additional
+- **Calls**: self.list_tickets, json.dumps, io.StringIO, csv.writer, writer.writerow, output.getvalue, t.model_dump, writer.writerow
+
+### planfile.cli.cmd.cmd_sync._load_tickets_from_v1
+> Load tickets from v1 format (*.planfile.yaml files).
+- **Calls**: glob.glob, Path, str, open, None.items, None.items, console.print, yaml.safe_load
 
 ### planfile.cli.cmd.cmd_apply.apply_strategy_cli
 > Apply a strategy to create tickets.
@@ -215,52 +231,38 @@ Supports both structured format (with ID: `...`) and checkbox format (- [ ] / - 
 > Example: Budget tracking with proxy.
 - **Calls**: examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, ProxyClient, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print
 
-### planfile.core.models.Strategy.get_stats
+### planfile.core.store.PlanfileStore.list_tickets
+> List tickets with filters.
+- **Calls**: self._apply_filters, self._all_sprint_files, self._sprint_file, self._read_yaml_cached, tickets_dict.values, self._read_yaml_cached, tickets_dict.values, data.get
+
+### planfile.core.models.strategy.Strategy.get_stats
 > Get strategy statistics.
 - **Calls**: len, sum, len, sum, isinstance, hasattr, durations.append, sum
 
-### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
-> Parse code2llm analysis.toon.yaml output.
-- **Calls**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists, self._mock_code2llm_data, open, f.read
+### examples.python-api.03_integration_simple.main
+> Run simplified integration examples.
+- **Calls**: examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, TicketLogger, examples.gitlab.run.print, examples.gitlab.run.print, logger.metric_alert, examples.gitlab.run.print
 
-### planfile.analysis.parsers.toon_parser._parse_summary_section
-> Parse summary section for metrics.
-- **Calls**: re.search, re.search, metrics.append, int, metrics.append, issues.append, ExtractedMetric, int
-
-### planfile.sync.markdown_backend.MarkdownFileBackend._update_ticket
-> Update an existing ticket in the markdown files.
-
-Supports both structured format and checkbox-style tickets.
-- **Calls**: re.match, self._find_ticket_file, re.search, match.group, content.replace, ValueError, ValueError, open
-
-### planfile.core.models.Sprint.convert_tasks
-- **Calls**: field_validator, isinstance, isinstance, isinstance, tasks.append, isinstance, tasks.append, tasks.append
-
-### planfile.sync.markdown_backend.MarkdownFileBackend._write_ticket_to_file
-> Write a ticket entry to the markdown file.
-- **Calls**: open, f.read, f.seek, f.write, f.truncate, content.find, content.find, content.find
-
-### planfile.analysis.generator.PlanfileGenerator.generate_from_analysis
-> Generate planfile from analyzed files.
-- **Calls**: self.analyzer.analyze_directory, self.generator.generate_sprints, self.generator.generate_tickets, self._extract_key_metrics, self._create_strategy_object, Path, self._generate_goal, self._generate_goals
+### examples.rest-api.04_javascript_client.BASE_URL
+- **Calls**: examples.rest-api.04_javascript_client.constructor, examples.rest-api.04_javascript_client.PlanfileClient.request, examples.rest-api.04_javascript_client.URL, examples.rest-api.04_javascript_client.entries, examples.rest-api.04_javascript_client.forEach, examples.rest-api.04_javascript_client.append, examples.rest-api.04_javascript_client.stringify, examples.rest-api.04_javascript_client.fetch
 
 ## Process Flows
 
 Key execution flows identified:
 
-### Flow 1: init_strategy_cli
+### Flow 1: register_ticket_commands
+```
+register_ticket_commands [planfile.cli.cmd.cmd_ticket]
+```
+
+### Flow 2: init_strategy_cli
 ```
 init_strategy_cli [planfile.cli.cmd.cmd_init]
   └─> _ask
   └─ →> get_detected_values
       └─> detect_project
-          └─> _detect_from_pyproject
-          └─> _detect_from_package_json
-```
-
-### Flow 2: register_ticket_commands
-```
-register_ticket_commands [planfile.cli.cmd.cmd_ticket]
+          └─ →> _detect_from_pyproject
+          └─ →> _detect_from_package_json
 ```
 
 ### Flow 3: example_metric_driven_planning
@@ -302,17 +304,23 @@ auto_loop [planfile.cli.auto_loop]
 register_export_commands [planfile.cli.cmd.cmd_export]
 ```
 
-### Flow 10: ci_status
+### Flow 10: main
 ```
-ci_status [planfile.cli.auto_loop]
+main [examples.python-api.04_analytics_simple]
+  └─ →> print
+  └─ →> print
 ```
 
 ## Key Classes
 
 ### planfile.core.store.PlanfileStore
 > Read/write tickets and sprints to .planfile/ YAML files.
-- **Methods**: 22
+- **Methods**: 25
 - **Key Methods**: planfile.core.store.PlanfileStore.__init__, planfile.core.store.PlanfileStore.init, planfile.core.store.PlanfileStore.is_initialized, planfile.core.store.PlanfileStore._get_file_mtime, planfile.core.store.PlanfileStore._read_yaml_cached, planfile.core.store.PlanfileStore._invalidate_cache, planfile.core.store.PlanfileStore.create_ticket, planfile.core.store.PlanfileStore.get_ticket, planfile.core.store.PlanfileStore.update_ticket, planfile.core.store.PlanfileStore.delete_ticket
+
+### examples.rest-api.04_javascript_client.PlanfileClient
+- **Methods**: 21
+- **Key Methods**: examples.rest-api.04_javascript_client.PlanfileClient.request, examples.rest-api.04_javascript_client.PlanfileClient.url, examples.rest-api.04_javascript_client.PlanfileClient.response, examples.rest-api.04_javascript_client.PlanfileClient.health, examples.rest-api.04_javascript_client.PlanfileClient.listTickets, examples.rest-api.04_javascript_client.PlanfileClient.createTicket, examples.rest-api.04_javascript_client.PlanfileClient.getTicket, examples.rest-api.04_javascript_client.PlanfileClient.updateTicket, examples.rest-api.04_javascript_client.PlanfileClient.moveTicket, examples.rest-api.04_javascript_client.PlanfileClient.deleteTicket
 
 ### planfile.sync.markdown_backend.MarkdownFileBackend
 > Backend for managing tickets in CHANGELOG.md and TODO.md files.
@@ -336,22 +344,10 @@ ci_status [planfile.cli.auto_loop]
 - **Methods**: 14
 - **Key Methods**: planfile.integrations.config.IntegrationConfig.__init__, planfile.integrations.config.IntegrationConfig.load_dotenv, planfile.integrations.config.IntegrationConfig._expand_env_vars, planfile.integrations.config.IntegrationConfig.discover_configs, planfile.integrations.config.IntegrationConfig.load_configs, planfile.integrations.config.IntegrationConfig.get_integration_config, planfile.integrations.config.IntegrationConfig.get_project_config, planfile.integrations.config.IntegrationConfig.get_sprint_config, planfile.integrations.config.IntegrationConfig.get_backlog_config, planfile.integrations.config.IntegrationConfig._deep_merge
 
-### planfile.core.models.Strategy
-> Main strategy configuration - simplified and more flexible.
-- **Methods**: 13
-- **Key Methods**: planfile.core.models.Strategy.get_task_patterns, planfile.core.models.Strategy.get_sprint, planfile.core.models.Strategy.validate_sprint_ids, planfile.core.models.Strategy.model_validate_yaml, planfile.core.models.Strategy.model_dump_yaml, planfile.core.models.Strategy.to_llx_format, planfile.core.models.Strategy.compare, planfile.core.models.Strategy.merge, planfile.core.models.Strategy.export, planfile.core.models.Strategy.get_stats
-- **Inherits**: BaseModel
-
 ### planfile.analysis.external_tools.ExternalToolRunner
 > Runner for external code analysis tools.
 - **Methods**: 11
 - **Key Methods**: planfile.analysis.external_tools.ExternalToolRunner.__init__, planfile.analysis.external_tools.ExternalToolRunner.run_all, planfile.analysis.external_tools.ExternalToolRunner.run_code2llm, planfile.analysis.external_tools.ExternalToolRunner.run_vallm, planfile.analysis.external_tools.ExternalToolRunner.run_redup, planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output, planfile.analysis.external_tools.ExternalToolRunner.parse_vallm_output, planfile.analysis.external_tools.ExternalToolRunner.parse_redup_output, planfile.analysis.external_tools.ExternalToolRunner._mock_code2llm_data, planfile.analysis.external_tools.ExternalToolRunner._mock_vallm_data
-
-### planfile.sync.jira.JiraBackend
-> Jira integration backend.
-- **Methods**: 10
-- **Key Methods**: planfile.sync.jira.JiraBackend.__init__, planfile.sync.jira.JiraBackend._validate_config, planfile.sync.jira.JiraBackend._map_priority_to_jira, planfile.sync.jira.JiraBackend._map_task_type_to_jira, planfile.sync.jira.JiraBackend._create_ticket, planfile.sync.jira.JiraBackend._update_ticket, planfile.sync.jira.JiraBackend._get_ticket, planfile.sync.jira.JiraBackend._issue_to_ticket_status, planfile.sync.jira.JiraBackend._list_tickets, planfile.sync.jira.JiraBackend._search_tickets
-- **Inherits**: BasePMBackend
 
 ### planfile.sync.generic.GenericBackend
 > Generic HTTP API backend for PM systems.
@@ -369,6 +365,17 @@ ci_status [planfile.cli.auto_loop]
 - **Methods**: 10
 - **Key Methods**: planfile.analysis.sprint_generator.SprintGenerator.__init__, planfile.analysis.sprint_generator.SprintGenerator.generate_sprints, planfile.analysis.sprint_generator.SprintGenerator._group_issues_by_priority, planfile.analysis.sprint_generator.SprintGenerator._get_high_and_quality_issues, planfile.analysis.sprint_generator.SprintGenerator._get_remaining_medium_issues, planfile.analysis.sprint_generator.SprintGenerator._create_sprint, planfile.analysis.sprint_generator.SprintGenerator._map_category_to_task_type, planfile.analysis.sprint_generator.SprintGenerator._get_highest_priority, planfile.analysis.sprint_generator.SprintGenerator._estimate_effort, planfile.analysis.sprint_generator.SprintGenerator.generate_tickets
 
+### planfile.sync.jira.JiraBackend
+> Jira integration backend.
+- **Methods**: 10
+- **Key Methods**: planfile.sync.jira.JiraBackend.__init__, planfile.sync.jira.JiraBackend._validate_config, planfile.sync.jira.JiraBackend._map_priority_to_jira, planfile.sync.jira.JiraBackend._map_task_type_to_jira, planfile.sync.jira.JiraBackend._create_ticket, planfile.sync.jira.JiraBackend._update_ticket, planfile.sync.jira.JiraBackend._get_ticket, planfile.sync.jira.JiraBackend._issue_to_ticket_status, planfile.sync.jira.JiraBackend._list_tickets, planfile.sync.jira.JiraBackend._search_tickets
+- **Inherits**: BasePMBackend
+
+### examples.rest-api.03_python_client.PlanfileClient
+> Python client for planfile REST API.
+- **Methods**: 9
+- **Key Methods**: examples.rest-api.03_python_client.PlanfileClient.__init__, examples.rest-api.03_python_client.PlanfileClient._request, examples.rest-api.03_python_client.PlanfileClient.health, examples.rest-api.03_python_client.PlanfileClient.list_tickets, examples.rest-api.03_python_client.PlanfileClient.create_ticket, examples.rest-api.03_python_client.PlanfileClient.get_ticket, examples.rest-api.03_python_client.PlanfileClient.update_ticket, examples.rest-api.03_python_client.PlanfileClient.move_ticket, examples.rest-api.03_python_client.PlanfileClient.delete_ticket
+
 ### planfile.ci.CIRunner
 > CI/CD runner with automated bug-fix loop and ticket creation.
 - **Methods**: 9
@@ -385,6 +392,12 @@ ci_status [planfile.cli.auto_loop]
 - **Methods**: 8
 - **Key Methods**: planfile.sync.gitlab.GitLabBackend.__init__, planfile.sync.gitlab.GitLabBackend._validate_config, planfile.sync.gitlab.GitLabBackend._create_ticket, planfile.sync.gitlab.GitLabBackend._update_ticket, planfile.sync.gitlab.GitLabBackend._get_ticket, planfile.sync.gitlab.GitLabBackend._issue_to_ticket_status, planfile.sync.gitlab.GitLabBackend._list_tickets, planfile.sync.gitlab.GitLabBackend._search_tickets
 - **Inherits**: BasePMBackend
+
+### planfile.core.models.strategy.Strategy
+> Main strategy configuration - simplified and more flexible.
+- **Methods**: 8
+- **Key Methods**: planfile.core.models.strategy.Strategy.get_task_patterns, planfile.core.models.strategy.Strategy.get_sprint, planfile.core.models.strategy.Strategy.validate_sprint_ids, planfile.core.models.strategy.Strategy.compare, planfile.core.models.strategy.Strategy.merge, planfile.core.models.strategy.Strategy.export, planfile.core.models.strategy.Strategy.get_stats, planfile.core.models.strategy.Strategy.to_yaml
+- **Inherits**: BaseModel
 
 ### planfile.importers.vallm_importer.VallmParser
 > Parser for vallm validation.toon files.
@@ -407,16 +420,6 @@ ci_status [planfile.cli.auto_loop]
 - **Key Methods**: planfile.sync.mock.MockBackend.__init__, planfile.sync.mock.MockBackend._validate_config, planfile.sync.mock.MockBackend._create_ticket, planfile.sync.mock.MockBackend._update_ticket, planfile.sync.mock.MockBackend._get_ticket, planfile.sync.mock.MockBackend._list_tickets, planfile.sync.mock.MockBackend._search_tickets
 - **Inherits**: BasePMBackend
 
-### examples.llx_validator.LLXValidator
-> Use LLX to validate generated code and strategies.
-- **Methods**: 6
-- **Key Methods**: examples.llx_validator.LLXValidator.__init__, examples.llx_validator.LLXValidator.validate_strategy, examples.llx_validator.LLXValidator.analyze_generated_code, examples.llx_validator.LLXValidator._is_llx_available, examples.llx_validator.LLXValidator._parse_llx_analysis, examples.llx_validator.LLXValidator._basic_code_analysis
-
-### examples.ecosystem.04_llx_integration.LLXIntegration
-> Integration with LLX for code analysis and model selection.
-- **Methods**: 6
-- **Key Methods**: examples.ecosystem.04_llx_integration.LLXIntegration.__init__, examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project, examples.ecosystem.04_llx_integration.LLXIntegration._parse_llx_output, examples.ecosystem.04_llx_integration.LLXIntegration._basic_analysis, examples.ecosystem.04_llx_integration.LLXIntegration.select_model, examples.ecosystem.04_llx_integration.LLXIntegration.get_task_scope
-
 ## Data Transformation Functions
 
 Key functions that process and transform data:
@@ -433,22 +436,23 @@ Key functions that process and transform data:
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
 
+### examples.ecosystem.04_llx_integration.LLXIntegration._parse_llx_output
+> Parse LLX analysis output.
+- **Output to**: None.split, ProjectMetrics, output.strip, line.split, value.strip
+
 ### examples.bash-generation.verify_planfile.validate_planfile
 
 ### planfile.examples.example_validate_strategy
 > Load and validate an existing strategy.
 - **Output to**: planfile.runner.load_valid_strategy, examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, len
 
-### examples.ecosystem.04_llx_integration.LLXIntegration._parse_llx_output
-> Parse LLX analysis output.
-- **Output to**: None.split, ProjectMetrics, output.strip, line.split, value.strip
+### planfile.sync.gitlab.GitLabBackend._validate_config
+> Validate GitLab configuration.
+- **Output to**: self.config.get, ValueError, self.config.get, ValueError
 
-### planfile.sync.mock.MockBackend._validate_config
-> Mock backend has no config requirements.
-
-### planfile.sync.jira.JiraBackend._validate_config
-> Validate Jira configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
+### planfile.sync.utils.save_v1_format
+> Save data back to v1 format YAML file.
+- **Output to**: open, yaml.dump
 
 ### planfile.sync.github.GitHubBackend._validate_config
 > Validate GitHub configuration.
@@ -458,9 +462,12 @@ Key functions that process and transform data:
 > Validate generic backend configuration.
 - **Output to**: self.config.get, ValueError
 
-### planfile.sync.gitlab.GitLabBackend._validate_config
-> Validate GitLab configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError
+### planfile.sync.markdown_backend.MarkdownFileBackend._validate_config
+> Validate markdown backend configuration.
+
+### planfile.sync.markdown_backend.MarkdownFileBackend._format_ticket_entry
+> Format a ticket entry for markdown file.
+- **Output to**: None.get, lines.append, lines.append, lines.append, lines.append
 
 ### planfile.loaders.yaml_loader._transform_task_patterns
 > Transform task patterns in the data.
@@ -496,13 +503,6 @@ Args:
     file_path: Path to strategy YAML f
 - **Output to**: planfile.loaders.yaml_loader._check_required_keys, planfile.loaders.yaml_loader._validate_sprints, planfile.loaders.yaml_loader._validate_gates, planfile.loaders.yaml_loader._validate_task_patterns, planfile.loaders.yaml_loader.load_yaml
 
-### planfile.sync.markdown_backend.MarkdownFileBackend._validate_config
-> Validate markdown backend configuration.
-
-### planfile.sync.markdown_backend.MarkdownFileBackend._format_ticket_entry
-> Format a ticket entry for markdown file.
-- **Output to**: None.get, lines.append, lines.append, lines.append, lines.append
-
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output
 > Parse code2llm analysis.toon.yaml output.
 - **Output to**: content.split, AnalysisResults, re.search, re.search, analysis_file.exists
@@ -514,6 +514,9 @@ Args:
 ### planfile.analysis.external_tools.ExternalToolRunner.parse_redup_output
 > Parse redup duplication.toon.yaml output.
 - **Output to**: AnalysisResults, re.search, re.search, dup_file.exists, self._mock_redup_data
+
+### planfile.analysis.generator.PlanfileGenerator._parse_effort
+- **Output to**: parse_effort
 
 ## Behavioral Patterns
 
@@ -536,10 +539,9 @@ Args:
 
 Functions exposed as public API (no underscore prefix):
 
+- `planfile.cli.cmd.cmd_ticket.register_ticket_commands` - 172 calls
 - `planfile.cli.cmd.cmd_init.init_strategy_cli` - 83 calls
-- `planfile.cli.cmd.cmd_ticket.register_ticket_commands` - 70 calls
 - `planfile.cli.cmd.cmd_sync.sync_integration` - 64 calls
-- `planfile.cli.cmd.cmd_sync.sync_to_external` - 62 calls
 - `examples.ecosystem.04_llx_integration.example_metric_driven_planning` - 57 calls
 - `examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy` - 56 calls
 - `planfile.cli.cmd.cmd_examples.create_examples_app` - 46 calls
@@ -547,8 +549,8 @@ Functions exposed as public API (no underscore prefix):
 - `examples.checkbox-tickets.demo.demo_checkbox_tickets` - 43 calls
 - `planfile.cli.cmd.cmd_review.review_strategy_cli` - 40 calls
 - `planfile.cli.auto_loop.auto_loop` - 39 calls
-- `planfile.cli.cmd.cmd_sync.sync_from_external` - 39 calls
 - `planfile.cli.cmd.cmd_export.register_export_commands` - 38 calls
+- `examples.python-api.04_analytics_simple.main` - 35 calls
 - `planfile.analysis.parsers.text_parser.analyze_text` - 30 calls
 - `planfile.cli.cmd.cmd_health.create_health_app` - 28 calls
 - `planfile.cli.auto_loop.ci_status` - 27 calls
@@ -556,26 +558,27 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.runner.analyze_project_metrics` - 25 calls
 - `planfile.cli.cmd.cmd_stats.register_stats_commands` - 25 calls
 - `planfile.runner.run_strategy` - 23 calls
-- `planfile.core.models.Strategy.merge` - 23 calls
+- `planfile.core.models.strategy.Strategy.merge` - 23 calls
 - `planfile.cli.cmd.cmd_compare.compare_strategies` - 22 calls
 - `planfile.cli.cmd.cmd_compare.register_compare_commands` - 22 calls
 - `planfile.cli.cmd.cmd_validate.validate_strategy_cli` - 22 calls
+- `examples.rest-api.03_python_client.main` - 21 calls
 - `planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure` - 21 calls
+- `planfile.sync.operations.sync_from_external` - 20 calls
 - `planfile.analysis.parsers.yaml_parser.analyze_yaml` - 20 calls
-- `planfile.core.models.Strategy.to_llx_format` - 20 calls
+- `planfile.core.store.PlanfileStore.export` - 20 calls
 - `planfile.cli.cmd.cmd_apply.apply_strategy_cli` - 20 calls
 - `planfile.cli.cmd.cmd_generate.generate_strategy_cli` - 20 calls
 - `examples.ecosystem.03_proxy_routing.example_budget_tracking` - 19 calls
-- `planfile.core.models.Strategy.get_stats` - 19 calls
+- `planfile.core.store.PlanfileStore.list_tickets` - 19 calls
+- `planfile.core.models.strategy.Strategy.get_stats` - 19 calls
+- `examples.python-api.03_integration_simple.main` - 18 calls
+- `examples.rest-api.04_javascript_client.BASE_URL` - 17 calls
+- `examples.python-api.04_advanced_filtering.example_statistics` - 17 calls
+- `examples.python-api.03_integration.example_custom_decorator` - 17 calls
 - `planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output` - 17 calls
 - `planfile.mcp.server.handle_tool_call` - 17 calls
-- `planfile.core.models.Sprint.convert_tasks` - 16 calls
-- `planfile.cli.cmd.cmd_utils.get_backend` - 16 calls
-- `planfile.cli.cmd.cmd_sync.all` - 16 calls
-- `planfile.loaders.cli_loader.export_results_to_markdown` - 15 calls
-- `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 15 calls
-- `planfile.analysis.parsers.toon_parser.analyze_toon` - 15 calls
-- `planfile.core.models.Strategy.compare` - 14 calls
+- `examples.PROPOSED_API_IMPROVEMENTS.PlanfileStoreExtended.export` - 16 calls
 
 ## System Interactions
 
@@ -583,12 +586,12 @@ How components interact:
 
 ```mermaid
 graph TD
+    register_ticket_comm --> Typer
+    register_ticket_comm --> command
     init_strategy_cli --> Option
     init_strategy_cli --> print
     init_strategy_cli --> get_detected_values
     init_strategy_cli --> _ask
-    register_ticket_comm --> Typer
-    register_ticket_comm --> command
     example_metric_drive --> print
     example_metric_drive --> LLXIntegration
     example_strategy_gen --> print
@@ -607,12 +610,12 @@ graph TD
     register_export_comm --> command
     register_export_comm --> Argument
     register_export_comm --> Option
+    main --> print
+    main --> auto_discover
     ci_status --> command
     ci_status --> Argument
     ci_status --> print
     ci_status --> exists
-    example_mcp_session --> print
-    _parse_llx_output --> split
 ```
 
 ## Reverse Engineering Guidelines

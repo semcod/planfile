@@ -244,16 +244,34 @@ class PlanfileStore:
                 if not data: continue
                 sprint_data = data.get("sprint") or data
                 tickets_dict = sprint_data.get("tickets") or {}
-                tickets.extend(
-                    Ticket(**t) for t in tickets_dict.values()
-                )
+                for t_data in tickets_dict.values():
+                    try:
+                        # Handle legacy data: ensure 'id' exists and fix 'integration' -> 'labels'
+                        if "id" not in t_data:
+                            continue  # Skip invalid tickets without ID
+                        if "integration" in t_data and isinstance(t_data["integration"], str):
+                            # Convert old 'integration' field to 'labels'
+                            t_data["labels"] = [t_data.pop("integration")]
+                        tickets.append(Ticket(**t_data))
+                    except Exception:
+                        # Skip tickets that fail validation
+                        continue
         else:
             sprint_file = self._sprint_file(sprint)
             data = self._read_yaml_cached(sprint_file)
             if not data: return []
             sprint_data = data.get("sprint") or data
             tickets_dict = sprint_data.get("tickets") or {}
-            tickets = [Ticket(**t) for t in tickets_dict.values()]
+            tickets = []
+            for t_data in tickets_dict.values():
+                try:
+                    if "id" not in t_data:
+                        continue
+                    if "integration" in t_data and isinstance(t_data["integration"], str):
+                        t_data["labels"] = [t_data.pop("integration")]
+                    tickets.append(Ticket(**t_data))
+                except Exception:
+                    continue
         return self._apply_filters(tickets, **filters)
 
     def _apply_filters(self, tickets, **filters):
@@ -368,3 +386,110 @@ class PlanfileStore:
     def save_backlog(self, data: dict):
         """Save backlog data."""
         self.save_sprint("backlog", data)
+
+    # ─── Analytics & Export ───
+
+    def stats(self) -> dict:
+        """
+        Get ticket statistics.
+        
+        Returns:
+            {
+                "total": int,
+                "by_status": {"open": int, "done": int, ...},
+                "by_priority": {"high": int, "normal": int, ...},
+                "by_label": {"bug": int, "feature": int, ...},
+                "by_sprint": {"current": int, "backlog": int, ...}
+            }
+        """
+        tickets = self.list_tickets(sprint="all")
+        from collections import Counter
+        
+        def status_value(s):
+            return s.value if hasattr(s, 'value') else str(s)
+        
+        return {
+            "total": len(tickets),
+            "by_status": dict(Counter(status_value(t.status) for t in tickets)),
+            "by_priority": dict(Counter(t.priority for t in tickets)),
+            "by_label": dict(Counter(
+                label for t in tickets for label in (t.labels or [])
+            )),
+            "by_sprint": dict(Counter(t.sprint for t in tickets))
+        }
+
+    def export(self, format: str = "json", sprint: str = None, **filters) -> str:
+        """
+        Export tickets to various formats.
+        
+        Args:
+            format: "json", "csv", or "markdown"
+            sprint: Filter by sprint (None = all)
+            **filters: Additional filters for list_tickets
+        
+        Returns:
+            Exported data as string
+        """
+        tickets = self.list_tickets(sprint=sprint or "all", **filters)
+        
+        if format == "json":
+            import json
+            return json.dumps([t.model_dump(mode="json") for t in tickets], indent=2)
+        
+        elif format == "csv":
+            import csv
+            import io
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(["id", "title", "status", "priority", "sprint", "labels", "description"])
+            for t in tickets:
+                writer.writerow([
+                    t.id,
+                    t.title,
+                    t.status.value if hasattr(t.status, 'value') else str(t.status),
+                    t.priority,
+                    t.sprint,
+                    "|".join(t.labels or []),
+                    t.description[:100] if t.description else ""
+                ])
+            return output.getvalue()
+        
+        elif format == "markdown":
+            lines = ["# Tickets\n"]
+            for t in tickets:
+                lines.append(f"\n## {t.id} [{t.priority}]")
+                lines.append(f"**{t.title}**")
+                lines.append(f"- Status: {t.status}")
+                lines.append(f"- Sprint: {t.sprint}")
+                if t.labels:
+                    lines.append(f"- Labels: {', '.join(t.labels)}")
+                if t.description:
+                    lines.append(f"\n{t.description[:200]}...")
+            return "\n".join(lines)
+        
+        else:
+            raise ValueError(f"Unknown format: {format}. Use 'json', 'csv', or 'markdown'")
+
+    def search(self, query: str, fields: list = None) -> list[Ticket]:
+        """
+        Full-text search in tickets.
+        
+        Args:
+            query: Search string (case-insensitive)
+            fields: Fields to search (default: ["title", "description"])
+        
+        Returns:
+            List of matching tickets
+        """
+        fields = fields or ["title", "description"]
+        tickets = self.list_tickets(sprint="all")
+        query_lower = query.lower()
+        
+        results = []
+        for t in tickets:
+            for field in fields:
+                value = getattr(t, field, "")
+                if value and query_lower in str(value).lower():
+                    results.append(t)
+                    break
+        return results

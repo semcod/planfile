@@ -18,11 +18,10 @@ def example_create_tickets():
     
     pf = Planfile.auto_discover(".")
     
-    # Create different types of tickets
+    # Create different types of tickets (using labels to categorize)
     bug = pf.create_ticket(
         title="Login button not working on mobile",
         description="Users report login button is unresponsive on iOS Safari",
-        type="bug",
         priority="high",
         labels=["bug", "mobile", "ios"],
         assignee="john.doe"
@@ -32,7 +31,6 @@ def example_create_tickets():
     feature = pf.create_ticket(
         title="Add dark mode support",
         description="Implement system-wide dark mode toggle",
-        type="feature",
         priority="medium",
         labels=["feature", "ui", "accessibility"]
     )
@@ -41,7 +39,6 @@ def example_create_tickets():
     docs = pf.create_ticket(
         title="Update API documentation",
         description="Add examples for new endpoints",
-        type="docs",
         priority="low",
         labels=["docs", "api"]
     )
@@ -61,8 +58,8 @@ def example_read_tickets(ticket_ids):
     print(f"Single ticket lookup:")
     print(f"  ID: {ticket.id}")
     print(f"  Title: {ticket.title}")
-    print(f"  Type: {ticket.type}")
     print(f"  Priority: {ticket.priority}")
+    print(f"  Status: {ticket.status}")
     print()
     
     # List all tickets
@@ -88,11 +85,10 @@ def example_update_tickets(ticket_ids):
     updated = pf.update_ticket(
         ticket_ids[1],
         priority="high",  # Escalated
-        assignee="jane.smith",
         labels=["feature", "ui", "accessibility", "sprint-goal"]
     )
     print(f"✓ Updated {updated.id}: priority → {updated.priority}")
-    print(f"                 assignee → {updated.assignee}")
+    print(f"                 labels → {updated.labels}")
     print()
 
 
@@ -108,20 +104,20 @@ def example_bulk_operations():
             "title": "Database connection timeout",
             "description": "Intermittent timeouts during peak hours",
             "priority": "critical",
-            "type": "bug",
+            "labels": ["bug"],
             "source_id": "JIRA-1234"
         },
         {
             "title": "Implement user search",
             "description": "Add fuzzy search to user directory",
             "priority": "medium",
-            "type": "feature"
+            "labels": ["feature"]
         },
         {
             "title": "Refactor auth module",
             "description": "Reduce code complexity in auth.py",
             "priority": "low",
-            "type": "chore"
+            "labels": ["chore"]
         }
     ]
     
@@ -134,7 +130,7 @@ def example_bulk_operations():
     
     print(f"✓ Bulk created {len(created)} tickets:\n")
     for t in created:
-        print(f"  {t.id}: {t.title} [{t.priority}]")
+        print(f"  {t.id}: {t.title} [{t.priority}] - Labels: {t.labels}")
     print()
     
     return [t.id for t in created]

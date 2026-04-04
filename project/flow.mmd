@@ -4,22 +4,22 @@ flowchart TD
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph CLI
-        planfile__cli__auto_loop__get_backend["get_backend"]
-        planfile__cli__auto_loop___validate_strategy["_validate_strategy"]
-        planfile__cli__auto_loop___initialize_backends["_initialize_backends"]
-        planfile__cli__auto_loop___display_summary_table["_display_summary_table"]
-        planfile__cli__auto_loop___display_final_status["_display_final_status"]
-        planfile__cli__auto_loop___display_ticket_summary["_display_ticket_summary"]
-        planfile__cli__auto_loop___save_results_if_needed["_save_results_if_needed"]
-        planfile__cli__auto_loop__auto_loop["auto_loop"]
-        planfile__cli__auto_loop__ci_status["ci_status"]
         planfile__cli__commands__version_callback["version_callback"]
         planfile__cli__commands__main_callback["main_callback"]
         planfile__cli__commands__main["main"]
         planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
-        planfile__cli__cmd__cmd_review__review_strategy_cli["review_strategy_cli"]
-        planfile__cli__cmd__cmd_utils__get_backend["get_backend"]
-        ...["+57 more"]
+        planfile__cli__project_detector__fallback___detect_from_structure["_detect_from_structure"]
+        planfile__cli__project_detector__readme___find_readme_content["_find_readme_content"]
+        planfile__cli__project_detector__readme___find_readme_description["_find_readme_description"]
+        planfile__cli__project_detector__readme___find_readme_goal["_find_readme_goal"]
+        planfile__cli__project_detector__license___detect_license["_detect_license"]
+        planfile__cli__project_detector__package___detect_from_package_json["_detect_from_package_json"]
+        planfile__cli__project_detector__structure___analyze_directory_structure["_analyze_directory_structure"]
+        planfile__cli__project_detector__gates___detect_test_gates["_detect_test_gates"]
+        planfile__cli__project_detector__gates___has_pytest_config["_has_pytest_config"]
+        planfile__cli__project_detector__gates___detect_docker_gates["_detect_docker_gates"]
+        planfile__cli__project_detector__gates___detect_ci_gates["_detect_ci_gates"]
+        ...["+70 more"]
     end
 
     subgraph Core
@@ -38,12 +38,13 @@ flowchart TD
         planfile__Planfile__list_tickets["list_tickets"]
         planfile__Planfile__update_ticket["update_ticket"]
         planfile__Planfile__create_tickets_bulk["create_tickets_bulk"]
-        ...["+246 more"]
+        ...["+248 more"]
     end
 
     subgraph Exporters
         planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
-        planfile__core__models__Strategy__export["export"]
+        planfile__core__store__PlanfileStore__export["export"]
+        planfile__core__models__strategy__Strategy__export["export"]
     end
 
     class docker_entrypoint__check_env,docker_entrypoint__validate_config,docker_entrypoint__setup_workspace,docker_entrypoint__run_command,docker_entrypoint__main,mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__Planfile__auto_discover entry

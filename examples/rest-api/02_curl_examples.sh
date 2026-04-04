@@ -3,7 +3,14 @@
 
 set -e
 
-BASE_URL="${PLANFILE_URL:-http://localhost:8000}"
+# Use saved port if available, otherwise use default
+if [ -f /tmp/planfile_server_port ]; then
+    PORT=$(cat /tmp/planfile_server_port)
+else
+    PORT=8000
+fi
+
+BASE_URL="${PLANFILE_URL:-http://localhost:$PORT}"
 
 echo "=========================================="
 echo "Planfile REST API - curl Examples"

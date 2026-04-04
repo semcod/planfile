@@ -18,8 +18,8 @@ def example_1_basic_initialization():
     
     # Auto-discover .planfile/ in current or parent directories
     pf = Planfile.auto_discover(".")
-    print(f"✓ Planfile initialized at: {pf.store.project_path}")
-    print(f"  Store path: {pf.store.store_path}")
+    print(f"✓ Planfile initialized at: {pf.store.root}")
+    print(f"  Store path: {pf.store.planfile_dir}")
     print()
 
 

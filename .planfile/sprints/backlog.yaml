@@ -182,3 +182,21 @@ sprint:
       external_id: '2'
       backend: github
       integration: github
+    PLF-045:
+      id: PLF-045
+      title: Login button not working on mobile
+      status: in_progress
+      priority: high
+      sprint: backlog
+      description: Users report login button is unresponsive on iOS Safari
+      acceptance_criteria: []
+      labels:
+      - bug
+      - mobile
+      - ios
+      blocked_by: []
+      blocks: []
+      sync: {}
+      history: []
+      created_at: '2026-04-04T06:13:48.511147'
+      updated_at: '2026-04-04T06:13:48.870148'

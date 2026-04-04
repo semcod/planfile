@@ -1,30 +1,45 @@
-"""Sync commands for planfile integrations."""
+"""Sync commands for planfile integrations.
 
-import sys
-from pathlib import Path
+NOTE: This module is now a thin shim. The actual implementation has been moved to:
+    planfile.cli.groups.sync
+
+Import from the new location for new code. This module is kept for backward compatibility.
+"""
+
+# Re-export everything from the new location for backward compatibility
+from planfile.cli.groups.sync.commands import all_cmd as all
+from planfile.cli.groups.sync.commands import github_cmd as github
+from planfile.cli.groups.sync.commands import gitlab_cmd as gitlab
+from planfile.cli.groups.sync.commands import jira_cmd as jira
+from planfile.cli.groups.sync.commands import markdown_cmd as markdown
+from planfile.cli.groups.sync.core import sync_integration
+from planfile.cli.groups.sync.core import (
+    _collect_tickets_from_backlog,
+    _collect_tickets_from_sprint,
+    _execute_sync_with_progress,
+    _initialize_backend,
+    _load_tickets_for_sync,
+    _load_tickets_v1_format,
+    _ticket_matches_integration,
+)
+
+# Legacy console import (now in core)
+from planfile.cli.core import console
+
+# Legacy imports that other modules might depend on
+from planfile.integrations.config import IntegrationConfig
+from planfile.sync.operations import sync_from_external, sync_to_external
+from planfile.sync.state import SyncState
+from planfile.sync.utils import save_v1_format as _save_v1_format
 
 import typer
-import yaml
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from planfile.integrations.config import IntegrationConfig
-from planfile.sync.state import SyncState
-
-console = Console()
+# Create the legacy sync_app (for backward compatibility)
 sync_app = typer.Typer(help="Sync tickets with external systems")
 
 
-def create_sync_app() -> typer.Typer:
-    """Create the sync command app."""
-    return sync_app
-
-
 @sync_app.command()
-def github(
+def github_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
@@ -34,7 +49,7 @@ def github(
 
 
 @sync_app.command()
-def gitlab(
+def gitlab_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
@@ -44,7 +59,7 @@ def gitlab(
 
 
 @sync_app.command()
-def jira(
+def jira_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
@@ -54,7 +69,7 @@ def jira(
 
 
 @sync_app.command()
-def markdown(
+def markdown_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
@@ -64,376 +79,22 @@ def markdown(
 
 
 @sync_app.command()
-def all(
+def all_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
 ) -> None:
     """Sync tickets with all configured integrations."""
-    config = IntegrationConfig(directory)
-    config.load_configs()
-
-    # Check if any integrations are configured
-    if not config.has_configured_integrations():
-        console.print("[yellow]⚠️ No integrations configured, using default markdown backend[/yellow]")
-        sync_integration("markdown", directory, dry_run, direction)
-        return
-
-    integrations = config.config.get("integrations", {}).keys()
-
-    console.print(f"🔄 Syncing with integrations: {', '.join(integrations)}")
-
-    for integration in integrations:
-        console.print(f"\n📡 Syncing with {integration}...")
-        try:
-            sync_integration(integration, directory, dry_run, direction, show_header=False)
-        except Exception as e:
-            console.print(f"[red]❌ Failed to sync with {integration}: {e}[/red]")
+    from planfile.cli.groups.sync.commands import all_cmd as new_all_cmd
+    new_all_cmd(directory, dry_run, direction)
 
 
-def sync_integration(integration_name: str, directory: str, dry_run: bool, direction: str, show_header: bool = True) -> None:
-    """Sync with a specific integration."""
-    if show_header:
-        console.print(f"🔄 Syncing with {integration_name}...")
-
-    # Load configuration
-    config = IntegrationConfig(directory)
-    config.load_configs()
-
-    # Special handling for markdown backend (default when no integrations configured)
-    if integration_name == "markdown":
-        # Always allow markdown backend as it's the default
-        backend = config.get_default_backend()
-        if show_header:
-            console.print("✅ Using default markdown backend (CHANGELOG.md, TODO.md)")
-    else:
-        # Validate integration for other backends
-        if not config.validate_integration(integration_name):
-            console.print(f"[red]❌ {integration_name} integration not configured or invalid[/red]")
-            raise typer.Exit(1)
-
-        # Get backend
-        try:
-            backend = config.get_integration_backend(integration_name)
-            if show_header:
-                console.print(f"✅ Connected to {integration_name}")
-        except Exception as e:
-            console.print(f"[red]❌ Failed to connect to {integration_name}: {e}[/red]")
-            raise typer.Exit(1)
-
-    # Load tickets - try multiple sources
-    from planfile.core.store import PlanfileStore
-    store = PlanfileStore(directory)
-
-    # Get tickets with integration filter
-    all_tickets = []
-    tickets_source = None
-    v1_source_file = None  # Track v1 file for saving back
-    v1_data = None  # Keep original v1 data structure
-
-    # Try 1: New .planfile/ structure
-    if store.is_initialized():
-        tickets_source = ".planfile/ structure"
-        sprint = store.load_sprint("current")
-        if sprint:
-            for ticket_id, ticket in sprint.get("tickets", {}).items():
-                ticket_integration = ticket.get("integration")
-                if ticket_integration:  # Only sync if integration is explicitly set
-                    if isinstance(ticket_integration, list):
-                        if integration_name in ticket_integration:
-                            all_tickets.append((ticket_id, ticket))
-                    elif ticket_integration == integration_name:
-                        all_tickets.append((ticket_id, ticket))
-
-        backlog = store.load_backlog()
-        if backlog:
-            for ticket_id, ticket in backlog.get("tickets", {}).items():
-                ticket_integration = ticket.get("integration")
-                if ticket_integration:  # Only sync if integration is explicitly set
-                    if isinstance(ticket_integration, list):
-                        if integration_name in ticket_integration:
-                            all_tickets.append((ticket_id, ticket))
-                    elif ticket_integration == integration_name:
-                        all_tickets.append((ticket_id, ticket))
-
-    # Try 2: Old format v1 (*.planfile.yaml files with sprint/backlog sections)
-    if not all_tickets:
-        import glob
-        planfile_pattern = Path(directory) / "*.planfile.yaml"
-        for planfile_path in glob.glob(str(planfile_pattern)):
-            try:
-                with open(planfile_path) as f:
-                    data = yaml.safe_load(f) or {}
-
-                # Check for old format v1 with sprint section
-                if "sprint" in data and "tickets" in data.get("sprint", {}):
-                    tickets_source = f"{Path(planfile_path).name} (sprint)"
-                    v1_source_file = planfile_path
-                    v1_data = data
-                    for ticket_id, ticket in data["sprint"]["tickets"].items():
-                        ticket_integration = ticket.get("integration", integration_name)
-                        if isinstance(ticket_integration, list):
-                            if integration_name in ticket_integration:
-                                all_tickets.append((ticket_id, ticket))
-                        elif ticket_integration == integration_name:
-                            all_tickets.append((ticket_id, ticket))
-
-                # Check for backlog section
-                if "backlog" in data and "tickets" in data.get("backlog", {}):
-                    if tickets_source is None:
-                        tickets_source = f"{Path(planfile_path).name} (backlog)"
-                        v1_source_file = planfile_path
-                        v1_data = data
-                    for ticket_id, ticket in data["backlog"]["tickets"].items():
-                        ticket_integration = ticket.get("integration", integration_name)
-                        if isinstance(ticket_integration, list):
-                            if integration_name in ticket_integration:
-                                all_tickets.append((ticket_id, ticket))
-                        elif ticket_integration == integration_name:
-                            all_tickets.append((ticket_id, ticket))
-            except Exception as e:
-                console.print(f"[dim]⚠️ Could not load {planfile_path}: {e}[/dim]")
-
-    if not all_tickets:
-        console.print("[yellow]ℹ️ No tickets to sync[/yellow]")
-        console.print("[dim]   Searched: .planfile/ structure and *.planfile.yaml files[/dim]")
-        return
-
-    console.print(f"📊 Found {len(all_tickets)} tickets for {integration_name} (source: {tickets_source})")
-
-    if dry_run:
-        console.print("\n[cyan]🔍 DRY RUN - No changes will be made[/cyan]")
-
-    # Sync based on direction
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console
-    ) as progress:
-        if direction in ["to", "both"]:
-            task = progress.add_task("Syncing to external system...", total=None)
-            sync_to_external(backend, all_tickets, dry_run, store, integration_name, v1_source_file, v1_data)
-            progress.update(task, description="[green]✓ Synced to external system[/green]")
-
-        if direction in ["from", "both"]:
-            task = progress.add_task("Syncing from external system...", total=None)
-            sync_from_external(backend, store, dry_run, integration_name, v1_source_file, v1_data)
-            progress.update(task, description="[green]✓ Synced from external system[/green]")
-
-    if not dry_run:
-        console.print(f"\n✅ Sync with {integration_name} completed successfully")
-    else:
-        console.print(f"\n✅ Dry run completed for {integration_name}")
+def create_sync_app() -> typer.Typer:
+    """Create the sync command app."""
+    return sync_app
 
 
-def sync_to_external(backend, tickets, dry_run: bool, store, integration_name: str, v1_source_file=None, v1_data=None) -> None:
-    """Sync planfile tickets to external system."""
-    # Initialize sync state
-    sync_state = SyncState(Path(store.planfile_dir), integration_name)
-    ticket_map = {}
-
-    for ticket_id, ticket in tickets:
-        if dry_run:
-            console.print(f"  Would create/update: {ticket_id} - {ticket.get('title', 'No title')}")
-        else:
-            try:
-                # Check if ticket already exists using sync state
-                external_id = sync_state.get_remote_id(ticket_id) or ticket.get("external_id")
-                if external_id:
-                    # Update existing ticket
-                    try:
-                        backend.update_ticket(external_id, ticket)
-                        console.print(f"  ✓ Updated: {ticket_id} → {external_id}")
-                    except Exception as e:
-                        # If update fails (e.g., 404 Not Found), create new ticket
-                        if "404" in str(e) or "Not Found" in str(e):
-                            console.print(f"  ⚠️  Issue not found, creating new: {external_id}")
-                            external_ticket = backend.create_ticket(ticket)
-                            external_id = external_ticket.id if hasattr(external_ticket, 'id') else str(external_ticket.get('id'))
-                            console.print(f"  ✓ Created: {ticket_id} → {external_id}")
-                        elif "403" in str(e) or "Forbidden" in str(e) or "not accessible by personal access token" in str(e).lower():
-                            console.print(f"[red]❌ GitHub permission denied for {ticket_id}[/red]")
-                            console.print("[yellow]🔑 Your GitHub token lacks permission to create issues[/yellow]")
-                            console.print("[yellow]📝 To fix this:[/yellow]")
-                            console.print("[yellow]   1. Go to: https://github.com/settings/tokens[/yellow]")
-                            console.print("[yellow]   2. Click 'Generate new token (classic)'[/yellow]")
-                            console.print("[yellow]   3. Select 'repo' scope (or 'public_repo' for public repos)[/yellow]")
-                            console.print("[yellow]   4. Copy the new token[/yellow]")
-                            console.print("[yellow]   5. Update your .env file with the new token[/yellow]")
-                            console.print("[yellow]   6. Try again: planfile sync github[/yellow]")
-                            raise Exception("GitHub token lacks required permissions. See instructions above.")
-                        else:
-                            raise
-                else:
-                    # Create new ticket
-                    try:
-                        external_ticket = backend.create_ticket(ticket)
-                        external_id = external_ticket.id if hasattr(external_ticket, 'id') else str(external_ticket.get('id'))
-                    except Exception as e:
-                        if "403" in str(e) or "Forbidden" in str(e) or "not accessible by personal access token" in str(e).lower():
-                            console.print(f"[red]❌ GitHub permission denied for {ticket_id}[/red]")
-                            console.print("[yellow]🔑 Your GitHub token lacks permission to create issues[/yellow]")
-                            console.print("[yellow]📝 To fix this:[/yellow]")
-                            console.print("[yellow]   1. Go to: https://github.com/settings/tokens[/yellow]")
-                            console.print("[yellow]   2. Click 'Generate new token (classic)'[/yellow]")
-                            console.print("[yellow]   3. Select 'repo' scope (or 'public_repo' for public repos)[/yellow]")
-                            console.print("[yellow]   4. Copy the new token[/yellow]")
-                            console.print("[yellow]   5. Update your .env file with the new token[/yellow]")
-                            console.print("[yellow]   6. Try again: planfile sync github[/yellow]")
-                            raise Exception("GitHub token lacks required permissions. See instructions above.")
-                        else:
-                            raise
-
-                    # Store mapping in sync state
-                    ticket_map[ticket_id] = external_id
-
-                    # Update ticket with external_id
-                    ticket["external_id"] = external_id
-                    ticket["backend"] = integration_name
-
-                    console.print(f"  ✓ Created: {ticket_id} → {external_id}")
-            except Exception as e:
-                import traceback
-                console.print(f"  ✗ Failed to sync {ticket_id}: {e}")
-                # Show detailed error for debugging
-                if "403" not in str(e) and "Forbidden" not in str(e):
-                    console.print(f"    [dim]Error details: {traceback.format_exc()}[/dim]")
-
-    # Save changes
-    if not dry_run:
-        sync_state.save_sync(ticket_map)
-
-        if v1_source_file and v1_data:
-            # Save back to v1 format file
-            _save_v1_format(v1_source_file, v1_data)
-            console.print(f"  💾 Saved changes to {Path(v1_source_file).name}")
-        else:
-            # Save to new format
-            store.save_sprint("current", store.load_sprint("current"))
-            store.save_backlog(store.load_backlog())
-
-
-def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_source_file=None, v1_data=None) -> None:
-    """Sync tickets from external system to planfile."""
-    # Initialize sync state
-    sync_state = SyncState(Path(store.planfile_dir), integration_name)
-    imported_count = 0
-    updated_count = 0
-
-    # Load sprint/backlog from appropriate source
-    if v1_source_file and v1_data:
-        sprint = v1_data.get("sprint", {"tickets": {}})
-        backlog = v1_data.get("backlog", {"tickets": {}})
-    else:
-        sprint = store.load_sprint("current") or {"tickets": {}}
-        backlog = store.load_backlog() or {"tickets": {}}
-
-    try:
-        external_tickets = backend.list_tickets()
-        
-        if external_tickets is None:
-            console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
-            return
-        
-        external_tickets = list(external_tickets)  # Ensure it's a list
-        
-        if not external_tickets:
-            console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
-            return
-
-        for ext_ticket in external_tickets:
-            # Handle both dict and Pydantic model
-            if hasattr(ext_ticket, 'id'):
-                # Pydantic model
-                ext_id = str(ext_ticket.id)
-                ext_title = ext_ticket.title if hasattr(ext_ticket, 'title') else 'No title'
-                ext_status = ext_ticket.status if hasattr(ext_ticket, 'status') else 'open'
-                ext_assignee = ext_ticket.assignee if hasattr(ext_ticket, 'assignee') else None
-                ext_labels = ext_ticket.labels if hasattr(ext_ticket, 'labels') else []
-                ext_description = ext_ticket.description if hasattr(ext_ticket, 'description') else ''
-            else:
-                # Dict
-                ext_id = str(ext_ticket.get('id', ''))
-                ext_title = ext_ticket.get('title', 'No title')
-                ext_status = ext_ticket.get('status', 'open')
-                ext_assignee = ext_ticket.get('assignee')
-                ext_labels = ext_ticket.get('labels', [])
-                ext_description = ext_ticket.get('description', '')
-
-            # Check if already imported using sync state
-            planfile_id = sync_state.get_local_id(ext_id)
-
-            if dry_run:
-                if planfile_id:
-                    console.print(f"  Would update: {planfile_id} from {ext_id}")
-                else:
-                    console.print(f"  Would import: {ext_title}")
-            else:
-                try:
-                    if planfile_id:
-                        # Update existing ticket
-                        if planfile_id in sprint.get("tickets", {}):
-                            sprint["tickets"][planfile_id].update({
-                                "status": ext_status,
-                                "assignee": ext_assignee,
-                                "labels": ext_labels,
-                            })
-                        elif planfile_id in backlog.get("tickets", {}):
-                            backlog["tickets"][planfile_id].update({
-                                "status": ext_status,
-                                "assignee": ext_assignee,
-                                "labels": ext_labels,
-                            })
-                        updated_count += 1
-                        console.print(f"  ✓ Updated: {planfile_id} from {ext_id}")
-                    else:
-                        # Import new ticket - generate ID
-                        new_id = f"{integration_name.upper()}-{ext_id}"
-
-                        # Create ticket data
-                        ticket_data = {
-                            "title": ext_title,
-                            "description": ext_description,
-                            "status": ext_status,
-                            "assignee": ext_assignee,
-                            "labels": ext_labels,
-                            "external_id": ext_id,
-                            "backend": integration_name,
-                            "integration": integration_name,
-                        }
-
-                        # Add to backlog by default
-                        backlog["tickets"][new_id] = ticket_data
-
-                        # Save mapping in sync state
-                        sync_state.save_sync({new_id: ext_id})
-
-                        imported_count += 1
-                        console.print(f"  ✓ Imported: {new_id} ← {ext_id}")
-                except Exception as e:
-                    console.print(f"  ✗ Failed to import {ext_id}: {e}")
-
-        # Save changes
-        if not dry_run and (imported_count > 0 or updated_count > 0):
-            if v1_source_file and v1_data:
-                # Update v1_data with modified sprint/backlog
-                if "sprint" in v1_data:
-                    v1_data["sprint"] = sprint
-                if "backlog" in v1_data:
-                    v1_data["backlog"] = backlog
-                _save_v1_format(v1_source_file, v1_data)
-                console.print(f"\n💾 Saved {imported_count} imported, {updated_count} updated to {Path(v1_source_file).name}")
-            else:
-                store.save_sprint("current", sprint)
-                store.save_backlog(backlog)
-                console.print(f"\n📥 Imported {imported_count} new tickets, updated {updated_count} existing")
-
-    except Exception as e:
-        import traceback
-        console.print(f"  ✗ Failed to import tickets: {e}")
-        console.print(f"    [dim]{traceback.format_exc()}[/dim]")
-
-
+# Legacy helper functions that might be imported by other modules
 def find_planfile_ticket(external_ticket, store, sync_state) -> str | None:
     """Find corresponding planfile ticket for external ticket using sync state."""
     ext_id = str(external_ticket.get('id', ''))
@@ -463,7 +124,37 @@ def find_planfile_ticket(external_ticket, store, sync_state) -> str | None:
     return None
 
 
-def _save_v1_format(file_path: str, data: dict) -> None:
+def _save_v1_format_legacy(file_path: str, data: dict) -> None:
     """Save data back to v1 format YAML file."""
+    import yaml
     with open(file_path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+
+__all__ = [
+    # Main function
+    'sync_integration',
+    # Legacy command handlers
+    'github', 'gitlab', 'jira', 'markdown', 'all',
+    'github_cmd', 'gitlab_cmd', 'jira_cmd', 'markdown_cmd', 'all_cmd',
+    # Legacy app
+    'sync_app', 'create_sync_app',
+    # Helper functions
+    'find_planfile_ticket',
+    '_save_v1_format_legacy',
+    # Internal helpers (for tests/other modules that import them)
+    '_initialize_backend',
+    '_ticket_matches_integration',
+    '_collect_tickets_from_sprint',
+    '_collect_tickets_from_backlog',
+    '_load_tickets_v1_format',
+    '_load_tickets_for_sync',
+    '_execute_sync_with_progress',
+    # Legacy imports
+    'console',
+    'IntegrationConfig',
+    'SyncState',
+    'sync_from_external',
+    'sync_to_external',
+    '_save_v1_format',
+]

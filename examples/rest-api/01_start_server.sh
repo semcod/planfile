@@ -19,15 +19,25 @@ if ! python3 -c "import fastapi" 2>/dev/null; then
     pip install fastapi uvicorn
 fi
 
-# Default port
+# Find available port starting from 8000
 PORT=${1:-8000}
+while netstat -tuln 2>/dev/null | grep -q ":$PORT " || ss -tuln 2>/dev/null | grep -q ":$PORT "; do
+    echo "Port $PORT is in use, trying next..."
+    PORT=$((PORT + 1))
+    if [ $PORT -gt 8010 ]; then
+        echo "Could not find available port between 8000-8010"
+        exit 1
+    fi
+done
 
 echo "Starting server on port $PORT..."
 echo "API will be available at: http://localhost:$PORT"
 echo "Health check: http://localhost:$PORT/health"
-echo
 echo "Press Ctrl+C to stop"
 echo
+
+# Save port for other scripts
+echo $PORT > /tmp/planfile_server_port
 
 # Start server
 uvicorn planfile.api.server:app \
