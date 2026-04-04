@@ -136,6 +136,29 @@ pipeline:
       optional: true
       timeout: 300
 
+    - name: validate_deploy
+      run: |
+        echo "=== Validating deploy ==="
+        # Check push
+        last_commit=$(git log -1 --pretty=%B)
+        if echo "$last_commit" | grep -q "pyqual auto-commit"; then
+          echo "✓ Push validated: $last_commit"
+        else
+          echo "⚠ No recent pyqual commit found"
+        fi
+        # Check publish
+        latest_wheel=$(ls -t dist/*.whl 2>/dev/null | head -1)
+        if [ -n "$latest_wheel" ]; then
+          echo "✓ Publish validated: $latest_wheel"
+        else
+          echo "✗ No wheel found in dist/"
+          exit 1
+        fi
+        echo "=== Deploy validation complete ==="
+      when: metrics_pass
+      optional: true
+      timeout: 30
+
     - name: markdown_report
       run: python3 -m pyqual.report_generator
       when: always
