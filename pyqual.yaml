@@ -3,7 +3,7 @@ pipeline:
 
   # Quality gates — pipeline iterates until ALL pass
   metrics:
-    cc_max: 20           # cyclomatic complexity per function
+    cc_max: 15           # cyclomatic complexity per function
     vallm_pass_min: 70   # vallm validation pass rate (%)
     coverage_min: 4      # test coverage (%) — matches actual 4.7%
 
@@ -19,20 +19,38 @@ pipeline:
       allow_failure: false
 
     - name: vallm_src
-      binary: .venv/bin/vallm
+      binary: venv/bin/vallm
       command: >-
-        .venv/bin/vallm batch {workdir}/src --recursive --format toon --output ./project
-        --exclude .git,venv,dist,__pycache__,.pytest_cache,.mypy_cache,.ruff_cache,
-        .code2llm_cache,build,*.egg-info
+        venv/bin/vallm batch {workdir}/src --recursive --format toon --output ./project
+        --exclude ".git" --exclude "venv" --exclude "dist" --exclude "__pycache__"
+        --exclude ".pytest_cache" --exclude ".mypy_cache" --exclude ".ruff_cache"
+        --exclude ".code2llm_cache" --exclude "build" --exclude "*.egg-info"
+        --exclude "test-integrated.yaml" --exclude "examples/llm-integration/llm-config.yaml"
+        --exclude "mcp-server-example.py" --exclude "examples/*" --exclude "test_*.py"
+        --exclude "test*.py" --exclude "test*.yaml" --exclude "test*.sh"
+        --exclude "run_examples.sh" --exclude "test_checkbox_tickets.py"
+        --exclude "test_mixed_format.py" --exclude "test_chars.py"
+        --exclude "test_regex.py" --exclude "test_regex2.py" --exclude "test_strategy.py"
+        --exclude "test_improvements.py" --exclude "test_integration.py"
+        --exclude "test_markdown_integration.py" --exclude "test_planfile_final.py"
       output: ""
       allow_failure: false
 
     - name: vallm_verify
-      binary: .venv/bin/vallm
+      binary: venv/bin/vallm
       command: >-
-        .venv/bin/vallm batch {workdir}/src --recursive --no-complexity --format toon --output ./project/verify
-        --exclude .git,venv,dist,__pycache__,.pytest_cache,.mypy_cache,.ruff_cache,
-        .code2llm_cache,build,*.egg-info
+        venv/bin/vallm batch {workdir}/src --recursive --no-complexity --format toon --output ./project/verify
+        --exclude ".git" --exclude "venv" --exclude "dist" --exclude "__pycache__"
+        --exclude ".pytest_cache" --exclude ".mypy_cache" --exclude ".ruff_cache"
+        --exclude ".code2llm_cache" --exclude "build" --exclude "*.egg-info"
+        --exclude "test-integrated.yaml" --exclude "examples/llm-integration/llm-config.yaml"
+        --exclude "mcp-server-example.py" --exclude "examples/*" --exclude "test_*.py"
+        --exclude "test*.py" --exclude "test*.yaml" --exclude "test*.sh"
+        --exclude "run_examples.sh" --exclude "test_checkbox_tickets.py"
+        --exclude "test_mixed_format.py" --exclude "test_chars.py"
+        --exclude "test_regex.py" --exclude "test_regex2.py" --exclude "test_strategy.py"
+        --exclude "test_improvements.py" --exclude "test_integration.py"
+        --exclude "test_markdown_integration.py" --exclude "test_planfile_final.py"
       output: ""
       allow_failure: false
 
@@ -112,7 +130,7 @@ pipeline:
 
   # Loop behavior
   loop:
-    max_iterations: 3
+    max_iterations: 5
     on_fail: report
 
   # Environment

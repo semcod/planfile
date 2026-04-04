@@ -1,10 +1,15 @@
+"""Backend utilities for apply commands."""
+
+from __future__ import annotations
+
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 import typer
-from rich.console import Console
 
+from planfile.cli.core import console, print_error
 from planfile.integrations.generic import GenericBackend
 from planfile.integrations.github import GitHubBackend
 from planfile.integrations.gitlab import GitLabBackend
@@ -12,8 +17,6 @@ from planfile.integrations.jira import JiraBackend
 from planfile.loaders.yaml_loader import load_strategy_yaml
 from planfile.models import Strategy
 from planfile.sync.mock import MockBackend
-
-console = Console()
 
 BACKEND_REGISTRY = {
     "github": GitHubBackend,
@@ -23,7 +26,8 @@ BACKEND_REGISTRY = {
     "mock": MockBackend
 }
 
-def get_backend(backend_type: str, config: dict):
+
+def get_backend(backend_type: str, config: dict) -> Any:
     """Get backend instance by type and config."""
     backend_class = BACKEND_REGISTRY.get(backend_type)
     if not backend_class:
@@ -40,17 +44,19 @@ def get_backend(backend_type: str, config: dict):
     elif backend_type == "mock":
         return backend_class()
 
-def _load_and_validate_strategy(strategy_path: Path) -> Strategy:
+
+def load_and_validate_strategy(strategy_path: Path) -> Strategy:
     """Load and validate strategy file."""
     try:
         strategy = load_strategy_yaml(strategy_path)
         console.print(f"[green]✓[/green] Loaded strategy: {strategy.name}")
         return strategy
     except Exception as e:
-        console.print(f"[red]✗[/red] Failed to load strategy: {e}")
+        print_error(f"Failed to load strategy: {e}")
         raise typer.Exit(1)
 
-def _load_backend_config(backend: str, config_file: Path | None) -> dict:
+
+def load_backend_config(backend: str, config_file: Path | None) -> dict:
     """Load backend configuration from file or environment."""
     backend_config = {}
 
@@ -79,7 +85,8 @@ def _load_backend_config(backend: str, config_file: Path | None) -> dict:
 
     return backend_config
 
-def _parse_sprint_filter(sprint_filter: str | None) -> list[int] | None:
+
+def parse_sprint_filter(sprint_filter: str | None) -> list[int] | None:
     """Parse sprint filter from string."""
     if not sprint_filter:
         return None
@@ -87,14 +94,15 @@ def _parse_sprint_filter(sprint_filter: str | None) -> list[int] | None:
     try:
         return [int(s.strip()) for s in sprint_filter.split(",")]
     except ValueError:
-        console.print("[red]✗[/red] Invalid sprint filter format. Use comma-separated integers.")
+        print_error("Invalid sprint filter format. Use comma-separated integers.")
         raise typer.Exit(1)
 
-def _select_backend(backend: str, backend_config: dict) -> dict:
+
+def select_backend(backend: str, backend_config: dict) -> dict:
     """Select and initialize backend."""
     try:
         backend_instance = get_backend(backend, backend_config)
         return {"default": backend_instance}
     except Exception as e:
-        console.print(f"[red]✗[/red] Failed to initialize backend: {e}")
+        print_error(f"Failed to initialize backend: {e}")
         raise typer.Exit(1)

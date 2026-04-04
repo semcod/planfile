@@ -1,18 +1,20 @@
+"""Validate command handlers for planfile CLI."""
+
+from __future__ import annotations
+
 from pathlib import Path
 
 import typer
-from rich.console import Console
 
+from planfile.cli.core import console, print_error
 from planfile.loaders.yaml_loader import load_strategy_yaml
 
-console = Console()
 
 def validate_strategy_cli(
     strategy_path: Path = typer.Argument(..., help="Path to strategy YAML file"),
     verbose: bool = typer.Option(False, help="Verbose output"),
 ) -> None:
     """Validate a strategy YAML file."""
-
     try:
         strategy = load_strategy_yaml(strategy_path)
         console.print("[green]✓[/green] Strategy is valid!")
@@ -36,5 +38,5 @@ def validate_strategy_cli(
                         console.print(f"    - {pattern.id}: {pattern.title}")
 
     except Exception as e:
-        console.print(f"[red]✗[/red] Validation failed: {e}")
+        print_error(f"Validation failed: {e}")
         raise typer.Exit(1)

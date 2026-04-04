@@ -4,22 +4,22 @@ flowchart TD
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph CLI
+        planfile__cli__auto_loop__create_auto_app["create_auto_app"]
         planfile__cli__commands__version_callback["version_callback"]
         planfile__cli__commands__main_callback["main_callback"]
         planfile__cli__commands__main["main"]
         planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
-        planfile__cli__project_detector__fallback___detect_from_structure["_detect_from_structure"]
-        planfile__cli__project_detector__readme___find_readme_content["_find_readme_content"]
-        planfile__cli__project_detector__readme___find_readme_description["_find_readme_description"]
-        planfile__cli__project_detector__readme___find_readme_goal["_find_readme_goal"]
-        planfile__cli__project_detector__license___detect_license["_detect_license"]
-        planfile__cli__project_detector__package___detect_from_package_json["_detect_from_package_json"]
-        planfile__cli__project_detector__structure___analyze_directory_structure["_analyze_directory_structure"]
-        planfile__cli__project_detector__gates___detect_test_gates["_detect_test_gates"]
-        planfile__cli__project_detector__gates___has_pytest_config["_has_pytest_config"]
-        planfile__cli__project_detector__gates___detect_docker_gates["_detect_docker_gates"]
-        planfile__cli__project_detector__gates___detect_ci_gates["_detect_ci_gates"]
-        ...["+70 more"]
+        planfile__cli__groups__sync__commands__github_cmd["github_cmd"]
+        planfile__cli__groups__sync__commands__gitlab_cmd["gitlab_cmd"]
+        planfile__cli__groups__sync__commands__jira_cmd["jira_cmd"]
+        planfile__cli__groups__sync__commands__markdown_cmd["markdown_cmd"]
+        planfile__cli__groups__sync__commands__all_cmd["all_cmd"]
+        planfile__cli__groups__sync__register_sync_commands["register_sync_commands"]
+        planfile__cli__groups__sync__core___initialize_backend["_initialize_backend"]
+        planfile__cli__groups__sync__core___ticket_matches_integration["_ticket_matches_integration"]
+        planfile__cli__groups__sync__core___collect_tickets_from_sprint["_collect_tickets_from_sprint"]
+        planfile__cli__groups__sync__core___collect_tickets_from_backlog["_collect_tickets_from_backlog"]
+        ...["+107 more"]
     end
 
     subgraph Core

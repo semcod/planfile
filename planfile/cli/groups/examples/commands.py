@@ -1,4 +1,6 @@
-"""Examples CLI command."""
+"""Examples CLI commands."""
+
+from __future__ import annotations
 
 import os
 import subprocess
@@ -20,7 +22,7 @@ def create_examples_app() -> typer.Typer:
     @app.command("list")
     def list_examples() -> None:
         """List available examples."""
-        examples_dir = Path(__file__).parent.parent.parent.parent / "examples"
+        examples_dir = Path(__file__).parent.parent.parent.parent.parent / "examples"
         examples = _discover_examples(examples_dir)
 
         if not examples:
@@ -49,7 +51,7 @@ def create_examples_app() -> typer.Typer:
         all: bool = typer.Option(False, "--all", "-a", help="Run all examples"),
     ) -> None:
         """Run an example."""
-        examples_dir = Path(__file__).parent.parent.parent.parent / "examples"
+        examples_dir = Path(__file__).parent.parent.parent.parent.parent / "examples"
         examples = _discover_examples(examples_dir)
 
         if all:

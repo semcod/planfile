@@ -1,26 +1,19 @@
-# vallm batch | 329f | 248✓ 21⚠ 4✗ | 2026-04-04
+# vallm batch | 347f | 264✓ 21⚠ 4✗ | 2026-04-04
 
 SUMMARY:
-  scanned: 329  passed: 248 (75.4%)  warnings: 21  errors: 4  unsupported: 77
+  scanned: 347  passed: 264 (76.1%)  warnings: 21  errors: 4  unsupported: 79
 
 WARNINGS[21]{path,score}:
-  planfile/cli/cmd/cmd_sync.py,0.90
-    issues[5]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_load_tickets_from_v1 has cyclomatic complexity 17 (max: 15),153
-      complexity.cyclomatic,warning,sync_integration has cyclomatic complexity 42 (max: 15),199
-      complexity.lizard_cc,warning,_load_tickets_from_v1: CC=17 exceeds limit 15,153
-      complexity.lizard_cc,warning,sync_integration: CC=42 exceeds limit 15,199
-      complexity.lizard_length,warning,sync_integration: 104 lines exceeds limit 100,199
   examples/test_llm_adapters.py,0.93
     issues[3]{rule,severity,message,line}:
       complexity.cyclomatic,warning,main has cyclomatic complexity 32 (max: 15),19
       complexity.lizard_cc,warning,main: CC=32 exceeds limit 15,19
       complexity.lizard_length,warning,main: 142 lines exceeds limit 100,19
-  planfile/cli/cmd/cmd_init.py,0.93
+  planfile/cli/groups/init/commands.py,0.93
     issues[3]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,init_strategy_cli has cyclomatic complexity 19 (max: 15),128
-      complexity.lizard_cc,warning,init_strategy_cli: CC=19 exceeds limit 15,128
-      complexity.lizard_length,warning,init_strategy_cli: 161 lines exceeds limit 100,128
+      complexity.cyclomatic,warning,init_strategy_cli has cyclomatic complexity 19 (max: 15),118
+      complexity.lizard_cc,warning,init_strategy_cli: CC=19 exceeds limit 15,118
+      complexity.lizard_length,warning,init_strategy_cli: 160 lines exceeds limit 100,118
   planfile/core/store.py,0.93
     issues[5]{rule,severity,message,line}:
       complexity.cyclomatic,warning,list_tickets has cyclomatic complexity 19 (max: 15),238
@@ -59,9 +52,14 @@ WARNINGS[21]{path,score}:
   planfile/builder.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,ask_llm_questions: 119 lines exceeds limit 100,62
-  planfile/cli/cmd/cmd_ticket.py,0.97
-    issues[1]{rule,severity,message,line}:
-      complexity.lizard_cc,warning,register_ticket_commands.ticket_import_todo: CC=17 exceeds limit 15,262
+  planfile/cli/groups/sync/core.py,0.97
+    issues[2]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,_load_tickets_v1_format has cyclomatic complexity 17 (max: 15),86
+      complexity.lizard_cc,warning,_load_tickets_v1_format: CC=17 exceeds limit 15,86
+  planfile/cli/groups/ticket/commands.py,0.97
+    issues[2]{rule,severity,message,line}:
+      complexity.cyclomatic,warning,ticket_import_todo has cyclomatic complexity 17 (max: 15),260
+      complexity.lizard_cc,warning,ticket_import_todo: CC=17 exceeds limit 15,260
   planfile/cli/project_detector/inference.py,0.97
     issues[2]{rule,severity,message,line}:
       complexity.cyclomatic,warning,_infer_python_project_type has cyclomatic complexity 17 (max: 15),8
@@ -109,9 +107,9 @@ ERRORS[4]{path,score}:
       python.import.resolvable,error,Module 'mcp.server.stdio' not found,4
 
 UNSUPPORTED[6]{bucket,count}:
-  *.md,49
+  *.md,50
   Dockerfile*,1
   *.txt,2
   *.yml,2
   *.example,4
-  other,19
+  other,20

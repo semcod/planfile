@@ -1,5 +1,4 @@
-"""Health check CLI command."""
-
+"""Health check CLI commands."""
 
 import typer
 from rich.console import Console

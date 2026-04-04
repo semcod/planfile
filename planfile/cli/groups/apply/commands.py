@@ -1,25 +1,29 @@
+"""Apply command handlers for planfile CLI."""
+
+from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import typer
-from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress
 from rich.table import Table
 
-from planfile.cli.cmd.cmd_utils import (
-    _load_and_validate_strategy,
-    _load_backend_config,
-    _parse_sprint_filter,
-    _select_backend,
+from planfile.cli.core import console, print_error
+from planfile.cli.groups.apply.utils import (
+    load_and_validate_strategy,
+    load_backend_config,
+    parse_sprint_filter,
+    select_backend,
 )
 from planfile.models import Strategy
 from planfile.runner import apply_strategy_to_tickets
 
-console = Console()
 
-def _execute_apply_strategy(
+def execute_apply_strategy(
     strategy: Strategy,
     project_path: Path,
     backend: str,
@@ -41,7 +45,8 @@ def _execute_apply_strategy(
 
     return results
 
-def _display_apply_results(results: dict) -> None:
+
+def display_apply_results(results: dict) -> None:
     """Display strategy application results."""
     console.print("\n[bold]Strategy Applied Successfully![/bold]")
     console.print(Panel(
@@ -76,12 +81,14 @@ def _display_apply_results(results: dict) -> None:
         for error in results["errors"]:
             console.print(f"  • {error}")
 
-def _save_results(results: dict, output: Path | None) -> None:
+
+def save_results(results: dict, output: Path | None) -> None:
     """Save results to file if specified."""
     if output:
         with open(output, "w") as f:
             json.dump(results, f, indent=2)
         console.print(f"\n[green]✓[/green] Results saved to: {output}")
+
 
 def apply_strategy_cli(
     strategy_path: Path = typer.Argument(..., help="Path to strategy YAML file"),
@@ -94,20 +101,19 @@ def apply_strategy_cli(
     verbose: bool = typer.Option(False, help="Verbose output"),
 ) -> None:
     """Apply a strategy to create tickets."""
-
     if verbose:
         logging.basicConfig(level=logging.INFO)
 
-    strategy = _load_and_validate_strategy(strategy_path)
-    backend_config = _load_backend_config(backend, config_file)
+    strategy = load_and_validate_strategy(strategy_path)
+    backend_config = load_backend_config(backend, config_file)
 
     # Mock backend doesn't need configuration
     if backend != "mock" and not all(v for v in backend_config.values() if v is not None):
-        console.print("[red]✗[/red] Missing backend configuration. Use --config-file or set environment variables.")
+        print_error("Missing backend configuration. Use --config-file or set environment variables.")
         raise typer.Exit(1)
 
-    sprint_ids = _parse_sprint_filter(sprint_filter)
-    backends = _select_backend(backend, backend_config)
-    results = _execute_apply_strategy(strategy, project_path, backend, dry_run, sprint_ids)
-    _display_apply_results(results)
-    _save_results(results, output)
+    sprint_ids = parse_sprint_filter(sprint_filter)
+    backends = select_backend(backend, backend_config)
+    results = execute_apply_strategy(strategy, project_path, backend, dry_run, sprint_ids)
+    display_apply_results(results)
+    save_results(results, output)

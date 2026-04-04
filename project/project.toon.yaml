@@ -1,53 +1,53 @@
-# planfile | 475 func | 79f | 17027L | python | 2026-04-04
+# planfile | 509 func | 92f | 16968L | python | 2026-04-04
 
 HEALTH:
-  CC̄=4.3  critical=52 (limit:10)  dup=1  cycles=0
+  CC̄=4.1  critical=50 (limit:10)  dup=1  cycles=0
 
 ALERTS[20]:
-  !!! high_fan_out     register_ticket_commands = 46 (limit:10)
-  !!! cc_exceeded      sync_integration = 42 (limit:15)
-  !!! high_fan_out     sync_integration = 31 (limit:10)
   !!! high_fan_out     init_strategy_cli = 30 (limit:10)
   !!! cc_exceeded      _detect_from_pyproject = 28 (limit:15)
   !!! high_fan_out     _detect_from_pyproject = 24 (limit:10)
-  !!! high_fan_out     create_examples_app = 23 (limit:10)
   !!! high_fan_out     analyze_project_metrics = 22 (limit:10)
   !!! high_fan_out     review_strategy_cli = 21 (limit:10)
-  !!! high_fan_out     auto_loop = 21 (limit:10)
+  !!! high_fan_out     analyze_text = 20 (limit:10)
+  !!! high_fan_out     auto_loop_cmd = 20 (limit:10)
+  !!  cc_exceeded      PlanfileStore._apply_filters = 20 (limit:15)
+  !!  cc_exceeded      _analyze_directory_structure = 20 (limit:15)
+  !!  high_fan_out     MarkdownFileBackend._search_tickets = 19 (limit:10)
 
-MODULES[106] (top by size):
+MODULES[120] (top by size):
   M[planfile/sync/markdown_backend.py] 518L C:1 F:17 CC↑13 D:0 (python)
   M[planfile/core/store.py] 495L C:7 F:37 CC↑20 D:0 (python)
-  M[planfile/cli/cmd/cmd_ticket.py] 422L C:0 F:2 CC↑10 D:0 (python)
+  M[planfile/cli/groups/ticket/commands.py] 414L C:0 F:13 CC↑17 D:0 (python)
   M[planfile/runner.py] 406L C:0 F:7 CC↑14 D:4 (python)
-  M[planfile/cli/cmd/cmd_sync.py] 366L C:0 F:12 CC↑42 D:2 (python)
   M[planfile/core/models/strategy.py] 341L C:6 F:12 CC↑15 D:0 (python)
   M[planfile/executor_standalone.py] 336L C:3 F:12 CC↑8 D:0 (python)
-  M[planfile/cli/cmd/cmd_init.py] 330L C:0 F:4 CC↑19 D:0 (python)
-  M[planfile/loaders/yaml_loader.py] 324L C:0 F:15 CC↑7 D:9 (python)
+  M[planfile/loaders/yaml_loader.py] 324L C:0 F:15 CC↑7 D:7 (python)
+  M[planfile/cli/groups/init/commands.py] 316L C:0 F:4 CC↑19 D:0 (python)
   M[planfile/ci.py] 315L C:3 F:9 CC↑7 D:0 (python)
   M[planfile/analysis/generator.py] 302L C:1 F:17 CC↑19 D:0 (python)
-  M[run_examples.sh] 286L C:0 F:13 CC↑0 D:1 (shell)
+  M[run_examples.sh] 286L C:0 F:13 CC↑0 D:7 (shell)
   M[planfile/sync/jira.py] 280L C:1 F:10 CC↑13 D:0 (python)
   M[planfile/analysis/external_tools.py] 272L C:2 F:13 CC↑12 D:0 (python)
-  M[planfile/cli/auto_loop.py] 253L C:0 F:9 CC↑10 D:0 (python)
-  LANGS: python:101/shell:5
+  M[planfile/cli/groups/query/commands.py] 244L C:0 F:8 CC↑10 D:0 (python)
+  M[planfile/sync/github.py] 240L C:1 F:9 CC↑15 D:0 (python)
+  LANGS: python:115/shell:5
 
 HOTSPOTS[10]:
-  ★ register_ticket_commands fan=46  // Register ticket subcommands on the typer app.
-  ★ sync_integration fan=31  // Sync with a specific integration.
-  ★ init_strategy_cli fan=30  // Interactive wizard — tworzy strategię przez zadawanie pytań.
+  ★ init_strategy_cli fan=30  // Interactive wizard — creates a strategy by asking questions.
 
-Nie wymaga szablon
+No template requir
   ★ _detect_from_pyproject fan=24  // Detect project info from pyproject.toml.
-  ★ create_examples_app fan=23  // Create and return the examples sub-app.
+  ★ analyze_project_metrics fan=22  // Analysis pipeline, 22 stages
+  ★ review_strategy_cli fan=21  // Review strategy execution and progress.
+  ★ analyze_text fan=20  // Analysis pipeline, 20 stages
 
 REFACTOR[15]:
   [1] H/L Split _detect_from_pyproject (CC=28 → target CC<10)
-  [2] H/L Split sync_integration (CC=42 → target CC<10)
-  [3] H/H Split god module planfile/sync/markdown_backend.py (518L, 1 classes)
-  [4] M/L Split GitLabBackend._update_ticket (CC=15 → target CC<10)
-  [5] M/L Split GitHubBackend._create_ticket (CC=15 → target CC<10)
+  [2] H/H Split god module planfile/sync/markdown_backend.py (518L, 1 classes)
+  [3] M/L Split GitHubBackend._create_ticket (CC=15 → target CC<10)
+  [4] M/L Split sync_from_external (CC=15 → target CC<10)
+  [5] M/L Split PlanfileGenerator._make_serializable (CC=19 → target CC<10)
 
 EVOLUTION:
-  2026-04-04 CC̄=4.3 crit=52 17027L // Automated analysis
+  2026-04-04 CC̄=4.1 crit=50 16968L // Automated analysis

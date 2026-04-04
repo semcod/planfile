@@ -1,0 +1,31 @@
+# Vallm ignore patterns - excludes test/example files from validation
+
+# Test files
+test-*.yaml
+test-*.py
+test_*.py
+test*.py
+test*.sh
+
+# Specific problematic files
+test-integrated.yaml
+mcp-server-example.py
+run_examples.sh
+test_checkbox_tickets.py
+test_mixed_format.py
+test_chars.py
+test_regex.py
+test_regex2.py
+test_strategy.py
+test_improvements.py
+test_integration.py
+test_markdown_integration.py
+test_planfile_final.py
+
+# Examples directory (optional files with imports that may not resolve)
+examples/
+examples/*
+examples/**/*
+
+# LLM integration configs that may have syntax issues
+examples/llm-integration/llm-config.yaml

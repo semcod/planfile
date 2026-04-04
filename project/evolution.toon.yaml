@@ -1,21 +1,21 @@
-# code2llm/evolution | 475 func | 79f | 2026-04-04
+# code2llm/evolution | 509 func | 92f | 2026-04-04
 
 NEXT[10] (ranked by impact):
   [1] !! SPLIT           planfile/sync/markdown_backend.py
       WHY: 518L, 1 classes, max CC=13
       EFFORT: ~4h  IMPACT: 6734
 
-  [2] !! SPLIT-FUNC      sync_integration  CC=42  fan=31
-      WHY: CC=42 exceeds 15
-      EFFORT: ~1h  IMPACT: 1302
-
-  [3] !! SPLIT-FUNC      _detect_from_pyproject  CC=28  fan=24
+  [2] !! SPLIT-FUNC      _detect_from_pyproject  CC=28  fan=24
       WHY: CC=28 exceeds 15
       EFFORT: ~1h  IMPACT: 672
 
-  [4] !  SPLIT-FUNC      init_strategy_cli  CC=19  fan=30
+  [3] !  SPLIT-FUNC      init_strategy_cli  CC=19  fan=30
       WHY: CC=19 exceeds 15
       EFFORT: ~1h  IMPACT: 570
+
+  [4] !  SPLIT-FUNC      ticket_import_todo  CC=17  fan=16
+      WHY: CC=17 exceeds 15
+      EFFORT: ~1h  IMPACT: 272
 
   [5] !  SPLIT-FUNC      PlanfileGenerator._make_serializable  CC=19  fan=12
       WHY: CC=19 exceeds 15
@@ -33,7 +33,7 @@ NEXT[10] (ranked by impact):
       WHY: CC=19 exceeds 15
       EFFORT: ~1h  IMPACT: 209
 
-  [9] !  SPLIT-FUNC      _load_tickets_from_v1  CC=17  fan=11
+  [9] !  SPLIT-FUNC      _load_tickets_v1_format  CC=17  fan=11
       WHY: CC=17 exceeds 15
       EFFORT: ~1h  IMPACT: 187
 
@@ -46,8 +46,8 @@ RISKS[1]:
   ⚠ Splitting planfile/sync/markdown_backend.py may break 17 import paths
 
 METRICS-TARGET:
-  CC̄:          4.3 → ≤3.0
-  max-CC:      42 → ≤20
+  CC̄:          4.1 → ≤2.9
+  max-CC:      28 → ≤14
   god-modules: 1 → 0
   high-CC(≥15): 17 → ≤8
   hub-types:   0 → ≤0
@@ -77,4 +77,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.4 → now CC̄=4.3
+  prev CC̄=4.1 → now CC̄=4.1
