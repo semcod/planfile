@@ -64,6 +64,8 @@ Generated on 2026-03-29 using [openrouter/qwen/qwen3-coder-next](https://openrou
 - 🤖 **LLM-Powered**: AI-driven bug reports and auto-fix capabilities
 - 📊 **Progress Tracking**: Review strategy execution with detailed metrics
 - 🚀 **CLI Tool**: Easy-to-use command-line interface for applying and reviewing strategies
+- 🐍 **Python Library**: Use planfile programmatically in your Python applications
+- 🌐 **REST API**: Run as FastAPI server for HTTP access and integrations
 - 🎨 **Rich Output**: Beautiful terminal output with progress bars and tables
 - 🐳 **Docker Support**: Containerized deployment with Ollama integration
 - 🔧 **Extensible**: Easy to add new backends and custom integrations
@@ -166,7 +168,43 @@ planfile strategy review \
   --backend github
 ```
 
-### 4. Using Makefile
+### 4. Using Python Library
+
+```python
+from planfile import Planfile, quick_ticket
+
+# Auto-discover .planfile/ in your project
+pf = Planfile.auto_discover(".")
+
+# Create tickets programmatically
+ticket = pf.create_ticket(
+    title="Fix authentication bug",
+    description="Users cannot login with OAuth",
+    priority="high",
+    labels=["bug", "backend"]
+)
+
+# List and filter tickets
+tickets = pf.list_tickets(sprint="current", status="open")
+
+# Quick one-liner for tools
+ticket = quick_ticket("Production alert", tool="monitoring", priority="critical")
+```
+
+### 5. Using REST API
+
+```bash
+# Start the FastAPI server
+uvicorn planfile.api.server:app --reload --port 8000
+
+# Use the API
+curl "http://localhost:8000/tickets?sprint=current"
+curl -X POST "http://localhost:8000/tickets" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "API fix", "priority": "high"}'
+```
+
+### 6. Using Makefile
 
 ```bash
 # Run CI loop with strategy

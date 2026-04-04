@@ -2,13 +2,238 @@
 
 Complete API documentation for the Planfile SDLC automation platform.
 
+## Table of Contents
+
+1. [Python Library API](#python-library-api) - Use planfile as a Python package
+2. [REST API](#rest-api) - Run planfile as a FastAPI server
+3. [Core Components](#core-components)
+4. [Backend Integration](#backend-integration)
+5. [CI/CD Runner](#cicd-runner)
+6. [Configuration](#configuration)
+7. [Error Handling](#error-handling)
+8. [Testing](#testing)
+
+---
+
+## Python Library API
+
+Use planfile programmatically in your Python applications.
+
+### Main Entry Point - `Planfile` Class
+
+```python
+from planfile import Planfile, Ticket, TicketSource
+
+# Auto-discover .planfile/ in current or parent directories
+pf = Planfile.auto_discover(".")
+
+# Or initialize in specific directory
+pf = Planfile("/path/to/project")
+
+# Check if planfile is initialized
+if pf.store.is_initialized():
+    print("Planfile ready")
+```
+
+### Ticket Management
+
+```python
+from planfile import Planfile, TicketStatus
+
+pf = Planfile.auto_discover(".")
+
+# Create a ticket
+ticket = pf.create_ticket(
+    title="Fix authentication bug",
+    description="Users cannot login with OAuth provider",
+    priority="high",
+    status="open",
+    labels=["bug", "backend", "security"],
+    sprint="current"
+)
+print(f"Created ticket: {ticket.id}")
+
+# List tickets with filters
+tickets = pf.list_tickets(
+    sprint="current",           # Filter by sprint
+    status="open",              # Filter by status
+    priority="high"             # Filter by priority
+)
+for t in tickets:
+    print(f"{t.id}: {t.title} [{t.status}]")
+
+# Get single ticket
+ticket = pf.get_ticket("TICKET-123")
+if ticket:
+    print(f"Found: {ticket.title}")
+
+# Update ticket
+updated = pf.update_ticket(
+    "TICKET-123",
+    status="in_progress",
+    priority="critical",
+    assignee="john.doe"
+)
+
+# Bulk create from external data
+tickets_data = [
+    {"title": "API timeout issue", "priority": "high", "labels": ["bug"]},
+    {"title": "Add dark mode", "priority": "medium", "labels": ["feature"]},
+    {"title": "Update docs", "priority": "low", "labels": ["docs"]},
+]
+created = pf.create_tickets_bulk(
+    tickets_data,
+    source="jira-importer",      # Source tool identifier
+    sprint="sprint-42"           # Target sprint
+)
+print(f"Created {len(created)} tickets")
+```
+
+### Quick Ticket Helper
+
+```python
+from planfile import quick_ticket
+
+# One-liner for tools and scripts
+ticket = quick_ticket(
+    title="Production alert: High memory usage",
+    tool="monitoring-system",
+    priority="critical",
+    context={"server": "prod-01", "metric": "memory"}
+)
+```
+
+### Low-Level Store Access
+
+```python
+from planfile import PlanfileStore
+
+# Direct store access for advanced operations
+store = PlanfileStore("/path/to/project")
+
+# Initialize new planfile directory
+store.init()
+
+# CRUD operations
+ticket = store.create_ticket(ticket_data)
+store.update_ticket("TICKET-123", status="done")
+store.delete_ticket("TICKET-123")
+store.move_ticket("TICKET-123", to_sprint="sprint-5")
+
+# ID generation
+next_id = store.next_id()  # TICKET-NNN
+```
+
+---
+
+## REST API
+
+Run planfile as a FastAPI server for HTTP access.
+
+### Running the Server
+
+```bash
+# Install with FastAPI support
+pip install planfile
+pip install fastapi uvicorn
+
+# Start the server
+uvicorn planfile.api.server:app --reload --host 0.0.0.0 --port 8000
+
+# Or use planfile CLI
+planfile server --port 8000
+```
+
+### Available Endpoints
+
+#### Tickets
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/tickets` | List tickets with optional filters |
+| `POST` | `/tickets` | Create new ticket |
+| `GET` | `/tickets/{id}` | Get single ticket |
+| `PATCH` | `/tickets/{id}` | Update ticket |
+| `DELETE` | `/tickets/{id}` | Delete ticket |
+| `POST` | `/tickets/{id}/move` | Move ticket to different sprint |
+
+#### Health
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Server health check |
+
+### Example Usage
+
+```bash
+# List all tickets
+curl "http://localhost:8000/tickets?sprint=current"
+
+# Create ticket
+curl -X POST "http://localhost:8000/tickets" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "API timeout fix",
+    "description": "Increase timeout for external calls",
+    "priority": "high",
+    "sprint": "current"
+  }'
+
+# Get ticket
+curl "http://localhost:8000/tickets/TICKET-123"
+
+# Update ticket
+curl -X PATCH "http://localhost:8000/tickets/TICKET-123" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress", "priority": "critical"}'
+
+# Move ticket to different sprint
+curl -X POST "http://localhost:8000/tickets/TICKET-123/move?to_sprint=sprint-5"
+
+# Delete ticket
+curl -X DELETE "http://localhost:8000/tickets/TICKET-123"
+
+# Health check
+curl "http://localhost:8000/health"
+```
+
+### Python Client Example
+
+```python
+import httpx
+
+# Client for planfile API
+client = httpx.Client(base_url="http://localhost:8000")
+
+# List tickets
+response = client.get("/tickets", params={"sprint": "current", "status": "open"})
+tickets = response.json()
+
+# Create ticket
+ticket_data = {
+    "title": "Fix memory leak",
+    "description": "Detected in production",
+    "priority": "critical"
+}
+response = client.post("/tickets", json=ticket_data)
+new_ticket = response.json()
+
+# Update ticket
+client.patch(f"/tickets/{new_ticket['id']}", json={"status": "in_progress"})
+
+# Move to sprint
+client.post(f"/tickets/{new_ticket['id']}/move", params={"to_sprint": "next"})
+```
+
+---
+
 ## Core Components
 
 ### Strategy Models
 
 #### Strategy
 ```python
-from strategy.models import Strategy
+from planfile.models import Strategy
 
 strategy = Strategy(
     name="My Project Strategy",
@@ -37,7 +262,7 @@ strategy = Strategy(
 
 #### Sprint
 ```python
-from strategy.models import Sprint
+from planfile.models import Sprint
 
 sprint = Sprint(
     id=1,
@@ -63,7 +288,7 @@ sprint = Sprint(
 
 #### TaskPattern
 ```python
-from strategy.models import TaskPattern, TaskType
+from planfile.models import TaskPattern, TaskType
 
 task = TaskPattern(
     type=TaskType.FEATURE,
@@ -83,7 +308,7 @@ task = TaskPattern(
 
 #### Auto Commands
 ```python
-from strategy.cli.commands import auto_loop_cli, auto_ci_status_cli
+from planfile.cli.commands import auto_loop_cli, auto_ci_status_cli
 
 # Run auto-loop
 auto_loop_cli(
@@ -104,7 +329,7 @@ auto_ci_status_cli(
 
 #### Strategy Commands
 ```python
-from strategy.cli.commands import (
+from planfile.cli.commands import (
     apply_strategy_cli,
     review_strategy_cli,
     validate_strategy_cli
@@ -137,7 +362,7 @@ validate_strategy_cli(
 
 #### GitHub Backend
 ```python
-from strategy.integrations.github import GitHubBackend
+from planfile.integrations.github import GitHubBackend
 
 github = GitHubBackend(
     token="github_token",
@@ -169,7 +394,7 @@ github.create_project_card(
 
 #### Jira Backend
 ```python
-from strategy.integrations.jira import JiraBackend
+from planfile.integrations.jira import JiraBackend
 
 jira = JiraBackend(
     url="https://company.atlassian.net",
@@ -202,7 +427,7 @@ jira.add_comment(
 
 #### GitLab Backend
 ```python
-from strategy.integrations.gitlab import GitLabBackend
+from planfile.integrations.gitlab import GitLabBackend
 
 gitlab = GitLabBackend(
     token="gitlab_token",
@@ -228,7 +453,7 @@ gitlab.update_issue(
 
 #### CIRunner
 ```python
-from strategy.ci_runner import CIRunner
+from planfile.ci_runner import CIRunner
 
 runner = CIRunner(
     project_path=".",
@@ -249,7 +474,7 @@ result = runner.run_iteration()
 
 #### BugAnalyzer
 ```python
-from strategy.ci_runner import BugAnalyzer
+from planfile.ci_runner import BugAnalyzer
 
 analyzer = BugAnalyzer(
     llm_provider="openai",
@@ -275,7 +500,7 @@ fix_code = analyzer.generate_fix(
 
 #### YAML Loader
 ```python
-from strategy.loaders.yaml_loader import (
+from planfile.loaders.yaml_loader import (
     load_strategy,
     save_strategy,
     merge_tasks
@@ -296,7 +521,7 @@ strategy = merge_tasks(
 
 #### JSON Loader
 ```python
-from strategy.loaders.cli_loader import (
+from planfile.loaders.cli_loader import (
     load_strategy_json,
     save_strategy_json,
     export_to_markdown
@@ -316,7 +541,7 @@ markdown = export_to_markdown(strategy)
 
 #### Metrics
 ```python
-from strategy.utils.metrics import (
+from planfile.utils.metrics import (
     analyze_project_metrics,
     calculate_strategy_health
 )
@@ -337,7 +562,7 @@ health = calculate_strategy_health(
 
 #### Priorities
 ```python
-from strategy.utils.priorities import (
+from planfile.utils.priorities import (
     calculate_task_priority,
     map_priority_to_system,
     get_priority_color
@@ -412,7 +637,7 @@ ai:
 
 ### Exceptions
 ```python
-from strategy.exceptions import (
+from planfile.exceptions import (
     StrategyError,
     BackendError,
     ValidationError,
@@ -430,7 +655,7 @@ except BackendError as e:
 ### Logging
 ```python
 import logging
-from strategy.utils import setup_logging
+from planfile.utils import setup_logging
 
 # Setup logging
 setup_logging(
@@ -449,8 +674,8 @@ logger.info("Starting auto-loop")
 ### Unit Tests
 ```python
 import pytest
-from strategy.models import Strategy, Sprint
-from strategy.loaders.yaml_loader import load_strategy
+from planfile.models import Strategy, Sprint
+from planfile.loaders.yaml_loader import load_strategy
 
 def test_strategy_loading():
     strategy = load_strategy("test_strategy.yaml")
@@ -466,7 +691,7 @@ def test_sprint_creation():
 ### Integration Tests
 ```python
 import pytest
-from strategy.integrations.github import GitHubBackend
+from planfile.integrations.github import GitHubBackend
 
 @pytest.mark.integration
 def test_github_backend():
@@ -481,7 +706,7 @@ def test_github_backend():
 ### Mock Testing
 ```python
 from unittest.mock import Mock, patch
-from strategy.ci_runner import CIRunner
+from planfile.ci_runner import CIRunner
 
 def test_auto_loop_mock():
     with patch('strategy.ci_runner.run_tests') as mock_tests:
@@ -499,7 +724,7 @@ def test_auto_loop_mock():
 ### Caching
 ```python
 from functools import lru_cache
-from strategy.integrations.github import GitHubBackend
+from planfile.integrations.github import GitHubBackend
 
 class GitHubBackend:
     @lru_cache(maxsize=128)
@@ -511,7 +736,7 @@ class GitHubBackend:
 ### Async Operations
 ```python
 import asyncio
-from strategy.integrations import AsyncBackend
+from planfile.integrations import AsyncBackend
 
 async def create_multiple_issues(backend, issues):
     tasks = [backend.create_issue(**issue) for issue in issues]
@@ -522,7 +747,7 @@ async def create_multiple_issues(backend, issues):
 
 ### Token Management
 ```python
-from strategy.utils.secure import get_token, mask_token
+from planfile.utils.secure import get_token, mask_token
 
 # Secure token retrieval
 token = get_token("github_token")
@@ -535,7 +760,7 @@ logger.info(f"Using token: {masked_token}")
 ### Input Validation
 ```python
 from pydantic import validator
-from strategy.models import TaskPattern
+from planfile.models import TaskPattern
 
 class TaskPattern(BaseModel):
     title: str
@@ -551,7 +776,7 @@ class TaskPattern(BaseModel):
 
 ### Custom Backends
 ```python
-from strategy.integrations.base import BaseBackend
+from planfile.integrations.base import BaseBackend
 
 class CustomBackend(BaseBackend):
     def create_issue(self, title, body, **kwargs):
@@ -566,7 +791,7 @@ class CustomBackend(BaseBackend):
 ### Custom Commands
 ```python
 import typer
-from strategy.cli.commands import app
+from planfile.cli.commands import app
 
 @app.command()
 def custom_command(
