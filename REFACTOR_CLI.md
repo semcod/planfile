@@ -150,13 +150,15 @@ register_auto_commands(app)
 
 ## Migration Checklist
 
-- [ ] Create `cli/core/` with console, errors, progress
-- [ ] Move `auto_loop.py` → `groups/auto/`
-- [ ] Split `cmd_sync.py` → `groups/sync/`
-- [ ] Split `cmd_generate.py` + `cmd_template.py` → `groups/generate/`
-- [ ] Split `cmd_review.py` + `cmd_validate.py` + `cmd_apply.py` → `groups/review/`
-- [ ] Split `cmd_ticket.py` → `groups/ticket/`
-- [ ] Merge `cmd_stats.py` + `cmd_compare.py` + `cmd_export.py` → `groups/query/`
-- [ ] Update `commands.py` to use new group imports
-- [ ] Delete `cmd/` directory after migration
-- [ ] Update tests to use new module paths
+- [x] Create `cli/core/` with console, errors, progress
+- [x] Move `auto_loop.py` → `groups/auto/`
+- [x] Split `cmd_sync.py` → `groups/sync/`
+- [x] Split `cmd_generate.py` + `cmd_template.py` → `groups/generate/`
+- [x] Split `cmd_review.py` + `cmd_validate.py` + `cmd_apply.py` → `groups/review/`, `groups/validate/`, `groups/apply/`
+- [x] Split `cmd_ticket.py` → `groups/ticket/`
+- [x] Merge `cmd_stats.py` + `cmd_compare.py` + `cmd_export.py` → `groups/query/`
+- [x] Move `cmd_examples.py` + `cmd_health.py` → `groups/examples/`, `groups/health/`
+- [x] Update `commands.py` to use new group imports
+- [x] Delete `cmd/` directory after migration
+- [x] Update tests to use new module paths
+- [x] Update documentation (README.md)
