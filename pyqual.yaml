@@ -2,10 +2,24 @@ pipeline:
   name: quality-loop-with-llx
 
   # Quality gates — pipeline iterates until ALL pass
+  # ONLY metrics with actual data (null values removed)
   metrics:
-    cc_max: 15           # cyclomatic complexity per function
-    vallm_pass_min: 70   # vallm validation pass rate (%)
-    coverage_min: 4      # test coverage (%) — matches actual 4.7%
+    # Code complexity & quality (active)
+    cc_max: 10                    # cyclomatic complexity (current: 4.1)
+    critical_max: 20              # critical issues (current: 17)
+    
+    # Test & validation (active)
+    vallm_pass_min: 75            # vallm pass rate % (current: 76.1)
+    coverage_min: 4               # test coverage % (current: 4.6)
+    
+    # Lint & style (active)
+    ruff_fatal_max: 15            # fatal lint errors (current: 13)
+    ruff_errors_max: 600          # total errors (current: 523)
+    
+    # NOTE: Disabled gates (no data from collectors):
+    # documentation_score_min, readme_completeness_min
+    # secrets_found_max, security_vuln_critical_max, security_vuln_high_max
+    # license_exists_min, pyproject_completeness_min
 
   # Custom tool definitions
   custom_tools:
