@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Export new helpers via `cli/core/__init__.py`
 - Replace `JiraBackend._map_priority_to_jira()` with override of `BasePMBackend.map_priority()` — removes 16-line duplicate of base class logic (`sync/jira.py`)
 - Make `BasePMBackend._validate_config()` non-abstract with default `pass` — removes redundant overrides in `MockBackend` and `MarkdownFileBackend` (`sync/base.py`, `sync/mock.py`, `sync/markdown_backend/backend.py`)
+- Split `init_strategy_cli` (CC=19, 83 lines) into 7 focused helpers: `_collect_sprint_data`, `_collect_custom_sprints`, `_collect_preset_sprints`, `_build_sprints_yaml`, `_assemble_quality_gates`, `_display_summary`, `_save_strategy` — also fixes mutable preset mutation bug via `copy.deepcopy`
+
+## [0.1.54] - 2026-04-08
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+
+### Other
+- Update planfile/cli/groups/init/commands.py
 
 ## [0.1.53] - 2026-04-08
 

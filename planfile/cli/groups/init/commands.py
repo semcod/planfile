@@ -1,4 +1,5 @@
 """Init command for planfile CLI."""
+import copy
 from pathlib import Path
 import typer
 import yaml
@@ -50,66 +51,79 @@ def _ask_list(prompt: str, example: str='') -> list[str]:
     raw = Prompt.ask('  >', default='')
     return [item.strip() for item in raw.split(',') if item.strip()]
 
-def init_strategy_cli(output: str=typer.Option('planfile.yaml', '--output', '-o', help='Output file path'), yes: bool=typer.Option(False, '--yes', '-y', help='Skip confirmation before saving')) -> None:
-    """
-    Interactive wizard — creates a strategy by asking questions.
 
-    No template required. Asks about project type, goals, sprints and quality gates.
-    Automatically detects project data from pyproject.toml, package.json or README.
-    """
-    console.print(Panel('[bold]planfile init[/bold] — Interaktywny kreator strategii\n[dim]Odpowiedz na pytania, a wygeneruję plik planfile.yaml[/dim]', border_style='cyan'))
-    detected = get_detected_values()
-    if detected['has_detection']:
-        source = detected['source']
-        console.print(f'\n[dim]ℹ️ Wykryto dane projektu z {source}[/dim]')
-    name = _ask('Nazwa projektu', default=detected['name'], required=True, detected=bool(detected['name']))
-    description = _ask('Krótki opis projektu (opcjonalnie)', default=detected['description'], detected=bool(detected['description']))
-    project_type = _choice('Typ projektu', [('api', 'REST API / serwis backendowy'), ('web', 'Aplikacja webowa (frontend + backend)'), ('cli', 'Narzędzie CLI'), ('library', 'Biblioteka / pakiet Python'), ('custom', 'Własny (zdefiniuję sprinty ręcznie)')], default=detected['project_type'] or 'api', detected=bool(detected['project_type']))
-    domain = _ask('Domena biznesowa (np. e-commerce, finance, devtools)', default=detected['domain'], detected=bool(detected['domain']))
-    goal_short = _ask('Cel w jednym zdaniu', default=detected['goal'], required=True, detected=bool(detected['goal']))
-    sprints_data: list[dict] = []
+_DURATION_MAP: dict[str, int] = {'1 tydzień': 7, '2 tygodnie': 14, '3 tygodnie': 21}
+
+
+def _collect_custom_sprints() -> list[dict]:
+    """Interactively collect custom sprint definitions."""
+    n_sprints = int(_ask('Ile sprintów?', default='3'))
+    sprints = []
+    for i in range(1, n_sprints + 1):
+        console.print(f'\n[bold]Sprint {i}[/bold]')
+        s_name = _ask(f'  Nazwa sprintu {i}', default=f'Sprint {i}', required=True)
+        s_dur = _ask('  Czas trwania', default='2 tygodnie')
+        s_objs = _ask_list(f'  Cele sprintu {i} (oddzielone przecinkami)', example='Zaprojektuj architekturę, Skonfiguruj CI/CD')
+        sprints.append({'name': s_name, 'duration': s_dur, 'objectives': s_objs})
+    return sprints
+
+
+def _collect_preset_sprints(project_type: str) -> list[dict]:
+    """Collect sprints from preset with optional customization."""
+    sprints = copy.deepcopy(_SPRINT_PRESETS[project_type])
+    console.print(f"\n[dim]Używam {len(sprints)} domyślnych sprintów dla '{project_type}'. Możesz je dostosować.[/dim]")
+    if Confirm.ask('  Chcesz edytować sprinty?', default=False):
+        for i, s in enumerate(sprints, 1):
+            console.print(f"\n[bold]Sprint {i}: {s['name']}[/bold]")
+            s['name'] = _ask('  Nazwa', default=s['name'])
+            s['duration'] = _ask('  Czas trwania', default=s['duration'])
+            edited_objs = _ask_list('  Cele (oddzielone przecinkami)', example=', '.join(s['objectives'][:2]))
+            s['objectives'] = edited_objs if edited_objs else s['objectives']
+    while Confirm.ask('\n  Dodać kolejny sprint?', default=False):
+        i = len(sprints) + 1
+        s_name = _ask(f'  Nazwa sprintu {i}', default=f'Sprint {i}', required=True)
+        s_dur = _ask('  Czas trwania', default='1 tydzień')
+        s_objs = _ask_list('  Cele sprintu', example='...')
+        sprints.append({'name': s_name, 'duration': s_dur, 'objectives': s_objs})
+    return sprints
+
+
+def _collect_sprint_data(project_type: str) -> list[dict]:
+    """Dispatch sprint collection based on project type."""
     if project_type == 'custom':
-        n_sprints = int(_ask('Ile sprintów?', default='3'))
-        for i in range(1, n_sprints + 1):
-            console.print(f'\n[bold]Sprint {i}[/bold]')
-            s_name = _ask(f'  Nazwa sprintu {i}', default=f'Sprint {i}', required=True)
-            s_dur = _ask('  Czas trwania', default='2 tygodnie')
-            s_objs = _ask_list(f'  Cele sprintu {i} (oddzielone przecinkami)', example='Zaprojektuj architekturę, Skonfiguruj CI/CD')
-            sprints_data.append({'name': s_name, 'duration': s_dur, 'objectives': s_objs})
-    else:
-        preset = _SPRINT_PRESETS[project_type]
-        console.print(f"\n[dim]Używam {len(preset)} domyślnych sprintów dla '{project_type}'. Możesz je dostosować.[/dim]")
-        customize = Confirm.ask('  Chcesz edytować sprinty?', default=False)
-        if customize:
-            for i, s in enumerate(preset, 1):
-                console.print(f"\n[bold]Sprint {i}: {s['name']}[/bold]")
-                s['name'] = _ask('  Nazwa', default=s['name'])
-                s['duration'] = _ask('  Czas trwania', default=s['duration'])
-                edited_objs = _ask_list('  Cele (oddzielone przecinkami)', example=', '.join(s['objectives'][:2]))
-                s['objectives'] = edited_objs if edited_objs else s['objectives']
-        sprints_data = preset
-        while Confirm.ask('\n  Dodać kolejny sprint?', default=False):
-            i = len(sprints_data) + 1
-            s_name = _ask(f'  Nazwa sprintu {i}', default=f'Sprint {i}', required=True)
-            s_dur = _ask('  Czas trwania', default='1 tydzień')
-            s_objs = _ask_list('  Cele sprintu', example='...')
-            sprints_data.append({'name': s_name, 'duration': s_dur, 'objectives': s_objs})
-    focus = _choice('Główny priorytet projektu', [('tdd', 'TDD / Jakość kodu i testy'), ('security', 'Bezpieczeństwo'), ('performance', 'Wydajność'), ('none', 'Brak szczególnego priorytetu')], default='tdd' if detected['has_tests'] else 'none', detected=detected['has_tests'])
-    if detected['quality_gates']:
-        console.print(f"\n[dim]Wykryto {len(detected['quality_gates'])} bramek jakości z plików projektu:[/dim]")
-        for gate in detected['quality_gates']:
-            console.print(f"  [dim]• {gate['name']}[/dim]")
-    extra_gates = _ask_list('Dodatkowe bramki jakości (opcjonalnie, enter = pomiń)', example='Docker image builds, API docs generated')
-    model_tier = _choice('Preferowany tier modeli LLM', [('free', 'Darmowe (openrouter free / local)'), ('cheap', 'Tanie (gpt-4o-mini, haiku)'), ('balanced', 'Zbalansowane (claude-sonnet, gpt-4o)'), ('premium', 'Premium (claude-opus, gpt-4)')], default=detected['model_tier'] or 'cheap', detected=bool(detected.get('model_tier')))
-    sprints_yaml = []
-    for i, s in enumerate(sprints_data, 1):
-        sprints_yaml.append({'id': i, 'name': s['name'], 'length_days': {'1 tydzień': 7, '2 tygodnie': 14, '3 tygodnie': 21}.get(s.get('duration', ''), 14), 'duration': s.get('duration', '2 tygodnie'), 'objectives': s.get('objectives', [])})
-    quality_gates = list(_FOCUS_QUALITY_GATES.get(focus, []))
-    for gate in detected['quality_gates']:
-        quality_gates.append({'name': gate['name'], 'description': gate['description'], 'criteria': gate['criteria'], 'required': gate['required']})
+        return _collect_custom_sprints()
+    return _collect_preset_sprints(project_type)
+
+
+def _build_sprints_yaml(sprints_data: list[dict]) -> list[dict]:
+    """Convert collected sprint data to YAML-ready dicts."""
+    return [
+        {
+            'id': i,
+            'name': s['name'],
+            'length_days': _DURATION_MAP.get(s.get('duration', ''), 14),
+            'duration': s.get('duration', '2 tygodnie'),
+            'objectives': s.get('objectives', []),
+        }
+        for i, s in enumerate(sprints_data, 1)
+    ]
+
+
+def _assemble_quality_gates(focus: str, detected_gates: list[dict], extra_gates: list[str]) -> list[dict]:
+    """Build the final quality_gates list from all sources."""
+    gates = list(_FOCUS_QUALITY_GATES.get(focus, []))
+    for gate in detected_gates:
+        gates.append({'name': gate['name'], 'description': gate['description'],
+                      'criteria': gate['criteria'], 'required': gate['required']})
     for gate_text in extra_gates:
-        quality_gates.append({'name': gate_text, 'description': gate_text, 'criteria': [gate_text], 'required': True})
-    strategy_dict = {'name': name, 'version': '1.0.0', 'project_type': project_type, 'domain': domain, 'description': description or None, 'goal': {'short': goal_short, 'quality': [], 'delivery': [], 'metrics': []}, 'sprints': sprints_yaml, 'tasks': {'patterns': []}, 'quality_gates': quality_gates, 'metadata': {'model_tier': model_tier, 'focus': focus}}
+        gates.append({'name': gate_text, 'description': gate_text,
+                      'criteria': [gate_text], 'required': True})
+    return gates
+
+
+def _display_summary(name: str, project_type: str, domain: str, goal_short: str,
+                     sprints_yaml: list, focus: str, model_tier: str, output: str) -> None:
+    """Print a rich summary table of the strategy."""
     console.print('\n')
     table = Table(title='Podsumowanie strategii', border_style='cyan')
     table.add_column('Parametr', style='bold')
@@ -123,7 +137,11 @@ def init_strategy_cli(output: str=typer.Option('planfile.yaml', '--output', '-o'
     table.add_row('Tier modelu', model_tier)
     table.add_row('Plik wyjściowy', output)
     console.print(table)
-    if not yes and (not Confirm.ask('\nZapisać strategię?', default=True)):
+
+
+def _save_strategy(strategy_dict: dict, output: str, yes: bool) -> None:
+    """Save strategy to YAML file after optional confirmation."""
+    if not yes and not Confirm.ask('\nZapisać strategię?', default=True):
         console.print('[yellow]Anulowano.[/yellow]')
         raise typer.Exit(0)
     out_path = Path(output)
@@ -134,3 +152,67 @@ def init_strategy_cli(output: str=typer.Option('planfile.yaml', '--output', '-o'
     console.print(f'  1. Przejrzyj:  planfile validate {output}')
     console.print(f'  2. Statystyki: planfile stats {output}')
     console.print(f'  3. Wykonaj:    llx plan apply {output} ./my-project')
+
+
+def init_strategy_cli(
+    output: str = typer.Option('planfile.yaml', '--output', '-o', help='Output file path'),
+    yes: bool = typer.Option(False, '--yes', '-y', help='Skip confirmation before saving'),
+) -> None:
+    """
+    Interactive wizard — creates a strategy by asking questions.
+
+    No template required. Asks about project type, goals, sprints and quality gates.
+    Automatically detects project data from pyproject.toml, package.json or README.
+    """
+    console.print(Panel('[bold]planfile init[/bold] — Interaktywny kreator strategii\n[dim]Odpowiedz na pytania, a wygeneruję plik planfile.yaml[/dim]', border_style='cyan'))
+    detected = get_detected_values()
+    if detected['has_detection']:
+        console.print(f"\n[dim]ℹ️ Wykryto dane projektu z {detected['source']}[/dim]")
+
+    name = _ask('Nazwa projektu', default=detected['name'], required=True, detected=bool(detected['name']))
+    description = _ask('Krótki opis projektu (opcjonalnie)', default=detected['description'], detected=bool(detected['description']))
+    project_type = _choice(
+        'Typ projektu',
+        [('api', 'REST API / serwis backendowy'), ('web', 'Aplikacja webowa (frontend + backend)'),
+         ('cli', 'Narzędzie CLI'), ('library', 'Biblioteka / pakiet Python'),
+         ('custom', 'Własny (zdefiniuję sprinty ręcznie)')],
+        default=detected['project_type'] or 'api',
+        detected=bool(detected['project_type']),
+    )
+    domain = _ask('Domena biznesowa (np. e-commerce, finance, devtools)', default=detected['domain'], detected=bool(detected['domain']))
+    goal_short = _ask('Cel w jednym zdaniu', default=detected['goal'], required=True, detected=bool(detected['goal']))
+
+    sprints_data = _collect_sprint_data(project_type)
+
+    focus = _choice(
+        'Główny priorytet projektu',
+        [('tdd', 'TDD / Jakość kodu i testy'), ('security', 'Bezpieczeństwo'),
+         ('performance', 'Wydajność'), ('none', 'Brak szczególnego priorytetu')],
+        default='tdd' if detected['has_tests'] else 'none',
+        detected=detected['has_tests'],
+    )
+    if detected['quality_gates']:
+        console.print(f"\n[dim]Wykryto {len(detected['quality_gates'])} bramek jakości z plików projektu:[/dim]")
+        for gate in detected['quality_gates']:
+            console.print(f"  [dim]• {gate['name']}[/dim]")
+    extra_gates = _ask_list('Dodatkowe bramki jakości (opcjonalnie, enter = pomiń)', example='Docker image builds, API docs generated')
+    model_tier = _choice(
+        'Preferowany tier modeli LLM',
+        [('free', 'Darmowe (openrouter free / local)'), ('cheap', 'Tanie (gpt-4o-mini, haiku)'),
+         ('balanced', 'Zbalansowane (claude-sonnet, gpt-4o)'), ('premium', 'Premium (claude-opus, gpt-4)')],
+        default=detected['model_tier'] or 'cheap',
+        detected=bool(detected.get('model_tier')),
+    )
+
+    sprints_yaml = _build_sprints_yaml(sprints_data)
+    quality_gates = _assemble_quality_gates(focus, detected['quality_gates'], extra_gates)
+    strategy_dict = {
+        'name': name, 'version': '1.0.0', 'project_type': project_type,
+        'domain': domain, 'description': description or None,
+        'goal': {'short': goal_short, 'quality': [], 'delivery': [], 'metrics': []},
+        'sprints': sprints_yaml, 'tasks': {'patterns': []},
+        'quality_gates': quality_gates,
+        'metadata': {'model_tier': model_tier, 'focus': focus},
+    }
+    _display_summary(name, project_type, domain, goal_short, sprints_yaml, focus, model_tier, output)
+    _save_strategy(strategy_dict, output, yes)
