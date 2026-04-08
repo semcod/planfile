@@ -265,47 +265,55 @@ class PlanfileGenerator:
     def _create_strategy_object(self, strategy_data: dict[str, Any]) -> Strategy:
         return strategy_data
 
+    _SKIP_ATTRS = frozenset({'content', 'file_contents', 'raw_data'})
+    _MAX_STR_LEN = 1000
+    _MAX_LIST_LEN = 100
+
+    def _serialize_object(self, obj: Any, visited: set) -> dict:
+        """Serialize an object's public __dict__ attributes."""
+        result = {}
+        for k, v in obj.__dict__.items():
+            if k.startswith('_') or k in self._SKIP_ATTRS:
+                continue
+            result[k] = self._make_serializable(v, visited)
+        return result
+
+    def _serialize_dict(self, obj: dict, visited: set) -> dict:
+        """Serialize a dict, truncating oversized string values."""
+        result = {}
+        for k, v in obj.items():
+            if isinstance(v, str) and len(v) > self._MAX_STR_LEN:
+                result[k] = f"<string_length_{len(v)}>"
+            else:
+                result[k] = self._make_serializable(v, visited)
+        return result
+
     def _make_serializable(self, obj: Any, visited: set = None) -> Any:
         """Convert object to serializable format with cycle detection."""
         if visited is None:
             visited = set()
 
-        # Prevent infinite recursion
+        if isinstance(obj, (int, float, bool)) or obj is None:
+            return obj
+        if isinstance(obj, str):
+            return obj if len(obj) <= self._MAX_STR_LEN else f"<string_length_{len(obj)}>"
+
         obj_id = id(obj)
         if obj_id in visited:
             return f"<circular_reference_{obj_id}>"
         visited.add(obj_id)
 
         if hasattr(obj, '__dict__'):
-            result = {}
-            for k, v in obj.__dict__.items():
-                # Skip private attributes and large data structures
-                if k.startswith('_') or k in ['content', 'file_contents', 'raw_data']:
-                    continue
-                result[k] = self._make_serializable(v, visited)
-            return result
-        elif isinstance(obj, dict):
-            result = {}
-            for k, v in obj.items():
-                # Skip large values
-                if isinstance(v, str) and len(v) > 1000:
-                    result[k] = f"<string_length_{len(v)}>"
-                else:
-                    result[k] = self._make_serializable(v, visited)
-            return result
-        elif isinstance(obj, list):
-            # Limit list size to prevent bloat
-            if len(obj) > 100:
+            return self._serialize_object(obj, visited)
+        if isinstance(obj, dict):
+            return self._serialize_dict(obj, visited)
+        if isinstance(obj, list):
+            if len(obj) > self._MAX_LIST_LEN:
                 return f"<list_length_{len(obj)}>"
             return [self._make_serializable(item, visited) for item in obj]
-        elif isinstance(obj, (str, int, float, bool)) or obj is None:
-            if isinstance(obj, str) and len(obj) > 1000:
-                return f"<string_length_{len(obj)}>"
-            return obj
-        elif hasattr(obj, '__name__'):
+        if hasattr(obj, '__name__'):
             return str(obj)
-        else:
-            return f"<type_{type(obj).__name__}>"
+        return f"<type_{type(obj).__name__}>"
 
 
 generator = PlanfileGenerator()

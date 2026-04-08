@@ -1,30 +1,26 @@
-# code2llm | 120f 12717L | python:115,shell:5 | 2026-04-04
-# CC̄=4.1 | critical:17/632 | dups:0 | cycles:0
+# code2llm | 126f 11707L | python:121,shell:5 | 2026-04-08
+# CC̄=4.0 | critical:13/607 | dups:0 | cycles:0
 
-HEALTH[18]:
+HEALTH[14]:
   🟡 CC    demo_checkbox_tickets CC=15 (limit:15)
+  🟡 CC    _update_ticket CC=15 (limit:15)
   🟡 CC    _create_ticket CC=15 (limit:15)
   🟡 CC    sync_from_external CC=15 (limit:15)
   🟡 CC    _make_serializable CC=19 (limit:15)
   🟡 CC    extract_from_yaml_structure CC=15 (limit:15)
-  🟡 CC    list_tickets CC=19 (limit:15)
-  🟡 CC    _apply_filters CC=20 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
   🟡 CC    _load_tickets_v1_format CC=17 (limit:15)
-  🟡 CC    _update_ticket CC=15 (limit:15)
-  🟡 CC    init_strategy_cli CC=19 (limit:15)
   🟡 CC    _find_readme_content CC=16 (limit:15)
-  🟡 CC    ticket_import_todo CC=17 (limit:15)
   🟡 CC    _analyze_directory_structure CC=20 (limit:15)
-  🟡 CC    _detect_from_pyproject CC=28 (limit:15)
   🟡 CC    _detect_model_tier CC=19 (limit:15)
+  🟡 CC    ticket_import_todo CC=17 (limit:15)
   🟡 CC    get_detected_values CC=15 (limit:15)
   🟡 CC    _infer_python_project_type CC=17 (limit:15)
 
 REFACTOR[1]:
-  1. split 18 high-CC methods  (CC>15)
+  1. split 14 high-CC methods  (CC>15)
 
-PIPELINES[351]:
+PIPELINES[322]:
   [1] Src [BASE_URL]: BASE_URL → request
       PURITY: 100% pure
   [2] Src [url]: url
@@ -37,28 +33,26 @@ PIPELINES[351]:
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=4.2    ←in:22  →out:6
-  │ !! markdown_backend           518L  1C   17m  CC=13     ←0
-  │ !! store                      495L  7C   37m  CC=20     ←0
-  │ !! commands                   414L  0C   13m  CC=17     ←0
-  │ runner                     406L  0C    7m  CC=14     ←4
-  │ !! strategy                   341L  6C   12m  CC=15     ←0
-  │ executor_standalone        336L  3C   12m  CC=8      ←0
-  │ yaml_loader                324L  0C   15m  CC=7      ←7
-  │ !! commands                   316L  0C    4m  CC=19     ←0
+  planfile/                       CC̄=4.1    ←in:22  →out:6
+  │ runner                     426L  0C    7m  CC=14     ←4
+  │ executor_standalone        338L  3C   12m  CC=8      ←0
+  │ yaml_loader                327L  0C   15m  CC=7      ←7
   │ ci                         315L  3C    9m  CC=7      ←0
-  │ !! generator                  302L  1C   17m  CC=19     ←0
+  │ !! generator                  311L  1C   17m  CC=19     ←0
   │ jira                       280L  1C   10m  CC=13     ←0
-  │ external_tools             272L  2C   13m  CC=12     ←0
+  │ external_tools             268L  2C   12m  CC=12     ←0
+  │ !! commands                   264L  0C   13m  CC=17     ←0
+  │ !! strategy                   259L  6C   12m  CC=15     ←0
   │ commands                   244L  0C    8m  CC=10     ←0
   │ !! github                     240L  1C    9m  CC=15     ←0
   │ !! operations                 239L  0C   12m  CC=15     ←1
-  │ base                       237L  4C   21m  CC=4      ←0
+  │ base                       236L  4C   21m  CC=4      ←0
   │ commands                   235L  0C    8m  CC=10     ←0
   │ !! core                       234L  0C    8m  CC=17     ←1
   │ !! gitlab                     233L  1C    8m  CC=15     ←0
   │ metrics                    227L  0C    5m  CC=8      ←0
   │ redup_importer             221L  0C    5m  CC=11     ←1
+  │ commands                   218L  0C   11m  CC=11     ←0
   │ generic                    216L  1C   10m  CC=6      ←0
   │ server                     209L  0C    4m  CC=14     ←0
   │ config                     206L  1C   14m  CC=10     ←0
@@ -66,8 +60,8 @@ LAYERS:
   │ sprint_generator           191L  1C   10m  CC=9      ←0
   │ toon_parser                189L  0C    7m  CC=11     ←2
   │ gates                      170L  0C   13m  CC=8      ←3
-  │ mock                       164L  1C    7m  CC=11     ←0
   │ __init__                   162L  1C    9m  CC=11     ←10
+  │ mock                       160L  1C    6m  CC=11     ←0
   │ generator                  145L  0C    6m  CC=8      ←1
   │ examples                   139L  0C    5m  CC=2      ←0
   │ commands                   132L  0C    2m  CC=14     ←0
@@ -75,8 +69,9 @@ LAYERS:
   │ file_analyzer              127L  1C   10m  CC=9      ←0
   │ commands                   119L  0C    4m  CC=6      ←0
   │ text_parser                118L  0C    1m  CC=13     ←3
-  │ !! pyproject                  111L  0C    1m  CC=28     ←1
+  │ pyproject                  117L  0C    9m  CC=8      ←1
   │ priorities                 111L  0C    3m  CC=4      ←0
+  │ tickets                    110L  1C    6m  CC=12     ←0
   │ utils                      108L  0C    5m  CC=7      ←1
   │ __init__                   104L  1C    5m  CC=3      ←0
   │ commands                   100L  0C    1m  CC=10     ←0
@@ -86,11 +81,12 @@ LAYERS:
   │ !! main                        88L  0C    2m  CC=15     ←1
   │ !! inference                   87L  0C    3m  CC=17     ←2
   │ utils                       86L  0C    3m  CC=7      ←1
-  │ commands                    78L  0C    1m  CC=1      ←2
+  │ commands                    78L  0C    1m  CC=1      ←1
   │ adapters                    75L  6C    5m  CC=1      ←0
   │ commands                    73L  0C    5m  CC=4      ←0
   │ package                     73L  0C    1m  CC=7      ←1
   │ !! readme                      71L  0C    3m  CC=16     ←3
+  │ registry                    67L  1C    5m  CC=2      ←6
   │ fallback                    66L  0C    1m  CC=9      ←1
   │ prompts                     63L  0C    1m  CC=5      ←1
   │ client                      63L  0C    1m  CC=4      ←1
@@ -98,28 +94,30 @@ LAYERS:
   │ !! structure                   60L  0C    1m  CC=20     ←3
   │ commands                    59L  0C    3m  CC=2      ←0
   │ !! model_tier                  59L  0C    1m  CC=19     ←3
+  │ store_tickets               54L  1C    4m  CC=7      ←0
   │ ticket                      51L  2C    1m  CC=2      ←0
-  │ models                      49L  3C    2m  CC=3      ←0
+  │ backend                     50L  1C    2m  CC=2      ←0
   │ state                       46L  1C    5m  CC=3      ←0
   │ base                        46L  3C    0m  CC=0.0    ←0
   │ metrics_extractor           44L  0C    6m  CC=9      ←1
   │ commands                    42L  0C    1m  CC=9      ←0
+  │ models                      39L  3C    0m  CC=0.0    ←0
   │ __init__                    38L  0C    1m  CC=1      ←0
   │ git                         36L  0C    1m  CC=4      ←3
   │ common                      35L  0C    2m  CC=6      ←2
+  │ __init__                    35L  0C    0m  CC=0.0    ←0
   │ base                        34L  2C    0m  CC=0.0    ←0
   │ __init__                    32L  0C    0m  CC=0.0    ←0
   │ json_parser                 31L  0C    1m  CC=2      ←1
+  │ store_files                 31L  1C    3m  CC=6      ←0
   │ progress                    31L  0C    2m  CC=1      ←0
   │ console                     31L  0C    5m  CC=1      ←1
   │ license                     30L  0C    1m  CC=9      ←3
   │ __init__                    29L  0C    2m  CC=8      ←1
-  │ registry                    29L  1C    3m  CC=2      ←0
-  │ __init__                    27L  0C    0m  CC=0.0    ←0
   │ auto_loop                   26L  0C    1m  CC=1      ←0
   │ __init__                    25L  0C    0m  CC=0.0    ←0
+  │ files                       24L  1C    1m  CC=3      ←0
   │ errors                      24L  0C    3m  CC=2      ←0
-  │ execution                   23L  0C    0m  CC=0.0    ←0
   │ __init__                    23L  0C    0m  CC=0.0    ←0
   │ __init__                    23L  0C    0m  CC=0.0    ←0
   │ __init__                    22L  0C    1m  CC=1      ←0
@@ -128,17 +126,21 @@ LAYERS:
   │ __init__                    18L  0C    1m  CC=1      ←0
   │ __init__                    18L  0C    1m  CC=1      ←0
   │ __init__                    18L  0C    1m  CC=1      ←0
-  │ __init__                    15L  0C    0m  CC=0.0    ←0
   │ server_common               14L  0C    1m  CC=2      ←2
   │ yaml_importer               14L  0C    1m  CC=1      ←1
   │ json_importer               14L  0C    1m  CC=1      ←1
   │ __init__                    12L  0C    0m  CC=0.0    ←0
   │ utils                       11L  0C    1m  CC=1      ←1
   │ __init__                    11L  0C    1m  CC=1      ←0
-  │ __init__                    10L  0C    1m  CC=1      ←0
-  │ __init__                    10L  0C    1m  CC=1      ←0
-  │ __init__                    10L  0C    1m  CC=1      ←0
-  │ __init__                    10L  0C    1m  CC=1      ←0
+  │ __init__                    11L  0C    1m  CC=1      ←0
+  │ __init__                    11L  0C    1m  CC=1      ←0
+  │ __init__                    11L  0C    1m  CC=1      ←0
+  │ __init__                    11L  0C    1m  CC=1      ←0
+  │ store                       11L  1C    0m  CC=0.0    ←0
+  │ execution                    6L  0C    0m  CC=0.0    ←0
+  │ constants                    5L  0C    0m  CC=0.0    ←0
+  │ __init__                     5L  0C    0m  CC=0.0    ←0
+  │ __init__                     4L  0C    0m  CC=0.0    ←0
   │ __main__                     4L  0C    0m  CC=0.0    ←0
   │ __init__                     4L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
@@ -146,9 +148,9 @@ LAYERS:
   │ base                         1L  0C    0m  CC=0.0    ←0
   │ gitlab                       1L  0C    0m  CC=0.0    ←0
   │ jira                         1L  0C    0m  CC=0.0    ←0
-  │ github                       1L  0C    0m  CC=0.0    ←0
-  │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ generic                      1L  0C    0m  CC=0.0    ←0
+  │ __init__                     1L  0C    0m  CC=0.0    ←0
+  │ github                       1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
@@ -179,9 +181,9 @@ COUPLING:
         planfile.mcp                                       1                                                                                                                                          ──
   CYCLES: none
   HUB: planfile.loaders/ (fan-in=13)
-  HUB: planfile/ (fan-in=22)
   HUB: run_examples/ (fan-in=14)
   HUB: planfile.importers/ (fan-in=5)
+  HUB: planfile/ (fan-in=22)
   SMELL: planfile.cli/ fan-out=44 → split needed
 
 EXTERNAL:

@@ -17,6 +17,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace `JiraBackend._map_priority_to_jira()` with override of `BasePMBackend.map_priority()` — removes 16-line duplicate of base class logic (`sync/jira.py`)
 - Make `BasePMBackend._validate_config()` non-abstract with default `pass` — removes redundant overrides in `MockBackend` and `MarkdownFileBackend` (`sync/base.py`, `sync/mock.py`, `sync/markdown_backend/backend.py`)
 - Split `init_strategy_cli` (CC=19, 83 lines) into 7 focused helpers: `_collect_sprint_data`, `_collect_custom_sprints`, `_collect_preset_sprints`, `_build_sprints_yaml`, `_assemble_quality_gates`, `_display_summary`, `_save_strategy` — also fixes mutable preset mutation bug via `copy.deepcopy`
+- Split `_detect_model_tier` (CC=19) into `_tier_from_env_vars`, `_tier_from_env_files`, `_tier_from_config_files` with constants `_ENV_VARS`, `_ENV_FILES`, `_CONFIG_FILES` (`cli/project_detector/model_tier.py`)
+- Split `_make_serializable` (CC=19) into `_serialize_object` + `_serialize_dict` helpers; extract `_SKIP_ATTRS`, `_MAX_STR_LEN`, `_MAX_LIST_LEN` constants; fix pre-existing bug where Python-interned primitives triggered false circular-reference detection (`analysis/generator.py`)
+
+## [0.1.55] - 2026-04-08
+
+### Docs
+- Update CHANGELOG.md
+- Update docs/README.md
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update planfile/analysis/generator.py
+- Update planfile/cli/project_detector/model_tier.py
+- Update project/analysis.toon.yaml
+- Update project/calls.mmd
+- Update project/calls.png
+- Update project/compact_flow.mmd
+- Update project/compact_flow.png
+- Update project/evolution.toon.yaml
+- Update project/flow.mmd
+- Update project/flow.png
+- ... and 4 more files
 
 ## [0.1.54] - 2026-04-08
 
