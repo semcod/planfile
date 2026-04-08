@@ -1,3 +1,11 @@
+
+CONSTANT_3 = 3
+CONSTANT_4 = 4
+CONSTANT_5 = 5
+CONSTANT_20 = 20
+CONSTANT_50 = 50
+CONSTANT_60 = 60
+
 """
 Main planfile generator from code analysis.
 Integrates file analysis and sprint generation to create complete strategies.
@@ -298,5 +306,6 @@ class PlanfileGenerator:
             return str(obj)
         else:
             return f"<type_{type(obj).__name__}>"
+
 
 generator = PlanfileGenerator()

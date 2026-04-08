@@ -1,3 +1,13 @@
+
+
+CONSTANT_14 = 14
+CONSTANT_20 = 20
+CONSTANT_50 = 50
+
+CONSTANT_14 = 14
+CONSTANT_20 = 20
+CONSTANT_50 = 50
+
 """
 Interactive strategy builder using LLX with local LLM.
 """

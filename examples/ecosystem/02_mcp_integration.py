@@ -1,4 +1,34 @@
 #!/usr/bin/env python3
+
+
+CONSTANT_3 = 3
+CONSTANT_4 = 4
+CONSTANT_4 = 4.1
+CONSTANT_5 = 5
+CONSTANT_5 = 5.2
+MAX_12 = 12
+MAX_18 = 18
+CONSTANT_25 = 25
+CONSTANT_40 = 40
+CONSTANT_60 = 60
+CONSTANT_65 = 65
+CONSTANT_80 = 80
+CONSTANT_3500 = 3500
+
+CONSTANT_3 = 3
+CONSTANT_4 = 4
+CONSTANT_4 = 4.1
+CONSTANT_5 = 5
+CONSTANT_5 = 5.2
+MAX_12 = 12
+MAX_18 = 18
+CONSTANT_25 = 25
+CONSTANT_40 = 40
+CONSTANT_60 = 60
+CONSTANT_65 = 65
+CONSTANT_80 = 80
+CONSTANT_3500 = 3500
+
 """
 Example 2: MCP Tools Integration
 Demonstrates how planfile can be used as MCP tools for LLM agents
@@ -257,7 +287,7 @@ def example_mcp_session():
     # Agent's conclusion
     print("\n" + "=" * 40)
     print("AGENT'S CONCLUSION")
-    print("=" * 40)
+    print("=" * CONSTANT_40)
 
     conclusion = """
     Agent: Based on the review:

@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-04-08
+
+### Fixed
+- Fix `NameError: PlanfileGenerator` — module-level singleton was incorrectly indented inside class body (`analysis/generator.py:310`)
+- Fix mutable default arguments in dataclasses — replaced `__post_init__` guards with `field(default_factory=list)` in `analysis/models.py` and `analysis/external_tools.py`
+
+### Refactored
+- Add `register_simple_command()` and `register_typer_group()` helpers to `cli/core/registry.py` — eliminates boilerplate `app.command()(fn)` pattern across 6 CLI group `__init__.py` files
+- Export new helpers via `cli/core/__init__.py`
+- Replace `JiraBackend._map_priority_to_jira()` with override of `BasePMBackend.map_priority()` — removes 16-line duplicate of base class logic (`sync/jira.py`)
+- Make `BasePMBackend._validate_config()` non-abstract with default `pass` — removes redundant overrides in `MockBackend` and `MarkdownFileBackend` (`sync/base.py`, `sync/mock.py`, `sync/markdown_backend/backend.py`)
+
+## [0.1.53] - 2026-04-08
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+
+### Test
+- Update test_checkbox_tickets.py
+- Update test_improvements.py
+- Update test_integration.py
+- Update test_markdown_integration.py
+- Update test_mixed_format.py
+- Update test_mixed_format.py.bak
+- Update test_planfile_final.py
+- Update test_strategy.py
+- Update tests/llm_adapters.py
+- Update tests/test_strategy.py
+
+### Other
+- Update examples/ecosystem/02_mcp_integration.py
+- Update examples/ecosystem/03_proxy_routing.py
+- Update examples/ecosystem/04_llx_integration.py
+- Update examples/interactive-tests/test_interactive_mode.py
+- Update examples/test_litellm_integration.py
+- Update examples/test_llm_adapters.py
+- Update planfile/analysis/external_tools.py
+- Update planfile/analysis/generator.py
+- Update planfile/analysis/models.py
+- Update planfile/builder.py
+- ... and 35 more files
+
 ## [0.1.10] - 2026-03-27
 
 ### Fixed

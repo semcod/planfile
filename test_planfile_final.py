@@ -143,13 +143,13 @@ def create_simple_free_strategy():
     return strategy_file
 
 
-if __name__ == "__main__":
-    # Test main strategy
-    test_planfile_v2()
+# Test main strategy
+test_planfile_v2()
 
-    # Create and test free-only strategy
-    console.print("\n" + "=" * 60)
-    create_simple_free_strategy()
+# Create and test free-only strategy
+console.print("\n" + "=" * 60)
+create_simple_free_strategy()
 
-    console.print("\n[bold green]All tests completed successfully![/bold green]")
-    console.print("\n[dim]Planfile v2 is ready to use with OpenRouter free models.[/dim]")
+console.print("\n[bold green]All tests completed successfully![/bold green]")
+console.print("\n[dim]Planfile v2 is ready to use with OpenRouter free models.[/dim]")
+

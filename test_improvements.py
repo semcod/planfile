@@ -161,14 +161,14 @@ def test_backward_compatibility():
         console.print(f"❌ Conversion failed: {e}")
 
 
-if __name__ == "__main__":
-    test_v2_format()
-    test_backward_compatibility()
+test_v2_format()
+test_backward_compatibility()
 
-    console.print("\n[bold]Summary of Improvements:[/bold]")
-    console.print("• Tasks are now embedded directly in sprints")
-    console.print("• Model hints accept simple strings")
-    console.print("• More flexible validation with sensible defaults")
-    console.print("• Support for both string and list criteria")
-    console.print("• Backward compatibility maintained")
-    console.print("• Simpler API for common use cases")
+console.print("\n[bold]Summary of Improvements:[/bold]")
+console.print("• Tasks are now embedded directly in sprints")
+console.print("• Model hints accept simple strings")
+console.print("• More flexible validation with sensible defaults")
+console.print("• Support for both string and list criteria")
+console.print("• Backward compatibility maintained")
+console.print("• Simpler API for common use cases")
+

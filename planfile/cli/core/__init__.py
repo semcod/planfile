@@ -3,7 +3,13 @@
 from planfile.cli.core.console import console, print_dim, print_error, print_info, print_success, print_warning
 from planfile.cli.core.errors import exit_with_error, exit_with_warning, handle_exception
 from planfile.cli.core.progress import create_progress, with_spinner
-from planfile.cli.core.registry import CommandRegistrar, CommandRegistry, registry
+from planfile.cli.core.registry import (
+    CommandRegistrar,
+    CommandRegistry,
+    register_simple_command,
+    register_typer_group,
+    registry,
+)
 
 __all__ = [
     # Console
@@ -24,4 +30,6 @@ __all__ = [
     "CommandRegistrar",
     "CommandRegistry",
     "registry",
+    "register_simple_command",
+    "register_typer_group",
 ]

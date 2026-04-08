@@ -59,7 +59,6 @@ class BasePMBackend(ABC):
         self.config = config
         self._validate_config()
 
-    @abstractmethod
     def _validate_config(self) -> None:
         """Validate backend configuration."""
         pass

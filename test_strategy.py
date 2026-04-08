@@ -55,7 +55,7 @@ def test_yaml_loading():
         print("⚠ Example YAML file not found, skipping test")
 
 
-if __name__ == "__main__":
-    test_basic_models()
-    test_yaml_loading()
-    print("\nAll tests passed! 🎉")
+test_basic_models()
+test_yaml_loading()
+print("\nAll tests passed! 🎉")
+

@@ -107,6 +107,6 @@ Some description here...
         print("\n✅ All tests passed!")
 
 
-if __name__ == "__main__":
-    import re
-    test_checkbox_ticket_parsing()
+import re
+test_checkbox_ticket_parsing()
+

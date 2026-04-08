@@ -12,6 +12,9 @@ from planfile.core.models import (
     TaskType,
 )
 
+PORT_50 = 50
+PORT_1024 = 1024
+
 # Backward compat alias used internally
 StrategyV2 = Strategy
 
@@ -59,7 +62,7 @@ def save_yaml(data: dict[str, Any], file_path: str | Path) -> None:
         import sys
         data_size = sys.getsizeof(data)
         if data_size > 50 * 1024 * 1024:  # 50MB threshold
-            print(f"Warning: Large data structure detected ({data_size/1024/1024:.1f}MB)")
+            print(f"Warning: Large data structure detected ({data_size/PORT_1024/PORT_1024:.1f}MB)")
     except:
         pass
 

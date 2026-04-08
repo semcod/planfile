@@ -126,14 +126,14 @@ def example_programmatic_strategy() -> None:
     print(f"Strategy saved to {output}")
 
 
-if __name__ == "__main__":
-    # Run examples
-    print("LLX Strategy Integration Examples")
-    print("=" * 40)
+# Run examples
+print("LLX Strategy Integration Examples")
+print("=" * 40)
 
-    # Uncomment to run examples
-    # example_create_strategy()
-    # example_validate_strategy()
-    # example_run_strategy()
-    # example_verify_strategy()
-    example_programmatic_strategy()
+# Uncomment to run examples
+# example_create_strategy()
+# example_validate_strategy()
+# example_run_strategy()
+# example_verify_strategy()
+example_programmatic_strategy()
+

@@ -14,10 +14,6 @@ class MockBackend(BasePMBackend):
         self.tickets = {}
         self.ticket_counter = 1
 
-    def _validate_config(self) -> None:
-        """Mock backend has no config requirements."""
-        pass
-
     def _create_ticket(
         self,
         title: str,

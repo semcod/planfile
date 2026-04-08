@@ -3,7 +3,7 @@ Data models for file analysis.
 These dataclasses represent extracted issues, metrics, and tasks from file analysis.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -16,11 +16,7 @@ class ExtractedIssue:
     file_path: str
     line_number: int | None = None
     effort_estimate: str | None = None
-    tags: list[str] = None
-
-    def __post_init__(self):
-        if self.tags is None:
-            self.tags = []
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -39,11 +35,5 @@ class ExtractedTask:
     name: str
     description: str
     type: str  # development, testing, review, documentation
-    dependencies: list[str] = None
-    acceptance_criteria: list[str] = None
-
-    def __post_init__(self):
-        if self.dependencies is None:
-            self.dependencies = []
-        if self.acceptance_criteria is None:
-            self.acceptance_criteria = []
+    dependencies: list[str] = field(default_factory=list)
+    acceptance_criteria: list[str] = field(default_factory=list)

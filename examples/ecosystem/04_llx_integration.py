@@ -1,6 +1,30 @@
 #!/usr/bin/env python3
+
+
+MAX_3 = 3
+MAX_4 = 4
+MAX_5 = 5
+MAX_8 = 8
+MAX_15 = 15
+MAX_20 = 20
+CONSTANT_60 = 60
+CONSTANT_80 = 80
+CONSTANT_500 = 500
+CONSTANT_3600 = 3600
+
+MAX_3 = 3
+MAX_4 = 4
+MAX_5 = 5
+MAX_8 = 8
+MAX_15 = 15
+MAX_20 = 20
+CONSTANT_60 = 60
+CONSTANT_80 = 80
+CONSTANT_500 = 500
+CONSTANT_3600 = 3600
+
 """
-Example 4: LLX Integration for Metric-Driven Planning
+Example MAX_4: LLX Integration for Metric-Driven Planning
 Demonstrates how planfile uses LLX for code analysis and model selection
 """
 

@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+
+CONSTANT_3 = 3
+CONSTANT_4 = 4
+CONSTANT_5 = 5
+CONSTANT_40 = 40
+CONSTANT_60 = 60
+CONSTANT_200 = 200
+
 """
 Direct integration of LiteLLM with planfile strategy generation.
 """
@@ -13,7 +21,9 @@ from typing import Any
 import yaml
 
 # Add planfile to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from planfile.llm.client import call_llm
 from planfile.models import Strategy
@@ -275,47 +285,47 @@ class LiteLLMStrategyTester:
         return "\n".join(summary_lines)
 
 
-async def test_specific_strategy():
-    """Test generating a specific strategy with different models."""
-    print("\n" + "=" * 60)
-    print("SPECIFIC STRATEGY GENERATION TEST")
-    print("=" * 60)
+    async def test_specific_strategy():
+        """Test generating a specific strategy with different models."""
+        print("\n" + "=" * 60)
+        print("SPECIFIC STRATEGY GENERATION TEST")
+        print("=" * 60)
 
-    # Test with the microservices migration strategy
-    strategy_path = Path(__file__).parent / "strategies" / "microservices-migration.yaml"
+        # Test with the microservices migration strategy
+        strategy_path = Path(__file__).parent / "strategies" / "microservices-migration.yaml"
 
-    if not strategy_path.exists():
+        if not strategy_path.exists():
         print(f"❌ Strategy file not found: {strategy_path}")
         return
 
-    # Read the strategy as a reference
-    with open(strategy_path) as f:
+        # Read the strategy as a reference
+        with open(strategy_path) as f:
         reference_strategy = f.read()
 
-    # Create a new prompt based on it
-    prompt = f"""
-    Based on this microservices migration strategy, create a new strategy for "Mobile App Development".
-    Keep the same structure and quality, but adapt for a mobile application project.
+        # Create a new prompt based on it
+        prompt = f"""
+        Based on this microservices migration strategy, create a new strategy for "Mobile App Development".
+        Keep the same structure and quality, but adapt for a mobile application project.
     
-    Reference strategy structure:
-    {reference_strategy[:1000]}...
+        Reference strategy structure:
+        {reference_strategy[:1000]}...
     
-    Generate a complete YAML strategy for:
-    - Project: Food Delivery Mobile App
-    - Platform: iOS & Android (React Native)
-    - Focus: User experience, performance, and scalability
-    - Sprints: 4
-    """
+        Generate a complete YAML strategy for:
+        - Project: Food Delivery Mobile App
+        - Platform: iOS & Android (React Native)
+        - Focus: User experience, performance, and scalability
+        - Sprints: 4
+        """
 
-    models_to_try = [
+        models_to_try = [
         "gpt-3.5-turbo",
         "anthropic/claude-3-haiku-20240307"
-    ]
+        ]
 
-    if os.environ.get('OPENROUTER_API_KEY'):
+        if os.environ.get('OPENROUTER_API_KEY'):
         models_to_try.append("anthropic/claude-3-haiku")
 
-    for model in models_to_try:
+        for model in models_to_try:
         print(f"\n🔄 Generating with {model}...")
 
         try:
@@ -340,16 +350,16 @@ async def test_specific_strategy():
             print(f"❌ Error: {e}")
 
 
-async def main():
-    """Main test function."""
-    # Run comprehensive tests
-    tester = LiteLLMStrategyTester()
-    await tester.run_comprehensive_test()
+    async def main():
+        """Main test function."""
+        # Run comprehensive tests
+        tester = LiteLLMStrategyTester()
+        await tester.run_comprehensive_test()
 
-    # Test specific strategy generation
-    await test_specific_strategy()
+        # Test specific strategy generation
+        await test_specific_strategy()
 
-    print("\n✅ All tests completed!")
+        print("\n✅ All tests completed!")
 
 
 if __name__ == "__main__":

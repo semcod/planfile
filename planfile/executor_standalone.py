@@ -9,7 +9,9 @@ from typing import Any
 
 from planfile.core.models import Strategy, Task
 
-logger = logging.getLogger(__name__)
+
+if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -222,10 +224,10 @@ Description:
         if metrics:
             prompt += f"""
 ## Project Context
-- Files: {metrics.get('total_files', 'N/A')}
-- Lines of code: {metrics.get('total_lines', 'N/A')}
-- Average complexity: {metrics.get('avg_cc', 'N/A')}
-- Max complexity: {metrics.get('max_cc', 'N/A')}
+    - Files: {metrics.get('total_files', 'N/A')}
+    - Lines of code: {metrics.get('total_lines', 'N/A')}
+    - Average complexity: {metrics.get('avg_cc', 'N/A')}
+    - Max complexity: {metrics.get('max_cc', 'N/A')}
 
 """
 
@@ -233,7 +235,7 @@ Description:
 ## Instructions
 Please execute this task. Provide:
 1. Specific actions to take
-2. Code changes if applicable (with file paths)
+    2. Code changes if applicable (with file paths)
 3. Any additional context or notes
 
 Focus on practical, actionable steps.

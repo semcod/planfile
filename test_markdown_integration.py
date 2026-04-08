@@ -72,6 +72,6 @@ def test_markdown_backend():
         print("\n✅ All tests passed!")
         return True
 
-if __name__ == "__main__":
-    success = test_markdown_backend()
-    sys.exit(0 if success else 1)
+success = test_markdown_backend()
+sys.exit(0 if success else 1)
+

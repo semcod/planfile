@@ -2,10 +2,10 @@
 
 import typer
 
+from planfile.cli.core import register_typer_group
 from planfile.cli.groups.health.commands import create_health_app
 
 
 def register_health_commands(app: typer.Typer) -> None:
     """Register health commands on the typer app."""
-    health_app = create_health_app()
-    app.add_typer(health_app, name="health")
+    register_typer_group(app, "health", create_health_app)

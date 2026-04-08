@@ -115,6 +115,6 @@ def test_integration():
     print("   result = analyzer.analyze_directory(Path('.'))")
 
 
-if __name__ == "__main__":
-    from pathlib import Path
-    test_integration()
+from pathlib import Path
+test_integration()
+

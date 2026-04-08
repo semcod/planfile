@@ -62,8 +62,8 @@ class JiraBackend(BasePMBackend):
         if not self.config.get("project"):
             raise ValueError("Jira project key is required")
 
-    def _map_priority_to_jira(self, priority: str | None) -> str:
-        """Map generic priority to Jira priority."""
+    def map_priority(self, priority: str | None) -> str:
+        """Map generic priority to Jira Title Case priority."""
         if not priority:
             return "Medium"
 
@@ -110,7 +110,7 @@ class JiraBackend(BasePMBackend):
 
         # Add priority
         if priority:
-            issue_dict["priority"] = {"name": self._map_priority_to_jira(priority)}
+            issue_dict["priority"] = {"name": self.map_priority(priority)}
 
         # Add labels
         if labels:
@@ -178,7 +178,7 @@ class JiraBackend(BasePMBackend):
                 fields["description"] = body
 
             if priority:
-                fields["priority"] = {"name": self._map_priority_to_jira(priority)}
+                fields["priority"] = {"name": self.map_priority(priority)}
 
             if labels is not None:
                 fields["labels"] = labels

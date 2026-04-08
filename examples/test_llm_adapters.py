@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+
+CONSTANT_60 = 60
+CONSTANT_500 = 500
+
 """
 Test planfile strategies with various LLM providers using adapters.
 """
@@ -11,22 +15,24 @@ from datetime import datetime
 from pathlib import Path
 
 # Add planfile to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from planfile.llm.adapters import LiteLLMAdapter, LLMTestRunner, LocalLLMAdapter, OpenRouterAdapter
 
 
-async def main():
-    """Run LLM adapter tests."""
-    print("=" * 60)
-    print("PLANFILE LLM ADAPTER TESTS")
-    print("=" * 60)
+    async def main():
+        """Run LLM adapter tests."""
+        print("=" * 60)
+        print("PLANFILE LLM ADAPTER TESTS")
+        print("=" * 60)
 
-    # Initialize test runner
-    runner = LLMTestRunner()
+        # Initialize test runner
+        runner = LLMTestRunner()
 
-    # Configure adapters
-    adapters_config = {
+        # Configure adapters
+        adapters_config = {
         'litellm': {
             'default_model': 'gpt-3.5-turbo',
             'api_key': os.environ.get('OPENAI_API_KEY')
@@ -45,10 +51,10 @@ async def main():
             'base_url': 'http://localhost:1234/v1',
             'provider': 'openai-compatible'
         }
-    }
+        }
 
-    # Register adapters
-    for name, config in adapters_config.items():
+        # Register adapters
+        for name, config in adapters_config.items():
         try:
             if name == 'litellm':
                 if config['api_key']:
@@ -71,7 +77,7 @@ async def main():
         except Exception as e:
             print(f"❌ Failed to register {name}: {e}")
 
-    if not runner.adapters:
+        if not runner.adapters:
         print("\n❌ No adapters registered. Please configure API keys or start local servers.")
         print("\nTo set up:")
         print("  export OPENAI_API_KEY=your_key")
@@ -80,28 +86,28 @@ async def main():
         print("  # Or start LM Studio with local server")
         return
 
-    # Select strategy to test
-    strategies_dir = Path(__file__).parent / "strategies"
-    test_strategies = [
+        # Select strategy to test
+        strategies_dir = Path(__file__).parent / "strategies"
+        test_strategies = [
         "microservices-migration.yaml",
         "ml-pipeline-optimization.yaml",
         "security-hardening.yaml"
-    ]
+        ]
 
-    print(f"\n📁 Testing strategies from: {strategies_dir}")
+        print(f"\n📁 Testing strategies from: {strategies_dir}")
 
-    # Models to test per adapter
-    test_models = {
+        # Models to test per adapter
+        test_models = {
         'litellm': ['gpt-3.5-turbo'],
         'openrouter': ['anthropic/claude-3-haiku', 'meta-llama/llama-3-8b-instruct'],
         'local-ollama': ['llama2'],
         'local-lmstudio': [None]
-    }
+        }
 
-    # Run tests
-    all_results = {}
+        # Run tests
+        all_results = {}
 
-    for strategy_file in test_strategies:
+        for strategy_file in test_strategies:
         strategy_path = strategies_dir / strategy_file
 
         if not strategy_path.exists():
@@ -128,8 +134,8 @@ async def main():
         except Exception as e:
             print(f"❌ Error testing {strategy_file}: {e}")
 
-    # Generate report
-    if all_results:
+        # Generate report
+        if all_results:
         print("\n" + "=" * 60)
         print("GENERATING REPORT")
         print("=" * 60)
@@ -199,7 +205,7 @@ async def main():
                 most_tokens = max(with_tokens, key=lambda x: x.token_count)
                 print(f"📝 Most detailed: {most_tokens.provider} {most_tokens.model} ({most_tokens.token_count} tokens)")
 
-    print("\n✅ Testing complete!")
+        print("\n✅ Testing complete!")
 
 
 if __name__ == "__main__":

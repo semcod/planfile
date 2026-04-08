@@ -6,7 +6,7 @@ and parse their output for planfile generation.
 
 import re
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -16,16 +16,12 @@ class AnalysisResults:
     """Results from external tool analysis."""
     cc_average: float = 0.0
     critical_functions: int = 0
-    high_cc_functions: list[dict[str, Any]] = None
+    high_cc_functions: list[dict[str, Any]] = field(default_factory=list)
     validation_errors: int = 0
     validation_warnings: int = 0
     duplication_groups: int = 0
     saved_lines: int = 0
     pass_rate: float = 0.0
-
-    def __post_init__(self):
-        if self.high_cc_functions is None:
-            self.high_cc_functions = []
 
 
 class ExternalToolRunner:
