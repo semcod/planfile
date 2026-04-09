@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 
 MAX_3 = 3
 MAX_4 = 4
@@ -12,16 +10,6 @@ CONSTANT_80 = 80
 CONSTANT_500 = 500
 CONSTANT_3600 = 3600
 
-MAX_3 = 3
-MAX_4 = 4
-MAX_5 = 5
-MAX_8 = 8
-MAX_15 = 15
-MAX_20 = 20
-CONSTANT_60 = 60
-CONSTANT_80 = 80
-CONSTANT_500 = 500
-CONSTANT_3600 = 3600
 
 """
 Example MAX_4: LLX Integration for Metric-Driven Planning
@@ -138,8 +126,8 @@ class LLXIntegration:
             total_lines=lines,
             avg_cc=avg_cc,
             max_cc=max_cc,
-            critical_count=sum(1 for cc in [max_cc] if cc >= 15),
-            god_modules=1 if lines > 500 else 0,  # Simplified
+            critical_count=sum(1 for cc in [max_cc] if cc >= MAX_15),
+            god_modules=1 if lines > CONSTANT_500 else 0,  # Simplified
             dup_groups=0,  # Would need duplication analysis
             languages=['python'],
             coupling_score=0.5,  # Placeholder
@@ -152,9 +140,9 @@ class LLXIntegration:
         # For now, implement simplified version
 
         # Base model selection on complexity
-        if metrics.avg_cc > 8 or metrics.max_cc > 20:
+        if metrics.avg_cc > MAX_8 or metrics.max_cc > MAX_20:
             complexity_tier = "high"
-        elif metrics.avg_cc > 4 or metrics.max_cc > 10:
+        elif metrics.avg_cc > MAX_4 or metrics.max_cc > 10:
             complexity_tier = "medium"
         else:
             complexity_tier = "low"
@@ -191,17 +179,17 @@ class LLXIntegration:
         tasks = {
             "critical_refactors": metrics.critical_count + metrics.god_modules,
             "standard_refactors": max(0, metrics.total_files // 10 - metrics.critical_count),
-            "test_writing": max(5, metrics.total_files // 5),
-            "documentation": max(3, metrics.total_files // 15),
-            "quality_gates": 3
+            "test_writing": max(MAX_5, metrics.total_files // MAX_5),
+            "documentation": max(MAX_3, metrics.total_files // MAX_15),
+            "quality_gates": MAX_3
         }
         return tasks
 
 def example_metric_driven_planning():
     """Example: Generate strategy based on actual project metrics."""
-    print("=" * 60)
+    print("=" * CONSTANT_60)
     print("Metric-Driven Planning with LLX")
-    print("=" * 60)
+    print("=" * CONSTANT_60)
 
     llx = LLXIntegration()
 
@@ -262,7 +250,7 @@ def example_metric_driven_planning():
 
     # Generate sprints based on metrics
     total_tasks = sum(task_scope.values())
-    tasks_per_sprint = max(3, total_tasks // 3)
+    tasks_per_sprint = max(MAX_3, total_tasks // MAX_3)
 
     # Sprint 1: Critical issues
     sprint1_tasks = []
@@ -271,7 +259,7 @@ def example_metric_driven_planning():
             "name": f"Fix {metrics.critical_count} critical functions (CC≥15)",
             "task_type": "refactor",
             "priority": "critical",
-            "estimated_hours": metrics.critical_count * 4,
+            "estimated_hours": metrics.critical_count * MAX_4,
             "model_hints": {
                 "planning": model_selections["refactor"],
                 "implementation": model_selections["refactor"],
@@ -284,7 +272,7 @@ def example_metric_driven_planning():
             "name": f"Split {metrics.god_modules} god modules",
             "task_type": "refactor",
             "priority": "critical",
-            "estimated_hours": metrics.god_modules * 8,
+            "estimated_hours": metrics.god_modules * MAX_8,
             "model_hints": {
                 "planning": model_selections["refactor"],
                 "implementation": model_selections["refactor"],
@@ -306,7 +294,7 @@ def example_metric_driven_planning():
             "name": f"Eliminate {metrics.dup_groups} duplicate code groups",
             "task_type": "refactor",
             "priority": "high",
-            "estimated_hours": metrics.dup_groups * 3,
+            "estimated_hours": metrics.dup_groups * MAX_3,
             "model_hints": {
                 "planning": model_selections["refactor"],
                 "implementation": model_selections["refactor"],
@@ -318,7 +306,7 @@ def example_metric_driven_planning():
         "name": "Improve code structure and patterns",
         "task_type": "refactor",
         "priority": "medium",
-        "estimated_hours": max(8, metrics.total_files // 10),
+        "estimated_hours": max(MAX_8, metrics.total_files // 10),
         "model_hints": {
             "planning": model_selections["planning"],
             "implementation": model_selections["refactor"],
@@ -350,7 +338,7 @@ def example_metric_driven_planning():
             "name": f"Generate documentation ({task_scope['documentation']} docs)",
             "task_type": "docs",
             "priority": "medium",
-            "estimated_hours": task_scope["documentation"] * 3,
+            "estimated_hours": task_scope["documentation"] * MAX_3,
             "model_hints": {
                 "planning": model_selections["docs"],
                 "implementation": model_selections["docs"],
@@ -371,21 +359,21 @@ def example_metric_driven_planning():
         {
             "name": "Cyclomatic Complexity",
             "metric": "avg_cc",
-            "threshold": max(3.0, metrics.avg_cc * 0.6),
+            "threshold": max(MAX_3, metrics.avg_cc * 0.6),
             "operator": "<=",
             "current": metrics.avg_cc
         },
         {
             "name": "Test Coverage",
             "metric": "test_coverage",
-            "threshold": 80,
+            "threshold": CONSTANT_80,
             "operator": ">=",
             "current": 0  # Would need actual coverage analysis
         },
         {
             "name": "Code Duplication",
             "metric": "duplication_percent",
-            "threshold": 5,
+            "threshold": MAX_5,
             "operator": "<=",
             "current": metrics.dup_groups * 10  # Rough estimate
         }
@@ -414,7 +402,7 @@ def _calculate_complexity_score(metrics: ProjectMetrics) -> float:
     # Weight different factors
     cc_score = min(100, metrics.avg_cc * 10)  # 40% weight
     size_score = min(100, metrics.total_lines / 100)  # 30% weight
-    structure_score = (metrics.god_modules * 20 + metrics.critical_count * 15)  # 30% weight
+    structure_score = (metrics.god_modules * MAX_20 + metrics.critical_count * MAX_15)  # 30% weight
 
     return (cc_score * 0.4 + size_score * 0.3 + structure_score * 0.3)
 
@@ -433,9 +421,9 @@ def create_llx_config_example():
                 "complexity": {
                     "tool": "code2llm",
                     "threshold": {
-                        "low": 5,
+                        "low": MAX_5,
                         "medium": 10,
-                        "high": 15
+                        "high": MAX_15
                     }
                 },
                 "duplication": {
@@ -454,8 +442,8 @@ def create_llx_config_example():
                 {
                     "name": "high_complexity_refactor",
                     "conditions": {
-                        "avg_cc": {"gt": 8},
-                        "max_cc": {"gt": 20},
+                        "avg_cc": {"gt": MAX_8},
+                        "max_cc": {"gt": MAX_20},
                         "god_modules": {"gt": 0}
                     },
                     "models": ["anthropic/claude-opus-4"],
@@ -464,8 +452,8 @@ def create_llx_config_example():
                 {
                     "name": "medium_complexity_refactor",
                     "conditions": {
-                        "avg_cc": {"gt": 4, "lte": 8},
-                        "total_files": {"gt": 20}
+                        "avg_cc": {"gt": MAX_4, "lte": MAX_8},
+                        "total_files": {"gt": MAX_20}
                     },
                     "models": ["anthropic/claude-sonnet-4", "openai/gpt-4"],
                     "reasoning": "Medium complexity needs balanced model"
@@ -473,7 +461,7 @@ def create_llx_config_example():
                 {
                     "name": "low_complexity_tasks",
                     "conditions": {
-                        "avg_cc": {"lte": 4},
+                        "avg_cc": {"lte": MAX_4},
                         "task_type": ["test", "docs"]
                     },
                     "models": ["anthropic/claude-haiku-4.5", "openai/gpt-3.5-turbo"],
@@ -486,7 +474,7 @@ def create_llx_config_example():
             "planfile": {
                 "auto_analyze": True,
                 "cache_metrics": True,
-                "cache_ttl": 3600,
+                "cache_ttl": CONSTANT_3600,
                 "export_format": "yaml"
             }
         }
@@ -501,9 +489,9 @@ if __name__ == "__main__":
     example_metric_driven_planning()
     create_llx_config_example()
 
-    print("\n\n" + "=" * 60)
+    print("\n\n" + "=" * CONSTANT_60)
     print("LLX Integration Benefits")
-    print("=" * 60)
+    print("=" * CONSTANT_60)
     print("""
     1. Metric-driven decisions based on actual code analysis
     2. Optimal model selection saves cost without sacrificing quality

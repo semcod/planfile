@@ -12,7 +12,13 @@ from planfile.analysis.models import ExtractedIssue
 class SprintGenerator:
     """Generates sprints and tickets from extracted information."""
 
-    def __init__(self):
+    MAX_TICKETS_PER_PRIORITY = 25
+    MAX_TOTAL_TICKETS = 50
+
+    def __init__(self, limits: dict[str, Any] | None = None):
+        limits = limits or {}
+        self.max_tickets_per_priority = int(limits.get('max_tickets_per_priority', self.MAX_TICKETS_PER_PRIORITY))
+        self.max_total_tickets = int(limits.get('max_total_tickets', self.MAX_TOTAL_TICKETS))
         self.sprint_templates = {
             'critical': {
                 'name': 'Critical Issues Sprint',
@@ -174,7 +180,12 @@ class SprintGenerator:
             'low': []
         }
 
+        total_created = 0
         for issue in issues:
+            if total_created >= self.max_total_tickets:
+                break
+            if len(tickets[issue.priority]) >= self.max_tickets_per_priority:
+                continue
             ticket = {
                 'title': issue.title,
                 'description': issue.description,
@@ -186,6 +197,10 @@ class SprintGenerator:
                 'tags': issue.tags
             }
 
-            tickets[issue.priority].append(ticket)
+            bucket = tickets[issue.priority]
+            if len(bucket) >= self.max_tickets_per_priority:
+                continue
+            bucket.append(ticket)
+            total_created += 1
 
         return tickets

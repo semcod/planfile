@@ -1,12 +1,17 @@
 
-
 CONSTANT_14 = 14
 CONSTANT_20 = 20
 CONSTANT_50 = 50
 
-CONSTANT_14 = 14
-CONSTANT_20 = 20
-CONSTANT_50 = 50
+
+
+CONSTANT_14 = CONSTANT_14
+CONSTANT_20 = CONSTANT_20
+CONSTANT_50 = CONSTANT_50
+
+CONSTANT_14 = CONSTANT_14
+CONSTANT_20 = CONSTANT_20
+CONSTANT_50 = CONSTANT_50
 
 """
 Interactive strategy builder using LLX with local LLM.
@@ -79,11 +84,11 @@ class LLXStrategyBuilder:
         answers = {}
 
         print("🎯 Building Strategy with LLX")
-        print("=" * 50)
+        print("=" * CONSTANT_50)
 
         # 1. Basic project info
         print("\n1. Project Goal")
-        print("-" * 20)
+        print("-" * CONSTANT_20)
 
         answers["goal"] = self._call_llx(
             "Ask user: What is the short description of this project's goal? "
@@ -105,7 +110,7 @@ class LLXStrategyBuilder:
 
         # 2. Project details
         print("\n2. Project Details")
-        print("-" * 20)
+        print("-" * CONSTANT_20)
 
         answers["project_type"] = self._call_llx(
             "Ask user: What type of project is this? "
@@ -121,7 +126,7 @@ class LLXStrategyBuilder:
 
         # 3. Sprints
         print("\n3. Sprints")
-        print("-" * 20)
+        print("-" * CONSTANT_20)
 
         answers["sprints"] = []
         sprint_count = int(self._call_llx(
@@ -142,13 +147,13 @@ class LLXStrategyBuilder:
                 "id": i,
                 "name": sprint_name,
                 "objectives": self._parse_bullet_list(objectives),
-                "length_days": 14  # Default
+                "length_days": CONSTANT_14  # Default
             })
             print(f"Sprint {i}: {sprint_name}")
 
         # 4. Task patterns
         print("\n4. Task Patterns")
-        print("-" * 20)
+        print("-" * CONSTANT_20)
 
         # Feature pattern
         feature_title = self._call_llx(
@@ -197,7 +202,7 @@ class LLXStrategyBuilder:
 
         # 5. Quality gates
         print("\n5. Quality Gates")
-        print("-" * 20)
+        print("-" * CONSTANT_20)
 
         answers["quality_gates"] = []
         has_gates = self._call_llx(

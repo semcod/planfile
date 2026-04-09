@@ -3,7 +3,7 @@ Planfile analysis module.
 Provides tools for analyzing code and generating improvement strategies.
 """
 
-from planfile.analysis import external_tools, file_analyzer, generator, sprint_generator
+from planfile.analysis import generator
 from planfile.analysis.external_tools import (
     AnalysisResults,
     ExternalToolRunner,

@@ -6,6 +6,8 @@ CONSTANT_20 = 20
 CONSTANT_50 = 50
 CONSTANT_60 = 60
 
+
+
 """
 Main planfile generator from code analysis.
 Integrates file analysis and sprint generation to create complete strategies.
@@ -40,16 +42,22 @@ class PlanfileGenerator:
         self.generator = SprintGenerator()
         self.external_runner: ExternalToolRunner | None = None
 
+    def _default_limits(self) -> dict[str, int]:
+        return {
+            'max_tickets_per_priority': SprintGenerator.MAX_TICKETS_PER_PRIORITY,
+            'max_total_tickets': SprintGenerator.MAX_TOTAL_TICKETS,
+        }
+
     def generate_with_external_tools(self,
                                      project_path: str = ".",
                                      project_name: str = None,
-                                     max_sprints: int = 4,
+                                     max_sprints: int = CONSTANT_4,
                                      focus_area: str = None,
                                      compact: bool = False) -> Strategy:
         """Generate planfile using external analysis tools (code2llm, vallm, redup)."""
-        print("=" * 60)
+        print("=" * CONSTANT_60)
         print("GENERATING PLANFILE WITH EXTERNAL TOOLS")
-        print("=" * 60)
+        print("=" * CONSTANT_60)
 
         # Run external tools
         self.external_runner = ExternalToolRunner(Path(project_path))
@@ -78,9 +86,9 @@ class PlanfileGenerator:
             issues.append({
                 'title': f"Refactor {func['name']} (CC={func['cc']})",
                 'description': "Function has high cyclomatic complexity",
-                'priority': 'critical' if func['cc'] > 20 else 'high',
+                'priority': 'critical' if func['cc'] > CONSTANT_20 else 'high',
                 'category': 'refactor',
-                'effort_estimate': f"{max(2, func['cc'] // 5)}h",
+                'effort_estimate': f"{max(2, func['cc'] // CONSTANT_5)}h",
                 'file_path': 'analysis.toon.yaml'
             })
 
@@ -90,7 +98,7 @@ class PlanfileGenerator:
                 'description': "Resolve all validation errors found in project",
                 'priority': 'critical',
                 'category': 'bug',
-                'effort_estimate': f"{max(1, results.validation_errors // 5)}d",
+                'effort_estimate': f"{max(1, results.validation_errors // CONSTANT_5)}d",
                 'file_path': 'validation.toon.yaml'
             })
 
@@ -100,7 +108,7 @@ class PlanfileGenerator:
                 'description': "Fix all validation warnings",
                 'priority': 'medium',
                 'category': 'refactor',
-                'effort_estimate': f"{max(1, results.validation_warnings // 3)}d",
+                'effort_estimate': f"{max(1, results.validation_warnings // CONSTANT_3)}d",
                 'file_path': 'validation.toon.yaml'
             })
 
@@ -149,7 +157,7 @@ class PlanfileGenerator:
         else:
             # Strip down high_cc_functions to essential fields only
             compact_high_cc = []
-            for func in results.high_cc_functions[:50]:  # Limit to top 50 functions
+            for func in results.high_cc_functions[:CONSTANT_50]:  # Limit to top CONSTANT_50 functions
                 compact_func = {
                     'name': func.get('name', 'unknown'),
                     'cc': func.get('cc', 0)
@@ -174,7 +182,7 @@ class PlanfileGenerator:
     def generate_from_analysis(self,
                              analysis_path: str,
                              project_name: str = None,
-                             max_sprints: int = 4,
+                             max_sprints: int = CONSTANT_4,
                              focus_area: str = None,
                              external_metrics: dict[str, Any] | None = None,
                              compact: bool = False) -> Strategy:
@@ -196,6 +204,7 @@ class PlanfileGenerator:
             'goal': self._generate_goal(summary, metrics, focus_area),
             'goals': self._generate_goals(summary, metrics, focus_area),
             'quality_gates': self._generate_quality_gates(metrics),
+            'limits': self._default_limits(),
             'sprints': sprints,
             'tasks': self._generate_tasks(analysis_result),
             'metrics': {

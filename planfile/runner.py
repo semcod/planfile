@@ -1,5 +1,4 @@
 
-
 TIMEOUT_5 = 5
 CONSTANT_16 = 16
 TIMEOUT_30 = 30
@@ -9,14 +8,7 @@ CONSTANT_80 = 80
 CONSTANT_90 = 90
 MIN_300 = 300
 
-TIMEOUT_5 = 5
-CONSTANT_16 = 16
-TIMEOUT_30 = 30
-MAX_32 = 32
-CONSTANT_50 = 50
-CONSTANT_80 = 80
-CONSTANT_90 = 90
-MIN_300 = 300
+
 
 """
 Strategy validation and runner for LLX.
@@ -92,12 +84,12 @@ def verify_strategy_post_execution(
         for goal in strategy.goal.quality:
             if "coverage" in goal.lower():
                 coverage = metrics.get("test_coverage", 0)
-                if coverage < 80:  # Default threshold
+                if coverage < CONSTANT_80:  # Default threshold
                     issues["metrics"].append(f"Test coverage {coverage}% is below goal")
 
             if "performance" in goal.lower():
                 # Check performance metrics
-                if metrics.get("performance_score", 100) < 90:
+                if metrics.get("performance_score", 100) < CONSTANT_90:
                     issues["metrics"].append("Performance metrics not met")
 
     except Exception as e:
@@ -123,7 +115,7 @@ def verify_strategy_post_execution(
     return issues
 
 
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=MAX_32)
 def _get_project_hash(project_path: str) -> str:
     """Get a hash of project files for cache invalidation."""
     path = Path(project_path)
@@ -138,7 +130,7 @@ def _get_project_hash(project_path: str) -> str:
             file_count += 1
             latest_mod = max(latest_mod, file_path.stat().st_mtime)
 
-    return hashlib.md5(f"{file_count}-{latest_mod}".encode()).hexdigest()[:16]
+    return hashlib.md5(f"{file_count}-{latest_mod}".encode()).hexdigest()[:CONSTANT_16]
 
 
 def analyze_project_metrics(project_path: str) -> dict[str, Any]:
@@ -169,7 +161,7 @@ def analyze_project_metrics(project_path: str) -> dict[str, Any]:
             cwd=path,
             capture_output=True,
             text=True,
-            timeout=5  # Add timeout
+            timeout=TIMEOUT_5  # Add timeout
         )
         if result.returncode == 0:
             metrics["file_count"] = int(result.stdout.strip())
@@ -187,7 +179,7 @@ def analyze_project_metrics(project_path: str) -> dict[str, Any]:
         # Try cache first
         if cache_file.exists():
             cache_data = json.loads(cache_file.read_text())
-            if time.time() - cache_data.get("timestamp", 0) < 300:  # 5 minutes cache
+            if time.time() - cache_data.get("timestamp", 0) < MIN_300:  # 5 minutes cache
                 metrics["test_coverage"] = cache_data["coverage"]
                 return metrics
 
@@ -197,7 +189,7 @@ def analyze_project_metrics(project_path: str) -> dict[str, Any]:
             cwd=path,
             capture_output=True,
             text=True,
-            timeout=30  # 30 second timeout
+            timeout=TIMEOUT_30  # TIMEOUT_30 second timeout
         )
         if result.returncode == 0:
             coverage_file = path / "coverage.json"
@@ -397,9 +389,9 @@ def run_strategy(
     )
 
     # Summary
-    print("\n" + "=" * 50)
+    print("\n" + "=" * CONSTANT_50)
     print("STRATEGY EXECUTION SUMMARY")
-    print("=" * 50)
+    print("=" * CONSTANT_50)
     print(f"Strategy: {strategy.name}")
     print(f"Sprints: {len(strategy.sprints)}")
     print(f"Tasks created: {len(results['created'])}")

@@ -198,7 +198,7 @@ def init_strategy_cli(
     extra_gates = _ask_list('Dodatkowe bramki jakości (opcjonalnie, enter = pomiń)', example='Docker image builds, API docs generated')
     model_tier = _choice(
         'Preferowany tier modeli LLM',
-        [('free', 'Darmowe (openrouter free / local)'), ('cheap', 'Tanie (gpt-4o-mini, haiku)'),
+        [('free', 'Darmowe (openrouter free / local)'), ('cheap', 'Tanie (gpt-5.4-mini, haiku)'),
          ('balanced', 'Zbalansowane (claude-sonnet, gpt-4o)'), ('premium', 'Premium (claude-opus, gpt-4)')],
         default=detected['model_tier'] or 'cheap',
         detected=bool(detected.get('model_tier')),

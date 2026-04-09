@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 
 CONSTANT_3 = 3
 CONSTANT_4 = 4
@@ -15,19 +13,6 @@ CONSTANT_65 = 65
 CONSTANT_80 = 80
 CONSTANT_3500 = 3500
 
-CONSTANT_3 = 3
-CONSTANT_4 = 4
-CONSTANT_4 = 4.1
-CONSTANT_5 = 5
-CONSTANT_5 = 5.2
-MAX_12 = 12
-MAX_18 = 18
-CONSTANT_25 = 25
-CONSTANT_40 = 40
-CONSTANT_60 = 60
-CONSTANT_65 = 65
-CONSTANT_80 = 80
-CONSTANT_3500 = 3500
 
 """
 Example 2: MCP Tools Integration
@@ -57,18 +42,18 @@ def simulate_planfile_generate(args: dict[str, Any]) -> dict[str, Any]:
     """Simulate planfile generate tool."""
     project_path = args.get("project_path", ".")
     model = args.get("model", "anthropic/claude-sonnet-4")
-    sprints = args.get("sprints", 3)
+    sprints = args.get("sprints", CONSTANT_3)
     focus = args.get("focus", "complexity")
 
     # Simulate project analysis
     metrics = {
-        "total_files": 25,
-        "total_lines": 3500,
-        "avg_cc": 5.2,
-        "max_cc": 18,
-        "critical_count": 3,
+        "total_files": CONSTANT_25,
+        "total_lines": CONSTANT_3500,
+        "avg_cc": CONSTANT_5,
+        "max_cc": MAX_18,
+        "critical_count": CONSTANT_3,
         "god_modules": 2,
-        "dup_groups": 5
+        "dup_groups": CONSTANT_5
     }
 
     # Generate strategy based on metrics
@@ -125,13 +110,13 @@ def simulate_planfile_generate(args: dict[str, Any]) -> dict[str, Any]:
         {
             "name": "Complexity Gate",
             "metric": "avg_cc",
-            "threshold": 3.0,
+            "threshold": CONSTANT_3,
             "operator": "<="
         },
         {
             "name": "Coverage Gate",
             "metric": "test_coverage",
-            "threshold": 80,
+            "threshold": CONSTANT_80,
             "operator": ">="
         }
     ]
@@ -191,21 +176,21 @@ def simulate_planfile_review(args: dict[str, Any]) -> dict[str, Any]:
 
     # Simulate collecting metrics
     current_metrics = {
-        "avg_cc": 4.1,  # Improved from 5.2
-        "max_cc": 12,   # Improved from 18
-        "test_coverage": 65,  # Added coverage
+        "avg_cc": CONSTANT_4,  # Improved from 5.2
+        "max_cc": MAX_12,   # Improved from 18
+        "test_coverage": CONSTANT_65,  # Added coverage
         "god_modules": 1,     # Reduced from 2
     }
 
     # Calculate progress
     total_tasks = 10
-    completed_tasks = 4
+    completed_tasks = CONSTANT_4
     progress = (completed_tasks / total_tasks) * 100
 
     # Check quality gates
     quality_gates = [
-        {"name": "Complexity Gate", "threshold": 3.0, "current": current_metrics["avg_cc"], "passed": False},
-        {"name": "Coverage Gate", "threshold": 80, "current": current_metrics["test_coverage"], "passed": False}
+        {"name": "Complexity Gate", "threshold": CONSTANT_3, "current": current_metrics["avg_cc"], "passed": False},
+        {"name": "Coverage Gate", "threshold": CONSTANT_80, "current": current_metrics["test_coverage"], "passed": False}
     ]
 
     return {
@@ -215,7 +200,7 @@ def simulate_planfile_review(args: dict[str, Any]) -> dict[str, Any]:
             "tasks_completed": completed_tasks,
             "total_tasks": total_tasks,
             "sprints_completed": 1,
-            "total_sprints": 3
+            "total_sprints": CONSTANT_3
         },
         "metrics": current_metrics,
         "quality_gates": quality_gates,
@@ -228,9 +213,9 @@ def simulate_planfile_review(args: dict[str, Any]) -> dict[str, Any]:
 
 def example_mcp_session():
     """Example of an LLM agent using planfile MCP tools."""
-    print("=" * 60)
+    print("=" * CONSTANT_60)
     print("MCP Tools Integration Example")
-    print("=" * 60)
+    print("=" * CONSTANT_60)
 
     # Agent's plan
     agent_plan = """
@@ -245,14 +230,14 @@ def example_mcp_session():
     print(agent_plan)
 
     # Step 1: Generate strategy
-    print("\n" + "=" * 40)
+    print("\n" + "=" * CONSTANT_40)
     print("STEP 1: Generate Strategy")
-    print("=" * 40)
+    print("=" * CONSTANT_40)
 
     result1 = run_mcp_tool("planfile_generate", {
         "project_path": "./my-project",
         "model": "anthropic/claude-sonnet-4",
-        "sprints": 3,
+        "sprints": CONSTANT_3,
         "focus": "complexity",
         "output": "refactor-strategy.yaml"
     })
@@ -260,9 +245,9 @@ def example_mcp_session():
     print(f"Result: {json.dumps(result1, indent=2)}")
 
     # Step 2: Apply strategy
-    print("\n" + "=" * 40)
+    print("\n" + "=" * CONSTANT_40)
     print("STEP 2: Apply Strategy")
-    print("=" * 40)
+    print("=" * CONSTANT_40)
 
     result2 = run_mcp_tool("planfile_apply", {
         "strategy_path": "refactor-strategy.yaml",
@@ -273,9 +258,9 @@ def example_mcp_session():
     print(f"Result: {json.dumps(result2, indent=2)}")
 
     # Step 3: Review progress
-    print("\n" + "=" * 40)
+    print("\n" + "=" * CONSTANT_40)
     print("STEP 3: Review Progress")
-    print("=" * 40)
+    print("=" * CONSTANT_40)
 
     result3 = run_mcp_tool("planfile_review", {
         "strategy_path": "refactor-strategy.yaml",
@@ -285,7 +270,7 @@ def example_mcp_session():
     print(f"Result: {json.dumps(result3, indent=2)}")
 
     # Agent's conclusion
-    print("\n" + "=" * 40)
+    print("\n" + "=" * CONSTANT_40)
     print("AGENT'S CONCLUSION")
     print("=" * CONSTANT_40)
 
@@ -316,7 +301,7 @@ def create_mcp_tool_definitions():
                 "properties": {
                     "project_path": {"type": "string", "default": "."},
                     "model": {"type": "string", "description": "LiteLLM model ID"},
-                    "sprints": {"type": "integer", "default": 3},
+                    "sprints": {"type": "integer", "default": CONSTANT_3},
                     "focus": {"type": "string", "enum": ["complexity", "duplication", "tests", "docs"]},
                     "output": {"type": "string", "default": "strategy.yaml"}
                 }

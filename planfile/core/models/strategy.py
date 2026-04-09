@@ -102,6 +102,7 @@ class Strategy(BaseModel):
     domain: str | None = Field('software', description='Business domain')
     goal: str | None = Field(None, description='Main goal of this strategy')
     description: str | None = Field(None, description='Detailed description')
+    limits: dict[str, Any] = Field(default_factory=dict, description='Limits for generated tickets and tasks')
     sprints: list[Sprint] = Field(default_factory=list, description='Sprints in this strategy')
     tasks: dict[str, Any] = Field(default_factory=dict, description='Task patterns by category (v1 compat)')
     quality_gates: list[QualityGate] = Field(default_factory=list, description='Quality gates')

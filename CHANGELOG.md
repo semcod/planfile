@@ -20,6 +20,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split `_detect_model_tier` (CC=19) into `_tier_from_env_vars`, `_tier_from_env_files`, `_tier_from_config_files` with constants `_ENV_VARS`, `_ENV_FILES`, `_CONFIG_FILES` (`cli/project_detector/model_tier.py`)
 - Split `_make_serializable` (CC=19) into `_serialize_object` + `_serialize_dict` helpers; extract `_SKIP_ATTRS`, `_MAX_STR_LEN`, `_MAX_LIST_LEN` constants; fix pre-existing bug where Python-interned primitives triggered false circular-reference detection (`analysis/generator.py`)
 
+## [0.1.57] - 2026-04-09
+
+### Docs
+- Update README.md
+- Update TODO.md
+
+### Test
+- Update test_planfile_final.py
+- Update tests/llm_adapters.py
+- Update tests/test_strategy.py
+
+### Other
+- Update examples/ecosystem/02_mcp_integration.py
+- Update examples/ecosystem/03_proxy_routing.py
+- Update examples/ecosystem/04_llx_integration.py
+- Update planfile/__init__.py
+- Update planfile/analysis/__init__.py
+- Update planfile/analysis/generator.py
+- Update planfile/analysis/sprint_generator.py
+- Update planfile/builder.py
+- Update planfile/cli/groups/init/commands.py
+- Update planfile/core/models.py
+- ... and 4 more files
+
 ## [0.1.56] - 2026-04-08
 
 ### Docs

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 
 CONSTANT_3 = 3
 CONSTANT_5 = 5
@@ -19,23 +17,6 @@ MAX_4096 = 4096
 CONSTANT_8500 = 8500
 CONSTANT_86400 = 86400
 
-CONSTANT_3 = 3
-CONSTANT_5 = 5
-CONSTANT_6 = 6.2
-CONSTANT_8 = 8
-CONSTANT_20 = 20.0
-MAX_24 = 24
-CONSTANT_30 = 30
-CONSTANT_40 = 40
-CONSTANT_45 = 45
-CONSTANT_50 = 50.0
-CONSTANT_60 = 60
-CONSTANT_200 = 200.0
-CONSTANT_500 = 500.0
-CONSTANT_3600 = 3600
-MAX_4096 = 4096
-CONSTANT_8500 = 8500
-CONSTANT_86400 = 86400
 
 """
 Example 3: Proxy Integration for Smart Model Routing
@@ -61,7 +42,7 @@ class ProxyClient:
             "messages": messages,
             "task_type": task_type,  # Let proxy choose model based on task
             "model": model,  # Optional override
-            "max_tokens": 4096,
+            "max_tokens": MAX_4096,
             "temperature": 0.2
         }
 
@@ -89,21 +70,21 @@ class ProxyClient:
 
 async def example_strategy_generation_with_proxy():
     """Example: Generate strategy using proxy for smart model routing."""
-    print("=" * 60)
+    print("=" * CONSTANT_60)
     print("Strategy Generation with Proxy Model Routing")
-    print("=" * 60)
+    print("=" * CONSTANT_60)
 
     proxy = ProxyClient()
 
     # Project metrics
     project_metrics = {
-        "total_files": 45,
-        "total_lines": 8500,
-        "avg_cc": 6.2,
-        "max_cc": 24,
-        "critical_count": 5,
-        "god_modules": 3,
-        "dup_groups": 8
+        "total_files": CONSTANT_45,
+        "total_lines": CONSTANT_8500,
+        "avg_cc": CONSTANT_6,
+        "max_cc": MAX_24,
+        "critical_count": CONSTANT_5,
+        "god_modules": CONSTANT_3,
+        "dup_groups": CONSTANT_8
     }
 
     # Step 1: Get routing decisions for different tasks
@@ -197,13 +178,13 @@ async def example_strategy_generation_with_proxy():
         model_used = result.get("model", "unknown")
         cost = result.get("usage", {}).get("cost", 0)
 
-        print(f"\nTask {i}: {description[:30]}...")
+        print(f"\nTask {i}: {description[:CONSTANT_30]}...")
         print(f"  Model: {model_used}")
         print(f"  Cost: ${cost:.4f}")
 
     # Step 4: Summary and cost analysis
     print("\n\n4. Cost Analysis Summary")
-    print("=" * 40)
+    print("=" * CONSTANT_40)
 
     total_cost = 0
     model_usage = {}
@@ -260,7 +241,7 @@ def create_proxy_config_example():
                         "complexity": "critical"
                     },
                     "models": ["anthropic/claude-opus-4"],
-                    "max_cost_per_request": 5.0
+                    "max_cost_per_request": CONSTANT_5
                 },
                 {
                     "name": "planfile_standard_refactor",
@@ -300,20 +281,20 @@ def create_proxy_config_example():
             ]
         },
         "budget": {
-            "daily_limit": 50.0,
-            "monthly_limit": 500.0,
+            "daily_limit": CONSTANT_50,
+            "monthly_limit": CONSTANT_500,
             "per_project_limits": {
                 "planfile": {
-                    "daily": 20.0,
-                    "monthly": 200.0
+                    "daily": CONSTANT_20,
+                    "monthly": CONSTANT_200
                 }
             }
         },
         "cache": {
             "enabled": True,
             "strategy_similarity_threshold": 0.8,
-            "task_cache_ttl": 3600,
-            "strategy_cache_ttl": 86400
+            "task_cache_ttl": CONSTANT_3600,
+            "strategy_cache_ttl": CONSTANT_86400
         },
         "analytics": {
             "track_project_metrics": True,
@@ -331,9 +312,9 @@ def create_proxy_config_example():
 
 async def example_budget_tracking():
     """Example: Budget tracking with proxy."""
-    print("\n\n" + "=" * 60)
+    print("\n\n" + "=" * CONSTANT_60)
     print("Budget Tracking Example")
-    print("=" * 60)
+    print("=" * CONSTANT_60)
 
     proxy = ProxyClient()
 
@@ -341,8 +322,8 @@ async def example_budget_tracking():
     stats = await proxy.get_usage_stats()
 
     print("\nCurrent Budget Status:")
-    print(f"  Daily Usage: ${stats.get('daily_usage', 0):.2f} / ${stats.get('daily_limit', 50):.2f}")
-    print(f"  Monthly Usage: ${stats.get('monthly_usage', 0):.2f} / ${stats.get('monthly_limit', 500):.2f}")
+    print(f"  Daily Usage: ${stats.get('daily_usage', 0):.2f} / ${stats.get('daily_limit', CONSTANT_50):.2f}")
+    print(f"  Monthly Usage: ${stats.get('monthly_usage', 0):.2f} / ${stats.get('monthly_limit', CONSTANT_500):.2f}")
     print(f"  Project (planfile): ${stats.get('project_usage', {}).get('planfile', 0):.2f}")
 
     # Simulate budget-aware routing
@@ -372,9 +353,9 @@ if __name__ == "__main__":
     create_proxy_config_example()
     asyncio.run(example_budget_tracking())
 
-    print("\n\n" + "=" * 60)
+    print("\n\n" + "=" * CONSTANT_60)
     print("Summary")
-    print("=" * 60)
+    print("=" * CONSTANT_60)
     print("""
     Proxy integration provides:
     1. Smart model routing based on task complexity

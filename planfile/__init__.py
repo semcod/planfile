@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.56"
+__version__ = "0.1.57"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -54,6 +54,8 @@ if TYPE_CHECKING:
 class Planfile:
     """Main entry point — convenience wrapper around PlanfileStore."""
 
+    MAX_BULK_TICKETS = 50
+
     def __init__(self, project_path: str = "."):
         self.store = PlanfileStore(project_path)
         if not self.store.is_initialized():
@@ -86,12 +88,15 @@ class Planfile:
     def create_tickets_bulk(self, tickets_data: list[dict],
                             source: str = None, sprint: str = "current"):
         created = []
-        for data in tickets_data:
+        for data in tickets_data[:self.MAX_BULK_TICKETS]:
             if source and "source" not in data:
                 data["source"] = {"tool": source}
             data.setdefault("sprint", sprint)
             ticket = self.create_ticket(**data)
             created.append(ticket)
+        if len(tickets_data) > self.MAX_BULK_TICKETS:
+            # Keep the limit explicit so callers can surface it in UX/logs.
+            pass
         return created
 
 

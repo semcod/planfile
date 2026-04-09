@@ -291,7 +291,7 @@ sprints:
         estimate: 2
         priority: "high"
         model_hints:
-          small: "gpt-4o-mini"
+          small: "gpt-5.4-mini"
           large: "gpt-4o"
 
 quality_gates:

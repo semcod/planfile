@@ -43,8 +43,8 @@ def test_planfile_v2():
         'model_map': {
             'local': 'ollama/qwen2.5-coder:7b',
             'cheap': 'openrouter/meta-llama/llama-3.2-3b-instruct:free',
-            'balanced': 'openai/gpt-4o-mini',
-            'premium': 'openai/gpt-4o',
+            'balanced': 'openai/gpt-5.4-mini',
+            'premium': 'x-ai/grok-code-fast-1',
             'free': 'openrouter/meta-llama/llama-3.2-3b-instruct:free'
         }
     })

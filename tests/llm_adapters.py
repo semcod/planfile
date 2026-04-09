@@ -3,6 +3,7 @@ CONSTANT_120 = 120.0
 CONSTANT_200 = 200
 CONSTANT_4000 = 4000
 
+
 """
 LiteLLM adapters for testing planfile with various LLM providers.
 """
@@ -100,7 +101,7 @@ class LiteLLMAdapter(BaseLLMAdapter):
                     }
                 ],
                 temperature=0.3,
-                max_tokens=4000
+                max_tokens=CONSTANT_4000
             )
 
             end_time = time.time()
@@ -187,7 +188,7 @@ class OpenRouterAdapter(BaseLLMAdapter):
                 }
             ],
             "temperature": 0.3,
-            "max_tokens": 4000
+            "max_tokens": CONSTANT_4000
         }
 
         start_time = time.time()
@@ -198,7 +199,7 @@ class OpenRouterAdapter(BaseLLMAdapter):
                     f"{self.base_url}/chat/completions",
                     headers=headers,
                     json=payload,
-                    timeout=120.0
+                    timeout=CONSTANT_120
                 )
                 response.raise_for_status()
 
@@ -271,7 +272,7 @@ class LocalLLMAdapter(BaseLLMAdapter):
             "stream": False,
             "options": {
                 "temperature": 0.3,
-                "num_predict": 4000
+                "num_predict": CONSTANT_4000
             }
         }
 
@@ -282,7 +283,7 @@ class LocalLLMAdapter(BaseLLMAdapter):
                 response = await client.post(
                     f"{self.base_url}/api/generate",
                     json=payload,
-                    timeout=120.0
+                    timeout=CONSTANT_120
                 )
                 response.raise_for_status()
 
@@ -322,7 +323,7 @@ class LocalLLMAdapter(BaseLLMAdapter):
                 }
             ],
             "temperature": 0.3,
-            "max_tokens": 4000
+            "max_tokens": CONSTANT_4000
         }
 
         start_time = time.time()
@@ -332,7 +333,7 @@ class LocalLLMAdapter(BaseLLMAdapter):
                 response = await client.post(
                     f"{self.base_url}/v1/chat/completions",
                     json=payload,
-                    timeout=120.0
+                    timeout=CONSTANT_120
                 )
                 response.raise_for_status()
 
@@ -474,7 +475,7 @@ class LLMTestRunner:
                 section.append(f"- Tokens: {result.token_count}\n")
             if result.cost:
                 section.append(f"- Cost: ${result.cost:.4f}\n")
-            section.append(f"- Response preview: {result.response[:200]}...\n")
+            section.append(f"- Response preview: {result.response[:CONSTANT_200]}...\n")
         return "\n".join(section)
 
     def _generate_failed_tests_section(self, failed: list[LLMTestResult]) -> str:

@@ -62,8 +62,8 @@ class StrategyExecutor:
             'model_map': {
                 'local': 'ollama/qwen2.5-coder:7b',
                 'cheap': 'openrouter/meta-llama/llama-3.2-3b-instruct:free',
-                'balanced': 'openai/gpt-4o-mini',
-                'premium': 'openai/gpt-4o',
+                'balanced': 'openai/gpt-5.4-mini',
+                'premium': 'x-ai/grok-code-fast-1',
                 'free': 'openrouter/meta-llama/llama-3.2-3b-instruct:free'
             },
             'api_keys': {
@@ -204,7 +204,7 @@ class StrategyExecutor:
             else:
                 hint = 'balanced'
 
-        return model_map.get(hint, model_map.get('balanced', 'openai/gpt-4o-mini'))
+        return model_map.get(hint, model_map.get('balanced', 'openai/gpt-5.4-mini'))
 
     def _build_prompt(self, task: Task, project_path: str | Path) -> str:
         """Build execution prompt for task."""
@@ -281,7 +281,7 @@ Focus on practical, actionable steps.
 
 # Convenience functions for different LLM providers
 
-def create_openai_client(api_key: str, model: str = "gpt-4o-mini") -> LLMClient:
+def create_openai_client(api_key: str, model: str = "gpt-5.4-mini") -> LLMClient:
     """Create an OpenAI client."""
     try:
         import openai
@@ -299,7 +299,7 @@ def create_openai_client(api_key: str, model: str = "gpt-4o-mini") -> LLMClient:
         raise ImportError("OpenAI library not installed. Install with: pip install openai")
 
 
-def create_litellm_client(api_key: str = None, model: str = "gpt-4o-mini") -> LLMClient:
+def create_litellm_client(api_key: str = None, model: str = "gpt-5.4-mini") -> LLMClient:
     """Create a LiteLLM client."""
     try:
         import litellm
