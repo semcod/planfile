@@ -11,8 +11,6 @@ Planfile provides automated CI/CD integration that:
 - Optionally auto-fixes bugs with LLM
 - Repeats until all tests pass or strategy is complete
 
-## Quick Start
-
 ### 1. Install
 
 ```bash
@@ -20,9 +18,6 @@ pip install planfile[all]
 pip install llx  # For AI analysis
 ```
 
-### 2. Configure Environment
-
-```bash
 # GitHub
 export GITHUB_TOKEN=your_token
 export GITHUB_REPO=owner/repo
@@ -54,10 +49,6 @@ planfile auto loop \
   --auto-fix
 ```
 
-## 🔄 Auto-Loop Process
-
-### Phase 1: Test Execution
-```bash
 # Run your test suite
 pytest tests/ -v --cov=src
 
@@ -72,8 +63,6 @@ mypy src/
 - Check security vulnerabilities
 - Detect performance regressions
 
-### Phase 3: AI Analysis
-```python
 # Generate bug report
 bug_report = llx.analyze_failure(
     test_output=test_results,
@@ -82,8 +71,6 @@ bug_report = llx.analyze_failure(
 )
 ```
 
-### Phase 4: Ticket Creation
-```yaml
 # GitHub Issue
 title: "Fix: Authentication module test failures"
 body: |
@@ -104,8 +91,6 @@ body: |
   - `tests/test_auth.py`
 ```
 
-### Phase 5: Auto-Fix (Optional)
-```python
 # Generate fix code
 fix_code = llx.generate_fix(
     bug_report=bug_report,
@@ -117,8 +102,6 @@ fix_code = llx.generate_fix(
 apply_fix(fix_code, file_path="src/auth/auth_service.py")
 ```
 
-### Phase 6: Verification
-```bash
 # Re-run tests
 pytest tests/test_auth.py -v
 
@@ -128,8 +111,6 @@ if tests_pass:
 else:
     update_ticket_status(ticket_id, "needs_review")
 ```
-
-## 🐳 Docker Integration
 
 ### Dockerfile
 ```dockerfile
@@ -167,8 +148,6 @@ services:
       - ./results:/app/results
     command: planfile auto loop --strategy strategy.yaml --max-iterations 10
 ```
-
-## 🔧 Configuration
 
 ### Strategy Configuration
 ```yaml
@@ -211,8 +190,6 @@ quality_gates:
     command: "ruff check src/"
 ```
 
-## 🚀 GitHub Actions
-
 ### Workflow Configuration
 ```yaml
 name: Planfile Auto-Loop
@@ -250,10 +227,6 @@ jobs:
             --auto-fix
 ```
 
-## 📊 Monitoring and Reporting
-
-### Progress Tracking
-```bash
 # Check CI status
 planfile auto ci-status
 
@@ -281,8 +254,6 @@ metrics:
     type: "percentage"
     target: 70
 ```
-
-## 🔄 Integration Examples
 
 ### GitHub Integration
 ```python
@@ -341,8 +312,6 @@ issue = gitlab.create_issue(
 )
 ```
 
-## 🛠️ Advanced Features
-
 ### Custom Test Runners
 ```python
 from strategy.ci_runner import CustomTestRunner
@@ -391,8 +360,6 @@ ticket_templates:
     priority: "high"
 ```
 
-## 📈 Best Practices
-
 ### 1. Strategy Design
 - Keep sprints focused and time-boxed
 - Define clear quality gates
@@ -418,24 +385,13 @@ ticket_templates:
 - Set up alerts for failures
 - Regular strategy reviews
 
-## 🔍 Troubleshooting
-
-### Common Issues
-
-#### Auto-Loop Stuck
-```bash
 # Check current status
 planfile auto ci-status
-
-# Force stop
-planfile auto stop
 
 # Resume with different parameters
 planfile auto loop --max-iterations 1 --dry-run
 ```
 
-#### AI Service Issues
-```bash
 # Check API keys
 echo $OPENAI_API_KEY
 
@@ -446,8 +402,6 @@ planfile ai test --provider openai
 planfile auto loop --no-auto-fix
 ```
 
-#### Backend Connection Issues
-```bash
 # Test GitHub connection
 planfile backend test github
 
@@ -458,8 +412,6 @@ planfile backend test jira
 planfile backend check github --permissions
 ```
 
-### Debug Mode
-```bash
 # Enable debug logging
 planfile auto loop --debug --log-level debug
 
@@ -473,7 +425,6 @@ planfile auto loop --dry-run --verbose
 ## 📚 Additional Resources
 
 - [Planfile CLI Reference](CLI.md)
-- [Strategy Schema Guide](STRATEGY_SCHEMA.md)
 - [Integration Examples](EXAMPLES.md)
 - [API Documentation](API.md)
 

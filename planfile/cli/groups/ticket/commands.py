@@ -167,6 +167,51 @@ def ticket_review(ticket_id: str=typer.Argument(..., help='Ticket ID to send for
         raise typer.Exit(1)
     console.print(f'[blue]👀[/blue] Sent {ticket.id} to [blue]review[/blue]')
 
+def _parse_checkbox_line(line: str) -> tuple[bool, str] | None:
+    """Parse a checkbox line. Returns (is_checked, task_text) or None if not a checkbox."""
+    match = re.match('^(\\s*)-\\s*\\[([ xX])\\]\\s*(.+)$', line)
+    if not match:
+        return None
+    is_checked = match.group(2).lower() == 'x'
+    task_text = match.group(3).strip()
+    if not task_text:
+        return None
+    return is_checked, task_text
+
+
+def _extract_priority_from_emoji(task_text: str) -> tuple[str, str]:
+    """Extract priority emoji from task text. Returns (priority, cleaned_text)."""
+    priority_map = {
+        '🔴': 'critical',
+        '🟠': 'high',
+        '🟡': 'medium',
+        '🟢': 'low',
+        '⚪': 'normal'
+    }
+    for emoji, priority in priority_map.items():
+        if task_text.startswith(emoji):
+            return priority, task_text[len(emoji):].strip()
+    return 'normal', task_text
+
+
+def _check_duplicate_ticket(pf, task_text: str, sprint: str) -> bool:
+    """Check if a ticket with the same title already exists."""
+    existing = [t for t in pf.list_tickets(sprint=sprint) if t.title == task_text]
+    return bool(existing)
+
+
+def _import_single_ticket(pf, task_text: str, priority: str, sprint: str, is_checked: bool, todo_file: str, line_num: int) -> str | None:
+    """Import a single ticket. Returns ticket ID or None."""
+    ticket = pf.create_ticket(
+        title=task_text,
+        priority=priority,
+        sprint=sprint,
+        status='done' if is_checked else 'open',
+        source={'tool': 'todo-import', 'context': {'source_file': todo_file, 'line': line_num}}
+    )
+    return ticket.id if ticket else None
+
+
 def ticket_import_todo(todo_file: str=typer.Option('TODO.md', '--file', help='TODO.md file path'), sprint: str=typer.Option('current', '-s', '--sprint'), dry_run: bool=typer.Option(False, '--dry-run', help='Preview without importing')) -> None:
     """Import tickets from TODO.md checkbox items into planfile."""
     from planfile import Planfile
@@ -180,38 +225,22 @@ def ticket_import_todo(todo_file: str=typer.Option('TODO.md', '--file', help='TO
     imported = 0
     skipped = 0
     for line_num, line in enumerate(lines, 1):
-        match = re.match('^(\\s*)-\\s*\\[([ xX])\\]\\s*(.+)$', line)
-        if match:
-            is_checked = match.group(2).lower() == 'x'
-            task_text = match.group(3).strip()
-            if not task_text:
-                continue
-            priority = 'normal'
-            if task_text.startswith('🔴'):
-                priority = 'critical'
-                task_text = task_text[2:].strip()
-            elif task_text.startswith('🟠'):
-                priority = 'high'
-                task_text = task_text[2:].strip()
-            elif task_text.startswith('🟡'):
-                priority = 'medium'
-                task_text = task_text[2:].strip()
-            elif task_text.startswith('🟢'):
-                priority = 'low'
-                task_text = task_text[2:].strip()
-            elif task_text.startswith('⚪'):
-                priority = 'normal'
-                task_text = task_text[2:].strip()
-            existing = [t for t in pf.list_tickets(sprint=sprint) if t.title == task_text]
-            if existing:
-                skipped += 1
-                continue
-            if dry_run:
-                status_str = 'done' if is_checked else 'open'
-                console.print(f'  Would import: [{status_str}] {task_text}')
-            else:
-                ticket = pf.create_ticket(title=task_text, priority=priority, sprint=sprint, status='done' if is_checked else 'open', source={'tool': 'todo-import', 'context': {'source_file': todo_file, 'line': line_num}})
-                console.print(f'  [green]✓[/green] Imported {ticket.id}: {ticket.title[:50]}')
+        parsed = _parse_checkbox_line(line)
+        if not parsed:
+            continue
+        is_checked, task_text = parsed
+        priority, cleaned_text = _extract_priority_from_emoji(task_text)
+        if _check_duplicate_ticket(pf, cleaned_text, sprint):
+            skipped += 1
+            continue
+        if dry_run:
+            status_str = 'done' if is_checked else 'open'
+            console.print(f'  Would import: [{status_str}] {cleaned_text}')
+            imported += 1
+        else:
+            ticket_id = _import_single_ticket(pf, cleaned_text, priority, sprint, is_checked, todo_file, line_num)
+            if ticket_id:
+                console.print(f'  [green]✓[/green] Imported {ticket_id}: {cleaned_text[:50]}')
                 imported += 1
     if dry_run:
         console.print(f'\n[cyan]🔍 Dry run — would import {imported} tickets[/cyan]')

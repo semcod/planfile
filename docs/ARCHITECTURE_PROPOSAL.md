@@ -1,13 +1,9 @@
-# Planfile Architecture Proposal: Clear Sources of Truth
-
 ## Problem Statement
 Currently planfile has confusing data storage:
 - `planfile.yaml` contains strategy metadata with unused `tickets: {}` fields
 - `.planfile/sprints/` contains the actual tickets (runtime data)
 - Integration configurations are mixed with ticket data
 - Users are confused about where the "real" data lives
-
-## Proposed Architecture
 
 ### 1. Single Source of Truth for Tasks: `.planfile/`
 The `.planfile/` directory becomes the canonical store for ALL ticket data:
@@ -81,8 +77,6 @@ strategy:
     - "CC̄ ≤ 3.0"
     - "Test coverage ≥ 80%"
 ```
-
-## Migration Plan
 
 ### Phase 1: Update Core Models
 1. Remove `tickets: {}` from Sprint model in planfile.yaml

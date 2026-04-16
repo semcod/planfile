@@ -31,8 +31,6 @@ Code2LLM is a code analysis tool that identifies technical debt, refactoring opp
    npm install -g code2llm
    ```
 
-## Running the Example
-
 ### Quick Start
 
 ```bash
@@ -122,8 +120,6 @@ The example targets these quality metrics:
 - **Vallm ≥ 95%**: Code validation score should be 95% or higher
 - **0 god modules**: No modules with excessive complexity
 
-## Workflow Integration
-
 ### 1. Regular Analysis
 Run code2llm regularly (e.g., weekly) to identify new technical debt:
 
@@ -149,10 +145,6 @@ Track technical debt reduction:
 ```bash
 # Show completed refactoring
 planfile ticket list --status done --source code2llm
-
-# Generate metrics report
-planfile stats
-```
 
 ## Best Practices
 
@@ -187,8 +179,6 @@ jobs:
           planfile ticket import --from evolution.toon --source code2llm --sprint backlog
 ```
 
-## Troubleshooting
-
 ### No tasks imported
 - Check that evolution.toon has a NEXT[] section
 - Verify tasks have valid H/L priority format
@@ -203,8 +193,6 @@ jobs:
 - Verify H/L format in evolution.toon
 - Check for spaces around the slash
 - Ensure WHY field is present
-
-## Advanced Usage
 
 ### Custom Priority Mapping
 Create a custom mapping in planfile.yaml:

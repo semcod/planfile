@@ -1,5 +1,3 @@
-# Planfile Examples - Quick Start Guide
-
 ## 🚀 One-Command Execution
 
 Run all examples with a single command:
@@ -15,13 +13,6 @@ The examples now run significantly faster with recent optimizations:
 - **60-second timeout protection** prevents hangs
 - **Intelligent caching** for repeated operations
 - **Thread-safe file operations** for better concurrency
-
-## 📋 Available Commands
-
-### Basic Usage
-```bash
-# Run all examples (with timeout protection)
-./run_examples.sh
 
 # Run specific example
 ./run_examples.sh quick-start
@@ -40,8 +31,6 @@ The examples now run significantly faster with recent optimizations:
 ./run_examples.sh --help
 ```
 
-### Using the CLI (New)
-```bash
 # List examples with rich output
 planfile examples list
 
@@ -51,8 +40,6 @@ planfile examples run --all
 # Run specific example with timeout
 planfile examples run code2llm
 ```
-
-## 🎯 Available Examples
 
 ### ⚡ Quick Start
 Perfect for beginners - get started with planfile in minutes!
@@ -157,8 +144,6 @@ Each example creates its own set of files:
 - `generated-from-examples.yaml` - Strategy from analysis
 - `template-*.yaml` - Various project templates
 - `strategy-export.*` - Multiple export formats
-
-## 🔧 Troubleshooting
 
 ### Common Issues
 

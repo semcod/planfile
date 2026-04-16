@@ -278,7 +278,24 @@ class PlanfileGenerator:
     _MAX_STR_LEN = 1000
     _MAX_LIST_LEN = 100
 
-    def _serialize_object(self, obj: Any, visited: set) -> dict:
+    def _is_primitive(self, obj: Any) -> bool:
+        """Check if object is a primitive type that doesn't need serialization."""
+        return isinstance(obj, (int, float, bool, str)) or obj is None
+
+    def _serialize_primitive(self, obj: Any) -> Any:
+        """Serialize a primitive value, truncating long strings."""
+        if isinstance(obj, str) and len(obj) > self._MAX_STR_LEN:
+            return f"<string_length_{len(obj)}>"
+        return obj
+
+    def _check_circular_ref(self, obj: Any, visited: set) -> str | None:
+        """Check for circular reference. Returns marker string if circular, None otherwise."""
+        obj_id = id(obj)
+        if obj_id in visited:
+            return f"<circular_reference_{obj_id}>"
+        return None
+
+    def _serialize_object_attrs(self, obj: Any, visited: set) -> dict:
         """Serialize an object's public __dict__ attributes."""
         result = {}
         for k, v in obj.__dict__.items():
@@ -287,39 +304,41 @@ class PlanfileGenerator:
             result[k] = self._make_serializable(v, visited)
         return result
 
-    def _serialize_dict(self, obj: dict, visited: set) -> dict:
+    def _serialize_dict_items(self, obj: dict, visited: set) -> dict:
         """Serialize a dict, truncating oversized string values."""
         result = {}
         for k, v in obj.items():
-            if isinstance(v, str) and len(v) > self._MAX_STR_LEN:
-                result[k] = f"<string_length_{len(v)}>"
-            else:
-                result[k] = self._make_serializable(v, visited)
+            result[k] = self._serialize_primitive(v) if isinstance(v, str) and len(v) > self._MAX_STR_LEN else self._make_serializable(v, visited)
         return result
+
+    def _serialize_list_items(self, obj: list, visited: set) -> list | str:
+        """Serialize list items. Returns truncated marker if list is too long."""
+        if len(obj) > self._MAX_LIST_LEN:
+            return f"<list_length_{len(obj)}>"
+        return [self._make_serializable(item, visited) for item in obj]
 
     def _make_serializable(self, obj: Any, visited: set = None) -> Any:
         """Convert object to serializable format with cycle detection."""
         if visited is None:
             visited = set()
 
-        if isinstance(obj, (int, float, bool)) or obj is None:
-            return obj
-        if isinstance(obj, str):
-            return obj if len(obj) <= self._MAX_STR_LEN else f"<string_length_{len(obj)}>"
+        # Handle primitives
+        if self._is_primitive(obj):
+            return self._serialize_primitive(obj)
 
-        obj_id = id(obj)
-        if obj_id in visited:
-            return f"<circular_reference_{obj_id}>"
-        visited.add(obj_id)
+        # Check for circular reference
+        circular = self._check_circular_ref(obj, visited)
+        if circular:
+            return circular
+        visited.add(id(obj))
 
+        # Handle complex types
         if hasattr(obj, '__dict__'):
-            return self._serialize_object(obj, visited)
+            return self._serialize_object_attrs(obj, visited)
         if isinstance(obj, dict):
-            return self._serialize_dict(obj, visited)
+            return self._serialize_dict_items(obj, visited)
         if isinstance(obj, list):
-            if len(obj) > self._MAX_LIST_LEN:
-                return f"<list_length_{len(obj)}>"
-            return [self._make_serializable(item, visited) for item in obj]
+            return self._serialize_list_items(obj, visited)
         if hasattr(obj, '__name__'):
             return str(obj)
         return f"<type_{type(obj).__name__}>"

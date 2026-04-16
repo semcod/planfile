@@ -1,5 +1,3 @@
-# Planfile Examples Summary
-
 ## Overview
 Successfully verified and enhanced the planfile examples with complex, real-world strategies.
 
@@ -7,8 +5,6 @@ Successfully verified and enhanced the planfile examples with complex, real-worl
 1. **Fixed relative imports** - All examples now work with the updated import structure
 2. **Fixed strategy validation** - Added missing `project_name` field to existing strategies
 3. **Updated quality gates format** - Standardized to use `metric`/`threshold` format
-
-## New Complex Strategies Added
 
 ### 1. Microservices Migration Strategy
 - **Domain**: Enterprise Software
@@ -53,8 +49,6 @@ All 5 strategies now pass:
 - ✅ Planfile validation command
 - ✅ Strategy generation (dry run)
 
-## Example Scripts Created
-
 ### 1. `test_strategies.py`
 - Validates all strategy files
 - Tests planfile validation command
@@ -67,9 +61,6 @@ All 5 strategies now pass:
 - Includes project metrics analysis
 - Export results to markdown
 
-## Running Examples
-
-```bash
 # Test all strategies
 python3 planfile/examples/test_strategies.py
 

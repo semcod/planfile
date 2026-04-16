@@ -1,9 +1,5 @@
-# Planfile V2 Migration Guide
-
 ## Overview
 Planfile V2 introduces a simplified, more robust format based on real-world testing experience. This guide helps you migrate from V1 to V2.
-
-## Key Improvements
 
 ### 1. **Simplified Task Structure**
 Tasks are now embedded directly in sprints instead of being defined separately.
@@ -62,8 +58,6 @@ The V2 loader handles various formats gracefully:
 - Missing optional fields get defaults
 - String criteria auto-convert to lists
 - Mixed task formats are accepted
-
-## Migration Steps
 
 ### Step 1: Update Your Strategy Files
 
@@ -146,8 +140,6 @@ V2 maintains backward compatibility:
 - V2 can load and convert V1 formats automatically
 - Existing code continues to work
 
-## Common Migration Patterns
-
 ### Pattern 1: Simple Refactoring Strategy
 
 ```yaml
@@ -199,8 +191,6 @@ sprints:
         type: "test"
         model_hints: "cheap"
 ```
-
-## Troubleshooting
 
 ### Error: "task_patterns not found"
 **Solution:** Tasks are now embedded in sprints. Move them there.

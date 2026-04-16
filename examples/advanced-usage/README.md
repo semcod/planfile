@@ -16,17 +16,9 @@ Advanced patterns and workflows for power users. This example demonstrates compl
 - `advanced_usage_examples.py` - Main example script
 - `run.sh` - Convenience script to run the example
 
-## Running
-
-```bash
-# Using the convenience script
-./run.sh
-
 # Or directly with Python
 python3 advanced_usage_examples.py
 ```
-
-## Examples Included
 
 ### 1. Custom File Patterns
 Analyzes projects with custom file patterns:
@@ -76,8 +68,6 @@ Creates automated workflows:
 - Task creation
 - Workflow script generation
 
-## Generated Files
-
 ### Custom Patterns
 - `custom-patterns-strategy.yaml` - Strategy from custom analysis
 
@@ -104,8 +94,6 @@ Creates automated workflows:
 ### CI/CD
 - `ci-analysis-strategy.yaml` - CI analysis
 - `ci-workflow.sh` - Generated workflow script
-
-## Advanced Patterns
 
 ### Custom Analysis
 ```python

@@ -1,10 +1,6 @@
-# File-Based Planfile Generation System
-
 ## Overview
 
 This system automatically generates comprehensive `planfile.yaml` strategies by analyzing YAML/JSON files in your project. It extracts issues, metrics, and tasks from various file formats to create data-driven improvement plans.
-
-## Components
 
 ### 1. Enhanced File Analyzer (`enhanced_analyze.py`)
 - Analyzes YAML, JSON, and Toon format files
@@ -24,8 +20,6 @@ This system automatically generates comprehensive `planfile.yaml` strategies by 
 - Balances workload across sprints
 - Estimates effort based on complexity
 
-## Supported File Formats
-
 ### Standard Formats
 - **YAML (.yaml, .yml)** - Configuration files, documentation
 - **JSON (.json)** - Configuration, data files
@@ -41,10 +35,6 @@ This system automatically generates comprehensive `planfile.yaml` strategies by 
 - **Metrics**: Cyclomatic complexity, test coverage, error counts
 - **Tasks**: Refactoring needs, test requirements, documentation
 
-## Usage
-
-### Basic Usage
-```bash
 # Analyze current directory
 python3 generate_from_files.py
 
@@ -58,8 +48,6 @@ python3 generate_from_files.py --output my-plan.yaml
 python3 generate_from_files.py --project-name "My Project"
 ```
 
-### Advanced Options
-```bash
 # Limit number of sprints
 python3 generate_from_files.py --max-sprints 2
 
@@ -69,8 +57,6 @@ python3 generate_from_files.py --patterns "*.yaml" "*.json"
 # Analyze only specific directory
 python3 enhanced_analyze.py ./analysis --format json
 ```
-
-## Generated Planfile Structure
 
 ### Goals Section
 Automatically generated based on found issues:
@@ -125,8 +111,6 @@ tickets:
     file_path: "src/module.py"
 ```
 
-## Integration with Analysis Tools
-
 ### code2llm Integration
 Extracts from `analysis.toon.yaml`:
 - Average cyclomatic complexity
@@ -148,24 +132,16 @@ Extracts from `duplication.toon.yaml`:
 - Specific duplicate functions
 - Extraction opportunities
 
-## Example Workflow
-
-### 1. Run Analysis Tools
-```bash
 # Run code analysis tools
 venv/bin/code2llm . -f all -o ./project --no-chunk
 venv/bin/vallm batch . --recursive --format toon --output .
 venv/bin/redup scan . --format toon --output ./project
 ```
 
-### 2. Generate Planfile
-```bash
 # Generate from analysis results
 python3 generate_from_files.py ./project --project-name myproject
 ```
 
-### 3. Validate and Apply
-```bash
 # Validate generated planfile
 python3 -m planfile.cli.commands validate planfile-from-files.yaml
 
@@ -175,8 +151,6 @@ python3 -m planfile.cli.commands apply planfile-from-files.yaml . --dry-run
 # Apply to real backend
 python3 -m planfile.cli.commands apply planfile-from-files.yaml . --backend github
 ```
-
-## Customization
 
 ### Adding New File Types
 Extend `EnhancedFileAnalyzer`:
@@ -202,8 +176,6 @@ Modify `generate_sprints()` to create custom sprint structures.
 3. **Update Estimates**: Review effort estimates based on team velocity
 4. **Track Metrics**: Monitor improvement in quality gates over time
 5. **Iterate**: Re-generate planfile after completing sprints
-
-## Troubleshooting
 
 ### Common Issues
 
@@ -235,8 +207,6 @@ for issue in issues[:5]:
 - Memory usage scales with file count
 - Can be run on CI/CD pipelines
 
-## Integration Examples
-
 ### GitHub Actions
 ```yaml
 - name: Generate Planfile
@@ -251,8 +221,6 @@ for issue in issues[:5]:
 python3 generate_from_files.py --max-sprints 1 --output quick-plan.yaml
 ```
 
-### CI/CD Pipeline
-```bash
 # Generate improvement plan
 python3 generate_from_files.py --output ci-plan.yaml
 

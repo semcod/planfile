@@ -111,9 +111,6 @@ from planfile import PlanfileStore
 # Direct store access for advanced operations
 store = PlanfileStore("/path/to/project")
 
-# Initialize new planfile directory
-store.init()
-
 # CRUD operations
 ticket = store.create_ticket(ticket_data)
 store.update_ticket("TICKET-123", status="done")
@@ -130,9 +127,6 @@ next_id = store.next_id()  # TICKET-NNN
 
 Run planfile as a FastAPI server for HTTP access.
 
-### Running the Server
-
-```bash
 # Install with FastAPI support
 pip install planfile
 pip install fastapi uvicorn
@@ -143,8 +137,6 @@ uvicorn planfile.api.server:app --reload --host 0.0.0.0 --port 8000
 # Or use planfile CLI
 planfile server --port 8000
 ```
-
-### Available Endpoints
 
 #### Tickets
 
@@ -163,9 +155,6 @@ planfile server --port 8000
 |--------|----------|-------------|
 | `GET` | `/health` | Server health check |
 
-### Example Usage
-
-```bash
 # List all tickets
 curl "http://localhost:8000/tickets?sprint=current"
 
@@ -226,10 +215,6 @@ client.post(f"/tickets/{new_ticket['id']}/move", params={"to_sprint": "next"})
 ```
 
 ---
-
-## Core Components
-
-### Strategy Models
 
 #### Strategy
 ```python
@@ -304,8 +289,6 @@ task = TaskPattern(
 )
 ```
 
-### CLI Commands
-
 #### Auto Commands
 ```python
 from planfile.cli.commands import auto_loop_cli, auto_ci_status_cli
@@ -357,8 +340,6 @@ validate_strategy_cli(
     schema="strict"
 )
 ```
-
-### Backend Integration
 
 #### GitHub Backend
 ```python
@@ -449,8 +430,6 @@ gitlab.update_issue(
 )
 ```
 
-### CI/CD Runner
-
 #### CIRunner
 ```python
 from planfile.ci_runner import CIRunner
@@ -496,8 +475,6 @@ fix_code = analyzer.generate_fix(
 )
 ```
 
-### Loaders
-
 #### YAML Loader
 ```python
 from planfile.loaders.yaml_loader import (
@@ -536,8 +513,6 @@ save_strategy_json(strategy, "strategy_updated.json")
 # Export to Markdown
 markdown = export_to_markdown(strategy)
 ```
-
-### Utilities
 
 #### Metrics
 ```python
@@ -585,10 +560,6 @@ github_priority = map_priority_to_system(
 color = get_priority_color(priority)
 ```
 
-## Configuration
-
-### Environment Variables
-```bash
 # GitHub
 GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 GITHUB_REPO=owner/repo
@@ -608,8 +579,6 @@ OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxx
 ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxx
 ```
 
-### Configuration Files
-```yaml
 # ~/.planfile/config.yaml
 default_backend: github
 default_strategy: strategy.yaml
@@ -632,8 +601,6 @@ ai:
   model: gpt-4
   temperature: 0.1
 ```
-
-## Error Handling
 
 ### Exceptions
 ```python
@@ -668,8 +635,6 @@ setup_logging(
 logger = logging.getLogger(__name__)
 logger.info("Starting auto-loop")
 ```
-
-## Testing
 
 ### Unit Tests
 ```python
@@ -719,8 +684,6 @@ def test_auto_loop_mock():
         mock_tests.assert_called_once()
 ```
 
-## Performance
-
 ### Caching
 ```python
 from functools import lru_cache
@@ -742,8 +705,6 @@ async def create_multiple_issues(backend, issues):
     tasks = [backend.create_issue(**issue) for issue in issues]
     return await asyncio.gather(*tasks)
 ```
-
-## Security
 
 ### Token Management
 ```python
@@ -771,8 +732,6 @@ class TaskPattern(BaseModel):
             raise ValueError("Title must be at least 3 characters")
         return v.strip()
 ```
-
-## Extensibility
 
 ### Custom Backends
 ```python

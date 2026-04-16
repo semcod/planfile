@@ -1,13 +1,9 @@
-# Automated Planfile Generation System
-
 ## Overview
 
 Created a complete automated system for generating `planfile.yaml` based on project analysis results from three tools:
 - **code2llm** - Cyclomatic complexity analysis
 - **vallm** - Validation and linting  
 - **redup** - Code duplication detection
-
-## Components Created
 
 ### 1. Core Generator (`generate_planfile.py`)
 - Parses analysis results from all three tools
@@ -33,10 +29,6 @@ Created a complete automated system for generating `planfile.yaml` based on proj
 - Customization guide
 - Troubleshooting tips
 
-## Usage
-
-### Quick Start
-```bash
 # Generate with mock data (fast)
 ./planfile_gen --mock
 
@@ -53,8 +45,6 @@ python3 generate_planfile.py
 ./planfile_gen --apply --backend github
 ```
 
-### Advanced Usage
-```bash
 # Custom project path
 python3 generate_planfile.py --project-path /path/to/project
 
@@ -82,8 +72,6 @@ python3 generate_planfile.py --output my-strategy.yaml
    - Save planfile.yaml
    - Validate structure
    - Optional dry-run application
-
-## Generated Strategy Features
 
 ### Sprints
 - **Sprint 1**: Fix critical issues (errors, high-CC, duplicates)

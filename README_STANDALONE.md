@@ -2,9 +2,6 @@
 
 Planfile can now be used as a standalone package without LLX dependencies. This makes it easier to integrate into any project.
 
-## Installation
-
-```bash
 # Install base package
 pip install planfile
 
@@ -13,8 +10,6 @@ pip install planfile[openai]  # For OpenAI
 pip install planfile[litellm]  # For LiteLLM (supports many providers)
 pip install planfile[all]  # All optional dependencies
 ```
-
-## Quick Start
 
 ### 1. Basic Usage (Mock Execution)
 
@@ -103,8 +98,6 @@ sprints:
         model_hints: "cheap"  # Use free/cheap models
 ```
 
-## Key Improvements
-
 ### 1. **Simplified Format**
 - Tasks are embedded directly in sprints
 - No separate task patterns section
@@ -150,8 +143,6 @@ config = {
 
 executor = StrategyExecutor(config=config)
 ```
-
-## Integration Examples
 
 ### FastAPI Integration
 
@@ -228,9 +219,6 @@ See `example_standalone.py` for complete examples including:
 - Custom client implementation
 - Model configuration
 
-## Testing
-
-```bash
 # Run basic tests
 python3 example_standalone.py
 

@@ -1,17 +1,13 @@
-# System Architecture Analysis
-
 ## Overview
 
 - **Project**: /home/tom/github/semcod/planfile
 - **Primary Language**: python
 - **Languages**: python: 136, shell: 33, javascript: 1
 - **Analysis Mode**: static
-- **Total Functions**: 607
+- **Total Functions**: 613
 - **Total Classes**: 70
 - **Modules**: 170
-- **Entry Points**: 398
-
-## Architecture by Module
+- **Entry Points**: 401
 
 ### examples.rest-api.04_javascript_client
 - **Functions**: 22
@@ -23,15 +19,15 @@
 - **Classes**: 4
 - **File**: `base.py`
 
+### planfile.analysis.generator
+- **Functions**: 20
+- **Classes**: 1
+- **File**: `generator.py`
+
 ### examples.ecosystem.01_full_workflow
 - **Functions**: 17
 - **Classes**: 6
 - **File**: `01_full_workflow.sh`
-
-### planfile.analysis.generator
-- **Functions**: 17
-- **Classes**: 1
-- **File**: `generator.py`
 
 ### planfile.loaders.yaml_loader
 - **Functions**: 15
@@ -51,13 +47,13 @@
 - **Functions**: 13
 - **File**: `run_examples.sh`
 
-### planfile.cli.project_detector.gates
-- **Functions**: 13
-- **File**: `gates.py`
-
 ### planfile.cli.groups.ticket.commands
 - **Functions**: 13
 - **File**: `commands.py`
+
+### planfile.cli.project_detector.gates
+- **Functions**: 13
+- **File**: `gates.py`
 
 ### planfile.executor_standalone
 - **Functions**: 12
@@ -82,11 +78,6 @@
 - **Functions**: 11
 - **File**: `commands.py`
 
-### planfile.sync.jira
-- **Functions**: 10
-- **Classes**: 1
-- **File**: `jira.py`
-
 ### planfile.sync.generic
 - **Functions**: 10
 - **Classes**: 1
@@ -105,6 +96,11 @@
 - **Functions**: 10
 - **Classes**: 1
 - **File**: `sprint_generator.py`
+
+### planfile.sync.jira
+- **Functions**: 10
+- **Classes**: 1
+- **File**: `jira.py`
 
 ## Key Entry Points
 
@@ -169,10 +165,6 @@ Automat
 > Check current CI status without running tests.
 - **Calls**: typer.Argument, console.print, results_file.exists, coverage_file.exists, list, json.loads, console.print, console.print
 
-### planfile.analysis.generator.PlanfileGenerator._make_serializable
-> Convert object to serializable format with cycle detection.
-- **Calls**: id, visited.add, hasattr, set, obj.__dict__.items, isinstance, self._make_serializable, obj.items
-
 ### planfile.cli.groups.query.commands.stats_cmd
 > Show strategy statistics.
 - **Calls**: typer.Argument, planfile.loaders.yaml_loader.load_strategy_yaml, planfile.cli.groups.query.commands.calculate_strategy_stats, Table, table.add_column, table.add_column, table.add_row, table.add_row
@@ -209,6 +201,10 @@ Automat
 > Run simplified integration examples.
 - **Calls**: examples.gitlab.run.print, examples.gitlab.run.print, examples.gitlab.run.print, TicketLogger, examples.gitlab.run.print, examples.gitlab.run.print, logger.metric_alert, examples.gitlab.run.print
 
+### planfile.analysis.generator.PlanfileGenerator._make_serializable
+> Convert object to serializable format with cycle detection.
+- **Calls**: isinstance, id, visited.add, hasattr, isinstance, isinstance, hasattr, set
+
 ### planfile.cli.groups.query.commands.compare_cmd
 > Compare two strategies.
 - **Calls**: typer.Argument, typer.Argument, typer.Option, planfile.loaders.yaml_loader.load_strategy_yaml, planfile.loaders.yaml_loader.load_strategy_yaml, planfile.cli.groups.query.commands.compare_strategies, console.print, Panel
@@ -232,11 +228,12 @@ Usage:
     md_data = pf.store.e
 - **Calls**: self.list_tickets, json.dumps, io.StringIO, csv.writer, writer.writerow, output.getvalue, t.model_dump, writer.writerow
 
+### planfile.analysis.generator.PlanfileGenerator.generate_from_analysis
+> Generate planfile from analyzed files.
+- **Calls**: self.analyzer.analyze_directory, self.generator.generate_sprints, self.generator.generate_tickets, self._extract_key_metrics, self._create_strategy_object, Path, self._generate_goal, self._generate_goals
+
 ### planfile.core.models.strategy.Sprint.convert_tasks
 - **Calls**: field_validator, isinstance, isinstance, isinstance, tasks.append, isinstance, tasks.append, tasks.append
-
-### planfile.sync.markdown_backend.tickets.MarkdownTicketHelpers._write_ticket_to_file
-- **Calls**: open, f.read, f.seek, f.write, f.truncate, content.find, content.find, content.find
 
 ## Process Flows
 
@@ -303,16 +300,14 @@ init_strategy_cli [planfile.cli.groups.init.commands]
           └─ →> _detect_from_package_json
 ```
 
-## Key Classes
-
 ### examples.rest-api.04_javascript_client.PlanfileClient
 - **Methods**: 21
 - **Key Methods**: examples.rest-api.04_javascript_client.PlanfileClient.request, examples.rest-api.04_javascript_client.PlanfileClient.url, examples.rest-api.04_javascript_client.PlanfileClient.response, examples.rest-api.04_javascript_client.PlanfileClient.health, examples.rest-api.04_javascript_client.PlanfileClient.listTickets, examples.rest-api.04_javascript_client.PlanfileClient.createTicket, examples.rest-api.04_javascript_client.PlanfileClient.getTicket, examples.rest-api.04_javascript_client.PlanfileClient.updateTicket, examples.rest-api.04_javascript_client.PlanfileClient.moveTicket, examples.rest-api.04_javascript_client.PlanfileClient.deleteTicket
 
 ### planfile.analysis.generator.PlanfileGenerator
 > Generate comprehensive planfile from file analysis.
-- **Methods**: 17
-- **Key Methods**: planfile.analysis.generator.PlanfileGenerator.__init__, planfile.analysis.generator.PlanfileGenerator.generate_with_external_tools, planfile.analysis.generator.PlanfileGenerator._external_to_internal_analysis, planfile.analysis.generator.PlanfileGenerator._extract_external_metrics, planfile.analysis.generator.PlanfileGenerator.generate_from_analysis, planfile.analysis.generator.PlanfileGenerator.generate_from_current_project, planfile.analysis.generator.PlanfileGenerator._extract_key_metrics, planfile.analysis.generator.PlanfileGenerator._generate_goal, planfile.analysis.generator.PlanfileGenerator._generate_goals, planfile.analysis.generator.PlanfileGenerator._generate_quality_gates
+- **Methods**: 20
+- **Key Methods**: planfile.analysis.generator.PlanfileGenerator.__init__, planfile.analysis.generator.PlanfileGenerator._default_limits, planfile.analysis.generator.PlanfileGenerator.generate_with_external_tools, planfile.analysis.generator.PlanfileGenerator._external_to_internal_analysis, planfile.analysis.generator.PlanfileGenerator._extract_external_metrics, planfile.analysis.generator.PlanfileGenerator.generate_from_analysis, planfile.analysis.generator.PlanfileGenerator.generate_from_current_project, planfile.analysis.generator.PlanfileGenerator._extract_key_metrics, planfile.analysis.generator.PlanfileGenerator._generate_goal, planfile.analysis.generator.PlanfileGenerator._generate_goals
 
 ### planfile.sync.base.BasePMBackend
 > Base class for PM backends with common functionality.
@@ -330,12 +325,6 @@ init_strategy_cli [planfile.cli.groups.init.commands]
 - **Methods**: 11
 - **Key Methods**: planfile.analysis.external_tools.ExternalToolRunner.__init__, planfile.analysis.external_tools.ExternalToolRunner.run_all, planfile.analysis.external_tools.ExternalToolRunner.run_code2llm, planfile.analysis.external_tools.ExternalToolRunner.run_vallm, planfile.analysis.external_tools.ExternalToolRunner.run_redup, planfile.analysis.external_tools.ExternalToolRunner.parse_code2llm_output, planfile.analysis.external_tools.ExternalToolRunner.parse_vallm_output, planfile.analysis.external_tools.ExternalToolRunner.parse_redup_output, planfile.analysis.external_tools.ExternalToolRunner._mock_code2llm_data, planfile.analysis.external_tools.ExternalToolRunner._mock_vallm_data
 
-### planfile.sync.jira.JiraBackend
-> Jira integration backend.
-- **Methods**: 10
-- **Key Methods**: planfile.sync.jira.JiraBackend.__init__, planfile.sync.jira.JiraBackend._validate_config, planfile.sync.jira.JiraBackend.map_priority, planfile.sync.jira.JiraBackend._map_task_type_to_jira, planfile.sync.jira.JiraBackend._create_ticket, planfile.sync.jira.JiraBackend._update_ticket, planfile.sync.jira.JiraBackend._get_ticket, planfile.sync.jira.JiraBackend._issue_to_ticket_status, planfile.sync.jira.JiraBackend._list_tickets, planfile.sync.jira.JiraBackend._search_tickets
-- **Inherits**: BasePMBackend
-
 ### planfile.sync.generic.GenericBackend
 > Generic HTTP API backend for PM systems.
 - **Methods**: 10
@@ -351,6 +340,12 @@ init_strategy_cli [planfile.cli.groups.init.commands]
 > Generates sprints and tickets from extracted information.
 - **Methods**: 10
 - **Key Methods**: planfile.analysis.sprint_generator.SprintGenerator.__init__, planfile.analysis.sprint_generator.SprintGenerator.generate_sprints, planfile.analysis.sprint_generator.SprintGenerator._group_issues_by_priority, planfile.analysis.sprint_generator.SprintGenerator._get_high_and_quality_issues, planfile.analysis.sprint_generator.SprintGenerator._get_remaining_medium_issues, planfile.analysis.sprint_generator.SprintGenerator._create_sprint, planfile.analysis.sprint_generator.SprintGenerator._map_category_to_task_type, planfile.analysis.sprint_generator.SprintGenerator._get_highest_priority, planfile.analysis.sprint_generator.SprintGenerator._estimate_effort, planfile.analysis.sprint_generator.SprintGenerator.generate_tickets
+
+### planfile.sync.jira.JiraBackend
+> Jira integration backend.
+- **Methods**: 10
+- **Key Methods**: planfile.sync.jira.JiraBackend.__init__, planfile.sync.jira.JiraBackend._validate_config, planfile.sync.jira.JiraBackend.map_priority, planfile.sync.jira.JiraBackend._map_task_type_to_jira, planfile.sync.jira.JiraBackend._create_ticket, planfile.sync.jira.JiraBackend._update_ticket, planfile.sync.jira.JiraBackend._get_ticket, planfile.sync.jira.JiraBackend._issue_to_ticket_status, planfile.sync.jira.JiraBackend._list_tickets, planfile.sync.jira.JiraBackend._search_tickets
+- **Inherits**: BasePMBackend
 
 ### examples.rest-api.03_python_client.PlanfileClient
 > Python client for planfile REST API.
@@ -415,10 +410,6 @@ init_strategy_cli [planfile.cli.groups.init.commands]
 
 Key functions that process and transform data:
 
-### docker-entrypoint.validate_config
-
-### examples.validate_with_llx.validate_file
-
 ### examples.llx_validator.LLXValidator.validate_strategy
 > Validate a strategy file using LLX.
 - **Output to**: self._is_llx_available, subprocess.run, str, str
@@ -426,8 +417,6 @@ Key functions that process and transform data:
 ### examples.llx_validator.LLXValidator._parse_llx_analysis
 > Parse LLX analysis output.
 - **Output to**: None.split, output.strip, line.split, value.strip, key.strip
-
-### examples.bash-generation.verify_planfile.validate_planfile
 
 ### planfile.examples.example_validate_strategy
 > Load and validate an existing strategy.
@@ -449,16 +438,15 @@ Key functions that process and transform data:
 > Validate GitHub configuration.
 - **Output to**: self.config.get, ValueError, self.config.get, ValueError, ValueError
 
-### planfile.sync.jira.JiraBackend._validate_config
-> Validate Jira configuration.
-- **Output to**: self.config.get, ValueError, self.config.get, ValueError, self.config.get
-
 ### planfile.sync.generic.GenericBackend._validate_config
 > Validate generic backend configuration.
 - **Output to**: self.config.get, ValueError
 
 ### planfile.sync.markdown_backend.tickets.MarkdownTicketHelpers._format_ticket_entry
 - **Output to**: None.get, lines.append, lines.append, lines.append, lines.append
+
+### planfile.sync.base.BasePMBackend._validate_config
+> Validate backend configuration.
 
 ### planfile.loaders.yaml_loader._transform_task_patterns
 > Transform task patterns in the data.
@@ -508,8 +496,6 @@ Args:
 
 ### planfile.analysis.generator.PlanfileGenerator._parse_effort
 - **Output to**: parse_effort
-
-## Behavioral Patterns
 
 ### recursion_extract_from_yaml_structure
 - **Type**: recursion
@@ -568,8 +554,8 @@ Functions exposed as public API (no underscore prefix):
 - `planfile.cli.groups.apply.commands.display_apply_results` - 17 calls
 - `planfile.mcp.server.handle_tool_call` - 17 calls
 - `examples.PROPOSED_API_IMPROVEMENTS.PlanfileStoreExtended.export` - 16 calls
+- `planfile.analysis.generator.PlanfileGenerator.generate_from_analysis` - 16 calls
 - `planfile.core.models.strategy.Sprint.convert_tasks` - 16 calls
-- `planfile.cli.groups.review.utils.get_backend` - 16 calls
 
 ## System Interactions
 
@@ -608,14 +594,6 @@ graph TD
     _parse_llx_output --> ProjectMetrics
     _parse_llx_output --> strip
 ```
-
-## Reverse Engineering Guidelines
-
-1. **Entry Points**: Start analysis from the entry points listed above
-2. **Core Logic**: Focus on classes with many methods
-3. **Data Flow**: Follow data transformation functions
-4. **Process Flows**: Use the flow diagrams for execution paths
-5. **API Surface**: Public API functions reveal the interface
 
 ## Context for LLM
 

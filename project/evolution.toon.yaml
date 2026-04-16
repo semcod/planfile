@@ -1,39 +1,35 @@
-# code2llm/evolution | 484 func | 94f | 2026-04-08
+# code2llm/evolution | 490 func | 94f | 2026-04-13
 
-NEXT[9] (ranked by impact):
+NEXT[8] (ranked by impact):
   [1] !  SPLIT-FUNC      ticket_import_todo  CC=17  fan=16
       WHY: CC=17 exceeds 15
       EFFORT: ~1h  IMPACT: 272
 
-  [2] !  SPLIT-FUNC      PlanfileGenerator._make_serializable  CC=19  fan=12
-      WHY: CC=19 exceeds 15
-      EFFORT: ~1h  IMPACT: 228
-
-  [3] !  SPLIT-FUNC      sync_from_external  CC=15  fan=15
+  [2] !  SPLIT-FUNC      sync_from_external  CC=15  fan=15
       WHY: CC=15 exceeds 15
       EFFORT: ~1h  IMPACT: 225
 
-  [4] !  SPLIT-FUNC      extract_from_yaml_structure  CC=15  fan=14
+  [3] !  SPLIT-FUNC      extract_from_yaml_structure  CC=15  fan=14
       WHY: CC=15 exceeds 15
       EFFORT: ~1h  IMPACT: 210
 
-  [5] !  SPLIT-FUNC      _load_tickets_v1_format  CC=17  fan=11
+  [4] !  SPLIT-FUNC      _load_tickets_v1_format  CC=17  fan=11
       WHY: CC=17 exceeds 15
       EFFORT: ~1h  IMPACT: 187
 
-  [6] !  SPLIT-FUNC      _analyze_directory_structure  CC=20  fan=9
+  [5] !  SPLIT-FUNC      _analyze_directory_structure  CC=20  fan=9
       WHY: CC=20 exceeds 15
       EFFORT: ~1h  IMPACT: 180
 
-  [7] !  SPLIT-FUNC      _find_readme_content  CC=16  fan=10
+  [6] !  SPLIT-FUNC      _find_readme_content  CC=16  fan=10
       WHY: CC=16 exceeds 15
       EFFORT: ~1h  IMPACT: 160
 
-  [8] !  SPLIT-FUNC      _infer_python_project_type  CC=17  fan=8
+  [7] !  SPLIT-FUNC      _infer_python_project_type  CC=17  fan=8
       WHY: CC=17 exceeds 15
       EFFORT: ~1h  IMPACT: 136
 
-  [9] !  SPLIT-FUNC      Strategy.get_stats  CC=15  fan=9
+  [8] !  SPLIT-FUNC      Strategy.get_stats  CC=15  fan=9
       WHY: CC=15 exceeds 15
       EFFORT: ~1h  IMPACT: 135
 
@@ -41,10 +37,10 @@ NEXT[9] (ranked by impact):
 RISKS[0]: none
 
 METRICS-TARGET:
-  CC̄:          4.0 → ≤2.8
+  CC̄:          3.9 → ≤2.7
   max-CC:      20 → ≤10
   god-modules: 0 → 0
-  high-CC(≥15): 13 → ≤6
+  high-CC(≥15): 11 → ≤5
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -72,4 +68,4 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=4.1 → now CC̄=4.0
+  prev CC̄=4.0 → now CC̄=3.9

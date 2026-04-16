@@ -1,5 +1,3 @@
-# System Architecture Analysis
-
 ## Overview
 
 - **Project**: /home/tom/github/semcod/planfile/examples/code2llm
@@ -10,8 +8,6 @@
 - **Total Classes**: 0
 - **Modules**: 1
 - **Entry Points**: 0
-
-## Architecture by Module
 
 ## Key Entry Points
 

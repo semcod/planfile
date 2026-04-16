@@ -1,12 +1,8 @@
-# Planfile Generation Summary
-
 ## Generated Strategy
 Created `planfile.yaml` based on analysis results from three tools:
 - **code2llm**: Cyclomatic complexity analysis
 - **vallm**: Validation and linting
 - **redup**: Code duplication detection
-
-## Key Metrics from Analysis
 
 ### Current State
 - **Files**: 34 (30 Python, 2 JavaScript, 2 Shell)
@@ -31,10 +27,6 @@ Created `planfile.yaml` based on analysis results from three tools:
 
 3. **Code Duplication**
    - `get_sprint` function duplicated in `models.py` and `models_v2.py`
-
-## Strategy Structure
-
-### 3 Sprints, 5 Weeks Total
 
 #### Sprint 1: Critical Complexity Reduction (2 weeks)
 - Split 12 high-CC functions
@@ -72,8 +64,6 @@ Created `planfile.yaml` based on analysis results from three tools:
 - **High Priority**: 3 tickets (complexity, validation, duplication)
 - **Medium Priority**: 2 tickets (testing, warnings)
 - **Low Priority**: 2 tickets (documentation, performance)
-
-## Implementation Focus
 
 ### Immediate Actions (Sprint 1)
 1. Refactor `planfile/llm/adapters.py` - split `generate_report` (CC=20)

@@ -83,6 +83,56 @@ def _collect_tickets_from_backlog(
     return tickets
 
 
+def _ticket_matches_integration_v1(ticket: dict, integration_name: str) -> bool:
+    """Check if a v1 format ticket matches the integration."""
+    ticket_integration = ticket.get("integration", integration_name)
+    if isinstance(ticket_integration, list):
+        return integration_name in ticket_integration
+    return ticket_integration == integration_name
+
+
+def _collect_tickets_from_section(data: dict, section: str, integration_name: str) -> list[tuple[str, dict]]:
+    """Collect tickets from a specific section (sprint or backlog)."""
+    tickets = []
+    section_data = data.get(section, {})
+    for ticket_id, ticket in section_data.get("tickets", {}).items():
+        if _ticket_matches_integration_v1(ticket, integration_name):
+            tickets.append((ticket_id, ticket))
+    return tickets
+
+
+def _process_planfile_v1(planfile_path: str, integration_name: str, all_tickets: list,
+                         tickets_source: str | None, v1_source_file: str | None, v1_data: dict | None) -> tuple:
+    """Process a single v1 planfile and extract tickets. Returns updated (tickets_source, v1_source_file, v1_data)."""
+    try:
+        with open(planfile_path) as f:
+            data = yaml.safe_load(f) or {}
+
+        has_sprint = "sprint" in data and "tickets" in data.get("sprint", {})
+        has_backlog = "backlog" in data and "tickets" in data.get("backlog", {})
+
+        # Process sprint section
+        if has_sprint:
+            if tickets_source is None:
+                tickets_source = f"{Path(planfile_path).name} (sprint)"
+                v1_source_file = planfile_path
+                v1_data = data
+            all_tickets.extend(_collect_tickets_from_section(data, "sprint", integration_name))
+
+        # Process backlog section
+        if has_backlog:
+            if tickets_source is None:
+                tickets_source = f"{Path(planfile_path).name} (backlog)"
+                v1_source_file = planfile_path
+                v1_data = data
+            all_tickets.extend(_collect_tickets_from_section(data, "backlog", integration_name))
+
+    except Exception as e:
+        console.print(f"[dim]⚠️ Could not load {planfile_path}: {e}[/dim]")
+
+    return tickets_source, v1_source_file, v1_data
+
+
 def _load_tickets_v1_format(
     directory: str,
     integration_name: str
@@ -95,38 +145,10 @@ def _load_tickets_v1_format(
 
     planfile_pattern = Path(directory) / "*.planfile.yaml"
     for planfile_path in glob.glob(str(planfile_pattern)):
-        try:
-            with open(planfile_path) as f:
-                data = yaml.safe_load(f) or {}
-
-            # Check for old format v1 with sprint section
-            if "sprint" in data and "tickets" in data.get("sprint", {}):
-                tickets_source = f"{Path(planfile_path).name} (sprint)"
-                v1_source_file = planfile_path
-                v1_data = data
-                for ticket_id, ticket in data["sprint"]["tickets"].items():
-                    ticket_integration = ticket.get("integration", integration_name)
-                    if isinstance(ticket_integration, list):
-                        if integration_name in ticket_integration:
-                            all_tickets.append((ticket_id, ticket))
-                    elif ticket_integration == integration_name:
-                        all_tickets.append((ticket_id, ticket))
-
-            # Check for backlog section
-            if "backlog" in data and "tickets" in data.get("backlog", {}):
-                if tickets_source is None:
-                    tickets_source = f"{Path(planfile_path).name} (backlog)"
-                    v1_source_file = planfile_path
-                    v1_data = data
-                for ticket_id, ticket in data["backlog"]["tickets"].items():
-                    ticket_integration = ticket.get("integration", integration_name)
-                    if isinstance(ticket_integration, list):
-                        if integration_name in ticket_integration:
-                            all_tickets.append((ticket_id, ticket))
-                    elif ticket_integration == integration_name:
-                        all_tickets.append((ticket_id, ticket))
-        except Exception as e:
-            console.print(f"[dim]⚠️ Could not load {planfile_path}: {e}[/dim]")
+        tickets_source, v1_source_file, v1_data = _process_planfile_v1(
+            planfile_path, integration_name, all_tickets,
+            tickets_source, v1_source_file, v1_data
+        )
 
     return all_tickets, tickets_source, v1_source_file, v1_data
 

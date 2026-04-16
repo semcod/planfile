@@ -17,17 +17,9 @@ Shows how to use all new CLI commands in planfile. This example demonstrates the
 - `cli_command_examples.py` - Main example script
 - `run.sh` - Convenience script to run the example
 
-## Running
-
-```bash
-# Using the convenience script
-./run.sh
-
 # Or directly with Python
 python3 cli_command_examples.py
 ```
-
-## Command Examples
 
 ### 1. Generate Templates
 ```bash

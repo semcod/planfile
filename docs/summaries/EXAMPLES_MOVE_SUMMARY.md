@@ -1,5 +1,3 @@
-# Examples Directory Move Summary
-
 ## Changes Made
 
 Successfully moved `planfile/examples/` to `./examples/` at the repository root.

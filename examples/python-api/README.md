@@ -10,19 +10,12 @@ Examples of using planfile as a Python library in your applications.
 - `04_bulk_operations.py` - Bulk ticket operations
 - `05_filtering.py` - Advanced ticket filtering
 
-## Running Examples
-
-```bash
 # Navigate to examples directory
 cd examples/python-api
 
 # Run individual examples
 python 01_basic_usage.py
 python 02_ticket_management.py
-
-# Or run all
-./run_all.sh
-```
 
 ## Prerequisites
 

@@ -16,10 +16,10 @@ flowchart TD
         planfile__cli__groups__sync__commands__all_cmd["all_cmd"]
         planfile__cli__groups__sync__register_sync_commands["register_sync_commands"]
         planfile__cli__groups__review__commands__review_strategy_cli["review_strategy_cli"]
-        planfile__cli__groups__review__register_review_commands["register_review_commands"]
-        planfile__cli__groups__review__utils__get_backend["get_backend"]
-        planfile__cli__groups__review__utils___load_backend_config["_load_backend_config"]
-        ...["+124 more"]
+        planfile__cli__groups__sync__core___initialize_backend["_initialize_backend"]
+        planfile__cli__groups__sync__core___ticket_matches_integration["_ticket_matches_integration"]
+        planfile__cli__groups__sync__core___collect_tickets_from_sprint["_collect_tickets_from_sprint"]
+        ...["+127 more"]
     end
 
     subgraph Core
@@ -38,7 +38,7 @@ flowchart TD
         planfile__Planfile__list_tickets["list_tickets"]
         planfile__Planfile__update_ticket["update_ticket"]
         planfile__Planfile__create_tickets_bulk["create_tickets_bulk"]
-        ...["+213 more"]
+        ...["+216 more"]
     end
 
     subgraph Exporters

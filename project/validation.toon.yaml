@@ -1,31 +1,9 @@
-# vallm batch | 347f | 264✓ 21⚠ 4✗ | 2026-04-04
+# vallm batch | 360f | 269✓ 11⚠ 6✗ | 2026-04-13
 
 SUMMARY:
-  scanned: 347  passed: 264 (76.1%)  warnings: 21  errors: 4  unsupported: 79
+  scanned: 360  passed: 269 (74.7%)  warnings: 11  errors: 6  unsupported: 85
 
-WARNINGS[21]{path,score}:
-  examples/test_llm_adapters.py,0.93
-    issues[3]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,main has cyclomatic complexity 32 (max: 15),19
-      complexity.lizard_cc,warning,main: CC=32 exceeds limit 15,19
-      complexity.lizard_length,warning,main: 142 lines exceeds limit 100,19
-  planfile/cli/groups/init/commands.py,0.93
-    issues[3]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,init_strategy_cli has cyclomatic complexity 19 (max: 15),118
-      complexity.lizard_cc,warning,init_strategy_cli: CC=19 exceeds limit 15,118
-      complexity.lizard_length,warning,init_strategy_cli: 160 lines exceeds limit 100,118
-  planfile/core/store.py,0.93
-    issues[5]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,list_tickets has cyclomatic complexity 19 (max: 15),238
-      complexity.cyclomatic,warning,_apply_filters has cyclomatic complexity 20 (max: 15),277
-      complexity.maintainability,warning,Low maintainability index: 18.4 (threshold: 20),
-      complexity.lizard_cc,warning,list_tickets: CC=19 exceeds limit 15,238
-      complexity.lizard_cc,warning,_apply_filters: CC=20 exceeds limit 15,277
-  test_mixed_format.py,0.93
-    issues[3]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,test_mixed_format_parsing has cyclomatic complexity 25 (max: 15),13
-      complexity.lizard_cc,warning,test_mixed_format_parsing: CC=25 exceeds limit 15,13
-      complexity.lizard_length,warning,test_mixed_format_parsing: 129 lines exceeds limit 100,13
+WARNINGS[11]{path,score}:
   examples/advanced-usage/final-strategy.yaml,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,_report: 287 lines exceeds limit 100,137
@@ -34,44 +12,17 @@ WARNINGS[21]{path,score}:
       complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
   examples/ecosystem/04_llx_integration.py,0.97
     issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,example_metric_driven_planning: 175 lines exceeds limit 100,176
-  examples/interactive-tests/test_interactive_mode.py,0.97
-    issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,test_interactive_mode: 131 lines exceeds limit 100,33
-  examples/test_litellm_integration.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,generate_summary has cyclomatic complexity 19 (max: 15),222
-      complexity.lizard_cc,warning,generate_summary: CC=19 exceeds limit 15,222
+      complexity.lizard_length,warning,example_metric_driven_planning: 175 lines exceeds limit 100,188
   examples/validate_with_llx.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
-  planfile/analysis/generator.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_make_serializable has cyclomatic complexity 19 (max: 15),260
-      complexity.lizard_cc,warning,_make_serializable: CC=19 exceeds limit 15,260
   planfile/builder.py,0.97
     issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,ask_llm_questions: 119 lines exceeds limit 100,62
-  planfile/cli/groups/sync/core.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_load_tickets_v1_format has cyclomatic complexity 17 (max: 15),86
-      complexity.lizard_cc,warning,_load_tickets_v1_format: CC=17 exceeds limit 15,86
-  planfile/cli/groups/ticket/commands.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,ticket_import_todo has cyclomatic complexity 17 (max: 15),260
-      complexity.lizard_cc,warning,ticket_import_todo: CC=17 exceeds limit 15,260
+      complexity.lizard_length,warning,ask_llm_questions: 119 lines exceeds limit 100,77
   planfile/cli/project_detector/inference.py,0.97
     issues[2]{rule,severity,message,line}:
       complexity.cyclomatic,warning,_infer_python_project_type has cyclomatic complexity 17 (max: 15),8
       complexity.lizard_cc,warning,_infer_python_project_type: CC=17 exceeds limit 15,8
-  planfile/cli/project_detector/model_tier.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_detect_model_tier has cyclomatic complexity 19 (max: 15),9
-      complexity.lizard_cc,warning,_detect_model_tier: CC=19 exceeds limit 15,9
-  planfile/cli/project_detector/pyproject.py,0.97
-    issues[2]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,_detect_from_pyproject has cyclomatic complexity 28 (max: 15),17
-      complexity.lizard_cc,warning,_detect_from_pyproject: CC=28 exceeds limit 15,17
   planfile/cli/project_detector/readme.py,0.97
     issues[2]{rule,severity,message,line}:
       complexity.cyclomatic,warning,_find_readme_content has cyclomatic complexity 16 (max: 15),9
@@ -83,14 +34,23 @@ WARNINGS[21]{path,score}:
   run_examples.sh,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,setup_environment: 141 lines exceeds limit 100,109
+  planfile/core/models/strategy.py,0.98
+    issues[1]{rule,severity,message,line}:
+      complexity.maintainability,warning,Low maintainability index: 16.2 (threshold: 20),
   test_checkbox_tickets.py,0.98
     issues[1]{rule,severity,message,line}:
       complexity.cyclomatic,warning,test_checkbox_ticket_parsing has cyclomatic complexity 16 (max: 15),8
 
-ERRORS[4]{path,score}:
+ERRORS[6]{path,score}:
   examples/llm-integration/llm-config.yaml,0.00
     issues[1]{rule,severity,message,line}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
+  examples/test_litellm_integration.py,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.parse,error,SyntaxError: expected an indented block after 'if' statement on line 297,298
+  examples/test_llm_adapters.py,0.00
+    issues[1]{rule,severity,message,line}:
+      syntax.parse,error,SyntaxError: unexpected indent,25
   test-integrated.yaml,0.00
     issues[1]{rule,severity,message,line}:
       syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
@@ -112,4 +72,4 @@ UNSUPPORTED[6]{bucket,count}:
   *.txt,2
   *.yml,2
   *.example,4
-  other,20
+  other,26

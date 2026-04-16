@@ -34,15 +34,15 @@ before:
 
 ## AI Cost Tracking
 
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-yellow) ![AI Model](https://img.shields.io/badge/AI%20Model-openrouter%2Fqwen%2Fqwen3-coder-next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.58-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-26.4h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-This project uses AI-generated code. Total cost: **$7.5000** with **63** AI commits.
+- 🤖 **LLM usage:** $7.5000 (66 commits)
+- 👤 **Human dev:** ~$2635 (26.4h @ $100/h, 30min dedup)
 
-Generated on 2026-04-08 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/models/openrouter/qwen/qwen3-coder-next)
+Generated on 2026-04-16 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
-
-
 
 **Planfile** is an SDLC automation platform that provides strategic project management with CI/CD integration and automated bug-fix loops. It manages sprints and strategies across external ticket systems like GitHub, Jira, and GitLab.
 
@@ -73,9 +73,6 @@ Generated on 2026-04-08 using [openrouter/qwen/qwen3-coder-next](https://openrou
 - 🌉 **Proxy Routing**: Smart model routing via Proxym API
 - 📈 **Metrics-Driven**: Project metrics analysis for informed planning
 
-## 📦 Installation
-
-```bash
 # Basic installation
 pip install planfile
 
@@ -86,8 +83,6 @@ pip install planfile[all]
 pip install planfile[github,jira]
 pip install planfile[gitlab]
 ```
-
-## 🚀 Quick Start
 
 ### 1. Create a Strategy
 
@@ -127,9 +122,6 @@ sprints:
         priority: "critical"
 ```
 
-### 2. Configure Environment
-
-```bash
 # GitHub
 export GITHUB_TOKEN=your_token
 export GITHUB_REPO=owner/repo
@@ -145,9 +137,6 @@ export GITLAB_TOKEN=your_token
 export GITLAB_PROJECT_ID=123
 ```
 
-### 3. Run CI/CD Auto-Loop
-
-```bash
 # Run automated bug-fix loop
 planfile auto loop \
   --strategy ./strategy.yaml \
@@ -189,9 +178,6 @@ tickets = pf.list_tickets(sprint="current", status="open")
 ticket = quick_ticket("Production alert", tool="monitoring", priority="critical")
 ```
 
-### 5. Using REST API
-
-```bash
 # Start the FastAPI server
 uvicorn planfile.api.server:app --reload --port 8000
 
@@ -202,9 +188,6 @@ curl -X POST "http://localhost:8000/tickets" \
   -d '{"title": "API fix", "priority": "high"}'
 ```
 
-### 6. Using Makefile
-
-```bash
 # Run CI loop with strategy
 make ci-loop STRATEGY=strategy.yaml BACKENDS=github MAX_ITERATIONS=5
 
@@ -228,12 +211,6 @@ Planfile provides complete automation for the bug-fix lifecycle:
 6. **Verification**: Re-run tests to verify fixes
 7. **Loop**: Repeat until all tests pass
 
-## 🐳 Docker Support
-
-```bash
-# Build Docker image
-make docker-build
-
 # Run with Docker Compose
 docker-compose up -d
 
@@ -254,8 +231,6 @@ docker-compose exec sprintstrat-runner planfile auto loop \
 - [Architecture Overview](docs/summaries/)
 - [Migration Guide](MIGRATION_GUIDE.md)
 - [Changelog](CHANGELOG.md)
-
-## 🔧 Configuration
 
 ### Strategy Schema (v2)
 
@@ -345,8 +320,6 @@ planfile strategy generate ./my-project --model gpt-4o
 
 Explore the `examples/` directory for comprehensive use cases:
 
-### Available Examples
-```bash
 # List all available examples
 planfile examples list
 
@@ -367,9 +340,6 @@ planfile examples run --all
 - **[interactive-tests](examples/interactive-tests/)** - Interactive mode demonstrations
 - **[ecosystem](examples/ecosystem/)** - MCP, LLX, and proxy routing integrations
 
-### Quick Example
-
-```yaml
 # examples/quick-start.yaml
 name: "Quick Start Demo"
 project_type: "web"
@@ -432,8 +402,6 @@ sprints:
         estimate: 5
 ```
 
-## 🔗 Integrations
-
 ### Version Control
 
 - **GitHub**: Issues, Projects, Actions
@@ -454,11 +422,6 @@ sprints:
 - **Jenkins**: Build automation
 - **Azure DevOps**: Release management
 
-## 🛠️ Development
-
-### Setup Development Environment
-
-```bash
 # Clone repository
 git clone https://github.com/semcod/planfile
 cd strategy
@@ -469,9 +432,6 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install in development mode
 pip install -e ".[dev]"
-
-# Run tests
-pytest tests/ -v
 
 # Run linting
 ruff check src/ tests/
@@ -547,6 +507,3 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## License
 
 Licensed under Apache-2.0.
-## Author
-
-Tom Sapletta

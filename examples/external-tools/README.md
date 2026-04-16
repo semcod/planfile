@@ -32,17 +32,9 @@ Install external tools (optional but recommended):
 pip install code2llm vallm redup
 ```
 
-## Running
-
-```bash
-# Using the convenience script
-./run.sh
-
 # Or directly with Python
 python3 external_tools_examples.py
 ```
-
-## Examples Included
 
 ### 1. Check External Tools Availability
 Verifies which external tools are installed and ready to use.
@@ -81,8 +73,6 @@ Demonstrates focused analysis on specific areas:
 - `duplication.toon.yaml` - redup output (if available)
 - `external-tools-generated.yaml` - Strategy from external analysis
 - `quality-focused.yaml` - Quality-focused strategy
-
-## Output Examples
 
 ### Without External Tools
 The example still works without external tools, showing:

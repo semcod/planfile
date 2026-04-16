@@ -1,11 +1,40 @@
 # Changelog
 
+## [Unreleased]
+
+## [0.1.58] - 2026-04-16
+
+### Docs
+- Update CHANGELOG.md
+- Update MIGRATION_GUIDE.md
+- Update PERFORMANCE.md
+- Update README.md
+- Update README_EXAMPLES.md
+- Update README_STANDALONE.md
+- Update REFACTOR_CLI.md
+- Update docs/API.md
+- Update docs/ARCHITECTURE_PROPOSAL.md
+- Update docs/CI_CD_INTEGRATION.md
+- ... and 37 more files
+
+### Other
+- Update No code edits required - this appears to be a task list/issue summary without specific code to fix.
+- Update planfile/analysis/generator.py
+- Update planfile/analysis/parsers/yaml_parser.py
+- Update planfile/cli/groups/sync/core.py
+- Update planfile/cli/groups/ticket/commands.py
+- Update planfile/sync/operations.py
+- Update project/analysis.toon.yaml
+- Update project/calls.mmd
+- Update project/calls.png
+- Update project/compact_flow.mmd
+- ... and 9 more files
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased] - 2026-04-08
 
 ### Fixed
 - Fix `NameError: PlanfileGenerator` — module-level singleton was incorrectly indented inside class body (`analysis/generator.py:310`)
@@ -19,8 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split `init_strategy_cli` (CC=19, 83 lines) into 7 focused helpers: `_collect_sprint_data`, `_collect_custom_sprints`, `_collect_preset_sprints`, `_build_sprints_yaml`, `_assemble_quality_gates`, `_display_summary`, `_save_strategy` — also fixes mutable preset mutation bug via `copy.deepcopy`
 - Split `_detect_model_tier` (CC=19) into `_tier_from_env_vars`, `_tier_from_env_files`, `_tier_from_config_files` with constants `_ENV_VARS`, `_ENV_FILES`, `_CONFIG_FILES` (`cli/project_detector/model_tier.py`)
 - Split `_make_serializable` (CC=19) into `_serialize_object` + `_serialize_dict` helpers; extract `_SKIP_ATTRS`, `_MAX_STR_LEN`, `_MAX_LIST_LEN` constants; fix pre-existing bug where Python-interned primitives triggered false circular-reference detection (`analysis/generator.py`)
-
-## [0.1.57] - 2026-04-09
 
 ### Docs
 - Update README.md
@@ -44,13 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/core/models.py
 - ... and 4 more files
 
-## [0.1.56] - 2026-04-08
-
-### Docs
-- Update README.md
-
-## [0.1.55] - 2026-04-08
-
 ### Docs
 - Update CHANGELOG.md
 - Update docs/README.md
@@ -70,16 +90,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/flow.png
 - ... and 4 more files
 
-## [0.1.54] - 2026-04-08
-
 ### Docs
 - Update CHANGELOG.md
 - Update README.md
 
 ### Other
 - Update planfile/cli/groups/init/commands.py
-
-## [0.1.53] - 2026-04-08
 
 ### Docs
 - Update CHANGELOG.md
@@ -109,8 +125,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/analysis/models.py
 - Update planfile/builder.py
 - ... and 35 more files
-
-## [0.1.10] - 2026-03-27
 
 ### Fixed
 - Fix smart-return-type issues (ticket-4a9b3842)
@@ -310,10 +324,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix magic-numbers issues (ticket-7c3fcd11)
 - Fix smart-return-type issues (ticket-d418ec5e)
 
-## [Unreleased]
-
-## [0.1.52] - 2026-03-29
-
 ### Test
 - Update test_chars.py
 - Update test_mixed_format.py
@@ -323,8 +333,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 - Update planfile/sync/markdown_backend.py
 - Update project/validation.toon.yaml
-
-## [0.1.51] - 2026-03-29
 
 ### Docs
 - Update README.md
@@ -348,8 +356,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/duplication.toon.yaml
 - Update project/evolution.toon.yaml
 - ... and 6 more files
-
-## [0.1.50] - 2026-03-27
 
 ### Docs
 - Update CHANGELOG.md
@@ -378,8 +384,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile.yaml
 - ... and 82 more files
 
-## [0.1.49] - 2026-03-27
-
 ### Docs
 - Update project/context.md
 
@@ -395,8 +399,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/calls.mmd
 - Update project/calls.png
 - ... and 8 more files
-
-## [0.1.48] - 2026-03-27
 
 ### Docs
 - Update README.md
@@ -415,8 +417,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/map.toon.yaml
 - Update project/validation.toon.yaml
 
-## [0.1.47] - 2026-03-27
-
 ### Docs
 - Update docs/README.md
 - Update project/README.md
@@ -434,8 +434,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/redup/.planfile/sprints/backlog.yaml
 - Update examples/redup/.planfile/sprints/current.yaml
 - ... and 21 more files
-
-## [0.1.46] - 2026-03-27
 
 ### Docs
 - Update CHANGELOG.md
@@ -458,8 +456,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/quick-start/web-template.json
 - Update examples/quick-start/web-template.yaml
 - ... and 10 more files
-
-## [0.1.45] - 2026-03-27
 
 ### Performance
 - **Major performance improvements**: Reduced startup time by 50-70% with lazy loading in `__init__.py`
@@ -486,8 +482,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/analysis/parsers/json_parser.py
 - ... and 17 more files
 
-## [0.1.44] - 2026-03-27
-
 ### Docs
 - Update docs/README.md
 - Update project/README.md
@@ -506,15 +500,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/calls.png
 - ... and 10 more files
 
-## [0.1.43] - 2026-03-27
-
 ### Other
 - Update examples/github/github.planfile.yaml
 - Update examples/github/planfile.yaml.old
 - Update planfile/cli/cmd/cmd_sync.py
 - Update planfile/core/store.py
-
-## [0.1.42] - 2026-03-27
 
 ### Docs
 - Update docs/ARCHITECTURE_PROPOSAL.md
@@ -534,8 +524,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/vallm/run.sh
 - ... and 14 more files
 
-## [0.1.41] - 2026-03-27
-
 ### Docs
 - Update docs/README.md
 - Update project/README.md
@@ -553,8 +541,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/evolution.toon.yaml
 - Update project/flow.mmd
 - ... and 6 more files
-
-## [0.1.40] - 2026-03-27
 
 ### Docs
 - Update examples/code2llm/README.md
@@ -576,16 +562,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/code2llm/planfile.yaml
 - ... and 21 more files
 
-## [0.1.39] - 2026-03-27
-
 ### Other
 - Update planfile/analysis/generator.py
 - Update planfile/sync/generic.py
 - Update planfile/sync/github.py
 - Update planfile/sync/gitlab.py
 - Update planfile/sync/jira.py
-
-## [0.1.38] - 2026-03-27
 
 ### Docs
 - Update docs/README.md
@@ -604,8 +586,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/compact_flow.mmd
 - Update project/compact_flow.png
 - ... and 9 more files
-
-## [0.1.37] - 2026-03-27
 
 ### Docs
 - Update docs/README.md
@@ -626,8 +606,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/analysis.toon.yaml
 - ... and 12 more files
 
-## [0.1.36] - 2026-03-27
-
 ### Docs
 - Update docs/README.md
 - Update project/README.md
@@ -646,27 +624,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/calls.png
 - ... and 11 more files
 
-## [0.1.35] - 2026-03-27
-
 ### Docs
 - Update docs/README.md
 - Update project/README.md
 - Update project/context.md
-
-### Other
-- Update planfile/core/models.py
-- Update project/analysis.toon.yaml
-- Update project/calls.mmd
-- Update project/calls.png
-- Update project/compact_flow.mmd
-- Update project/compact_flow.png
-- Update project/duplication.toon.yaml
-- Update project/evolution.toon.yaml
-- Update project/flow.mmd
-- Update project/flow.png
-- ... and 5 more files
-
-## [0.1.34] - 2026-03-27
 
 ### Test
 - Update tests/llm_adapters.py
@@ -683,8 +644,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/cli/cmd/cmd_template.py
 - Update planfile/cli/cmd/cmd_ticket.py
 - ... and 24 more files
-
-## [0.1.33] - 2026-03-26
 
 ### Docs
 - Update docs/README.md
@@ -704,11 +663,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/integrations/generic.py
 - ... and 17 more files
 
-## [0.1.32] - 2026-03-26
-
-### Docs
-- Update README.md
-
 ### Other
 - Update examples/advanced-usage/ci-strategy.yaml
 - Update examples/demo-without-keys/local-strategy.yaml
@@ -718,8 +672,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/cli/cmd/cmd_validate.py
 - Update planfile/cli/commands.py
 - Update planfile/cli/extra_commands.py
-
-## [0.1.31] - 2026-03-26
 
 ### Docs
 - Update .planfile_analysis/context.md
@@ -736,8 +688,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/integrated-functionality/external.yaml
 - Update examples/integrated-functionality/generated.yaml
 - ... and 7 more files
-
-## [0.1.30] - 2026-03-26
 
 ### Docs
 - Update .planfile_analysis/README.md
@@ -756,8 +706,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update .planfile_analysis/prompt.txt
 - ... and 11 more files
 
-## [0.1.29] - 2026-03-26
-
 ### Docs
 - Update .planfile_analysis/context.md
 
@@ -774,8 +722,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/comprehensive-example/comprehensive_example.py
 - ... and 20 more files
 
-## [0.1.28] - 2026-03-26
-
 ### Docs
 - Update .planfile_analysis/README.md
 - Update .planfile_analysis/context.md
@@ -787,21 +733,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/llm-integration/README.md
 - Update project/README.md
 - Update project/context.md
-
-### Other
-- Update .planfile_analysis/analysis.toon.yaml
-- Update .planfile_analysis/calls.mmd
-- Update .planfile_analysis/compact_flow.mmd
-- Update .planfile_analysis/duplication.toon
-- Update .planfile_analysis/evolution.toon.yaml
-- Update .planfile_analysis/flow.mmd
-- Update .planfile_analysis/index.html
-- Update .planfile_analysis/map.toon.yaml
-- Update .planfile_analysis/project.toon.yaml
-- Update .planfile_analysis/prompt.txt
-- ... and 53 more files
-
-## [0.1.27] - 2026-03-26
 
 ### Docs
 - Update TODO.md
@@ -821,8 +752,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/compact_flow.png
 - Update project/duplication.toon.yaml
 - ... and 8 more files
-
-## [0.1.26] - 2026-03-26
 
 ### Docs
 - Update TODO.md
@@ -846,8 +775,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/quick-start.yaml
 - Update examples/quick-start/quick_start_examples.py
 - ... and 20 more files
-
-## [0.1.25] - 2026-03-26
 
 ### Docs
 - Update code2llm_output/README.md
@@ -878,8 +805,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/index.html
 - ... and 1 more files
 
-## [0.1.24] - 2026-03-26
-
 ### Docs
 - Update code2llm_output/README.md
 - Update code2llm_output/context.md
@@ -900,8 +825,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/analysis/generator.py
 - ... and 17 more files
 
-## [0.1.23] - 2026-03-26
-
 ### Docs
 - Update ENHANCEMENT_COMPLETE.md
 
@@ -910,8 +833,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/.planfile_analysis/analysis_summary.json
 - Update planfile/loaders/yaml_loader.py
 - Update web-export.html
-
-## [0.1.22] - 2026-03-26
 
 ### Docs
 - Update AUTOMATED_GENERATION_SUMMARY.md
@@ -938,28 +859,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update generate_from_files.py
 - ... and 19 more files
 
-## [0.1.21] - 2026-03-26
-
 ### Docs
 - Update PLANFILE_GENERATION_SUMMARY.md
 - Update docs/README.md
 - Update project/README.md
 - Update project/context.md
-
-### Other
-- Update planfile.yaml
-- Update project/analysis.toon.yaml
-- Update project/calls.mmd
-- Update project/calls.png
-- Update project/compact_flow.mmd
-- Update project/compact_flow.png
-- Update project/duplication.toon.yaml
-- Update project/evolution.toon.yaml
-- Update project/flow.mmd
-- Update project/flow.png
-- ... and 5 more files
-
-## [0.1.20] - 2026-03-26
 
 ### Docs
 - Update EXAMPLES_MOVE_SUMMARY.md
@@ -978,8 +882,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update examples/ecosystem/04_llx_integration.py
 - Update examples/interactive-tests/test_interactive_expect.sh
 - ... and 73 more files
-
-## [0.1.19] - 2026-03-26
 
 ### Docs
 - Update INTEGRATION_SUMMARY.md
@@ -1000,8 +902,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/models_v2.py
 - ... and 54 more files
 
-## [0.1.18] - 2026-03-26
-
 ### Docs
 - Update EXAMPLES_SUMMARY.md
 
@@ -1021,16 +921,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/examples/strategies/microservices-migration.yaml
 - ... and 8 more files
 
-## [0.1.17] - 2026-03-26
-
 ### Test
 - Update test_planfile_final.py
 
 ### Other
 - Update examples/strategy_free_test.yaml
 - Update planfile/models_v2.py
-
-## [0.1.16] - 2026-03-26
 
 ### Docs
 - Update IMPROVEMENTS_SUMMARY.md
@@ -1055,8 +951,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/duplication.toon.yaml
 - ... and 8 more files
 
-## [0.1.15] - 2026-03-26
-
 ### Docs
 - Update REFACTORING_SUMMARY.md
 - Update docs/README.md
@@ -1074,8 +968,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/compact_flow.mmd
 - Update project/compact_flow.png
 - ... and 5 more files
-
-## [0.1.14] - 2026-03-26
 
 ### Docs
 - Update docs/README.md
@@ -1097,8 +989,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/utils/priorities.py
 - ... and 9 more files
 
-## [0.1.13] - 2026-03-26
-
 ### Docs
 - Update docs/README.md
 - Update project/README.md
@@ -1116,8 +1006,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/project.toon.yaml
 - Update project/prompt.txt
 - ... and 1 more files
-
-## [0.1.12] - 2026-03-26
 
 ### Docs
 - Update docs/CLI.md
@@ -1137,26 +1025,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/examples/interactive-tests/test_interactive_mode.py
 - ... and 19 more files
 
-## [0.1.11] - 2026-03-26
-
 ### Docs
 - Update docs/README.md
 - Update project/context.md
-
-### Other
-- Update Makefile
-- Update docker-entrypoint.sh
-- Update project/analysis.toon.yaml
-- Update project/calls.mmd
-- Update project/calls.png
-- Update project/compact_flow.mmd
-- Update project/compact_flow.png
-- Update project/duplication.toon.yaml
-- Update project/evolution.toon.yaml
-- Update project/flow.mmd
-- ... and 4 more files
-
-## [0.1.10] - 2026-03-26
 
 ### Docs
 - Update README_OLD.md
@@ -1185,8 +1056,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update planfile/integrations/__init__.py
 - ... and 27 more files
 
-## [0.1.9] - 2026-03-26
-
 ### Docs
 - Update README.md
 - Update README_OLD.md
@@ -1200,28 +1069,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update docker-entrypoint.sh
 - Update strategy/__init__.py
 
-## [0.1.7] - 2026-03-26
-
 ### Other
 - Update docker-entrypoint.sh
-
-## [0.1.6] - 2026-03-26
-
-### Other
-- Update Makefile
-
-## [0.1.5] - 2026-03-26
 
 ### Other
 - Update Makefile
 - Update docker-entrypoint.sh
-
-## [0.1.4] - 2026-03-26
-
-### Other
-- Update Makefile
-
-## [0.1.3] - 2026-03-26
 
 ### Docs
 - Update docs/CI_CD_INTEGRATION.md
@@ -1241,8 +1094,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update project/compact_flow.png
 - Update project/duplication.toon.yaml
 - ... and 11 more files
-
-## [0.1.1] - 2026-03-26
 
 ### Docs
 - Update README.md

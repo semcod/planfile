@@ -10,8 +10,6 @@ The automated generation algorithm:
 3. Runs `redup` for code duplication detection
 4. Generates a comprehensive planfile based on the results
 
-## Files
-
 ### `generate_planfile.py`
 Python script that parses analysis results and generates planfile.yaml.
 
@@ -55,8 +53,6 @@ source venv/bin/activate
 # Install tools
 pip install code2llm vallm redup
 ```
-
-## Algorithm Details
 
 ### 1. Analysis Phase
 
@@ -150,8 +146,6 @@ python3 -m planfile.cli.commands apply planfile.yaml . --backend github
 python3 -m planfile.cli.commands review planfile.yaml .
 ```
 
-## Customization
-
 ### Adding New Analysis Tools
 
 1. Add parsing function in `generate_planfile.py`:
@@ -180,8 +174,6 @@ Create custom planfile templates for different project types:
 - Security hardening
 - Performance optimization
 - Documentation updates
-
-## Troubleshooting
 
 ### Tools Not Found
 ```

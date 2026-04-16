@@ -1,26 +1,24 @@
-# code2llm | 126f 11707L | python:121,shell:5 | 2026-04-08
-# CC̄=4.0 | critical:13/607 | dups:0 | cycles:0
+# code2llm | 126f 11742L | python:121,shell:5 | 2026-04-13
+# CC̄=3.9 | critical:11/613 | dups:0 | cycles:0
 
-HEALTH[14]:
+HEALTH[12]:
   🟡 CC    demo_checkbox_tickets CC=15 (limit:15)
   🟡 CC    _update_ticket CC=15 (limit:15)
   🟡 CC    _create_ticket CC=15 (limit:15)
   🟡 CC    sync_from_external CC=15 (limit:15)
-  🟡 CC    _make_serializable CC=19 (limit:15)
   🟡 CC    extract_from_yaml_structure CC=15 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
   🟡 CC    _load_tickets_v1_format CC=17 (limit:15)
   🟡 CC    _find_readme_content CC=16 (limit:15)
   🟡 CC    _analyze_directory_structure CC=20 (limit:15)
-  🟡 CC    _detect_model_tier CC=19 (limit:15)
   🟡 CC    ticket_import_todo CC=17 (limit:15)
   🟡 CC    get_detected_values CC=15 (limit:15)
   🟡 CC    _infer_python_project_type CC=17 (limit:15)
 
 REFACTOR[1]:
-  1. split 14 high-CC methods  (CC>15)
+  1. split 12 high-CC methods  (CC>15)
 
-PIPELINES[322]:
+PIPELINES[325]:
   [1] Src [BASE_URL]: BASE_URL → request
       PURITY: 100% pure
   [2] Src [url]: url
@@ -34,15 +32,15 @@ PIPELINES[322]:
 
 LAYERS:
   planfile/                       CC̄=4.1    ←in:22  →out:6
-  │ runner                     426L  0C    7m  CC=14     ←4
+  │ runner                     418L  0C    7m  CC=14     ←4
   │ executor_standalone        338L  3C   12m  CC=8      ←0
-  │ yaml_loader                327L  0C   15m  CC=7      ←7
+  │ yaml_loader                331L  0C   15m  CC=7      ←7
+  │ generator                  328L  1C   20m  CC=14     ←0
   │ ci                         315L  3C    9m  CC=7      ←0
-  │ !! generator                  311L  1C   17m  CC=19     ←0
   │ jira                       280L  1C   10m  CC=13     ←0
   │ external_tools             268L  2C   12m  CC=12     ←0
   │ !! commands                   264L  0C   13m  CC=17     ←0
-  │ !! strategy                   259L  6C   12m  CC=15     ←0
+  │ !! strategy                   260L  6C   12m  CC=15     ←0
   │ commands                   244L  0C    8m  CC=10     ←0
   │ !! github                     240L  1C    9m  CC=15     ←0
   │ !! operations                 239L  0C   12m  CC=15     ←1
@@ -55,12 +53,12 @@ LAYERS:
   │ commands                   218L  0C   11m  CC=11     ←0
   │ generic                    216L  1C   10m  CC=6      ←0
   │ server                     209L  0C    4m  CC=14     ←0
+  │ sprint_generator           206L  1C   10m  CC=9      ←0
   │ config                     206L  1C   14m  CC=10     ←0
   │ cli_loader                 194L  0C   10m  CC=7      ←0
-  │ sprint_generator           191L  1C   10m  CC=9      ←0
   │ toon_parser                189L  0C    7m  CC=11     ←2
   │ gates                      170L  0C   13m  CC=8      ←3
-  │ __init__                   162L  1C    9m  CC=11     ←10
+  │ __init__                   167L  1C    9m  CC=11     ←10
   │ mock                       160L  1C    6m  CC=11     ←0
   │ generator                  145L  0C    6m  CC=8      ←1
   │ examples                   139L  0C    5m  CC=2      ←0
@@ -92,8 +90,8 @@ LAYERS:
   │ client                      63L  0C    1m  CC=4      ←1
   │ __init__                    63L  0C    0m  CC=0.0    ←0
   │ !! structure                   60L  0C    1m  CC=20     ←3
+  │ model_tier                  60L  0C    4m  CC=9      ←3
   │ commands                    59L  0C    3m  CC=2      ←0
-  │ !! model_tier                  59L  0C    1m  CC=19     ←3
   │ store_tickets               54L  1C    4m  CC=7      ←0
   │ ticket                      51L  2C    1m  CC=2      ←0
   │ backend                     50L  1C    2m  CC=2      ←0
@@ -146,11 +144,11 @@ LAYERS:
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ base                         1L  0C    0m  CC=0.0    ←0
-  │ gitlab                       1L  0C    0m  CC=0.0    ←0
   │ jira                         1L  0C    0m  CC=0.0    ←0
-  │ generic                      1L  0C    0m  CC=0.0    ←0
-  │ __init__                     1L  0C    0m  CC=0.0    ←0
+  │ gitlab                       1L  0C    0m  CC=0.0    ←0
   │ github                       1L  0C    0m  CC=0.0    ←0
+  │ __init__                     1L  0C    0m  CC=0.0    ←0
+  │ generic                      1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
@@ -180,10 +178,10 @@ COUPLING:
         planfile.llm                  ←1                                                                                                                                          ──                    
         planfile.mcp                                       1                                                                                                                                          ──
   CYCLES: none
+  HUB: planfile/ (fan-in=22)
+  HUB: planfile.importers/ (fan-in=5)
   HUB: planfile.loaders/ (fan-in=13)
   HUB: run_examples/ (fan-in=14)
-  HUB: planfile.importers/ (fan-in=5)
-  HUB: planfile/ (fan-in=22)
   SMELL: planfile.cli/ fan-out=44 → split needed
 
 EXTERNAL:

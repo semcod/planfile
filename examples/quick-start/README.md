@@ -1,22 +1,7 @@
-# Quick Start Examples
-
-Get started with planfile in minutes! This example shows the basics:
-- Generate strategy from files
-- Create templates
-- Load and analyze strategies
-- Export to different formats
-- Compare strategies
-
 ## Files
 
 - `quick_start_examples.py` - Main example script
 - `run.sh` - Convenience script to run the example
-
-## Running
-
-```bash
-# Using the convenience script
-./run.sh
 
 # Or directly with Python
 python3 quick_start_examples.py

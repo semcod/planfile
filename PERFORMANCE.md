@@ -2,8 +2,6 @@
 
 This document outlines the performance optimizations implemented to improve planfile's startup time and runtime efficiency.
 
-## Optimizations Implemented
-
 ### 1. Lazy Loading in `__init__.py`
 
 **Problem**: Heavy modules (runner, executor_standalone) were imported upfront, causing slow startup.
@@ -39,8 +37,6 @@ This document outlines the performance optimizations implemented to improve plan
 
 **Solution**: Added 60-second timeout to example execution with proper cleanup.
 
-## Cache Management
-
 ### Clearing Caches
 
 If you encounter issues with stale data, clear caches:
@@ -48,9 +44,6 @@ If you encounter issues with stale data, clear caches:
 ```bash
 # Clear subprocess cache
 rm -rf ~/.planfile_cache/
-
-# File cache is in-memory and clears on restart
-```
 
 ### Cache Locations
 

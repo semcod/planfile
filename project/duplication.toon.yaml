@@ -1,73 +1,99 @@
-# redup/duplication | 9 groups | 101f 14426L | 2026-04-04
+# redup/duplication | 12 groups | 135f 13931L | 2026-04-13
 
 SUMMARY:
-  files_scanned: 101
-  total_lines:   14426
-  dup_groups:    9
-  dup_fragments: 20
-  saved_lines:   82
-  scan_ms:       8905
+  files_scanned: 135
+  total_lines:   13931
+  dup_groups:    12
+  dup_fragments: 34
+  saved_lines:   131
+  scan_ms:       7793
 
-DUPLICATES[9] (ranked by impact):
-  [b2d1c1c46c2f6743]   STRU  register_review_commands  L=6 N=4 saved=18 sim=1.00
-      planfile/cli/groups/review/__init__.py:0-5  (register_review_commands)
-      planfile/cli/groups/apply/__init__.py:0-5  (register_apply_commands)
-      planfile/cli/groups/init/__init__.py:0-5  (register_init_commands)
-      planfile/cli/groups/validate/__init__.py:0-5  (register_validate_commands)
-  [8db5047d0460fba7]   STRU  _map_priority_to_jira  L=16 N=2 saved=16 sim=1.00
-      planfile/sync/jira.py:0-15  (_map_priority_to_jira)
-      planfile/sync/base.py:0-15  (map_priority)
-  [ea9e4d4772d21746]   STRU  register_auto_commands  L=11 N=2 saved=11 sim=1.00
-      planfile/cli/groups/auto/__init__.py:0-10  (register_auto_commands)
-      planfile/cli/groups/generate/__init__.py:0-10  (register_generate_commands)
-  [d32dae4fd2e94d5b]   STRU  import_json  L=10 N=2 saved=10 sim=1.00
-      planfile/importers/json_importer.py:0-9  (import_json)
-      planfile/importers/yaml_importer.py:0-9  (import_yaml)
-  [83ecb78f55462368]   STRU  register_health_commands  L=7 N=2 saved=7 sim=1.00
-      planfile/cli/groups/health/__init__.py:0-6  (register_health_commands)
-      planfile/cli/groups/examples/__init__.py:0-6  (register_examples_commands)
-  [1aa5c925a5a0c66c]   EXAC  __init__  L=6 N=2 saved=6 sim=1.00
-      examples/PROPOSED_API_IMPROVEMENTS.py:0-5  (__init__)
-      planfile/extensions/__init__.py:0-5  (__init__)
-  [11d76056cd91522d]   EXAC  _validate_config  L=5 N=2 saved=5 sim=1.00
-      planfile/sync/mock.py:0-4  (_validate_config)
-      planfile/sync/markdown_backend.py:0-5  (_validate_config)
-  [4d28bf1ae2ca147e]   STRU  __post_init__  L=5 N=2 saved=5 sim=1.00
-      planfile/analysis/models.py:0-4  (__post_init__)
-      planfile/analysis/external_tools.py:0-4  (__post_init__)
-  [dd66daa2229bd051]   EXAC  __init__  L=4 N=2 saved=4 sim=1.00
-      examples/llx_validator.py:0-3  (__init__)
-      examples/ecosystem/04_llx_integration.py:0-3  (__init__)
+DUPLICATES[12] (ranked by impact):
+  [73f23dc09aac9b7a]   STRU  github_cmd  L=7 N=4 saved=21 sim=1.00
+      planfile/cli/groups/sync/commands.py:11-17  (github_cmd)
+      planfile/cli/groups/sync/commands.py:20-26  (gitlab_cmd)
+      planfile/cli/groups/sync/commands.py:29-35  (jira_cmd)
+      planfile/cli/groups/sync/commands.py:38-44  (markdown_cmd)
+  [743611597bf1e270]   STRU  ticket_done  L=9 N=3 saved=18 sim=1.00
+      planfile/cli/groups/ticket/commands.py:127-135  (ticket_done)
+      planfile/cli/groups/ticket/commands.py:137-145  (ticket_start)
+      planfile/cli/groups/ticket/commands.py:160-168  (ticket_review)
+  [84118158d8b5d9f1]   STRU  register_apply_commands  L=3 N=6 saved=15 sim=1.00
+      planfile/cli/groups/apply/__init__.py:9-11  (register_apply_commands)
+      planfile/cli/groups/examples/__init__.py:9-11  (register_examples_commands)
+      planfile/cli/groups/health/__init__.py:9-11  (register_health_commands)
+      planfile/cli/groups/init/__init__.py:9-11  (register_init_commands)
+      planfile/cli/groups/review/__init__.py:9-11  (register_review_commands)
+      planfile/cli/groups/validate/__init__.py:9-11  (register_validate_commands)
+  [f071e098e43958d3]   STRU  map_priority  L=14 N=2 saved=14 sim=1.00
+      planfile/sync/base.py:66-79  (map_priority)
+      planfile/sync/jira.py:65-78  (map_priority)
+  [21eb3398cdd6a2b6]   STRU  print_success  L=3 N=5 saved=12 sim=1.00
+      planfile/cli/core/console.py:9-11  (print_success)
+      planfile/cli/core/console.py:14-16  (print_error)
+      planfile/cli/core/console.py:19-21  (print_warning)
+      planfile/cli/core/console.py:24-26  (print_info)
+      planfile/cli/core/console.py:29-31  (print_dim)
+  [6a6c4ffd98c596b0]   STRU  _collect_tickets_from_sprint  L=12 N=2 saved=12 sim=1.00
+      planfile/cli/groups/sync/core.py:58-69  (_collect_tickets_from_sprint)
+      planfile/cli/groups/sync/core.py:72-83  (_collect_tickets_from_backlog)
+  [1d3d96e641f80678]   STRU  _detect_docker_gates  L=9 N=2 saved=9 sim=1.00
+      planfile/cli/project_detector/gates.py:40-48  (_detect_docker_gates)
+      planfile/cli/project_detector/gates.py:145-153  (_detect_doc_gates)
+  [647474f57d8a2dab]   STRU  register_auto_commands  L=8 N=2 saved=8 sim=1.00
+      planfile/cli/groups/auto/__init__.py:11-18  (register_auto_commands)
+      planfile/cli/groups/generate/__init__.py:11-18  (register_generate_commands)
+  [9c4f9ae7fbca56f4]   STRU  _has_mypy_config  L=7 N=2 saved=7 sim=1.00
+      planfile/cli/project_detector/gates.py:103-109  (_has_mypy_config)
+      planfile/cli/project_detector/gates.py:136-142  (_has_bandit_config)
+  [ea2851389f454151]   STRU  import_json  L=7 N=2 saved=7 sim=1.00
+      planfile/importers/json_importer.py:8-14  (import_json)
+      planfile/importers/yaml_importer.py:8-14  (import_yaml)
+  [1aa5c925a5a0c66c]   EXAC  __init__  L=4 N=2 saved=4 sim=1.00
+      examples/PROPOSED_API_IMPROVEMENTS.py:27-30  (__init__)
+      planfile/extensions/__init__.py:29-32  (__init__)
+  [3252487e1015a40a]   STRU  _find_readme_description  L=4 N=2 saved=4 sim=1.00
+      planfile/cli/project_detector/readme.py:62-65  (_find_readme_description)
+      planfile/cli/project_detector/readme.py:68-71  (_find_readme_goal)
 
-REFACTOR[9] (ranked by priority):
-  [1] ○ extract_function   → planfile/cli/groups/utils/register_review_commands.py
-      WHY: 4 occurrences of 6-line block across 4 files — saves 18 lines
-      FILES: planfile/cli/groups/apply/__init__.py, planfile/cli/groups/init/__init__.py, planfile/cli/groups/review/__init__.py, planfile/cli/groups/validate/__init__.py
-  [2] ○ extract_function   → planfile/sync/utils/_map_priority_to_jira.py
-      WHY: 2 occurrences of 16-line block across 2 files — saves 16 lines
+REFACTOR[12] (ranked by priority):
+  [1] ○ extract_function   → planfile/cli/groups/sync/utils/github_cmd.py
+      WHY: 4 occurrences of 7-line block across 1 files — saves 21 lines
+      FILES: planfile/cli/groups/sync/commands.py
+  [2] ○ extract_function   → planfile/cli/groups/ticket/utils/ticket_done.py
+      WHY: 3 occurrences of 9-line block across 1 files — saves 18 lines
+      FILES: planfile/cli/groups/ticket/commands.py
+  [3] ○ extract_function   → planfile/cli/groups/utils/register_apply_commands.py
+      WHY: 6 occurrences of 3-line block across 6 files — saves 15 lines
+      FILES: planfile/cli/groups/apply/__init__.py, planfile/cli/groups/examples/__init__.py, planfile/cli/groups/health/__init__.py, planfile/cli/groups/init/__init__.py, planfile/cli/groups/review/__init__.py +1 more
+  [4] ○ extract_function   → planfile/sync/utils/map_priority.py
+      WHY: 2 occurrences of 14-line block across 2 files — saves 14 lines
       FILES: planfile/sync/base.py, planfile/sync/jira.py
-  [3] ○ extract_function   → planfile/cli/groups/utils/register_auto_commands.py
-      WHY: 2 occurrences of 11-line block across 2 files — saves 11 lines
+  [5] ○ extract_function   → planfile/cli/core/utils/print_success.py
+      WHY: 5 occurrences of 3-line block across 1 files — saves 12 lines
+      FILES: planfile/cli/core/console.py
+  [6] ○ extract_function   → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
+      WHY: 2 occurrences of 12-line block across 1 files — saves 12 lines
+      FILES: planfile/cli/groups/sync/core.py
+  [7] ○ extract_function   → planfile/cli/project_detector/utils/_detect_docker_gates.py
+      WHY: 2 occurrences of 9-line block across 1 files — saves 9 lines
+      FILES: planfile/cli/project_detector/gates.py
+  [8] ○ extract_function   → planfile/cli/groups/utils/register_auto_commands.py
+      WHY: 2 occurrences of 8-line block across 2 files — saves 8 lines
       FILES: planfile/cli/groups/auto/__init__.py, planfile/cli/groups/generate/__init__.py
-  [4] ○ extract_function   → planfile/importers/utils/import_json.py
-      WHY: 2 occurrences of 10-line block across 2 files — saves 10 lines
-      FILES: planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
-  [5] ○ extract_function   → planfile/cli/groups/utils/register_health_commands.py
+  [9] ○ extract_function   → planfile/cli/project_detector/utils/_has_mypy_config.py
+      WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
+      FILES: planfile/cli/project_detector/gates.py
+  [10] ○ extract_function   → planfile/importers/utils/import_json.py
       WHY: 2 occurrences of 7-line block across 2 files — saves 7 lines
-      FILES: planfile/cli/groups/examples/__init__.py, planfile/cli/groups/health/__init__.py
-  [6] ○ extract_class      → utils/__init__.py
-      WHY: 2 occurrences of 6-line block across 2 files — saves 6 lines
-      FILES: examples/PROPOSED_API_IMPROVEMENTS.py, planfile/extensions/__init__.py
-  [7] ○ extract_function   → planfile/sync/utils/_validate_config.py
-      WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
-      FILES: planfile/sync/markdown_backend.py, planfile/sync/mock.py
-  [8] ○ extract_function   → planfile/analysis/utils/__post_init__.py
-      WHY: 2 occurrences of 5-line block across 2 files — saves 5 lines
-      FILES: planfile/analysis/external_tools.py, planfile/analysis/models.py
-  [9] ○ extract_function   → examples/utils/__init__.py
+      FILES: planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
+  [11] ○ extract_class      → utils/__init__.py
       WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
-      FILES: examples/ecosystem/04_llx_integration.py, examples/llx_validator.py
+      FILES: examples/PROPOSED_API_IMPROVEMENTS.py, planfile/extensions/__init__.py
+  [12] ○ extract_function   → planfile/cli/project_detector/utils/_find_readme_description.py
+      WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
+      FILES: planfile/cli/project_detector/readme.py
 
 METRICS-TARGET:
-  dup_groups:  9 → 0
-  saved_lines: 82 lines recoverable
+  dup_groups:  12 → 0
+  saved_lines: 131 lines recoverable

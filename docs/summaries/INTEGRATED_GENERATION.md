@@ -1,10 +1,6 @@
-# Integrated Planfile Generation from File Analysis
-
 ## Overview
 
 The planfile package now includes built-in functionality to generate comprehensive strategies directly from code analysis. This integration eliminates the need for external scripts and provides a seamless workflow for creating improvement plans.
-
-## New Command: `generate-from-files`
 
 ### Usage
 ```bash
@@ -19,10 +15,6 @@ python3 -m planfile.cli.commands generate-from-files [PROJECT_PATH] [OPTIONS]
 - `--patterns TEXT`: File patterns to analyze (default: *.yaml, *.yml, *.json, *.toon.yaml, *.toon.yml)
 - `--verbose`: Enable verbose output
 
-### Examples
-
-#### Basic Usage
-```bash
 # Analyze current directory
 python3 -m planfile.cli.commands generate-from-files .
 
@@ -33,8 +25,6 @@ python3 -m planfile.cli.commands generate-from-files ./src
 python3 -m planfile.cli.commands generate-from-files . --output my-strategy.yaml
 ```
 
-#### Advanced Usage
-```bash
 # Focus on security improvements
 python3 -m planfile.cli.commands generate-from-files . --focus security
 
@@ -47,8 +37,6 @@ python3 -m planfile.cli.commands generate-from-files . --patterns "*.py" "*.yaml
 # Verbose output
 python3 -m planfile.cli.commands generate-from-files . --verbose
 ```
-
-## Python API
 
 ### Direct Usage
 ```python
@@ -82,8 +70,6 @@ sprints = sprint_gen.generate_sprints(result)
 tickets = sprint_gen.generate_tickets(result)
 ```
 
-## Supported File Types
-
 ### Analysis Formats
 - **Toon files** (.toon.yaml, .toon.yml) - Output from code2llm, vallm, redup
 - **YAML files** (.yaml, .yml) - Configuration, documentation
@@ -93,8 +79,6 @@ tickets = sprint_gen.generate_tickets(result)
 - **Issues**: TODO, FIXME, BUG, HACK, OPTIMIZE, REFACTOR comments
 - **Metrics**: Cyclomatic complexity, test coverage, error counts
 - **Code patterns**: Duplication, long functions, validation errors
-
-## Integration with Analysis Tools
 
 ### code2llm Integration
 Extracts from analysis.toon.yaml:
@@ -116,8 +100,6 @@ Extracts from duplication.toon.yaml:
 - Lines saved by deduplication
 - Specific duplicate functions
 - Extraction opportunities
-
-## Generated Strategy Features
 
 ### Automatic Goals
 Based on analysis results:
@@ -163,8 +145,6 @@ planfile/
     └── commands.py           # CLI command integration
 ```
 
-## Implementation Details
-
 ### FileAnalyzer Class
 - Parses various file formats
 - Extracts issues using pattern matching
@@ -183,16 +163,10 @@ planfile/
 - Handles focus areas and customization
 - Provides Python API
 
-## Best Practices
-
-### 1. Regular Analysis
-```bash
 # Weekly analysis
 python3 -m planfile.cli.commands generate-from-files . --output weekly-plan.yaml
 ```
 
-### 2. Focus-Specific Strategies
-```bash
 # Security focus
 python3 -m planfile.cli.commands generate-from-files . --focus security
 
@@ -200,8 +174,6 @@ python3 -m planfile.cli.commands generate-from-files . --focus security
 python3 -m planfile.cli.commands generate-from-files . --focus performance
 ```
 
-### 3. CI/CD Integration
-```yaml
 # GitHub Actions
 - name: Generate Improvement Plan
   run: |
@@ -210,15 +182,11 @@ python3 -m planfile.cli.commands generate-from-files . --focus performance
       --focus quality
 ```
 
-### 4. Large Projects
-```bash
 # Analyze specific directories
 python3 -m planfile.cli.commands generate-from-files ./src \
   --patterns "*.py" "*.yaml" \
   --max-sprints 2
 ```
-
-## Troubleshooting
 
 ### Common Issues
 
@@ -234,23 +202,15 @@ python3 -m planfile.cli.commands generate-from-files ./src \
 - Generated planfiles may need manual adjustment
 - Use `--dry-run` to review before applying
 
-### Debug Mode
-```bash
 # Enable verbose output
 python3 -m planfile.cli.commands generate-from-files . --verbose
 ```
 
-## Examples
-
-### Example 1: Quick Quality Check
-```bash
 # Generate and validate
 python3 -m planfile.cli.commands generate-from-files . --output quick-check.yaml
 python3 -m planfile.cli.commands validate quick-check.yaml
 ```
 
-### Example 2: Security Hardening
-```bash
 # Focus on security
 python3 -m planfile.cli.commands generate-from-files . \
   --focus security \
@@ -260,8 +220,6 @@ python3 -m planfile.cli.commands generate-from-files . \
 python3 -m planfile.cli.commands apply security-plan.yaml . --backend github
 ```
 
-### Example 3: Performance Optimization
-```bash
 # Performance focus with custom patterns
 python3 -m planfile.cli.commands generate-from-files . \
   --focus performance \

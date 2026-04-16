@@ -1,5 +1,3 @@
-# Examples Reorganization Summary
-
 ## What Was Done
 
 Reorganized all new examples into separate folders with consistent structure:
@@ -36,9 +34,6 @@ examples/
 4. **Independent Execution** - Each example can be run independently
 5. **Better Documentation** - Each README is specific to its examples
 
-## How to Use
-
-```bash
 # Quick start for beginners
 cd quick-start && ./run.sh
 
@@ -54,8 +49,6 @@ cd external-tools && ./run.sh
 # Advanced patterns and workflows
 cd advanced-usage && ./run.sh
 ```
-
-## File Changes
 
 ### Moved Files
 - `quick_start_examples.py` → `quick-start/`

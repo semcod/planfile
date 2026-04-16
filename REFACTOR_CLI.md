@@ -1,7 +1,3 @@
-# CLI Refactoring Plan — Planfile
-
-## Current State Analysis
-
 ### Fan-out Problem (33 dependencies)
 Current `planfile/cli/commands.py` imports from 15+ modules:
 - `planfile.cli.auto_loop` → CIRunner, GitHub/GitLab/Jira backends
@@ -17,8 +13,6 @@ Current `planfile/cli/commands.py` imports from 15+ modules:
 - `planfile.cli.cmd.cmd_ticket` → register_ticket_commands
 - `planfile.cli.extra_commands` → add_extra_commands (health, examples)
 - Plus indirect imports from each cmd module
-
-## Proposed Restructure
 
 ### New Module Hierarchy
 
@@ -74,8 +68,6 @@ planfile/cli/
 │       └── backends.py      # GitHub/GitLab/Jira backend factory
 └── commands.py              # SHRINK: Only orchestrates group registration
 ```
-
-## Migration Strategy
 
 ### Phase 1: Extract Shared Infrastructure
 1. Create `planfile/cli/core/console.py`

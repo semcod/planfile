@@ -2,8 +2,6 @@
 
 Based on testing experience with LLX integration, the following improvements have been made to simplify usage and minimize errors:
 
-## 1. Simplified Strategy Format
-
 ### Before (V1)
 ```yaml
 name: "Strategy"
@@ -27,8 +25,6 @@ sprints:
         type: "feature"
 ```
 
-## 2. Flexible Model Hints
-
 ### Before
 ```yaml
 model_hints:
@@ -51,8 +47,6 @@ model_hints:
 - Sensible defaults for missing fields
 - Better error messages
 
-## 4. Improved Executor
-
 ### Features
 - **Format Detection**: Automatically detects V1 or V2 format
 - **Smart Model Selection**: Considers project complexity
@@ -71,8 +65,6 @@ results = execute_strategy_flexible(
     dry_run=True
 )
 ```
-
-## 5. Files Created/Modified
 
 ### In `/home/tom/github/semcod/planfile/`:
 - `planfile/models_v2.py` - New simplified models

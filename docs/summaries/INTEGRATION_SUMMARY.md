@@ -1,10 +1,6 @@
-# Planfile Integration Summary
-
 ## What Was Done
 
 Successfully moved and integrated `llx/planfile` into the main `/home/tom/github/semcod/planfile` project to make it standalone and easier to use.
-
-## Key Changes
 
 ### 1. **Standalone Package**
 - No longer requires LLX dependencies
@@ -23,8 +19,6 @@ Successfully moved and integrated `llx/planfile` into the main `/home/tom/github
 - `executor.py` - LLX-dependent executor
 - `executor_improved.py` - LLX-dependent executor
 - `executor_v2.py` - Replaced by standalone version
-
-## Usage Examples
 
 ### Simple Usage (No LLM)
 ```python
@@ -82,8 +76,6 @@ results = executor.execute_strategy(strategy)
    - Simple API
    - Clear documentation
 
-## Migration from LLX
-
 ### Before (LLX)
 ```python
 from llx.planfile import execute_strategy
@@ -111,8 +103,6 @@ planfile/
 ├── examples.py              # Example strategies
 └── cli/                     # CLI tools
 ```
-
-## Dependencies
 
 ### Core Dependencies
 - pydantic (for models)

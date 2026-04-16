@@ -2,8 +2,6 @@
 
 Real-world examples and templates for different project types and use cases.
 
-## Project Templates
-
 ### Web Application Strategy
 
 ```yaml
@@ -262,11 +260,6 @@ success_metrics:
     target: "< 0.1%"
 ```
 
-## Task Pattern Templates
-
-### Common Web Tasks
-
-```yaml
 # common-web-tasks.yaml
 task_patterns:
   - name: "database_migration"
@@ -332,9 +325,6 @@ task_patterns:
         - "Monitoring added"
 ```
 
-### Quality Gates Templates
-
-```yaml
 # quality-gates.yaml
 quality_gates:
   - name: "Test Coverage"
@@ -373,11 +363,6 @@ quality_gates:
     command: "pytest tests/integration/ -v"
 ```
 
-## CI/CD Integration Examples
-
-### GitHub Actions Workflow
-
-```yaml
 # .github/workflows/planfile-auto-loop.yml
 name: Planfile Auto-Loop
 
@@ -474,9 +459,6 @@ jobs:
             });
 ```
 
-### GitLab CI Pipeline
-
-```yaml
 # .gitlab-ci.yml
 stages:
   - test
@@ -553,11 +535,6 @@ deploy_staging:
     - main
 ```
 
-## Docker Examples
-
-### Multi-stage Dockerfile
-
-```dockerfile
 # Dockerfile
 FROM python:3.11-slim as base
 
@@ -587,9 +564,6 @@ EXPOSE 8000
 CMD ["planfile", "serve", "--port", "8000"]
 ```
 
-### Docker Compose Setup
-
-```yaml
 # docker-compose.yml
 version: '3.8'
 
@@ -642,11 +616,6 @@ volumes:
   redis_data:
 ```
 
-## Configuration Examples
-
-### Environment-specific Strategies
-
-```yaml
 # strategy-dev.yaml
 name: "Development Strategy"
 project_type: "web"
@@ -693,9 +662,6 @@ sprints:
         threshold: "response_time < 100ms"
 ```
 
-### Multi-project Strategy
-
-```yaml
 # multi-project-strategy.yaml
 name: "Multi-Project Coordination"
 projects:
@@ -736,11 +702,6 @@ shared_resources:
     projects: ["frontend", "backend", "mobile"]
 ```
 
-## Advanced Examples
-
-### Custom Backend Integration
-
-```python
 # custom_backend.py
 from strategy.integrations.base import BaseBackend
 from strategy.models import Ticket
@@ -764,9 +725,6 @@ class CustomBackend(BaseBackend):
         pass
 ```
 
-### Custom Quality Gates
-
-```python
 # custom_quality_gates.py
 from strategy.ci_runner import QualityGate
 

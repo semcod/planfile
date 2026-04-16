@@ -19,9 +19,6 @@ pip install fastapi uvicorn
 pip install httpx
 ```
 
-## Quick Start
-
-```bash
 # 1. Start the server
 ./01_start_server.sh
 

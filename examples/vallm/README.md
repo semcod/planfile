@@ -23,35 +23,6 @@ This integration shows how to:
 - `run.sh` - Demonstration script showing the full pipeline
 - `README.md` - This documentation
 
-## Prerequisites
-
-1. Install planfile:
-   ```bash
-   pip install -e .
-   ```
-
-2. Install vallm (optional for generating new validation):
-   ```bash
-   pip install vallm
-   # or
-   npm install -g vallm
-   ```
-
-## Running the Example
-
-### Quick Start
-
-```bash
-cd examples/vallm
-./run.sh
-```
-
-This will:
-- Initialize a new planfile project
-- Create sample tickets
-- Import validation errors to current sprint
-- Show quality gates and metrics
-
 ### Manual Steps
 
 1. **Initialize planfile**:
@@ -119,16 +90,6 @@ vallm batch . --recursive
 
 This will analyze the current directory recursively and create a validation.toon file.
 
-## Quality Metrics
-
-The example targets these quality metrics:
-
-- **CC̄ ≤ 3.0**: Average cyclomatic complexity should be 3.0 or less
-- **Vallm ≥ 95%**: Code validation score should be 95% or higher
-- **0 god modules**: No modules with excessive complexity
-
-## Quality Gates
-
 ### Critical Issues (Priority: critical)
 Must be fixed immediately:
 - Module not found errors
@@ -146,8 +107,6 @@ Can be scheduled for next sprint:
 - Style violations
 - Missing documentation
 - Unused imports
-
-## Workflow Integration
 
 ### 1. Pre-commit Validation
 Add vallm to pre-commit hooks:
@@ -211,8 +170,6 @@ Automated daily quality checks:
 4. **Team Ownership**: Assign validation tickets to appropriate team members
 5. **Preventive Measures**: Add linters and formatters to prevent common issues
 
-## Advanced Usage
-
 ### Custom Priority Mapping
 Configure custom priority rules in planfile.yaml:
 
@@ -248,20 +205,6 @@ awk '$2 < 0.9 {print}' validation.toon > low-score.toon
 planfile ticket import --from low-score.toon --source vallm --sprint current
 ```
 
-### Multiple Directories
-Validate multiple projects:
-
-```bash
-for project in project1 project2 project3; do
-    cd $project
-    vallm . --recursive > ../validation-$project.toon
-    cd ../planfile
-    planfile ticket import --from ../validation-$project.toon --source vallm --sprint backlog
-done
-```
-
-## Integration with Other Tools
-
 ### With code2llm
 Use both tools for comprehensive analysis:
 
@@ -285,8 +228,6 @@ planfile ticket import --from validation.toon --source vallm --sprint current
 # Sync to GitHub
 planfile sync github
 ```
-
-## Troubleshooting
 
 ### No errors imported
 - Check that validation.toon has an ERRORS[] section

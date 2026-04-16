@@ -1,9 +1,5 @@
-# LiteLLM Integration Summary
-
 ## Overview
 Successfully created comprehensive LiteLLM adapters for testing planfile with various LLM providers.
-
-## Created Components
 
 ### 1. LLM Adapters (`planfile/llm/adapters.py`)
 - **LiteLLMAdapter** - For OpenAI, Anthropic, Google, Cohere models
@@ -11,8 +7,6 @@ Successfully created comprehensive LiteLLM adapters for testing planfile with va
 - **LocalLLMAdapter** - For Ollama and LM Studio
 - **LLMTestRunner** - Orchestrates testing across adapters
 - **LLMTestResult** - Data class for test results
-
-### 2. Test Scripts
 
 #### `test_llm_adapters.py`
 - Tests all registered adapters
@@ -44,8 +38,6 @@ Successfully created comprehensive LiteLLM adapters for testing planfile with va
 - Test scenarios
 - Performance benchmarks
 
-## Key Features
-
 ### Multi-Provider Support
 - OpenAI (GPT-3.5, GPT-4)
 - Anthropic (Claude 3 Opus/Sonnet/Haiku)
@@ -65,8 +57,6 @@ Successfully created comprehensive LiteLLM adapters for testing planfile with va
 - Cost-effective model selection
 - Most detailed responses
 - Success rate tracking
-
-## Usage Examples
 
 ### Basic Usage
 ```python
@@ -95,8 +85,6 @@ adapter = LocalLLMAdapter({
 result = await adapter.test_strategy_generation(prompt, 'llama2')
 ```
 
-## Test Results
-
 ### Ollama Testing (Local)
 - Successfully tested with llama2 model
 - Response times: 80-120 seconds
@@ -111,8 +99,6 @@ The adapters can compare:
 - YAML validity rate
 - Strategy completeness
 
-## Setup Instructions
-
 ### 1. Install Dependencies
 ```bash
 pip install litellm httpx
@@ -125,17 +111,6 @@ export OPENROUTER_API_KEY=your_key
 export GOOGLE_API_KEY=your_key
 ```
 
-### 3. Start Local Server (Optional)
-```bash
-# For Ollama
-ollama serve
-
-# For LM Studio
-# Start server in UI
-```
-
-### 4. Run Tests
-```bash
 # Test all adapters
 python3 planfile/examples/test_llm_adapters.py
 
@@ -171,8 +146,6 @@ The adapters integrate seamlessly with planfile:
 3. Analyze results to choose best model
 4. Integrate chosen model into workflow
 5. Monitor performance over time
-
-## Troubleshooting
 
 ### Import Errors
 - Ensure litellm and httpx are installed

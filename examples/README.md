@@ -50,14 +50,6 @@ examples/
     └── advanced_usage_examples.py
 ```
 
-## Quick Start
-
-### 1. Install Dependencies
-
-```bash
-# Core planfile
-pip install -e .
-
 # Optional integrations
 pip install planfile[all]  # Includes litellm, llx, and all PM backends
 
@@ -65,9 +57,6 @@ pip install planfile[all]  # Includes litellm, llx, and all PM backends
 pip install litellm llx PyGithub python-gitlab jira
 ```
 
-### 2. Set Up API Keys
-
-```bash
 # For OpenAI (if using)
 export OPENAI_API_KEY=sk-...
 
@@ -99,17 +88,12 @@ cd external-tools && ./run.sh
 cd advanced-usage && ./run.sh
 ```
 
-### 3. Run All Examples with Validation
-
-```bash
 # Test all examples with LLM validation
 python test_all_examples.py
 
 # Or use the shell runner
 ./run_all_tests.sh
 ```
-
-## Ecosystem Integration Examples
 
 ### 1. Full Workflow (ecosystem/01_full_workflow.sh)
 
@@ -157,8 +141,6 @@ Shows metric-driven planning using LLX:
 ```python
 python ecosystem/04_llx_integration.py
 ```
-
-## New Examples (Integrated Functionality)
 
 ### ⚡ Quick Start (quick-start/)
 
@@ -229,8 +211,6 @@ Advanced patterns and workflows:
 cd advanced-usage && ./run.sh
 ```
 
-## Validation with LLX
-
 ### Automated Validation
 
 The examples include automated validation using LLX:
@@ -260,8 +240,6 @@ The validation checks:
 - **Code Quality**: Python syntax and best practices
 - **Logic Validation**: Task priorities and estimates
 - **Security**: Basic security checks
-
-## Individual Tests
 
 ### README Examples Test
 
@@ -334,15 +312,6 @@ The examples test:
 
 Install optional dependencies:
 ```bash
-# LLX for code analysis
-pip install llx
-
-# Expect for interactive tests
-# Ubuntu/Debian: sudo apt-get install expect
-# macOS: brew install expect
-# RHEL/CentOS: sudo yum install expect
-```
-
 ## Output
 
 Each test generates:
@@ -351,12 +320,6 @@ Each test generates:
 - Generated planfile.yaml examples
 - Validation reports (test-results.json)
 
-## Example Generated Strategy
-
-## Quick Reference
-
-### New CLI Commands
-```bash
 # Generate template
 planfile template web ecommerce
 

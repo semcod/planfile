@@ -1,19 +1,19 @@
-# planfile | 126f 11707L | shell:5,python:121 | 2026-04-08
-# stats: 484 func | 0 cls | 126 mod | CC̄=4.0 | critical:13 | cycles:0
+# planfile | 126f 11742L | shell:5,python:121 | 2026-04-13
+# stats: 490 func | 0 cls | 126 mod | CC̄=3.9 | critical:11 | cycles:0
 # alerts[5]: fan-out analyze_project_metrics=22; fan-out review_strategy_cli=21; fan-out analyze_text=20; fan-out auto_loop_cmd=20; CC _analyze_directory_structure=20
 # hotspots[5]: analyze_project_metrics fan=22; review_strategy_cli fan=21; analyze_text fan=20; auto_loop_cmd fan=20; _detect_from_package_json fan=18
-# evolution: CC̄ 4.1→4.0 (improved -0.1)
+# evolution: CC̄ 4.0→3.9 (improved -0.1)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
 M[126]:
   auto_generate_planfile.sh,124
   cleanup_redundant.sh,71
   docker-entrypoint.sh,174
   mcp-server-example.py,28
-  planfile/__init__.py,162
+  planfile/__init__.py,167
   planfile/analysis/__init__.py,32
   planfile/analysis/external_tools.py,268
   planfile/analysis/file_analyzer.py,127
-  planfile/analysis/generator.py,311
+  planfile/analysis/generator.py,328
   planfile/analysis/generators/__init__.py,23
   planfile/analysis/generators/metrics_extractor.py,44
   planfile/analysis/models.py,39
@@ -22,7 +22,7 @@ M[126]:
   planfile/analysis/parsers/text_parser.py,118
   planfile/analysis/parsers/toon_parser.py,189
   planfile/analysis/parsers/yaml_parser.py,95
-  planfile/analysis/sprint_generator.py,191
+  planfile/analysis/sprint_generator.py,206
   planfile/api/__init__.py,1
   planfile/api/server.py,97
   planfile/ci.py,315
@@ -67,7 +67,7 @@ M[126]:
   planfile/cli/project_detector/inference.py,87
   planfile/cli/project_detector/license.py,30
   planfile/cli/project_detector/main.py,88
-  planfile/cli/project_detector/model_tier.py,59
+  planfile/cli/project_detector/model_tier.py,60
   planfile/cli/project_detector/package.py,73
   planfile/cli/project_detector/pyproject.py,117
   planfile/cli/project_detector/readme.py,71
@@ -75,7 +75,7 @@ M[126]:
   planfile/core/__init__.py,5
   planfile/core/models/__init__.py,63
   planfile/core/models/base.py,46
-  planfile/core/models/strategy.py,259
+  planfile/core/models/strategy.py,260
   planfile/core/models/ticket.py,51
   planfile/core/store.py,11
   planfile/core/store_files.py,31
@@ -105,11 +105,11 @@ M[126]:
   planfile/llm/prompts.py,63
   planfile/loaders/__init__.py,0
   planfile/loaders/cli_loader.py,194
-  planfile/loaders/yaml_loader.py,327
+  planfile/loaders/yaml_loader.py,331
   planfile/mcp/__init__.py,1
   planfile/mcp/server.py,209
   planfile/models.py,21
-  planfile/runner.py,426
+  planfile/runner.py,418
   planfile/server_common.py,14
   planfile/sync/__init__.py,25
   planfile/sync/base.py,236
@@ -135,12 +135,6 @@ D:
   planfile/cli/project_detector/structure.py:
     e: _analyze_directory_structure
     _analyze_directory_structure(project_path)
-  planfile/analysis/generator.py:
-    e: PlanfileGenerator
-    PlanfileGenerator: __init__(0),generate_with_external_tools(5),_external_to_internal_analysis(1),_extract_external_metrics(2),generate_from_analysis(6),generate_from_current_project(3),_extract_key_metrics(2),_generate_goal(3),_generate_goals(3),_generate_quality_gates(1),_generate_tasks(1),_parse_effort(1),_generate_target_metrics(1),_generate_risks(1),_generate_success_criteria(1),_create_strategy_object(1),_make_serializable(2)  # Generate comprehensive planfile from file analysis...
-  planfile/cli/project_detector/model_tier.py:
-    e: _detect_model_tier
-    _detect_model_tier(project_path)
   planfile/cli/groups/sync/core.py:
     e: _initialize_backend,_ticket_matches_integration,_collect_tickets_from_sprint,_collect_tickets_from_backlog,_load_tickets_v1_format,_load_tickets_for_sync,_execute_sync_with_progress,sync_integration
     _initialize_backend(integration_name;config;show_header)
@@ -221,6 +215,9 @@ D:
     apply_strategy_to_tickets(strategy;project_path;backend;dry_run)
     review_strategy(strategy;project_path;backends;backend_name)
     run_strategy(strategy_path;project_path;backend;dry_run)
+  planfile/analysis/generator.py:
+    e: PlanfileGenerator
+    PlanfileGenerator: __init__(0),_default_limits(0),generate_with_external_tools(5),_external_to_internal_analysis(1),_extract_external_metrics(2),generate_from_analysis(6),generate_from_current_project(3),_extract_key_metrics(2),_generate_goal(3),_generate_goals(3),_generate_quality_gates(1),_generate_tasks(1),_parse_effort(1),_generate_target_metrics(1),_generate_risks(1),_generate_success_criteria(1),_create_strategy_object(1),_serialize_object(2),_serialize_dict(2),_make_serializable(2)  # Generate comprehensive planfile from file analysis...
   planfile/cli/groups/generate/commands.py:
     e: generate_strategy_cli,generate_from_files_cmd
     generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
@@ -231,12 +228,12 @@ D:
     _read_jsonrpc()
     _write_jsonrpc(obj)
     main()
-  planfile/sync/jira.py:
-    e: JiraBackend
-    JiraBackend(BasePMBackend): __init__(4),_validate_config(0),map_priority(1),_map_task_type_to_jira(1),_create_ticket(6),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend...
   planfile/analysis/parsers/text_parser.py:
     e: analyze_text
     analyze_text(file_path)
+  planfile/sync/jira.py:
+    e: JiraBackend
+    JiraBackend(BasePMBackend): __init__(4),_validate_config(0),map_priority(1),_map_task_type_to_jira(1),_create_ticket(6),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend...
   planfile/importers/code2llm_importer.py:
     e: EvolutionParser,import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health
     EvolutionParser: __init__(1),parse(1),_process_line(1),_handle_outside(1),_handle_in_next(1)  # State machine parser for evolution.toon NEXT[] sections...
@@ -320,7 +317,7 @@ D:
     FileAnalyzer: __init__(0),analyze_file(1),_analyze_toon(1),_analyze_yaml(1),_analyze_json(1),_analyze_text(1),_extract_from_yaml_structure(3),_extract_from_json_structure(3),analyze_directory(2),_generate_summary(3)  # Analyzes YAML/JSON files to extract issues and metrics...
   planfile/analysis/sprint_generator.py:
     e: SprintGenerator
-    SprintGenerator: __init__(0),generate_sprints(2),_group_issues_by_priority(1),_get_high_and_quality_issues(1),_get_remaining_medium_issues(1),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information...
+    SprintGenerator: __init__(1),generate_sprints(2),_group_issues_by_priority(1),_get_high_and_quality_issues(1),_get_remaining_medium_issues(1),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information...
   planfile/analysis/generators/metrics_extractor.py:
     e: extract_key_metrics,_extract_cc_metrics,_extract_critical_metrics,_extract_validation_metrics,_extract_duplication_metrics,_extract_coverage_metrics
     extract_key_metrics(analysis_result;external_metrics)
@@ -338,6 +335,12 @@ D:
   planfile/cli/project_detector/license.py:
     e: _detect_license
     _detect_license(project_path)
+  planfile/cli/project_detector/model_tier.py:
+    e: _tier_from_env_vars,_tier_from_env_files,_tier_from_config_files,_detect_model_tier
+    _tier_from_env_vars()
+    _tier_from_env_files(project_path)
+    _tier_from_config_files(project_path)
+    _detect_model_tier(project_path)
   planfile/executor_standalone.py:
     e: TaskResult,LLMClient,StrategyExecutor,create_openai_client,create_litellm_client,execute_strategy
     TaskResult:  # Result of executing a task...
@@ -365,17 +368,6 @@ D:
     _has_bandit_config(project_path;pyproject_data)
     _detect_doc_gates(project_path)
     _detect_quality_gates(project_path;pyproject_data)
-  planfile/cli/project_detector/pyproject.py:
-    e: _import_toml_loader,_load_pyproject_data,_populate_project_metadata,_populate_poetry_metadata,_populate_project_from_data,_get_project_dependencies,_populate_inferred_project_details,_populate_readme_and_repository_details,_detect_from_pyproject
-    _import_toml_loader()
-    _load_pyproject_data(pyproject_path)
-    _populate_project_metadata(project;data)
-    _populate_poetry_metadata(project;data)
-    _populate_project_from_data(project;data)
-    _get_project_dependencies(data)
-    _populate_inferred_project_details(project;data;project_path)
-    _populate_readme_and_repository_details(project;project_path)
-    _detect_from_pyproject(project_path)
   planfile/llm/generator.py:
     e: generate_strategy,_collect_metrics,_auto_select_model,_parse_strategy_response,_fix_yaml_formatting,_basic_metrics
     generate_strategy(project_path)
@@ -391,6 +383,17 @@ D:
     _check_project_files(path)
     analyze_project_metrics(project_path)
     calculate_strategy_health(strategy_results)
+  planfile/cli/project_detector/pyproject.py:
+    e: _import_toml_loader,_load_pyproject_data,_populate_project_metadata,_populate_poetry_metadata,_populate_project_from_data,_get_project_dependencies,_populate_inferred_project_details,_populate_readme_and_repository_details,_detect_from_pyproject
+    _import_toml_loader()
+    _load_pyproject_data(pyproject_path)
+    _populate_project_metadata(project;data)
+    _populate_poetry_metadata(project;data)
+    _populate_project_from_data(project;data)
+    _get_project_dependencies(data)
+    _populate_inferred_project_details(project;data;project_path)
+    _populate_readme_and_repository_details(project;project_path)
+    _detect_from_pyproject(project_path)
   planfile/ci.py:
     e: TestResult,BugReport,CIRunner
     TestResult:  # Result of running tests...
@@ -462,6 +465,12 @@ D:
   planfile/llm/prompts.py:
     e: build_strategy_prompt
     build_strategy_prompt(metrics;sprints;focus)
+  planfile/sync/base.py:
+    e: TicketRef,TicketStatus,PMBackend,BasePMBackend
+    TicketRef(BaseModel):  # Reference to a created/updated ticket...
+    TicketStatus(BaseModel):  # Status of a ticket...
+    PMBackend(Protocol): create_ticket(1),update_ticket(0),get_ticket(1),list_tickets(0),search_tickets(1)  # Protocol for PM system backends...
+    BasePMBackend(ABC): __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1),create_ticket(1),_create_ticket(6),update_ticket(7),_update_ticket(7),get_ticket(1),_get_ticket(1),list_tickets(4),_list_tickets(4),search_tickets(1),_search_tickets(1),build_ticket_ref(0),build_ticket_status(0)  # Base class for PM backends with common functionality...
   planfile/cli/groups/sync/commands.py:
     e: github_cmd,gitlab_cmd,jira_cmd,markdown_cmd,all_cmd
     github_cmd(directory;dry_run;direction)
@@ -469,20 +478,14 @@ D:
     jira_cmd(directory;dry_run;direction)
     markdown_cmd(directory;dry_run;direction)
     all_cmd(directory;dry_run;direction)
-  planfile/sync/base.py:
-    e: TicketRef,TicketStatus,PMBackend,BasePMBackend
-    TicketRef(BaseModel):  # Reference to a created/updated ticket...
-    TicketStatus(BaseModel):  # Status of a ticket...
-    PMBackend(Protocol): create_ticket(1),update_ticket(0),get_ticket(1),list_tickets(0),search_tickets(1)  # Protocol for PM system backends...
-    BasePMBackend(ABC): __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1),create_ticket(1),_create_ticket(6),update_ticket(7),_update_ticket(7),get_ticket(1),_get_ticket(1),list_tickets(4),_list_tickets(4),search_tickets(1),_search_tickets(1),build_ticket_ref(0),build_ticket_status(0)  # Base class for PM backends with common functionality...
+  planfile/cli/project_detector/git.py:
+    e: _detect_git_authors
+    _detect_git_authors(project_path)
   planfile/importers/vallm_importer.py:
     e: VallmParser,import_vallm,_auto_labels
     VallmParser: __init__(1),parse(1),_process_line(1),_is_file_entry(1),_is_issue_entry(1),_parse_file_entry(1),_parse_issue_entry(1),_determine_priority(1)  # Parser for vallm validation.toon files...
     import_vallm(toon_path;auto_priority)
     _auto_labels(rule)
-  planfile/cli/project_detector/git.py:
-    e: _detect_git_authors
-    _detect_git_authors(project_path)
   planfile/llm/client.py:
     e: call_llm
     call_llm(prompt;model;temperature)
@@ -573,12 +576,12 @@ D:
   planfile/cli/groups/review/__init__.py:
     e: register_review_commands
     register_review_commands(app)
-  planfile/cli/groups/health/commands.py:
-    e: create_health_app
-    create_health_app()
   planfile/cli/groups/health/__init__.py:
     e: register_health_commands
     register_health_commands(app)
+  planfile/cli/groups/health/commands.py:
+    e: create_health_app
+    create_health_app()
   planfile/cli/groups/query/__init__.py:
     e: register_query_commands
     register_query_commands(app)
@@ -620,13 +623,6 @@ D:
     LocalLLMAdapter(BaseLLMAdapter):
     LLMTestRunner: __init__(0),register_adapter(2)
   cleanup_redundant.sh:
-  docker-entrypoint.sh:
-    e: check_env,validate_config,setup_workspace,run_command,main
-    check_env()
-    validate_config()
-    setup_workspace()
-    run_command()
-    main()
   auto_generate_planfile.sh:
   run_examples.sh:
     e: print_header,print_step,print_success,print_error,print_info,run_example,check_prerequisites,setup_environment,run_all_examples,run_specific_example,show_usage,list_examples,main
@@ -643,6 +639,13 @@ D:
     show_usage()
     list_examples()
     main()
+  docker-entrypoint.sh:
+    e: check_env,validate_config,setup_workspace,run_command,main
+    check_env()
+    validate_config()
+    setup_workspace()
+    run_command()
+    main()
   project.sh:
   planfile/execution.py:
   planfile/models.py:
@@ -658,10 +661,10 @@ D:
     ExtractedTask:  # Represents a task extracted from a file...
   planfile/analysis/generators/__init__.py:
   planfile/analysis/parsers/__init__.py:
+  planfile/core/__init__.py:
   planfile/core/store.py:
     e: Store
     Store(StoreFileMixin,TicketStoreMixin):
-  planfile/core/__init__.py:
   planfile/core/models/__init__.py:
   planfile/core/models/base.py:
     e: TaskType,ModelTier,TicketStatus
@@ -681,8 +684,8 @@ D:
   planfile/mcp/__init__.py:
   planfile/integrations/base.py:
   planfile/integrations/__init__.py:
-  planfile/integrations/gitlab.py:
   planfile/integrations/jira.py:
-  planfile/integrations/generic.py:
-  planfile/api/__init__.py:
+  planfile/integrations/gitlab.py:
   planfile/integrations/github.py:
+  planfile/api/__init__.py:
+  planfile/integrations/generic.py:

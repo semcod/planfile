@@ -22,10 +22,6 @@ Options:
   --log-level   Logging level (DEBUG|INFO|WARNING|ERROR)
 ```
 
-## Commands
-
-### Auto Commands
-
 #### auto loop
 Run automated CI/CD bug-fix loop.
 
@@ -100,17 +96,12 @@ Options:
 
 Examples:
 ```bash
-# Stop all processes
-planfile auto stop
-
 # Force stop
 planfile auto stop --force
 
 # Stop specific process
 planfile auto stop --pid 12345
 ```
-
-### Strategy Commands
 
 #### strategy apply
 Apply strategy to create/update tickets.
@@ -225,8 +216,6 @@ planfile strategy export --strategy strategy.yaml --format markdown --output str
 planfile strategy export --strategy strategy.yaml --format json --include-metrics
 ```
 
-### Backend Commands
-
 #### backend test
 Test backend connection and permissions.
 
@@ -301,8 +290,6 @@ planfile backend configure jira --token ATATT3xFfGF0
 planfile backend configure gitlab --url https://gitlab.com --save
 ```
 
-### Config Commands
-
 #### config show
 Show current configuration.
 
@@ -376,8 +363,6 @@ planfile config reset --section backends
 planfile config reset --global
 ```
 
-### AI Commands
-
 #### ai test
 Test AI service connection.
 
@@ -428,8 +413,6 @@ planfile ai analyze --provider anthropic --model claude-3 code_issue.py
 # Save analysis
 planfile ai analyze --type strategy strategy.yaml --output analysis.json
 ```
-
-### Init Commands
 
 #### init project
 Initialize new Planfile project.
@@ -492,10 +475,6 @@ planfile init strategy --template advanced --project-type web --domain fintech
 - `5`: Strategy error
 - `130`: Interrupted (Ctrl+C)
 
-## Configuration Files
-
-### Global Config
-```yaml
 # ~/.planfile/config.yaml
 default_backend: github
 auto_fix: false
@@ -516,8 +495,6 @@ ai:
   temperature: 0.1
 ```
 
-### Project Config
-```yaml
 # .planfile/config.yaml
 strategy: strategy.yaml
 backends: [github, jira]
@@ -526,9 +503,6 @@ quality_gates:
   - security_scan: true
 ```
 
-## Environment Variables
-
-```bash
 # Planfile
 PLANFILE_CONFIG_PATH    # Path to config file
 PLANFILE_LOG_LEVEL      # Logging level
@@ -549,10 +523,6 @@ OPENAI_API_KEY        # OpenAI API key
 ANTHROPIC_API_KEY     # Anthropic API key
 ```
 
-## Examples
-
-### Complete Workflow
-```bash
 # 1. Initialize project
 planfile init project my-app --template web --backend github
 
@@ -578,8 +548,6 @@ planfile strategy review --strategy my-strategy.yaml --backend github --format m
 planfile auto ci-status --detailed
 ```
 
-### Advanced Usage
-```bash
 # Multi-backend setup
 planfile auto loop \
   --strategy strategy.yaml \

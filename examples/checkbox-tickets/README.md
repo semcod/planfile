@@ -8,16 +8,6 @@ This example demonstrates planfile's support for native markdown checkbox ticket
 - `demo.py` - Python script demonstrating checkbox parsing and sync
 - `run.sh` - Convenience script to run the demo
 
-## Running
-
-```bash
-# Using the convenience script
-./run.sh
-
-# Or directly with Python
-python3 demo.py
-```
-
 ## What You'll Learn
 
 1. **Checkbox Format** - Use standard markdown checkboxes for tickets
@@ -25,9 +15,6 @@ python3 demo.py
 3. **Sync Integration** - Sync checkbox tickets with planfile
 4. **Toggle Status** - Programmatically mark tickets as done/undone
 
-## Checkbox Format
-
-```markdown
 ## Pending Tasks
 - [ ] Fix authentication bug in login.py:42
 - [ ] Add validation to user form

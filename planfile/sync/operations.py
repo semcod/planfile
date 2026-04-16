@@ -104,53 +104,73 @@ def _save_sync_results(store, v1_source_file, v1_data) -> None:
         store.save_backlog(store.load_backlog())
 
 
-def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_source_file=None, v1_data=None) -> None:
-    """Sync tickets from external system to planfile."""
-    sync_state = SyncState(Path(store.planfile_dir), integration_name)
-    imported_count = 0
-    updated_count = 0
-
+def _load_sprint_and_backlog(store, v1_source_file, v1_data) -> tuple[dict, dict]:
+    """Load sprint and backlog data from appropriate source."""
     if v1_source_file and v1_data:
         sprint = v1_data.get("sprint", {"tickets": {}})
         backlog = v1_data.get("backlog", {"tickets": {}})
     else:
         sprint = store.load_sprint("current") or {"tickets": {}}
         backlog = store.load_backlog() or {"tickets": {}}
+    return sprint, backlog
 
+
+def _fetch_external_tickets(backend, integration_name: str) -> list | None:
+    """Fetch tickets from external system. Returns None on error, empty list if no tickets."""
     try:
         external_tickets = backend.list_tickets()
-
         if external_tickets is None:
             console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
-            return
-
-        external_tickets = list(external_tickets)
-
-        if not external_tickets:
-            console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
-            return
-
-        for ext_ticket in external_tickets:
-            ext_data = _extract_ticket_data(ext_ticket)
-            planfile_id = sync_state.get_local_id(ext_data['id'])
-
-            if dry_run:
-                _print_dry_run_action(planfile_id, ext_data)
-            else:
-                try:
-                    if planfile_id:
-                        updated_count = _update_local_ticket(sprint, backlog, planfile_id, ext_data, updated_count)
-                    else:
-                        imported_count = _import_new_ticket(backlog, ext_data, integration_name, sync_state, imported_count)
-                except Exception as e:
-                    console.print(f"  ✗ Failed to import {ext_data['id']}: {e}")
-
-        if not dry_run and (imported_count > 0 or updated_count > 0):
-            _save_import_results(store, v1_source_file, v1_data, sprint, backlog, imported_count, updated_count)
-
+            return None
+        return list(external_tickets)
     except Exception as e:
-        console.print(f"  ✗ Failed to import tickets: {e}")
-        console.print(f"    [dim]{traceback.format_exc()}[/dim]")
+        console.print(f"  ✗ Failed to fetch tickets: {e}")
+        return None
+
+
+def _process_external_ticket(ext_ticket, sprint: dict, backlog: dict, sync_state, integration_name: str,
+                             dry_run: bool, imported_count: int, updated_count: int) -> tuple[int, int]:
+    """Process a single external ticket. Returns updated (imported_count, updated_count)."""
+    ext_data = _extract_ticket_data(ext_ticket)
+    planfile_id = sync_state.get_local_id(ext_data['id'])
+
+    if dry_run:
+        _print_dry_run_action(planfile_id, ext_data)
+        return imported_count, updated_count
+
+    try:
+        if planfile_id:
+            return imported_count, _update_local_ticket(sprint, backlog, planfile_id, ext_data, updated_count)
+        else:
+            return _import_new_ticket(backlog, ext_data, integration_name, sync_state, imported_count), updated_count
+    except Exception as e:
+        console.print(f"  ✗ Failed to import {ext_data['id']}: {e}")
+        return imported_count, updated_count
+
+
+def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_source_file=None, v1_data=None) -> None:
+    """Sync tickets from external system to planfile."""
+    sync_state = SyncState(Path(store.planfile_dir), integration_name)
+    imported_count = 0
+    updated_count = 0
+
+    sprint, backlog = _load_sprint_and_backlog(store, v1_source_file, v1_data)
+    external_tickets = _fetch_external_tickets(backend, integration_name)
+
+    if external_tickets is None:
+        return
+    if not external_tickets:
+        console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
+        return
+
+    for ext_ticket in external_tickets:
+        imported_count, updated_count = _process_external_ticket(
+            ext_ticket, sprint, backlog, sync_state, integration_name,
+            dry_run, imported_count, updated_count
+        )
+
+    if not dry_run and (imported_count > 0 or updated_count > 0):
+        _save_import_results(store, v1_source_file, v1_data, sprint, backlog, imported_count, updated_count)
 
 
 def _extract_ticket_data(ext_ticket) -> dict:

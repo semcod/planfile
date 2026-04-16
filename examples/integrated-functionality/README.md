@@ -16,17 +16,9 @@ Comprehensive demo of all new integrated features in planfile. This example show
 - `integrated_functionality_examples.py` - Main example script
 - `run.sh` - Convenience script to run the example
 
-## Running
-
-```bash
-# Using the convenience script
-./run.sh
-
 # Or directly with Python
 python3 integrated_functionality_examples.py
 ```
-
-## Examples Included
 
 ### 1. Generate from Files
 Analyzes the strategies directory and generates a complete strategy based on file analysis.

@@ -39,21 +39,6 @@ This integration shows how to:
    pip install -e .
    ```
 
-## Running the Example
-
-### Quick Start
-
-```bash
-cd examples/redup
-./run.sh
-```
-
-This will:
-- Initialize a new planfile project
-- Create sample tickets
-- Import duplication issues to backlog
-- Show current duplication metrics
-
 ### Manual Steps
 
 1. **Initialize planfile**:
@@ -142,8 +127,6 @@ The example targets these quality metrics:
 - **100% unique code**: All code is original
 - **No patterns > 3 lines**: Small duplications only
 
-## Refactoring Strategies
-
 ### 1. Extract Base Class
 For structural duplicates across multiple files:
 
@@ -183,8 +166,6 @@ class TicketBuilder:
     def build(self, **kwargs):
         # Build ticket based on type
 ```
-
-## Workflow Integration
 
 ### 1. Regular Analysis
 Run redup regularly to detect new duplications:
@@ -248,8 +229,6 @@ jobs:
 4. **Review Before Refactoring**: Ensure duplicates are truly equivalent
 5. **Test After Refactoring**: Verify functionality is preserved
 
-## Advanced Usage
-
 ### Custom Priority Mapping
 Configure custom priority rules in planfile.yaml:
 
@@ -288,8 +267,6 @@ for project in project1 project2 project3; do
 done
 ```
 
-## Integration with Other Tools
-
 ### With code2llm
 Use both tools for comprehensive analysis:
 
@@ -314,8 +291,6 @@ planfile ticket import --from duplication.toon.yaml --source redup --sprint curr
 vallm batch . --recursive
 planfile ticket import --from validation.toon.yaml --source vallm --sprint current
 ```
-
-## Troubleshooting
 
 ### No duplications imported
 - Check that duplication.toon.yaml has a DUPLICATES[] section
