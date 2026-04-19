@@ -1,0 +1,22 @@
+# redsl | refactor | 2026-04-19
+# mode=dry-run | files=157 | lines=16603
+# CC̄=8.7 | critical=33 | decisions=1
+
+STATUS[planned]
+
+DECISIONS[1]:
+  1. split_module → tests/llm_adapters.py (score=1.17) God module — zbyt duży plik z za dużą liczbą funkcji
+
+METRICS[10]:
+  🟢 mcp-server-example.py::None CC=1 LOC=28
+  🟢 examples/llx_validator.py::None CC=4 LOC=185
+  🟡 examples/PROPOSED_API_IMPROVEMENTS.py::export CC=13 LOC=217
+  🟡 examples/PROPOSED_API_IMPROVEMENTS.py::None CC=13 LOC=217
+  🟡 examples/test_strategies.py::validate_strategy_yaml CC=14 LOC=178
+  🟡 examples/test_strategies.py::main CC=14 LOC=178
+  🟡 examples/test_strategies.py::None CC=14 LOC=178
+  🟢 tests/llm_adapters.py::None CC=8 LOC=487
+  🔴 tests/test_checkbox_tickets.py::test_checkbox_ticket_parsing CC=16 LOC=112
+  🔴 tests/test_checkbox_tickets.py::None CC=16 LOC=112
+
+LOG: /home/tom/github/semcod/planfile/logs/redsl_20260419_193309.log

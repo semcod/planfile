@@ -1,14 +1,14 @@
 schema: '1.0'
 project: planfile
-version: 0.1.59
+version: 0.0.0
 generated: '2026-04-19'
 generator: redsl planfile sync
 sources:
 - project/analysis.toon.yaml
 - project/duplication.toon.yaml
 stats:
-  total: 32
-  todo: 32
+  total: 34
+  todo: 34
   done: 0
 
 tasks:
@@ -31,7 +31,7 @@ tasks:
   title: 'reduce_complexity: generator (CC=14)'
   description: Module 'generator' has cyclomatic complexity CC=14 (347 lines, 1 complex
     functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/generator.py
+  file: planfile/analysis/generator.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -46,7 +46,7 @@ tasks:
   title: 'reduce_complexity: commands (CC=14)'
   description: Module 'commands' has cyclomatic complexity CC=14 (293 lines, 0 complex
     functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/commands.py
+  file: planfile/cli/commands.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -61,7 +61,7 @@ tasks:
   title: 'reduce_complexity: jira (CC=13)'
   description: Module 'jira' has cyclomatic complexity CC=13 (280 lines, 1 complex
     functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/jira.py
+  file: planfile/sync/jira.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -76,7 +76,7 @@ tasks:
   title: 'reduce_complexity: external_tools (CC=12)'
   description: Module 'external_tools' has cyclomatic complexity CC=12 (268 lines,
     2 complex functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/external_tools.py
+  file: planfile/analysis/external_tools.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -91,7 +91,7 @@ tasks:
   title: 'reduce_complexity: redup_importer (CC=11)'
   description: Module 'redup_importer' has cyclomatic complexity CC=11 (221 lines,
     0 complex functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/redup_importer.py
+  file: planfile/importers/redup_importer.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -106,7 +106,7 @@ tasks:
   title: 'reduce_complexity: server (CC=14)'
   description: Module 'server' has cyclomatic complexity CC=14 (209 lines, 0 complex
     functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/server.py
+  file: planfile/mcp/server.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -121,7 +121,7 @@ tasks:
   title: 'reduce_complexity: config (CC=10)'
   description: Module 'config' has cyclomatic complexity CC=10 (206 lines, 1 complex
     functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/config.py
+  file: planfile/integrations/config.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -132,11 +132,11 @@ tasks:
   - cc-10
   source: project/analysis.toon.yaml
   priority_label: medium
-- id: Q12
+- id: Q13
   title: 'reduce_complexity: toon_parser (CC=11)'
   description: Module 'toon_parser' has cyclomatic complexity CC=11 (189 lines, 0
     complex functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/toon_parser.py
+  file: planfile/analysis/parsers/toon_parser.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -147,7 +147,7 @@ tasks:
   - cc-11
   source: project/analysis.toon.yaml
   priority_label: medium
-- id: Q13
+- id: Q14
   title: 'reduce_complexity: __init__ (CC=11)'
   description: Module '__init__' has cyclomatic complexity CC=11 (167 lines, 1 complex
     functions). Apply guard clauses, extract helpers, reduce nesting.
@@ -162,11 +162,11 @@ tasks:
   - cc-11
   source: project/analysis.toon.yaml
   priority_label: medium
-- id: Q14
+- id: Q15
   title: 'reduce_complexity: mock (CC=11)'
   description: Module 'mock' has cyclomatic complexity CC=11 (160 lines, 1 complex
     functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/mock.py
+  file: planfile/sync/mock.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -177,26 +177,11 @@ tasks:
   - cc-11
   source: project/analysis.toon.yaml
   priority_label: medium
-- id: Q16
+- id: Q17
   title: 'reduce_complexity: code2llm_importer (CC=13)'
   description: Module 'code2llm_importer' has cyclomatic complexity CC=13 (129 lines,
     1 complex functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/code2llm_importer.py
-  action: reduce_complexity
-  priority: 3
-  effort: medium
-  status: todo
-  labels:
-  - refactor
-  - complexity
-  - cc-13
-  source: project/analysis.toon.yaml
-  priority_label: medium
-- id: Q17
-  title: 'reduce_complexity: text_parser (CC=13)'
-  description: Module 'text_parser' has cyclomatic complexity CC=13 (118 lines, 0
-    complex functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/text_parser.py
+  file: planfile/importers/code2llm_importer.py
   action: reduce_complexity
   priority: 3
   effort: medium
@@ -208,10 +193,56 @@ tasks:
   source: project/analysis.toon.yaml
   priority_label: medium
 - id: Q18
+  title: 'reduce_complexity: text_parser (CC=13)'
+  description: Module 'text_parser' has cyclomatic complexity CC=13 (118 lines, 0
+    complex functions). Apply guard clauses, extract helpers, reduce nesting.
+  file: planfile/analysis/parsers/text_parser.py
+  action: reduce_complexity
+  priority: 3
+  effort: medium
+  status: todo
+  labels:
+  - refactor
+  - complexity
+  - cc-13
+  source: project/analysis.toon.yaml
+  priority_label: medium
+- id: Q19
   title: 'reduce_complexity: tickets (CC=12)'
   description: Module 'tickets' has cyclomatic complexity CC=12 (110 lines, 1 complex
     functions). Apply guard clauses, extract helpers, reduce nesting.
-  file: planfile/tickets.py
+  file: planfile/sync/markdown_backend/tickets.py
+  action: reduce_complexity
+  priority: 3
+  effort: medium
+  status: todo
+  labels:
+  - refactor
+  - complexity
+  - cc-12
+  source: project/analysis.toon.yaml
+  priority_label: medium
+- id: Q21
+  title: 'reduce_complexity: PROPOSED_API_IMPROVEMENTS (CC=13)'
+  description: Module 'PROPOSED_API_IMPROVEMENTS' has cyclomatic complexity CC=13
+    (217 lines, 2 complex functions). Apply guard clauses, extract helpers, reduce
+    nesting.
+  file: examples/PROPOSED_API_IMPROVEMENTS.py
+  action: reduce_complexity
+  priority: 3
+  effort: medium
+  status: todo
+  labels:
+  - refactor
+  - complexity
+  - cc-13
+  source: project/analysis.toon.yaml
+  priority_label: medium
+- id: Q22
+  title: 'reduce_complexity: 04_advanced_filtering (CC=12)'
+  description: Module '04_advanced_filtering' has cyclomatic complexity CC=12 (161
+    lines, 0 complex functions). Apply guard clauses, extract helpers, reduce nesting.
+  file: examples/python-api/04_advanced_filtering.py
   action: reduce_complexity
   priority: 3
   effort: medium

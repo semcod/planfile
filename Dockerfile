@@ -25,7 +25,7 @@ RUN pip install --no-cache-dir planfile[all]
 RUN pip install --no-cache-dir llx
 
 # Copy entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY scripts/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create directories

@@ -1,6 +1,9 @@
 examples/demo-without-keys/local-strategy.yaml
 planfile/.planfile_analysis/analysis_summary.json
 .pyqual
+.redsl
+.redsl_refactor_report.md
+.redsl_refactor_report.toon.yaml
 .idea
 litellm_config.yaml
 litellm-config.yaml

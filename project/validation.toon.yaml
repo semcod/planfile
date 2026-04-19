@@ -1,21 +1,9 @@
-# vallm batch | 360f | 269✓ 11⚠ 6✗ | 2026-04-13
+# vallm batch | 213f | 155✓ 5⚠ 1✗ | 2026-04-19
 
 SUMMARY:
-  scanned: 360  passed: 269 (74.7%)  warnings: 11  errors: 6  unsupported: 85
+  scanned: 213  passed: 155 (72.8%)  warnings: 5  errors: 1  unsupported: 57
 
-WARNINGS[11]{path,score}:
-  examples/advanced-usage/final-strategy.yaml,0.97
-    issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,_report: 287 lines exceeds limit 100,137
-  examples/bash-generation/verify_planfile.sh,0.97
-    issues[1]{rule,severity,message,line}:
-      complexity.lizard_cc,warning,validate_planfile: CC=17 exceeds limit 15,11
-  examples/ecosystem/04_llx_integration.py,0.97
-    issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,example_metric_driven_planning: 175 lines exceeds limit 100,188
-  examples/validate_with_llx.sh,0.97
-    issues[1]{rule,severity,message,line}:
-      complexity.lizard_cc,warning,validate_file: CC=17 exceeds limit 15,18
+WARNINGS[5]{path,score}:
   planfile/builder.py,0.97
     issues[1]{rule,severity,message,line}:
       complexity.lizard_length,warning,ask_llm_questions: 119 lines exceeds limit 100,77
@@ -31,29 +19,11 @@ WARNINGS[11]{path,score}:
     issues[2]{rule,severity,message,line}:
       complexity.cyclomatic,warning,_analyze_directory_structure has cyclomatic complexity 20 (max: 15),8
       complexity.lizard_cc,warning,_analyze_directory_structure: CC=20 exceeds limit 15,8
-  run_examples.sh,0.97
-    issues[1]{rule,severity,message,line}:
-      complexity.lizard_length,warning,setup_environment: 141 lines exceeds limit 100,109
   planfile/core/models/strategy.py,0.98
     issues[1]{rule,severity,message,line}:
       complexity.maintainability,warning,Low maintainability index: 16.2 (threshold: 20),
-  test_checkbox_tickets.py,0.98
-    issues[1]{rule,severity,message,line}:
-      complexity.cyclomatic,warning,test_checkbox_ticket_parsing has cyclomatic complexity 16 (max: 15),8
 
-ERRORS[6]{path,score}:
-  examples/llm-integration/llm-config.yaml,0.00
-    issues[1]{rule,severity,message,line}:
-      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
-  examples/test_litellm_integration.py,0.00
-    issues[1]{rule,severity,message,line}:
-      syntax.parse,error,SyntaxError: expected an indented block after 'if' statement on line 297,298
-  examples/test_llm_adapters.py,0.00
-    issues[1]{rule,severity,message,line}:
-      syntax.parse,error,SyntaxError: unexpected indent,25
-  test-integrated.yaml,0.00
-    issues[1]{rule,severity,message,line}:
-      syntax.tree_sitter,error,tree-sitter found 1 parse error(s) in yaml,
+ERRORS[1]{path,score}:
   planfile/examples.py,0.64
     issues[5]{rule,severity,message,line}:
       python.import.resolvable,error,Module 'llx.planfile' not found,10
@@ -61,15 +31,10 @@ ERRORS[6]{path,score}:
       python.import.resolvable,error,Module 'llx.planfile' not found,36
       python.import.resolvable,error,Module 'llx.planfile' not found,49
       python.import.resolvable,error,Module 'llx.planfile.models' not found,67
-  mcp-server-example.py,0.79
-    issues[2]{rule,severity,message,line}:
-      python.import.resolvable,error,Module 'mcp.server' not found,3
-      python.import.resolvable,error,Module 'mcp.server.stdio' not found,4
 
-UNSUPPORTED[6]{bucket,count}:
-  *.md,50
+UNSUPPORTED[5]{bucket,count}:
+  *.md,35
   Dockerfile*,1
-  *.txt,2
-  *.yml,2
-  *.example,4
-  other,26
+  *.txt,1
+  *.yml,3
+  other,17

@@ -1,0 +1,3 @@
+-- PostgreSQL initialization script for Planfile
+-- This file is automatically executed on container startup
+-- Add your database schema initialization here if needed

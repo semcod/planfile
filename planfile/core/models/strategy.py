@@ -67,7 +67,7 @@ class Sprint(BaseModel):
                     else:
                         tasks.append(Task(name=item.get('title', 'Unnamed Task'), description=item.get('description', ''), type=item.get('type', TaskType.feature), priority=item.get('priority', 'medium'), model_hints=item.get('model_hints', {})))
                 elif isinstance(item, str):
-                    tasks.append(item)
+                    tasks.append(Task(name=item, description='', type=TaskType.feature))
                 elif isinstance(item, Task):
                     tasks.append(item)
             return tasks

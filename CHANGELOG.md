@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+## [0.1.60] - 2026-04-19
+
+### Docs
+- Update analyses/SUMD.md
+- Update analyses/SUMR.md
+- Update redsl_refactor_plan.md
+- Update redsl_refactor_report.md
+
+### Test
+- Update test-integrated.yaml
+- Update test_checkbox_tickets.py
+- Update test_improvements.py
+- Update test_integration.py
+- Update test_markdown_integration.py
+- Update test_mixed_format.py
+- Update test_mixed_format.py.bak
+- Update test_planfile_final.py
+- Update test_strategy.py
+- Update tests/llm_adapters/__init__.py
+- ... and 11 more files
+
+### Other
+- Update .gitignore
+- Update analyses/SUMR.json
+- Update analyses/analysis-generated.yaml
+- Update analyses/enhanced-analysis.yaml
+- Update analyses/final-planfile.yaml
+- Update analyses/integrated-planfile.yaml
+- Update analyses/llx-config-for-planfile.yaml
+- Update analyses/llx-driven-strategy.yaml
+- Update analyses/refactoring_summary.json
+- Update analyses/sumd.json
+- ... and 24 more files
+
 ## [0.1.59] - 2026-04-19
 
 ### Docs
