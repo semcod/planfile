@@ -1,17 +1,18 @@
-# code2llm | 126f 11860L | python:125,shell:15 | 2026-04-19
+# code2llm | 126f 11860L | python:121,shell:5 | 2026-04-19
 # CC̄=3.8 | critical:7/644 | dups:0 | cycles:0
 
-HEALTH[7]:
-  🟡 CC    _analyze_directory_structure CC=20 (limit:15)
-  🟡 CC    _infer_python_project_type CC=17 (limit:15)
-  🟡 CC    _find_readme_content CC=16 (limit:15)
-  🟡 CC    _create_ticket CC=15 (limit:15)
+HEALTH[8]:
+  🟡 CC    demo_checkbox_tickets CC=15 (limit:15)
   🟡 CC    _update_ticket CC=15 (limit:15)
+  🟡 CC    _create_ticket CC=15 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
+  🟡 CC    _find_readme_content CC=16 (limit:15)
+  🟡 CC    _analyze_directory_structure CC=20 (limit:15)
   🟡 CC    get_detected_values CC=15 (limit:15)
+  🟡 CC    _infer_python_project_type CC=17 (limit:15)
 
 REFACTOR[1]:
-  1. split 7 high-CC methods  (CC>15)
+  1. split 8 high-CC methods  (CC>15)
 
 PIPELINES[329]:
   [1] Src [BASE_URL]: BASE_URL → request
@@ -139,11 +140,11 @@ LAYERS:
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ base                         1L  0C    0m  CC=0.0    ←0
-  │ github                       1L  0C    0m  CC=0.0    ←0
-  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ gitlab                       1L  0C    0m  CC=0.0    ←0
+  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ generic                      1L  0C    0m  CC=0.0    ←0
+  │ github                       1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0

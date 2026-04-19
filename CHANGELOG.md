@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+## [0.1.59] - 2026-04-19
+
+### Docs
+- Update project/README.md
+- Update project/context.md
+- Update project/examples/context.md
+- Update project/planfile/context.md
+- Update project/root/context.md
+
+### Other
+- Update Taskfile.yml
+- Update app.doql.css
+- Update project/analysis.toon.yaml
+- Update project/evolution.toon.yaml
+- Update project/examples/analysis.toon.yaml
+- Update project/examples/evolution.toon.yaml
+- Update project/index.html
+- Update project/planfile/analysis.toon.yaml
+- Update project/planfile/evolution.toon.yaml
+- Update project/project.toon.yaml
+- ... and 3 more files
+
 ## [0.1.58] - 2026-04-16
 
 ### Docs
