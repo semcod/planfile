@@ -1,0 +1,9 @@
+{
+  "project_name": "planfile",
+  "report_type": "SUMR",
+  "generated_at": "2026-04-19T12:30:18.484909",
+  "metrics": {
+    "python_files": 158,
+    "has_pyqual_config": true
+  }
+}

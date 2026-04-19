@@ -1,3 +1,1114 @@
+# Planfile
+
+SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops
+
+## Contents
+
+- [Metadata](#metadata)
+- [Architecture](#architecture)
+- [Interfaces](#interfaces)
+- [Workflows](#workflows)
+- [Quality Pipeline (`pyqual.yaml`)](#quality-pipeline-pyqualyaml)
+- [Configuration](#configuration)
+- [Dependencies](#dependencies)
+- [Deployment](#deployment)
+- [Release Management (`goal.yaml`)](#release-management-goalyaml)
+- [Makefile Targets](#makefile-targets)
+- [Code Analysis](#code-analysis)
+- [Source Map](#source-map)
+- [Intent](#intent)
+
+## Metadata
+
+- **name**: `planfile`
+- **version**: `0.1.59`
+- **python_requires**: `>=3.10`
+- **license**: Apache-2.0
+- **ai_model**: `openrouter/qwen/qwen3-coder-next`
+- **ecosystem**: SUMD + DOQL + testql + taskfile
+- **generated_from**: pyproject.toml, Taskfile.yml, Makefile, app.doql.css, pyqual.yaml, goal.yaml, Dockerfile, docker-compose.yml, src(8 mod), project/(1 analysis files)
+
+## Architecture
+
+```
+SUMD (description) → DOQL/source (code) → taskfile (automation) → testql (verification)
+```
+
+### DOQL Application Declaration (`app.doql.css`)
+
+```css markpact:doql path=app.doql.css
+app {
+  name: "planfile";
+  version: "0.1.58";
+}
+
+entity[name="TicketSource"] {
+
+}
+
+entity[name="Ticket"] {
+
+}
+
+entity[name="ModelHints"] {
+
+}
+
+entity[name="Task"] {
+
+}
+
+entity[name="Sprint"] {
+
+}
+
+entity[name="QualityGate"] {
+
+}
+
+entity[name="Goal"] {
+
+}
+
+entity[name="Strategy"] {
+
+}
+
+database[name="postgres"] {
+  type: "postgresql";
+  url: env.DATABASE_URL;
+}
+
+database[name="redis"] {
+  type: "redis";
+  url: env.REDIS_URL;
+}
+
+interface[type="cli"] {
+  framework: argparse;
+}
+interface[type="cli"] page[name="planfile"] {
+
+}
+
+integration[name="email"] {
+  type: "smtp";
+}
+
+integration[name="github"] {
+  type: "scm";
+}
+
+workflow[name="install"] {
+  trigger: "manual";
+  step-1: run cmd=pip install -e ".[all]";
+  step-2: run cmd=pip install llx;
+}
+
+workflow[name="test"] {
+  trigger: "manual";
+  step-1: run cmd=pytest --cov=src --cov-report=html --cov-report=term;
+}
+
+workflow[name="docker-build"] {
+  trigger: "manual";
+  step-1: run cmd=docker build -t planfile/runner:latest .;
+}
+
+workflow[name="docker-run"] {
+  trigger: "manual";
+  step-1: run cmd=docker-compose up -d planfile-runner;
+  step-2: run cmd=docker-compose logs -f planfile-runner;
+}
+
+workflow[name="docker-stop"] {
+  trigger: "manual";
+  step-1: run cmd=docker-compose down;
+}
+
+workflow[name="docker-clean"] {
+  trigger: "manual";
+  step-1: run cmd=docker-compose down -v;
+  step-2: run cmd=docker system prune -f;
+}
+
+workflow[name="ci-loop"] {
+  trigger: "manual";
+  step-1: run cmd=if [ -z "$(STRATEGY)" ]; then \;
+  step-2: run cmd=echo "Usage: make ci-loop STRATEGY=<strategy.yaml> [BACKENDS=github,jira] [MAX_ITERATIONS=5]"; \;
+  step-3: run cmd=exit 1; \;
+  step-4: run cmd=fi;
+  step-5: run cmd=planfile auto loop \;
+  step-6: run cmd=--strategy $(STRATEGY) \;
+  step-7: run cmd=--project . \;
+  step-8: run cmd=--backend $(or $(BACKENDS),github) \;
+  step-9: run cmd=--max-iterations $(or $(MAX_ITERATIONS),5) \;
+  step-10: run cmd=$(if $(filter true,$(AUTO_FIX)),--auto-fix) \;
+  step-11: run cmd=--output ci-results.json;
+}
+
+workflow[name="dev-setup"] {
+  trigger: "manual";
+  step-1: run cmd=python -m venv .venv;
+  step-2: run cmd=source .venv/bin/activate && pip install -e ".[dev]";
+  step-3: run cmd=pre-commit install;
+}
+
+workflow[name="lint"] {
+  trigger: "manual";
+  step-1: run cmd=ruff check src/ tests/;
+  step-2: run cmd=ruff format --check src/ tests/;
+}
+
+workflow[name="format"] {
+  trigger: "manual";
+  step-1: run cmd=ruff check --fix src/ tests/;
+  step-2: run cmd=ruff format src/ tests/;
+}
+
+workflow[name="example-github"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Running example with GitHub backend...";
+  step-2: run cmd=echo "Make sure GITHUB_TOKEN and GITHUB_REPO are set";
+  step-3: run cmd=planfile auto loop \;
+  step-4: run cmd=--strategy examples/strategies/onboarding.yaml \;
+  step-5: run cmd=--project . \;
+  step-6: run cmd=--backend github \;
+  step-7: run cmd=--max-iterations 3 \;
+  step-8: run cmd=--dry-run;
+}
+
+workflow[name="example-jira"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Running example with Jira backend...";
+  step-2: run cmd=echo "Make sure JIRA_URL, JIRA_EMAIL, JIRA_TOKEN, JIRA_PROJECT are set";
+  step-3: run cmd=planfile auto loop \;
+  step-4: run cmd=--strategy examples/strategies/ecommerce-mvp.yaml \;
+  step-5: run cmd=--project . \;
+  step-6: run cmd=--backend jira \;
+  step-7: run cmd=--max-iterations 3 \;
+  step-8: run cmd=--dry-run;
+}
+
+workflow[name="status"] {
+  trigger: "manual";
+  step-1: run cmd=planfile auto ci-status;
+}
+
+workflow[name="logs"] {
+  trigger: "manual";
+  step-1: run cmd=docker-compose logs -f planfile-runner;
+}
+
+workflow[name="clean"] {
+  trigger: "manual";
+  step-1: run cmd=rm -rf .pytest_cache;
+  step-2: run cmd=rm -rf htmlcov;
+  step-3: run cmd=rm -rf .coverage;
+  step-4: run cmd=rm -rf coverage.json;
+  step-5: run cmd=rm -rf ci-results.json;
+  step-6: run cmd=rm -rf test-results.xml;
+  step-7: run cmd=rm -rf build;
+  step-8: run cmd=rm -rf dist;
+  step-9: run cmd=rm -rf *.egg-info;
+}
+
+workflow[name="version"] {
+  trigger: "manual";
+  step-1: run cmd=python -c "import planfile; print(planfile.__version__)";
+}
+
+workflow[name="bump-patch"] {
+  trigger: "manual";
+  step-1: run cmd=bump2version patch;
+}
+
+workflow[name="bump-minor"] {
+  trigger: "manual";
+  step-1: run cmd=bump2version minor;
+}
+
+workflow[name="bump-major"] {
+  trigger: "manual";
+  step-1: run cmd=bump2version major;
+}
+
+workflow[name="publish"] {
+  trigger: "manual";
+  step-1: run cmd=python3 -m build;
+  step-2: run cmd=twine upload dist/*;
+}
+
+workflow[name="pipeline-test"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Running full CI/CD pipeline locally...";
+  step-2: run cmd=echo "Step 1: Install dependencies";
+  step-3: run cmd=make install;
+  step-4: run cmd=echo "Step 2: Run tests";
+  step-5: run cmd=make test;
+  step-6: run cmd=echo "Step 3: Run CI loop";
+  step-7: run cmd=make ci-loop STRATEGY=examples/strategies/onboarding.yaml BACKENDS=github MAX_ITERATIONS=1;
+}
+
+workflow[name="pipeline-docker"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Running CI/CD pipeline in Docker...";
+  step-2: run cmd=make docker-build;
+  step-3: run cmd=docker-compose up -d;
+  step-4: run cmd=sleep 10;
+  step-5: run cmd=docker-compose exec planfile-runner planfile auto loop \;
+  step-6: run cmd=--strategy /app/planfile.yaml \;
+  step-7: run cmd=--project /workspace \;
+  step-8: run cmd=--backend github \;
+  step-9: run cmd=--max-iterations 1;
+}
+
+workflow[name="full-loop"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Running full bug-fix loop with auto-fix...";
+  step-2: run cmd=planfile auto loop \;
+  step-3: run cmd=--strategy examples/strategies/onboarding.yaml \;
+  step-4: run cmd=--project . \;
+  step-5: run cmd=--backend github \;
+  step-6: run cmd=--max-iterations 10 \;
+  step-7: run cmd=--auto-fix \;
+  step-8: run cmd=--output full-loop-results.json;
+}
+
+workflow[name="strategy-review"] {
+  trigger: "manual";
+  step-1: run cmd=planfile strategy review \;
+  step-2: run cmd=--strategy examples/strategies/onboarding.yaml \;
+  step-3: run cmd=--project . \;
+  step-4: run cmd=--backend github;
+}
+
+workflow[name="test-github"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Testing GitHub integration...";
+  step-2: run cmd=if [ -z "$(GITHUB_TOKEN)" ] || [ -z "$(GITHUB_REPO)" ]; then \;
+  step-3: run cmd=echo "Set GITHUB_TOKEN and GITHUB_REPO"; \;
+  step-4: run cmd=exit 1; \;
+  step-5: run cmd=fi;
+  step-6: run cmd=python3 -m tests.integration.test_github;
+}
+
+workflow[name="test-jira"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Testing Jira integration...";
+  step-2: run cmd=if [ -z "$(JIRA_TOKEN)" ] || [ -z "$(JIRA_URL)" ]; then \;
+  step-3: run cmd=echo "Set JIRA_TOKEN and JIRA_URL"; \;
+  step-4: run cmd=exit 1; \;
+  step-5: run cmd=fi;
+  step-6: run cmd=python -m tests.integration.test_jira;
+}
+
+workflow[name="docs"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Generating documentation...";
+  step-2: run cmd=cd docs && make html;
+}
+
+workflow[name="serve-docs"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Serving documentation...";
+  step-2: run cmd=cd docs/_build/html && python3 -m http.server 8080;
+}
+
+workflow[name="quick-start"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Quick start with Planfile";
+  step-2: run cmd=echo "==========================";
+  step-3: run cmd=echo "1. Install: make install";
+  step-4: run cmd=echo "2. Configure: export GITHUB_TOKEN=your_token";
+  step-5: run cmd=echo "3. Run: make ci-loop STRATEGY=examples/strategies/onboarding.yaml";
+  step-6: run cmd=echo "";
+  step-7: run cmd=echo "For Docker: make docker-build && make docker-run";
+}
+
+workflow[name="fmt"] {
+  trigger: "manual";
+  step-1: run cmd=ruff format .;
+}
+
+workflow[name="build"] {
+  trigger: "manual";
+  step-1: run cmd=python -m build;
+}
+
+workflow[name="health"] {
+  trigger: "manual";
+  step-1: run cmd=docker compose ps;
+  step-2: run cmd=docker compose exec app echo "Health check passed";
+}
+
+workflow[name="up"] {
+  trigger: "manual";
+  step-1: run cmd=docker compose up -d;
+}
+
+workflow[name="down"] {
+  trigger: "manual";
+  step-1: run cmd=docker compose down;
+}
+
+workflow[name="ps"] {
+  trigger: "manual";
+  step-1: run cmd=docker compose ps;
+}
+
+workflow[name="import-makefile-hint"] {
+  trigger: "manual";
+  step-1: run cmd=echo 'Run: taskfile import Makefile to import existing targets.';
+}
+
+workflow[name="help"] {
+  trigger: "manual";
+  step-1: run cmd=echo "Planfile CI/CD Automation";
+  step-2: run cmd=echo "============================";
+  step-3: run cmd=echo "";
+  step-4: run cmd=echo "Targets:";
+  step-5: run cmd=echo "  install      Install Planfile with all integrations";
+  step-6: run cmd=echo "  test         Run tests";
+  step-7: run cmd=echo "  docker-build Build Docker image";
+  step-8: run cmd=echo "  docker-run   Run Docker container";
+  step-9: run cmd=echo "  ci-loop      Run CI/CD loop locally";
+  step-10: run cmd=echo "  clean        Clean up artifacts";
+  step-11: run cmd=echo "";
+  step-12: run cmd=echo "Examples:";
+  step-13: run cmd=echo "  make install                    # Install with all backends; 
+  step-14: run cmd=echo "  make ci-loop BACKENDS=github    # Run with GitHub only; 
+  step-15: run cmd=echo "  make docker-run AUTO_FIX=true   # Run with auto-fix enabled; 
+}
+
+deploy {
+  target: docker-compose;
+  compose_file: docker-compose.yml;
+}
+
+environment[name="local"] {
+  runtime: docker-compose;
+  env_file: ".env";
+}
+
+workflow[name="all"] {
+  trigger: "manual";
+  step-1: run cmd=taskfile run install;
+  step-2: run cmd=taskfile run lint;
+  step-3: run cmd=taskfile run test;
+}
+```
+
+### Source Modules
+
+- `planfile.builder`
+- `planfile.ci`
+- `planfile.examples`
+- `planfile.execution`
+- `planfile.executor_standalone`
+- `planfile.models`
+- `planfile.runner`
+- `planfile.server_common`
+
+## Interfaces
+
+### CLI Entry Points
+
+- `planfile`
+
+## Workflows
+
+### Taskfile Tasks (`Taskfile.yml`)
+
+```yaml markpact:taskfile path=Taskfile.yml
+version: '1'
+name: planfile
+description: Minimal Taskfile
+variables:
+  APP_NAME: planfile
+environments:
+  local:
+    container_runtime: docker
+    compose_command: docker compose
+pipeline:
+  python_version: "3.12"
+  runner_image: ubuntu-latest
+  branches: [main]
+  cache: [~/.cache/pip]
+  artifacts: [dist/]
+
+  stages:
+    - name: lint
+      tasks: [lint]
+
+    - name: test
+      tasks: [test]
+
+    - name: build
+      tasks: [build]
+      when: "branch:main"
+
+tasks:
+  install:
+    desc: Install Python dependencies (editable)
+    cmds:
+    - pip install -e .[dev]
+  test:
+    desc: Run pytest suite
+    cmds:
+    - pytest -q
+  lint:
+    desc: Run ruff lint check
+    cmds:
+    - ruff check .
+  fmt:
+    desc: Auto-format with ruff
+    cmds:
+    - ruff format .
+  build:
+    desc: Build wheel + sdist
+    cmds:
+    - python -m build
+  clean:
+    desc: Remove build artefacts
+    cmds:
+    - rm -rf build/ dist/ *.egg-info
+  up:
+    desc: Start services via docker compose
+    cmds:
+    - docker compose up -d
+  down:
+    desc: Stop services
+    cmds:
+    - docker compose down
+  logs:
+    desc: Tail compose logs
+    cmds:
+    - docker compose logs -f
+  ps:
+    desc: Show running compose services
+    cmds:
+    - docker compose ps
+  docker-build:
+    desc: Build docker image
+    cmds:
+    - docker build -t planfile:latest .
+  help:
+    desc: '[imported from Makefile] help'
+    cmds:
+    - echo "Planfile CI/CD Automation"
+    - echo "============================"
+    - echo ""
+    - echo "Targets:"
+    - echo "  install      Install Planfile with all integrations"
+    - echo "  test         Run tests"
+    - echo "  docker-build Build Docker image"
+    - echo "  docker-run   Run Docker container"
+    - echo "  ci-loop      Run CI/CD loop locally"
+    - echo "  clean        Clean up artifacts"
+    - echo ""
+    - echo "Examples:"
+    - 'echo "  make install                    # Install with all backends"'
+    - 'echo "  make ci-loop BACKENDS=github    # Run with GitHub only"'
+    - 'echo "  make docker-run AUTO_FIX=true   # Run with auto-fix enabled"'
+  docker-run:
+    desc: '[imported from Makefile] docker-run'
+    cmds:
+    - docker-compose up -d planfile-runner
+    - docker-compose logs -f planfile-runner
+  docker-stop:
+    desc: '[imported from Makefile] docker-stop'
+    cmds:
+    - docker-compose down
+  docker-clean:
+    desc: '[imported from Makefile] docker-clean'
+    cmds:
+    - docker-compose down -v
+    - docker system prune -f
+  ci-loop:
+    desc: '[imported from Makefile] ci-loop'
+    cmds:
+    - if [ -z "$(STRATEGY)" ]; then \
+    - 'echo "Usage: make ci-loop STRATEGY=<strategy.yaml> [BACKENDS=github,jira] [MAX_ITERATIONS=5]";
+      \'
+    - exit 1; \
+    - fi
+    - planfile auto loop \
+    - --strategy $(STRATEGY) \
+    - --project . \
+    - --backend $(or $(BACKENDS),github) \
+    - --max-iterations $(or $(MAX_ITERATIONS),5) \
+    - $(if $(filter true,$(AUTO_FIX)),--auto-fix) \
+    - --output ci-results.json
+  dev-setup:
+    desc: '[imported from Makefile] dev-setup'
+    cmds:
+    - python -m venv .venv
+    - source .venv/bin/activate && pip install -e ".[dev]"
+    - pre-commit install
+  format:
+    desc: '[imported from Makefile] format'
+    cmds:
+    - ruff check --fix src/ tests/
+    - ruff format src/ tests/
+  example-github:
+    desc: '[imported from Makefile] example-github'
+    cmds:
+    - echo "Running example with GitHub backend..."
+    - echo "Make sure GITHUB_TOKEN and GITHUB_REPO are set"
+    - planfile auto loop \
+    - --strategy examples/strategies/onboarding.yaml \
+    - --project . \
+    - --backend github \
+    - --max-iterations 3 \
+    - --dry-run
+  example-jira:
+    desc: '[imported from Makefile] example-jira'
+    cmds:
+    - echo "Running example with Jira backend..."
+    - echo "Make sure JIRA_URL, JIRA_EMAIL, JIRA_TOKEN, JIRA_PROJECT are set"
+    - planfile auto loop \
+    - --strategy examples/strategies/ecommerce-mvp.yaml \
+    - --project . \
+    - --backend jira \
+    - --max-iterations 3 \
+    - --dry-run
+  status:
+    desc: '[imported from Makefile] status'
+    cmds:
+    - planfile auto ci-status
+  version:
+    desc: '[imported from Makefile] version'
+    cmds:
+    - python -c "import planfile; print(planfile.__version__)"
+  bump-patch:
+    desc: '[imported from Makefile] bump-patch'
+    cmds:
+    - bump2version patch
+  bump-minor:
+    desc: '[imported from Makefile] bump-minor'
+    cmds:
+    - bump2version minor
+  bump-major:
+    desc: '[imported from Makefile] bump-major'
+    cmds:
+    - bump2version major
+  publish:
+    desc: '[imported from Makefile] publish'
+    cmds:
+    - python3 -m build
+    - twine upload dist/*
+  pipeline-test:
+    desc: '[imported from Makefile] pipeline-test'
+    cmds:
+    - echo "Running full CI/CD pipeline locally..."
+    - 'echo "Step 1: Install dependencies"'
+    - make install
+    - 'echo "Step 2: Run tests"'
+    - make test
+    - 'echo "Step 3: Run CI loop"'
+    - make ci-loop STRATEGY=examples/strategies/onboarding.yaml BACKENDS=github MAX_ITERATIONS=1
+  pipeline-docker:
+    desc: '[imported from Makefile] pipeline-docker'
+    cmds:
+    - echo "Running CI/CD pipeline in Docker..."
+    - make docker-build
+    - docker-compose up -d
+    - sleep 10
+    - docker-compose exec planfile-runner planfile auto loop \
+    - --strategy /app/planfile.yaml \
+    - --project /workspace \
+    - --backend github \
+    - --max-iterations 1
+  full-loop:
+    desc: '[imported from Makefile] full-loop'
+    cmds:
+    - echo "Running full bug-fix loop with auto-fix..."
+    - planfile auto loop \
+    - --strategy examples/strategies/onboarding.yaml \
+    - --project . \
+    - --backend github \
+    - --max-iterations 10 \
+    - --auto-fix \
+    - --output full-loop-results.json
+  strategy-review:
+    desc: '[imported from Makefile] strategy-review'
+    cmds:
+    - planfile strategy review \
+    - --strategy examples/strategies/onboarding.yaml \
+    - --project . \
+    - --backend github
+  test-github:
+    desc: '[imported from Makefile] test-github'
+    cmds:
+    - echo "Testing GitHub integration..."
+    - if [ -z "$(GITHUB_TOKEN)" ] || [ -z "$(GITHUB_REPO)" ]; then \
+    - echo "Set GITHUB_TOKEN and GITHUB_REPO"; \
+    - exit 1; \
+    - fi
+    - python3 -m tests.integration.test_github
+  test-jira:
+    desc: '[imported from Makefile] test-jira'
+    cmds:
+    - echo "Testing Jira integration..."
+    - if [ -z "$(JIRA_TOKEN)" ] || [ -z "$(JIRA_URL)" ]; then \
+    - echo "Set JIRA_TOKEN and JIRA_URL"; \
+    - exit 1; \
+    - fi
+    - python -m tests.integration.test_jira
+  docs:
+    desc: '[imported from Makefile] docs'
+    cmds:
+    - echo "Generating documentation..."
+    - cd docs && make html
+  serve-docs:
+    desc: '[imported from Makefile] serve-docs'
+    cmds:
+    - echo "Serving documentation..."
+    - cd docs/_build/html && python3 -m http.server 8080
+  quick-start:
+    desc: '[imported from Makefile] quick-start'
+    cmds:
+    - echo "Quick start with Planfile"
+    - echo "=========================="
+    - 'echo "1. Install: make install"'
+    - 'echo "2. Configure: export GITHUB_TOKEN=your_token"'
+    - 'echo "3. Run: make ci-loop STRATEGY=examples/strategies/onboarding.yaml"'
+    - echo ""
+    - 'echo "For Docker: make docker-build && make docker-run"'
+  health:
+    desc: '[from doql] workflow: health'
+    cmds:
+    - docker compose ps
+    - docker compose exec app echo "Health check passed"
+  import-makefile-hint:
+    desc: '[from doql] workflow: import-makefile-hint'
+    cmds:
+    - 'echo ''Run: taskfile import Makefile to import existing targets.'''
+  all:
+    desc: Run install, lint, test
+    cmds:
+    - taskfile run install
+    - taskfile run lint
+    - taskfile run test
+  sumd:
+    desc: Generate SUMD (Structured Unified Markdown Descriptor) for AI-aware project description
+    cmds:
+    - |
+      echo "# $(basename $(pwd))" > SUMD.md
+      echo "" >> SUMD.md
+      echo "$(python3 -c "import tomllib; f=open('pyproject.toml','rb'); d=tomllib.load(f); print(d.get('project',{}).get('description','Project description'))" 2>/dev/null || echo 'Project description')" >> SUMD.md
+      echo "" >> SUMD.md
+      echo "## Contents" >> SUMD.md
+      echo "" >> SUMD.md
+      echo "- [Metadata](#metadata)" >> SUMD.md
+      echo "- [Architecture](#architecture)" >> SUMD.md
+      echo "- [Dependencies](#dependencies)" >> SUMD.md
+      echo "- [Source Map](#source-map)" >> SUMD.md
+      echo "- [Intent](#intent)" >> SUMD.md
+      echo "" >> SUMD.md
+      echo "## Metadata" >> SUMD.md
+      echo "" >> SUMD.md
+      echo "- **name**: \`$(basename $(pwd))\`" >> SUMD.md
+      echo "- **version**: \`$(python3 -c "import tomllib; f=open('pyproject.toml','rb'); d=tomllib.load(f); print(d.get('project',{}).get('version','unknown'))" 2>/dev/null || echo 'unknown')\`" >> SUMD.md
+      echo "- **python_requires**: \`>=$(python3 --version 2>/dev/null | cut -d' ' -f2 | cut -d. -f1,2)\`" >> SUMD.md
+      echo "- **license**: $(python3 -c "import tomllib; f=open('pyproject.toml','rb'); d=tomllib.load(f); print(d.get('project',{}).get('license',{}).get('text','MIT'))" 2>/dev/null || echo 'MIT')" >> SUMD.md
+      echo "- **ecosystem**: SUMD + DOQL + testql + taskfile" >> SUMD.md
+      echo "- **generated_from**: pyproject.toml, Taskfile.yml, Makefile, src/" >> SUMD.md
+      echo "" >> SUMD.md
+      echo "## Architecture" >> SUMD.md
+      echo "" >> SUMD.md
+      echo '```' >> SUMD.md
+      echo "SUMD (description) → DOQL/source (code) → taskfile (automation) → testql (verification)" >> SUMD.md
+      echo '```' >> SUMD.md
+      echo "" >> SUMD.md
+      echo "## Source Map" >> SUMD.md
+      echo "" >> SUMD.md
+      find . -name '*.py' -not -path './.venv/*' -not -path './venv/*' -not -path './__pycache__/*' -not -path './.git/*' | head -50 | sed 's|^./||' | sed 's|^|- |' >> SUMD.md
+      echo "Generated SUMD.md"
+    - |
+      python3 -c "
+      import json, os, subprocess
+      from pathlib import Path
+      project_name = Path.cwd().name
+      py_files = list(Path('.').rglob('*.py'))
+      py_files = [f for f in py_files if not any(x in str(f) for x in ['.venv', 'venv', '__pycache__', '.git'])]
+      data = {
+          'project_name': project_name,
+          'description': 'SUMD - Structured Unified Markdown Descriptor for AI-aware project refactorization',
+          'files': [{'path': str(f), 'type': 'python'} for f in py_files[:100]]
+      }
+      with open('sumd.json', 'w') as f:
+          json.dump(data, f, indent=2)
+      print('Generated sumd.json')
+      " 2>/dev/null || echo 'Python generation failed, using fallback'
+  sumr:
+    desc: Generate SUMR (Summary Report) with project metrics and health status
+    cmds:
+    - |
+      echo "# $(basename $(pwd)) - Summary Report" > SUMR.md
+      echo "" >> SUMR.md
+      echo "SUMR - Summary Report for project analysis" >> SUMR.md
+      echo "" >> SUMR.md
+      echo "## Contents" >> SUMR.md
+      echo "" >> SUMR.md
+      echo "- [Metadata](#metadata)" >> SUMR.md
+      echo "- [Quality Status](#quality-status)" >> SUMR.md
+      echo "- [Metrics](#metrics)" >> SUMR.md
+      echo "- [Refactoring Analysis](#refactoring-analysis)" >> SUMR.md
+      echo "- [Intent](#intent)" >> SUMR.md
+      echo "" >> SUMR.md
+      echo "## Metadata" >> SUMR.md
+      echo "" >> SUMR.md
+      echo "- **name**: \`$(basename $(pwd))\`" >> SUMR.md
+      echo "- **version**: \`$(python3 -c "import tomllib; f=open('pyproject.toml','rb'); d=tomllib.load(f); print(d.get('project',{}).get('version','unknown'))" 2>/dev/null || echo 'unknown')\`" >> SUMR.md
+      echo "- **generated_at**: \`$(date -Iseconds)\`" >> SUMR.md
+      echo "" >> SUMR.md
+      echo "## Quality Status" >> SUMR.md
+      echo "" >> SUMR.md
+      if [ -f pyqual.yaml ]; then
+        echo "- **pyqual_config**: ✅ Present" >> SUMR.md
+        echo "- **last_run**: $(stat -c %y .pyqual/pipeline.db 2>/dev/null | cut -d' ' -f1 || echo 'N/A')" >> SUMR.md
+      else
+        echo "- **pyqual_config**: ❌ Missing" >> SUMR.md
+      fi
+      echo "" >> SUMR.md
+      echo "## Metrics" >> SUMR.md
+      echo "" >> SUMR.md
+      py_files=$(find . -name '*.py' -not -path './.venv/*' -not -path './venv/*' | wc -l)
+      echo "- **python_files**: $py_files" >> SUMR.md
+      lines=$(find . -name '*.py' -not -path './.venv/*' -not -path './venv/*' -exec cat {} \; 2>/dev/null | wc -l)
+      echo "- **total_lines**: $lines" >> SUMR.md
+      echo "" >> SUMR.md
+      echo "## Refactoring Analysis" >> SUMR.md
+      echo "" >> SUMR.md
+      echo "Run \`code2llm ./ -f evolution\` for detailed refactoring queue." >> SUMR.md
+      echo "Generated SUMR.md"
+    - |
+      python3 -c "
+      import json, os, subprocess
+      from pathlib import Path
+      from datetime import datetime
+      project_name = Path.cwd().name
+      py_files = len([f for f in Path('.').rglob('*.py') if not any(x in str(f) for x in ['.venv', 'venv', '__pycache__', '.git'])])
+      data = {
+          'project_name': project_name,
+          'report_type': 'SUMR',
+          'generated_at': datetime.now().isoformat(),
+          'metrics': {
+              'python_files': py_files,
+              'has_pyqual_config': Path('pyqual.yaml').exists()
+          }
+      }
+      with open('SUMR.json', 'w') as f:
+          json.dump(data, f, indent=2)
+      print('Generated SUMR.json')
+      " 2>/dev/null || echo 'Python generation failed, using fallback'
+```
+
+## Quality Pipeline (`pyqual.yaml`)
+
+```yaml markpact:pyqual path=pyqual.yaml
+pipeline:
+  name: quality-loop-with-llx
+
+  # Quality gates — pipeline iterates until ALL pass
+  # ONLY metrics with actual data (null values removed)
+  metrics:
+    # Code complexity & quality (active)
+    cc_max: 10                    # cyclomatic complexity (current: 4.1)
+    critical_max: 20              # critical issues (current: 17)
+    
+    # Test & validation (active)
+    vallm_pass_min: 75            # vallm pass rate % (current: 76.1)
+    coverage_min: 4               # test coverage % (current: 4.6)
+    
+    # Lint & style (active)
+    ruff_fatal_max: 15            # fatal lint errors (current: 13)
+    ruff_errors_max: 600          # total errors (current: 523)
+    
+    # NOTE: Disabled gates (no data from collectors):
+    # documentation_score_min, readme_completeness_min
+    # secrets_found_max, security_vuln_critical_max, security_vuln_high_max
+    # license_exists_min, pyproject_completeness_min
+
+  # Custom tool definitions
+  custom_tools:
+    - name: code2llm_vallm
+      binary: .venv/bin/code2llm
+      command: >-
+        .venv/bin/code2llm {workdir} -f toon -o ./project --no-chunk
+        --exclude .git venv dist __pycache__ .pytest_cache .mypy_cache .ruff_cache
+        .code2llm_cache build *.egg-info
+      output: ""
+      allow_failure: false
+
+    - name: vallm_src
+      binary: venv/bin/vallm
+      command: >-
+        venv/bin/vallm batch {workdir}/src --recursive --format toon --output ./project
+        --exclude ".git" --exclude "venv" --exclude "dist" --exclude "__pycache__"
+        --exclude ".pytest_cache" --exclude ".mypy_cache" --exclude ".ruff_cache"
+        --exclude ".code2llm_cache" --exclude "build" --exclude "*.egg-info"
+        --exclude "test-integrated.yaml" --exclude "examples/llm-integration/llm-config.yaml"
+        --exclude "mcp-server-example.py" --exclude "examples/*" --exclude "test_*.py"
+        --exclude "test*.py" --exclude "test*.yaml" --exclude "test*.sh"
+        --exclude "run_examples.sh" --exclude "test_checkbox_tickets.py"
+        --exclude "test_mixed_format.py" --exclude "test_chars.py"
+        --exclude "test_regex.py" --exclude "test_regex2.py" --exclude "test_strategy.py"
+        --exclude "test_improvements.py" --exclude "test_integration.py"
+        --exclude "test_markdown_integration.py" --exclude "test_planfile_final.py"
+      output: ""
+      allow_failure: false
+
+    - name: vallm_verify
+      binary: venv/bin/vallm
+      command: >-
+        venv/bin/vallm batch {workdir}/src --recursive --no-complexity --format toon --output ./project/verify
+        --exclude ".git" --exclude "venv" --exclude "dist" --exclude "__pycache__"
+        --exclude ".pytest_cache" --exclude ".mypy_cache" --exclude ".ruff_cache"
+        --exclude ".code2llm_cache" --exclude "build" --exclude "*.egg-info"
+        --exclude "test-integrated.yaml" --exclude "examples/llm-integration/llm-config.yaml"
+        --exclude "mcp-server-example.py" --exclude "examples/*" --exclude "test_*.py"
+        --exclude "test*.py" --exclude "test*.yaml" --exclude "test*.sh"
+        --exclude "run_examples.sh" --exclude "test_checkbox_tickets.py"
+        --exclude "test_mixed_format.py" --exclude "test_chars.py"
+        --exclude "test_regex.py" --exclude "test_regex2.py" --exclude "test_strategy.py"
+        --exclude "test_improvements.py" --exclude "test_integration.py"
+        --exclude "test_markdown_integration.py" --exclude "test_planfile_final.py"
+      output: ""
+      allow_failure: false
+
+  # Pipeline stages
+  stages:
+    - name: setup
+      run: |
+        set -e
+        echo "=== pyqual dependency check ==="
+        for pkg in code2llm vallm prefact llx pytest-cov goal; do
+          if python -m pip show "$pkg" >/dev/null 2>&1; then
+            echo "  ✓ $pkg"
+          else
+            echo "  ✗ $pkg — installing…"
+            pip install -q "$pkg" || echo "  ⚠ $pkg install failed (optional)"
+          fi
+        done
+        if command -v claude >/dev/null 2>&1; then
+          echo "  ✓ claude $(claude --version 2>/dev/null)"
+        else
+          echo "  ✗ claude — not installed"
+        fi
+        echo "=== setup done ==="
+      when: first_iteration
+      timeout: 300
+
+    - name: lint
+      tool: ruff
+      optional: true
+
+    - name: test
+      run: .venv/bin/python -m pytest -q --tb=short --cov=src/vallm --cov-report=term-missing --cov-report=json:.pyqual/coverage.json
+      when: always
+
+    - name: prefact
+      tool: prefact
+      optional: true
+      when: metrics_fail
+      timeout: 900
+
+    - name: fix
+      tool: llx-fix
+      optional: true
+      when: metrics_fail
+      timeout: 1800
+
+    - name: verify
+      tool: vallm_verify
+      optional: true
+      when: after_fix
+      timeout: 300
+
+    - name: push
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          git add -A
+          git commit -m "chore: pyqual auto-commit [skip ci]" 2>/dev/null || true
+          git push origin HEAD
+        else
+          echo "No changes to push"
+        fi
+      when: metrics_pass
+      optional: true
+      timeout: 120
+
+    - name: publish
+      run: make publish
+      when: metrics_pass
+      optional: true
+      timeout: 300
+
+    - name: validate_deploy
+      run: |
+        echo "=== Validating deploy ==="
+        errors=0
+        
+        # Check push - verify recent pyqual commit
+        last_commit=$(git log -1 --pretty=%B 2>/dev/null)
+        if echo "$last_commit" | grep -q "pyqual auto-commit"; then
+          echo "✓ Push validated: recent commit found"
+        else
+          echo "✗ Push failed: no pyqual auto-commit found"
+          errors=$((errors + 1))
+        fi
+        
+        # Check publish - verify wheel was built successfully
+        # Get wheel from today
+        today_wheel=$(find dist -name "*.whl" -newer .pyqual/pipeline.db 2>/dev/null | head -1)
+        if [ -n "$today_wheel" ]; then
+          echo "✓ Publish validated: fresh wheel found: $(basename $today_wheel)"
+        else
+          echo "✗ Publish failed: no fresh wheel found (checked dist/*.whl)"
+          errors=$((errors + 1))
+        fi
+        
+        # Summary
+        if [ $errors -eq 0 ]; then
+          echo "=== Deploy validation PASSED ==="
+          exit 0
+        else
+          echo "=== Deploy validation FAILED ($errors errors) ==="
+          exit 1
+        fi
+      when: metrics_pass
+      optional: true
+      timeout: 30
+
+    - name: markdown_report
+      run: python3 -m pyqual.report_generator
+      when: always
+      optional: true
+      timeout: 30
+
+  # Loop behavior
+  loop:
+    max_iterations: 5
+    on_fail: report
+
+  # Environment
+  env:
+    LLM_MODEL: openrouter/x-ai/grok-code-fast-1
+    LLX_DEFAULT_TIER: balanced
+    LLX_VERBOSE: true
+```
+
+## Configuration
+
+```yaml
+project:
+  name: planfile
+  version: 0.1.59
+  env: local
+```
+
+## Dependencies
+
+### Runtime
+
+```text markpact:deps python
+typer>=0.12
+rich>=13.0
+pydantic>=2.0
+pydantic-settings>=2.0
+pyyaml>=6.0
+requests>=2.31
+httpx>=0.27
+filelock>=3.0
+python-dotenv>=1.0
+PyGithub>=2.0
+```
+
+### Development
+
+```text markpact:deps python scope=dev
+pytest>=8.0
+pytest-cov>=5.0
+ruff>=0.5
+mypy>=1.10
+black>=23.0
+isort>=5.12
+goal>=2.1.0
+costs>=0.1.20
+pfix>=0.1.60
+```
+
+## Deployment
+
+```bash markpact:run
+pip install planfile
+
+# development install
+pip install -e .[dev]
+```
+
+### Docker
+
+- **base image**: `python:3.11-slim`
+- **expose**: `11434`
+- **entrypoint**: `["docker-entrypoint.sh"]`
+
+### Docker Compose (`docker-compose.yml`)
+
+- **planfile-runner** image=`planfile/runner:latest` ports: `11434:11434`
+- **postgres** image=`postgres:15-alpine`
+- **redis** image=`redis:7-alpine`
+- **web-ui** image=`{'context': '.', 'dockerfile': 'Dockerfile.web'}` ports: `3000:3000`
+
+## Release Management (`goal.yaml`)
+
+- **versioning**: `semver`
+- **commits**: `conventional` scope=`strategy`
+- **changelog**: `keep-a-changelog`
+- **build strategies**: `python`, `nodejs`, `rust`
+- **version files**: `VERSION`, `pyproject.toml:version`, `planfile/__init__.py:__version__`
+
+## Makefile Targets
+
+- `help` — Default target
+- `install` — Installation
+- `test` — Testing
+- `docker-build` — Docker commands
+- `docker-run`
+- `docker-stop`
+- `docker-clean`
+- `ci-loop` — CI/CD commands
+- `dev-setup` — Development commands
+- `lint`
+- `format`
+- `example-github` — Examples
+- `example-jira`
+- `status` — Monitoring
+- `logs`
+- `clean` — Cleanup
+- `version` — Release
+- `bump-patch`
+- `bump-minor`
+- `bump-major`
+- `publish`
+- `pipeline-test` — CI/CD Pipeline helpers
+- `pipeline-docker`
+- `full-loop` — Advanced examples
+- `strategy-review`
+- `test-github` — Integration tests
+- `test-jira`
+- `docs` — Documentation
+- `serve-docs`
+- `quick-start` — Quick start
+
+## Code Analysis
+
+### `project/map.toon.yaml`
+
+```toon markpact:analysis path=project/map.toon.yaml
 # planfile | 207f 27239L | python:158,shell:37,css:6,javascript:6 | 2026-04-19
 # stats: 356 func | 73 cls | 207 mod | CC̄=4.3 | critical:30 | cycles:0
 # alerts[5]: CC _analyze_directory_structure=20; CC _infer_python_project_type=17; CC _find_readme_content=16; CC test_checkbox_ticket_parsing=16; CC demo_checkbox_tickets=15
@@ -925,3 +2036,84 @@ D:
     test_import()
     test_planfile_bulk_ticket_creation_is_capped(monkeypatch)
     test_sprint_generator_limits_tickets_by_priority()
+```
+
+## Source Map
+
+*Top 5 modules by symbol density — signatures for LLM orientation.*
+
+### `planfile.executor_standalone` (`planfile/executor_standalone.py`)
+
+```python
+def create_openai_client(api_key, model)  # CC=2, fan=4
+def create_litellm_client(api_key, model)  # CC=2, fan=3
+def execute_strategy(strategy_path, project_path)  # CC=8, fan=2
+class TaskResult:  # Result of executing a task.
+class LLMClient:  # Simple LLM client interface.
+    def __init__(client_func, config)  # CC=2
+    def chat(messages, model)  # CC=1
+class StrategyExecutor:  # Standalone strategy executor.
+    def __init__(client, config)  # CC=2
+    def _default_config()  # CC=1
+    def execute_strategy(strategy, project_path)  # CC=8
+    def _execute_task(task, project_path, dry_run, model_override)  # CC=7
+    def _select_model(task)  # CC=7
+    def _build_prompt(task, project_path)  # CC=2
+    def _get_project_metrics(project_path)  # CC=6
+```
+
+### `planfile.ci` (`planfile/ci.py`)
+
+```python
+class TestResult:  # Result of running tests.
+class BugReport:  # Generated bug report from test failures.
+class CIRunner:  # CI/CD runner with automated bug-fix loop and ticket creation
+    def __init__(strategy_path, project_path, backends, llx_command, max_iterations, auto_fix, planfile_instance)  # CC=4
+    def run_tests()  # CC=6
+    def run_code_analysis()  # CC=5
+    def generate_bug_report(test_result, metrics)  # CC=2
+    def create_bug_tickets(bug_report)  # CC=7
+    def auto_fix_bugs(bug_report)  # CC=2
+    def check_strategy_completion()  # CC=3
+    def run_loop()  # CC=7
+    def save_results(results, output_path)  # CC=2
+```
+
+### `planfile.builder` (`planfile/builder.py`)
+
+```python
+def create_strategy_command(output, model, local)  # CC=1, fan=5
+class LLXStrategyBuilder:  # Interactive strategy builder using LLX.
+    def __init__(llx_path, model, local)  # CC=1
+    def _call_llx(prompt)  # CC=3
+    def ask_llm_questions()  # CC=4
+    def _parse_bullet_list(text)  # CC=4
+    def answers_to_strategy(answers)  # CC=3
+    def build_strategy(output_path)  # CC=2
+```
+
+### `planfile.runner` (`planfile/runner.py`)
+
+```python
+def load_valid_strategy(path)  # CC=3, fan=6
+def verify_strategy_post_execution(strategy, project_path, backend)  # CC=12, fan=6 ⚠
+def _get_project_hash(project_path)  # CC=5, fan=11
+def analyze_project_metrics(project_path)  # CC=12, fan=17 ⚠
+def apply_strategy_to_tickets(strategy, project_path, backend, dry_run)  # CC=8, fan=3
+def review_strategy(strategy, project_path, backends, backend_name)  # CC=14, fan=9 ⚠
+def run_strategy(strategy_path, project_path, backend, dry_run)  # CC=8, fan=8
+```
+
+### `planfile.examples` (`planfile/examples.py`)
+
+```python
+def example_create_strategy()  # CC=1, fan=1
+def example_validate_strategy()  # CC=2, fan=3
+def example_run_strategy()  # CC=1, fan=1
+def example_verify_strategy()  # CC=2, fan=3
+def example_programmatic_strategy()  # CC=1, fan=9
+```
+
+## Intent
+
+SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops

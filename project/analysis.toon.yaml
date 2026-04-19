@@ -1,17 +1,20 @@
-# code2llm | 126f 11860L | python:125,shell:15 | 2026-04-19
-# CC̄=3.8 | critical:7/644 | dups:0 | cycles:0
+# code2llm | 174f 17980L | python:136,shell:37,javascript:1 | 2026-04-19
+# CC̄=3.5 | critical:8/644 | dups:3 | cycles:0
 
-HEALTH[7]:
+HEALTH[9]:
+  🔴 DUP   3 classes duplicated
+  🟡 CC    demo_checkbox_tickets CC=15 (limit:15)
+  🟡 CC    _find_readme_content CC=16 (limit:15)
+  🟡 CC    get_detected_values CC=15 (limit:15)
   🟡 CC    _analyze_directory_structure CC=20 (limit:15)
   🟡 CC    _infer_python_project_type CC=17 (limit:15)
-  🟡 CC    _find_readme_content CC=16 (limit:15)
   🟡 CC    _create_ticket CC=15 (limit:15)
   🟡 CC    _update_ticket CC=15 (limit:15)
   🟡 CC    get_stats CC=15 (limit:15)
-  🟡 CC    get_detected_values CC=15 (limit:15)
 
-REFACTOR[1]:
-  1. split 7 high-CC methods  (CC>15)
+REFACTOR[2]:
+  1. rm duplicates  (-3 dup classes)
+  2. split 8 high-CC methods  (CC>15)
 
 PIPELINES[329]:
   [1] Src [BASE_URL]: BASE_URL → request
@@ -26,7 +29,7 @@ PIPELINES[329]:
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=4.0    ←in:22  →out:6
+  planfile/                       CC̄=4.0    ←in:43  →out:33  !! split  ×DUP
   │ runner                     418L  0C    7m  CC=14     ←4
   │ generator                  347L  1C   24m  CC=14     ←0
   │ executor_standalone        338L  3C   12m  CC=8      ←0
@@ -50,6 +53,7 @@ LAYERS:
   │ server                     209L  0C    4m  CC=14     ←0
   │ sprint_generator           206L  1C   10m  CC=9      ←0
   │ config                     206L  1C   14m  CC=10     ←0
+  │ commands                   197L  0C    3m  CC=13     ←1
   │ cli_loader                 194L  0C   10m  CC=7      ←0
   │ toon_parser                189L  0C    7m  CC=11     ←2
   │ gates                      170L  0C   13m  CC=8      ←3
@@ -67,7 +71,7 @@ LAYERS:
   │ priorities                 111L  0C    3m  CC=4      ←0
   │ tickets                    110L  1C    6m  CC=12     ←0
   │ utils                      108L  0C    5m  CC=7      ←1
-  │ __init__                   104L  1C    5m  CC=3      ←0
+  │ __init__                   104L  1C    5m  CC=3      ←0  ×DUP
   │ commands                   100L  0C    1m  CC=10     ←0
   │ server                      97L  2C    7m  CC=4      ←0
   │ vallm_importer              96L  1C   10m  CC=4      ←1
@@ -84,8 +88,8 @@ LAYERS:
   │ prompts                     63L  0C    1m  CC=5      ←1
   │ client                      63L  0C    1m  CC=4      ←1
   │ __init__                    63L  0C    0m  CC=0.0    ←0
-  │ !! structure                   60L  0C    1m  CC=20     ←3
   │ model_tier                  60L  0C    4m  CC=9      ←3
+  │ !! structure                   60L  0C    1m  CC=20     ←3
   │ commands                    59L  0C    3m  CC=2      ←0
   │ store_tickets               54L  1C    4m  CC=7      ←0
   │ ticket                      51L  2C    1m  CC=2      ←0
@@ -129,6 +133,7 @@ LAYERS:
   │ __init__                    11L  0C    1m  CC=1      ←0
   │ __init__                    11L  0C    1m  CC=1      ←0
   │ __init__                    11L  0C    1m  CC=1      ←0
+  │ __init__                    11L  0C    1m  CC=1      ←0
   │ store                       11L  1C    0m  CC=0.0    ←0
   │ execution                    6L  0C    0m  CC=0.0    ←0
   │ constants                    5L  0C    0m  CC=0.0    ←0
@@ -138,15 +143,63 @@ LAYERS:
   │ __init__                     4L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
-  │ base                         1L  0C    0m  CC=0.0    ←0
-  │ github                       1L  0C    0m  CC=0.0    ←0
-  │ jira                         1L  0C    0m  CC=0.0    ←0
-  │ gitlab                       1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
+  │ gitlab                       1L  0C    0m  CC=0.0    ←0
+  │ github                       1L  0C    0m  CC=0.0    ←0
   │ generic                      1L  0C    0m  CC=0.0    ←0
+  │ base                         1L  0C    0m  CC=0.0    ←0
+  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │
+  examples/                       CC̄=2.0    ←in:0  →out:2  ×DUP
+  │ !! 04_llx_integration         503L  2C    9m  CC=12     ←1
+  │ 02_mcp_integration         381L  0C    6m  CC=9      ←0
+  │ 03_proxy_routing           368L  1C    7m  CC=8      ←0
+  │ 01_full_workflow.sh        352L  4C   12m  CC=0.0    ←0
+  │ test_interactive_expect.sh   278L  0C    0m  CC=0.0    ←0
+  │ test_planfile_generation.sh   277L  4C    7m  CC=0.0    ←0
+  │ 03_python_client           250L  1C   14m  CC=4      ←0
+  │ verify_planfile.sh         245L  0C    2m  CC=0.0    ←0
+  │ 03_integration             218L  1C    9m  CC=4      ←0  ×DUP
+  │ PROPOSED_API_IMPROVEMENTS   217L  2C    7m  CC=13     ←0  ×DUP
+  │ run_all_tests.sh           203L  0C    2m  CC=0.0    ←0
+  │ llx_validator              185L  1C    7m  CC=4      ←0
+  │ 02_ticket_management       172L  0C    6m  CC=3      ←0
+  │ run.sh                     166L  0C    1m  CC=0.0    ←0
+  │ 04_advanced_filtering      161L  0C    6m  CC=12     ←0
+  │ test_readme_examples.sh    158L  1C    3m  CC=0.0    ←0
+  │ 04_javascript_client.js    152L  1C   18m  CC=5      ←0
+  │ run.sh                     129L  0C    0m  CC=0.0    ←0
+  │ run.sh                     128L  0C    0m  CC=0.0    ←0
+  │ 01_basic_usage             112L  0C    5m  CC=3      ←0
+  │ !! demo                       109L  0C    1m  CC=15     ←0
+  │ run.sh                     109L  0C    0m  CC=0.0    ←0
+  │ 02_curl_examples.sh        102L  0C    2m  CC=0.0    ←0
+  │ run.sh                      92L  0C    1m  CC=0.0    ←0
+  │ run.sh                      92L  0C    1m  CC=0.0    ←0
+  │ run.sh                      89L  0C    1m  CC=0.0    ←20
+  │ validate_with_llx.sh        65L  0C    1m  CC=0.0    ←0
+  │ 04_analytics_simple         59L  0C    1m  CC=1      ←0
+  │ 03_integration_simple       52L  0C    1m  CC=3      ←0
+  │ run_all.sh                  49L  0C    1m  CC=0.0    ←0
+  │ 01_start_server.sh          47L  0C    0m  CC=0.0    ←0
+  │ run_fixed.sh                47L  0C    0m  CC=0.0    ←0
+  │ run.sh                      40L  0C    0m  CC=0.0    ←0
+  │ run.sh                      38L  0C    0m  CC=0.0    ←0
+  │ run_fixed.sh                35L  0C    0m  CC=0.0    ←0
+  │ run.sh                      34L  0C    0m  CC=0.0    ←0
+  │ run_all.sh                  30L  0C    0m  CC=0.0    ←0
+  │ run.sh                      29L  0C    0m  CC=0.0    ←0
+  │ run.sh                      29L  0C    0m  CC=0.0    ←0
+  │ run.sh                      29L  0C    0m  CC=0.0    ←0
+  │ run.sh                      17L  0C    0m  CC=0.0    ←0
+  │ ci-workflow.sh              16L  0C    0m  CC=0.0    ←0
+  │ run.sh                      13L  0C    0m  CC=0.0    ←0
+  │ run.sh                      13L  0C    0m  CC=0.0    ←0
+  │ run.sh                      12L  0C    0m  CC=0.0    ←0
+  │ planfile-sync.sh            10L  0C    0m  CC=0.0    ←0
   │
   ./                              CC̄=0.2    ←in:0  →out:0
   │ run_examples.sh            286L  0C   13m  CC=0.0    ←7
@@ -162,22 +215,34 @@ LAYERS:
      planfile/utils/__init__.py                0L
 
 COUPLING:
-                            planfile.cli            planfile        run_examples    planfile.loaders        planfile.api  planfile.importers       planfile.sync        planfile.llm        planfile.mcp
-        planfile.cli                  ──                  15                  14                  12                                                           2                   1                      !! fan-out
-            planfile                 ←15                  ──                                       1                  ←6                   5                                                          ←1  hub
-        run_examples                 ←14                                      ──                                                                                                                          hub
-    planfile.loaders                 ←12                  ←1                                      ──                                                                                                      hub
-        planfile.api                                       6                                                          ──                                                                                
-  planfile.importers                                      ←5                                                                              ──                                                              hub
-       planfile.sync                  ←2                                                                                                                      ──                                        
-        planfile.llm                  ←1                                                                                                                                          ──                    
-        planfile.mcp                                       1                                                                                                                                          ──
+                           examples.gitlab  examples.python-api   examples.ecosystem             planfile         planfile.cli    examples.rest-api    planfile.analysis     planfile.loaders         run_examples        planfile.sync         planfile.api   planfile.importers         planfile.llm             examples        planfile.core
+      examples.gitlab                   ──                 ←145                  ←95                  ←27                                       ←29                  ←15                   ←2                                        ←6                                                             ←1                   ←1                   ←2  hub
+  examples.python-api                  145                   ──                                        20                                                                                                                                                                                                                                         !! fan-out
+   examples.ecosystem                   95                                        ──                                                                                                                                                                                                                ←2                                            !! fan-out
+             planfile                   27                  ←20                                        ──                  ←15                                                              1                                                             ←6                    5                                        ←1                       hub
+         planfile.cli                                                                                  15                   ──                                                             12                   15                    2                                                              1                                            !! fan-out
+    examples.rest-api                   29                                                                                                       ──                                                                                                                                                                                               !! fan-out
+    planfile.analysis                   15                                                                                                                            ──                                                                                                                                                                          !! fan-out
+     planfile.loaders                    2                                                             ←1                  ←12                                                             ──                                                                                                                                                     hub
+         run_examples                                                                                                      ←15                                                                                  ──                                                                                                                                hub
+        planfile.sync                    6                                                                                  ←2                                                                                                       ──                                                                                                         
+         planfile.api                                                                                   6                                                                                                                                                 ──                                                                                    
+   planfile.importers                                                                                  ←5                                                                                                                                                                      ──                                                                 hub
+         planfile.llm                    1                                         2                                        ←1                                                                                                                                                                      ──                                          
+             examples                    1                                                              1                                                                                                                                                                                                                ──                     
+        planfile.core                    2                                                                                                                                                                                                                                                                                                    ──
   CYCLES: none
-  HUB: run_examples/ (fan-in=14)
   HUB: planfile.loaders/ (fan-in=13)
-  HUB: planfile/ (fan-in=22)
   HUB: planfile.importers/ (fan-in=5)
-  SMELL: planfile.cli/ fan-out=44 → split needed
+  HUB: planfile/ (fan-in=43)
+  HUB: run_examples/ (fan-in=15)
+  HUB: examples.gitlab/ (fan-in=323)
+  SMELL: examples.ecosystem/ fan-out=95 → split needed
+  SMELL: planfile.analysis/ fan-out=15 → split needed
+  SMELL: planfile/ fan-out=33 → split needed
+  SMELL: examples.python-api/ fan-out=165 → split needed
+  SMELL: examples.rest-api/ fan-out=29 → split needed
+  SMELL: planfile.cli/ fan-out=45 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon

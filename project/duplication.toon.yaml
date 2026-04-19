@@ -1,12 +1,21 @@
-# redup/duplication | 12 groups | 135f 13931L | 2026-04-13
+# redup/duplication | 12 groups | 135f 14020L | 2026-04-19
 
 SUMMARY:
   files_scanned: 135
-  total_lines:   13931
+  total_lines:   14020
   dup_groups:    12
   dup_fragments: 34
   saved_lines:   131
-  scan_ms:       7793
+  scan_ms:       6741
+
+HOTSPOTS[7] (files with most duplication):
+  planfile/cli/project_detector/gates.py  dup=32L  groups=2  frags=4  (0.2%)
+  planfile/cli/groups/sync/commands.py  dup=28L  groups=1  frags=4  (0.2%)
+  planfile/cli/groups/ticket/commands.py  dup=27L  groups=1  frags=3  (0.2%)
+  planfile/cli/groups/sync/core.py  dup=24L  groups=1  frags=2  (0.2%)
+  planfile/cli/core/console.py  dup=15L  groups=1  frags=5  (0.1%)
+  planfile/sync/base.py  dup=14L  groups=1  frags=1  (0.1%)
+  planfile/sync/jira.py  dup=14L  groups=1  frags=1  (0.1%)
 
 DUPLICATES[12] (ranked by impact):
   [73f23dc09aac9b7a]   STRU  github_cmd  L=7 N=4 saved=21 sim=1.00
@@ -93,6 +102,46 @@ REFACTOR[12] (ranked by priority):
   [12] ○ extract_function   → planfile/cli/project_detector/utils/_find_readme_description.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: planfile/cli/project_detector/readme.py
+
+QUICK_WINS[10] (low risk, high savings — do first):
+  [1] extract_function   saved=21L  → planfile/cli/groups/sync/utils/github_cmd.py
+      FILES: commands.py
+  [2] extract_function   saved=18L  → planfile/cli/groups/ticket/utils/ticket_done.py
+      FILES: commands.py
+  [3] extract_function   saved=15L  → planfile/cli/groups/utils/register_apply_commands.py
+      FILES: __init__.py, __init__.py, __init__.py +3
+  [4] extract_function   saved=14L  → planfile/sync/utils/map_priority.py
+      FILES: base.py, jira.py
+  [5] extract_function   saved=12L  → planfile/cli/core/utils/print_success.py
+      FILES: console.py
+  [6] extract_function   saved=12L  → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
+      FILES: core.py
+  [7] extract_function   saved=9L  → planfile/cli/project_detector/utils/_detect_docker_gates.py
+      FILES: gates.py
+  [8] extract_function   saved=8L  → planfile/cli/groups/utils/register_auto_commands.py
+      FILES: __init__.py, __init__.py
+  [9] extract_function   saved=7L  → planfile/cli/project_detector/utils/_has_mypy_config.py
+      FILES: gates.py
+  [10] extract_function   saved=7L  → planfile/importers/utils/import_json.py
+      FILES: json_importer.py, yaml_importer.py
+
+DEPENDENCY_RISK[1] (duplicates spanning multiple packages):
+  __init__  packages=2  files=2
+      examples/PROPOSED_API_IMPROVEMENTS.py
+      planfile/extensions/__init__.py
+
+EFFORT_ESTIMATE (total ≈ 4.5h):
+  medium github_cmd                          saved=21L  ~42min
+  medium ticket_done                         saved=18L  ~36min
+  medium register_apply_commands             saved=15L  ~30min
+  easy   map_priority                        saved=14L  ~28min
+  easy   print_success                       saved=12L  ~24min
+  easy   _collect_tickets_from_sprint        saved=12L  ~24min
+  easy   _detect_docker_gates                saved=9L  ~18min
+  easy   register_auto_commands              saved=8L  ~16min
+  easy   _has_mypy_config                    saved=7L  ~14min
+  easy   import_json                         saved=7L  ~14min
+  ... +2 more (~24min)
 
 METRICS-TARGET:
   dup_groups:  12 → 0
