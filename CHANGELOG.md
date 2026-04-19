@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.1.61] - 2026-04-19
+
+### Test
+- Update tests/test_integration.py
+
 ## [0.1.60] - 2026-04-19
 
 ### Docs
