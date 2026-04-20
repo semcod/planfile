@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.1.62] - 2026-04-20
+
+### Other
+- Update planfile.yaml
+- Update planfile/cli/groups/sync/commands.py
+- Update planfile/cli/groups/sync/commands.py.bak
+- Update planfile/cli/groups/ticket/commands.py
+- Update planfile/cli/groups/ticket/commands.py.bak
+- Update redsl.yaml
+
 ## [0.1.61] - 2026-04-19
 
 ### Test

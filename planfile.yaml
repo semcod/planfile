@@ -8,9 +8,8 @@ sources:
 - project/duplication.toon.yaml
 stats:
   total: 34
-  todo: 34
-  done: 0
-
+  todo: 31
+  done: 3
 tasks:
 - id: Q01
   title: 'reduce_complexity: runner (CC=14)'
@@ -50,13 +49,14 @@ tasks:
   action: reduce_complexity
   priority: 3
   effort: medium
-  status: todo
+  status: done
   labels:
   - refactor
   - complexity
   - cc-14
   source: project/analysis.toon.yaml
   priority_label: medium
+  completed_at: '2026-04-20T06:50:12.320573+00:00'
 - id: Q04
   title: 'reduce_complexity: jira (CC=13)'
   description: Module 'jira' has cyclomatic complexity CC=13 (280 lines, 1 complex
@@ -418,13 +418,14 @@ tasks:
   action: extract_function
   priority: 3
   effort: low
-  status: todo
+  status: done
   labels:
   - refactor
   - duplication
   - extract-function
   source: project/duplication.toon.yaml
   priority_label: medium
+  completed_at: '2026-04-20T06:50:12.320573+00:00'
 - id: D14
   title: 'extract_function: ticket_done (saves 18L)'
   description: 'Duplicated ''ticket_done'': 3 occurrences, 9 lines each, saves 18
@@ -434,13 +435,14 @@ tasks:
   action: extract_function
   priority: 3
   effort: medium
-  status: todo
+  status: done
   labels:
   - refactor
   - duplication
   - extract-function
   source: project/duplication.toon.yaml
   priority_label: medium
+  completed_at: '2026-04-20T06:50:12.320573+00:00'
 - id: D15
   title: 'extract_function: register_apply_commands (saves 15L)'
   description: 'Duplicated ''register_apply_commands'': 6 occurrences, 3 lines each,
