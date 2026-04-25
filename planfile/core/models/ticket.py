@@ -22,7 +22,7 @@ class Ticket(BaseModel):
     """Atomic unit of work in planfile."""
     id: str                            # "PLF-042"
     name: str
-    status: "TicketStatus" = None      # Forward reference
+    status: "TicketStatus" = "open"      # Default to open status
     priority: str = "normal"           # critical | high | normal | low
     sprint: str = "current"            # current | backlog | sprint-XXX
 
@@ -47,8 +47,3 @@ class Ticket(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    def __post_init__(self):
-        """Set default status if not provided."""
-        if self.status is None:
-            from .base import TicketStatus
-            self.status = TicketStatus.open

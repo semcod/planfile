@@ -61,7 +61,7 @@ def create_ticket_table(tickets) -> Table:
     table.add_column('ID', style='cyan', no_wrap=True)
     table.add_column('Status', style='bold')
     table.add_column('Priority')
-    table.add_column('Title')
+    table.add_column('Name')
     table.add_column('Labels', style='dim')
     table.add_column('Source', style='dim')
     status_colors = {'open': 'white', 'in_progress': 'yellow', 'review': 'blue', 'done': 'green', 'blocked': 'red'}
@@ -71,20 +71,20 @@ def create_ticket_table(tickets) -> Table:
         sc = status_colors.get(status_val, 'white')
         pc = priority_colors.get(t.priority, 'white')
         source_str = t.source.tool if t.source else ''
-        table.add_row(t.id, f'[{sc}]{status_val}[/{sc}]', f'[{pc}]{t.priority}[/{pc}]', t.title, ', '.join(t.labels) if t.labels else '', source_str)
+        table.add_row(t.id, f'[{sc}]{status_val}[/{sc}]', f'[{pc}]{t.priority}[/{pc}]', t.name, ', '.join(t.labels) if t.labels else '', source_str)
     return table
 
-def ticket_create(title: str=typer.Argument(..., help='Ticket title'), priority: str=typer.Option('normal', '-p', '--priority', help='critical | high | normal | low'), sprint: str=typer.Option('current', '-s', '--sprint'), source: str=typer.Option('human', help='Source tool name'), label: list[str] | None=typer.Option(None, '-l', '--label'), description: str=typer.Option('', '-d', '--description'), files: list[str] | None=typer.Option(None, '--files', help='File(s) associated with this ticket'), integration: list[str] | None=typer.Option(None, '-i', '--integration', help='Integration(s) to sync with (e.g., github, gitlab)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after creation'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
+def ticket_create(name: str=typer.Argument(..., help='Ticket name'), priority: str=typer.Option('normal', '-p', '--priority', help='critical | high | normal | low'), sprint: str=typer.Option('current', '-s', '--sprint'), source: str=typer.Option('human', help='Source tool name'), label: list[str] | None=typer.Option(None, '-l', '--label'), description: str=typer.Option('', '-d', '--description'), files: list[str] | None=typer.Option(None, '--files', help='File(s) associated with this ticket'), integration: list[str] | None=typer.Option(None, '-i', '--integration', help='Integration(s) to sync with (e.g., github, gitlab)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after creation'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
     """Create a new ticket."""
     from planfile import Planfile, TicketSource
     pf = Planfile.auto_discover()
-    ticket_data = {'title': title, 'priority': priority, 'sprint': sprint, 'source': TicketSource(tool=source), 'labels': list(label) if label else [], 'description': description}
+    ticket_data = {'name': name, 'priority': priority, 'sprint': sprint, 'source': TicketSource(tool=source), 'labels': list(label) if label else [], 'description': description}
     if files:
         ticket_data['files'] = list(files)
     if integration:
         ticket_data['integration'] = list(integration)
     ticket = pf.create_ticket(**ticket_data)
-    console.print(f'[green]✓[/green] Created {ticket.id}: {ticket.title}')
+    console.print(f'[green]✓[/green] Created {ticket.id}: {ticket.name}')
     
     if sync:
         _auto_sync(str(pf.store.project_dir), integration, sync_dry_run)
@@ -119,7 +119,7 @@ def ticket_show(ticket_id: str=typer.Argument(..., help='Ticket ID (e.g. PLF-001
     else:
         console.print(yaml.dump(data, default_flow_style=False, sort_keys=False))
 
-def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: str | None=typer.Option(None, help='New status'), priority: str | None=typer.Option(None, '-p', '--priority'), title: str | None=typer.Option(None, help='New title'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after update'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
+def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: str | None=typer.Option(None, help='New status'), priority: str | None=typer.Option(None, '-p', '--priority'), name: str | None=typer.Option(None, help='New name'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after update'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
     """Update ticket fields."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
@@ -128,8 +128,8 @@ def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: 
         updates['status'] = status
     if priority:
         updates['priority'] = priority
-    if title:
-        updates['title'] = title
+    if name:
+        updates['name'] = name
     if not updates:
         console.print('[yellow]⚠[/yellow] No updates specified.')
         raise typer.Exit(1)
@@ -334,7 +334,7 @@ def ticket_bulk_update(
     # Show what will be updated
     console.print(f'[bold]Tickets to update:[/bold] ({len(tickets)} total)')
     for t in tickets:
-        console.print(f'  - {t.id}: {t.title}')
+        console.print(f'  - {t.id}: {t.name}')
 
     console.print(f'\n[bold]Updates to apply:[/bold]')
     if new_status:

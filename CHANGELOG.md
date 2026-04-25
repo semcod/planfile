@@ -16,6 +16,16 @@
 - fix: remove large generated files from repository
 - chore: pyqual auto-commit [skip ci]
 
+## [0.1.71] - 2026-04-25
+
+### Test
+- Update tests/test_ticket_files.py
+
+### Other
+- Update planfile/builder.py
+- Update planfile/cli/groups/ticket/commands.py
+- Update planfile/core/models/ticket.py
+
 ## [0.1.70] - 2026-04-25
 
 ### Docs

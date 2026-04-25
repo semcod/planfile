@@ -166,7 +166,7 @@ class LLXStrategyBuilder:
         )
 
         answers["feature_pattern"] = {
-            "title": feature_title,
+            "name": feature_title,
             "description": feature_desc
         }
 
@@ -181,7 +181,7 @@ class LLXStrategyBuilder:
         )
 
         answers["bug_pattern"] = {
-            "title": bug_title,
+            "name": bug_title,
             "description": bug_desc
         }
 
@@ -196,7 +196,7 @@ class LLXStrategyBuilder:
         )
 
         answers["tech_debt_pattern"] = {
-            "title": tech_debt_title,
+            "name": tech_debt_title,
             "description": tech_debt_desc
         }
 
@@ -270,7 +270,7 @@ class LLXStrategyBuilder:
         patterns.append(TaskPattern(
             id="feature",
             type=TaskType.feature,
-            title=answers["feature_pattern"]["title"],
+            name=answers["feature_pattern"]["name"],
             description=answers["feature_pattern"]["description"],
             model_hints=ModelHints(
                 design="balanced",
@@ -282,7 +282,7 @@ class LLXStrategyBuilder:
         patterns.append(TaskPattern(
             id="bug",
             type=TaskType.bug,
-            title=answers["bug_pattern"]["title"],
+            name=answers["bug_pattern"]["name"],
             description=answers["bug_pattern"]["description"],
             priority="highest",
             model_hints=ModelHints(
@@ -295,7 +295,7 @@ class LLXStrategyBuilder:
         patterns.append(TaskPattern(
             id="tech_debt",
             type=TaskType.tech_debt,
-            title=answers["tech_debt_pattern"]["title"],
+            name=answers["tech_debt_pattern"]["name"],
             description=answers["tech_debt_pattern"]["description"],
             priority="medium",
             model_hints=ModelHints(

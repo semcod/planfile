@@ -9,7 +9,6 @@ def test_ticket_model_with_files():
     """Test Ticket model with files field."""
     ticket = Ticket(
         id="PLF-001",
-        title="Test ticket",
         name="test-ticket",
         files=["src/main.py", "lib/utils.py"]
     )
@@ -22,7 +21,6 @@ def test_ticket_model_with_file():
     """Test Ticket model with single file field."""
     ticket = Ticket(
         id="PLF-002",
-        title="Test ticket",
         name="test-ticket",
         file="src/main.py"
     )
@@ -35,7 +33,6 @@ def test_ticket_model_default_files():
     """Test Ticket model with default empty files."""
     ticket = Ticket(
         id="PLF-003",
-        title="Test ticket",
         name="test-ticket"
     )
     
@@ -48,10 +45,10 @@ def test_store_filter_by_files():
     from planfile.core.store_tickets import TicketStoreMixin
     
     tickets = [
-        Ticket(id="PLF-001", title="Ticket 1", name="ticket-1", files=["src/main.py"]),
-        Ticket(id="PLF-002", title="Ticket 2", name="ticket-2", files=["lib/utils.py"]),
-        Ticket(id="PLF-003", title="Ticket 3", name="ticket-3", files=["src/main.py", "lib/test.py"]),
-        Ticket(id="PLF-004", title="Ticket 4", name="ticket-4", files=[]),
+        Ticket(id="PLF-001", name="ticket-1", files=["src/main.py"]),
+        Ticket(id="PLF-002", name="ticket-2", files=["lib/utils.py"]),
+        Ticket(id="PLF-003", name="ticket-3", files=["src/main.py", "lib/test.py"]),
+        Ticket(id="PLF-004", name="ticket-4", files=[]),
     ]
     
     store = TicketStoreMixin()
