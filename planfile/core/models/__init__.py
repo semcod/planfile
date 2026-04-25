@@ -61,3 +61,7 @@ __all__ = [
     "Ticket",
     "TicketSource",
 ]
+
+# Resolve forward references now that TicketStatus is available
+Ticket.model_rebuild()
+

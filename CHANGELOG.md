@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+
+- feat(goal): configuration management system
+- feat(examples): configuration management system
+- feat(docs): configuration management system
+- feat(docs): code analysis engine
+- refactor(docs): code analysis engine
+- refactor(examples): code analysis engine
+- feat(tests): added tests to improve coverage
+- feat(tests): deep code analysis engine with 4 supporting modules
+- fix(docs): add markdown output
+- fix(planfile): code quality metrics with 3 supporting modules
+- fix: remove large generated files from repository
+- chore: pyqual auto-commit [skip ci]
+
+## [0.1.64] - 2026-04-25
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+
+### Other
+- Update .taskill/state.json
+- Update planfile/core/models/__init__.py
+- Update planfile/core/store.py
+
 ## [0.1.63] - 2026-04-25
 
 ### Docs

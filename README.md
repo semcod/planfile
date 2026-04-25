@@ -34,7 +34,7 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.63-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.64-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 ![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-26.4h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
 - 🤖 **LLM usage:** $7.5000 (66 commits)
@@ -507,3 +507,17 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## License
 
 Licensed under Apache-2.0.
+## Status
+
+_Last updated by [taskill](https://github.com/oqlos/taskill) at 2026-04-25 13:42 UTC_
+
+| Metric | Value |
+|---|---|
+| HEAD | `f7a4f3c` |
+| Coverage | — |
+| Failing tests | — |
+| Commits in last cycle | 50 |
+
+> Introduces a configuration management system across goal, examples, and docs; refactors and extends the code analysis engine and test suite to improve coverage. Includes documentation fixes (markdown output), a fix for code quality metrics, and cleanup removing large generated files.
+
+<!-- taskill:status:end -->
