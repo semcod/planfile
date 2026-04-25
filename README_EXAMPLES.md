@@ -41,6 +41,75 @@ planfile examples run --all
 planfile examples run code2llm
 ```
 
+## 🎫 Ticket Management Examples
+
+### Delete Tickets
+```bash
+# Delete specific tickets by ID
+planfile ticket delete PLF-001 PLF-002
+
+# Delete all done tickets (with confirmation prompt)
+planfile ticket delete --status done
+
+# Delete with force (skip confirmation)
+planfile ticket delete --sprint old-sprint --force
+
+# Preview what would be deleted
+planfile ticket delete --label archive --dry-run
+
+# Delete by multiple criteria
+planfile ticket delete --status done --label old --sprint current
+```
+
+### Bulk Update Tickets
+```bash
+# Mark all open tickets as in-progress
+planfile ticket bulk-update --status-filter open --new-status in_progress
+
+# Change priority for filtered tickets
+planfile ticket bulk-update --label bug --new-priority critical
+
+# Add labels to matching tickets
+planfile ticket bulk-update --sprint current --add-label reviewed
+
+# Remove and add labels simultaneously
+planfile ticket bulk-update --label todo --remove-label todo --add-label in-progress
+
+# Move completed tickets to archive sprint
+planfile ticket bulk-update --status-filter done --move-to-sprint archived
+
+# Complex bulk update
+planfile ticket bulk-update \
+  --sprint sprint-1 \
+  --status-filter open \
+  --label bug \
+  --new-status in_progress \
+  --new-priority high \
+  --add-label urgent
+```
+
+### Sync Tickets
+```bash
+# Sync with TODO.md and CHANGELOG.md
+planfile sync markdown
+
+# Preview sync
+planfile sync markdown --dry-run
+
+# Export only (planfile -> markdown)
+planfile sync markdown --direction to
+
+# Import only (markdown -> planfile)
+planfile sync markdown --direction from
+
+# Sync with GitHub (requires config)
+planfile sync github --dry-run
+planfile sync github
+
+# Sync all configured integrations
+planfile sync all
+```
+
 ### ⚡ Quick Start
 Perfect for beginners - get started with planfile in minutes!
 ```bash

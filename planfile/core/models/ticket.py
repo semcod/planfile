@@ -34,6 +34,8 @@ class Ticket(BaseModel):
     blocked_by: list[str] = Field(default_factory=list)
     blocks: list[str] = Field(default_factory=list)
 
+    files: list[str] = Field(default_factory=list)  # Files associated with this ticket
+
     integration: list[str] | None = None  # Target integrations for sync
 
     llm_hints: ModelHints | None = None

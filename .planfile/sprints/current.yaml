@@ -4,1151 +4,1155 @@ sprint:
   status: active
   tickets:
     PLF-001:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:16.830398'
+      description: ''
+      history: []
       id: PLF-001
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 4
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.830382'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: Identify and remove unnecessary and generated files (`htmlcov/`, `.coverage`,
         etc.)
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.830382'
-        context:
-          source_file: TODO.md
-          line: 4
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:16.830398'
       updated_at: '2026-04-01T14:32:31.726662'
     PLF-002:
-      id: PLF-002
-      title: Organize generated markdown summaries into `docs/summaries/` directory
-      status: in_progress
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.845653'
-        context:
-          source_file: TODO.md
-          line: 5
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:16.845661'
+      description: ''
+      history: []
+      id: PLF-002
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 5
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.845653'
+        tool: todo-import
+      sprint: current
+      status: in_progress
+      sync: {}
+      title: Organize generated markdown summaries into `docs/summaries/` directory
       updated_at: '2026-04-01T14:32:32.241512'
     PLF-003:
-      id: PLF-003
-      title: Run projects in `examples/*` to ensure base correctness
-      status: review
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.852166'
-        context:
-          source_file: TODO.md
-          line: 6
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:16.852176'
+      description: ''
+      history: []
+      id: PLF-003
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 6
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.852166'
+        tool: todo-import
+      sprint: current
+      status: review
+      sync: {}
+      title: Run projects in `examples/*` to ensure base correctness
       updated_at: '2026-04-01T14:32:32.759874'
     PLF-004:
-      id: PLF-004
-      title: Refactor `planfile/analysis/file_analyzer.py` (God module)
-      status: blocked
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.860483'
-        context:
-          source_file: TODO.md
-          line: 7
-      description: 'BLOCKED: Waiting for dependencies'
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:16.860492'
+      description: 'BLOCKED: Waiting for dependencies'
+      history: []
+      id: PLF-004
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 7
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.860483'
+        tool: todo-import
+      sprint: current
+      status: blocked
+      sync: {}
+      title: Refactor `planfile/analysis/file_analyzer.py` (God module)
       updated_at: '2026-04-01T14:32:33.279432'
     PLF-005:
-      id: PLF-005
-      title: Refactor `planfile/analysis/generator.py` (God module)
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.870485'
-        context:
-          source_file: TODO.md
-          line: 8
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:16.870494'
+      description: ''
+      history: []
+      id: PLF-005
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 8
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.870485'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Refactor `planfile/analysis/generator.py` (God module)
       updated_at: '2026-04-01T14:29:16.870495'
     PLF-006:
-      id: PLF-006
-      title: Refactor `planfile/cli/commands.py` (God module)
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.882303'
-        context:
-          source_file: TODO.md
-          line: 9
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:16.882312'
+      description: ''
+      history: []
+      id: PLF-006
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 9
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.882303'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Refactor `planfile/cli/commands.py` (God module)
       updated_at: '2026-04-01T14:29:16.882313'
     PLF-007:
-      id: PLF-007
-      title: Split highest-CC functions (e.g., `_analyze_toon`, `_extract_key_metrics`)
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.896802'
-        context:
-          source_file: TODO.md
-          line: 10
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:16.896811'
+      description: ''
+      history: []
+      id: PLF-007
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 10
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.896802'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Split highest-CC functions (e.g., `_analyze_toon`, `_extract_key_metrics`)
       updated_at: '2026-04-01T14:29:16.896812'
     PLF-008:
-      id: PLF-008
-      title: Preserve module boundaries and update imports/exports as per `map.toon.yaml`
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.912213'
-        context:
-          source_file: TODO.md
-          line: 11
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:16.912225'
+      description: ''
+      history: []
+      id: PLF-008
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 11
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.912213'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Preserve module boundaries and update imports/exports as per `map.toon.yaml`
       updated_at: '2026-04-01T14:29:16.912226'
     PLF-009:
-      id: PLF-009
-      title: Implement `--version` flag for the CLI to display the current version
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.929193'
-        context:
-          source_file: TODO.md
-          line: 12
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:16.929202'
+      description: ''
+      history: []
+      id: PLF-009
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 12
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.929193'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Implement `--version` flag for the CLI to display the current version
       updated_at: '2026-04-01T14:29:16.929203'
     PLF-010:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:16.947752'
+      description: ''
+      history: []
       id: PLF-010
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 13
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.947741'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: Add an extensible Backend Registry to remove complex `if/elif` statements
         when creating integrations
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.947741'
-        context:
-          source_file: TODO.md
-          line: 13
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:16.947752'
       updated_at: '2026-04-01T14:29:16.947753'
     PLF-011:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:16.973856'
+      description: ''
+      history: []
       id: PLF-011
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 14
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.973842'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Performance optimization**: Implement lazy loading in `__init__.py`
         to reduce startup time by 50-70%'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.973842'
-        context:
-          source_file: TODO.md
-          line: 14
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:16.973856'
       updated_at: '2026-04-01T14:29:16.973857'
     PLF-012:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:16.998078'
+      description: ''
+      history: []
       id: PLF-012
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 15
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:16.998068'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Performance optimization**: Add intelligent caching for subprocess
         calls with timeouts in `runner.py`'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:16.998068'
-        context:
-          source_file: TODO.md
-          line: 15
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:16.998078'
       updated_at: '2026-04-01T14:29:16.998079'
     PLF-013:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:17.023619'
+      description: ''
+      history: []
       id: PLF-013
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 16
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.023608'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Performance optimization**: Implement thread-safe file caching in
         `store.py` with size limits'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.023608'
-        context:
-          source_file: TODO.md
-          line: 16
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:17.023619'
       updated_at: '2026-04-01T14:29:17.023620'
     PLF-014:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:17.049784'
+      description: ''
+      history: []
       id: PLF-014
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 17
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.049774'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Performance optimization**: Add timeout protection (60s) for example
         execution to prevent hangs'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.049774'
-        context:
-          source_file: TODO.md
-          line: 17
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:17.049784'
       updated_at: '2026-04-01T14:29:17.049785'
     PLF-015:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:17.077024'
+      description: ''
+      history: []
       id: PLF-015
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 18
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.077007'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Documentation**: Create comprehensive PERFORMANCE.md guide with optimization
         details'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.077007'
-        context:
-          source_file: TODO.md
-          line: 18
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:17.077024'
       updated_at: '2026-04-01T14:29:17.077025'
     PLF-016:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:17.111313'
+      description: ''
+      history: []
       id: PLF-016
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 19
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.111299'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Documentation**: Update README.md with enhanced examples section and
         CLI commands'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.111299'
-        context:
-          source_file: TODO.md
-          line: 19
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:17.111313'
       updated_at: '2026-04-01T14:29:17.111315'
     PLF-017:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:17.144404'
+      description: ''
+      history: []
       id: PLF-017
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 20
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.144393'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Code Quality**: Fixed missing return type annotations in core modules
         (planfile/core/, planfile/cli/, planfile/analysis/)'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.144393'
-        context:
-          source_file: TODO.md
-          line: 20
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:17.144404'
       updated_at: '2026-04-01T14:29:17.144405'
     PLF-018:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:17.179128'
+      description: ''
+      history: []
       id: PLF-018
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 21
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.179112'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Code Quality**: Replaced magic numbers with named constants in core
         modules'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.179112'
-        context:
-          source_file: TODO.md
-          line: 21
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:17.179128'
       updated_at: '2026-04-01T14:29:17.179129'
     PLF-019:
-      id: PLF-019
-      title: '**Code Quality**: Fixed LLM-style docstrings to follow Python conventions'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.219292'
-        context:
-          source_file: TODO.md
-          line: 22
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:17.219303'
+      description: ''
+      history: []
+      id: PLF-019
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 22
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.219292'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: '**Code Quality**: Fixed LLM-style docstrings to follow Python conventions'
       updated_at: '2026-04-01T14:29:17.219304'
     PLF-020:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:17.256464'
+      description: ''
+      history: []
       id: PLF-020
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 23
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.256452'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Code Quality**: Reviewed and cleaned up imports (star imports are
         intentional re-exports for backward compatibility)'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.256452'
-        context:
-          source_file: TODO.md
-          line: 23
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:17.256464'
       updated_at: '2026-04-01T14:29:17.256465'
     PLF-021:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T14:29:17.297858'
+      description: ''
+      history: []
       id: PLF-021
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 24
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.297848'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
       title: '**Code Quality**: Ran ruff --fix to auto-resolve 2496 issues (unused
         imports, f-string conversions)'
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.297848'
-        context:
-          source_file: TODO.md
-          line: 24
-      description: ''
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-01T14:29:17.297858'
       updated_at: '2026-04-01T14:29:17.297860'
     PLF-022:
-      id: PLF-022
-      title: Consider implementing persistent cache warming for long-running processes
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.338048'
-        context:
-          source_file: TODO.md
-          line: 27
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:17.338061'
+      description: ''
+      history: []
+      id: PLF-022
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 27
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.338048'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Consider implementing persistent cache warming for long-running processes
       updated_at: '2026-04-01T14:29:17.338062'
     PLF-023:
-      id: PLF-023
-      title: Add performance metrics collection for monitoring
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.380144'
-        context:
-          source_file: TODO.md
-          line: 28
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:17.380165'
+      description: ''
+      history: []
+      id: PLF-023
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 28
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.380144'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Add performance metrics collection for monitoring
       updated_at: '2026-04-01T14:29:17.380166'
     PLF-024:
-      id: PLF-024
-      title: Implement async I/O for large file operations (if needed)
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.427583'
-        context:
-          source_file: TODO.md
-          line: 29
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:17.427594'
+      description: ''
+      history: []
+      id: PLF-024
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 29
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.427583'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Implement async I/O for large file operations (if needed)
       updated_at: '2026-04-01T14:29:17.427594'
     PLF-025:
-      id: PLF-025
-      title: Add connection pooling for external API calls (if needed)
-      status: done
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T14:29:17.473506'
-        context:
-          source_file: TODO.md
-          line: 30
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T14:29:17.473520'
+      description: ''
+      history: []
+      id: PLF-025
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 30
+          source_file: TODO.md
+        timestamp: '2026-04-01T14:29:17.473506'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Add connection pooling for external API calls (if needed)
       updated_at: '2026-04-01T14:29:17.473521'
     PLF-026:
-      id: PLF-026
-      title: Test ticket for new feature
-      status: open
-      priority: high
-      sprint: current
-      source:
-        tool: human
-        timestamp: '2026-04-01T15:01:52.868977'
-        context: {}
-      description: This is a test description for the new ticket system
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T15:01:52.871506'
+      description: This is a test description for the new ticket system
+      history: []
+      id: PLF-026
       labels:
       - test,feature
-      blocked_by: []
-      blocks: []
+      priority: high
+      source:
+        context: {}
+        timestamp: '2026-04-01T15:01:52.868977'
+        tool: human
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-01T15:01:52.871506'
+      title: Test ticket for new feature
       updated_at: '2026-04-01T15:01:52.871512'
     PLF-028:
-      id: PLF-028
-      title: Updated high priority task
-      status: open
-      priority: critical
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T15:06:52.056349'
-        context:
-          source_file: TODO_TEST.md
-          line: 6
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T15:06:52.056360'
+      description: ''
+      history: []
+      id: PLF-028
+      labels: []
+      priority: critical
+      source:
+        context:
+          line: 6
+          source_file: TODO_TEST.md
+        timestamp: '2026-04-01T15:06:52.056349'
+        tool: todo-import
+      sprint: current
+      status: open
+      sync: {}
+      title: Updated high priority task
       updated_at: '2026-04-01T15:08:49.881558'
     PLF-029:
-      id: PLF-029
-      title: Medium priority task - normal priority
-      status: open
-      priority: medium
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T15:06:52.107069'
-        context:
-          source_file: TODO_TEST.md
-          line: 7
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T15:06:52.107079'
+      description: ''
+      history: []
+      id: PLF-029
+      labels: []
+      priority: medium
+      source:
+        context:
+          line: 7
+          source_file: TODO_TEST.md
+        timestamp: '2026-04-01T15:06:52.107069'
+        tool: todo-import
+      sprint: current
+      status: open
+      sync: {}
+      title: Medium priority task - normal priority
       updated_at: '2026-04-01T15:06:52.107080'
     PLF-030:
-      id: PLF-030
-      title: Low priority task - can wait
-      status: open
-      priority: low
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T15:06:52.161200'
-        context:
-          source_file: TODO_TEST.md
-          line: 8
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T15:06:52.161212'
+      description: ''
+      history: []
+      id: PLF-030
+      labels: []
+      priority: low
+      source:
+        context:
+          line: 8
+          source_file: TODO_TEST.md
+        timestamp: '2026-04-01T15:06:52.161200'
+        tool: todo-import
+      sprint: current
+      status: open
+      sync: {}
+      title: Low priority task - can wait
       updated_at: '2026-04-01T15:06:52.161213'
     PLF-031:
-      id: PLF-031
-      title: ⚪ Normal priority task - default priority
-      status: open
-      priority: normal
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T15:06:52.215979'
-        context:
-          source_file: TODO_TEST.md
-          line: 9
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T15:06:52.215992'
+      description: ''
+      history: []
+      id: PLF-031
+      labels: []
+      priority: normal
+      source:
+        context:
+          line: 9
+          source_file: TODO_TEST.md
+        timestamp: '2026-04-01T15:06:52.215979'
+        tool: todo-import
+      sprint: current
+      status: open
+      sync: {}
+      title: ⚪ Normal priority task - default priority
       updated_at: '2026-04-01T15:06:52.215993'
     PLF-032:
-      id: PLF-032
-      title: Completed critical task
-      status: done
-      priority: critical
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T15:06:52.285135'
-        context:
-          source_file: TODO_TEST.md
-          line: 10
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T15:06:52.285148'
+      description: ''
+      history: []
+      id: PLF-032
+      labels: []
+      priority: critical
+      source:
+        context:
+          line: 10
+          source_file: TODO_TEST.md
+        timestamp: '2026-04-01T15:06:52.285135'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Completed critical task
       updated_at: '2026-04-01T15:06:52.285149'
     PLF-033:
-      id: PLF-033
-      title: Completed low priority task
-      status: done
-      priority: low
-      sprint: current
-      source:
-        tool: todo-import
-        timestamp: '2026-04-01T15:06:52.347727'
-        context:
-          source_file: TODO_TEST.md
-          line: 11
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T15:06:52.347738'
+      description: ''
+      history: []
+      id: PLF-033
+      labels: []
+      priority: low
+      source:
+        context:
+          line: 11
+          source_file: TODO_TEST.md
+        timestamp: '2026-04-01T15:06:52.347727'
+        tool: todo-import
+      sprint: current
+      status: done
+      sync: {}
+      title: Completed low priority task
       updated_at: '2026-04-01T15:06:52.347739'
     PLF-034:
-      id: PLF-034
-      title: Test GitHub sync ticket
-      status: open
-      priority: high
-      sprint: current
-      source:
-        tool: human
-        timestamp: '2026-04-01T16:27:57.494088'
-        context: {}
-      description: Testing automatic GitHub synchronization
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T16:27:57.497384'
+      description: Testing automatic GitHub synchronization
+      history: []
+      id: PLF-034
       labels:
       - github-test
-      blocked_by: []
-      blocks: []
+      priority: high
+      source:
+        context: {}
+        timestamp: '2026-04-01T16:27:57.494088'
+        tool: human
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-01T16:27:57.497384'
+      title: Test GitHub sync ticket
       updated_at: '2026-04-01T16:27:57.497388'
     PLF-035:
-      id: PLF-035
-      title: Test ticket for GitHub
-      status: open
-      priority: high
-      sprint: current
-      source:
-        tool: human
-        timestamp: '2026-04-01T16:33:45.914545'
-        context: {}
-      description: Testing GitHub integration flag
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-01T16:33:45.916778'
+      description: Testing GitHub integration flag
+      history: []
+      id: PLF-035
+      labels: []
+      priority: high
+      source:
+        context: {}
+        timestamp: '2026-04-01T16:33:45.914545'
+        tool: human
+      sprint: current
+      status: open
+      sync: {}
+      title: Test ticket for GitHub
       updated_at: '2026-04-01T16:33:45.916782'
     PLF-036:
-      id: PLF-036
-      title: GitHub sync test
-      status: open
-      priority: high
-      sprint: current
-      source:
-        tool: human
-        timestamp: '2026-04-01T16:37:59.888815'
-        context: {}
-      description: ''
       acceptance_criteria: []
+      assignee: null
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-01T16:37:59.891340'
+      description: ''
+      history: []
+      id: PLF-036
+      integration:
+      - github
       labels:
       - priority-high
       - planfile
       - managed
+      priority: high
+      source:
+        context: {}
+        timestamp: '2026-04-01T16:37:59.888815'
+        tool: human
+      sprint: current
+      status: open
+      sync: {}
+      title: GitHub sync test
+      updated_at: '2026-04-01T16:37:59.891344'
+    PLF-037:
+      acceptance_criteria: []
       blocked_by: []
       blocks: []
-      integration:
-      - github
-      sync: {}
-      history: []
-      created_at: '2026-04-01T16:37:59.891340'
-      updated_at: '2026-04-01T16:37:59.891344'
-      assignee: null
-    PLF-037:
-      id: PLF-037
-      title: Fix authentication bug
-      status: open
-      priority: high
-      sprint: current
+      created_at: '2026-04-04T06:12:21.690459'
       description: Users cannot login with OAuth provider
-      acceptance_criteria: []
+      history: []
+      id: PLF-037
       labels:
       - bug
       - backend
       - security
-      blocked_by: []
-      blocks: []
+      priority: high
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:12:21.690459'
+      title: Fix authentication bug
       updated_at: '2026-04-04T06:12:21.690467'
     PLF-038:
-      id: PLF-038
-      title: 'Production alert: High memory usage on prod-01'
-      status: open
-      priority: critical
-      sprint: current
-      source:
-        tool: monitoring-system
-        timestamp: '2026-04-04T06:12:21.767629'
-        context:
-          server: prod-01
-          metric: memory
-          threshold: 90%
-          duration: 5m
-      description: ''
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-04T06:12:21.769030'
+      description: ''
+      history: []
+      id: PLF-038
+      labels: []
+      priority: critical
+      source:
+        context:
+          duration: 5m
+          metric: memory
+          server: prod-01
+          threshold: 90%
+        timestamp: '2026-04-04T06:12:21.767629'
+        tool: monitoring-system
+      sprint: current
+      status: open
+      sync: {}
+      title: 'Production alert: High memory usage on prod-01'
       updated_at: '2026-04-04T06:12:21.769033'
     PLF-039:
-      id: PLF-039
-      title: Login button not working on mobile
-      status: open
-      priority: high
-      sprint: current
-      description: Users report login button is unresponsive on iOS Safari
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:12:36.408230'
+      description: Users report login button is unresponsive on iOS Safari
+      history: []
+      id: PLF-039
       labels:
       - bug
       - mobile
       - ios
-      blocked_by: []
-      blocks: []
+      priority: high
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:12:36.408230'
+      title: Login button not working on mobile
       updated_at: '2026-04-04T06:12:36.408235'
     PLF-040:
-      id: PLF-040
-      title: Add dark mode support
-      status: open
-      priority: medium
-      sprint: current
-      description: Implement system-wide dark mode toggle
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:12:36.478769'
+      description: Implement system-wide dark mode toggle
+      history: []
+      id: PLF-040
       labels:
       - feature
       - ui
       - accessibility
-      blocked_by: []
-      blocks: []
+      priority: medium
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:12:36.478769'
+      title: Add dark mode support
       updated_at: '2026-04-04T06:12:36.478772'
     PLF-041:
-      id: PLF-041
-      title: Update API documentation
-      status: open
-      priority: low
-      sprint: current
-      description: Add examples for new endpoints
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:12:36.550755'
+      description: Add examples for new endpoints
+      history: []
+      id: PLF-041
       labels:
       - docs
       - api
-      blocked_by: []
-      blocks: []
+      priority: low
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:12:36.550755'
+      title: Update API documentation
       updated_at: '2026-04-04T06:12:36.550758'
     PLF-042:
-      id: PLF-042
-      title: Login button not working on mobile
-      status: in_progress
-      priority: high
-      sprint: current
-      description: Users report login button is unresponsive on iOS Safari
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      comment: Started investigation
+      created_at: '2026-04-04T06:13:21.816916'
+      description: Users report login button is unresponsive on iOS Safari
+      history: []
+      id: PLF-042
       labels:
       - bug
       - mobile
       - ios
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-04T06:13:21.816916'
-      updated_at: '2026-04-04T06:13:22.164739'
-      comment: Started investigation
-    PLF-043:
-      id: PLF-043
-      title: Add dark mode support
-      status: open
       priority: high
       sprint: current
-      description: Implement system-wide dark mode toggle
+      status: in_progress
+      sync: {}
+      title: Login button not working on mobile
+      updated_at: '2026-04-04T06:13:22.164739'
+    PLF-043:
       acceptance_criteria: []
+      assignee: jane.smith
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:13:21.891117'
+      description: Implement system-wide dark mode toggle
+      history: []
+      id: PLF-043
       labels:
       - feature
       - ui
       - accessibility
       - sprint-goal
+      priority: high
+      sprint: current
+      status: open
+      sync: {}
+      title: Add dark mode support
+      updated_at: '2026-04-04T06:13:22.248984'
+    PLF-044:
+      acceptance_criteria: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-04T06:13:21.891117'
-      updated_at: '2026-04-04T06:13:22.248984'
-      assignee: jane.smith
-    PLF-044:
-      id: PLF-044
-      title: Update API documentation
-      status: open
-      priority: low
-      sprint: current
+      created_at: '2026-04-04T06:13:21.962918'
       description: Add examples for new endpoints
-      acceptance_criteria: []
+      history: []
+      id: PLF-044
       labels:
       - docs
       - api
-      blocked_by: []
-      blocks: []
+      priority: low
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:13:21.962918'
+      title: Update API documentation
       updated_at: '2026-04-04T06:13:21.962922'
     PLF-046:
-      id: PLF-046
-      title: Add dark mode support
-      status: open
-      priority: high
-      sprint: current
-      description: Implement system-wide dark mode toggle
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:13:48.590809'
+      description: Implement system-wide dark mode toggle
+      history: []
+      id: PLF-046
       labels:
       - feature
       - ui
       - accessibility
       - sprint-goal
-      blocked_by: []
-      blocks: []
+      priority: high
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:13:48.590809'
+      title: Add dark mode support
       updated_at: '2026-04-04T06:13:48.945138'
     PLF-047:
-      id: PLF-047
-      title: Update API documentation
-      status: open
-      priority: low
-      sprint: current
-      description: Add examples for new endpoints
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:13:48.671028'
+      description: Add examples for new endpoints
+      history: []
+      id: PLF-047
       labels:
       - docs
       - api
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-04T06:13:48.671028'
-      updated_at: '2026-04-04T06:13:48.671031'
-    PLF-048:
-      id: PLF-048
-      title: Database connection timeout
-      status: open
-      priority: critical
-      sprint: current
-      source:
-        tool: jira-migration
-        timestamp: '2026-04-04T06:13:48.973423'
-        context: {}
-      description: Intermittent timeouts during peak hours
-      acceptance_criteria: []
-      labels:
-      - bug
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-04T06:13:48.973432'
-      updated_at: '2026-04-04T06:13:48.973433'
-    PLF-049:
-      id: PLF-049
-      title: Implement user search
-      status: open
-      priority: medium
-      sprint: current
-      source:
-        tool: jira-migration
-        timestamp: '2026-04-04T06:13:49.049003'
-        context: {}
-      description: Add fuzzy search to user directory
-      acceptance_criteria: []
-      labels:
-      - feature
-      blocked_by: []
-      blocks: []
-      sync: {}
-      history: []
-      created_at: '2026-04-04T06:13:49.049017'
-      updated_at: '2026-04-04T06:13:49.049018'
-    PLF-050:
-      id: PLF-050
-      title: Refactor auth module
-      status: open
       priority: low
       sprint: current
-      source:
-        tool: jira-migration
-        timestamp: '2026-04-04T06:13:49.129195'
-        context: {}
-      description: Reduce code complexity in auth.py
+      status: open
+      sync: {}
+      title: Update API documentation
+      updated_at: '2026-04-04T06:13:48.671031'
+    PLF-048:
       acceptance_criteria: []
-      labels:
-      - chore
       blocked_by: []
       blocks: []
-      sync: {}
+      created_at: '2026-04-04T06:13:48.973432'
+      description: Intermittent timeouts during peak hours
       history: []
+      id: PLF-048
+      labels:
+      - bug
+      priority: critical
+      source:
+        context: {}
+        timestamp: '2026-04-04T06:13:48.973423'
+        tool: jira-migration
+      sprint: current
+      status: open
+      sync: {}
+      title: Database connection timeout
+      updated_at: '2026-04-04T06:13:48.973433'
+    PLF-049:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:13:49.049017'
+      description: Add fuzzy search to user directory
+      history: []
+      id: PLF-049
+      labels:
+      - feature
+      priority: medium
+      source:
+        context: {}
+        timestamp: '2026-04-04T06:13:49.049003'
+        tool: jira-migration
+      sprint: current
+      status: open
+      sync: {}
+      title: Implement user search
+      updated_at: '2026-04-04T06:13:49.049018'
+    PLF-050:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
       created_at: '2026-04-04T06:13:49.129208'
+      description: Reduce code complexity in auth.py
+      history: []
+      id: PLF-050
+      labels:
+      - chore
+      priority: low
+      source:
+        context: {}
+        timestamp: '2026-04-04T06:13:49.129195'
+        tool: jira-migration
+      sprint: current
+      status: open
+      sync: {}
+      title: Refactor auth module
       updated_at: '2026-04-04T06:13:49.129209'
     PLF-051:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:14:01.942430'
+      description: 'Deployment failed: Database connection error'
+      history: []
       id: PLF-051
-      title: '[deploy-tool] Error: Deployment failed: Database connection error'
-      status: open
+      labels: []
       priority: high
-      sprint: current
       source:
-        tool: deploy-tool
-        timestamp: '2026-04-04T06:14:01.940519'
         context:
           environment: production
-          version: 2.1.0
-          server: prod-01
           exception: Failed to connect to production database
+          server: prod-01
           traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration.py\"\
             , line 83, in example_cli_tool_integration\n    raise RuntimeError(\"\
             Failed to connect to production database\")\nRuntimeError: Failed to connect\
             \ to production database\n"
-      description: 'Deployment failed: Database connection error'
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
+          version: 2.1.0
+        timestamp: '2026-04-04T06:14:01.940519'
+        tool: deploy-tool
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:14:01.942430'
+      title: '[deploy-tool] Error: Deployment failed: Database connection error'
       updated_at: '2026-04-04T06:14:01.942433'
     PLF-052:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:14:02.028646'
+      description: Metric CPU Usage exceeded threshold
+      history: []
       id: PLF-052
-      title: '🚨 CPU Usage: 95 exceeds 90'
-      status: open
+      labels: []
       priority: critical
-      sprint: current
       source:
-        tool: system-monitor-metrics
-        timestamp: '2026-04-04T06:14:02.027090'
         context:
           metric: CPU Usage
-          value: 95
           threshold: 90
           timestamp: '2026-04-04T08:14:02.026906'
-      description: Metric CPU Usage exceeded threshold
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
+          value: 95
+        timestamp: '2026-04-04T06:14:02.027090'
+        tool: system-monitor-metrics
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:14:02.028646'
+      title: '🚨 CPU Usage: 95 exceeds 90'
       updated_at: '2026-04-04T06:14:02.028649'
     PLF-053:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:14:02.117871'
+      description: Metric Memory Usage exceeded threshold
+      history: []
       id: PLF-053
-      title: '🚨 Memory Usage: 88 exceeds 85'
-      status: open
+      labels: []
       priority: critical
-      sprint: current
       source:
-        tool: system-monitor-metrics
-        timestamp: '2026-04-04T06:14:02.116863'
         context:
           metric: Memory Usage
-          value: 88
           threshold: 85
           timestamp: '2026-04-04T08:14:02.116702'
-      description: Metric Memory Usage exceeded threshold
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
+          value: 88
+        timestamp: '2026-04-04T06:14:02.116863'
+        tool: system-monitor-metrics
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:14:02.117871'
+      title: '🚨 Memory Usage: 88 exceeds 85'
       updated_at: '2026-04-04T06:14:02.117873'
     PLF-054:
-      id: PLF-054
-      title: '🚨 Disk Usage: 92 exceeds 90'
-      status: open
-      priority: critical
-      sprint: current
-      source:
-        tool: system-monitor-metrics
-        timestamp: '2026-04-04T06:14:02.204337'
-        context:
-          metric: Disk Usage
-          value: 92
-          threshold: 90
-          timestamp: '2026-04-04T08:14:02.204157'
-      description: Metric Disk Usage exceeded threshold
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-04T06:14:02.205423'
+      description: Metric Disk Usage exceeded threshold
+      history: []
+      id: PLF-054
+      labels: []
+      priority: critical
+      source:
+        context:
+          metric: Disk Usage
+          threshold: 90
+          timestamp: '2026-04-04T08:14:02.204157'
+          value: 92
+        timestamp: '2026-04-04T06:14:02.204337'
+        tool: system-monitor-metrics
+      sprint: current
+      status: open
+      sync: {}
+      title: '🚨 Disk Usage: 92 exceeds 90'
       updated_at: '2026-04-04T06:14:02.205425'
     PLF-055:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:14:02.292417'
+      description: 'CI Pipeline failed: 2 tests failed'
+      history: []
       id: PLF-055
-      title: '[ci-pipeline] Error: CI Pipeline failed: 2 tests failed'
-      status: open
+      labels: []
       priority: high
-      sprint: current
       source:
-        tool: ci-pipeline
-        timestamp: '2026-04-04T06:14:02.291257'
         context:
+          branch: main
+          commit: abc123
           failed_tests:
           - tests/test_api.py::test_login
           - tests/test_db.py::test_connection
           total_tests: 3
-          branch: main
-          commit: abc123
-      description: 'CI Pipeline failed: 2 tests failed'
-      acceptance_criteria: []
-      labels: []
-      blocked_by: []
-      blocks: []
+        timestamp: '2026-04-04T06:14:02.291257'
+        tool: ci-pipeline
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:14:02.292417'
+      title: '[ci-pipeline] Error: CI Pipeline failed: 2 tests failed'
       updated_at: '2026-04-04T06:14:02.292419'
     PLF-056:
-      id: PLF-056
-      title: '[data-processor] process_data failed: Empty data provided'
-      status: open
-      priority: high
-      sprint: current
-      source:
-        tool: data-processor
-        timestamp: '2026-04-04T06:14:02.381716'
-        context:
-          function: process_data
-          exception: Empty data provided
-          args: ([],)
-          kwargs: '{}'
-      description: Function process_data raised ValueError
       acceptance_criteria: []
-      labels: []
       blocked_by: []
       blocks: []
-      sync: {}
-      history: []
       created_at: '2026-04-04T06:14:02.382778'
+      description: Function process_data raised ValueError
+      history: []
+      id: PLF-056
+      labels: []
+      priority: high
+      source:
+        context:
+          args: ([],)
+          exception: Empty data provided
+          function: process_data
+          kwargs: '{}'
+        timestamp: '2026-04-04T06:14:02.381716'
+        tool: data-processor
+      sprint: current
+      status: open
+      sync: {}
+      title: '[data-processor] process_data failed: Empty data provided'
       updated_at: '2026-04-04T06:14:02.382781'
     PLF-057:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:22:30.894280'
+      description: DB connection error
+      history: []
       id: PLF-057
-      title: '[my-service] DB connection error'
-      status: open
+      labels:
+      - error
+      - auto-generated
       priority: high
-      sprint: current
       source:
-        tool: my-service
-        timestamp: '2026-04-04T06:22:30.892272'
         context:
           db: prod
           exception: Database connection failed
@@ -1156,71 +1160,67 @@ sprint:
           traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration_simple.py\"\
             , line 24, in main\n    raise RuntimeError(\"Database connection failed\"\
             )\nRuntimeError: Database connection failed\n"
-      description: DB connection error
-      acceptance_criteria: []
-      labels:
-      - error
-      - auto-generated
-      blocked_by: []
-      blocks: []
+        timestamp: '2026-04-04T06:22:30.892272'
+        tool: my-service
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:22:30.894280'
+      title: '[my-service] DB connection error'
       updated_at: '2026-04-04T06:22:30.894297'
     PLF-058:
-      id: PLF-058
-      title: '🚨 CPU: 95 exceeds 90'
-      status: open
-      priority: critical
-      sprint: current
-      source:
-        tool: my-service-metrics
-        timestamp: '2026-04-04T06:22:31.007736'
-        context:
-          metric: CPU
-          value: 95
-          threshold: 90
-          timestamp: '2026-04-04T06:22:31.007714'
-          server: prod-01
-      description: Metric CPU exceeded threshold of 90
       acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:22:31.008845'
+      description: Metric CPU exceeded threshold of 90
+      history: []
+      id: PLF-058
       labels:
       - alert
       - metric
       - auto-generated
-      blocked_by: []
-      blocks: []
+      priority: critical
+      source:
+        context:
+          metric: CPU
+          server: prod-01
+          threshold: 90
+          timestamp: '2026-04-04T06:22:31.007714'
+          value: 95
+        timestamp: '2026-04-04T06:22:31.007736'
+        tool: my-service-metrics
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:22:31.008845'
+      title: '🚨 CPU: 95 exceeds 90'
       updated_at: '2026-04-04T06:22:31.008848'
     PLF-059:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-04-04T06:22:31.121761'
+      description: 'risky_operation failed: Something went wrong'
+      history: []
       id: PLF-059
-      title: '[my-service] risky_operation failed: Something went wrong'
-      status: open
+      labels:
+      - error
+      - auto-generated
       priority: high
-      sprint: current
       source:
-        tool: my-service
-        timestamp: '2026-04-04T06:22:31.120689'
         context:
-          function: risky_operation
           args: ()
-          kwargs: '{}'
           exception: Something went wrong
           exception_type: ValueError
+          function: risky_operation
+          kwargs: '{}'
           traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/planfile/extensions/__init__.py\"\
             , line 96, in wrapper\n    return func(*args, **kwargs)\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration_simple.py\"\
             , line 39, in risky_operation\n    raise ValueError(\"Something went wrong\"\
             )\nValueError: Something went wrong\n"
-      description: 'risky_operation failed: Something went wrong'
-      acceptance_criteria: []
-      labels:
-      - error
-      - auto-generated
-      blocked_by: []
-      blocks: []
+        timestamp: '2026-04-04T06:22:31.120689'
+        tool: my-service
+      sprint: current
+      status: open
       sync: {}
-      history: []
-      created_at: '2026-04-04T06:22:31.121761'
+      title: '[my-service] risky_operation failed: Something went wrong'
       updated_at: '2026-04-04T06:22:31.121763'

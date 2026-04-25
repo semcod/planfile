@@ -34,7 +34,7 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.65-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.66-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 ![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-26.4h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
 - 🤖 **LLM usage:** $7.5000 (66 commits)
@@ -187,6 +187,94 @@ curl -X POST "http://localhost:8000/tickets" \
   -H "Content-Type: application/json" \
   -d '{"title": "API fix", "priority": "high"}'
 ```
+
+### 5. Ticket Management CLI
+
+Create, update, delete and bulk-manage tickets directly from command line:
+
+```bash
+# Create a new ticket
+planfile ticket create "Fix login bug" -p high -l bug -l backend
+
+# List tickets with filters
+planfile ticket list --status open
+planfile ticket list --label bug --format json
+
+# Update a single ticket
+planfile ticket update PLF-001 --status done
+planfile ticket update PLF-002 --priority critical
+
+# Delete tickets by ID
+planfile ticket delete PLF-001 PLF-002
+
+# Delete tickets matching filters (with confirmation)
+planfile ticket delete --status done --force
+planfile ticket delete --sprint old-sprint --label archive
+
+# Preview deletions without executing
+planfile ticket delete --label old --dry-run
+
+# Bulk update tickets by filters
+planfile ticket bulk-update --status-filter open --new-status in_progress
+planfile ticket bulk-update --label todo --new-status done --force
+
+# Change priority for all open bugs
+planfile ticket bulk-update --status-filter open --label bug --new-priority high
+
+# Add/remove labels in bulk
+planfile ticket bulk-update --label old --add-label archived --remove-label old
+
+# Move tickets between sprints
+planfile ticket bulk-update --sprint current --status-filter done --move-to-sprint completed
+
+# Combine multiple updates
+planfile ticket bulk-update \
+  --sprint sprint-1 \
+  --status-filter open \
+  --new-status in_progress \
+  --new-priority high \
+  --add-label urgent
+```
+
+### 6. Sync with External Systems
+
+Synchronize tickets with TODO.md, GitHub, Jira, and GitLab:
+
+```bash
+# Sync with markdown files (TODO.md, CHANGELOG.md)
+planfile sync markdown
+
+# Preview sync without making changes
+planfile sync markdown --dry-run
+
+# Sync only to external system (export)
+planfile sync markdown --direction to
+
+# Sync only from external system (import)
+planfile sync markdown --direction from
+
+# Sync with GitHub Issues (requires github.planfile.yaml config)
+planfile sync github
+
+# Sync with all configured integrations
+planfile sync all
+
+# Example: Export all done tickets to CHANGELOG.md
+planfile ticket bulk-update --status-filter done --add-label changelog
+planfile sync markdown --direction to --dry-run
+```
+
+**Sync Configuration:**
+
+Create `github.planfile.yaml` for GitHub integration:
+```yaml
+integrations:
+  github:
+    repo: "owner/repo"
+    token: "${GITHUB_TOKEN}"  # or auto-detected from `gh auth token`
+```
+
+Markdown sync works out-of-the-box with `TODO.md` and `CHANGELOG.md` files.
 
 # Run CI loop with strategy
 make ci-loop STRATEGY=strategy.yaml BACKENDS=github MAX_ITERATIONS=5

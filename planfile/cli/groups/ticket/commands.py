@@ -42,17 +42,19 @@ def create_ticket_table(tickets) -> Table:
         table.add_row(t.id, f'[{sc}]{status_val}[/{sc}]', f'[{pc}]{t.priority}[/{pc}]', t.title, ', '.join(t.labels) if t.labels else '', source_str)
     return table
 
-def ticket_create(title: str=typer.Argument(..., help='Ticket title'), priority: str=typer.Option('normal', '-p', '--priority', help='critical | high | normal | low'), sprint: str=typer.Option('current', '-s', '--sprint'), source: str=typer.Option('human', help='Source tool name'), label: list[str] | None=typer.Option(None, '-l', '--label'), description: str=typer.Option('', '-d', '--description'), integration: list[str] | None=typer.Option(None, '-i', '--integration', help='Integration(s) to sync with (e.g., github, gitlab)')) -> None:
+def ticket_create(title: str=typer.Argument(..., help='Ticket title'), priority: str=typer.Option('normal', '-p', '--priority', help='critical | high | normal | low'), sprint: str=typer.Option('current', '-s', '--sprint'), source: str=typer.Option('human', help='Source tool name'), label: list[str] | None=typer.Option(None, '-l', '--label'), description: str=typer.Option('', '-d', '--description'), files: list[str] | None=typer.Option(None, '--files', help='File(s) associated with this ticket'), integration: list[str] | None=typer.Option(None, '-i', '--integration', help='Integration(s) to sync with (e.g., github, gitlab)')) -> None:
     """Create a new ticket."""
     from planfile import Planfile, TicketSource
     pf = Planfile.auto_discover()
     ticket_data = {'title': title, 'priority': priority, 'sprint': sprint, 'source': TicketSource(tool=source), 'labels': list(label) if label else [], 'description': description}
+    if files:
+        ticket_data['files'] = list(files)
     if integration:
         ticket_data['integration'] = list(integration)
     ticket = pf.create_ticket(**ticket_data)
     console.print(f'[green]✓[/green] Created {ticket.id}: {ticket.title}')
 
-def ticket_list(sprint: str=typer.Option('current', '-s', '--sprint'), status: str | None=typer.Option(None, help='open|in_progress|review|done|blocked|all'), source: str | None=typer.Option(None, help='Filter by source tool'), label: list[str] | None=typer.Option(None, '-l', '--label'), fmt: str=typer.Option('table', '--format', help='table | json | yaml')) -> None:
+def ticket_list(sprint: str=typer.Option('current', '-s', '--sprint'), status: str | None=typer.Option(None, help='open|in_progress|review|done|blocked|all'), source: str | None=typer.Option(None, help='Filter by source tool'), label: list[str] | None=typer.Option(None, '-l', '--label'), files: list[str] | None=typer.Option(None, '--files', help='Filter by file glob pattern(s)'), fmt: str=typer.Option('table', '--format', help='table | json | yaml')) -> None:
     """List tickets with optional filters."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
@@ -63,6 +65,8 @@ def ticket_list(sprint: str=typer.Option('current', '-s', '--sprint'), status: s
         filters['source'] = source
     if label:
         filters['labels'] = list(label)
+    if files:
+        filters['files'] = files
     tickets = pf.list_tickets(sprint=sprint, **filters)
     _display_tickets(tickets, fmt)
 
@@ -173,10 +177,11 @@ def ticket_delete(
     status: str = typer.Option(None, '--status', help='Delete tickets with this status (open|in_progress|review|done|blocked)'),
     label: list[str] = typer.Option(None, '-l', '--label', help='Delete tickets with these labels'),
     source: str = typer.Option(None, '--source', help='Delete tickets from this source tool'),
+    files: list[str] = typer.Option(None, '--files', help='Delete tickets associated with files matching glob pattern(s)'),
     dry_run: bool = typer.Option(False, '--dry-run', help='Preview what would be deleted without deleting'),
     force: bool = typer.Option(False, '-f', '--force', help='Skip confirmation prompt'),
 ) -> None:
-    """Delete tickets by ID(s) or filters (status, sprint, label, source)."""
+    """Delete tickets by ID(s) or filters (status, sprint, label, source, files)."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
 
@@ -187,7 +192,7 @@ def ticket_delete(
         to_delete.extend(ticket_ids)
 
     # Filter-based deletion
-    if sprint or status or label or source:
+    if sprint or status or label or source or files:
         filters = {}
         if status:
             filters['status'] = status
@@ -195,6 +200,8 @@ def ticket_delete(
             filters['source'] = source
         if label:
             filters['labels'] = list(label)
+        if files:
+            filters['files'] = files
 
         sprint_arg = sprint if sprint else 'all'
         tickets = pf.list_tickets(sprint=sprint_arg, **filters)
@@ -236,6 +243,7 @@ def ticket_bulk_update(
     status_filter: str = typer.Option(None, '--status-filter', help='Filter by current status (open|in_progress|review|done|blocked)'),
     label: list[str] = typer.Option(None, '-l', '--label', help='Filter by labels'),
     source: str = typer.Option(None, '--source', help='Filter by source tool'),
+    files: list[str] = typer.Option(None, '--files', help='Filter by file glob pattern(s)'),
     # Update parameters
     new_status: str = typer.Option(None, '--new-status', help='Set new status'),
     new_priority: str = typer.Option(None, '--new-priority', help='Set new priority (critical|high|normal|low)'),
@@ -257,6 +265,8 @@ def ticket_bulk_update(
         filters['source'] = source
     if label:
         filters['labels'] = list(label)
+    if files:
+        filters['files'] = files
 
     sprint_arg = sprint if sprint else 'all'
     tickets = pf.list_tickets(sprint=sprint_arg, **filters)
