@@ -75,7 +75,7 @@ class GitLabBackend(BasePMBackend):
 
     def _create_ticket(
         self,
-        title: str,
+        name: str,
         body: str,
         labels: list[str] | None = None,
         priority: str | None = None,
@@ -89,7 +89,7 @@ class GitLabBackend(BasePMBackend):
 
         try:
             issue = self.project.issues.create({
-                "title": title,
+                "title": name,
                 "description": body,
                 "labels": issue_labels,
             })
@@ -130,7 +130,7 @@ class GitLabBackend(BasePMBackend):
     def _update_ticket(
         self,
         ticket_id: str,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list[str] | None = None,
@@ -142,8 +142,8 @@ class GitLabBackend(BasePMBackend):
         try:
             issue = self.project.issues.get(ticket_id)
 
-            if title:
-                issue.title = title
+            if name:
+                issue.title = name
             if body:
                 issue.description = body
             if labels is not None or priority:

@@ -16,7 +16,7 @@ class MockBackend(BasePMBackend):
 
     def _create_ticket(
         self,
-        title: str,
+        name: str,
         body: str,
         labels: list | None = None,
         priority: str | None = None,
@@ -32,7 +32,7 @@ class MockBackend(BasePMBackend):
         # Store ticket data
         self.tickets[ticket_id] = {
             "id": ticket_id,
-            "title": title,
+            "name": name,
             "description": body,
             "labels": labels or [],
             "priority": priority or "medium",
@@ -43,7 +43,7 @@ class MockBackend(BasePMBackend):
             "metadata": metadata or {}
         }
 
-        print(f"  [MOCK] Created ticket #{ticket_id}: {title}")
+        print(f"  [MOCK] Created ticket #{ticket_id}: {name}")
 
         return self.build_ticket_ref(
             id=ticket_id,
@@ -56,7 +56,7 @@ class MockBackend(BasePMBackend):
     def _update_ticket(
         self,
         ticket_id: str,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list | None = None,
@@ -71,8 +71,8 @@ class MockBackend(BasePMBackend):
             return
 
         ticket = self.tickets[ticket_id]
-        if title:
-            ticket["title"] = title
+        if name:
+            ticket["name"] = name
         if body:
             ticket["description"] = body
         if status:
@@ -86,7 +86,7 @@ class MockBackend(BasePMBackend):
 
         ticket["updated_at"] = datetime.now().isoformat()
 
-        print(f"  [MOCK] Updated ticket #{ticket_id}: {ticket['title']}")
+        print(f"  [MOCK] Updated ticket #{ticket_id}: {ticket.get('name', 'No title')}")
 
     def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get mock ticket status."""
@@ -145,7 +145,8 @@ class MockBackend(BasePMBackend):
         query_lower = query.lower()
 
         for ticket_data in self.tickets.values():
-            if (query_lower in ticket_data["title"].lower() or
+            if (query_lower in ticket_data.get("name", "").lower() or
+                query_lower in ticket_data.get("title", "").lower() or
                 query_lower in ticket_data["description"].lower()):
                 tickets.append(self.build_ticket_state(
                     id=ticket_data["id"],

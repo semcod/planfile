@@ -103,7 +103,7 @@ class GitHubBackend(BasePMBackend):
 
     def _create_ticket(
         self,
-        title: str,
+        name: str,
         body: str,
         labels: list[str] | None = None,
         priority: str | None = None,
@@ -116,7 +116,7 @@ class GitHubBackend(BasePMBackend):
         body = self._build_metadata_body(body, metadata)
 
         create_kwargs = {
-            "title": title,
+            "title": name,
             "body": body,
             "labels": issue_labels,
         }
@@ -158,7 +158,7 @@ class GitHubBackend(BasePMBackend):
     def _update_ticket(
         self,
         ticket_id: str,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list[str] | None = None,
@@ -169,8 +169,8 @@ class GitHubBackend(BasePMBackend):
         """Update an existing GitHub issue."""
         issue = self.repo.get_issue(int(ticket_id))
 
-        if title:
-            issue.edit(title=title)
+        if name:
+            issue.edit(title=name)
         if body:
             issue.edit(body=body)
         if labels is not None or priority:

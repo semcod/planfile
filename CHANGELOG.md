@@ -22,6 +22,16 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.77] - 2026-04-25
+
+### Docs
+- Update README.md
+
+### Other
+- Update planfile/sync/github.py
+- Update planfile/sync/gitlab.py
+- Update planfile/sync/mock.py
+
 ## [0.1.76] - 2026-04-25
 
 ### Docs
