@@ -7,13 +7,13 @@ from typing import Any
 def normalize_ticket_dict(item: dict) -> dict:
     """Ensure minimal ticket fields exist."""
     return {
-        "title": item.get("title") or item.get("name") or item.get("summary", "Untitled"),
+        "name": item.get("name") or item.get("title") or item.get("summary", "Untitled"),
         "description": item.get("description", ""),
         "priority": item.get("priority", "normal"),
         "labels": item.get("labels", item.get("tags", [])),
         **{
             k: v for k, v in item.items()
-            if k not in ("title", "name", "summary", "description", "priority", "labels", "tags")
+            if k not in ("name", "title", "summary", "description", "priority", "labels", "tags")
         },
     }
 

@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.68"
+__version__ = "0.1.69"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -71,9 +71,9 @@ class Planfile:
             path = path.parent
         return cls(start_path)  # init in CWD
 
-    def create_ticket(self, title: str, **kwargs) -> Ticket:
+    def create_ticket(self, name: str, **kwargs) -> Ticket:
         ticket_id = self.store.next_id()
-        ticket = Ticket(id=ticket_id, title=title, **kwargs)
+        ticket = Ticket(id=ticket_id, name=name, **kwargs)
         return self.store.create_ticket(ticket)
 
     def get_ticket(self, ticket_id: str):
@@ -108,11 +108,11 @@ class Planfile:
         return created
 
 
-def quick_ticket(title: str, tool: str = "unknown", **kwargs) -> Ticket:
+def quick_ticket(name: str, tool: str = "unknown", **kwargs) -> Ticket:
     """One-liner ticket creation for tools."""
     pf = Planfile.auto_discover()
     source = TicketSource(tool=tool, context=kwargs.pop("context", {}))
-    return pf.create_ticket(title=title, source=source, **kwargs)
+    return pf.create_ticket(name=name, source=source, **kwargs)
 
 
 __all__ = [

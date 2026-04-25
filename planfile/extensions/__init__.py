@@ -73,7 +73,7 @@ class TicketLogger:
     ) -> Ticket:
         """Create ticket for metric threshold breach."""
         return self.pf.create_ticket(
-            title=f"🚨 {metric}: {value} exceeds {threshold}",
+            name=f"🚨 {metric}: {value} exceeds {threshold}",
             description=f"Metric {metric} exceeded threshold of {threshold}",
             priority=priority,
             source=TicketSource(

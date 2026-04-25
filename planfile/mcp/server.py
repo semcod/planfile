@@ -33,13 +33,13 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "title": {"type": "string"},
+                "name": {"type": "string"},
                 "priority": {"type": "string", "default": "normal"},
                 "sprint": {"type": "string", "default": "current"},
                 "description": {"type": "string", "default": ""},
                 "labels": {"type": "array", "items": {"type": "string"}, "default": []},
             },
-            "required": ["title"],
+            "required": ["name"],
         },
     },
     {
@@ -55,14 +55,14 @@ TOOLS = [
     },
     {
         "name": "planfile_update_ticket",
-        "description": "Update ticket fields (status, priority, title).",
+        "description": "Update ticket fields (status, priority, name).",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "ticket_id": {"type": "string"},
                 "status": {"type": "string"},
                 "priority": {"type": "string"},
-                "title": {"type": "string"},
+                "name": {"type": "string"},
             },
             "required": ["ticket_id"],
         },
@@ -99,7 +99,7 @@ def handle_tool_call(name: str, arguments: dict) -> dict:
 
     elif name == "planfile_create_ticket":
         ticket = pf.create_ticket(
-            title=arguments["title"],
+            name=arguments["name"],
             priority=arguments.get("priority", "normal"),
             sprint=arguments.get("sprint", "current"),
             description=arguments.get("description", ""),

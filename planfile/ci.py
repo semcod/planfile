@@ -29,7 +29,7 @@ class TestResult:
 @dataclass
 class BugReport:
     """Generated bug report from test failures."""
-    title: str
+    name: str
     description: str
     files: list[str]
     test_names: list[str]
@@ -161,7 +161,7 @@ Respond in JSON format:
         try:
             bug_data = json.loads(result.stdout)
             return BugReport(
-                title=bug_data["title"],
+                name=bug_data["name"],
                 description=bug_data["description"],
                 files=bug_data.get("files", []),
                 test_names=test_result.failed_tests,
@@ -169,7 +169,7 @@ Respond in JSON format:
             )
         except Exception:
             return BugReport(
-                title=f"Tests failed: {len(test_result.failed_tests)} failures",
+                name=f"Tests failed: {len(test_result.failed_tests)} failures",
                 description=f"Tests failed: {', '.join(test_result.failed_tests)}",
                 files=[], test_names=test_result.failed_tests,
                 severity="medium"
@@ -184,7 +184,7 @@ Respond in JSON format:
             try:
                 from planfile import TicketSource
                 ticket = self.pf.create_ticket(
-                    title=bug_report.title,
+                    name=bug_report.name,
                     priority="critical" if bug_report.severity in ("high", "critical") else "normal",
                     source=TicketSource(tool="ci-runner", context={
                         "error": bug_report.description[:500],
@@ -201,7 +201,7 @@ Respond in JSON format:
         for name, backend in self.backends.items():
             try:
                 ticket = backend.create_ticket(
-                    title=bug_report.title,
+                    name=bug_report.name,
                     description=bug_report.description,
                     labels=["bug", "auto-generated", f"severity-{bug_report.severity}"],
                     priority="high" if bug_report.severity in ("high", "critical") else "medium"

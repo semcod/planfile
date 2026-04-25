@@ -3,9 +3,12 @@
 import typer
 
 from planfile.cli.core import register_simple_command
-from planfile.cli.groups.validate.commands import validate_strategy_cli
+from planfile.cli.groups.validate.commands import validate_strategy_cli, validate_schema_cli
 
 
 def register_validate_commands(app: typer.Typer) -> None:
     """Register validate subcommand on the typer app."""
-    register_simple_command(app, "validate", validate_strategy_cli)
+    validate_app = typer.Typer(help="Validate planfile files")
+    validate_app.command("strategy")(validate_strategy_cli)
+    validate_app.command("schema")(validate_schema_cli)
+    app.add_typer(validate_app, name="validate")
