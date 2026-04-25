@@ -91,12 +91,12 @@ class BasePMBackend(ABC):
 
     def create_ticket(self, ticket: dict[str, Any], **kwargs) -> TicketRef:
         """Create a new ticket through the backend-specific implementation."""
-        # Extract title and body from ticket object
-        title = ticket.get("title", "")
+        # Extract name (prefer 'name', fall back to 'title') and body from ticket object
+        name = ticket.get("name") or ticket.get("title", "")
         body = ticket.get("description", "") or ticket.get("body", "")
 
         return self._create_ticket(
-            title=title,
+            name=name,
             body=body,
             labels=ticket.get("labels"),
             priority=ticket.get("priority"),
@@ -108,7 +108,7 @@ class BasePMBackend(ABC):
     @abstractmethod
     def _create_ticket(
         self,
-        title: str,
+        name: str,
         body: str,
         labels: list[str] | None = None,
         priority: str | None = None,
@@ -121,7 +121,7 @@ class BasePMBackend(ABC):
     def update_ticket(
         self,
         ticket_id: str,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list[str] | None = None,
@@ -131,7 +131,7 @@ class BasePMBackend(ABC):
         """Update an existing ticket through the backend-specific implementation."""
         return self._update_ticket(
             ticket_id=ticket_id,
-            title=title,
+            name=name,
             body=body,
             status=status,
             labels=labels,

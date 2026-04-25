@@ -19,7 +19,8 @@ def sync_to_external(backend, tickets, dry_run: bool, store, integration_name: s
 
     for ticket_id, ticket in tickets:
         if dry_run:
-            console.print(f"  Would create/update: {ticket_id} - {ticket.get('title', 'No title')}")
+            ticket_name = ticket.get('name') or ticket.get('title', 'No title')
+            console.print(f"  Would create/update: {ticket_id} - {ticket_name}")
         else:
             try:
                 external_id = sync_state.get_remote_id(ticket_id) or ticket.get("external_id")
@@ -178,7 +179,7 @@ def _extract_ticket_data(ext_ticket) -> dict:
     if hasattr(ext_ticket, 'id'):
         return {
             'id': str(ext_ticket.id),
-            'title': ext_ticket.title if hasattr(ext_ticket, 'title') else 'No title',
+            'name': ext_ticket.name if hasattr(ext_ticket, 'name') else (ext_ticket.title if hasattr(ext_ticket, 'title') else 'No title'),
             'status': ext_ticket.status if hasattr(ext_ticket, 'status') else 'open',
             'assignee': ext_ticket.assignee if hasattr(ext_ticket, 'assignee') else None,
             'labels': ext_ticket.labels if hasattr(ext_ticket, 'labels') else [],
@@ -187,7 +188,7 @@ def _extract_ticket_data(ext_ticket) -> dict:
     else:
         return {
             'id': str(ext_ticket.get('id', '')),
-            'title': ext_ticket.get('title', 'No title'),
+            'name': ext_ticket.get('name') or ext_ticket.get('title', 'No title'),
             'status': ext_ticket.get('status', 'open'),
             'assignee': ext_ticket.get('assignee'),
             'labels': ext_ticket.get('labels', []),
@@ -200,7 +201,7 @@ def _print_dry_run_action(planfile_id: str | None, ext_data: dict) -> None:
     if planfile_id:
         console.print(f"  Would update: {planfile_id} from {ext_data['id']}")
     else:
-        console.print(f"  Would import: {ext_data['title']}")
+        console.print(f"  Would import: {ext_data.get('name') or ext_data.get('title')}")
 
 
 def _update_local_ticket(sprint: dict, backlog: dict, planfile_id: str, ext_data: dict, updated_count: int) -> int:
@@ -225,7 +226,7 @@ def _import_new_ticket(backlog: dict, ext_data: dict, integration_name: str, syn
     new_id = f"{integration_name.upper()}-{ext_data['id']}"
 
     ticket_data = {
-        "title": ext_data['title'],
+        "name": ext_data.get('name') or ext_data.get('title'),
         "description": ext_data['description'],
         "status": ext_data['status'],
         "assignee": ext_data['assignee'],
