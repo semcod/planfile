@@ -73,7 +73,7 @@ class GenericBackend(BasePMBackend):
 
     def _create_ticket(
         self,
-        title: str,
+        name: str,
         body: str,
         labels: list | None = None,
         priority: str | None = None,
@@ -84,7 +84,7 @@ class GenericBackend(BasePMBackend):
     ) -> TicketRef:
         """Create a new ticket via generic API."""
         data = {
-            "title": title,
+            "title": name,
             "description": body,
             "labels": labels or [],
             "priority": priority,
@@ -109,7 +109,7 @@ class GenericBackend(BasePMBackend):
     def _update_ticket(
         self,
         ticket_id: str,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list | None = None,
@@ -120,7 +120,7 @@ class GenericBackend(BasePMBackend):
     ) -> None:
         """Update a ticket via generic API."""
         data = self._build_update_data(
-            title=title,
+            name=name,
             body=body,
             status=status,
             labels=labels,
@@ -133,7 +133,7 @@ class GenericBackend(BasePMBackend):
 
     def _build_update_data(
         self,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list | None = None,
@@ -144,7 +144,7 @@ class GenericBackend(BasePMBackend):
         data = {}
 
         field_mapping = {
-            "title": title,
+            "title": name,
             "description": body,
             "status": status,
             "labels": labels,
