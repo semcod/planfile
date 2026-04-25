@@ -16,6 +16,24 @@
 - fix: remove large generated files from repository
 - chore: pyqual auto-commit [skip ci]
 
+- feat: added configuration management system with CLI interface
+- feat: implemented backlog, sync, ticket, and validate command groups
+- feat: added configuration management tests
+- refactor: reorganized goal and config modules
+- docs: updated documentation for configuration management system
+
+## [0.1.72] - 2026-04-25
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+
+### Test
+- Update tests/test_ticket_files.py
+
+### Other
+- Update .taskill/state.json
+
 ## [0.1.71] - 2026-04-25
 
 ### Test

@@ -71,9 +71,9 @@ def test_store_filter_by_file():
     from planfile.core.store_tickets import TicketStoreMixin
     
     tickets = [
-        Ticket(id="PLF-001", title="Ticket 1", name="ticket-1", file="src/main.py"),
-        Ticket(id="PLF-002", title="Ticket 2", name="ticket-2", file="lib/utils.py"),
-        Ticket(id="PLF-003", title="Ticket 3", name="ticket-3", file=None),
+        Ticket(id="PLF-001", name="ticket-1", file="src/main.py"),
+        Ticket(id="PLF-002", name="ticket-2", file="lib/utils.py"),
+        Ticket(id="PLF-003", name="ticket-3", file=None),
     ]
     
     store = TicketStoreMixin()
@@ -94,9 +94,9 @@ def test_store_filter_by_files_and_file():
     from planfile.core.store_tickets import TicketStoreMixin
     
     tickets = [
-        Ticket(id="PLF-001", title="Ticket 1", name="ticket-1", files=["src/main.py"], file=None),
-        Ticket(id="PLF-002", title="Ticket 2", name="ticket-2", files=[], file="lib/utils.py"),
-        Ticket(id="PLF-003", title="Ticket 3", name="ticket-3", files=["src/test.py"], file="src/main.py"),
+        Ticket(id="PLF-001", name="ticket-1", files=["src/main.py"], file=None),
+        Ticket(id="PLF-002", name="ticket-2", files=[], file="lib/utils.py"),
+        Ticket(id="PLF-003", name="ticket-3", files=["src/test.py"], file="src/main.py"),
     ]
     
     store = TicketStoreMixin()
@@ -118,9 +118,9 @@ def test_store_filter_by_files_glob_pattern():
     from planfile.core.store_tickets import TicketStoreMixin
     
     tickets = [
-        Ticket(id="PLF-001", title="Ticket 1", name="ticket-1", files=["_archive/test.py"]),
-        Ticket(id="PLF-002", title="Ticket 2", name="ticket-2", files=["src/main.py"]),
-        Ticket(id="PLF-003", title="Ticket 3", name="ticket-3", files=["lib/utils.py"]),
+        Ticket(id="PLF-001", name="ticket-1", files=["_archive/test.py"]),
+        Ticket(id="PLF-002", name="ticket-2", files=["src/main.py"]),
+        Ticket(id="PLF-003", name="ticket-3", files=["lib/utils.py"]),
     ]
     
     store = TicketStoreMixin()
@@ -140,8 +140,8 @@ def test_store_filter_no_files():
     from planfile.core.store_tickets import TicketStoreMixin
     
     tickets = [
-        Ticket(id="PLF-001", title="Ticket 1", name="ticket-1", files=[]),
-        Ticket(id="PLF-002", title="Ticket 2", name="ticket-2", files=[]),
+        Ticket(id="PLF-001", name="ticket-1", files=[]),
+        Ticket(id="PLF-002", name="ticket-2", files=[]),
     ]
     
     store = TicketStoreMixin()
@@ -156,9 +156,9 @@ def test_store_filter_multiple_patterns():
     from planfile.core.store_tickets import TicketStoreMixin
     
     tickets = [
-        Ticket(id="PLF-001", title="Ticket 1", name="ticket-1", files=["src/main.py"]),
-        Ticket(id="PLF-002", title="Ticket 2", name="ticket-2", files=["lib/utils.py"]),
-        Ticket(id="PLF-003", title="Ticket 3", name="ticket-3", files=["test/test.py"]),
+        Ticket(id="PLF-001", name="ticket-1", files=["src/main.py"]),
+        Ticket(id="PLF-002", name="ticket-2", files=["lib/utils.py"]),
+        Ticket(id="PLF-003", name="ticket-3", files=["test/test.py"]),
     ]
     
     store = TicketStoreMixin()
@@ -178,7 +178,6 @@ def test_store_matches_files():
     
     ticket_with_files = Ticket(
         id="PLF-001",
-        title="Ticket 1",
         name="ticket-1",
         files=["src/main.py", "lib/utils.py"]
     )
@@ -189,7 +188,6 @@ def test_store_matches_files():
     
     ticket_with_file = Ticket(
         id="PLF-002",
-        title="Ticket 2",
         name="ticket-2",
         file="src/main.py"
     )
@@ -208,13 +206,12 @@ def test_ticket_create_with_files():
     mock_store.project_dir = "/tmp/test"
     mock_store.create_ticket = Mock(return_value=Ticket(
         id="PLF-001",
-        title="Test ticket",
         name="test-ticket",
         files=["src/main.py"]
     ))
     
     ticket_data = {
-        "title": "Test ticket",
+        "name": "test-ticket",
         "priority": "normal",
         "sprint": "current",
         "source": TicketSource(tool="human"),
