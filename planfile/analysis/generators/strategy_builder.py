@@ -127,7 +127,7 @@ def generate_tasks(analysis_result: dict[str, Any]) -> dict[str, list[dict[str, 
 
     for issue in analysis_result['issues']:
         task = {
-            'name': issue.title,
+            'name': issue.name,
             'description': issue.description,
             'file_path': issue.file_path,
             'line_number': issue.line_number,

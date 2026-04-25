@@ -187,7 +187,7 @@ class SprintGenerator:
             if len(tickets[issue.priority]) >= self.max_tickets_per_priority:
                 continue
             ticket = {
-                'title': issue.title,
+                'name': issue.name,
                 'description': issue.description,
                 'priority': issue.priority,
                 'category': issue.category,

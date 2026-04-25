@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 @dataclass
 class ExtractedIssue:
     """Represents an issue extracted from a file."""
-    title: str
+    name: str
     description: str
     priority: str  # critical, high, medium, low
     category: str  # bug, feature, refactor, test, docs, etc.

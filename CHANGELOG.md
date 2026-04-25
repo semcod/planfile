@@ -22,6 +22,16 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.73] - 2026-04-25
+
+### Docs
+- Update README.md
+
+### Other
+- Update planfile/analysis/generators/strategy_builder.py
+- Update planfile/analysis/models.py
+- Update planfile/analysis/sprint_generator.py
+
 ## [0.1.72] - 2026-04-25
 
 ### Docs
