@@ -13,8 +13,8 @@ class TicketRef(BaseModel):
     metadata: dict[str, Any] = {}
 
 
-class TicketStatus(BaseModel):
-    """Status of a ticket."""
+class TicketState(BaseModel):
+    """State snapshot of a ticket."""
     id: str
     key: str | None = None
     status: str
@@ -37,17 +37,17 @@ class PMBackend(Protocol):
         ...
 
     @abstractmethod
-    def get_ticket(self, ticket_id: str) -> TicketStatus:
-        """Get ticket status."""
+    def get_ticket(self, ticket_id: str) -> TicketState:
+        """Get ticket state."""
         ...
 
     @abstractmethod
-    def list_tickets(self, **kwargs) -> list[TicketStatus]:
+    def list_tickets(self, **kwargs) -> list[TicketState]:
         """List tickets with filters."""
         ...
 
     @abstractmethod
-    def search_tickets(self, query: str) -> list[TicketStatus]:
+    def search_tickets(self, query: str) -> list[TicketState]:
         """Search tickets by query."""
         ...
 
@@ -153,13 +153,13 @@ class BasePMBackend(ABC):
         """Update an existing ticket."""
         ...
 
-    def get_ticket(self, ticket_id: str) -> TicketStatus:
-        """Get ticket status through the backend-specific implementation."""
+    def get_ticket(self, ticket_id: str) -> TicketState:
+        """Get ticket state through the backend-specific implementation."""
         return self._get_ticket(ticket_id)
 
     @abstractmethod
-    def _get_ticket(self, ticket_id: str) -> TicketStatus:
-        """Get ticket status."""
+    def _get_ticket(self, ticket_id: str) -> TicketState:
+        """Get ticket state."""
         ...
 
     def list_tickets(
@@ -168,7 +168,7 @@ class BasePMBackend(ABC):
         status: str | None = None,
         assignee: str | None = None,
         limit: int | None = None,
-    ) -> list[TicketStatus]:
+    ) -> list[TicketState]:
         """List tickets with filters through the backend-specific implementation."""
         return self._list_tickets(
             labels=labels,
@@ -184,16 +184,16 @@ class BasePMBackend(ABC):
         status: str | None = None,
         assignee: str | None = None,
         limit: int | None = None,
-    ) -> list[TicketStatus]:
+    ) -> list[TicketState]:
         """List tickets with filters."""
         ...
 
-    def search_tickets(self, query: str) -> list[TicketStatus]:
+    def search_tickets(self, query: str) -> list[TicketState]:
         """Search tickets through the backend-specific implementation."""
         return self._search_tickets(query)
 
     @abstractmethod
-    def _search_tickets(self, query: str) -> list[TicketStatus]:
+    def _search_tickets(self, query: str) -> list[TicketState]:
         """Search tickets by query."""
         ...
 
@@ -215,7 +215,7 @@ class BasePMBackend(ABC):
             metadata=self.prepare_metadata(metadata),
         )
 
-    def build_ticket_status(
+    def build_ticket_state(
         self,
         *,
         id: str,
@@ -224,9 +224,9 @@ class BasePMBackend(ABC):
         assignee: str | None = None,
         labels: list[str] | None = None,
         updated_at: str | None = None,
-    ) -> TicketStatus:
-        """Build a TicketStatus with consistent defaults."""
-        return TicketStatus(
+    ) -> TicketState:
+        """Build a TicketState with consistent defaults."""
+        return TicketState(
             id=id,
             key=key,
             status=status,

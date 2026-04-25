@@ -1,0 +1,7 @@
+# SCENARIO: Library Unit Tests
+# TYPE: unit
+# GENERATED: true
+
+LOG[2]{message}:
+  "Test core functions"
+  "Test public API surface"

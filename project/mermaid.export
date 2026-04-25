@@ -1,0 +1,1025 @@
+flowchart TD
+    subgraph Taskfile
+        Taskfile__print["print"]
+    end
+    subgraph examples__PROPOSED_API_IMPROVEMENTS
+        examples__PROPOSED_API_IMPROVEMENTS__TicketLogger____init__["__init__"]
+        examples__PROPOSED_API_IMPROVEMENTS__TicketLogger__error["error"]
+        examples__PROPOSED_API_IMPROVEMENTS__TicketLogger__metric_alert["metric_alert"]
+        examples__PROPOSED_API_IMPROVEMENTS__TicketLogger__catch_errors["catch_errors"]
+        examples__PROPOSED_API_IMPROVEMENTS__PlanfileStoreExtended__stats("stats CC=8")
+        examples__PROPOSED_API_IMPROVEMENTS__PlanfileStoreExtended__export("export CC=13")
+        examples__PROPOSED_API_IMPROVEMENTS__PlanfileStoreExtended__search["search"]
+    end
+    subgraph examples__bash_generation
+        examples__bash_generation__test_planfile_generation__test_planfile_generation["test_planfile_generation"]
+        examples__bash_generation__test_planfile_generation____init__["__init__"]
+        examples__bash_generation__test_planfile_generation__to_dict["to_dict"]
+        examples__bash_generation__test_planfile_generation__render_user["render_user"]
+        examples__bash_generation__test_planfile_generation__create_user["create_user"]
+        examples__bash_generation__test_planfile_generation__health_check["health_check"]
+        examples__bash_generation__test_planfile_generation__get_user["get_user"]
+        examples__bash_generation__verify_planfile__validate_planfile["validate_planfile"]
+        examples__bash_generation__verify_planfile__print["print"]
+    end
+    subgraph examples__checkbox_tickets
+        examples__checkbox_tickets__demo__demo_checkbox_tickets{{demo_checkbox_tickets CC=15}}
+    end
+    subgraph examples__ecosystem
+        examples__ecosystem__01_full_workflow____init__["__init__"]
+        examples__ecosystem__01_full_workflow___load_config["_load_config"]
+        examples__ecosystem__01_full_workflow__create_user["create_user"]
+        examples__ecosystem__01_full_workflow__get_user["get_user"]
+        examples__ecosystem__01_full_workflow__update_user["update_user"]
+        examples__ecosystem__01_full_workflow__setattr["setattr"]
+        examples__ecosystem__01_full_workflow__delete_user["delete_user"]
+        examples__ecosystem__01_full_workflow__get_users_by_type["get_users_by_type"]
+        examples__ecosystem__01_full_workflow__authenticate["authenticate"]
+        examples__ecosystem__01_full_workflow__export_to_json["export_to_json"]
+        examples__ecosystem__01_full_workflow__import_from_json["import_from_json"]
+        examples__ecosystem__01_full_workflow__get_statistics["get_statistics"]
+        examples__ecosystem__02_mcp_integration__run_mcp_tool["run_mcp_tool"]
+        examples__ecosystem__02_mcp_integration__simulate_planfile_generate("simulate_planfile_generate CC=9")
+        examples__ecosystem__02_mcp_integration__simulate_planfile_apply["simulate_planfile_apply"]
+        examples__ecosystem__02_mcp_integration__simulate_planfile_review["simulate_planfile_review"]
+        examples__ecosystem__02_mcp_integration__example_mcp_session["example_mcp_session"]
+        examples__ecosystem__02_mcp_integration__create_mcp_tool_definitions["create_mcp_tool_definitions"]
+        examples__ecosystem__03_proxy_routing__ProxyClient____init__["__init__"]
+        examples__ecosystem__03_proxy_routing__ProxyClient__chat["chat"]
+        examples__ecosystem__03_proxy_routing__ProxyClient__get_routing_decision["get_routing_decision"]
+        examples__ecosystem__03_proxy_routing__ProxyClient__get_usage_stats["get_usage_stats"]
+        examples__ecosystem__03_proxy_routing__example_strategy_generation_with_proxy("example_strategy_generation_with_pr CC=8")
+        examples__ecosystem__03_proxy_routing__create_proxy_config_example["create_proxy_config_example"]
+        examples__ecosystem__03_proxy_routing__example_budget_tracking["example_budget_tracking"]
+        examples__ecosystem__04_llx_integration__LLXIntegration____init__["__init__"]
+        examples__ecosystem__04_llx_integration__LLXIntegration__analyze_project["analyze_project"]
+        examples__ecosystem__04_llx_integration__LLXIntegration___parse_llx_output["_parse_llx_output"]
+        examples__ecosystem__04_llx_integration__LLXIntegration___basic_analysis("_basic_analysis CC=12")
+        examples__ecosystem__04_llx_integration__LLXIntegration__select_model["select_model"]
+        examples__ecosystem__04_llx_integration__LLXIntegration__get_task_scope["get_task_scope"]
+        examples__ecosystem__04_llx_integration__example_metric_driven_planning("example_metric_driven_planning CC=9")
+        examples__ecosystem__04_llx_integration___calculate_complexity_score["_calculate_complexity_score"]
+        examples__ecosystem__04_llx_integration__create_llx_config_example["create_llx_config_example"]
+    end
+    subgraph examples__github
+        examples__github__run__print["print"]
+    end
+    subgraph examples__gitlab
+        examples__gitlab__run__print["print"]
+    end
+    subgraph examples__jira
+        examples__jira__run__print["print"]
+    end
+    subgraph examples__llx_validator
+        examples__llx_validator__LLXValidator____init__["__init__"]
+        examples__llx_validator__LLXValidator__validate_strategy["validate_strategy"]
+        examples__llx_validator__LLXValidator__analyze_generated_code["analyze_generated_code"]
+        examples__llx_validator__LLXValidator___is_llx_available["_is_llx_available"]
+        examples__llx_validator__LLXValidator___parse_llx_analysis["_parse_llx_analysis"]
+        examples__llx_validator__LLXValidator___basic_code_analysis["_basic_code_analysis"]
+        examples__llx_validator__create_validation_script["create_validation_script"]
+    end
+    subgraph examples__multi_ticket
+        examples__multi_ticket__run__print["print"]
+    end
+    subgraph examples__python_api
+        examples__python_api__03_integration_simple__main["main"]
+        examples__python_api__03_integration__TicketLogger____init__["__init__"]
+        examples__python_api__03_integration__TicketLogger__error["error"]
+        examples__python_api__03_integration__TicketLogger__warning["warning"]
+        examples__python_api__03_integration__TicketLogger__metric_alert["metric_alert"]
+        examples__python_api__03_integration__example_cli_tool_integration["example_cli_tool_integration"]
+        examples__python_api__03_integration__example_monitoring_integration["example_monitoring_integration"]
+        examples__python_api__03_integration__example_ci_pipeline_integration["example_ci_pipeline_integration"]
+        examples__python_api__03_integration__example_custom_decorator["example_custom_decorator"]
+        examples__python_api__03_integration__main["main"]
+        examples__python_api__01_basic_usage__example_1_basic_initialization["example_1_basic_initialization"]
+        examples__python_api__01_basic_usage__example_2_create_ticket["example_2_create_ticket"]
+        examples__python_api__01_basic_usage__example_3_quick_ticket["example_3_quick_ticket"]
+        examples__python_api__01_basic_usage__example_4_list_tickets["example_4_list_tickets"]
+        examples__python_api__01_basic_usage__main["main"]
+        examples__python_api__04_analytics_simple__main["main"]
+        examples__python_api__02_ticket_management__example_create_tickets["example_create_tickets"]
+        examples__python_api__02_ticket_management__example_read_tickets["example_read_tickets"]
+        examples__python_api__02_ticket_management__example_update_tickets["example_update_tickets"]
+        examples__python_api__02_ticket_management__example_bulk_operations["example_bulk_operations"]
+        examples__python_api__02_ticket_management__example_delete_and_move["example_delete_and_move"]
+        examples__python_api__02_ticket_management__main["main"]
+        examples__python_api__04_advanced_filtering__example_basic_filtering["example_basic_filtering"]
+        examples__python_api__04_advanced_filtering__example_combined_filters["example_combined_filters"]
+        examples__python_api__04_advanced_filtering__example_search_by_labels("example_search_by_labels CC=12")
+        examples__python_api__04_advanced_filtering__example_export_filtered["example_export_filtered"]
+        examples__python_api__04_advanced_filtering__example_statistics("example_statistics CC=8")
+        examples__python_api__04_advanced_filtering__main["main"]
+    end
+    subgraph examples__readme_tests
+        examples__readme_tests__test_readme_examples__hello_world["hello_world"]
+        examples__readme_tests__test_readme_examples____init__["__init__"]
+        examples__readme_tests__test_readme_examples__greet["greet"]
+    end
+    subgraph examples__rest_api
+        examples__rest_api__run_all__cleanup["cleanup"]
+        examples__rest_api__02_curl_examples__print_step["print_step"]
+        examples__rest_api__02_curl_examples__print["print"]
+        examples__rest_api__04_javascript_client__BASE_URL["BASE_URL"]
+        examples__rest_api__04_javascript_client__PlanfileClient__request["request"]
+        examples__rest_api__04_javascript_client__PlanfileClient__url["url"]
+        examples__rest_api__04_javascript_client__PlanfileClient__response["response"]
+        examples__rest_api__04_javascript_client__PlanfileClient__health["health"]
+        examples__rest_api__04_javascript_client__PlanfileClient__listTickets["listTickets"]
+        examples__rest_api__04_javascript_client__PlanfileClient__createTicket["createTicket"]
+        examples__rest_api__04_javascript_client__PlanfileClient__getTicket["getTicket"]
+        examples__rest_api__04_javascript_client__PlanfileClient__updateTicket["updateTicket"]
+        examples__rest_api__04_javascript_client__PlanfileClient__moveTicket["moveTicket"]
+        examples__rest_api__04_javascript_client__PlanfileClient__deleteTicket["deleteTicket"]
+        examples__rest_api__04_javascript_client__PlanfileClient__examples["examples"]
+        examples__rest_api__04_javascript_client__PlanfileClient__client["client"]
+        examples__rest_api__04_javascript_client__PlanfileClient__ticket["ticket"]
+        examples__rest_api__04_javascript_client__PlanfileClient__fetched["fetched"]
+        examples__rest_api__04_javascript_client__PlanfileClient__updated["updated"]
+        examples__rest_api__04_javascript_client__PlanfileClient__tickets["tickets"]
+        examples__rest_api__04_javascript_client__PlanfileClient__moved["moved"]
+        examples__rest_api__03_python_client__PlanfileClient____init__["__init__"]
+        examples__rest_api__03_python_client__PlanfileClient___request["_request"]
+        examples__rest_api__03_python_client__PlanfileClient__health["health"]
+        examples__rest_api__03_python_client__PlanfileClient__list_tickets["list_tickets"]
+        examples__rest_api__03_python_client__PlanfileClient__create_ticket["create_ticket"]
+        examples__rest_api__03_python_client__PlanfileClient__get_ticket["get_ticket"]
+        examples__rest_api__03_python_client__PlanfileClient__update_ticket["update_ticket"]
+        examples__rest_api__03_python_client__PlanfileClient__move_ticket["move_ticket"]
+        examples__rest_api__03_python_client__PlanfileClient__delete_ticket["delete_ticket"]
+        examples__rest_api__03_python_client__example_basic_operations["example_basic_operations"]
+        examples__rest_api__03_python_client__example_bulk_operations["example_bulk_operations"]
+        examples__rest_api__03_python_client__example_workflow["example_workflow"]
+        examples__rest_api__03_python_client__example_error_handling["example_error_handling"]
+        examples__rest_api__03_python_client__main["main"]
+    end
+    subgraph examples__run_all_tests
+        examples__run_all_tests__run_test["run_test"]
+        examples__run_all_tests__run_python_test["run_python_test"]
+    end
+    subgraph examples__validate_with_llx
+        examples__validate_with_llx__validate_file["validate_file"]
+    end
+    subgraph mcp_server_example
+        mcp_server_example__planfile_generate["planfile_generate"]
+        mcp_server_example__planfile_apply["planfile_apply"]
+        mcp_server_example__planfile_review["planfile_review"]
+        mcp_server_example__main["main"]
+    end
+    subgraph planfile
+        planfile__quick_ticket["quick_ticket"]
+        planfile____getattr__("__getattr__ CC=11")
+    end
+    subgraph planfile__Planfile
+        planfile__Planfile____init__["__init__"]
+        planfile__Planfile__auto_discover["auto_discover"]
+        planfile__Planfile__create_ticket["create_ticket"]
+        planfile__Planfile__get_ticket["get_ticket"]
+        planfile__Planfile__list_tickets["list_tickets"]
+        planfile__Planfile__update_ticket["update_ticket"]
+        planfile__Planfile__create_tickets_bulk["create_tickets_bulk"]
+    end
+    subgraph planfile__analysis
+        planfile__analysis__external_tools__ExternalToolRunner____init__["__init__"]
+        planfile__analysis__external_tools__ExternalToolRunner__run_all["run_all"]
+        planfile__analysis__external_tools__ExternalToolRunner__run_code2llm["run_code2llm"]
+        planfile__analysis__external_tools__ExternalToolRunner__run_vallm["run_vallm"]
+        planfile__analysis__external_tools__ExternalToolRunner__run_redup["run_redup"]
+        planfile__analysis__external_tools__ExternalToolRunner__parse_code2llm_output("parse_code2llm_output CC=12")
+        planfile__analysis__external_tools__ExternalToolRunner__parse_vallm_output["parse_vallm_output"]
+        planfile__analysis__external_tools__ExternalToolRunner__parse_redup_output["parse_redup_output"]
+        planfile__analysis__external_tools__ExternalToolRunner___mock_code2llm_data["_mock_code2llm_data"]
+        planfile__analysis__external_tools__ExternalToolRunner___mock_vallm_data["_mock_vallm_data"]
+        planfile__analysis__external_tools__ExternalToolRunner___mock_redup_data["_mock_redup_data"]
+        planfile__analysis__external_tools__run_external_analysis["run_external_analysis"]
+        planfile__analysis__file_analyzer__FileAnalyzer____init__["__init__"]
+        planfile__analysis__file_analyzer__FileAnalyzer__analyze_file["analyze_file"]
+        planfile__analysis__file_analyzer__FileAnalyzer___analyze_toon["_analyze_toon"]
+        planfile__analysis__file_analyzer__FileAnalyzer___analyze_yaml["_analyze_yaml"]
+        planfile__analysis__file_analyzer__FileAnalyzer___analyze_json["_analyze_json"]
+        planfile__analysis__file_analyzer__FileAnalyzer___analyze_text["_analyze_text"]
+        planfile__analysis__file_analyzer__FileAnalyzer___extract_from_yaml_structure["_extract_from_yaml_structure"]
+        planfile__analysis__file_analyzer__FileAnalyzer___extract_from_json_structure["_extract_from_json_structure"]
+        planfile__analysis__file_analyzer__FileAnalyzer__analyze_directory("analyze_directory CC=9")
+        planfile__analysis__file_analyzer__FileAnalyzer___generate_summary["_generate_summary"]
+        planfile__analysis__generator__PlanfileGenerator____init__["__init__"]
+        planfile__analysis__generator__PlanfileGenerator___default_limits["_default_limits"]
+        planfile__analysis__generator__PlanfileGenerator__generate_with_external_tools["generate_with_external_tools"]
+        planfile__analysis__generator__PlanfileGenerator___external_to_internal_analysis("_external_to_internal_analysis CC=14")
+        planfile__analysis__generator__PlanfileGenerator___extract_external_metrics["_extract_external_metrics"]
+        planfile__analysis__generator__PlanfileGenerator__generate_from_analysis["generate_from_analysis"]
+        planfile__analysis__generator__PlanfileGenerator__generate_from_current_project["generate_from_current_project"]
+        planfile__analysis__generator__PlanfileGenerator___extract_key_metrics["_extract_key_metrics"]
+        planfile__analysis__generator__PlanfileGenerator___generate_goal["_generate_goal"]
+        planfile__analysis__generator__PlanfileGenerator___generate_goals["_generate_goals"]
+        planfile__analysis__generator__PlanfileGenerator___generate_quality_gates["_generate_quality_gates"]
+        planfile__analysis__generator__PlanfileGenerator___generate_tasks["_generate_tasks"]
+        planfile__analysis__generator__PlanfileGenerator___parse_effort["_parse_effort"]
+        planfile__analysis__generator__PlanfileGenerator___generate_target_metrics["_generate_target_metrics"]
+        planfile__analysis__generator__PlanfileGenerator___generate_risks["_generate_risks"]
+        planfile__analysis__generator__PlanfileGenerator___generate_success_criteria["_generate_success_criteria"]
+        planfile__analysis__generator__PlanfileGenerator___create_strategy_object["_create_strategy_object"]
+        planfile__analysis__generator__PlanfileGenerator___is_primitive["_is_primitive"]
+        planfile__analysis__generator__PlanfileGenerator___serialize_primitive["_serialize_primitive"]
+        planfile__analysis__generator__PlanfileGenerator___check_circular_ref["_check_circular_ref"]
+        planfile__analysis__generator__PlanfileGenerator___serialize_object_attrs["_serialize_object_attrs"]
+        planfile__analysis__generator__PlanfileGenerator___serialize_dict_items["_serialize_dict_items"]
+        planfile__analysis__generator__PlanfileGenerator___serialize_list_items["_serialize_list_items"]
+        planfile__analysis__generator__PlanfileGenerator___make_serializable("_make_serializable CC=8")
+        planfile__analysis__parsers__json_parser__analyze_json["analyze_json"]
+        planfile__analysis__generators__metrics_extractor__extract_key_metrics["extract_key_metrics"]
+        planfile__analysis__generators__metrics_extractor___extract_cc_metrics["_extract_cc_metrics"]
+        planfile__analysis__generators__metrics_extractor___extract_critical_metrics["_extract_critical_metrics"]
+        planfile__analysis__generators__metrics_extractor___extract_validation_metrics("_extract_validation_metrics CC=9")
+        planfile__analysis__generators__metrics_extractor___extract_duplication_metrics["_extract_duplication_metrics"]
+        planfile__analysis__generators__metrics_extractor___extract_coverage_metrics["_extract_coverage_metrics"]
+        planfile__analysis__parsers__text_parser__analyze_text("analyze_text CC=13")
+        planfile__analysis__sprint_generator__SprintGenerator____init__["__init__"]
+        planfile__analysis__sprint_generator__SprintGenerator__generate_sprints["generate_sprints"]
+        planfile__analysis__sprint_generator__SprintGenerator___group_issues_by_priority("_group_issues_by_priority CC=9")
+        planfile__analysis__sprint_generator__SprintGenerator___get_high_and_quality_issues["_get_high_and_quality_issues"]
+        planfile__analysis__sprint_generator__SprintGenerator___get_remaining_medium_issues["_get_remaining_medium_issues"]
+        planfile__analysis__sprint_generator__SprintGenerator___create_sprint["_create_sprint"]
+    end
+    subgraph planfile__api
+        planfile__api__server__list_tickets["list_tickets"]
+        planfile__api__server__create_ticket["create_ticket"]
+        planfile__api__server__get_ticket["get_ticket"]
+        planfile__api__server__update_ticket["update_ticket"]
+        planfile__api__server__delete_ticket["delete_ticket"]
+        planfile__api__server__move_ticket["move_ticket"]
+        planfile__api__server__health["health"]
+    end
+    subgraph planfile__ci
+        planfile__ci__CIRunner____init__["__init__"]
+        planfile__ci__CIRunner__run_tests["run_tests"]
+        planfile__ci__CIRunner__run_code_analysis["run_code_analysis"]
+        planfile__ci__CIRunner__generate_bug_report["generate_bug_report"]
+        planfile__ci__CIRunner__create_bug_tickets["create_bug_tickets"]
+        planfile__ci__CIRunner__auto_fix_bugs["auto_fix_bugs"]
+        planfile__ci__CIRunner__check_strategy_completion["check_strategy_completion"]
+        planfile__ci__CIRunner__run_loop["run_loop"]
+        planfile__ci__CIRunner__save_results["save_results"]
+    end
+    subgraph planfile__cli
+        planfile__cli__auto_loop__create_auto_app["create_auto_app"]
+        planfile__cli__commands__version_callback["version_callback"]
+        planfile__cli__commands__main_callback["main_callback"]
+        planfile__cli__commands__main["main"]
+        planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
+        planfile__cli__groups__sync__register_sync_commands["register_sync_commands"]
+        planfile__cli__groups__sync__commands__github_cmd["github_cmd"]
+        planfile__cli__groups__sync__commands__gitlab_cmd["gitlab_cmd"]
+        planfile__cli__groups__sync__commands__jira_cmd["jira_cmd"]
+        planfile__cli__groups__sync__commands__markdown_cmd["markdown_cmd"]
+        planfile__cli__groups__sync__commands__handle_no_integrations["handle_no_integrations"]
+        planfile__cli__groups__sync__commands__sync_all_integrations["sync_all_integrations"]
+        planfile__cli__groups__sync__commands__all_cmd["all_cmd"]
+        planfile__cli__groups__review__commands__review_strategy_cli("review_strategy_cli CC=10")
+        planfile__cli__groups__review__register_review_commands["register_review_commands"]
+        planfile__cli__groups__health__commands__create_health_app["create_health_app"]
+        planfile__cli__groups__review__utils__get_backend["get_backend"]
+        planfile__cli__groups__review__utils___load_backend_config["_load_backend_config"]
+        planfile__cli__groups__review__utils___load_and_validate_strategy["_load_and_validate_strategy"]
+        planfile__cli__groups__examples__register_examples_commands["register_examples_commands"]
+        planfile__cli__groups__health__register_health_commands["register_health_commands"]
+        planfile__cli__groups__query__register_query_commands["register_query_commands"]
+        planfile__cli__groups__sync__core___initialize_backend["_initialize_backend"]
+        planfile__cli__groups__sync__core___ticket_matches_integration["_ticket_matches_integration"]
+        planfile__cli__groups__sync__core___collect_tickets_from_sprint["_collect_tickets_from_sprint"]
+        planfile__cli__groups__sync__core___collect_tickets_from_backlog["_collect_tickets_from_backlog"]
+        planfile__cli__groups__sync__core___ticket_matches_integration_v1["_ticket_matches_integration_v1"]
+        planfile__cli__groups__sync__core___collect_tickets_from_section["_collect_tickets_from_section"]
+        planfile__cli__groups__sync__core___process_planfile_v1("_process_planfile_v1 CC=9")
+        planfile__cli__groups__sync__core___load_tickets_v1_format["_load_tickets_v1_format"]
+        planfile__cli__groups__sync__core___load_tickets_for_sync["_load_tickets_for_sync"]
+        planfile__cli__groups__sync__core___execute_sync_with_progress["_execute_sync_with_progress"]
+        planfile__cli__groups__sync__core__sync_integration["sync_integration"]
+        planfile__cli__groups__apply__register_apply_commands["register_apply_commands"]
+        planfile__cli__groups__apply__commands__execute_apply_strategy["execute_apply_strategy"]
+        planfile__cli__groups__apply__commands__display_apply_results["display_apply_results"]
+        planfile__cli__groups__apply__commands__save_results["save_results"]
+        planfile__cli__groups__apply__commands__apply_strategy_cli["apply_strategy_cli"]
+        planfile__cli__groups__apply__utils__get_backend["get_backend"]
+        planfile__cli__groups__apply__utils__load_and_validate_strategy["load_and_validate_strategy"]
+        planfile__cli__groups__apply__utils__load_backend_config["load_backend_config"]
+        planfile__cli__groups__apply__utils__parse_sprint_filter["parse_sprint_filter"]
+        planfile__cli__groups__apply__utils__select_backend["select_backend"]
+        planfile__cli__groups__examples__commands__create_examples_app["create_examples_app"]
+        planfile__cli__groups__examples__commands___discover_examples("_discover_examples CC=13")
+        planfile__cli__groups__examples__commands___execute_example["_execute_example"]
+        planfile__cli__groups__auto__register_auto_commands["register_auto_commands"]
+        planfile__cli__groups__generate__register_generate_commands["register_generate_commands"]
+        planfile__cli__groups__init__commands___choice("_choice CC=11")
+        planfile__cli__groups__init__commands___ask["_ask"]
+        planfile__cli__groups__init__commands___ask_list["_ask_list"]
+        planfile__cli__groups__init__commands___collect_custom_sprints["_collect_custom_sprints"]
+        planfile__cli__groups__init__commands___collect_preset_sprints["_collect_preset_sprints"]
+        planfile__cli__groups__init__commands___collect_sprint_data["_collect_sprint_data"]
+        planfile__cli__groups__init__commands___build_sprints_yaml["_build_sprints_yaml"]
+        planfile__cli__groups__init__commands___assemble_quality_gates["_assemble_quality_gates"]
+        planfile__cli__groups__init__commands___display_summary["_display_summary"]
+        planfile__cli__groups__init__commands___save_strategy["_save_strategy"]
+        planfile__cli__groups__init__commands__init_strategy_cli("init_strategy_cli CC=8")
+        planfile__cli__groups__ticket__register_ticket_commands["register_ticket_commands"]
+    end
+    subgraph planfile__core
+        planfile__core__store_files__StoreFileMixin___sprint_file["_sprint_file"]
+        planfile__core__store_files__StoreFileMixin___all_sprint_files["_all_sprint_files"]
+        planfile__core__store_files__StoreFileMixin___read_yaml_cached["_read_yaml_cached"]
+        planfile__core__store_tickets__TicketStoreMixin___ticket_from_data["_ticket_from_data"]
+        planfile__core__store_tickets__TicketStoreMixin___tickets_from_sprint_data["_tickets_from_sprint_data"]
+        planfile__core__store_tickets__TicketStoreMixin___apply_filters["_apply_filters"]
+        planfile__core__store_tickets__TicketStoreMixin__list_tickets["list_tickets"]
+        planfile__core__models__strategy__ModelHints__convert_str_to_tier["convert_str_to_tier"]
+        planfile__core__models__strategy__Task__normalize_model_hints["normalize_model_hints"]
+        planfile__core__models__strategy__Sprint__convert_tasks("convert_tasks CC=8")
+        planfile__core__models__strategy__QualityGate__normalize_criteria["normalize_criteria"]
+        planfile__core__models__strategy__Strategy__get_task_patterns["get_task_patterns"]
+        planfile__core__models__strategy__Strategy__get_sprint["get_sprint"]
+        planfile__core__models__strategy__Strategy__validate_sprint_ids["validate_sprint_ids"]
+        planfile__core__models__strategy__Strategy__compare("compare CC=11")
+        planfile__core__models__strategy__Strategy__merge("merge CC=12")
+        planfile__core__models__strategy__Strategy__export["export"]
+        planfile__core__models__strategy__Strategy__get_stats{{get_stats CC=15}}
+        planfile__core__models__strategy__Strategy__to_yaml["to_yaml"]
+        planfile__core__models__ticket__Ticket____post_init__["__post_init__"]
+    end
+    subgraph planfile__examples
+        planfile__examples__example_create_strategy["example_create_strategy"]
+        planfile__examples__example_validate_strategy["example_validate_strategy"]
+        planfile__examples__example_run_strategy["example_run_strategy"]
+        planfile__examples__example_verify_strategy["example_verify_strategy"]
+        planfile__examples__example_programmatic_strategy["example_programmatic_strategy"]
+    end
+    subgraph planfile__executor_standalone
+        planfile__executor_standalone__LLMClient____init__["__init__"]
+        planfile__executor_standalone__LLMClient__chat["chat"]
+        planfile__executor_standalone__StrategyExecutor____init__["__init__"]
+        planfile__executor_standalone__StrategyExecutor___default_config["_default_config"]
+        planfile__executor_standalone__StrategyExecutor__execute_strategy("execute_strategy CC=8")
+        planfile__executor_standalone__StrategyExecutor___execute_task["_execute_task"]
+        planfile__executor_standalone__StrategyExecutor___select_model["_select_model"]
+        planfile__executor_standalone__StrategyExecutor___build_prompt["_build_prompt"]
+        planfile__executor_standalone__StrategyExecutor___get_project_metrics["_get_project_metrics"]
+        planfile__executor_standalone__create_openai_client["create_openai_client"]
+        planfile__executor_standalone__create_litellm_client["create_litellm_client"]
+        planfile__executor_standalone__execute_strategy["execute_strategy"]
+    end
+    subgraph planfile__extensions
+        planfile__extensions__TicketLogger____init__["__init__"]
+        planfile__extensions__TicketLogger__error["error"]
+        planfile__extensions__TicketLogger__warning["warning"]
+        planfile__extensions__TicketLogger__metric_alert["metric_alert"]
+        planfile__extensions__TicketLogger__catch_errors["catch_errors"]
+    end
+    subgraph planfile__importers
+        planfile__importers__common__normalize_ticket_dict["normalize_ticket_dict"]
+        planfile__importers__common__load_structured_tickets["load_structured_tickets"]
+        planfile__importers__register_importer["register_importer"]
+        planfile__importers__import_from_source("import_from_source CC=8")
+        planfile__importers__yaml_importer__import_yaml["import_yaml"]
+        planfile__importers__json_importer__import_json["import_json"]
+        planfile__importers__redup_importer__import_redup["import_redup"]
+        planfile__importers__redup_importer___parse_toon_format("_parse_toon_format CC=9")
+        planfile__importers__redup_importer___parse_duplicates("_parse_duplicates CC=9")
+        planfile__importers__redup_importer___parse_refactor("_parse_refactor CC=11")
+        planfile__importers__redup_importer___create_refactor_ticket("_create_refactor_ticket CC=9")
+        planfile__importers__vallm_importer__import_vallm["import_vallm"]
+        planfile__importers__vallm_importer__VallmParser____init__["__init__"]
+        planfile__importers__vallm_importer__VallmParser__parse["parse"]
+        planfile__importers__vallm_importer__VallmParser___process_line["_process_line"]
+        planfile__importers__vallm_importer__VallmParser___is_file_entry["_is_file_entry"]
+        planfile__importers__vallm_importer__VallmParser___is_issue_entry["_is_issue_entry"]
+        planfile__importers__vallm_importer__VallmParser___parse_file_entry["_parse_file_entry"]
+        planfile__importers__vallm_importer__VallmParser___parse_issue_entry["_parse_issue_entry"]
+        planfile__importers__vallm_importer__VallmParser___determine_priority["_determine_priority"]
+        planfile__importers__vallm_importer___auto_labels["_auto_labels"]
+        planfile__importers__code2llm_importer__import_code2llm["import_code2llm"]
+        planfile__importers__code2llm_importer___parse_evolution["_parse_evolution"]
+        planfile__importers__code2llm_importer__EvolutionParser____init__["__init__"]
+        planfile__importers__code2llm_importer__EvolutionParser__parse["parse"]
+        planfile__importers__code2llm_importer__EvolutionParser___process_line["_process_line"]
+        planfile__importers__code2llm_importer__EvolutionParser___handle_outside["_handle_outside"]
+        planfile__importers__code2llm_importer__EvolutionParser___handle_in_next("_handle_in_next CC=13")
+        planfile__importers__code2llm_importer___evolution_item_to_ticket["_evolution_item_to_ticket"]
+        planfile__importers__code2llm_importer___parse_health("_parse_health CC=9")
+    end
+    subgraph planfile__integrations
+        planfile__integrations__config__IntegrationConfig____init__["__init__"]
+        planfile__integrations__config__IntegrationConfig__load_dotenv["load_dotenv"]
+        planfile__integrations__config__IntegrationConfig___expand_env_vars["_expand_env_vars"]
+        planfile__integrations__config__IntegrationConfig__discover_configs["discover_configs"]
+        planfile__integrations__config__IntegrationConfig__load_configs["load_configs"]
+        planfile__integrations__config__IntegrationConfig__get_integration_config["get_integration_config"]
+        planfile__integrations__config__IntegrationConfig__get_project_config["get_project_config"]
+        planfile__integrations__config__IntegrationConfig__get_sprint_config["get_sprint_config"]
+        planfile__integrations__config__IntegrationConfig__get_backlog_config["get_backlog_config"]
+        planfile__integrations__config__IntegrationConfig___deep_merge["_deep_merge"]
+        planfile__integrations__config__IntegrationConfig__validate_integration("validate_integration CC=9")
+        planfile__integrations__config__IntegrationConfig__has_configured_integrations("has_configured_integrations CC=10")
+        planfile__integrations__config__IntegrationConfig__get_default_backend["get_default_backend"]
+        planfile__integrations__config__IntegrationConfig__get_integration_backend("get_integration_backend CC=10")
+    end
+    subgraph planfile__llm
+        planfile__llm__prompts__build_strategy_prompt["build_strategy_prompt"]
+        planfile__llm__client__call_llm["call_llm"]
+        planfile__llm__adapters__BaseLLMAdapter____init__["__init__"]
+        planfile__llm__adapters__BaseLLMAdapter__test_strategy_generation["test_strategy_generation"]
+        planfile__llm__adapters__BaseLLMAdapter__get_available_models["get_available_models"]
+        planfile__llm__adapters__LLMTestRunner____init__["__init__"]
+        planfile__llm__adapters__LLMTestRunner__register_adapter["register_adapter"]
+        planfile__llm__generator__generate_strategy["generate_strategy"]
+        planfile__llm__generator___collect_metrics["_collect_metrics"]
+        planfile__llm__generator___auto_select_model["_auto_select_model"]
+        planfile__llm__generator___parse_strategy_response["_parse_strategy_response"]
+        planfile__llm__generator___fix_yaml_formatting["_fix_yaml_formatting"]
+        planfile__llm__generator___basic_metrics("_basic_metrics CC=8")
+    end
+    subgraph planfile__loaders
+        planfile__loaders__cli_loader__load_from_json["load_from_json"]
+        planfile__loaders__cli_loader__save_to_json["save_to_json"]
+        planfile__loaders__cli_loader__load_strategy_from_json["load_strategy_from_json"]
+        planfile__loaders__cli_loader__save_strategy_to_json["save_strategy_to_json"]
+        planfile__loaders__cli_loader___md_header["_md_header"]
+        planfile__loaders__cli_loader___md_summary["_md_summary"]
+        planfile__loaders__cli_loader___md_tasks["_md_tasks"]
+        planfile__loaders__cli_loader___md_sprints["_md_sprints"]
+        planfile__loaders__cli_loader___md_metrics["_md_metrics"]
+        planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
+        planfile__loaders__yaml_loader__load_yaml["load_yaml"]
+        planfile__loaders__yaml_loader__save_yaml["save_yaml"]
+        planfile__loaders__yaml_loader__load_strategy_yaml["load_strategy_yaml"]
+        planfile__loaders__yaml_loader___transform_task_patterns["_transform_task_patterns"]
+        planfile__loaders__yaml_loader___transform_sprints["_transform_sprints"]
+        planfile__loaders__yaml_loader___transform_goal["_transform_goal"]
+        planfile__loaders__yaml_loader___format_validation_error["_format_validation_error"]
+        planfile__loaders__yaml_loader__save_strategy_yaml["save_strategy_yaml"]
+        planfile__loaders__yaml_loader__load_tasks_yaml["load_tasks_yaml"]
+        planfile__loaders__yaml_loader__merge_strategy_with_tasks["merge_strategy_with_tasks"]
+        planfile__loaders__yaml_loader___check_required_keys["_check_required_keys"]
+        planfile__loaders__yaml_loader___validate_sprints["_validate_sprints"]
+        planfile__loaders__yaml_loader___validate_gates["_validate_gates"]
+        planfile__loaders__yaml_loader___validate_task_patterns["_validate_task_patterns"]
+        planfile__loaders__yaml_loader__validate_strategy_schema["validate_strategy_schema"]
+    end
+    subgraph planfile__mcp
+        planfile__mcp__server__handle_tool_call("handle_tool_call CC=14")
+        planfile__mcp__server___read_jsonrpc["_read_jsonrpc"]
+        planfile__mcp__server___write_jsonrpc["_write_jsonrpc"]
+        planfile__mcp__server__main("main CC=8")
+    end
+    subgraph planfile__runner
+        planfile__runner__load_valid_strategy["load_valid_strategy"]
+        planfile__runner__verify_strategy_post_execution("verify_strategy_post_execution CC=12")
+        planfile__runner___get_project_hash["_get_project_hash"]
+        planfile__runner__analyze_project_metrics("analyze_project_metrics CC=12")
+        planfile__runner__apply_strategy_to_tickets("apply_strategy_to_tickets CC=8")
+        planfile__runner__review_strategy("review_strategy CC=14")
+        planfile__runner__run_strategy("run_strategy CC=8")
+    end
+    subgraph planfile__server_common
+        planfile__server_common__get_planfile["get_planfile"]
+    end
+    subgraph planfile__sync
+        planfile__sync__state__SyncState____init__["__init__"]
+        planfile__sync__state__SyncState__get_last_sync["get_last_sync"]
+        planfile__sync__state__SyncState__save_sync["save_sync"]
+        planfile__sync__state__SyncState__get_remote_id["get_remote_id"]
+        planfile__sync__state__SyncState__get_local_id["get_local_id"]
+        planfile__sync__utils__save_v1_format["save_v1_format"]
+        planfile__sync__markdown_backend__files__MarkdownFileManager___ensure_files_exist["_ensure_files_exist"]
+        planfile__sync__markdown_backend__tickets__MarkdownTicketHelpers___determine_target_file("_determine_target_file CC=12")
+        planfile__sync__markdown_backend__tickets__MarkdownTicketHelpers___generate_ticket_id["_generate_ticket_id"]
+        planfile__sync__markdown_backend__tickets__MarkdownTicketHelpers___ticket_exists["_ticket_exists"]
+        planfile__sync__markdown_backend__tickets__MarkdownTicketHelpers___ticket_exists_by_title["_ticket_exists_by_title"]
+        planfile__sync__markdown_backend__tickets__MarkdownTicketHelpers___format_ticket_entry["_format_ticket_entry"]
+        planfile__sync__markdown_backend__tickets__MarkdownTicketHelpers___write_ticket_to_file["_write_ticket_to_file"]
+        planfile__sync__operations__sync_to_external("sync_to_external CC=9")
+        planfile__sync__operations___update_existing_ticket["_update_existing_ticket"]
+        planfile__sync__operations___create_new_ticket["_create_new_ticket"]
+        planfile__sync__operations___is_permission_error["_is_permission_error"]
+        planfile__sync__operations___print_permission_error["_print_permission_error"]
+        planfile__sync__operations___save_sync_results["_save_sync_results"]
+        planfile__sync__operations___load_sprint_and_backlog["_load_sprint_and_backlog"]
+        planfile__sync__operations___fetch_external_tickets["_fetch_external_tickets"]
+        planfile__sync__operations___process_external_ticket["_process_external_ticket"]
+        planfile__sync__operations__sync_from_external["sync_from_external"]
+        planfile__sync__operations___extract_ticket_data["_extract_ticket_data"]
+        planfile__sync__operations___print_dry_run_action["_print_dry_run_action"]
+        planfile__sync__operations___update_local_ticket["_update_local_ticket"]
+        planfile__sync__operations___import_new_ticket["_import_new_ticket"]
+        planfile__sync__operations___save_import_results["_save_import_results"]
+        planfile__sync__github__GitHubBackend____init__["__init__"]
+        planfile__sync__github__GitHubBackend___validate_config["_validate_config"]
+        planfile__sync__github__GitHubBackend___ensure_labels_exist["_ensure_labels_exist"]
+        planfile__sync__github__GitHubBackend___create_ticket{{_create_ticket CC=15}}
+        planfile__sync__github__GitHubBackend___update_ticket("_update_ticket CC=14")
+        planfile__sync__github__GitHubBackend___get_ticket["_get_ticket"]
+        planfile__sync__github__GitHubBackend___issue_to_ticket_status["_issue_to_ticket_status"]
+        planfile__sync__github__GitHubBackend___list_tickets["_list_tickets"]
+        planfile__sync__github__GitHubBackend___search_tickets["_search_tickets"]
+        planfile__sync__jira__JiraBackend____init__["__init__"]
+        planfile__sync__jira__JiraBackend___validate_config["_validate_config"]
+        planfile__sync__jira__JiraBackend__map_priority["map_priority"]
+        planfile__sync__jira__JiraBackend___map_task_type_to_jira["_map_task_type_to_jira"]
+        planfile__sync__jira__JiraBackend___create_ticket("_create_ticket CC=13")
+        planfile__sync__jira__JiraBackend___update_ticket("_update_ticket CC=11")
+        planfile__sync__jira__JiraBackend___get_ticket["_get_ticket"]
+        planfile__sync__jira__JiraBackend___issue_to_ticket_status["_issue_to_ticket_status"]
+        planfile__sync__jira__JiraBackend___list_tickets("_list_tickets CC=8")
+        planfile__sync__jira__JiraBackend___search_tickets["_search_tickets"]
+        planfile__sync__generic__GenericBackend____init__["__init__"]
+        planfile__sync__generic__GenericBackend___validate_config["_validate_config"]
+        planfile__sync__generic__GenericBackend___make_request["_make_request"]
+        planfile__sync__generic__GenericBackend___create_ticket["_create_ticket"]
+        planfile__sync__generic__GenericBackend___update_ticket["_update_ticket"]
+        planfile__sync__generic__GenericBackend___build_update_data["_build_update_data"]
+        planfile__sync__generic__GenericBackend___get_ticket["_get_ticket"]
+        planfile__sync__generic__GenericBackend___list_tickets["_list_tickets"]
+        planfile__sync__generic__GenericBackend___search_tickets["_search_tickets"]
+        planfile__sync__generic__GenericBackend___ticket_data_to_status["_ticket_data_to_status"]
+        planfile__sync__markdown_backend__backend__MarkdownFileBackend____init__["__init__"]
+        planfile__sync__markdown_backend__backend__MarkdownFileBackend___create_ticket["_create_ticket"]
+        planfile__sync__gitlab__GitLabBackend____init__["__init__"]
+    end
+    subgraph planfile__utils
+        planfile__utils__priorities__calculate_task_priority["calculate_task_priority"]
+        planfile__utils__priorities__map_priority_to_system["map_priority_to_system"]
+        planfile__utils__priorities__get_priority_color["get_priority_color"]
+        planfile__utils__metrics___collect_git_metrics("_collect_git_metrics CC=8")
+        planfile__utils__metrics___count_files_by_language["_count_files_by_language"]
+        planfile__utils__metrics___check_project_files["_check_project_files"]
+        planfile__utils__metrics__analyze_project_metrics["analyze_project_metrics"]
+        planfile__utils__metrics__calculate_strategy_health["calculate_strategy_health"]
+    end
+    subgraph project__map
+        project__map__toon__demo_checkbox_tickets["demo_checkbox_tickets"]
+        project__map__toon__run_mcp_tool["run_mcp_tool"]
+        project__map__toon__simulate_planfile_generate["simulate_planfile_generate"]
+        project__map__toon__simulate_planfile_apply["simulate_planfile_apply"]
+        project__map__toon__simulate_planfile_review["simulate_planfile_review"]
+        project__map__toon__example_mcp_session["example_mcp_session"]
+        project__map__toon__create_mcp_tool_definitions["create_mcp_tool_definitions"]
+        project__map__toon__example_strategy_generation_with_proxy["example_strategy_generation_with_pr"]
+        project__map__toon__create_proxy_config_example["create_proxy_config_example"]
+        project__map__toon__example_budget_tracking["example_budget_tracking"]
+        project__map__toon__example_metric_driven_planning["example_metric_driven_planning"]
+        project__map__toon___calculate_complexity_score["_calculate_complexity_score"]
+        project__map__toon__create_llx_config_example["create_llx_config_example"]
+        project__map__toon__run_interactive_planfile["run_interactive_planfile"]
+        project__map__toon__test_interactive_mode["test_interactive_mode"]
+        project__map__toon__test_expect_script["test_expect_script"]
+        project__map__toon__main["main"]
+        project__map__toon__create_validation_script["create_validation_script"]
+        project__map__toon__example_1_basic_initialization["example_1_basic_initialization"]
+        project__map__toon__example_2_create_ticket["example_2_create_ticket"]
+        project__map__toon__example_3_quick_ticket["example_3_quick_ticket"]
+        project__map__toon__example_4_list_tickets["example_4_list_tickets"]
+        project__map__toon__example_create_tickets["example_create_tickets"]
+        project__map__toon__example_read_tickets["example_read_tickets"]
+        project__map__toon__example_update_tickets["example_update_tickets"]
+        project__map__toon__example_bulk_operations["example_bulk_operations"]
+        project__map__toon__example_delete_and_move["example_delete_and_move"]
+        project__map__toon__example_cli_tool_integration["example_cli_tool_integration"]
+        project__map__toon__example_monitoring_integration["example_monitoring_integration"]
+        project__map__toon__example_ci_pipeline_integration["example_ci_pipeline_integration"]
+        project__map__toon__example_custom_decorator["example_custom_decorator"]
+        project__map__toon__example_basic_filtering["example_basic_filtering"]
+        project__map__toon__example_combined_filters["example_combined_filters"]
+        project__map__toon__example_search_by_labels["example_search_by_labels"]
+        project__map__toon__example_export_filtered["example_export_filtered"]
+        project__map__toon__example_statistics["example_statistics"]
+        project__map__toon__example_basic_operations["example_basic_operations"]
+        project__map__toon__example_workflow["example_workflow"]
+        project__map__toon__example_error_handling["example_error_handling"]
+        project__map__toon__run_tests["run_tests"]
+        project__map__toon__validate_strategy_yaml["validate_strategy_yaml"]
+        project__map__toon__test_strategy_generation["test_strategy_generation"]
+        project__map__toon__test_strategy_validation["test_strategy_validation"]
+        project__map__toon__planfile_generate["planfile_generate"]
+        project__map__toon__planfile_apply["planfile_apply"]
+        project__map__toon__planfile_review["planfile_review"]
+        project__map__toon__quick_ticket["quick_ticket"]
+        project__map__toon____getattr__["__getattr__"]
+        project__map__toon__run_external_analysis["run_external_analysis"]
+        project__map__toon__extract_key_metrics["extract_key_metrics"]
+        project__map__toon___extract_cc_metrics["_extract_cc_metrics"]
+        project__map__toon___extract_critical_metrics["_extract_critical_metrics"]
+        project__map__toon___extract_validation_metrics["_extract_validation_metrics"]
+        project__map__toon___extract_duplication_metrics["_extract_duplication_metrics"]
+        project__map__toon___extract_coverage_metrics["_extract_coverage_metrics"]
+        project__map__toon__generate_goal["generate_goal"]
+        project__map__toon__generate_goals["generate_goals"]
+        project__map__toon__generate_quality_gates["generate_quality_gates"]
+        project__map__toon__generate_tasks["generate_tasks"]
+        project__map__toon__parse_effort["parse_effort"]
+    end
+    subgraph scripts__docker_entrypoint
+        scripts__docker_entrypoint__check_env["check_env"]
+        scripts__docker_entrypoint__validate_config["validate_config"]
+        scripts__docker_entrypoint__setup_workspace["setup_workspace"]
+        scripts__docker_entrypoint__run_command["run_command"]
+        scripts__docker_entrypoint__main["main"]
+    end
+    subgraph scripts__run_examples
+        scripts__run_examples__print_header["print_header"]
+        scripts__run_examples__print_step["print_step"]
+        scripts__run_examples__print_success["print_success"]
+        scripts__run_examples__print_error["print_error"]
+        scripts__run_examples__print_info["print_info"]
+        scripts__run_examples__run_example["run_example"]
+        scripts__run_examples__check_prerequisites["check_prerequisites"]
+        scripts__run_examples__setup_environment["setup_environment"]
+        scripts__run_examples__run_all_examples["run_all_examples"]
+        scripts__run_examples__run_specific_example["run_specific_example"]
+        scripts__run_examples__show_usage["show_usage"]
+        scripts__run_examples__list_examples["list_examples"]
+        scripts__run_examples__main["main"]
+    end
+    examples__rest_api__04_javascript_client__BASE_URL --> examples__rest_api__04_javascript_client__PlanfileClient__request
+    examples__rest_api__04_javascript_client__BASE_URL --> examples__rest_api__04_javascript_client__PlanfileClient__health
+    examples__rest_api__04_javascript_client__BASE_URL --> examples__rest_api__04_javascript_client__PlanfileClient__listTickets
+    examples__rest_api__04_javascript_client__BASE_URL --> examples__rest_api__04_javascript_client__PlanfileClient__createTicket
+    examples__rest_api__04_javascript_client__BASE_URL --> examples__rest_api__04_javascript_client__PlanfileClient__getTicket
+    examples__rest_api__04_javascript_client__BASE_URL --> examples__rest_api__04_javascript_client__PlanfileClient__updateTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__health --> examples__rest_api__04_javascript_client__PlanfileClient__createTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__listTickets --> examples__rest_api__04_javascript_client__PlanfileClient__request
+    examples__rest_api__04_javascript_client__PlanfileClient__createTicket --> examples__rest_api__04_javascript_client__PlanfileClient__request
+    examples__rest_api__04_javascript_client__PlanfileClient__getTicket --> examples__rest_api__04_javascript_client__PlanfileClient__request
+    examples__rest_api__04_javascript_client__PlanfileClient__updateTicket --> examples__rest_api__04_javascript_client__PlanfileClient__request
+    examples__rest_api__04_javascript_client__PlanfileClient__moveTicket --> examples__rest_api__04_javascript_client__PlanfileClient__request
+    examples__rest_api__04_javascript_client__PlanfileClient__client --> examples__rest_api__04_javascript_client__PlanfileClient__health
+    examples__rest_api__04_javascript_client__PlanfileClient__client --> examples__rest_api__04_javascript_client__PlanfileClient__createTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__client --> examples__rest_api__04_javascript_client__PlanfileClient__getTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__client --> examples__rest_api__04_javascript_client__PlanfileClient__updateTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__client --> examples__rest_api__04_javascript_client__PlanfileClient__listTickets
+    examples__rest_api__04_javascript_client__PlanfileClient__client --> examples__rest_api__04_javascript_client__PlanfileClient__moveTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__ticket --> examples__rest_api__04_javascript_client__PlanfileClient__createTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__fetched --> examples__rest_api__04_javascript_client__PlanfileClient__updateTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__updated --> examples__rest_api__04_javascript_client__PlanfileClient__updateTicket
+    examples__rest_api__04_javascript_client__PlanfileClient__tickets --> examples__rest_api__04_javascript_client__PlanfileClient__listTickets
+    examples__python_api__03_integration_simple__main --> Taskfile__print
+    examples__python_api__03_integration__TicketLogger__error --> planfile__quick_ticket
+    examples__python_api__03_integration__TicketLogger__error --> Taskfile__print
+    examples__python_api__03_integration__TicketLogger__warning --> planfile__quick_ticket
+    examples__python_api__03_integration__TicketLogger__warning --> Taskfile__print
+    examples__python_api__03_integration__TicketLogger__metric_alert --> planfile__quick_ticket
+    examples__python_api__03_integration__TicketLogger__metric_alert --> Taskfile__print
+    examples__python_api__03_integration__example_cli_tool_integration --> Taskfile__print
+    examples__python_api__03_integration__example_monitoring_integration --> Taskfile__print
+    examples__python_api__03_integration__example_ci_pipeline_integration --> Taskfile__print
+    examples__python_api__03_integration__example_custom_decorator --> Taskfile__print
+    examples__python_api__03_integration__example_custom_decorator --> planfile__quick_ticket
+    examples__python_api__03_integration__main --> Taskfile__print
+    examples__python_api__03_integration__main --> examples__python_api__03_integration__example_cli_tool_integration
+    examples__python_api__03_integration__main --> examples__python_api__03_integration__example_monitoring_integration
+    examples__python_api__03_integration__main --> examples__python_api__03_integration__example_ci_pipeline_integration
+    examples__python_api__03_integration__main --> examples__python_api__03_integration__example_custom_decorator
+    examples__ecosystem__02_mcp_integration__run_mcp_tool --> Taskfile__print
+    examples__ecosystem__02_mcp_integration__run_mcp_tool --> examples__ecosystem__02_mcp_integration__simulate_planfile_generate
+    examples__ecosystem__02_mcp_integration__run_mcp_tool --> examples__ecosystem__02_mcp_integration__simulate_planfile_apply
+    examples__ecosystem__02_mcp_integration__run_mcp_tool --> examples__ecosystem__02_mcp_integration__simulate_planfile_review
+    examples__ecosystem__02_mcp_integration__simulate_planfile_generate --> Taskfile__print
+    examples__ecosystem__02_mcp_integration__simulate_planfile_apply --> Taskfile__print
+    examples__ecosystem__02_mcp_integration__example_mcp_session --> Taskfile__print
+    examples__ecosystem__02_mcp_integration__example_mcp_session --> examples__ecosystem__02_mcp_integration__run_mcp_tool
+    examples__ecosystem__02_mcp_integration__create_mcp_tool_definitions --> Taskfile__print
+    examples__python_api__01_basic_usage__example_1_basic_initialization --> Taskfile__print
+    examples__python_api__01_basic_usage__example_2_create_ticket --> Taskfile__print
+    examples__python_api__01_basic_usage__example_3_quick_ticket --> Taskfile__print
+    examples__python_api__01_basic_usage__example_3_quick_ticket --> planfile__quick_ticket
+    examples__python_api__01_basic_usage__example_4_list_tickets --> Taskfile__print
+    examples__python_api__01_basic_usage__main --> Taskfile__print
+    examples__python_api__01_basic_usage__main --> examples__python_api__01_basic_usage__example_1_basic_initialization
+    examples__python_api__01_basic_usage__main --> examples__python_api__01_basic_usage__example_2_create_ticket
+    examples__python_api__01_basic_usage__main --> examples__python_api__01_basic_usage__example_3_quick_ticket
+    examples__python_api__01_basic_usage__main --> examples__python_api__01_basic_usage__example_4_list_tickets
+    planfile__examples__example_create_strategy --> project__map__toon__create_strategy_command
+    planfile__examples__example_validate_strategy --> planfile__runner__load_valid_strategy
+    planfile__examples__example_validate_strategy --> Taskfile__print
+    planfile__examples__example_run_strategy --> planfile__runner__run_strategy
+    planfile__examples__example_verify_strategy --> planfile__runner__load_valid_strategy
+    planfile__examples__example_verify_strategy --> planfile__runner__verify_strategy_post_execution
+    planfile__examples__example_verify_strategy --> Taskfile__print
+    planfile__examples__example_programmatic_strategy --> Taskfile__print
+    planfile__sync__state__SyncState__save_sync --> Taskfile__print
+    planfile__runner__load_valid_strategy --> Taskfile__print
+    planfile__runner__verify_strategy_post_execution --> planfile__runner__analyze_project_metrics
+    planfile__runner__analyze_project_metrics --> planfile__runner___get_project_hash
+    planfile__runner__apply_strategy_to_tickets --> Taskfile__print
+    planfile__runner__review_strategy --> Taskfile__print
+    planfile__runner__run_strategy --> planfile__runner__load_valid_strategy
+    planfile__runner__run_strategy --> planfile__runner__apply_strategy_to_tickets
+    planfile__runner__run_strategy --> Taskfile__print
+    planfile__runner__run_strategy --> planfile__runner__verify_strategy_post_execution
+    examples__rest_api__03_python_client__example_basic_operations --> Taskfile__print
+    examples__rest_api__03_python_client__example_bulk_operations --> Taskfile__print
+    examples__rest_api__03_python_client__example_workflow --> Taskfile__print
+    examples__rest_api__03_python_client__example_error_handling --> Taskfile__print
+    examples__rest_api__03_python_client__main --> Taskfile__print
+    examples__rest_api__03_python_client__main --> examples__rest_api__03_python_client__example_basic_operations
+    examples__rest_api__03_python_client__main --> examples__rest_api__03_python_client__example_bulk_operations
+    examples__rest_api__03_python_client__main --> examples__rest_api__03_python_client__example_workflow
+    examples__rest_api__03_python_client__main --> examples__rest_api__03_python_client__example_error_handling
+    examples__python_api__04_analytics_simple__main --> Taskfile__print
+    examples__llx_validator__create_validation_script --> Taskfile__print
+    examples__ecosystem__03_proxy_routing__example_strategy_generation_with_proxy --> Taskfile__print
+    examples__ecosystem__03_proxy_routing__create_proxy_config_example --> Taskfile__print
+    examples__ecosystem__03_proxy_routing__example_budget_tracking --> Taskfile__print
+    examples__python_api__02_ticket_management__example_create_tickets --> Taskfile__print
+    examples__python_api__02_ticket_management__example_read_tickets --> Taskfile__print
+    examples__python_api__02_ticket_management__example_update_tickets --> Taskfile__print
+    examples__python_api__02_ticket_management__example_bulk_operations --> Taskfile__print
+    examples__python_api__02_ticket_management__example_delete_and_move --> Taskfile__print
+    examples__python_api__02_ticket_management__main --> Taskfile__print
+    examples__python_api__02_ticket_management__main --> examples__python_api__02_ticket_management__example_create_tickets
+    examples__python_api__02_ticket_management__main --> examples__python_api__02_ticket_management__example_read_tickets
+    examples__python_api__02_ticket_management__main --> examples__python_api__02_ticket_management__example_update_tickets
+    examples__python_api__02_ticket_management__main --> examples__python_api__02_ticket_management__example_bulk_operations
+    examples__python_api__02_ticket_management__main --> examples__python_api__02_ticket_management__example_delete_and_move
+    examples__python_api__04_advanced_filtering__example_basic_filtering --> Taskfile__print
+    examples__python_api__04_advanced_filtering__example_combined_filters --> Taskfile__print
+    examples__python_api__04_advanced_filtering__example_search_by_labels --> Taskfile__print
+    examples__python_api__04_advanced_filtering__example_export_filtered --> Taskfile__print
+    examples__python_api__04_advanced_filtering__example_statistics --> Taskfile__print
+    examples__python_api__04_advanced_filtering__main --> Taskfile__print
+    examples__python_api__04_advanced_filtering__main --> examples__python_api__04_advanced_filtering__example_basic_filtering
+    examples__python_api__04_advanced_filtering__main --> examples__python_api__04_advanced_filtering__example_combined_filters
+    examples__python_api__04_advanced_filtering__main --> examples__python_api__04_advanced_filtering__example_search_by_labels
+    examples__python_api__04_advanced_filtering__main --> examples__python_api__04_advanced_filtering__example_export_filtered
+    examples__python_api__04_advanced_filtering__main --> examples__python_api__04_advanced_filtering__example_statistics
+    planfile__loaders__cli_loader__load_strategy_from_json --> planfile__loaders__cli_loader__load_from_json
+    planfile__loaders__cli_loader__save_strategy_to_json --> planfile__loaders__cli_loader__save_to_json
+    planfile__loaders__cli_loader__export_results_to_markdown --> planfile__loaders__cli_loader___md_header
+    planfile__loaders__cli_loader__export_results_to_markdown --> planfile__loaders__cli_loader___md_summary
+    planfile__loaders__cli_loader__export_results_to_markdown --> planfile__loaders__cli_loader___md_tasks
+    planfile__loaders__cli_loader__export_results_to_markdown --> planfile__loaders__cli_loader___md_sprints
+    planfile__loaders__cli_loader__export_results_to_markdown --> planfile__loaders__cli_loader___md_metrics
+    planfile__sync__operations__sync_to_external --> planfile__sync__operations___save_sync_results
+    planfile__sync__operations__sync_to_external --> planfile__sync__operations___update_existing_ticket
+    planfile__sync__operations__sync_to_external --> planfile__sync__operations___create_new_ticket
+    planfile__sync__operations___update_existing_ticket --> planfile__sync__operations___is_permission_error
+    planfile__sync__operations___update_existing_ticket --> planfile__sync__operations___print_permission_error
+    planfile__sync__operations___create_new_ticket --> planfile__sync__operations___is_permission_error
+    planfile__sync__operations___create_new_ticket --> planfile__sync__operations___print_permission_error
+    planfile__sync__operations___save_sync_results --> planfile__sync__utils__save_v1_format
+    planfile__sync__operations___process_external_ticket --> planfile__sync__operations___extract_ticket_data
+    planfile__sync__operations___process_external_ticket --> planfile__sync__operations___print_dry_run_action
+    planfile__sync__operations___process_external_ticket --> planfile__sync__operations___update_local_ticket
+    planfile__sync__operations___process_external_ticket --> planfile__sync__operations___import_new_ticket
+    planfile__sync__operations__sync_from_external --> planfile__sync__operations___load_sprint_and_backlog
+    planfile__sync__operations__sync_from_external --> planfile__sync__operations___fetch_external_tickets
+    planfile__sync__operations__sync_from_external --> planfile__sync__operations___process_external_ticket
+    planfile__sync__operations__sync_from_external --> planfile__sync__operations___save_import_results
+    planfile__sync__operations___save_import_results --> planfile__sync__utils__save_v1_format
+    planfile__analysis__external_tools__ExternalToolRunner__run_code2llm --> Taskfile__print
+    planfile__analysis__external_tools__ExternalToolRunner__run_vallm --> Taskfile__print
+    planfile__analysis__external_tools__ExternalToolRunner__run_redup --> Taskfile__print
+    planfile__loaders__yaml_loader__save_yaml --> Taskfile__print
+    planfile__loaders__yaml_loader__load_strategy_yaml --> planfile__loaders__yaml_loader__load_yaml
+    planfile__loaders__yaml_loader__load_strategy_yaml --> planfile__loaders__yaml_loader___transform_task_patterns
+    planfile__loaders__yaml_loader__load_strategy_yaml --> planfile__loaders__yaml_loader___transform_sprints
+    planfile__loaders__yaml_loader__load_strategy_yaml --> planfile__loaders__yaml_loader___transform_goal
+    planfile__loaders__yaml_loader__load_strategy_yaml --> planfile__loaders__yaml_loader___format_validation_error
+    planfile__loaders__yaml_loader__save_strategy_yaml --> planfile__loaders__yaml_loader__save_yaml
+    planfile__loaders__yaml_loader__load_tasks_yaml --> planfile__loaders__yaml_loader__load_yaml
+    planfile__loaders__yaml_loader__merge_strategy_with_tasks --> planfile__loaders__yaml_loader__load_tasks_yaml
+    planfile__loaders__yaml_loader__validate_strategy_schema --> planfile__loaders__yaml_loader___check_required_keys
+    planfile__loaders__yaml_loader__validate_strategy_schema --> planfile__loaders__yaml_loader___validate_sprints
+    planfile__loaders__yaml_loader__validate_strategy_schema --> planfile__loaders__yaml_loader___validate_gates
+    planfile__loaders__yaml_loader__validate_strategy_schema --> planfile__loaders__yaml_loader___validate_task_patterns
+    planfile__loaders__yaml_loader__validate_strategy_schema --> planfile__loaders__yaml_loader__load_yaml
+    planfile__loaders__yaml_loader__validate_strategy_schema --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__analysis__file_analyzer__FileAnalyzer__analyze_file --> planfile__analysis__parsers__text_parser__analyze_text
+    planfile__analysis__file_analyzer__FileAnalyzer___analyze_toon --> planfile__analysis__parsers__toon_parser__analyze_toon
+    planfile__analysis__file_analyzer__FileAnalyzer___analyze_yaml --> planfile__analysis__parsers__yaml_parser__analyze_yaml
+    planfile__analysis__file_analyzer__FileAnalyzer___analyze_json --> planfile__analysis__parsers__json_parser__analyze_json
+    planfile__analysis__file_analyzer__FileAnalyzer___analyze_text --> planfile__analysis__parsers__text_parser__analyze_text
+    planfile__analysis__file_analyzer__FileAnalyzer___extract_from_yaml_structure --> planfile__analysis__parsers__yaml_parser__extract_from_yaml_structure
+    planfile__analysis__file_analyzer__FileAnalyzer___extract_from_json_structure --> planfile__analysis__parsers__yaml_parser__extract_from_yaml_structure
+    planfile__ci__CIRunner____init__ --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__ci__CIRunner__check_strategy_completion --> planfile__runner__review_strategy
+    planfile__analysis__generator__PlanfileGenerator__generate_with_external_tools --> Taskfile__print
+    planfile__analysis__generator__PlanfileGenerator___extract_key_metrics --> planfile__analysis__generators__metrics_extractor__extract_key_metrics
+    planfile__analysis__generator__PlanfileGenerator___generate_goal --> project__map__toon__generate_goal
+    planfile__analysis__generator__PlanfileGenerator___generate_goals --> project__map__toon__generate_goals
+    planfile__analysis__generator__PlanfileGenerator___generate_quality_gates --> project__map__toon__generate_quality_gates
+    planfile__analysis__generator__PlanfileGenerator___generate_tasks --> project__map__toon__generate_tasks
+    planfile__analysis__generator__PlanfileGenerator___parse_effort --> project__map__toon__parse_effort
+    planfile__analysis__generator__PlanfileGenerator___generate_target_metrics --> project__map__toon__generate_target_metrics
+    planfile__analysis__generator__PlanfileGenerator___generate_risks --> project__map__toon__generate_risks
+    planfile__analysis__generator__PlanfileGenerator___generate_success_criteria --> project__map__toon__generate_success_criteria
+    planfile__analysis__parsers__json_parser__analyze_json --> planfile__analysis__parsers__yaml_parser__extract_from_yaml_structure
+    planfile__analysis__generators__metrics_extractor__extract_key_metrics --> planfile__analysis__generators__metrics_extractor___extract_cc_metrics
+    planfile__analysis__generators__metrics_extractor__extract_key_metrics --> planfile__analysis__generators__metrics_extractor___extract_critical_metrics
+    planfile__analysis__generators__metrics_extractor__extract_key_metrics --> planfile__analysis__generators__metrics_extractor___extract_validation_metrics
+    planfile__analysis__generators__metrics_extractor__extract_key_metrics --> planfile__analysis__generators__metrics_extractor___extract_duplication_metrics
+    planfile__analysis__generators__metrics_extractor__extract_key_metrics --> planfile__analysis__generators__metrics_extractor___extract_coverage_metrics
+    planfile__analysis__parsers__yaml_parser___process_yaml_value --> planfile__analysis__parsers__yaml_parser___is_issue_content
+    planfile__analysis__parsers__yaml_parser___process_yaml_value --> planfile__analysis__parsers__yaml_parser__extract_from_yaml_structure
+    planfile__analysis__parsers__yaml_parser___process_yaml_value --> planfile__analysis__parsers__yaml_parser___create_issue_from_value
+    planfile__analysis__parsers__yaml_parser___process_yaml_dict --> planfile__analysis__parsers__yaml_parser___process_yaml_value
+    planfile__analysis__parsers__yaml_parser___process_yaml_list --> planfile__analysis__parsers__yaml_parser__extract_from_yaml_structure
+    planfile__analysis__parsers__yaml_parser__extract_from_yaml_structure --> planfile__analysis__parsers__yaml_parser___process_yaml_dict
+    planfile__analysis__parsers__yaml_parser__extract_from_yaml_structure --> planfile__analysis__parsers__yaml_parser___process_yaml_list
+    planfile__analysis__parsers__yaml_parser__analyze_yaml --> planfile__analysis__parsers__text_parser__analyze_text
+    planfile__analysis__parsers__yaml_parser__analyze_yaml --> planfile__analysis__parsers__yaml_parser__extract_from_yaml_structure
+    planfile__analysis__parsers__yaml_parser__analyze_yaml --> planfile__analysis__parsers__toon_parser__analyze_toon
+    examples__ecosystem__04_llx_integration__LLXIntegration__analyze_project --> Taskfile__print
+    examples__ecosystem__04_llx_integration__example_metric_driven_planning --> Taskfile__print
+    examples__ecosystem__04_llx_integration__create_llx_config_example --> Taskfile__print
+    planfile__analysis__parsers__toon_parser___parse_toon_sections --> planfile__analysis__parsers__toon_parser___determine_section
+    planfile__analysis__parsers__toon_parser__analyze_toon --> planfile__analysis__parsers__toon_parser___parse_toon_sections
+    planfile__analysis__parsers__toon_parser__analyze_toon --> planfile__analysis__parsers__text_parser__analyze_text
+    planfile__analysis__parsers__toon_parser__analyze_toon --> planfile__analysis__parsers__toon_parser___parse_toon_header
+    planfile__importers__common__load_structured_tickets --> planfile__importers__common__normalize_ticket_dict
+    planfile__importers__import_from_source --> planfile__importers__vallm_importer__import_vallm
+    planfile__importers__import_from_source --> planfile__importers__json_importer__import_json
+    planfile__importers__import_from_source --> planfile__importers__redup_importer__import_redup
+    planfile__importers__import_from_source --> planfile__importers__code2llm_importer__import_code2llm
+    planfile__importers__import_from_source --> planfile__importers__yaml_importer__import_yaml
+    planfile__importers__yaml_importer__import_yaml --> planfile__importers__common__load_structured_tickets
+    planfile__importers__json_importer__import_json --> planfile__importers__common__load_structured_tickets
+    planfile__cli__extra_commands__add_extra_commands --> planfile__cli__groups__health__commands__create_health_app
+    planfile__cli__extra_commands__add_extra_commands --> planfile__cli__groups__examples__commands__create_examples_app
+    planfile__importers__redup_importer__import_redup --> planfile__importers__redup_importer___parse_toon_format
+    planfile__importers__redup_importer__import_redup --> planfile__importers__redup_importer___create_refactor_ticket
+    planfile__importers__redup_importer___parse_toon_format --> planfile__importers__redup_importer___parse_duplicates
+    planfile__importers__redup_importer___parse_toon_format --> planfile__importers__redup_importer___parse_refactor
+    planfile__cli__groups__sync__commands__github_cmd --> planfile__cli__groups__sync__core__sync_integration
+    planfile__cli__groups__sync__commands__gitlab_cmd --> planfile__cli__groups__sync__core__sync_integration
+    planfile__cli__groups__sync__commands__jira_cmd --> planfile__cli__groups__sync__core__sync_integration
+    planfile__cli__groups__sync__commands__markdown_cmd --> planfile__cli__groups__sync__core__sync_integration
+    planfile__cli__groups__sync__commands__handle_no_integrations --> planfile__cli__groups__sync__core__sync_integration
+    planfile__cli__groups__sync__commands__sync_all_integrations --> planfile__cli__groups__sync__core__sync_integration
+    planfile__cli__groups__sync__commands__all_cmd --> planfile__cli__groups__sync__commands__sync_all_integrations
+    planfile__cli__groups__sync__commands__all_cmd --> planfile__cli__groups__sync__commands__handle_no_integrations
+    planfile__cli__groups__review__commands__review_strategy_cli --> planfile__cli__groups__review__utils___load_backend_config
+    planfile__cli__groups__review__commands__review_strategy_cli --> planfile__runner__review_strategy
+    planfile__cli__groups__review__commands__review_strategy_cli --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__cli__groups__review__commands__review_strategy_cli --> planfile__cli__groups__review__utils__get_backend
+    planfile__cli__groups__review__register_review_commands --> planfile__cli__core__registry__register_simple_command
+    planfile__importers__vallm_importer__VallmParser___parse_issue_entry --> planfile__importers__vallm_importer___auto_labels
+    planfile__cli__groups__review__utils___load_and_validate_strategy --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__cli__groups__examples__register_examples_commands --> planfile__cli__core__registry__register_typer_group
+    planfile__cli__groups__health__register_health_commands --> planfile__cli__core__registry__register_typer_group
+    planfile__cli__groups__sync__core___initialize_backend --> scripts__run_examples__print_error
+    planfile__cli__groups__sync__core___collect_tickets_from_sprint --> planfile__cli__groups__sync__core___ticket_matches_integration
+    planfile__cli__groups__sync__core___collect_tickets_from_backlog --> planfile__cli__groups__sync__core___ticket_matches_integration
+    planfile__cli__groups__sync__core___collect_tickets_from_section --> planfile__cli__groups__sync__core___ticket_matches_integration_v1
+    planfile__cli__groups__sync__core___process_planfile_v1 --> planfile__cli__groups__sync__core___collect_tickets_from_section
+    planfile__cli__groups__sync__core___load_tickets_v1_format --> planfile__cli__groups__sync__core___process_planfile_v1
+    planfile__cli__groups__sync__core___load_tickets_for_sync --> planfile__cli__groups__sync__core___load_tickets_v1_format
+    planfile__cli__groups__sync__core___load_tickets_for_sync --> planfile__cli__groups__sync__core___collect_tickets_from_sprint
+    planfile__cli__groups__sync__core___load_tickets_for_sync --> planfile__cli__groups__sync__core___collect_tickets_from_backlog
+    planfile__cli__groups__sync__core___execute_sync_with_progress --> planfile__sync__operations__sync_to_external
+    planfile__cli__groups__sync__core___execute_sync_with_progress --> planfile__sync__operations__sync_from_external
+    planfile__cli__groups__sync__core__sync_integration --> planfile__cli__groups__sync__core___initialize_backend
+    planfile__cli__groups__sync__core__sync_integration --> planfile__cli__groups__sync__core___load_tickets_for_sync
+    planfile__cli__groups__sync__core__sync_integration --> planfile__cli__groups__sync__core___execute_sync_with_progress
+    planfile__cli__groups__sync__core__sync_integration --> planfile__cli__core__console__print_warning
+    planfile__cli__groups__apply__register_apply_commands --> planfile__cli__core__registry__register_simple_command
+    planfile__importers__code2llm_importer__import_code2llm --> planfile__importers__code2llm_importer___parse_evolution
+    planfile__importers__code2llm_importer__import_code2llm --> planfile__importers__code2llm_importer___parse_health
+    planfile__importers__code2llm_importer__EvolutionParser__parse --> planfile__importers__code2llm_importer___evolution_item_to_ticket
+    planfile__importers__code2llm_importer__EvolutionParser___handle_in_next --> planfile__importers__code2llm_importer___evolution_item_to_ticket
+    planfile__cli__groups__apply__commands__execute_apply_strategy --> planfile__runner__apply_strategy_to_tickets
+    planfile__cli__groups__apply__commands__apply_strategy_cli --> planfile__cli__groups__apply__utils__load_and_validate_strategy
+    planfile__cli__groups__apply__commands__apply_strategy_cli --> planfile__cli__groups__apply__utils__load_backend_config
+    planfile__cli__groups__apply__commands__apply_strategy_cli --> planfile__cli__groups__apply__utils__parse_sprint_filter
+    planfile__cli__groups__apply__commands__apply_strategy_cli --> planfile__cli__groups__apply__utils__select_backend
+    planfile__cli__groups__apply__commands__apply_strategy_cli --> planfile__cli__groups__apply__commands__execute_apply_strategy
+    planfile__cli__groups__apply__commands__apply_strategy_cli --> planfile__cli__groups__apply__commands__display_apply_results
+    planfile__cli__groups__apply__commands__apply_strategy_cli --> planfile__cli__groups__apply__commands__save_results
+    planfile__cli__groups__apply__utils__load_and_validate_strategy --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__cli__groups__apply__utils__load_and_validate_strategy --> scripts__run_examples__print_error
+    planfile__cli__groups__apply__utils__parse_sprint_filter --> scripts__run_examples__print_error
+    planfile__cli__groups__apply__utils__select_backend --> planfile__cli__groups__apply__utils__get_backend
+    planfile__cli__groups__apply__utils__select_backend --> scripts__run_examples__print_error
+    planfile__cli__groups__examples__commands__create_examples_app --> planfile__cli__groups__examples__commands___discover_examples
+    planfile__cli__groups__init__commands___collect_custom_sprints --> planfile__cli__groups__init__commands___ask
+    planfile__cli__groups__init__commands___collect_custom_sprints --> planfile__cli__groups__init__commands___ask_list
+    planfile__cli__groups__init__commands___collect_preset_sprints --> planfile__cli__groups__init__commands___ask
+    planfile__cli__groups__init__commands___collect_preset_sprints --> planfile__cli__groups__init__commands___ask_list
+    planfile__cli__groups__init__commands___collect_sprint_data --> planfile__cli__groups__init__commands___collect_preset_sprints
+    planfile__cli__groups__init__commands___collect_sprint_data --> planfile__cli__groups__init__commands___collect_custom_sprints
+    planfile__cli__groups__init__commands__init_strategy_cli --> planfile__cli__project_detector__main__get_detected_values
+    planfile__cli__groups__init__commands__init_strategy_cli --> planfile__cli__groups__init__commands___ask
+    planfile__cli__groups__init__commands__init_strategy_cli --> planfile__cli__groups__init__commands___choice
+    planfile__cli__groups__init__commands__init_strategy_cli --> planfile__cli__groups__init__commands___collect_sprint_data
+    planfile__cli__groups__init__commands__init_strategy_cli --> planfile__cli__groups__init__commands___ask_list
+    planfile__cli__groups__init__commands__init_strategy_cli --> planfile__cli__groups__init__commands___build_sprints_yaml
+    planfile__cli__groups__init__commands__init_strategy_cli --> planfile__cli__groups__init__commands___assemble_quality_gates
+    planfile__cli__groups__validate__register_validate_commands --> planfile__cli__core__registry__register_simple_command
+    planfile__cli__groups__auto__commands___initialize_backends --> planfile__cli__groups__auto__commands__get_backend
+    planfile__cli__core__errors__exit_with_error --> scripts__run_examples__print_error
+    planfile__cli__core__errors__handle_exception --> scripts__run_examples__print_error
+    planfile__cli__groups__query__commands__stats_cmd --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__cli__groups__query__commands__stats_cmd --> planfile__cli__groups__query__commands__calculate_strategy_stats
+    planfile__cli__groups__query__commands__compare_cmd --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__cli__groups__query__commands__compare_cmd --> planfile__cli__groups__query__commands__compare_strategies
+    planfile__cli__groups__query__commands__compare_cmd --> scripts__run_examples__print_error
+    planfile__cli__groups__query__commands__export_cmd --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__cli__groups__query__commands__export_cmd --> scripts__run_examples__print_error
+    planfile__cli__groups__query__commands__export_cmd --> planfile__cli__groups__query__commands___export_to_csv
+    planfile__cli__groups__query__commands__export_cmd --> planfile__cli__groups__query__commands___export_to_html
+    planfile__cli__groups__query__commands__merge_cmd --> planfile__loaders__yaml_loader__save_strategy_yaml
+    planfile__cli__groups__query__commands__merge_cmd --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__cli__groups__query__commands__merge_cmd --> scripts__run_examples__print_error
+    planfile__cli__groups__validate__commands__validate_strategy_cli --> planfile__loaders__yaml_loader__load_strategy_yaml
+    planfile__cli__groups__validate__commands__validate_strategy_cli --> scripts__run_examples__print_error
+    planfile__cli__groups__generate__commands__generate_strategy_cli --> planfile__llm__generator__generate_strategy
+    planfile__cli__groups__generate__commands__generate_strategy_cli --> planfile__loaders__yaml_loader__save_strategy_yaml
+    planfile__cli__groups__generate__commands__generate_from_files_cmd --> planfile__loaders__yaml_loader__save_strategy_yaml
+    planfile__cli__project_detector__fallback___detect_from_structure --> planfile__cli__project_detector__readme___find_readme_description
+    planfile__cli__project_detector__fallback___detect_from_structure --> planfile__cli__project_detector__readme___find_readme_goal
+    planfile__cli__project_detector__fallback___detect_from_structure --> planfile__cli__project_detector__gates___detect_quality_gates
+    planfile__cli__project_detector__fallback___detect_from_structure --> planfile__cli__project_detector__structure___analyze_directory_structure
+    planfile__cli__project_detector__fallback___detect_from_structure --> planfile__cli__project_detector__license___detect_license
+    planfile__cli__project_detector__fallback___detect_from_structure --> planfile__cli__project_detector__git___detect_git_authors
+    planfile__cli__project_detector__fallback___detect_from_structure --> planfile__cli__project_detector__model_tier___detect_model_tier
+    planfile__cli__project_detector__readme___find_readme_description --> planfile__cli__project_detector__readme___find_readme_content
+    planfile__cli__project_detector__readme___find_readme_goal --> planfile__cli__project_detector__readme___find_readme_content
+    planfile__cli__project_detector__package___detect_from_package_json --> planfile__cli__project_detector__inference___infer_node_project_type
+    planfile__cli__project_detector__package___detect_from_package_json --> planfile__cli__project_detector__inference___infer_domain
+    planfile__cli__project_detector__package___detect_from_package_json --> planfile__cli__project_detector__gates___detect_quality_gates
+    planfile__cli__project_detector__package___detect_from_package_json --> planfile__cli__project_detector__readme___find_readme_goal
+    planfile__cli__project_detector__package___detect_from_package_json --> planfile__cli__project_detector__structure___analyze_directory_structure
+    planfile__cli__project_detector__package___detect_from_package_json --> planfile__cli__project_detector__git___detect_git_authors
+    planfile__cli__project_detector__model_tier___detect_model_tier --> planfile__cli__project_detector__model_tier___tier_from_env_vars
+    planfile__cli__project_detector__model_tier___detect_model_tier --> planfile__cli__project_detector__model_tier___tier_from_env_files
+    planfile__cli__project_detector__model_tier___detect_model_tier --> planfile__cli__project_detector__model_tier___tier_from_config_files
+    planfile__cli__project_detector__main__detect_project --> planfile__cli__project_detector__pyproject___detect_from_pyproject
+    planfile__cli__project_detector__main__detect_project --> planfile__cli__project_detector__package___detect_from_package_json
+    planfile__cli__project_detector__main__detect_project --> planfile__cli__project_detector__fallback___detect_from_structure
+    planfile__cli__project_detector__main__get_detected_values --> planfile__cli__project_detector__main__detect_project
+    planfile__cli__project_detector__pyproject___load_pyproject_data --> planfile__cli__project_detector__pyproject___import_toml_loader
+    planfile__cli__project_detector__pyproject___populate_project_from_data --> planfile__cli__project_detector__pyproject___populate_project_metadata
+    planfile__cli__project_detector__pyproject___populate_project_from_data --> planfile__cli__project_detector__pyproject___populate_poetry_metadata
+    planfile__cli__project_detector__pyproject___populate_inferred_project_details --> planfile__cli__project_detector__pyproject___get_project_dependencies
+    planfile__cli__project_detector__pyproject___populate_inferred_project_details --> planfile__cli__project_detector__inference___infer_python_project_type
+    planfile__cli__project_detector__pyproject___populate_inferred_project_details --> planfile__cli__project_detector__gates___detect_quality_gates
+    planfile__cli__project_detector__pyproject___populate_inferred_project_details --> planfile__cli__project_detector__inference___infer_domain
+    planfile__cli__project_detector__pyproject___populate_readme_and_repository_details --> planfile__cli__project_detector__readme___find_readme_goal
+    planfile__cli__project_detector__pyproject___populate_readme_and_repository_details --> planfile__cli__project_detector__structure___analyze_directory_structure
+    planfile__cli__project_detector__pyproject___populate_readme_and_repository_details --> planfile__cli__project_detector__model_tier___detect_model_tier
+    planfile__cli__project_detector__pyproject___populate_readme_and_repository_details --> planfile__cli__project_detector__readme___find_readme_description
+    planfile__cli__project_detector__pyproject___populate_readme_and_repository_details --> planfile__cli__project_detector__license___detect_license
+    planfile__cli__project_detector__pyproject___populate_readme_and_repository_details --> planfile__cli__project_detector__git___detect_git_authors
+    planfile__cli__project_detector__pyproject___detect_from_pyproject --> planfile__cli__project_detector__pyproject___load_pyproject_data
+    planfile__cli__project_detector__pyproject___detect_from_pyproject --> planfile__cli__project_detector__pyproject___populate_project_from_data
+    planfile__cli__project_detector__pyproject___detect_from_pyproject --> planfile__cli__project_detector__pyproject___populate_inferred_project_details
+    planfile__cli__project_detector__pyproject___detect_from_pyproject --> planfile__cli__project_detector__pyproject___populate_readme_and_repository_details
+    planfile__cli__groups__ticket__commands___display_tickets --> planfile__cli__groups__ticket__commands__create_ticket_table
+    planfile__cli__groups__ticket__commands__ticket_list --> planfile__cli__groups__ticket__commands___display_tickets
+    planfile__cli__groups__ticket__commands__ticket_import --> planfile__cli__groups__ticket__commands__load_import_tickets
+    planfile__cli__groups__ticket__commands__load_import_tickets --> planfile__importers__import_from_source
+    planfile__cli__project_detector__gates___detect_test_gates --> planfile__cli__project_detector__gates___has_pytest_config
+    planfile__cli__project_detector__gates___detect_quality_tool_gates --> planfile__cli__project_detector__gates___find_quality_tools
+    planfile__cli__project_detector__gates___find_quality_tools --> planfile__cli__project_detector__gates___has_ruff_config
+    planfile__cli__project_detector__gates___find_quality_tools --> planfile__cli__project_detector__gates___has_mypy_config
+    planfile__cli__project_detector__gates___detect_security_gates --> planfile__cli__project_detector__gates___find_security_tools
+    planfile__cli__project_detector__gates___find_security_tools --> planfile__cli__project_detector__gates___has_bandit_config
+    planfile__cli__project_detector__gates___detect_quality_gates --> planfile__cli__project_detector__gates___detect_test_gates
+    planfile__cli__project_detector__gates___detect_quality_gates --> planfile__cli__project_detector__gates___detect_docker_gates
+    planfile__cli__project_detector__gates___detect_quality_gates --> planfile__cli__project_detector__gates___detect_ci_gates
+    planfile__cli__project_detector__gates___detect_quality_gates --> planfile__cli__project_detector__gates___detect_quality_tool_gates
+    planfile__cli__project_detector__gates___detect_quality_gates --> planfile__cli__project_detector__gates___detect_security_gates
+    planfile__cli__project_detector__gates___detect_quality_gates --> planfile__cli__project_detector__gates___detect_doc_gates
+    planfile__llm__generator__generate_strategy --> planfile__llm__generator___collect_metrics
+    planfile__llm__generator__generate_strategy --> planfile__llm__prompts__build_strategy_prompt
+    planfile__llm__generator__generate_strategy --> planfile__llm__client__call_llm
+    planfile__llm__generator__generate_strategy --> planfile__llm__generator___parse_strategy_response
+    planfile__llm__generator__generate_strategy --> Taskfile__print
+    planfile__llm__generator__generate_strategy --> planfile__llm__generator___auto_select_model
+    planfile__llm__generator___collect_metrics --> examples__ecosystem__04_llx_integration__LLXIntegration__analyze_project
+    planfile__llm__generator___collect_metrics --> planfile__llm__generator___basic_metrics
+    planfile__llm__generator___auto_select_model --> examples__ecosystem__04_llx_integration__LLXIntegration__select_model
+    planfile__llm__generator___parse_strategy_response --> planfile__llm__generator___fix_yaml_formatting
+    planfile__mcp__server__handle_tool_call --> planfile__server_common__get_planfile
+    planfile__mcp__server__main --> planfile__mcp__server___read_jsonrpc
+    planfile__mcp__server__main --> planfile__mcp__server___write_jsonrpc
+    planfile__mcp__server__main --> planfile__mcp__server__handle_tool_call
+    planfile__utils__metrics__analyze_project_metrics --> planfile__utils__metrics___count_files_by_language
+    planfile__utils__metrics__analyze_project_metrics --> planfile__utils__metrics___check_project_files
+    planfile__utils__metrics__analyze_project_metrics --> planfile__utils__metrics___collect_git_metrics
+    planfile__cli__groups__init__register_init_commands --> planfile__cli__core__registry__register_simple_command
+    planfile__sync__mock__MockBackend___create_ticket --> Taskfile__print
+    planfile__sync__mock__MockBackend___update_ticket --> Taskfile__print
+    planfile__sync__mock__MockBackend___list_tickets --> Taskfile__print
+    planfile__sync__mock__MockBackend___search_tickets --> Taskfile__print
+    planfile__core__models__strategy__Strategy__export --> Taskfile__print
+    planfile__core__models__strategy__Strategy__to_yaml --> Taskfile__print
+    planfile__api__server__list_tickets --> planfile__server_common__get_planfile
+    planfile__api__server__create_ticket --> planfile__server_common__get_planfile
+    planfile__api__server__get_ticket --> planfile__server_common__get_planfile
+    planfile__api__server__update_ticket --> planfile__server_common__get_planfile
+    planfile__api__server__delete_ticket --> planfile__server_common__get_planfile
+    planfile__api__server__move_ticket --> planfile__server_common__get_planfile
+
+    classDef highCC fill:#ff6b6b,stroke:#c92a2a,color:#fff
+    classDef medCC fill:#ffd43b,stroke:#f08c00,color:#000
+    class examples__checkbox_tickets__demo__demo_checkbox_tickets,planfile__cli__project_detector__readme___find_readme_content,planfile__cli__project_detector__structure___analyze_directory_structure,planfile__cli__project_detector__main__get_detected_values,planfile__cli__project_detector__inference___infer_python_project_type,planfile__sync__github__GitHubBackend___create_ticket,planfile__sync__gitlab__GitLabBackend___update_ticket,planfile__core__models__strategy__Strategy__get_stats highCC
+    class examples__ecosystem__02_mcp_integration__simulate_planfile_generate,examples__PROPOSED_API_IMPROVEMENTS__PlanfileStoreExtended__stats,examples__PROPOSED_API_IMPROVEMENTS__PlanfileStoreExtended__export,planfile____getattr__,planfile__runner__verify_strategy_post_execution,planfile__runner__analyze_project_metrics,planfile__runner__apply_strategy_to_tickets,planfile__runner__review_strategy,planfile__runner__run_strategy,examples__ecosystem__03_proxy_routing__example_strategy_generation_with_proxy,planfile__executor_standalone__StrategyExecutor__execute_strategy,examples__python_api__04_advanced_filtering__example_search_by_labels,examples__python_api__04_advanced_filtering__example_statistics,planfile__sync__markdown_backend__tickets__MarkdownTicketHelpers___determine_target_file,planfile__sync__operations__sync_to_external,planfile__analysis__external_tools__ExternalToolRunner__parse_code2llm_output,planfile__analysis__file_analyzer__FileAnalyzer__analyze_directory,planfile__analysis__generator__PlanfileGenerator___external_to_internal_analysis,planfile__analysis__generator__PlanfileGenerator___make_serializable,planfile__analysis__generators__metrics_extractor___extract_validation_metrics,planfile__analysis__parsers__text_parser__analyze_text,planfile__analysis__sprint_generator__SprintGenerator___group_issues_by_priority,examples__ecosystem__04_llx_integration__LLXIntegration___basic_analysis,examples__ecosystem__04_llx_integration__example_metric_driven_planning,planfile__analysis__parsers__toon_parser___parse_toon_header,planfile__analysis__parsers__toon_parser___determine_section,planfile__importers__import_from_source,planfile__importers__redup_importer___parse_toon_format,planfile__importers__redup_importer___parse_duplicates,planfile__importers__redup_importer___parse_refactor medCC

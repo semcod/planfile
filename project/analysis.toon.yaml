@@ -1,12 +1,12 @@
-# code2llm | 174f 17980L | python:136,shell:37,javascript:1 | 2026-04-19
-# CC̄=3.5 | critical:8/644 | dups:3 | cycles:0
+# code2llm | 278f 327693L | python:136,yaml:88,shell:39,json:7,yml:2,txt:2,toml:1,javascript:1 | 2026-04-25
+# CC̄=2.2 | critical:8/983 | dups:3 | cycles:0
 
 HEALTH[9]:
   🔴 DUP   3 classes duplicated
   🟡 CC    demo_checkbox_tickets CC=15 (limit:15)
   🟡 CC    _find_readme_content CC=16 (limit:15)
-  🟡 CC    get_detected_values CC=15 (limit:15)
   🟡 CC    _analyze_directory_structure CC=20 (limit:15)
+  🟡 CC    get_detected_values CC=15 (limit:15)
   🟡 CC    _infer_python_project_type CC=17 (limit:15)
   🟡 CC    _create_ticket CC=15 (limit:15)
   🟡 CC    _update_ticket CC=15 (limit:15)
@@ -16,7 +16,7 @@ REFACTOR[2]:
   1. rm duplicates  (-3 dup classes)
   2. split 8 high-CC methods  (CC>15)
 
-PIPELINES[329]:
+PIPELINES[326]:
   [1] Src [BASE_URL]: BASE_URL → request
       PURITY: 100% pure
   [2] Src [url]: url
@@ -29,13 +29,12 @@ PIPELINES[329]:
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=4.0    ←in:43  →out:33  !! split  ×DUP
+  planfile/                       CC̄=4.0    ←in:40  →out:34  !! split  ×DUP
   │ runner                     418L  0C    7m  CC=14     ←4
   │ generator                  347L  1C   24m  CC=14     ←0
   │ executor_standalone        338L  3C   12m  CC=8      ←0
   │ yaml_loader                331L  0C   15m  CC=7      ←7
   │ ci                         315L  3C    9m  CC=7      ←0
-  │ commands                   293L  0C   17m  CC=14     ←0
   │ jira                       280L  1C   10m  CC=13     ←0
   │ external_tools             268L  2C   12m  CC=12     ←0
   │ !! strategy                   260L  6C   12m  CC=15     ←0
@@ -57,6 +56,7 @@ LAYERS:
   │ cli_loader                 194L  0C   10m  CC=7      ←0
   │ toon_parser                189L  0C    7m  CC=11     ←2
   │ gates                      170L  0C   13m  CC=8      ←3
+  │ commands                   168L  0C   12m  CC=6      ←0
   │ __init__                   167L  1C    9m  CC=11     ←10
   │ mock                       160L  1C    6m  CC=11     ←0
   │ generator                  145L  0C    6m  CC=8      ←1
@@ -75,12 +75,12 @@ LAYERS:
   │ commands                   100L  0C    1m  CC=10     ←0
   │ server                      97L  2C    7m  CC=4      ←0
   │ vallm_importer              96L  1C   10m  CC=4      ←1
+  │ commands                    91L  0C    7m  CC=3      ←0
   │ !! main                        88L  0C    2m  CC=15     ←1
   │ !! inference                   87L  0C    3m  CC=17     ←2
   │ utils                       86L  0C    3m  CC=7      ←1
   │ commands                    78L  0C    1m  CC=1      ←1
   │ adapters                    75L  6C    5m  CC=1      ←0
-  │ commands                    73L  0C    5m  CC=4      ←0
   │ package                     73L  0C    1m  CC=7      ←1
   │ !! readme                      71L  0C    3m  CC=16     ←3
   │ registry                    67L  1C    5m  CC=2      ←6
@@ -88,8 +88,8 @@ LAYERS:
   │ prompts                     63L  0C    1m  CC=5      ←1
   │ client                      63L  0C    1m  CC=4      ←1
   │ __init__                    63L  0C    0m  CC=0.0    ←0
-  │ model_tier                  60L  0C    4m  CC=9      ←3
   │ !! structure                   60L  0C    1m  CC=20     ←3
+  │ model_tier                  60L  0C    4m  CC=9      ←3
   │ commands                    59L  0C    3m  CC=2      ←0
   │ store_tickets               54L  1C    4m  CC=7      ←0
   │ ticket                      51L  2C    1m  CC=2      ←0
@@ -145,104 +145,223 @@ LAYERS:
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ gitlab                       1L  0C    0m  CC=0.0    ←0
-  │ github                       1L  0C    0m  CC=0.0    ←0
   │ generic                      1L  0C    0m  CC=0.0    ←0
-  │ base                         1L  0C    0m  CC=0.0    ←0
   │ jira                         1L  0C    0m  CC=0.0    ←0
+  │ base                         1L  0C    0m  CC=0.0    ←0
+  │ github                       1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │
   examples/                       CC̄=2.0    ←in:0  →out:2  ×DUP
+  │ !! ci-strategy.yaml          3100L  0C    0m  CC=0.0    ←0
+  │ !! final-strategy.yaml       1197L  0C    0m  CC=0.0    ←0
   │ !! 04_llx_integration         503L  2C    9m  CC=12     ←1
   │ 02_mcp_integration         381L  0C    6m  CC=9      ←0
   │ 03_proxy_routing           368L  1C    7m  CC=8      ←0
   │ 01_full_workflow.sh        352L  4C   12m  CC=0.0    ←0
+  │ current.yaml               322L  0C    0m  CC=0.0    ←0
+  │ backlog.yaml               294L  0C    0m  CC=0.0    ←0
+  │ ecommerce-mvp.yaml         290L  0C    0m  CC=0.0    ←0
+  │ quick-start.yaml           278L  0C    0m  CC=0.0    ←0
   │ test_interactive_expect.sh   278L  0C    0m  CC=0.0    ←0
   │ test_planfile_generation.sh   277L  4C    7m  CC=0.0    ←0
+  │ onboarding.yaml            275L  0C    0m  CC=0.0    ←0
   │ 03_python_client           250L  1C   14m  CC=4      ←0
   │ verify_planfile.sh         245L  0C    2m  CC=0.0    ←0
+  │ microservices-migration.yaml   228L  0C    0m  CC=0.0    ←0
+  │ security-hardening.yaml    225L  0C    0m  CC=0.0    ←0
+  │ ml-pipeline-optimization.yaml   225L  0C    0m  CC=0.0    ←0
   │ 03_integration             218L  1C    9m  CC=4      ←0  ×DUP
+  │ common-tasks.yaml          218L  0C    0m  CC=0.0    ←0
   │ PROPOSED_API_IMPROVEMENTS   217L  2C    7m  CC=13     ←0  ×DUP
   │ run_all_tests.sh           203L  0C    2m  CC=0.0    ←0
   │ llx_validator              185L  1C    7m  CC=4      ←0
+  │ llm-config.yaml            181L  0C    0m  CC=0.0    ←0
   │ 02_ticket_management       172L  0C    6m  CC=3      ←0
   │ run.sh                     166L  0C    1m  CC=0.0    ←0
   │ 04_advanced_filtering      161L  0C    6m  CC=12     ←0
   │ test_readme_examples.sh    158L  1C    3m  CC=0.0    ←0
   │ 04_javascript_client.js    152L  1C   18m  CC=5      ←0
+  │ backlog.yaml               139L  0C    0m  CC=0.0    ←0
   │ run.sh                     129L  0C    0m  CC=0.0    ←0
+  │ tickets.planfile.yaml      128L  0C    0m  CC=0.0    ←0
   │ run.sh                     128L  0C    0m  CC=0.0    ←0
   │ 01_basic_usage             112L  0C    5m  CC=3      ←0
   │ !! demo                       109L  0C    1m  CC=15     ←0
   │ run.sh                     109L  0C    0m  CC=0.0    ←0
+  │ merged.yaml                106L  0C    0m  CC=0.0    ←0
   │ 02_curl_examples.sh        102L  0C    2m  CC=0.0    ←0
+  │ merged-strategy.yaml        96L  0C    0m  CC=0.0    ←0
+  │ tickets.planfile.yaml       95L  0C    0m  CC=0.0    ←0
   │ run.sh                      92L  0C    1m  CC=0.0    ←0
   │ run.sh                      92L  0C    1m  CC=0.0    ←0
-  │ run.sh                      89L  0C    1m  CC=0.0    ←20
+  │ run.sh                      89L  0C    1m  CC=0.0    ←0
+  │ planfile.yaml               85L  0C    0m  CC=0.0    ←0
+  │ strategy_simple_v2.yaml     80L  0C    0m  CC=0.0    ←0
+  │ tickets.planfile.yaml       70L  0C    0m  CC=0.0    ←0
+  │ tickets.planfile.yaml       70L  0C    0m  CC=0.0    ←0
   │ validate_with_llx.sh        65L  0C    1m  CC=0.0    ←0
+  │ web.json                    62L  0C    0m  CC=0.0    ←0
+  │ web-template.json           62L  0C    0m  CC=0.0    ←0
   │ 04_analytics_simple         59L  0C    1m  CC=1      ←0
+  │ test-strategy.json          58L  0C    0m  CC=0.0    ←0
   │ 03_integration_simple       52L  0C    1m  CC=3      ←0
   │ run_all.sh                  49L  0C    1m  CC=0.0    ←0
   │ 01_start_server.sh          47L  0C    0m  CC=0.0    ←0
   │ run_fixed.sh                47L  0C    0m  CC=0.0    ←0
+  │ mobile-healthcare.yaml      46L  0C    0m  CC=0.0    ←0
+  │ web-ecommerce.yaml          46L  0C    0m  CC=0.0    ←0
+  │ ml-finance.yaml             46L  0C    0m  CC=0.0    ←0
+  │ security-baseline.yaml      46L  0C    0m  CC=0.0    ←0
+  │ jira.planfile.yaml          45L  0C    0m  CC=0.0    ←0
+  │ jira.planfile.yaml          43L  0C    0m  CC=0.0    ←0
+  │ current.yaml                43L  0C    0m  CC=0.0    ←0
+  │ current.yaml                43L  0C    0m  CC=0.0    ←0
+  │ test-strategy.yaml          42L  0C    0m  CC=0.0    ←0
+  │ web-template.yaml           42L  0C    0m  CC=0.0    ←0
+  │ template-mobile-healthcare.yaml    42L  0C    0m  CC=0.0    ←0
+  │ template-ml-finance.yaml    42L  0C    0m  CC=0.0    ←0
+  │ strategy-export.yaml        42L  0C    0m  CC=0.0    ←0
+  │ template-web-ecommerce.yaml    42L  0C    0m  CC=0.0    ←0
+  │ gitlab.planfile.yaml        41L  0C    0m  CC=0.0    ←0
   │ run.sh                      40L  0C    0m  CC=0.0    ←0
+  │ evolution.toon.yaml         39L  0C    0m  CC=0.0    ←0
   │ run.sh                      38L  0C    0m  CC=0.0    ←0
+  │ gitlab.planfile.yaml        38L  0C    0m  CC=0.0    ←0
+  │ duplication.toon.yaml       37L  0C    0m  CC=0.0    ←0
+  │ github.planfile.yaml        37L  0C    0m  CC=0.0    ←0
+  │ github.planfile.yaml        35L  0C    0m  CC=0.0    ←0
   │ run_fixed.sh                35L  0C    0m  CC=0.0    ←0
   │ run.sh                      34L  0C    0m  CC=0.0    ←0
   │ run_all.sh                  30L  0C    0m  CC=0.0    ←0
   │ run.sh                      29L  0C    0m  CC=0.0    ←0
   │ run.sh                      29L  0C    0m  CC=0.0    ←0
   │ run.sh                      29L  0C    0m  CC=0.0    ←0
+  │ strategy_free_test.yaml     24L  0C    0m  CC=0.0    ←0
+  │ planfile.yaml               18L  0C    0m  CC=0.0    ←0
+  │ planfile.yaml               18L  0C    0m  CC=0.0    ←0
   │ run.sh                      17L  0C    0m  CC=0.0    ←0
+  │ planfile.yaml               17L  0C    0m  CC=0.0    ←0
   │ ci-workflow.sh              16L  0C    0m  CC=0.0    ←0
+  │ analysis.toon.yaml          16L  0C    0m  CC=0.0    ←0
   │ run.sh                      13L  0C    0m  CC=0.0    ←0
   │ run.sh                      13L  0C    0m  CC=0.0    ←0
   │ run.sh                      12L  0C    0m  CC=0.0    ←0
   │ planfile-sync.sh            10L  0C    0m  CC=0.0    ←0
+  │ github.state.yaml            7L  0C    0m  CC=0.0    ←0
+  │ backlog.yaml                 5L  0C    0m  CC=0.0    ←0
+  │ config.yaml                  3L  0C    0m  CC=0.0    ←0
+  │ config.yaml                  3L  0C    0m  CC=0.0    ←0
+  │ config.yaml                  3L  0C    0m  CC=0.0    ←0
+  │ strategy-export-dict.txt     1L  0C    0m  CC=0.0    ←0
   │
-  ./                              CC̄=0.2    ←in:0  →out:0
+  ./                              CC̄=0.8    ←in:0  →out:0
+  │ !! goal.yaml                  513L  0C    0m  CC=0.0    ←0
+  │ Taskfile.yml               383L  0C    1m  CC=0.0    ←20
+  │ pyproject.toml             166L  0C    0m  CC=0.0    ←0
+  │ docker-compose.yml         126L  0C    0m  CC=0.0    ←0
+  │ redsl.yaml                  72L  0C    0m  CC=0.0    ←0
+  │ test-integrated.yaml        64L  0C    0m  CC=0.0    ←0
+  │ project.sh                  48L  0C    0m  CC=0.0    ←0
+  │ mcp-server-example          28L  0C    4m  CC=1      ←0
+  │ redsl_refactor_report.toon.yaml    25L  0C    0m  CC=0.0    ←0
+  │ redsl_refactor_plan.toon.yaml    22L  0C    0m  CC=0.0    ←0
+  │ tree.sh                      1L  0C    0m  CC=0.0    ←0
+  │ Makefile                     0L  0C    0m  CC=0.0    ←0
+  │ Dockerfile                   0L  0C    0m  CC=0.0    ←0
+  │
+  scripts/                        CC̄=0.0    ←in:15  →out:0
   │ run_examples.sh            286L  0C   13m  CC=0.0    ←7
   │ docker-entrypoint.sh       174L  0C    5m  CC=0.0    ←0
   │ auto_generate_planfile.sh   124L  0C    0m  CC=0.0    ←0
   │ cleanup_redundant.sh        71L  0C    0m  CC=0.0    ←0
   │ project.sh                  40L  0C    0m  CC=0.0    ←0
-  │ mcp-server-example          28L  0C    4m  CC=1      ←0
+  │
+  project/                        CC̄=0.0    ←in:0  →out:0
+  │ !! map.toon.yaml              927L  0C  341m  CC=0.0    ←2
+  │ analysis.toon.yaml         249L  0C    0m  CC=0.0    ←0
+  │ analysis.toon.yaml         185L  0C    0m  CC=0.0    ←0
+  │ analysis.toon.yaml         185L  0C    0m  CC=0.0    ←0
+  │ analysis.toon.yaml         185L  0C    0m  CC=0.0    ←0
+  │ duplication.toon.yaml      148L  0C    0m  CC=0.0    ←0
+  │ evolution.toon.yaml         59L  0C    0m  CC=0.0    ←0
+  │ evolution.toon.yaml         59L  0C    0m  CC=0.0    ←0
+  │ evolution.toon.yaml         59L  0C    0m  CC=0.0    ←0
+  │ evolution.toon.yaml         59L  0C    0m  CC=0.0    ←0
+  │ project.toon.yaml           51L  0C    0m  CC=0.0    ←0
+  │ prompt.txt                  47L  0C    0m  CC=0.0    ←0
+  │ validation.toon.yaml        40L  0C    0m  CC=0.0    ←0
+  │ validation.toon.yaml         5L  0C    0m  CC=0.0    ←0
+  │
+  web/                            CC̄=0.0    ←in:0  →out:0
+  │ web-template-v2.yaml        42L  0C    0m  CC=0.0    ←0
+  │ web-template-v3.yaml        42L  0C    0m  CC=0.0    ←0
+  │ web-template.yaml           39L  0C    0m  CC=0.0    ←0
+  │
+  .planfile/                      CC̄=0.0    ←in:0  →out:0
+  │ !! current.yaml              1226L  0C    0m  CC=0.0    ←0
+  │ backlog.yaml               202L  0C    0m  CC=0.0    ←0
+  │ github.planfile.yaml        19L  0C    0m  CC=0.0    ←0
+  │ github.state.yaml           14L  0C    0m  CC=0.0    ←0
+  │ config.yaml                  3L  0C    0m  CC=0.0    ←0
+  │
+  analyses/                       CC̄=0.0    ←in:0  →out:0
+  │ !! test-integrated.yaml     289300L  0C    0m  CC=0.0    ←0
+  │ !! final-planfile.yaml       1840L  0C    0m  CC=0.0    ←0
+  │ !! integrated-planfile.yaml  1668L  0C    0m  CC=0.0    ←0
+  │ !! enhanced-analysis.yaml    1311L  0C    0m  CC=0.0    ←0
+  │ analysis-generated.yaml    310L  0C    0m  CC=0.0    ←0
+  │ sumd.json                  144L  0C    0m  CC=0.0    ←0
+  │ refactoring_summary.json    83L  0C    0m  CC=0.0    ←0
+  │ llx-driven-strategy.yaml    77L  0C    0m  CC=0.0    ←0
+  │ llx-config-for-planfile.yaml    66L  0C    0m  CC=0.0    ←0
+  │ SUMR.json                    9L  0C    0m  CC=0.0    ←0
+  │
+  config/                         CC̄=0.0    ←in:0  →out:0
+  │ goal.yaml                  429L  0C    0m  CC=0.0    ←0
+  │ pyqual.yaml                190L  0C    0m  CC=0.0    ←0
+  │ planfile-auto.yaml         174L  0C    0m  CC=0.0    ←0
+  │ mcp-tools.json              87L  0C    0m  CC=0.0    ←0
+  │ prefact.yaml                31L  0C    0m  CC=0.0    ←0
   │
   ── zero ──
+     Dockerfile                                0L
+     Makefile                                  0L
      planfile/cli/__init__.py                  0L
      planfile/loaders/__init__.py              0L
      planfile/utils/__init__.py                0L
 
 COUPLING:
-                           examples.gitlab  examples.python-api   examples.ecosystem             planfile         planfile.cli    examples.rest-api    planfile.analysis     planfile.loaders         run_examples        planfile.sync         planfile.api   planfile.importers         planfile.llm             examples        planfile.core
-      examples.gitlab                   ──                 ←145                  ←95                  ←27                                       ←29                  ←15                   ←2                                        ←6                                                             ←1                   ←1                   ←2  hub
+                                  Taskfile  examples.python-api   examples.ecosystem             planfile         planfile.cli    examples.rest-api    planfile.analysis     planfile.loaders              scripts          project.map        planfile.sync         planfile.api   planfile.importers         planfile.llm             examples
+             Taskfile                   ──                 ←145                  ←95                  ←27                                       ←29                  ←15                   ←2                                                             ←6                                                             ←1                   ←1  hub
   examples.python-api                  145                   ──                                        20                                                                                                                                                                                                                                         !! fan-out
-   examples.ecosystem                   95                                        ──                                                                                                                                                                                                                ←2                                            !! fan-out
-             planfile                   27                  ←20                                        ──                  ←15                                                              1                                                             ←6                    5                                        ←1                       hub
-         planfile.cli                                                                                  15                   ──                                                             12                   15                    2                                                              1                                            !! fan-out
+   examples.ecosystem                   95                                        ──                                                                                                                                                                                                                                     ←2                       !! fan-out
+             planfile                   27                  ←20                                        ──                  ←12                                                              1                                         1                                        ←6                    5                                        ←1  hub
+         planfile.cli                                                                                  12                   ──                                                             12                   15                                         2                                                              1                       !! fan-out
     examples.rest-api                   29                                                                                                       ──                                                                                                                                                                                               !! fan-out
-    planfile.analysis                   15                                                                                                                            ──                                                                                                                                                                          !! fan-out
+    planfile.analysis                   15                                                                                                                            ──                                                              8                                                                                                           !! fan-out
      planfile.loaders                    2                                                             ←1                  ←12                                                             ──                                                                                                                                                     hub
-         run_examples                                                                                                      ←15                                                                                  ──                                                                                                                                hub
-        planfile.sync                    6                                                                                  ←2                                                                                                       ──                                                                                                         
-         planfile.api                                                                                   6                                                                                                                                                 ──                                                                                    
-   planfile.importers                                                                                  ←5                                                                                                                                                                      ──                                                                 hub
-         planfile.llm                    1                                         2                                        ←1                                                                                                                                                                      ──                                          
-             examples                    1                                                              1                                                                                                                                                                                                                ──                     
-        planfile.core                    2                                                                                                                                                                                                                                                                                                    ──
+              scripts                                                                                                      ←15                                                                                  ──                                                                                                                                hub
+          project.map                                                                                  ←1                                                             ←8                                                             ──                                                                                                           hub
+        planfile.sync                    6                                                                                  ←2                                                                                                                            ──                                                                                    
+         planfile.api                                                                                   6                                                                                                                                                                      ──                                                               
+   planfile.importers                                                                                  ←5                                                                                                                                                                                           ──                                            hub
+         planfile.llm                    1                                         2                                        ←1                                                                                                                                                                                           ──                     
+             examples                    1                                                              1                                                                                                                                                                                                                                     ──
   CYCLES: none
   HUB: planfile.loaders/ (fan-in=13)
+  HUB: Taskfile/ (fan-in=323)
+  HUB: project.map/ (fan-in=9)
+  HUB: planfile/ (fan-in=40)
+  HUB: scripts/ (fan-in=15)
   HUB: planfile.importers/ (fan-in=5)
-  HUB: planfile/ (fan-in=43)
-  HUB: run_examples/ (fan-in=15)
-  HUB: examples.gitlab/ (fan-in=323)
-  SMELL: examples.ecosystem/ fan-out=95 → split needed
-  SMELL: planfile.analysis/ fan-out=15 → split needed
-  SMELL: planfile/ fan-out=33 → split needed
   SMELL: examples.python-api/ fan-out=165 → split needed
+  SMELL: examples.ecosystem/ fan-out=95 → split needed
+  SMELL: planfile.cli/ fan-out=42 → split needed
+  SMELL: planfile.analysis/ fan-out=23 → split needed
   SMELL: examples.rest-api/ fan-out=29 → split needed
-  SMELL: planfile.cli/ fan-out=45 → split needed
+  SMELL: planfile/ fan-out=34 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon

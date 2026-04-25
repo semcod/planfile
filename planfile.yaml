@@ -255,7 +255,7 @@ tasks:
   priority_label: medium
 - id: R01
   title: 'extract_function: github_cmd.py'
-  description: 4 occurrences of 7-line block across 1 files — saves 21 lines
+  description: "4 occurrences of 7-line block across 1 files \u2014 saves 21 lines"
   file: planfile/cli/groups/sync/utils/github_cmd.py
   action: extract_function
   priority: 3
@@ -268,7 +268,7 @@ tasks:
   priority_label: medium
 - id: R02
   title: 'extract_function: ticket_done.py'
-  description: 3 occurrences of 9-line block across 1 files — saves 18 lines
+  description: "3 occurrences of 9-line block across 1 files \u2014 saves 18 lines"
   file: planfile/cli/groups/ticket/utils/ticket_done.py
   action: extract_function
   priority: 3
@@ -281,7 +281,7 @@ tasks:
   priority_label: medium
 - id: R03
   title: 'extract_function: register_apply_commands.py'
-  description: 6 occurrences of 3-line block across 6 files — saves 15 lines
+  description: "6 occurrences of 3-line block across 6 files \u2014 saves 15 lines"
   file: planfile/cli/groups/utils/register_apply_commands.py
   action: extract_function
   priority: 3
@@ -294,7 +294,7 @@ tasks:
   priority_label: medium
 - id: R04
   title: 'extract_function: map_priority.py'
-  description: 2 occurrences of 14-line block across 2 files — saves 14 lines
+  description: "2 occurrences of 14-line block across 2 files \u2014 saves 14 lines"
   file: planfile/sync/utils/map_priority.py
   action: extract_function
   priority: 3
@@ -307,7 +307,7 @@ tasks:
   priority_label: medium
 - id: R05
   title: 'extract_function: print_success.py'
-  description: 5 occurrences of 3-line block across 1 files — saves 12 lines
+  description: "5 occurrences of 3-line block across 1 files \u2014 saves 12 lines"
   file: planfile/cli/core/utils/print_success.py
   action: extract_function
   priority: 3
@@ -320,7 +320,7 @@ tasks:
   priority_label: medium
 - id: R06
   title: 'extract_function: _collect_tickets_from_sprint.py'
-  description: 2 occurrences of 12-line block across 1 files — saves 12 lines
+  description: "2 occurrences of 12-line block across 1 files \u2014 saves 12 lines"
   file: planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
   action: extract_function
   priority: 3
@@ -333,7 +333,7 @@ tasks:
   priority_label: medium
 - id: R07
   title: 'extract_function: _detect_docker_gates.py'
-  description: 2 occurrences of 9-line block across 1 files — saves 9 lines
+  description: "2 occurrences of 9-line block across 1 files \u2014 saves 9 lines"
   file: planfile/cli/project_detector/utils/_detect_docker_gates.py
   action: extract_function
   priority: 3
@@ -346,7 +346,7 @@ tasks:
   priority_label: medium
 - id: R08
   title: 'extract_function: register_auto_commands.py'
-  description: 2 occurrences of 8-line block across 2 files — saves 8 lines
+  description: "2 occurrences of 8-line block across 2 files \u2014 saves 8 lines"
   file: planfile/cli/groups/utils/register_auto_commands.py
   action: extract_function
   priority: 3
@@ -359,7 +359,7 @@ tasks:
   priority_label: medium
 - id: R09
   title: 'extract_function: _has_mypy_config.py'
-  description: 2 occurrences of 7-line block across 1 files — saves 7 lines
+  description: "2 occurrences of 7-line block across 1 files \u2014 saves 7 lines"
   file: planfile/cli/project_detector/utils/_has_mypy_config.py
   action: extract_function
   priority: 3
@@ -372,7 +372,7 @@ tasks:
   priority_label: medium
 - id: R10
   title: 'extract_function: import_json.py'
-  description: 2 occurrences of 7-line block across 2 files — saves 7 lines
+  description: "2 occurrences of 7-line block across 2 files \u2014 saves 7 lines"
   file: planfile/importers/utils/import_json.py
   action: extract_function
   priority: 3
@@ -385,7 +385,7 @@ tasks:
   priority_label: medium
 - id: R11
   title: 'extract_class: __init__.py'
-  description: 2 occurrences of 4-line block across 2 files — saves 4 lines
+  description: "2 occurrences of 4-line block across 2 files \u2014 saves 4 lines"
   file: utils/__init__.py
   action: extract_class
   priority: 3
@@ -398,7 +398,7 @@ tasks:
   priority_label: medium
 - id: R12
   title: 'extract_function: _find_readme_description.py'
-  description: 2 occurrences of 4-line block across 1 files — saves 4 lines
+  description: "2 occurrences of 4-line block across 1 files \u2014 saves 4 lines"
   file: planfile/cli/project_detector/utils/_find_readme_description.py
   action: extract_function
   priority: 3
@@ -504,3 +504,10 @@ tasks:
   - extract-function
   source: project/duplication.toon.yaml
   priority_label: medium
+sprints:
+- id: sprint-1
+  name: Code Quality Improvements
+  duration: 2 weeks
+  objectives:
+  - Fix code quality issues
+  task_patterns: []

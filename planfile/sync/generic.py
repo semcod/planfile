@@ -2,7 +2,7 @@ from typing import Any
 
 import requests
 
-from planfile.sync.base import BasePMBackend, TicketRef, TicketStatus
+from planfile.sync.base import BasePMBackend, TicketRef, TicketState
 
 
 class GenericBackend(BasePMBackend):
@@ -158,7 +158,7 @@ class GenericBackend(BasePMBackend):
 
         return data
 
-    def _get_ticket(self, ticket_id: str) -> TicketStatus:
+    def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get ticket status via generic API."""
         response = self._make_request("GET", f"/tickets/{ticket_id}")
 
@@ -172,7 +172,7 @@ class GenericBackend(BasePMBackend):
         limit: int | None = None,
         *,
         backend_tag: str = "generic",
-    ) -> list[TicketStatus]:
+    ) -> list[TicketState]:
         """List tickets via generic API."""
         params = {}
 
@@ -193,7 +193,7 @@ class GenericBackend(BasePMBackend):
 
         return tickets
 
-    def _search_tickets(self, query: str) -> list[TicketStatus]:
+    def _search_tickets(self, query: str) -> list[TicketState]:
         """Search tickets via generic API."""
         params = {"q": query}
 
@@ -205,9 +205,9 @@ class GenericBackend(BasePMBackend):
 
         return tickets
 
-    def _ticket_data_to_status(self, ticket_data: dict[str, Any]) -> TicketStatus:
-        """Convert a generic API ticket payload into TicketStatus."""
-        return self.build_ticket_status(
+    def _ticket_data_to_status(self, ticket_data: dict[str, Any]) -> TicketState:
+        """Convert a generic API ticket payload into TicketState."""
+        return self.build_ticket_state(
             id=str(ticket_data.get("id")),
             status=ticket_data.get("status"),
             assignee=ticket_data.get("assignee"),

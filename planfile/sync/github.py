@@ -10,7 +10,7 @@ except ImportError:
     Issue = None
     Repository = None  # pip install PyGithub
 
-from planfile.sync.base import BasePMBackend, TicketRef, TicketStatus
+from planfile.sync.base import BasePMBackend, TicketRef, TicketState
 
 
 class GitHubBackend(BasePMBackend):
@@ -65,6 +65,42 @@ class GitHubBackend(BasePMBackend):
                     # If label creation fails, skip this label
                     pass
 
+    def _prepare_labels(
+        self,
+        labels: list[str] | None,
+        priority: str | None,
+    ) -> list[str]:
+        """Build label list, filtering old priority labels and adding defaults."""
+        issue_labels = []
+        if labels:
+            for label in labels:
+                if not label.startswith("priority: "):
+                    issue_labels.append(label)
+        if priority:
+            priority_label = f"priority-{priority}"
+            if priority_label not in issue_labels:
+                issue_labels.append(priority_label)
+        for default in ("planfile", "managed"):
+            if default not in issue_labels:
+                issue_labels.append(default)
+        self._ensure_labels_exist(issue_labels)
+        return issue_labels
+
+    def _build_metadata_body(self, body: str, metadata: dict[str, Any] | None) -> str:
+        """Append strategy metadata section to body."""
+        if not metadata:
+            return body
+        metadata_section = "\n\n---\n\n**Strategy Metadata:**\n"
+        for key, value in metadata.items():
+            if key != "model_hints":
+                metadata_section += f"- {key}: {value}\n"
+        if "model_hints" in metadata:
+            metadata_section += "\n**Model Hints:**\n"
+            for phase, tier in metadata["model_hints"].items():
+                if tier:
+                    metadata_section += f"- {phase}: {tier}\n"
+        return body + metadata_section
+
     def _create_ticket(
         self,
         title: str,
@@ -76,52 +112,14 @@ class GitHubBackend(BasePMBackend):
         metadata: dict[str, Any] | None = None,
     ) -> TicketRef:
         """Create a new GitHub issue."""
-        # Prepare labels - start fresh to avoid duplicates
-        issue_labels = []
+        issue_labels = self._prepare_labels(labels, priority)
+        body = self._build_metadata_body(body, metadata)
 
-        # Add original labels (clean format)
-        if labels:
-            for label in labels:
-                # Skip old priority format labels
-                if not label.startswith("priority: "):
-                    issue_labels.append(label)
-
-        # Add priority as label if specified (use simpler format)
-        if priority:
-            priority_label = f"priority-{priority}"
-            if priority_label not in issue_labels:
-                issue_labels.append(priority_label)
-
-        # Add default labels
-        if "planfile" not in issue_labels:
-            issue_labels.append("planfile")
-        if "managed" not in issue_labels:
-            issue_labels.append("managed")
-
-        # Ensure all labels exist
-        self._ensure_labels_exist(issue_labels)
-
-        # Add strategy metadata to body
-        if metadata:
-            metadata_section = "\n\n---\n\n**Strategy Metadata:**\n"
-            for key, value in metadata.items():
-                if key != "model_hints":
-                    metadata_section += f"- {key}: {value}\n"
-            if "model_hints" in metadata:
-                metadata_section += "\n**Model Hints:**\n"
-                for phase, tier in metadata["model_hints"].items():
-                    if tier:
-                        metadata_section += f"- {phase}: {tier}\n"
-            body += metadata_section
-
-        # Create issue
         create_kwargs = {
             "title": title,
             "body": body,
-            "labels": issue_labels
+            "labels": issue_labels,
         }
-
-        # Only add assignee if it's not None
         if assignee:
             create_kwargs["assignee"] = assignee
 
@@ -134,6 +132,28 @@ class GitHubBackend(BasePMBackend):
             status=issue.state,
             metadata=metadata,
         )
+
+    def _update_labels(
+        self,
+        issue: Issue,
+        labels: list[str] | None,
+        priority: str | None,
+    ) -> None:
+        """Update issue labels, replacing priority labels."""
+        current_labels = [label.name for label in issue.labels]
+        current_labels = [l for l in current_labels if not l.startswith("priority: ")]
+        new_labels = labels or []
+        if priority:
+            new_labels.append(f"priority: {priority}")
+        issue.set_labels(*current_labels, *new_labels)
+
+    def _update_issue_state(self, issue: Issue, status: str) -> None:
+        """Update issue open/closed state."""
+        status_lower = status.lower()
+        if status_lower == "closed":
+            issue.edit(state="closed")
+        elif status_lower == "open":
+            issue.edit(state="open")
 
     def _update_ticket(
         self,
@@ -149,48 +169,26 @@ class GitHubBackend(BasePMBackend):
         """Update an existing GitHub issue."""
         issue = self.repo.get_issue(int(ticket_id))
 
-        # Update title
         if title:
             issue.edit(title=title)
-
-        # Update body
         if body:
             issue.edit(body=body)
-
-        # Update labels
         if labels is not None or priority:
-            current_labels = [label.name for label in issue.labels]
-
-            # Remove existing priority labels
-            current_labels = [l for l in current_labels if not l.startswith("priority: ")]
-
-            # Add new labels
-            new_labels = labels or []
-            if priority:
-                new_labels.append(f"priority: {priority}")
-
-            issue.set_labels(*current_labels, *new_labels)
-
-        # Update state (open/close)
+            self._update_labels(issue, labels, priority)
         if status:
-            if status.lower() == "closed":
-                issue.edit(state="closed")
-            elif status.lower() == "open":
-                issue.edit(state="open")
-
-        # Update assignee
+            self._update_issue_state(issue, status)
         if assignee:
             issue.edit(assignee=assignee)
 
-    def _get_ticket(self, ticket_id: str) -> TicketStatus:
+    def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get GitHub issue status."""
         issue = self.repo.get_issue(int(ticket_id))
 
         return self._issue_to_ticket_status(issue)
 
-    def _issue_to_ticket_status(self, issue: Issue) -> TicketStatus:
-        """Convert a GitHub issue object into a TicketStatus."""
-        return self.build_ticket_status(
+    def _issue_to_ticket_status(self, issue: Issue) -> TicketState:
+        """Convert a GitHub issue object into a TicketState."""
+        return self.build_ticket_state(
             id=str(issue.number),
             status=issue.state,
             assignee=issue.assignee.login if issue.assignee else None,
@@ -205,7 +203,7 @@ class GitHubBackend(BasePMBackend):
         backend_tag: str = "github",
         assignee: str | None = None,
         limit: int | None = None,
-    ) -> list[TicketStatus]:
+    ) -> list[TicketState]:
         """List GitHub issues with filters."""
         state = "all" if not status else status.lower()
 
@@ -227,7 +225,7 @@ class GitHubBackend(BasePMBackend):
 
         return tickets
 
-    def _search_tickets(self, query: str) -> list[TicketStatus]:
+    def _search_tickets(self, query: str) -> list[TicketState]:
         """Search GitHub issues."""
         issues = self.repo.get_issues(state="all")
 

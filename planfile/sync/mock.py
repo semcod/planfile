@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from planfile.sync.base import BasePMBackend, TicketRef, TicketStatus
+from planfile.sync.base import BasePMBackend, TicketRef, TicketState
 
 
 class MockBackend(BasePMBackend):
@@ -88,13 +88,13 @@ class MockBackend(BasePMBackend):
 
         print(f"  [MOCK] Updated ticket #{ticket_id}: {ticket['title']}")
 
-    def _get_ticket(self, ticket_id: str) -> TicketStatus:
+    def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get mock ticket status."""
         if ticket_id not in self.tickets:
             raise ValueError(f"Ticket #{ticket_id} not found")
 
         ticket = self.tickets[ticket_id]
-        return self.build_ticket_status(
+        return self.build_ticket_state(
             id=ticket["id"],
             key=f"MOCK-{ticket['id']}",
             status=ticket["status"],
@@ -111,7 +111,7 @@ class MockBackend(BasePMBackend):
         limit: int | None = None,
         *,
         backend_tag: str = "mock",
-    ) -> list[TicketStatus]:
+    ) -> list[TicketState]:
         """List mock tickets."""
         tickets = []
 
@@ -124,7 +124,7 @@ class MockBackend(BasePMBackend):
             if assignee and ticket_data.get("assignee") != assignee:
                 continue
 
-            tickets.append(self.build_ticket_status(
+            tickets.append(self.build_ticket_state(
                 id=ticket_data["id"],
                 key=f"MOCK-{ticket_data['id']}",
                 status=ticket_data["status"],
@@ -139,7 +139,7 @@ class MockBackend(BasePMBackend):
         print(f"  [MOCK] Listed {len(tickets)} tickets")
         return tickets
 
-    def _search_tickets(self, query: str) -> list[TicketStatus]:
+    def _search_tickets(self, query: str) -> list[TicketState]:
         """Search mock tickets."""
         tickets = []
         query_lower = query.lower()
@@ -147,7 +147,7 @@ class MockBackend(BasePMBackend):
         for ticket_data in self.tickets.values():
             if (query_lower in ticket_data["title"].lower() or
                 query_lower in ticket_data["description"].lower()):
-                tickets.append(self.build_ticket_status(
+                tickets.append(self.build_ticket_state(
                     id=ticket_data["id"],
                     key=f"MOCK-{ticket_data['id']}",
                     status=ticket_data["status"],

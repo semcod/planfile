@@ -8,7 +8,7 @@ except ImportError:
     gitlab = None
     GitlabError = None  # pip install python-gitlab
 
-from planfile.sync.base import BasePMBackend, TicketRef, TicketStatus
+from planfile.sync.base import BasePMBackend, TicketRef, TicketState
 
 
 class GitLabBackend(BasePMBackend):
@@ -51,6 +51,28 @@ class GitLabBackend(BasePMBackend):
         if not self.config.get("project_id"):
             raise ValueError("GitLab project ID is required")
 
+    def _prepare_labels(self, labels: list[str] | None, priority: str | None) -> list[str]:
+        """Build label list, appending priority label."""
+        issue_labels = list(labels or [])
+        if priority:
+            issue_labels.append(f"priority::{priority}")
+        return issue_labels
+
+    def _build_metadata_body(self, body: str, metadata: dict[str, Any] | None) -> str:
+        """Append strategy metadata section to body."""
+        if not metadata:
+            return body
+        metadata_section = "\n\n---\n\n### Strategy Metadata\n\n"
+        for key, value in metadata.items():
+            if key != "model_hints":
+                metadata_section += f"- **{key}**: {value}\n"
+        if "model_hints" in metadata:
+            metadata_section += "\n### Model Hints\n\n"
+            for phase, tier in metadata["model_hints"].items():
+                if tier:
+                    metadata_section += f"- **{phase}**: {tier}\n"
+        return body + metadata_section
+
     def _create_ticket(
         self,
         title: str,
@@ -62,30 +84,9 @@ class GitLabBackend(BasePMBackend):
         metadata: dict[str, Any] | None = None,
     ) -> TicketRef:
         """Create a new GitLab issue."""
-        # Prepare labels
-        issue_labels = labels or []
+        issue_labels = self._prepare_labels(labels, priority)
+        body = self._build_metadata_body(body, metadata)
 
-        # Add priority as label if specified
-        if priority:
-            priority_label = f"priority::{priority}"
-            issue_labels.append(priority_label)
-
-        # Add strategy metadata to body
-        if metadata:
-            metadata_section = "\n\n---\n\n### Strategy Metadata\n\n"
-            for key, value in metadata.items():
-                if key != "model_hints":
-                    metadata_section += f"- **{key}**: {value}\n"
-
-            if "model_hints" in metadata:
-                metadata_section += "\n### Model Hints\n\n"
-                for phase, tier in metadata["model_hints"].items():
-                    if tier:
-                        metadata_section += f"- **{phase}**: {tier}\n"
-
-            body += metadata_section
-
-        # Create issue
         try:
             issue = self.project.issues.create({
                 "title": title,
@@ -93,9 +94,7 @@ class GitLabBackend(BasePMBackend):
                 "labels": issue_labels,
             })
 
-            # Assign if specified
             if assignee:
-                # Get user by username
                 users = self.gl.users.list(username=assignee)
                 if users:
                     issue.assignee_id = users[0].id
@@ -110,6 +109,23 @@ class GitLabBackend(BasePMBackend):
             )
         except GitlabError as e:
             raise RuntimeError(f"Failed to create GitLab issue: {e}")
+
+    def _update_labels(self, issue, labels: list[str] | None, priority: str | None) -> None:
+        """Update issue labels, replacing priority labels."""
+        current_labels = issue.labels
+        current_labels = [l for l in current_labels if not l.startswith("priority::")]
+        new_labels = list(labels or [])
+        if priority:
+            new_labels.append(f"priority::{priority}")
+        issue.labels = current_labels + new_labels
+
+    def _update_state(self, issue, status: str) -> None:
+        """Update issue open/close state."""
+        status_lower = status.lower()
+        if status_lower == "closed":
+            issue.state_event = "close"
+        elif status_lower == "open":
+            issue.state_event = "reopen"
 
     def _update_ticket(
         self,
@@ -126,36 +142,14 @@ class GitLabBackend(BasePMBackend):
         try:
             issue = self.project.issues.get(ticket_id)
 
-            # Update title
             if title:
                 issue.title = title
-
-            # Update description
             if body:
                 issue.description = body
-
-            # Update labels
             if labels is not None or priority:
-                current_labels = issue.labels
-
-                # Remove existing priority labels
-                current_labels = [l for l in current_labels if not l.startswith("priority::")]
-
-                # Add new labels
-                new_labels = labels or []
-                if priority:
-                    new_labels.append(f"priority::{priority}")
-
-                issue.labels = current_labels + new_labels
-
-            # Update state (open/close)
+                self._update_labels(issue, labels, priority)
             if status:
-                if status.lower() == "closed":
-                    issue.state_event = "close"
-                elif status.lower() == "open":
-                    issue.state_event = "reopen"
-
-            # Update assignee
+                self._update_state(issue, status)
             if assignee:
                 users = self.gl.users.list(username=assignee)
                 if users:
@@ -166,7 +160,7 @@ class GitLabBackend(BasePMBackend):
         except GitlabError as e:
             raise RuntimeError(f"Failed to update GitLab issue {ticket_id}: {e}")
 
-    def _get_ticket(self, ticket_id: str) -> TicketStatus:
+    def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get GitLab issue status."""
         try:
             issue = self.project.issues.get(ticket_id)
@@ -175,9 +169,9 @@ class GitLabBackend(BasePMBackend):
         except GitlabError as e:
             raise RuntimeError(f"Failed to get GitLab issue {ticket_id}: {e}")
 
-    def _issue_to_ticket_status(self, issue) -> TicketStatus:
-        """Convert a GitLab issue object into a TicketStatus."""
-        return self.build_ticket_status(
+    def _issue_to_ticket_status(self, issue) -> TicketState:
+        """Convert a GitLab issue object into a TicketState."""
+        return self.build_ticket_state(
             id=str(issue.iid),
             status=issue.state,
             assignee=issue.assignee["username"] if issue.assignee else None,
@@ -192,7 +186,7 @@ class GitLabBackend(BasePMBackend):
         backend_tag: str = "gitlab",
         assignee: str | None = None,
         limit: int | None = None,
-    ) -> list[TicketStatus]:
+    ) -> list[TicketState]:
         """List GitLab issues with filters."""
         params = {}
 
@@ -219,7 +213,7 @@ class GitLabBackend(BasePMBackend):
         except GitlabError as e:
             raise RuntimeError(f"Failed to list GitLab issues: {e}")
 
-    def _search_tickets(self, query: str) -> list[TicketStatus]:
+    def _search_tickets(self, query: str) -> list[TicketState]:
         """Search GitLab issues."""
         try:
             issues = self.project.issues.list(search=query, state="all", per_page=50)

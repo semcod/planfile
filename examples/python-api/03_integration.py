@@ -8,67 +8,8 @@ Shows how to:
 - Track metrics and alerts as tickets
 """
 
-import sys
-import traceback
-from datetime import datetime
-from planfile import quick_ticket, Planfile
-
-
-class TicketLogger:
-    """Logger that creates tickets for errors and warnings."""
-    
-    def __init__(self, tool_name):
-        self.tool_name = tool_name
-        self.pf = Planfile.auto_discover(".")
-    
-    def error(self, message, exception=None, context=None):
-        """Log error as ticket."""
-        ctx = context or {}
-        if exception:
-            ctx["exception"] = str(exception)
-            ctx["traceback"] = traceback.format_exc()
-        
-        ticket = quick_ticket(
-            title=f"[{self.tool_name}] Error: {message[:50]}",
-            tool=self.tool_name,
-            priority="high",
-            description=message,
-            context=ctx,
-            type="bug"
-        )
-        print(f"🎫 Created error ticket: {ticket.id}")
-        return ticket
-    
-    def warning(self, message, context=None):
-        """Log warning as ticket."""
-        ticket = quick_ticket(
-            title=f"[{self.tool_name}] Warning: {message[:50]}",
-            tool=self.tool_name,
-            priority="medium",
-            description=message,
-            context=context or {},
-            type="task"
-        )
-        print(f"🎫 Created warning ticket: {ticket.id}")
-        return ticket
-    
-    def metric_alert(self, metric_name, value, threshold):
-        """Create ticket for metric threshold breach."""
-        ticket = quick_ticket(
-            title=f"🚨 {metric_name}: {value} exceeds {threshold}",
-            tool=f"{self.tool_name}-metrics",
-            priority="critical",
-            description=f"Metric {metric_name} exceeded threshold",
-            context={
-                "metric": metric_name,
-                "value": value,
-                "threshold": threshold,
-                "timestamp": datetime.now().isoformat()
-            },
-            type="bug"
-        )
-        print(f"🎫 Created metric alert ticket: {ticket.id}")
-        return ticket
+from planfile import quick_ticket
+from planfile.extensions import TicketLogger
 
 
 def example_cli_tool_integration():

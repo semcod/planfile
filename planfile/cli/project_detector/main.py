@@ -39,34 +39,35 @@ def detect_project(project_path: Path | None = None) -> DetectedProject:
     return _detect_from_structure(project_path)
 
 
-def get_detected_values() -> dict:
-    """
-    Get detected project values as a dictionary for use in CLI.
-    
-    Returns:
-        Dict with detected values or empty strings if not detected
-    """
-    detected = detect_project()
-
-    # Convert quality gates to dict format
-    quality_gates = []
-    for gate in detected.quality_gates:
-        quality_gates.append({
+def _quality_gates_to_dict(gates: list) -> list[dict]:
+    """Convert quality gates to dict format."""
+    return [
+        {
             "name": gate.name,
             "description": gate.description,
             "criteria": gate.criteria,
             "required": gate.required,
-        })
+        }
+        for gate in gates
+    ]
 
-    # Determine source
-    source = "structure"
-    if detected.name:
-        if (Path.cwd() / "pyproject.toml").exists():
-            source = "pyproject.toml"
-        elif (Path.cwd() / "package.json").exists():
-            source = "package.json"
-        elif detected.description and not detected.name:
-            source = "README"
+
+def _determine_source(detected: DetectedProject) -> str:
+    """Determine the detection source based on project files."""
+    if not detected.name:
+        return "structure"
+    cwd = Path.cwd()
+    if (cwd / "pyproject.toml").exists():
+        return "pyproject.toml"
+    if (cwd / "package.json").exists():
+        return "package.json"
+    return "README"
+
+
+def _build_detected_dict(detected: DetectedProject) -> dict:
+    """Build a dictionary from detected project values."""
+    quality_gates = _quality_gates_to_dict(detected.quality_gates)
+    source = _determine_source(detected)
 
     return {
         "name": detected.name or "",
@@ -86,3 +87,14 @@ def get_detected_values() -> dict:
         "has_detection": bool(detected.name),
         "source": source,
     }
+
+
+def get_detected_values() -> dict:
+    """
+    Get detected project values as a dictionary for use in CLI.
+
+    Returns:
+        Dict with detected values or empty strings if not detected
+    """
+    detected = detect_project()
+    return _build_detected_dict(detected)

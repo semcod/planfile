@@ -1,0 +1,481 @@
+# code2llm call graph | /home/tom/github/semcod/planfile
+# nodes: 316 | edges: 347 | modules: 83
+# CC̄=2.2
+
+HUBS[20]:
+  Taskfile.print
+    CC=0  in:323  out:0  total:323
+  examples.ecosystem.04_llx_integration.example_metric_driven_planning
+    CC=9  in:0  out:57  total:57
+  examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy
+    CC=8  in:0  out:56  total:56
+  planfile.cli.groups.examples.commands.create_examples_app
+    CC=1  in:1  out:46  total:47
+  planfile.cli.groups.review.commands.review_strategy_cli
+    CC=10  in:0  out:40  total:40
+  examples.python-api.04_analytics_simple.main
+    CC=1  in:0  out:35  total:35
+  planfile.analysis.parsers.text_parser.analyze_text
+    CC=13  in:4  out:30  total:34
+  planfile.cli.project_detector.package._detect_from_package_json
+    CC=7  in:1  out:28  total:29
+  planfile.cli.groups.init.commands.init_strategy_cli
+    CC=8  in:0  out:29  total:29
+  planfile.cli.groups.health.commands.create_health_app
+    CC=1  in:1  out:28  total:29
+  planfile.cli.project_detector.fallback._detect_from_structure
+    CC=9  in:1  out:27  total:28
+  planfile.importers.redup_importer._parse_duplicates
+    CC=9  in:1  out:26  total:27
+  planfile.runner.analyze_project_metrics
+    CC=12  in:1  out:25  total:26
+  examples.ecosystem.02_mcp_integration.example_mcp_session
+    CC=1  in:0  out:26  total:26
+  planfile.cli.project_detector.structure._analyze_directory_structure
+    CC=20  in:3  out:23  total:26
+  planfile.cli.groups.query.commands.stats_cmd
+    CC=5  in:0  out:24  total:24
+  planfile.runner.run_strategy
+    CC=8  in:1  out:23  total:24
+  planfile.importers.redup_importer._parse_toon_format
+    CC=9  in:1  out:22  total:23
+  planfile.cli.groups.query.commands.compare_strategies
+    CC=10  in:1  out:22  total:23
+  planfile.cli.project_detector.readme._find_readme_content
+    CC=16  in:2  out:20  total:22
+
+MODULES:
+  Taskfile  [1 funcs]
+    print  CC=0  out:0
+  examples.ecosystem.02_mcp_integration  [6 funcs]
+    create_mcp_tool_definitions  CC=1  out:6
+    example_mcp_session  CC=1  out:26
+    run_mcp_tool  CC=4  out:6
+    simulate_planfile_apply  CC=5  out:7
+    simulate_planfile_generate  CC=9  out:9
+    simulate_planfile_review  CC=1  out:2
+  examples.ecosystem.03_proxy_routing  [3 funcs]
+    create_proxy_config_example  CC=1  out:3
+    example_budget_tracking  CC=2  out:19
+    example_strategy_generation_with_proxy  CC=8  out:56
+  examples.ecosystem.04_llx_integration  [4 funcs]
+    analyze_project  CC=4  out:6
+    select_model  CC=5  out:2
+    create_llx_config_example  CC=1  out:3
+    example_metric_driven_planning  CC=9  out:57
+  examples.llx_validator  [1 funcs]
+    create_validation_script  CC=1  out:4
+  examples.python-api.01_basic_usage  [5 funcs]
+    example_1_basic_initialization  CC=1  out:5
+    example_2_create_ticket  CC=1  out:9
+    example_3_quick_ticket  CC=1  out:6
+    example_4_list_tickets  CC=3  out:13
+    main  CC=1  out:10
+  examples.python-api.02_ticket_management  [6 funcs]
+    example_bulk_operations  CC=3  out:7
+    example_create_tickets  CC=1  out:8
+    example_delete_and_move  CC=1  out:4
+    example_read_tickets  CC=1  out:12
+    example_update_tickets  CC=1  out:8
+    main  CC=1  out:11
+  examples.python-api.03_integration  [8 funcs]
+    error  CC=3  out:4
+    metric_alert  CC=1  out:4
+    warning  CC=2  out:2
+    example_ci_pipeline_integration  CC=4  out:7
+    example_cli_tool_integration  CC=2  out:5
+    example_custom_decorator  CC=3  out:17
+    example_monitoring_integration  CC=4  out:6
+    main  CC=1  out:10
+  examples.python-api.03_integration_simple  [1 funcs]
+    main  CC=3  out:18
+  examples.python-api.04_advanced_filtering  [6 funcs]
+    example_basic_filtering  CC=1  out:15
+    example_combined_filters  CC=2  out:7
+    example_export_filtered  CC=5  out:13
+    example_search_by_labels  CC=12  out:10
+    example_statistics  CC=8  out:17
+    main  CC=1  out:11
+  examples.python-api.04_analytics_simple  [1 funcs]
+    main  CC=1  out:35
+  examples.rest-api.03_python_client  [5 funcs]
+    example_basic_operations  CC=1  out:10
+    example_bulk_operations  CC=2  out:12
+    example_error_handling  CC=3  out:7
+    example_workflow  CC=1  out:12
+    main  CC=4  out:21
+  examples.rest-api.04_javascript_client  [13 funcs]
+    BASE_URL  CC=5  out:17
+    client  CC=2  out:10
+    createTicket  CC=1  out:1
+    fetched  CC=1  out:1
+    getTicket  CC=1  out:1
+    health  CC=1  out:1
+    listTickets  CC=1  out:1
+    moveTicket  CC=1  out:1
+    request  CC=5  out:8
+    ticket  CC=1  out:1
+  planfile  [1 funcs]
+    quick_ticket  CC=1  out:4
+  planfile.analysis.external_tools  [3 funcs]
+    run_code2llm  CC=3  out:10
+    run_redup  CC=3  out:10
+    run_vallm  CC=3  out:10
+  planfile.analysis.file_analyzer  [7 funcs]
+    _analyze_json  CC=1  out:1
+    _analyze_text  CC=1  out:1
+    _analyze_toon  CC=1  out:1
+    _analyze_yaml  CC=1  out:1
+    _extract_from_json_structure  CC=1  out:1
+    _extract_from_yaml_structure  CC=1  out:1
+    analyze_file  CC=4  out:5
+  planfile.analysis.generator  [10 funcs]
+    _extract_key_metrics  CC=1  out:1
+    _generate_goal  CC=1  out:1
+    _generate_goals  CC=1  out:1
+    _generate_quality_gates  CC=1  out:1
+    _generate_risks  CC=1  out:1
+    _generate_success_criteria  CC=1  out:1
+    _generate_target_metrics  CC=1  out:1
+    _generate_tasks  CC=1  out:1
+    _parse_effort  CC=1  out:1
+    generate_with_external_tools  CC=1  out:10
+  planfile.analysis.generators.metrics_extractor  [6 funcs]
+    _extract_cc_metrics  CC=7  out:5
+    _extract_coverage_metrics  CC=4  out:1
+    _extract_critical_metrics  CC=7  out:4
+    _extract_duplication_metrics  CC=6  out:3
+    _extract_validation_metrics  CC=9  out:6
+    extract_key_metrics  CC=2  out:6
+  planfile.analysis.parsers.json_parser  [1 funcs]
+    analyze_json  CC=2  out:9
+  planfile.analysis.parsers.text_parser  [1 funcs]
+    analyze_text  CC=13  out:30
+  planfile.analysis.parsers.toon_parser  [3 funcs]
+    _determine_section  CC=11  out:7
+    _parse_toon_sections  CC=4  out:3
+    analyze_toon  CC=5  out:15
+  planfile.analysis.parsers.yaml_parser  [7 funcs]
+    _create_issue_from_value  CC=1  out:1
+    _is_issue_content  CC=4  out:4
+    _process_yaml_dict  CC=4  out:4
+    _process_yaml_list  CC=2  out:3
+    _process_yaml_value  CC=4  out:7
+    analyze_yaml  CC=4  out:20
+    extract_from_yaml_structure  CC=5  out:8
+  planfile.api.server  [6 funcs]
+    create_ticket  CC=1  out:5
+    delete_ticket  CC=2  out:4
+    get_ticket  CC=2  out:5
+    list_tickets  CC=3  out:6
+    move_ticket  CC=2  out:5
+    update_ticket  CC=4  out:7
+  planfile.ci  [2 funcs]
+    __init__  CC=4  out:5
+    check_strategy_completion  CC=3  out:9
+  planfile.cli.core.console  [1 funcs]
+    print_warning  CC=1  out:1
+  planfile.cli.core.errors  [2 funcs]
+    exit_with_error  CC=1  out:2
+    handle_exception  CC=2  out:3
+  planfile.cli.core.registry  [2 funcs]
+    register_simple_command  CC=2  out:1
+    register_typer_group  CC=1  out:2
+  planfile.cli.extra_commands  [1 funcs]
+    add_extra_commands  CC=1  out:4
+  planfile.cli.groups.apply  [1 funcs]
+    register_apply_commands  CC=1  out:1
+  planfile.cli.groups.apply.commands  [2 funcs]
+    apply_strategy_cli  CC=6  out:20
+    execute_apply_strategy  CC=1  out:5
+  planfile.cli.groups.apply.utils  [5 funcs]
+    get_backend  CC=7  out:16
+    load_and_validate_strategy  CC=2  out:4
+    load_backend_config  CC=5  out:11
+    parse_sprint_filter  CC=4  out:5
+    select_backend  CC=2  out:3
+  planfile.cli.groups.auto.commands  [2 funcs]
+    _initialize_backends  CC=3  out:4
+    get_backend  CC=4  out:13
+  planfile.cli.groups.examples  [1 funcs]
+    register_examples_commands  CC=1  out:1
+  planfile.cli.groups.examples.commands  [2 funcs]
+    _discover_examples  CC=13  out:18
+    create_examples_app  CC=1  out:46
+  planfile.cli.groups.generate.commands  [1 funcs]
+    generate_strategy_cli  CC=5  out:20
+  planfile.cli.groups.health  [1 funcs]
+    register_health_commands  CC=1  out:1
+  planfile.cli.groups.health.commands  [1 funcs]
+    create_health_app  CC=1  out:28
+  planfile.cli.groups.init  [1 funcs]
+    register_init_commands  CC=1  out:1
+  planfile.cli.groups.init.commands  [7 funcs]
+    _ask  CC=7  out:3
+    _ask_list  CC=4  out:6
+    _choice  CC=11  out:12
+    _collect_custom_sprints  CC=2  out:8
+    _collect_preset_sprints  CC=5  out:16
+    _collect_sprint_data  CC=2  out:2
+    init_strategy_cli  CC=8  out:29
+  planfile.cli.groups.query.commands  [7 funcs]
+    _export_to_csv  CC=6  out:12
+    calculate_strategy_stats  CC=7  out:14
+    compare_cmd  CC=7  out:18
+    compare_strategies  CC=10  out:22
+    export_cmd  CC=5  out:15
+    merge_cmd  CC=3  out:10
+    stats_cmd  CC=5  out:24
+  planfile.cli.groups.review  [1 funcs]
+    register_review_commands  CC=1  out:1
+  planfile.cli.groups.review.commands  [1 funcs]
+    review_strategy_cli  CC=10  out:40
+  planfile.cli.groups.review.utils  [2 funcs]
+    _load_and_validate_strategy  CC=2  out:3
+    _load_backend_config  CC=6  out:13
+  planfile.cli.groups.sync.commands  [7 funcs]
+    all_cmd  CC=2  out:11
+    github_cmd  CC=1  out:4
+    gitlab_cmd  CC=1  out:4
+    handle_no_integrations  CC=1  out:2
+    jira_cmd  CC=1  out:4
+    markdown_cmd  CC=1  out:4
+    sync_all_integrations  CC=3  out:5
+  planfile.cli.groups.sync.core  [11 funcs]
+    _collect_tickets_from_backlog  CC=4  out:4
+    _collect_tickets_from_section  CC=3  out:5
+    _collect_tickets_from_sprint  CC=4  out:4
+    _execute_sync_with_progress  CC=3  out:9
+    _initialize_backend  CC=6  out:9
+    _load_tickets_for_sync  CC=3  out:9
+    _load_tickets_v1_format  CC=2  out:4
+    _process_planfile_v1  CC=9  out:11
+    _ticket_matches_integration  CC=3  out:2
+    _ticket_matches_integration_v1  CC=2  out:2
+  planfile.cli.groups.ticket.commands  [5 funcs]
+    _display_tickets  CC=6  out:9
+    create_ticket_table  CC=5  out:14
+    load_import_tickets  CC=5  out:6
+    ticket_import  CC=1  out:8
+    ticket_list  CC=5  out:9
+  planfile.cli.groups.validate  [1 funcs]
+    register_validate_commands  CC=1  out:1
+  planfile.cli.groups.validate.commands  [1 funcs]
+    validate_strategy_cli  CC=9  out:22
+  planfile.cli.project_detector.fallback  [1 funcs]
+    _detect_from_structure  CC=9  out:27
+  planfile.cli.project_detector.gates  [13 funcs]
+    _detect_ci_gates  CC=3  out:3
+    _detect_doc_gates  CC=3  out:3
+    _detect_docker_gates  CC=3  out:3
+    _detect_quality_gates  CC=3  out:7
+    _detect_quality_tool_gates  CC=3  out:2
+    _detect_security_gates  CC=3  out:2
+    _detect_test_gates  CC=8  out:10
+    _find_quality_tools  CC=4  out:6
+    _find_security_tools  CC=7  out:6
+    _has_bandit_config  CC=5  out:2
+  planfile.cli.project_detector.git  [1 funcs]
+    _detect_git_authors  CC=4  out:5
+  planfile.cli.project_detector.inference  [3 funcs]
+    _infer_domain  CC=4  out:4
+    _infer_node_project_type  CC=9  out:5
+    _infer_python_project_type  CC=17  out:12
+  planfile.cli.project_detector.license  [1 funcs]
+    _detect_license  CC=9  out:2
+  planfile.cli.project_detector.main  [2 funcs]
+    detect_project  CC=4  out:5
+    get_detected_values  CC=15  out:7
+  planfile.cli.project_detector.model_tier  [4 funcs]
+    _detect_model_tier  CC=3  out:3
+    _tier_from_config_files  CC=9  out:3
+    _tier_from_env_files  CC=8  out:2
+    _tier_from_env_vars  CC=4  out:1
+  planfile.cli.project_detector.package  [1 funcs]
+    _detect_from_package_json  CC=7  out:28
+  planfile.cli.project_detector.pyproject  [9 funcs]
+    _detect_from_pyproject  CC=4  out:6
+    _get_project_dependencies  CC=6  out:2
+    _import_toml_loader  CC=3  out:0
+    _load_pyproject_data  CC=3  out:3
+    _populate_inferred_project_details  CC=3  out:6
+    _populate_poetry_metadata  CC=2  out:5
+    _populate_project_from_data  CC=5  out:2
+    _populate_project_metadata  CC=8  out:13
+    _populate_readme_and_repository_details  CC=4  out:10
+  planfile.cli.project_detector.readme  [3 funcs]
+    _find_readme_content  CC=16  out:20
+    _find_readme_description  CC=1  out:1
+    _find_readme_goal  CC=1  out:1
+  planfile.cli.project_detector.structure  [1 funcs]
+    _analyze_directory_structure  CC=20  out:23
+  planfile.core.models.strategy  [2 funcs]
+    export  CC=5  out:12
+    to_yaml  CC=2  out:5
+  planfile.examples  [5 funcs]
+    example_create_strategy  CC=1  out:1
+    example_programmatic_strategy  CC=1  out:11
+    example_run_strategy  CC=1  out:1
+    example_validate_strategy  CC=2  out:5
+    example_verify_strategy  CC=2  out:4
+  planfile.importers  [1 funcs]
+    import_from_source  CC=8  out:11
+  planfile.importers.code2llm_importer  [6 funcs]
+    _handle_in_next  CC=13  out:14
+    parse  CC=3  out:4
+    _evolution_item_to_ticket  CC=6  out:11
+    _parse_evolution  CC=1  out:2
+    _parse_health  CC=9  out:8
+    import_code2llm  CC=3  out:4
+  planfile.importers.common  [2 funcs]
+    load_structured_tickets  CC=6  out:10
+    normalize_ticket_dict  CC=5  out:8
+  planfile.importers.json_importer  [1 funcs]
+    import_json  CC=1  out:1
+  planfile.importers.redup_importer  [5 funcs]
+    _create_refactor_ticket  CC=9  out:13
+    _parse_duplicates  CC=9  out:26
+    _parse_refactor  CC=11  out:15
+    _parse_toon_format  CC=9  out:22
+    import_redup  CC=3  out:7
+  planfile.importers.vallm_importer  [3 funcs]
+    _parse_issue_entry  CC=3  out:5
+    _auto_labels  CC=3  out:3
+    import_vallm  CC=1  out:4
+  planfile.importers.yaml_importer  [1 funcs]
+    import_yaml  CC=1  out:1
+  planfile.llm.client  [1 funcs]
+    call_llm  CC=4  out:10
+  planfile.llm.generator  [6 funcs]
+    _auto_select_model  CC=4  out:4
+    _basic_metrics  CC=8  out:6
+    _collect_metrics  CC=2  out:3
+    _fix_yaml_formatting  CC=6  out:7
+    _parse_strategy_response  CC=3  out:7
+    generate_strategy  CC=3  out:7
+  planfile.llm.prompts  [1 funcs]
+    build_strategy_prompt  CC=5  out:9
+  planfile.loaders.cli_loader  [8 funcs]
+    _md_header  CC=1  out:3
+    _md_summary  CC=2  out:3
+    _md_tasks  CC=7  out:6
+    export_results_to_markdown  CC=1  out:15
+    load_from_json  CC=2  out:5
+    load_strategy_from_json  CC=1  out:2
+    save_strategy_to_json  CC=1  out:2
+    save_to_json  CC=1  out:4
+  planfile.loaders.yaml_loader  [15 funcs]
+    _check_required_keys  CC=3  out:1
+    _format_validation_error  CC=5  out:7
+    _transform_goal  CC=4  out:3
+    _transform_sprints  CC=4  out:0
+    _transform_task_patterns  CC=6  out:3
+    _validate_gates  CC=6  out:4
+    _validate_sprints  CC=6  out:6
+    _validate_task_patterns  CC=7  out:5
+    load_strategy_yaml  CC=2  out:6
+    load_tasks_yaml  CC=5  out:6
+  planfile.mcp.server  [4 funcs]
+    _read_jsonrpc  CC=4  out:2
+    _write_jsonrpc  CC=1  out:3
+    handle_tool_call  CC=14  out:17
+    main  CC=8  out:12
+  planfile.runner  [7 funcs]
+    _get_project_hash  CC=5  out:11
+    analyze_project_metrics  CC=12  out:25
+    apply_strategy_to_tickets  CC=8  out:8
+    load_valid_strategy  CC=3  out:7
+    review_strategy  CC=14  out:9
+    run_strategy  CC=8  out:23
+    verify_strategy_post_execution  CC=12  out:12
+  planfile.server_common  [1 funcs]
+    get_planfile  CC=2  out:1
+  planfile.sync.mock  [4 funcs]
+    _create_ticket  CC=4  out:7
+    _list_tickets  CC=11  out:13
+    _search_tickets  CC=4  out:11
+    _update_ticket  CC=8  out:4
+  planfile.sync.operations  [15 funcs]
+    _create_new_ticket  CC=4  out:8
+    _extract_ticket_data  CC=7  out:14
+    _fetch_external_tickets  CC=3  out:4
+    _import_new_ticket  CC=1  out:3
+    _is_permission_error  CC=3  out:4
+    _load_sprint_and_backlog  CC=5  out:4
+    _print_dry_run_action  CC=2  out:2
+    _print_permission_error  CC=1  out:9
+    _process_external_ticket  CC=4  out:6
+    _save_import_results  CC=5  out:6
+  planfile.sync.state  [1 funcs]
+    save_sync  CC=2  out:9
+  planfile.sync.utils  [1 funcs]
+    save_v1_format  CC=1  out:2
+  planfile.utils.metrics  [4 funcs]
+    _check_project_files  CC=2  out:1
+    _collect_git_metrics  CC=8  out:15
+    _count_files_by_language  CC=6  out:11
+    analyze_project_metrics  CC=3  out:10
+  project.map.toon  [9 funcs]
+    create_strategy_command  CC=0  out:0
+    generate_goal  CC=0  out:0
+    generate_goals  CC=0  out:0
+    generate_quality_gates  CC=0  out:0
+    generate_risks  CC=0  out:0
+    generate_success_criteria  CC=0  out:0
+    generate_target_metrics  CC=0  out:0
+    generate_tasks  CC=0  out:0
+    parse_effort  CC=0  out:0
+  scripts.run_examples  [1 funcs]
+    print_error  CC=0  out:0
+
+EDGES:
+  examples.rest-api.04_javascript_client.BASE_URL → examples.rest-api.04_javascript_client.PlanfileClient.request
+  examples.rest-api.04_javascript_client.PlanfileClient.health → examples.rest-api.04_javascript_client.PlanfileClient.createTicket
+  examples.rest-api.04_javascript_client.PlanfileClient.listTickets → examples.rest-api.04_javascript_client.PlanfileClient.request
+  examples.rest-api.04_javascript_client.PlanfileClient.createTicket → examples.rest-api.04_javascript_client.PlanfileClient.request
+  examples.rest-api.04_javascript_client.PlanfileClient.getTicket → examples.rest-api.04_javascript_client.PlanfileClient.request
+  examples.rest-api.04_javascript_client.PlanfileClient.updateTicket → examples.rest-api.04_javascript_client.PlanfileClient.request
+  examples.rest-api.04_javascript_client.PlanfileClient.moveTicket → examples.rest-api.04_javascript_client.PlanfileClient.request
+  examples.rest-api.04_javascript_client.PlanfileClient.client → examples.rest-api.04_javascript_client.PlanfileClient.health
+  examples.rest-api.04_javascript_client.PlanfileClient.client → examples.rest-api.04_javascript_client.PlanfileClient.createTicket
+  examples.rest-api.04_javascript_client.PlanfileClient.client → examples.rest-api.04_javascript_client.PlanfileClient.getTicket
+  examples.rest-api.04_javascript_client.PlanfileClient.client → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
+  examples.rest-api.04_javascript_client.PlanfileClient.client → examples.rest-api.04_javascript_client.PlanfileClient.listTickets
+  examples.rest-api.04_javascript_client.PlanfileClient.client → examples.rest-api.04_javascript_client.PlanfileClient.moveTicket
+  examples.rest-api.04_javascript_client.PlanfileClient.ticket → examples.rest-api.04_javascript_client.PlanfileClient.createTicket
+  examples.rest-api.04_javascript_client.PlanfileClient.fetched → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
+  examples.rest-api.04_javascript_client.PlanfileClient.updated → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
+  examples.rest-api.04_javascript_client.PlanfileClient.tickets → examples.rest-api.04_javascript_client.PlanfileClient.listTickets
+  examples.python-api.03_integration_simple.main → Taskfile.print
+  examples.python-api.03_integration.TicketLogger.error → planfile.quick_ticket
+  examples.python-api.03_integration.TicketLogger.error → Taskfile.print
+  examples.python-api.03_integration.TicketLogger.warning → planfile.quick_ticket
+  examples.python-api.03_integration.TicketLogger.warning → Taskfile.print
+  examples.python-api.03_integration.TicketLogger.metric_alert → planfile.quick_ticket
+  examples.python-api.03_integration.TicketLogger.metric_alert → Taskfile.print
+  examples.python-api.03_integration.example_cli_tool_integration → Taskfile.print
+  examples.python-api.03_integration.example_monitoring_integration → Taskfile.print
+  examples.python-api.03_integration.example_ci_pipeline_integration → Taskfile.print
+  examples.python-api.03_integration.example_custom_decorator → Taskfile.print
+  examples.python-api.03_integration.main → Taskfile.print
+  examples.python-api.03_integration.main → examples.python-api.03_integration.example_cli_tool_integration
+  examples.python-api.03_integration.main → examples.python-api.03_integration.example_monitoring_integration
+  examples.python-api.03_integration.main → examples.python-api.03_integration.example_ci_pipeline_integration
+  examples.python-api.03_integration.main → examples.python-api.03_integration.example_custom_decorator
+  examples.ecosystem.02_mcp_integration.run_mcp_tool → Taskfile.print
+  examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_generate
+  examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_apply
+  examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_review
+  examples.ecosystem.02_mcp_integration.simulate_planfile_generate → Taskfile.print
+  examples.ecosystem.02_mcp_integration.simulate_planfile_apply → Taskfile.print
+  examples.ecosystem.02_mcp_integration.example_mcp_session → Taskfile.print
+  examples.ecosystem.02_mcp_integration.example_mcp_session → examples.ecosystem.02_mcp_integration.run_mcp_tool
+  examples.ecosystem.02_mcp_integration.create_mcp_tool_definitions → Taskfile.print
+  examples.python-api.01_basic_usage.example_1_basic_initialization → Taskfile.print
+  examples.python-api.01_basic_usage.example_2_create_ticket → Taskfile.print
+  examples.python-api.01_basic_usage.example_3_quick_ticket → Taskfile.print
+  examples.python-api.01_basic_usage.example_3_quick_ticket → planfile.quick_ticket
+  examples.python-api.01_basic_usage.example_4_list_tickets → Taskfile.print
+  examples.python-api.01_basic_usage.main → Taskfile.print
+  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_1_basic_initialization
+  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_2_create_ticket

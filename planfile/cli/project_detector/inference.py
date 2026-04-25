@@ -9,30 +9,23 @@ def _infer_python_project_type(deps: list, pyproject_data: dict, project_path: P
     """Infer Python project type from dependencies."""
     dep_names = [d.lower() for d in deps]
 
-    # Check for FastAPI, Flask, Django, etc.
-    if any(d in dep_names for d in ["fastapi", "flask", "django", "starlette", "tornado"]):
-        return "api"
-
-    # Check for web frameworks
-    if any(d in dep_names for d in ["streamlit", "gradio", "dash", "bokeh"]):
-        return "web"
-
-    # Check for CLI frameworks
-    if any(d in dep_names for d in ["typer", "click", "argparse", "fire", "docopt"]):
-        return "cli"
+    type_frameworks = [
+        (["fastapi", "flask", "django", "starlette", "tornado"], "api"),
+        (["streamlit", "gradio", "dash", "bokeh"], "web"),
+        (["typer", "click", "argparse", "fire", "docopt"], "cli"),
+    ]
+    for frameworks, project_type in type_frameworks:
+        if any(d in dep_names for d in frameworks):
+            return project_type
 
     # Check for project scripts (CLI entry points)
-    if "project" in pyproject_data and "scripts" in pyproject_data["project"]:
-        scripts = pyproject_data["project"]["scripts"]
-        if scripts and len(scripts) > 0:
-            return "cli"
+    if pyproject_data.get("project", {}).get("scripts"):
+        return "cli"
 
     # Check directory structure
     src_path = project_path / "src"
-    if src_path.exists():
-        subdirs = [d.name for d in src_path.iterdir() if d.is_dir()]
-        if len(subdirs) == 1:
-            return "library"
+    if src_path.exists() and sum(1 for _ in src_path.iterdir() if _.is_dir()) == 1:
+        return "library"
 
     # Check for main module vs package
     py_files = list(project_path.glob("*.py"))

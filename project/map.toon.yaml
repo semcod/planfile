@@ -1,14 +1,11 @@
-# planfile | 207f 27239L | python:158,shell:37,css:6,javascript:6 | 2026-04-19
-# stats: 356 func | 73 cls | 207 mod | CC̄=4.3 | critical:30 | cycles:0
-# alerts[5]: CC _analyze_directory_structure=20; CC _infer_python_project_type=17; CC _find_readme_content=16; CC test_checkbox_ticket_parsing=16; CC demo_checkbox_tickets=15
+# planfile | 212f 27270L | python:160,shell:39,javascript:6,css:6,less:1 | 2026-04-25
+# stats: 338 func | 78 cls | 212 mod | CC̄=4.2 | critical:25 | cycles:0
+# alerts[5]: CC _analyze_directory_structure=20; CC _infer_python_project_type=17; CC _find_readme_content=16; CC demo_checkbox_tickets=15; CC get_detected_values=15
 # hotspots[5]: create_examples_app fan=23; review_strategy_cli fan=21; auto_loop_cmd fan=20; example_metric_driven_planning fan=18; analyze_text fan=17
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[207]:
-  app.doql.css,361
-  auto_generate_planfile.sh,125
-  cleanup_redundant.sh,72
-  docker-entrypoint.sh,175
+M[212]:
+  app.doql.less,535
   examples/PROPOSED_API_IMPROVEMENTS.py,218
   examples/advanced-usage/ci-workflow.sh,17
   examples/advanced-usage/run.sh,30
@@ -117,10 +114,10 @@ M[207]:
   planfile/cli/groups/review/commands.py,101
   planfile/cli/groups/review/utils.py,87
   planfile/cli/groups/sync/__init__.py,19
-  planfile/cli/groups/sync/commands.py,74
+  planfile/cli/groups/sync/commands.py,92
   planfile/cli/groups/sync/core.py,257
   planfile/cli/groups/ticket/__init__.py,39
-  planfile/cli/groups/ticket/commands.py,293
+  planfile/cli/groups/ticket/commands.py,168
   planfile/cli/groups/validate/__init__.py,12
   planfile/cli/groups/validate/commands.py,43
   planfile/cli/project_detector/__init__.py,24
@@ -196,22 +193,30 @@ M[207]:
   planfile/utils/__init__.py,1
   planfile/utils/metrics.py,228
   planfile/utils/priorities.py,112
-  project.sh,40
-  run_examples.sh,287
-  test_chars.py,10
-  test_checkbox_tickets.py,113
-  test_improvements.py,175
-  test_integration.py,121
-  test_markdown_integration.py,78
-  test_mixed_format.py,50
-  test_planfile_final.py,156
-  test_regex.py,32
-  test_regex2.py,21
-  test_strategy.py,62
+  project.sh,48
+  scripts/auto_generate_planfile.sh,125
+  scripts/cleanup_redundant.sh,72
+  scripts/docker-entrypoint.sh,175
+  scripts/project.sh,40
+  scripts/run_examples.sh,287
   tests/htmlcov/coverage_html_cb_dd2e7eb5.js,736
   tests/htmlcov/style_cb_9ff733b0.css,390
+  tests/llm_adapters/__init__.py,20
+  tests/llm_adapters/adapters/__init__.py,10
+  tests/llm_adapters/adapters/lite_llm.py,89
+  tests/llm_adapters/adapters/local_llm.py,34
+  tests/llm_adapters/adapters/open_router.py,99
+  tests/llm_adapters/base.py,20
+  tests/llm_adapters/constants.py,25
+  tests/llm_adapters/models.py,14
   tests/llm_adapters.py,488
-  tests/test_strategy.py,73
+  tests/test_chars.py,10
+  tests/test_integration.py,8
+  tests/test_regex.py,32
+  tests/test_regex2.py,21
+  tests/test_strategy.py,62
+  tree.sh,2
+  web/app.doql.css,361
 D:
   examples/PROPOSED_API_IMPROVEMENTS.py:
     e: TicketLogger,PlanfileStoreExtended
@@ -533,11 +538,13 @@ D:
     e: register_sync_commands
     register_sync_commands(app)
   planfile/cli/groups/sync/commands.py:
-    e: github_cmd,gitlab_cmd,jira_cmd,markdown_cmd,all_cmd
+    e: github_cmd,gitlab_cmd,jira_cmd,markdown_cmd,handle_no_integrations,sync_all_integrations,all_cmd
     github_cmd(directory;dry_run;direction)
     gitlab_cmd(directory;dry_run;direction)
     jira_cmd(directory;dry_run;direction)
     markdown_cmd(directory;dry_run;direction)
+    handle_no_integrations(directory;dry_run;direction)
+    sync_all_integrations(integrations;directory;dry_run;direction)
     all_cmd(directory;dry_run;direction)
   planfile/cli/groups/sync/core.py:
     e: _initialize_backend,_ticket_matches_integration,_collect_tickets_from_sprint,_collect_tickets_from_backlog,_ticket_matches_integration_v1,_collect_tickets_from_section,_process_planfile_v1,_load_tickets_v1_format,_load_tickets_for_sync,_execute_sync_with_progress,sync_integration
@@ -556,24 +563,19 @@ D:
     e: register_ticket_commands
     register_ticket_commands(app)
   planfile/cli/groups/ticket/commands.py:
-    e: _display_tickets,ticket_create,ticket_list,ticket_show,ticket_update,ticket_move,ticket_import,ticket_done,ticket_start,ticket_block,ticket_review,_parse_checkbox_line,_extract_priority_from_emoji,_check_duplicate_ticket,_import_single_ticket,ticket_import_todo,ticket_export_todo
+    e: _display_tickets,create_ticket_table,ticket_create,ticket_list,ticket_show,ticket_update,ticket_move,ticket_import,load_import_tickets,ticket_done,ticket_start,ticket_block
     _display_tickets(tickets;fmt)
+    create_ticket_table(tickets)
     ticket_create(title;priority;sprint;source;label;description;integration)
     ticket_list(sprint;status;source;label;fmt)
     ticket_show(ticket_id;fmt)
     ticket_update(ticket_id;status;priority;title)
     ticket_move(ticket_id;to_sprint)
     ticket_import(source;sprint;from_file)
+    load_import_tickets(from_file;source)
     ticket_done(ticket_id)
     ticket_start(ticket_id)
     ticket_block(ticket_id;reason)
-    ticket_review(ticket_id)
-    _parse_checkbox_line(line)
-    _extract_priority_from_emoji(task_text)
-    _check_duplicate_ticket(pf;task_text;sprint)
-    _import_single_ticket(pf;task_text;priority;sprint;is_checked;todo_file;line_num)
-    ticket_import_todo(todo_file;sprint;dry_run)
-    ticket_export_todo(todo_file;sprint;include_done)
   planfile/cli/groups/validate/__init__.py:
     e: register_validate_commands
     register_validate_commands(app)
@@ -880,37 +882,24 @@ D:
     calculate_task_priority(base_priority;task_type;sprint_id;weight_factors)
     map_priority_to_system(priority;system)
     get_priority_color(priority)
-  test_chars.py:
-  test_checkbox_tickets.py:
-    e: test_checkbox_ticket_parsing
-    test_checkbox_ticket_parsing()
-  test_improvements.py:
-    e: test_v2_format,test_backward_compatibility
-    test_v2_format()
-    test_backward_compatibility()
-  test_integration.py:
-    e: test_integration
-    test_integration()
-  test_markdown_integration.py:
-    e: test_markdown_backend
-    test_markdown_backend()
-  test_mixed_format.py:
-    e: create_temp_files,categorize_tickets,filter_by_status,filter_by_id_pattern,parse_tickets
-    create_temp_files(mixed_content)
-    categorize_tickets(tickets)
-    filter_by_status(tickets;status)
-    filter_by_id_pattern(tickets;pattern)
-    parse_tickets(backend)
-  test_planfile_final.py:
-    e: test_planfile_v2,create_simple_free_strategy
-    test_planfile_v2()
-    create_simple_free_strategy()
-  test_regex.py:
-  test_regex2.py:
-  test_strategy.py:
-    e: test_basic_models,test_yaml_loading
-    test_basic_models()
-    test_yaml_loading()
+  tests/llm_adapters/__init__.py:
+  tests/llm_adapters/adapters/__init__.py:
+  tests/llm_adapters/adapters/lite_llm.py:
+    e: LiteLLMAdapter
+    LiteLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for LiteLLM providers.
+  tests/llm_adapters/adapters/local_llm.py:
+    e: LocalLLMAdapter
+    LocalLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for local LLM servers (Ollama, LM Studio, etc.).
+  tests/llm_adapters/adapters/open_router.py:
+    e: OpenRouterAdapter
+    OpenRouterAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for OpenRouter API.
+  tests/llm_adapters/base.py:
+    e: BaseLLMAdapter
+    BaseLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Base class for LLM adapters.
+  tests/llm_adapters/constants.py:
+  tests/llm_adapters/models.py:
+    e: LLMTestResult
+    LLMTestResult:  # Result of LLM test.
   tests/llm_adapters.py:
     e: LLMTestResult,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAdapter,LocalLLMAdapter,LLMTestRunner
     LLMTestResult:  # Result of LLM test.
@@ -919,9 +908,13 @@ D:
     OpenRouterAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for OpenRouter API.
     LocalLLMAdapter: __init__(1),test_strategy_generation(2),_test_ollama(2),_test_openai_compatible(2),get_available_models(0)  # Adapter for local LLM servers (Ollama, LM Studio, etc.).
     LLMTestRunner: __init__(0),register_adapter(2),test_strategy_with_all_adapters(2),generate_report(1),_generate_header(0),_generate_summary_table(1),_generate_detailed_results(1),_generate_successful_tests_section(1),_generate_failed_tests_section(1)  # Run tests across multiple LLM adapters.
+  tests/test_chars.py:
+  tests/test_integration.py:
+    e: test_integration
+    test_integration()
+  tests/test_regex.py:
+  tests/test_regex2.py:
   tests/test_strategy.py:
-    e: test_placeholder,test_import,test_planfile_bulk_ticket_creation_is_capped,test_sprint_generator_limits_tickets_by_priority
-    test_placeholder()
-    test_import()
-    test_planfile_bulk_ticket_creation_is_capped(monkeypatch)
-    test_sprint_generator_limits_tickets_by_priority()
+    e: test_basic_models,test_yaml_loading
+    test_basic_models()
+    test_yaml_loading()

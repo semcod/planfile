@@ -6,6 +6,35 @@ import re
 from pathlib import Path
 
 
+def _extract_description(lines: list[str]) -> str | None:
+    """Find first non-empty, non-header line for description."""
+    for line in lines:
+        line_stripped = line.strip()
+        if not line_stripped or line_stripped.startswith("#") or line_stripped.startswith("["):
+            continue
+        cleaned = re.sub(r"\[[^\]]+\]\([^)]+\)", r"\1", line_stripped)
+        cleaned = re.sub(r"[*_`~]", "", cleaned)
+        if len(cleaned) > 10:
+            return cleaned[:200]
+    return None
+
+
+def _extract_goal(content: str) -> str | None:
+    """Find first substantial paragraph, skipping badges."""
+    content_without_badges = re.sub(r'\[!?\[.*?\]\(.*?\)\]\(.*?\)', '', content)
+    content_without_badges = re.sub(r'!\[.*?\]\(.*?\)', '', content_without_badges)
+    paragraphs = [p.strip() for p in content_without_badges.split('\n\n') if p.strip()]
+
+    for para in paragraphs:
+        if len(para) < 20 or para.startswith('#') or para.startswith('```'):
+            continue
+        cleaned_para = re.sub(r"[*_`~]", "", para)
+        cleaned_para = re.sub(r"\[[^\]]+\]\([^)]+\)", r"\1", cleaned_para)
+        if len(cleaned_para) > 30:
+            return cleaned_para[:150]
+    return None
+
+
 def _find_readme_content(project_path: Path) -> tuple[str | None, str | None]:
     """
     Extract description and goal from README.
@@ -19,41 +48,7 @@ def _find_readme_content(project_path: Path) -> tuple[str | None, str | None]:
             try:
                 content = readme_path.read_text(encoding="utf-8")
                 lines = content.split("\n")
-
-                description = None
-                goal = None
-
-                # Find first non-empty, non-header line for description
-                for line in lines:
-                    line_stripped = line.strip()
-                    # Skip empty lines, headers, and badges
-                    if not line_stripped or line_stripped.startswith("#") or line_stripped.startswith("["):
-                        continue
-                    # Remove markdown formatting
-                    cleaned = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", line_stripped)  # links
-                    cleaned = re.sub(r"[*_`~]", "", cleaned)  # formatting chars
-                    if len(cleaned) > 10:
-                        description = cleaned[:200]
-                        break
-
-                # Find a better "goal" - look for summary/intro paragraph
-                # Skip past badges and find first substantial paragraph
-                content_without_badges = re.sub(r'\[!?\[.*?\]\(.*?\)\]\(.*?\)', '', content)
-                content_without_badges = re.sub(r'!\[.*?\]\(.*?\)', '', content_without_badges)
-                paragraphs = [p.strip() for p in content_without_badges.split('\n\n') if p.strip()]
-
-                for para in paragraphs:
-                    # Skip short lines (likely badges), headers, and code blocks
-                    if len(para) < 20 or para.startswith('#') or para.startswith('```'):
-                        continue
-                    # Clean markdown
-                    cleaned_para = re.sub(r"[*_`~]", "", para)
-                    cleaned_para = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", cleaned_para)
-                    if len(cleaned_para) > 30:
-                        goal = cleaned_para[:150]
-                        break
-
-                return description, goal
+                return _extract_description(lines), _extract_goal(content)
             except Exception:
                 return None, None
     return None, None

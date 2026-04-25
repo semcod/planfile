@@ -1,0 +1,7 @@
+# SCENARIO: Auto-generated from Python Tests
+# TYPE: integration
+# GENERATED: true
+
+INCLUDE[2]{file}:
+  "/home/tom/github/semcod/planfile/tests/test_integration.py"
+  "/home/tom/github/semcod/planfile/tests/test_integration.py"

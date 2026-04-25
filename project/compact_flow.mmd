@@ -1,55 +1,48 @@
 flowchart TD
-    examples__PROPOSED_API_IMPROVEMENTS["examples.PROPOSED_API_IMPROVEMENTS<br/>7 funcs"]
+    Taskfile["Taskfile<br/>1 funcs"]
     examples__ecosystem["examples.ecosystem<br/>34 funcs"]
-    examples__gitlab["examples.gitlab<br/>1 funcs"]
     examples__llx_validator["examples.llx_validator<br/>7 funcs"]
     examples__python_api["examples.python-api<br/>28 funcs"]
     examples__rest_api["examples.rest-api<br/>35 funcs"]
     planfile["planfile<br/>2 funcs"]
-    planfile__Planfile["planfile.Planfile<br/>7 funcs"]
-    planfile__analysis["planfile.analysis<br/>69 funcs"]
+    planfile__analysis["planfile.analysis<br/>78 funcs"]
     planfile__api["planfile.api<br/>7 funcs"]
     planfile__ci["planfile.ci<br/>9 funcs"]
-    planfile__cli["planfile.cli<br/>143 funcs"]
+    planfile__cli["planfile.cli<br/>147 funcs"]
     planfile__core["planfile.core<br/>20 funcs"]
     planfile__examples["planfile.examples<br/>5 funcs"]
-    planfile__extensions["planfile.extensions<br/>5 funcs"]
     planfile__importers["planfile.importers<br/>30 funcs"]
     planfile__llm["planfile.llm<br/>13 funcs"]
     planfile__loaders["planfile.loaders<br/>25 funcs"]
     planfile__mcp["planfile.mcp<br/>4 funcs"]
     planfile__runner["planfile.runner<br/>7 funcs"]
     planfile__server_common["planfile.server_common<br/>1 funcs"]
-    planfile__sync["planfile.sync<br/>91 funcs"]
-    run_examples["run_examples<br/>13 funcs"]
-    examples__python_api ==>|145| examples__gitlab
-    examples__ecosystem ==>|95| examples__gitlab
-    examples__rest_api ==>|29| examples__gitlab
-    planfile__runner ==>|21| examples__gitlab
-    examples__python_api ==>|15| planfile__Planfile
-    planfile__analysis ==>|15| examples__gitlab
-    planfile__cli ==>|15| run_examples
+    planfile__sync["planfile.sync<br/>94 funcs"]
+    project__map["project.map<br/>341 funcs"]
+    scripts__run_examples["scripts.run_examples<br/>13 funcs"]
+    examples__python_api ==>|145| Taskfile
+    examples__ecosystem ==>|95| Taskfile
+    examples__rest_api ==>|29| Taskfile
+    planfile__runner ==>|21| Taskfile
+    planfile__analysis ==>|15| Taskfile
+    planfile__cli ==>|15| scripts__run_examples
     planfile__cli ==>|12| planfile__loaders
-    planfile__cli ==>|12| planfile__Planfile
-    planfile__examples ==>|6| examples__gitlab
-    planfile__sync ==>|6| examples__gitlab
+    planfile__analysis ==>|8| project__map
+    planfile__examples ==>|6| Taskfile
+    planfile__sync ==>|6| Taskfile
     planfile__api ==>|6| planfile__server_common
     examples__python_api ==>|5| planfile
     planfile__examples ==>|4| planfile__runner
-    planfile__loaders -->|2| examples__gitlab
-    planfile__core -->|2| examples__gitlab
+    planfile__loaders -->|2| Taskfile
     planfile__cli -->|2| planfile__runner
     planfile__cli -->|2| planfile__sync
     planfile__llm -->|2| examples__ecosystem
-    examples__llx_validator -->|1| examples__gitlab
-    examples__PROPOSED_API_IMPROVEMENTS -->|1| planfile__Planfile
-    planfile__server_common -->|1| planfile__Planfile
-    planfile -->|1| planfile__Planfile
+    planfile__core -->|2| Taskfile
+    planfile__examples -->|1| project__map
+    examples__llx_validator -->|1| Taskfile
     planfile__ci -->|1| planfile__loaders
-    planfile__ci -->|1| planfile__Planfile
     planfile__ci -->|1| planfile__runner
     planfile__cli -->|1| planfile__llm
     planfile__cli -->|1| planfile__importers
-    planfile__llm -->|1| examples__gitlab
-    planfile__extensions -->|1| planfile__Planfile
+    planfile__llm -->|1| Taskfile
     planfile__mcp -->|1| planfile__server_common

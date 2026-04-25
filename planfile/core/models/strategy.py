@@ -216,35 +216,48 @@ class Strategy(BaseModel):
         else:
             raise ValueError(f'Unsupported export format: {format}')
 
-    def get_stats(self) -> dict[str, Any]:
-        """Get strategy statistics."""
-        from .base import DAYS_PER_WEEK
-        stats = {'total_sprints': len(self.sprints), 'total_tasks': sum((len(sprint.tasks) for sprint in self.sprints)), 'total_quality_gates': len(self.quality_gates), 'project_type': self.project_type, 'domain': self.domain, 'version': self.version}
-        task_types = {}
+    def _count_task_types(self) -> dict[str, int]:
+        """Count task types across all sprints."""
+        task_types: dict[str, int] = {}
         for sprint in self.sprints:
             for task in sprint.tasks:
                 if isinstance(task, Task):
                     task_type = task.type.value
                     task_types[task_type] = task_types.get(task_type, 0) + 1
-        stats['task_types'] = task_types
+        return task_types
+
+    def _collect_durations(self) -> list[int]:
+        """Collect sprint durations in days."""
+        from .base import DAYS_PER_WEEK
         durations = []
         for sprint in self.sprints:
-            if hasattr(sprint, 'length_days') and sprint.length_days:
+            if getattr(sprint, 'length_days', None):
                 durations.append(sprint.length_days)
-            elif hasattr(sprint, 'duration') and sprint.duration:
+            elif getattr(sprint, 'duration', None):
                 duration_str = sprint.duration.lower()
-                if 'week' in duration_str:
-                    try:
+                try:
+                    if 'week' in duration_str:
                         weeks = int(duration_str.split()[0])
                         durations.append(weeks * DAYS_PER_WEEK)
-                    except (ValueError, IndexError):
-                        pass
-                elif 'day' in duration_str:
-                    try:
+                    elif 'day' in duration_str:
                         days = int(duration_str.split()[0])
                         durations.append(days)
-                    except (ValueError, IndexError):
-                        pass
+                except (ValueError, IndexError):
+                    pass
+        return durations
+
+    def get_stats(self) -> dict[str, Any]:
+        """Get strategy statistics."""
+        stats = {
+            'total_sprints': len(self.sprints),
+            'total_tasks': sum(len(sprint.tasks) for sprint in self.sprints),
+            'total_quality_gates': len(self.quality_gates),
+            'project_type': self.project_type,
+            'domain': self.domain,
+            'version': self.version,
+            'task_types': self._count_task_types(),
+        }
+        durations = self._collect_durations()
         if durations:
             stats['total_duration_days'] = sum(durations)
             stats['avg_duration_days'] = sum(durations) / len(durations)

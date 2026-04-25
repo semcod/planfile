@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+## [0.1.63] - 2026-04-25
+
+### Docs
+- Update SUMD.md
+- Update SUMR.md
+- Update TODO.md
+- Update project/README.md
+- Update project/context.md
+
+### Test
+- Update testql-scenarios/generated-from-pytests.testql.toon.yaml
+- Update testql-scenarios/generated-unit-tests.testql.toon.yaml
+
+### Other
+- Update .gitignore
+- Update app.doql.less
+- Update examples/PROPOSED_API_IMPROVEMENTS.py
+- Update examples/checkbox-tickets/demo.py
+- Update examples/python-api/03_integration.py
+- Update planfile.yaml
+- Update planfile/cli/groups/sync/commands.py.bak
+- Update planfile/cli/groups/ticket/commands.py.bak
+- Update planfile/cli/project_detector/inference.py
+- Update planfile/cli/project_detector/main.py
+- ... and 35 more files
+
 ## [0.1.62] - 2026-04-20
 
 ### Other

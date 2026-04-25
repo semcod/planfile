@@ -5,70 +5,21 @@ These features would allow reducing example code by ~60%.
 """
 
 # ============================================================
-# PROPOSED: planfile.extensions module
+# AVAILABLE: planfile.extensions module
 # ============================================================
 
-class TicketLogger:
-    """
-    Native ticket logging - replaces 80-line example.
-    
-    Usage:
-        from planfile import TicketLogger
-        logger = TicketLogger("my-tool")
-        
-        @logger.catch_errors  # decorator
-        def risky_function():
-            ...
-        
-        logger.metric_alert("CPU", 95, threshold=90)
-        logger.error("Database connection failed", context={"db": "prod"})
-    """
-    
-    def __init__(self, tool_name: str, auto_create: bool = True):
-        self.tool_name = tool_name
-        self.pf = Planfile.auto_discover()
-        self.auto_create = auto_create
-    
-    def error(self, message: str, exception=None, context: dict = None) -> "Ticket":
-        """Create error ticket with optional exception details."""
-        ctx = context or {}
-        if exception:
-            import traceback
-            ctx["exception"] = str(exception)
-            ctx["traceback"] = traceback.format_exc()
-        
-        return self.pf.create_ticket(
-            title=f"[{self.tool_name}] {message[:80]}",
-            priority="high",
-            source=TicketSource(tool=self.tool_name, context=ctx),
-            labels=["error", "auto-generated"]
-        )
-    
-    def metric_alert(self, metric: str, value: float, threshold: float, **context) -> "Ticket":
-        """Create ticket for threshold breach."""
-        return self.pf.create_ticket(
-            title=f"🚨 {metric}: {value} exceeds {threshold}",
-            priority="critical",
-            source=TicketSource(
-                tool=f"{self.tool_name}-metrics",
-                context={"metric": metric, "value": value, "threshold": threshold, **context}
-            ),
-            labels=["alert", "metric", "auto-generated"]
-        )
-    
-    def catch_errors(self, func):
-        """Decorator to auto-log function errors as tickets."""
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                self.error(
-                    f"{func.__name__} failed: {str(e)[:60]}",
-                    exception=e,
-                    context={"args": str(args), "kwargs": str(kwargs)}
-                )
-                raise
-        return wrapper
+from planfile.extensions import TicketLogger
+
+# Usage:
+#     from planfile.extensions import TicketLogger
+#     logger = TicketLogger("my-tool")
+#
+#     @logger.catch_errors  # decorator
+#     def risky_function():
+#         ...
+#
+#     logger.metric_alert("CPU", 95, threshold=90)
+#     logger.error("Database connection failed", context={"db": "prod"})
 
 
 # ============================================================
