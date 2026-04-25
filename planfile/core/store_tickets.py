@@ -35,16 +35,28 @@ class TicketStoreMixin:
             # Special handling for files filter with glob patterns
             if key == 'files':
                 patterns = value if isinstance(value, list) else [value]
-                result = [t for t in result if t.files and any(
-                    any(fnmatch.fnmatch(f, pattern) for f in t.files)
-                    for pattern in patterns
-                )]
+                result = [t for t in result if self._matches_files(t, patterns)]
             elif key == 'labels':
                 labels = value if isinstance(value, list) else [value]
                 result = [t for t in result if any(label in (t.labels or []) for label in labels)]
             else:
                 result = [t for t in result if getattr(t, key, None) == value]
         return result
+
+    def _matches_files(self, ticket: Ticket, patterns: list[str]) -> bool:
+        """Check if ticket matches any of the file patterns."""
+        # Check files list
+        if ticket.files:
+            for f in ticket.files:
+                for pattern in patterns:
+                    if fnmatch.fnmatch(f, pattern):
+                        return True
+        # Check single file field (backward compatibility)
+        if ticket.file:
+            for pattern in patterns:
+                if fnmatch.fnmatch(ticket.file, pattern):
+                    return True
+        return False
 
     def list_tickets(self, sprint: str = 'current', **filters) -> list[Ticket]:
         """List tickets with filters."""

@@ -34,6 +34,7 @@ class Ticket(BaseModel):
     blocked_by: list[str] = Field(default_factory=list)
     blocks: list[str] = Field(default_factory=list)
 
+    file: str | None = None  # Single file path (for backward compatibility)
     files: list[str] = Field(default_factory=list)  # Files associated with this ticket
 
     integration: list[str] | None = None  # Target integrations for sync

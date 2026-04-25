@@ -16,6 +16,13 @@
 - fix: remove large generated files from repository
 - chore: pyqual auto-commit [skip ci]
 
+## [0.1.67] - 2026-04-25
+
+### Other
+- Update .planfile/config.yaml
+- Update planfile/core/models/ticket.py
+- Update planfile/core/store_tickets.py
+
 ## [0.1.66] - 2026-04-25
 
 ### Docs
