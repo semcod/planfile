@@ -84,7 +84,7 @@ class PlanfileGenerator:
         # Create issues from high CC functions
         for func in results.high_cc_functions:
             issues.append({
-                'title': f"Refactor {func['name']} (CC={func['cc']})",
+                'name': f"Refactor {func['name']} (CC={func['cc']})",
                 'description': "Function has high cyclomatic complexity",
                 'priority': 'critical' if func['cc'] > CONSTANT_20 else 'high',
                 'category': 'refactor',
@@ -94,7 +94,7 @@ class PlanfileGenerator:
 
         if results.validation_errors > 0:
             issues.append({
-                'title': f"Fix {results.validation_errors} validation errors",
+                'name': f"Fix {results.validation_errors} validation errors",
                 'description': "Resolve all validation errors found in project",
                 'priority': 'critical',
                 'category': 'bug',
