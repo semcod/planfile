@@ -21,7 +21,7 @@ class TicketSource(BaseModel):
 class Ticket(BaseModel):
     """Atomic unit of work in planfile."""
     id: str                            # "PLF-042"
-    title: str
+    name: str
     status: "TicketStatus" = None      # Forward reference
     priority: str = "normal"           # critical | high | normal | low
     sprint: str = "current"            # current | backlog | sprint-XXX

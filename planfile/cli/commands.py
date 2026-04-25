@@ -7,6 +7,7 @@ import typer
 from planfile.cli.core import console
 from planfile.cli.groups.apply import register_apply_commands
 from planfile.cli.groups.auto import register_auto_commands
+from planfile.cli.groups.backlog import register_backlog_commands
 from planfile.cli.groups.generate import register_generate_commands
 from planfile.cli.groups.init import register_init_commands
 from planfile.cli.groups.query import register_query_commands
@@ -40,6 +41,7 @@ def main_callback(
 # Register all command groups
 register_apply_commands(app)
 register_auto_commands(app)
+register_backlog_commands(app)
 register_generate_commands(app)
 register_init_commands(app)
 register_query_commands(app)
