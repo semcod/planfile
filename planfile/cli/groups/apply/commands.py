@@ -61,7 +61,7 @@ def display_apply_results(results: dict) -> None:
         table = Table(title="Created Tickets")
         table.add_column("Sprint", style="cyan")
         table.add_column("Task", style="magenta")
-        table.add_column("Title", style="green")
+        table.add_column("Name", style="green")
         table.add_column("Type", style="blue")
         table.add_column("Priority", style="yellow")
 
@@ -69,7 +69,7 @@ def display_apply_results(results: dict) -> None:
             table.add_row(
                 str(ticket["sprint"]),
                 ticket["pattern"],
-                ticket["title"],
+                ticket["name"],
                 ticket["type"],
                 ticket["priority"]
             )

@@ -36,7 +36,7 @@ def validate_strategy_cli(
                 for category, patterns in tasks_dict.items():
                     console.print(f"  {category}:")
                     for pattern in patterns:
-                        console.print(f"    - {pattern.id}: {pattern.title}")
+                        console.print(f"    - {pattern.id}: {pattern.name}")
 
     except Exception as e:
         print_error(f"Validation failed: {e}")

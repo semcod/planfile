@@ -34,7 +34,7 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.69-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.70-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 ![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-26.4h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
 - 🤖 **LLM usage:** $7.5000 (66 commits)
@@ -236,6 +236,21 @@ planfile ticket bulk-update \
   --add-label urgent
 ```
 
+**Auto-sync after changes:**
+```bash
+# Create ticket and sync immediately
+planfile ticket create "Fix login bug" -p high --sync
+
+# Delete tickets and auto-sync
+planfile ticket delete --status done --sync
+
+# Bulk update with sync
+planfile ticket bulk-update --label bug --new-status done --sync
+
+# Preview sync (dry-run)
+planfile ticket update PLF-001 --status done --sync --sync-dry-run
+```
+
 ### 6. Sync with External Systems
 
 Synchronize tickets with TODO.md, GitHub, Jira, and GitLab:
@@ -262,6 +277,21 @@ planfile sync all
 # Example: Export all done tickets to CHANGELOG.md
 planfile ticket bulk-update --status-filter done --add-label changelog
 planfile sync markdown --direction to --dry-run
+
+# Watch .planfile/ directory and auto-sync on changes
+planfile sync watch
+
+# Watch with custom polling interval (seconds)
+planfile sync watch --interval 10
+
+# Watch specific integrations only
+planfile sync watch --integration github --integration jira
+
+# One-time sync (no watch loop)
+planfile sync watch --once
+
+# Watch with sync direction "from" (import from external systems)
+planfile sync watch --direction from
 ```
 
 **Sync Configuration:**

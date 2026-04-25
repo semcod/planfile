@@ -2,7 +2,7 @@
 
 import typer
 
-from planfile.cli.groups.sync.commands import all_cmd, github_cmd, gitlab_cmd, jira_cmd, markdown_cmd
+from planfile.cli.groups.sync.commands import all_cmd, github_cmd, gitlab_cmd, jira_cmd, markdown_cmd, watch_cmd
 
 
 def register_sync_commands(app: typer.Typer) -> None:
@@ -14,5 +14,6 @@ def register_sync_commands(app: typer.Typer) -> None:
     sync_app.command("jira")(jira_cmd)
     sync_app.command("markdown")(markdown_cmd)
     sync_app.command("all")(all_cmd)
+    sync_app.command("watch")(watch_cmd)
 
     app.add_typer(sync_app, name="sync")

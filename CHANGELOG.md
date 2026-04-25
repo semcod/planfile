@@ -16,6 +16,23 @@
 - fix: remove large generated files from repository
 - chore: pyqual auto-commit [skip ci]
 
+## [0.1.70] - 2026-04-25
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/test_e2e_backlog.py
+- Update tests/test_e2e_schema.py
+- Update tests/test_e2e_ticket_files.py
+
+### Other
+- Update planfile/cli/groups/apply/commands.py
+- Update planfile/cli/groups/sync/__init__.py
+- Update planfile/cli/groups/sync/commands.py
+- Update planfile/cli/groups/validate/commands.py
+- Update planfile/runner.py
+
 ## [0.1.69] - 2026-04-25
 
 ### Test

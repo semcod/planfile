@@ -256,19 +256,19 @@ def apply_strategy_to_tickets(
             ticket_info = {
                 "sprint": sprint.id,
                 "pattern": pattern.id,
-                "title": pattern.title,
+                "name": pattern.name,
                 "type": pattern.type.value,
                 "priority": pattern.priority
             }
 
             if dry_run:
                 results["created"].append(ticket_info)
-                print(f"  Would create: {pattern.title}")
+                print(f"  Would create: {pattern.name}")
             else:
                 # Here you would actually create the ticket
                 # For now, just simulate
                 results["created"].append(ticket_info)
-                print(f"  Created: {pattern.title}")
+                print(f"  Created: {pattern.name}")
 
     return results
 
