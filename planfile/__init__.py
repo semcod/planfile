@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.64"
+__version__ = "0.1.65"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -84,6 +84,14 @@ class Planfile:
 
     def update_ticket(self, ticket_id: str, **updates):
         return self.store.update_ticket(ticket_id, **updates)
+
+    def delete_ticket(self, ticket_id: str) -> bool:
+        """Delete a single ticket by ID. Returns True if deleted, False if not found."""
+        return self.store.delete_ticket(ticket_id)
+
+    def delete_tickets(self, ticket_ids: list[str]) -> tuple[list[str], list[str]]:
+        """Delete multiple tickets by ID. Returns (deleted_ids, not_found_ids)."""
+        return self.store.delete_tickets_bulk(ticket_ids)
 
     def create_tickets_bulk(self, tickets_data: list[dict],
                             source: str = None, sprint: str = "current"):

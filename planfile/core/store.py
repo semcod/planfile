@@ -120,5 +120,32 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 return self._ticket_from_data(tickets[ticket_id])
         return None
 
+    def delete_ticket(self, ticket_id: str) -> bool:
+        """Delete a ticket by ID. Returns True if deleted, False if not found."""
+        for sprint_file in self._all_sprint_files():
+            data = yaml.safe_load(sprint_file.read_text()) or {}
+            sprint_data = data.get("sprint", data)
+            tickets = sprint_data.get("tickets", {})
+            if ticket_id in tickets:
+                del tickets[ticket_id]
+                sprint_file.write_text(
+                    yaml.dump(data, default_flow_style=False, allow_unicode=True), encoding="utf-8"
+                )
+                if hasattr(self, "_yaml_cache"):
+                    self._yaml_cache.pop(str(sprint_file), None)
+                return True
+        return False
+
+    def delete_tickets_bulk(self, ticket_ids: list[str]) -> tuple[list[str], list[str]]:
+        """Delete multiple tickets by ID. Returns (deleted_ids, not_found_ids)."""
+        deleted = []
+        not_found = []
+        for ticket_id in ticket_ids:
+            if self.delete_ticket(ticket_id):
+                deleted.append(ticket_id)
+            else:
+                not_found.append(ticket_id)
+        return deleted, not_found
+
 
 PlanfileStore = Store
