@@ -37,6 +37,20 @@ def test_build_testql_tickets_from_failed_report() -> None:
     assert tickets[0]["file"] == "src/api/users.py"
 
 
+def test_build_testql_tickets_handles_compact_report_steps_count() -> None:
+    report = {
+        "ok": False,
+        "failed": 1,
+        "steps": 6,
+        "errors": "Connection refused",
+    }
+
+    tickets = build_testql_tickets(report, "tests/api.testql.toon.yaml", max_tickets=10)
+
+    assert len(tickets) == 1
+    assert tickets[0]["id"].startswith("TQL-")
+
+
 def test_upsert_testql_tickets_updates_tasks_and_sprint_patterns(tmp_path: Path) -> None:
     strategy_path = tmp_path / "planfile.yaml"
     _write(

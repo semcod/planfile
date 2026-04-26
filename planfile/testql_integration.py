@@ -143,17 +143,27 @@ def _collect_failure_messages(report: dict[str, Any]) -> list[str]:
     """Collect normalized failure messages from TestQL report."""
     messages: list[str] = []
 
-    for step in report.get("steps", []):
-        if not isinstance(step, dict):
-            continue
-        status = str(step.get("status") or "").lower()
-        if status not in {"failed", "error"}:
-            continue
-        name = str(step.get("name") or "step")
-        message = str(step.get("message") or "failed")
-        messages.append(f"{name}: {message}")
+    steps_raw = report.get("steps", [])
+    if isinstance(steps_raw, list):
+        for step in steps_raw:
+            if not isinstance(step, dict):
+                continue
+            status = str(step.get("status") or "").lower()
+            if status not in {"failed", "error"}:
+                continue
+            name = str(step.get("name") or "step")
+            message = str(step.get("message") or "failed")
+            messages.append(f"{name}: {message}")
 
-    for err in report.get("errors", []):
+    errors_raw = report.get("errors", [])
+    if isinstance(errors_raw, list):
+        error_values = errors_raw
+    elif errors_raw is None:
+        error_values = []
+    else:
+        error_values = [errors_raw]
+
+    for err in error_values:
         text = str(err or "").strip()
         if text:
             messages.append(text)

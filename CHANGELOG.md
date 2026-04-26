@@ -29,6 +29,15 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.84] - 2026-04-26
+
+### Test
+- Update tests/test_testql_integration.py
+
+### Other
+- Update planfile/sync/markdown_backend/backend.py
+- Update planfile/testql_integration.py
+
 ## [0.1.83] - 2026-04-26
 
 ### Other
