@@ -29,6 +29,15 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.80] - 2026-04-26
+
+### Test
+- Update tests/test_ci_runner.py
+
+### Other
+- Update planfile/builder.py
+- Update planfile/ci.py
+
 ## [0.1.79] - 2026-04-26
 
 ### Docs

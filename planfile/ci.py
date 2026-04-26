@@ -6,6 +6,7 @@ Creates planfile tickets from test/analysis failures.
 """
 
 import json
+import re
 import subprocess
 import time
 from dataclasses import dataclass
@@ -66,6 +67,41 @@ class CIRunner:
                 self.pf = Planfile.auto_discover(str(self.project_path))
             except Exception:
                 self.pf = None
+
+    @staticmethod
+    def _extract_json_object(raw_output: str) -> dict[str, Any] | None:
+        """Extract JSON object from plain or markdown-wrapped llx output."""
+        text = (raw_output or "").strip()
+        if not text:
+            return None
+
+        try:
+            data = json.loads(text)
+            if isinstance(data, dict):
+                return data
+        except json.JSONDecodeError:
+            pass
+
+        fenced_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        if fenced_match:
+            try:
+                data = json.loads(fenced_match.group(1))
+                if isinstance(data, dict):
+                    return data
+            except json.JSONDecodeError:
+                pass
+
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            try:
+                data = json.loads(text[start:end + 1])
+                if isinstance(data, dict):
+                    return data
+            except json.JSONDecodeError:
+                pass
+
+        return None
 
     def run_tests(self) -> TestResult:
         """Run tests and return results."""
@@ -155,25 +191,35 @@ Respond in JSON format:
 
         result = subprocess.run(
             [self.llx_command, "chat", "--model", "balanced", "--prompt", prompt],
-            capture_output=True, text=True
+            cwd=self.project_path,
+            capture_output=True,
+            text=True,
         )
 
-        try:
-            bug_data = json.loads(result.stdout)
-            return BugReport(
-                name=bug_data["name"],
-                description=bug_data["description"],
-                files=bug_data.get("files", []),
-                test_names=test_result.failed_tests,
-                severity=bug_data.get("severity", "medium")
-            )
-        except Exception:
-            return BugReport(
-                name=f"Tests failed: {len(test_result.failed_tests)} failures",
-                description=f"Tests failed: {', '.join(test_result.failed_tests)}",
-                files=[], test_names=test_result.failed_tests,
-                severity="medium"
-            )
+        bug_data = self._extract_json_object(result.stdout)
+        if result.returncode == 0 and bug_data:
+            name = bug_data.get("name") or bug_data.get("title")
+            description = bug_data.get("description")
+            if name and description:
+                files = bug_data.get("files") or []
+                if not isinstance(files, list):
+                    files = []
+                severity = bug_data.get("severity") or "medium"
+                return BugReport(
+                    name=str(name),
+                    description=str(description),
+                    files=[str(file_path) for file_path in files],
+                    test_names=test_result.failed_tests,
+                    severity=str(severity),
+                )
+
+        return BugReport(
+            name=f"Tests failed: {len(test_result.failed_tests)} failures",
+            description=f"Tests failed: {', '.join(test_result.failed_tests)}",
+            files=[],
+            test_names=test_result.failed_tests,
+            severity="medium",
+        )
 
     def create_bug_tickets(self, bug_report: BugReport) -> list[str]:
         """Create bug tickets in configured backends AND local planfile."""
@@ -220,7 +266,7 @@ Respond in JSON format:
         prompt = f"""
 Fix the following bug in the codebase:
 
-Bug: {bug_report.title}
+Bug: {bug_report.name}
 Description: {bug_report.description}
 Failed tests: {bug_report.test_names}
 
@@ -228,7 +274,7 @@ Focus on the failed tests and make minimal changes to fix them.
 """
 
         result = subprocess.run(
-            [self.llx_command, "chat", "--model", "local", "--prompt", prompt, "--execute"],
+            [self.llx_command, "chat", "--local", "--prompt", prompt],
             cwd=self.project_path, capture_output=True, text=True
         )
 

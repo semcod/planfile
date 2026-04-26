@@ -96,13 +96,13 @@ class LLXStrategyBuilder:
         )
         print(f"Goal: {answers['goal']}")
 
-        answers["quality_goals"] = self._call_llm(
+        answers["quality_goals"] = self._call_llx(
             "Ask user: What are the quality goals for this project? "
             "List 3-5 bullet points."
         )
         print(f"Quality goals: {answers['quality_goals']}")
 
-        answers["delivery_goals"] = self._call_llm(
+        answers["delivery_goals"] = self._call_llx(
             "Ask user: What are the delivery goals (deadlines, environments, etc.)? "
             "List 2-3 bullet points."
         )
@@ -134,12 +134,12 @@ class LLXStrategyBuilder:
         ))
 
         for i in range(1, sprint_count + 1):
-            objectives = self._call_llm(
+            objectives = self._call_llx(
                 f"Ask user: What are the objectives for sprint {i}? "
                 f"List up to 5 bullet points."
             )
 
-            sprint_name = self._call_llm(
+            sprint_name = self._call_llx(
                 f"Ask user: What is the name for sprint {i}?"
             )
 
