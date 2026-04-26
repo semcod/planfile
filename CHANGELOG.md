@@ -29,6 +29,12 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.83] - 2026-04-26
+
+### Other
+- Update planfile/cli/groups/validate/commands.py
+- Update planfile/testql_integration.py
+
 ## [0.1.82] - 2026-04-26
 
 ### Docs

@@ -194,7 +194,7 @@ def build_testql_tickets(
 
     tickets: list[dict[str, Any]] = []
     for idx, failure in enumerate(failures, start=1):
-        digest = hashlib.sha1(f"{scenario_label}|{failure}".encode("utf-8")).hexdigest()[:10]
+        digest = hashlib.sha1(f"{scenario_label}|{failure}".encode()).hexdigest()[:10]
         ticket_id = f"TQL-{digest}"
         short_failure = failure if len(failure) <= 88 else f"{failure[:85]}..."
         title = f"testql: {scenario_label} :: {short_failure}"

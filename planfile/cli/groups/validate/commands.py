@@ -46,7 +46,7 @@ def validate_strategy_cli(
 
     except Exception as e:
         print_error(f"Validation failed: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 def validate_schema_cli(
@@ -56,38 +56,39 @@ def validate_schema_cli(
 ) -> None:
     """Validate YAML file schema version and structure."""
     from planfile import Planfile
-    
+
     # Auto-detect file path if not provided
     if file_path is None:
-        pf = Planfile.auto_discover()
+        pf = Planfile.auto_discover(".")
         file_path = Path(pf.store.project_dir) / "planfile.yaml"
         file_type = "planfile"
-    
+
     # Auto-detect file type
     if file_type == "auto":
-        if "sprint" in file_path.name.lower() or file_path.parent.name == "sprints":
-            file_type = "sprint"
+        if "redsl" in file_path.name:
+            file_type = "redsl"
         else:
             file_type = "planfile"
-    
+
     console.print(f"[bold]Validating:[/bold] {file_path} (type: {file_type})")
-    
+
     # Show current schema version
     current_version = SchemaValidator.get_current_schema_version()
     console.print(f"[bold]Current schema version:[/bold] {current_version}")
-    
+
     # Validate file
     is_valid, errors = validate_yaml_file(file_path, file_type)
-    
+
     if is_valid:
         console.print("[green]✓[/green] Schema validation passed!")
-        
+
         if verbose and file_type == "planfile":
             with open(file_path) as f:
                 import yaml
                 data = yaml.safe_load(f)
                 if "schema" in data:
                     console.print(f"[bold]File schema version:[/bold] {data['schema']}")
+
     else:
         console.print("[red]✗[/red] Schema validation failed!")
         for error in errors:
