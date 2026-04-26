@@ -8,10 +8,13 @@ Creates planfile tickets from test/analysis failures.
 import json
 import re
 import subprocess
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from planfile.loaders.yaml_loader import load_strategy_yaml
 from planfile.runner import review_strategy
@@ -258,27 +261,115 @@ Respond in JSON format:
 
         return ticket_urls
 
+    def _resolve_target_file(self, bug_report: BugReport) -> str:
+        """Resolve best target file path for llx plan run task."""
+        project_root = self.project_path.resolve()
+
+        for file_path in bug_report.files:
+            if not file_path:
+                continue
+
+            candidate = Path(file_path)
+            if candidate.is_absolute():
+                try:
+                    return str(candidate.resolve().relative_to(project_root))
+                except ValueError:
+                    return str(candidate)
+
+            full_candidate = project_root / candidate
+            if full_candidate.exists():
+                return str(candidate)
+
+        return ""
+
+    @staticmethod
+    def _task_patch_applied(results_payload: dict[str, Any]) -> bool:
+        """Check llx plan run output payload for real file changes."""
+        results = results_payload.get("results") or []
+        if not isinstance(results, list):
+            return False
+
+        return any(
+            isinstance(item, dict)
+            and item.get("status") == "success"
+            and bool(item.get("file_changed"))
+            for item in results
+        )
+
     def auto_fix_bugs(self, bug_report: BugReport) -> bool:
-        """Attempt to auto-fix bugs using LLM."""
+        """Attempt to auto-fix bugs via llx plan run editing backend."""
         if not self.auto_fix:
             return False
 
-        prompt = f"""
-Fix the following bug in the codebase:
+        target_file = self._resolve_target_file(bug_report)
+        if not target_file:
+            return False
 
-Bug: {bug_report.name}
-Description: {bug_report.description}
-Failed tests: {bug_report.test_names}
-
-Focus on the failed tests and make minimal changes to fix them.
-"""
-
-        result = subprocess.run(
-            [self.llx_command, "chat", "--local", "--prompt", prompt],
-            cwd=self.project_path, capture_output=True, text=True
+        ticket_id = f"ci-autofix-{int(time.time())}"
+        task_description = (
+            f"{bug_report.description}\n\n"
+            f"Failed tests: {', '.join(bug_report.test_names)}\n"
+            "Apply a minimal patch to resolve the failing tests."
         )
 
-        return result.returncode == 0
+        temp_planfile = {
+            "name": "ci-auto-fix",
+            "tasks": [
+                {
+                    "id": ticket_id,
+                    "title": bug_report.name,
+                    "description": task_description,
+                    "file": target_file,
+                    "action": "fix",
+                    "priority": 1,
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory(prefix="planfile-ci-autofix-") as temp_dir:
+            temp_dir_path = Path(temp_dir)
+            strategy_path = temp_dir_path / "ci-autofix.planfile.yaml"
+            output_yaml = temp_dir_path / "ci-autofix.results.yaml"
+
+            strategy_path.write_text(
+                yaml.safe_dump(temp_planfile, sort_keys=False),
+                encoding="utf-8",
+            )
+
+            cmd = [
+                self.llx_command,
+                "plan",
+                "run",
+                str(strategy_path),
+                "--project",
+                str(self.project_path),
+                "--ticket-id",
+                ticket_id,
+                "--max-tasks",
+                "1",
+                "--output-yaml",
+                str(output_yaml),
+                "--use-aider",
+            ]
+
+            result = subprocess.run(
+                cmd,
+                cwd=self.project_path,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                return False
+
+            if not output_yaml.exists():
+                return False
+
+            try:
+                payload = yaml.safe_load(output_yaml.read_text(encoding="utf-8")) or {}
+            except Exception:
+                return False
+
+            return self._task_patch_applied(payload)
 
     def check_strategy_completion(self) -> tuple[bool, list[str]]:
         """Check if strategy goals are met."""

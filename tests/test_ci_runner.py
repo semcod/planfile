@@ -3,6 +3,8 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import yaml
+
 from planfile.ci import BugReport, CIRunner, TestResult
 
 
@@ -70,14 +72,33 @@ def test_generate_bug_report_parses_markdown_json(monkeypatch):
     assert report.files == ["src/p.py"]
 
 
-def test_auto_fix_bugs_uses_local_chat_without_execute(monkeypatch):
-    """Auto-fix command no longer uses unsupported --execute flag."""
+def test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend(monkeypatch, tmp_path):
+    """Auto-fix uses llx plan run + editing backend and checks file_changed result."""
     runner = _make_runner(auto_fix=True)
+    runner.project_path = tmp_path
+
+    src_file = tmp_path / "src" / "auth.py"
+    src_file.parent.mkdir(parents=True, exist_ok=True)
+    src_file.write_text("def login():\n    return True\n", encoding="utf-8")
+
     captured = {}
 
     def fake_run(cmd, **kwargs):
         captured["cmd"] = cmd
         captured["kwargs"] = kwargs
+        output_idx = cmd.index("--output-yaml") + 1
+        output_path = Path(cmd[output_idx])
+        output_payload = {
+            "summary": {"success": 1, "failed": 0},
+            "results": [
+                {
+                    "task_name": "Fix auth bug",
+                    "status": "success",
+                    "file_changed": True,
+                }
+            ],
+        }
+        output_path.write_text(yaml.safe_dump(output_payload), encoding="utf-8")
         return SimpleNamespace(returncode=0, stdout="ok", stderr="")
 
     monkeypatch.setattr("planfile.ci.subprocess.run", fake_run)
@@ -91,6 +112,32 @@ def test_auto_fix_bugs_uses_local_chat_without_execute(monkeypatch):
     )
 
     assert runner.auto_fix_bugs(bug) is True
-    assert "--local" in captured["cmd"]
-    assert "--execute" not in captured["cmd"]
-    assert any("Fix auth bug" in str(part) for part in captured["cmd"])
+    assert captured["cmd"][:3] == ["llx", "plan", "run"]
+    assert "--ticket-id" in captured["cmd"]
+    assert "--use-aider" in captured["cmd"]
+    assert captured["kwargs"]["cwd"] == tmp_path
+
+
+def test_auto_fix_bugs_returns_false_without_target_file(monkeypatch, tmp_path):
+    """Auto-fix is skipped when no usable target file is available."""
+    runner = _make_runner(auto_fix=True)
+    runner.project_path = tmp_path
+
+    called = {"value": False}
+
+    def fake_run(cmd, **kwargs):
+        called["value"] = True
+        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+
+    monkeypatch.setattr("planfile.ci.subprocess.run", fake_run)
+
+    bug = BugReport(
+        name="Fix unknown bug",
+        description="No target file provided",
+        files=[],
+        test_names=["tests/test_unknown.py::test_case"],
+        severity="medium",
+    )
+
+    assert runner.auto_fix_bugs(bug) is False
+    assert called["value"] is False
