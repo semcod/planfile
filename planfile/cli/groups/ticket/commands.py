@@ -55,6 +55,106 @@ def _display_tickets(tickets, fmt: str='table') -> None:
     table = create_ticket_table(tickets)
     console.print(table)
 
+
+def _load_issue_records_from_file(issues_path: str | None) -> list[dict] | None:
+    """Load optional issue records from a YAML/JSON file."""
+    if not issues_path:
+        return None
+
+    path = Path(issues_path)
+    if not path.exists():
+        console.print(f"[red]✗[/red] Issues file not found: {issues_path}")
+        raise typer.Exit(1)
+
+    try:
+        data = yaml.safe_load(path.read_text(encoding='utf-8'))
+    except Exception as e:
+        console.print(f"[red]✗[/red] Failed to read issues file: {e}")
+        raise typer.Exit(1)
+
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+
+    if isinstance(data, dict):
+        for key in ('issues', 'errors', 'findings', 'results', 'messages'):
+            value = data.get(key)
+            if isinstance(value, list):
+                return [item for item in value if isinstance(item, dict)]
+
+    return []
+
+
+def _print_ticket_validation_table(tickets: list[dict]) -> None:
+    """Print ticket validation results in table format."""
+    if not tickets:
+        console.print('[dim]No matching tickets to validate.[/dim]')
+        return
+
+    table = Table(title=f'Ticket Validation ({len(tickets)})')
+    table.add_column('ID', style='cyan', no_wrap=True)
+    table.add_column('Status', style='bold')
+    table.add_column('Reason')
+    table.add_column('Files', style='dim')
+
+    status_colors = {'current': 'green', 'stale': 'red', 'unknown': 'yellow'}
+
+    for ticket in tickets:
+        status = str(ticket.get('status', 'unknown'))
+        ticket_id = str(ticket.get('ticket_id', 'unknown'))
+        reason = str(ticket.get('reason', ''))
+        files = ', '.join(ticket.get('files') or [])
+        color = status_colors.get(status, 'white')
+        table.add_row(ticket_id, f'[{color}]{status}[/{color}]', reason, files)
+
+    console.print(table)
+
+
+def ticket_validate(
+    ticket_ids: list[str] = typer.Argument(None, help='Optional ticket ID(s) to validate (e.g., Q01 PLF-002)'),
+    strategy: str = typer.Option('planfile.yaml', '--strategy', '-S', help='Path to strategy/planfile YAML'),
+    project: str = typer.Option('.', '--project', '-p', help='Project root directory'),
+    issues: str | None = typer.Option(None, '--issues', '-e', help='Optional YAML/JSON issue scan file'),
+    fmt: str = typer.Option('table', '--format', help='table | json | yaml'),
+    stale_only: bool = typer.Option(False, '--stale-only', help='Show only stale tickets in output'),
+    fail_on_stale: bool = typer.Option(False, '--fail-on-stale', help='Exit with code 1 if stale tickets are found'),
+) -> None:
+    """Validate whether planfile tickets are still current against code and scan data."""
+    from planfile import validate_planfile_tickets
+
+    issue_records = _load_issue_records_from_file(issues)
+    report = validate_planfile_tickets(
+        strategy_path=strategy,
+        project_path=project,
+        issue_records=issue_records,
+        ticket_ids=ticket_ids or None,
+    )
+
+    visible_tickets = report.get('tickets', [])
+    if stale_only:
+        visible_tickets = [ticket for ticket in visible_tickets if ticket.get('status') == 'stale']
+
+    if fmt == 'json':
+        payload = dict(report)
+        payload['tickets'] = visible_tickets
+        console.print(json.dumps(payload, indent=2, default=str))
+    elif fmt == 'yaml':
+        payload = dict(report)
+        payload['tickets'] = visible_tickets
+        console.print(yaml.dump(payload, default_flow_style=False, sort_keys=False))
+    elif fmt == 'table':
+        console.print(
+            f"[bold]Validation:[/bold] total={report.get('total', 0)} "
+            f"current={report.get('current', 0)} stale={report.get('stale', 0)} "
+            f"unknown={report.get('unknown', 0)}"
+        )
+        _print_ticket_validation_table(visible_tickets)
+    else:
+        console.print(f"[red]✗[/red] Unsupported format: {fmt}")
+        raise typer.Exit(1)
+
+    if fail_on_stale and int(report.get('stale', 0)) > 0:
+        raise typer.Exit(1)
+
 def create_ticket_table(tickets) -> Table:
     """Create and populate a Rich table for displaying tickets."""
     table = Table(title=f'Tickets ({len(tickets)})')

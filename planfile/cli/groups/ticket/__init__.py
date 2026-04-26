@@ -14,6 +14,7 @@ from planfile.cli.groups.ticket.commands import (
     ticket_show,
     ticket_start,
     ticket_update,
+    ticket_validate,
 )
 
 
@@ -32,5 +33,6 @@ def register_ticket_commands(app: typer.Typer) -> None:
     ticket_app.command("done")(ticket_done)
     ticket_app.command("start")(ticket_start)
     ticket_app.command("block")(ticket_block)
+    ticket_app.command("validate")(ticket_validate)
 
     app.add_typer(ticket_app, name="ticket")

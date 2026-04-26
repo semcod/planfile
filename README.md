@@ -34,7 +34,7 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.81-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.82-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 ![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-33.8h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
 - 🤖 **LLM usage:** $7.5000 (88 commits)
@@ -204,6 +204,11 @@ planfile ticket list --label bug --format json
 planfile ticket update PLF-001 --status done
 planfile ticket update PLF-002 --priority critical
 
+# Validate if tickets are still current
+planfile ticket validate
+planfile ticket validate Q01 Q02 --issues analyses/issues.yaml --format yaml
+planfile ticket validate --stale-only --fail-on-stale
+
 # Delete tickets by ID
 planfile ticket delete PLF-001 PLF-002
 
@@ -305,6 +310,16 @@ integrations:
 ```
 
 Markdown sync works out-of-the-box with `TODO.md` and `CHANGELOG.md` files.
+
+To enable automatic checkbox syncing from `planfile.yaml` task statuses/results
+in tools that reuse planfile APIs (e.g. `llx plan run`), add:
+
+```yaml
+integrations:
+  markdown:
+    sync_on_plan_run: true
+    todo_file: TODO.md
+```
 
 # Run CI loop with strategy
 make ci-loop STRATEGY=strategy.yaml BACKENDS=github MAX_ITERATIONS=5

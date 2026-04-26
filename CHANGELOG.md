@@ -29,6 +29,29 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.82] - 2026-04-26
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/test_ci_runner.py
+- Update tests/test_testql_integration.py
+- Update tests/test_ticket_validation.py
+- Update tests/test_todo_sync.py
+
+### Other
+- Update planfile/__init__.py
+- Update planfile/ci.py
+- Update planfile/cli/groups/ticket/__init__.py
+- Update planfile/cli/groups/ticket/commands.py
+- Update planfile/cli/groups/validate/__init__.py
+- Update planfile/cli/groups/validate/commands.py
+- Update planfile/core/models/base.py
+- Update planfile/testql_integration.py
+- Update planfile/ticket_validation.py
+- Update planfile/todo_sync.py
+
 ## [0.1.81] - 2026-04-26
 
 ### Test

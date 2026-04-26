@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.81"
+__version__ = "0.1.82"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -31,6 +31,14 @@ from planfile.core.models import (
     TicketStatus,
 )
 from planfile.core.store import PlanfileStore
+from planfile.testql_integration import (
+    build_testql_tickets,
+    run_testql_validation,
+    sync_testql_tickets,
+    upsert_testql_tickets,
+)
+from planfile.ticket_validation import validate_planfile_tickets
+from planfile.todo_sync import sync_todo_checkboxes_from_planfile
 
 # Backward compat aliases
 StrategyV1 = Strategy
@@ -130,6 +138,12 @@ __all__ = [
     "create_openai_client", "create_litellm_client",
     # Runner (lazy loaded)
     "load_valid_strategy", "run_strategy", "verify_strategy_post_execution",
+    "sync_todo_checkboxes_from_planfile",
+    "run_testql_validation",
+    "build_testql_tickets",
+    "upsert_testql_tickets",
+    "sync_testql_tickets",
+    "validate_planfile_tickets",
 ]
 
 # Lazy loading functions for executors

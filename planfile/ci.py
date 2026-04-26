@@ -365,6 +365,8 @@ Respond in JSON format:
                 "plan",
                 "run",
                 str(strategy_path),
+                "--format",
+                "yaml",
                 "--project",
                 str(self.project_path),
                 "--ticket-id",

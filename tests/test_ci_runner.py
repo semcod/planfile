@@ -110,6 +110,8 @@ def test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend(monkeypatch, tmp_path
 
     assert runner.auto_fix_bugs(bug) is True
     assert captured["cmd"][:3] == ["llx", "plan", "run"]
+    assert "--format" in captured["cmd"]
+    assert "yaml" in captured["cmd"]
     assert "--ticket-id" in captured["cmd"]
     assert "--use-aider" in captured["cmd"]
     assert "--output-yaml" not in captured["cmd"]
