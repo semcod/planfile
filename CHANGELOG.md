@@ -29,6 +29,11 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.86] - 2026-04-26
+
+### Test
+- Update tests/test_ticket_validation.py
+
 ## [0.1.85] - 2026-04-26
 
 ### Test

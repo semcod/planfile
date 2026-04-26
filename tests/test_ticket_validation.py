@@ -166,3 +166,75 @@ def test_validate_planfile_tickets_filters_specific_ticket_ids(tmp_path: Path) -
     assert report["stale"] == 1
     assert report["review_needed_ticket_ids"] == []
     assert report["stale_ticket_ids"] == ["Q02"]
+
+
+def test_validate_planfile_tickets_empty_ticket_ids_returns_all(tmp_path: Path) -> None:
+    """Empty ticket_ids list should be treated as no filter."""
+    strategy_path = tmp_path / "planfile.yaml"
+    _write(
+        strategy_path,
+        yaml.safe_dump(
+            {
+                "tasks": [
+                    {
+                        "id": "Q01",
+                        "name": "Existing rule",
+                        "rule_id": "unused-imports",
+                        "files": ["src/a.py"],
+                    },
+                ]
+            },
+            sort_keys=False,
+        ),
+    )
+    _write(tmp_path / "src/a.py", "import os\n")
+
+    report_none = validate_planfile_tickets(
+        strategy_path=strategy_path,
+        project_path=tmp_path,
+        issue_records=[{"rule_id": "unused-imports", "file": "src/a.py", "line": 1}],
+        ticket_ids=None,
+    )
+    report_empty = validate_planfile_tickets(
+        strategy_path=strategy_path,
+        project_path=tmp_path,
+        issue_records=[{"rule_id": "unused-imports", "file": "src/a.py", "line": 1}],
+        ticket_ids=[],
+    )
+
+    assert report_none["total"] == report_empty["total"] == 1
+    assert report_none["current"] == report_empty["current"] == 1
+
+
+def test_validate_planfile_tickets_nonexistent_ids_returns_empty(tmp_path: Path) -> None:
+    """Filtering by IDs that don't exist in strategy should yield empty results."""
+    strategy_path = tmp_path / "planfile.yaml"
+    _write(
+        strategy_path,
+        yaml.safe_dump(
+            {
+                "tasks": [
+                    {
+                        "id": "Q01",
+                        "name": "Existing rule",
+                        "rule_id": "unused-imports",
+                        "files": ["src/a.py"],
+                    },
+                ]
+            },
+            sort_keys=False,
+        ),
+    )
+    _write(tmp_path / "src/a.py", "import os\n")
+
+    report = validate_planfile_tickets(
+        strategy_path=strategy_path,
+        project_path=tmp_path,
+        issue_records=[{"rule_id": "unused-imports", "file": "src/a.py", "line": 1}],
+        ticket_ids=["Z99"],
+    )
+
+    assert report["total"] == 0
+    assert report["current"] == 0
+    assert report["stale"] == 0
+    assert report["tickets"] == []
