@@ -296,6 +296,31 @@ Respond in JSON format:
             for item in results
         )
 
+    @staticmethod
+    def _extract_yaml_object(raw_output: str) -> dict[str, Any] | None:
+        """Extract YAML object from llx stdout, including fenced markdown payloads."""
+        text = (raw_output or "").strip()
+        if not text:
+            return None
+
+        try:
+            data = yaml.safe_load(text)
+            if isinstance(data, dict):
+                return data
+        except yaml.YAMLError:
+            pass
+
+        fenced_match = re.search(r"```(?:yaml|yml)?\s*(.*?)\s*```", text, re.DOTALL)
+        if fenced_match:
+            try:
+                data = yaml.safe_load(fenced_match.group(1))
+                if isinstance(data, dict):
+                    return data
+            except yaml.YAMLError:
+                pass
+
+        return None
+
     def auto_fix_bugs(self, bug_report: BugReport) -> bool:
         """Attempt to auto-fix bugs via llx plan run editing backend."""
         if not self.auto_fix:
@@ -329,7 +354,6 @@ Respond in JSON format:
         with tempfile.TemporaryDirectory(prefix="planfile-ci-autofix-") as temp_dir:
             temp_dir_path = Path(temp_dir)
             strategy_path = temp_dir_path / "ci-autofix.planfile.yaml"
-            output_yaml = temp_dir_path / "ci-autofix.results.yaml"
 
             strategy_path.write_text(
                 yaml.safe_dump(temp_planfile, sort_keys=False),
@@ -347,8 +371,6 @@ Respond in JSON format:
                 ticket_id,
                 "--max-tasks",
                 "1",
-                "--output-yaml",
-                str(output_yaml),
                 "--use-aider",
             ]
 
@@ -361,12 +383,8 @@ Respond in JSON format:
             if result.returncode != 0:
                 return False
 
-            if not output_yaml.exists():
-                return False
-
-            try:
-                payload = yaml.safe_load(output_yaml.read_text(encoding="utf-8")) or {}
-            except Exception:
+            payload = self._extract_yaml_object(result.stdout)
+            if not payload:
                 return False
 
             return self._task_patch_applied(payload)

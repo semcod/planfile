@@ -3,8 +3,6 @@
 from pathlib import Path
 from types import SimpleNamespace
 
-import yaml
-
 from planfile.ci import BugReport, CIRunner, TestResult
 
 
@@ -73,7 +71,7 @@ def test_generate_bug_report_parses_markdown_json(monkeypatch):
 
 
 def test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend(monkeypatch, tmp_path):
-    """Auto-fix uses llx plan run + editing backend and checks file_changed result."""
+    """Auto-fix uses llx plan run + editing backend and checks YAML stdout payload."""
     runner = _make_runner(auto_fix=True)
     runner.project_path = tmp_path
 
@@ -86,20 +84,19 @@ def test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend(monkeypatch, tmp_path
     def fake_run(cmd, **kwargs):
         captured["cmd"] = cmd
         captured["kwargs"] = kwargs
-        output_idx = cmd.index("--output-yaml") + 1
-        output_path = Path(cmd[output_idx])
-        output_payload = {
-            "summary": {"success": 1, "failed": 0},
-            "results": [
-                {
-                    "task_name": "Fix auth bug",
-                    "status": "success",
-                    "file_changed": True,
-                }
-            ],
-        }
-        output_path.write_text(yaml.safe_dump(output_payload), encoding="utf-8")
-        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+        stdout = (
+            "strategy: ci-autofix.planfile.yaml\n"
+            "project: .\n"
+            "summary:\n"
+            "  success: 1\n"
+            "  failed: 0\n"
+            "results:\n"
+            "- ticket_id: ci-autofix-123\n"
+            "  task_name: Fix auth bug\n"
+            "  status: success\n"
+            "  file_changed: true\n"
+        )
+        return SimpleNamespace(returncode=0, stdout=stdout, stderr="")
 
     monkeypatch.setattr("planfile.ci.subprocess.run", fake_run)
 
@@ -115,6 +112,7 @@ def test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend(monkeypatch, tmp_path
     assert captured["cmd"][:3] == ["llx", "plan", "run"]
     assert "--ticket-id" in captured["cmd"]
     assert "--use-aider" in captured["cmd"]
+    assert "--output-yaml" not in captured["cmd"]
     assert captured["kwargs"]["cwd"] == tmp_path
 
 
