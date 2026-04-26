@@ -371,10 +371,10 @@ if __name__ == "__main__":
     asyncio.run(main())
 '''
 
-    with open("mcp-server-example.py", "w") as f:
-        f.write(server_code)
+    output_file = Path(__file__).resolve().parent / "mcp-server-example.py"
+    output_file.write_text(server_code, encoding="utf-8")
 
-    print("✅ MCP server example saved to: mcp-server-example.py")
+    print(f"✅ MCP server example saved to: {output_file}")
 
 if __name__ == "__main__":
     example_mcp_session()

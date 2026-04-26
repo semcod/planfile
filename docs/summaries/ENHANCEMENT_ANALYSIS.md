@@ -18,7 +18,7 @@ After analyzing all files outside the `planfile/` directory and examples, I've i
 - `test_integration.py` - Integration tests
 
 ### Scripts to Refactor
-- `planfile_gen` - CLI wrapper, can be simplified
+- `scripts/planfile_gen` - CLI wrapper, can be simplified
 
 ### From `comprehensive_example.py`
 - Uses `export_results_to_markdown` - ✅ Already exists

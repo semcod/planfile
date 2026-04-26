@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 
+- chore(repo): move root guides to docs/guides (MIGRATION_GUIDE, PERFORMANCE, README_EXAMPLES, README_STANDALONE)
+- chore(repo): move REFACTOR_CLI to docs/summaries
+- chore(repo): move mcp-server-example to examples/ecosystem and planfile_gen to scripts/
+- docs: add docs/NAVIGATION.md and refresh README documentation links
+- chore(todo): review TODO.md state (0 active, 0 completed) — no completed TODO items to migrate into changelog
+
+
 - feat(goal): configuration management system
 - feat(examples): configuration management system
 - feat(docs): configuration management system
@@ -21,6 +28,26 @@
 - feat: added configuration management tests
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
+
+## [0.1.79] - 2026-04-26
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+- Update docs/NAVIGATION.md
+- Update docs/guides/MIGRATION_GUIDE.md
+- Update docs/guides/PERFORMANCE.md
+- Update docs/guides/README_EXAMPLES.md
+- Update docs/guides/README_STANDALONE.md
+- Update docs/summaries/AUTOMATED_GENERATION_SUMMARY.md
+- Update docs/summaries/ENHANCEMENT_ANALYSIS.md
+- Update docs/summaries/REFACTOR_CLI.md
+- ... and 1 more files
+
+### Other
+- Update examples/ecosystem/02_mcp_integration.py
+- Update examples/ecosystem/mcp-server-example.py
+- Update scripts/planfile_gen
 
 ## [0.1.78] - 2026-04-25
 

@@ -17,7 +17,7 @@ Created a complete automated system for generating `planfile.yaml` based on proj
 - Shows summary statistics
 - Validates generated planfile
 
-### 3. CLI Tool (`planfile_gen`)
+### 3. CLI Tool (`scripts/planfile_gen`)
 - User-friendly command interface
 - Options for mock data, validation, and applying
 - Interactive prompts for validation and application
@@ -29,8 +29,9 @@ Created a complete automated system for generating `planfile.yaml` based on proj
 - Customization guide
 - Troubleshooting tips
 
+```bash
 # Generate with mock data (fast)
-./planfile_gen --mock
+./scripts/planfile_gen --mock
 
 # Run full analysis pipeline
 ./auto_generate_planfile.sh
@@ -39,12 +40,13 @@ Created a complete automated system for generating `planfile.yaml` based on proj
 python3 generate_planfile.py
 
 # Validate existing planfile
-./planfile_gen --validate-only
+./scripts/planfile_gen --validate-only
 
 # Apply planfile (dry run)
-./planfile_gen --apply --backend github
+./scripts/planfile_gen --apply --backend github
 ```
 
+```bash
 # Custom project path
 python3 generate_planfile.py --project-path /path/to/project
 
@@ -52,7 +54,7 @@ python3 generate_planfile.py --project-path /path/to/project
 python3 generate_planfile.py --output my-strategy.yaml
 
 # Different backend
-./planfile_gen --apply --backend jira
+./scripts/planfile_gen --apply --backend jira
 ```
 
 ## Algorithm Flow

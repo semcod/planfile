@@ -34,13 +34,13 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.78-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-33.7h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.79-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-33.8h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $7.5000 (87 commits)
-- 👤 **Human dev:** ~$3372 (33.7h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $7.5000 (88 commits)
+- 👤 **Human dev:** ~$3378 (33.8h @ $100/h, 30min dedup)
 
-Generated on 2026-04-25 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-04-26 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
@@ -342,12 +342,16 @@ docker-compose exec sprintstrat-runner planfile auto loop \
 
 ## 📚 Documentation
 
+- [Documentation Navigation](docs/NAVIGATION.md)
 - [CI/CD Integration Guide](docs/CI_CD_INTEGRATION.md)
 - [API Reference](docs/API.md)
 - [CLI Reference](docs/CLI.md)
 - [Examples](examples/)
 - [Architecture Overview](docs/summaries/)
-- [Migration Guide](MIGRATION_GUIDE.md)
+- [Migration Guide](docs/guides/MIGRATION_GUIDE.md)
+- [Performance Guide](docs/guides/PERFORMANCE.md)
+- [Examples Runner Guide](docs/guides/README_EXAMPLES.md)
+- [Standalone Usage Guide](docs/guides/README_STANDALONE.md)
 - [Changelog](CHANGELOG.md)
 
 ### Strategy Schema (v2)
