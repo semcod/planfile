@@ -27,20 +27,28 @@ class TicketStoreMixin:
                 tickets.append(ticket)
         return tickets
 
+    def _filter_by_files(self, tickets: list[Ticket], value: Any) -> list[Ticket]:
+        patterns = value if isinstance(value, list) else [value]
+        return [t for t in tickets if self._matches_files(t, patterns)]
+
+    def _filter_by_labels(self, tickets: list[Ticket], value: Any) -> list[Ticket]:
+        labels = value if isinstance(value, list) else [value]
+        return [t for t in tickets if any(label in (t.labels or []) for label in labels)]
+
+    def _filter_by_attribute(self, tickets: list[Ticket], key: str, value: Any) -> list[Ticket]:
+        return [t for t in tickets if getattr(t, key, None) == value]
+
     def _apply_filters(self, tickets: list[Ticket], **filters) -> list[Ticket]:
         result = tickets
         for key, value in filters.items():
             if value is None:
                 continue
-            # Special handling for files filter with glob patterns
             if key == 'files':
-                patterns = value if isinstance(value, list) else [value]
-                result = [t for t in result if self._matches_files(t, patterns)]
+                result = self._filter_by_files(result, value)
             elif key == 'labels':
-                labels = value if isinstance(value, list) else [value]
-                result = [t for t in result if any(label in (t.labels or []) for label in labels)]
+                result = self._filter_by_labels(result, value)
             else:
-                result = [t for t in result if getattr(t, key, None) == value]
+                result = self._filter_by_attribute(result, key, value)
         return result
 
     def _matches_files(self, ticket: Ticket, patterns: list[str]) -> bool:

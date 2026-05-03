@@ -7,7 +7,8 @@ Examples of using planfile as a REST API server.
 - `01_start_server.sh` - Start the FastAPI server
 - `02_curl_examples.sh` - Basic curl commands for all endpoints
 - `03_python_client.py` - Python client using httpx/requests
-- `04_javascript_client.js` - JavaScript/Node.js client example
+- `04_dsl_usage.py` - DSL endpoint usage examples
+- `06_websocket.py` - WebSocket DSL usage examples
 - `05_integration_test.py` - Integration test example
 
 ## Prerequisites

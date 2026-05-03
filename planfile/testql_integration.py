@@ -170,39 +170,38 @@ def _looks_already_exists_error(exc: Exception) -> bool:
     return "already exists" in text or "already exist" in text
 
 
-def _attach_external_ref(ticket: dict[str, Any], integration: str, ref: dict[str, str]) -> None:
-    ref_id = _normalize_ref_text(ref.get("id"))
-    ref_key = _normalize_ref_text(ref.get("key"))
-    ref_url = _normalize_ref_url(ref.get("url"))
-    if not (ref_id or ref_key or ref_url):
-        return
-
-    refs = _iter_external_refs(ticket)
-    updated = False
+def _update_existing_ref_entry(
+    refs: list[dict[str, Any]], integration: str, ref_id: str, ref_key: str, ref_url: str
+) -> bool:
     for item in refs:
-        item_integration = _normalize_ref_text(item.get("integration")).lower()
-        if item_integration == integration:
-            if ref_id:
-                item["id"] = ref_id
-            if ref_key:
-                item["key"] = ref_key
-            if ref_url:
-                item["url"] = ref_url
-            updated = True
-            break
-
-    if not updated:
-        entry: dict[str, str] = {"integration": integration}
+        if _normalize_ref_text(item.get("integration")).lower() != integration:
+            continue
         if ref_id:
-            entry["id"] = ref_id
+            item["id"] = ref_id
         if ref_key:
-            entry["key"] = ref_key
+            item["key"] = ref_key
         if ref_url:
-            entry["url"] = ref_url
-        refs.append(entry)
+            item["url"] = ref_url
+        return True
+    return False
 
-    ticket["external_refs"] = refs
 
+def _append_ref_entry(
+    refs: list[dict[str, Any]], integration: str, ref_id: str, ref_key: str, ref_url: str
+) -> None:
+    entry: dict[str, str] = {"integration": integration}
+    if ref_id:
+        entry["id"] = ref_id
+    if ref_key:
+        entry["key"] = ref_key
+    if ref_url:
+        entry["url"] = ref_url
+    refs.append(entry)
+
+
+def _update_ticket_integration_fields(
+    ticket: dict[str, Any], integration: str, ref_id: str, ref_key: str, ref_url: str
+) -> None:
     if ref_id:
         ticket[f"{integration}_id"] = ref_id
         ticket.setdefault("external_id", ref_id)
@@ -211,6 +210,21 @@ def _attach_external_ref(ticket: dict[str, Any], integration: str, ref: dict[str
     if ref_url:
         ticket[f"{integration}_url"] = ref_url
         ticket.setdefault("external_url", ref_url)
+
+
+def _attach_external_ref(ticket: dict[str, Any], integration: str, ref: dict[str, str]) -> None:
+    ref_id = _normalize_ref_text(ref.get("id"))
+    ref_key = _normalize_ref_text(ref.get("key"))
+    ref_url = _normalize_ref_url(ref.get("url"))
+    if not (ref_id or ref_key or ref_url):
+        return
+
+    refs = _iter_external_refs(ticket)
+    if not _update_existing_ref_entry(refs, integration, ref_id, ref_key, ref_url):
+        _append_ref_entry(refs, integration, ref_id, ref_key, ref_url)
+
+    ticket["external_refs"] = refs
+    _update_ticket_integration_fields(ticket, integration, ref_id, ref_key, ref_url)
 
 
 def _resolve_update_reference(backend: Any, ticket: dict[str, Any], integration: str) -> dict[str, str]:
@@ -365,38 +379,32 @@ def run_testql_validation(
     return report
 
 
-def _collect_failure_messages(report: dict[str, Any]) -> list[str]:
-    """Collect normalized failure messages from TestQL report."""
+def _collect_step_messages(steps_raw: Any) -> list[str]:
     messages: list[str] = []
+    if not isinstance(steps_raw, list):
+        return messages
+    for step in steps_raw:
+        if not isinstance(step, dict):
+            continue
+        if str(step.get("status") or "").lower() not in {"failed", "error"}:
+            continue
+        name = str(step.get("name") or "step")
+        message = str(step.get("message") or "failed")
+        messages.append(f"{name}: {message}")
+    return messages
 
-    steps_raw = report.get("steps", [])
-    if isinstance(steps_raw, list):
-        for step in steps_raw:
-            if not isinstance(step, dict):
-                continue
-            status = str(step.get("status") or "").lower()
-            if status not in {"failed", "error"}:
-                continue
-            name = str(step.get("name") or "step")
-            message = str(step.get("message") or "failed")
-            messages.append(f"{name}: {message}")
 
-    errors_raw = report.get("errors", [])
+def _collect_error_messages(errors_raw: Any) -> list[str]:
     if isinstance(errors_raw, list):
-        error_values = errors_raw
+        values = errors_raw
     elif errors_raw is None:
-        error_values = []
+        values = []
     else:
-        error_values = [errors_raw]
+        values = [errors_raw]
+    return [str(err or "").strip() for err in values if str(err or "").strip()]
 
-    for err in error_values:
-        text = str(err or "").strip()
-        if text:
-            messages.append(text)
 
-    if not messages and int(report.get("failed") or 0) > 0:
-        messages.append("One or more TestQL checks failed without detailed error output")
-
+def _dedupe_messages(messages: list[str]) -> list[str]:
     unique: list[str] = []
     seen: set[str] = set()
     for message in messages:
@@ -404,6 +412,17 @@ def _collect_failure_messages(report: dict[str, Any]) -> list[str]:
             unique.append(message)
             seen.add(message)
     return unique
+
+
+def _collect_failure_messages(report: dict[str, Any]) -> list[str]:
+    """Collect normalized failure messages from TestQL report."""
+    messages = _collect_step_messages(report.get("steps", []))
+    messages += _collect_error_messages(report.get("errors", []))
+
+    if not messages and int(report.get("failed") or 0) > 0:
+        messages.append("One or more TestQL checks failed without detailed error output")
+
+    return _dedupe_messages(messages)
 
 
 def _extract_file_from_message(message: str) -> str | None:
@@ -481,24 +500,16 @@ def _default_strategy_payload() -> dict[str, Any]:
     }
 
 
-def upsert_testql_tickets(
-    strategy_path: str | Path,
-    tickets: list[dict[str, Any]],
-    *,
-    project_path: str | Path = ".",
-) -> dict[str, Any]:
-    """Upsert TestQL tickets into planfile.yaml tasks and sprint task_patterns."""
-    project_root = Path(project_path).resolve()
-    strategy_file = Path(strategy_path)
-    if not strategy_file.is_absolute():
-        strategy_file = (project_root / strategy_file).resolve()
-
+def _load_or_init_strategy(strategy_file: Path) -> dict[str, Any]:
     if strategy_file.exists():
         loaded = yaml.safe_load(strategy_file.read_text(encoding="utf-8")) or {}
-        strategy = loaded if isinstance(loaded, dict) else {}
-    else:
-        strategy = _default_strategy_payload()
+        return loaded if isinstance(loaded, dict) else {}
+    return _default_strategy_payload()
 
+
+def _ensure_strategy_lists(
+    strategy: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     tasks = strategy.get("tasks")
     if not isinstance(tasks, list):
         tasks = []
@@ -517,16 +528,65 @@ def upsert_testql_tickets(
         task_patterns = []
         sprint["task_patterns"] = task_patterns
 
-    existing_task_ids = {
-        str(task.get("id"))
-        for task in tasks
-        if isinstance(task, dict) and task.get("id")
+    return tasks, task_patterns, sprint
+
+
+def _build_task_pattern_entry(ticket: dict[str, Any], ticket_id: str) -> dict[str, Any]:
+    return {
+        "id": ticket_id,
+        "name": ticket.get("title") or ticket.get("name") or ticket_id,
+        "description": ticket.get("description", ""),
+        "task_type": "fix",
+        "model_hints": {"planning": "balanced", "implementation": "balanced"},
+        "priority": "high",
+        "status": "todo",
+        "file": ticket.get("file", ""),
     }
-    existing_pattern_ids = {
-        str(pattern.get("id"))
-        for pattern in task_patterns
-        if isinstance(pattern, dict) and pattern.get("id")
-    }
+
+
+def _upsert_single_ticket(
+    ticket: dict[str, Any],
+    tasks: list[dict[str, Any]],
+    task_patterns: list[dict[str, Any]],
+    existing_task_ids: set[str],
+    existing_pattern_ids: set[str],
+    existing_identity_keys: set[str],
+) -> bool:
+    ticket_id = str(ticket.get("id") or "").strip()
+    if not ticket_id:
+        return False
+    ticket_identity_keys = _collect_ticket_identity_keys(ticket)
+    if ticket_id in existing_task_ids or any(k in existing_identity_keys for k in ticket_identity_keys):
+        return False
+
+    tasks.append(ticket)
+    existing_task_ids.add(ticket_id)
+    existing_identity_keys.update(ticket_identity_keys)
+
+    if ticket_id not in existing_pattern_ids:
+        task_patterns.append(_build_task_pattern_entry(ticket, ticket_id))
+        existing_pattern_ids.add(ticket_id)
+
+    return True
+
+
+def upsert_testql_tickets(
+    strategy_path: str | Path,
+    tickets: list[dict[str, Any]],
+    *,
+    project_path: str | Path = ".",
+) -> dict[str, Any]:
+    """Upsert TestQL tickets into planfile.yaml tasks and sprint task_patterns."""
+    project_root = Path(project_path).resolve()
+    strategy_file = Path(strategy_path)
+    if not strategy_file.is_absolute():
+        strategy_file = (project_root / strategy_file).resolve()
+
+    strategy = _load_or_init_strategy(strategy_file)
+    tasks, task_patterns, _sprint = _ensure_strategy_lists(strategy)
+
+    existing_task_ids = {str(t.get("id")) for t in tasks if isinstance(t, dict) and t.get("id")}
+    existing_pattern_ids = {str(p.get("id")) for p in task_patterns if isinstance(p, dict) and p.get("id")}
     existing_identity_keys: set[str] = set()
     for existing_task in tasks:
         if isinstance(existing_task, dict):
@@ -541,32 +601,13 @@ def upsert_testql_tickets(
         ticket_id = str(ticket.get("id") or "").strip()
         if not ticket_id:
             continue
-        ticket_identity_keys = _collect_ticket_identity_keys(ticket)
-        has_identity_conflict = any(key in existing_identity_keys for key in ticket_identity_keys)
-
-        if ticket_id in existing_task_ids or has_identity_conflict:
+        if _upsert_single_ticket(
+            ticket, tasks, task_patterns,
+            existing_task_ids, existing_pattern_ids, existing_identity_keys,
+        ):
+            created_ids.append(ticket_id)
+        else:
             skipped_ids.append(ticket_id)
-            continue
-
-        tasks.append(ticket)
-        existing_task_ids.add(ticket_id)
-        existing_identity_keys.update(ticket_identity_keys)
-        created_ids.append(ticket_id)
-
-        if ticket_id not in existing_pattern_ids:
-            task_patterns.append(
-                {
-                    "id": ticket_id,
-                    "name": ticket.get("title") or ticket.get("name") or ticket_id,
-                    "description": ticket.get("description", ""),
-                    "task_type": "fix",
-                    "model_hints": {"planning": "balanced", "implementation": "balanced"},
-                    "priority": "high",
-                    "status": "todo",
-                    "file": ticket.get("file", ""),
-                }
-            )
-            existing_pattern_ids.add(ticket_id)
 
     strategy_file.write_text(
         yaml.safe_dump(strategy, sort_keys=False, allow_unicode=True),
@@ -580,6 +621,56 @@ def upsert_testql_tickets(
         "created_ticket_ids": created_ids,
         "skipped_ticket_ids": skipped_ids,
     }
+
+
+def _resolve_sync_backend(config: Any, integration: str) -> Any:
+    if integration == "markdown":
+        return config.get_default_backend()
+    return config.get_integration_backend(integration)
+
+
+def _sync_ticket_to_backend(
+    ticket: dict[str, Any], backend: Any, integration: str
+) -> tuple[str, int]:
+    update_ref = _resolve_update_reference(backend, ticket, integration)
+    if update_ref.get("id"):
+        try:
+            backend.update_ticket(
+                update_ref["id"],
+                name=ticket.get("name") or ticket.get("title"),
+                body=ticket.get("description") or ticket.get("body"),
+                status=ticket.get("status"),
+                labels=ticket.get("labels"),
+                priority=ticket.get("priority"),
+                assignee=ticket.get("assignee"),
+            )
+            _attach_external_ref(ticket, integration, update_ref)
+            return "updated", 1
+        except Exception as exc:
+            if not _looks_not_found_error(exc):
+                raise
+    created_ref = _extract_created_ticket_ref(backend.create_ticket(ticket))
+    _attach_external_ref(ticket, integration, created_ref)
+    return "created", 1
+
+
+def _sync_tickets_to_integration(
+    tickets: list[dict[str, Any]], backend: Any, integration: str
+) -> dict[str, Any]:
+    created = updated = skipped = failed = 0
+    for ticket in tickets:
+        try:
+            outcome, _ = _sync_ticket_to_backend(ticket, backend, integration)
+            if outcome == "updated":
+                updated += 1
+            else:
+                created += 1
+        except Exception as exc:
+            if _looks_already_exists_error(exc):
+                skipped += 1
+            else:
+                failed += 1
+    return {"integration": integration, "created": created, "updated": updated, "skipped": skipped, "failed": failed}
 
 
 def sync_testql_tickets(
@@ -601,77 +692,17 @@ def sync_testql_tickets(
 
     integrations_report: list[dict[str, Any]] = []
     for integration in sync_order:
-        created = 0
-        updated = 0
-        skipped = 0
-        failed = 0
-
         try:
-            if integration == "markdown":
-                backend = config.get_default_backend()
-            else:
-                if not config.validate_integration(integration):
-                    integrations_report.append(
-                        {
-                            "integration": integration,
-                            "created": 0,
-                            "skipped": 0,
-                            "failed": len(tickets),
-                            "error": "integration_not_configured",
-                        }
-                    )
-                    continue
-                backend = config.get_integration_backend(integration)
-
-            for ticket in tickets:
-                try:
-                    update_ref = _resolve_update_reference(backend, ticket, integration)
-                    if update_ref.get("id"):
-                        try:
-                            backend.update_ticket(
-                                update_ref["id"],
-                                name=ticket.get("name") or ticket.get("title"),
-                                body=ticket.get("description") or ticket.get("body"),
-                                status=ticket.get("status"),
-                                labels=ticket.get("labels"),
-                                priority=ticket.get("priority"),
-                                assignee=ticket.get("assignee"),
-                            )
-                            _attach_external_ref(ticket, integration, update_ref)
-                            updated += 1
-                            continue
-                        except Exception as exc:
-                            if not _looks_not_found_error(exc):
-                                raise
-
-                    created_ref = _extract_created_ticket_ref(backend.create_ticket(ticket))
-                    _attach_external_ref(ticket, integration, created_ref)
-                    created += 1
-                except Exception as exc:
-                    if _looks_already_exists_error(exc):
-                        skipped += 1
-                    else:
-                        failed += 1
-
-            integrations_report.append(
-                {
-                    "integration": integration,
-                    "created": created,
-                    "updated": updated,
-                    "skipped": skipped,
-                    "failed": failed,
-                }
-            )
+            if integration != "markdown" and not config.validate_integration(integration):
+                integrations_report.append(
+                    {"integration": integration, "created": 0, "skipped": 0, "failed": len(tickets), "error": "integration_not_configured"}
+                )
+                continue
+            backend = _resolve_sync_backend(config, integration)
+            integrations_report.append(_sync_tickets_to_integration(tickets, backend, integration))
         except Exception as exc:
             integrations_report.append(
-                {
-                    "integration": integration,
-                    "created": created,
-                    "updated": updated,
-                    "skipped": skipped,
-                    "failed": len(tickets),
-                    "error": str(exc),
-                }
+                {"integration": integration, "created": 0, "updated": 0, "skipped": 0, "failed": len(tickets), "error": str(exc)}
             )
 
     return {

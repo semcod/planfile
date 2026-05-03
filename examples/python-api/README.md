@@ -9,6 +9,7 @@ Examples of using planfile as a Python library in your applications.
 - `03_integration.py` - Integrating planfile into existing tools
 - `04_bulk_operations.py` - Bulk ticket operations
 - `05_filtering.py` - Advanced ticket filtering
+- `05_dsl_usage.py` - DSL (Domain Specific Language) usage examples
 
 # Navigate to examples directory
 cd examples/python-api

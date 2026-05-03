@@ -1,54 +1,54 @@
 # code2llm call graph | /home/tom/github/semcod/planfile
-# nodes: 316 | edges: 347 | modules: 83
+# nodes: 428 | edges: 455 | modules: 92
 # CC̄=2.2
 
 HUBS[20]:
   Taskfile.print
-    CC=0  in:323  out:0  total:323
+    CC=0  in:361  out:0  total:361
+  planfile.testql_integration._collect_ticket_identity_keys
+    CC=14  in:2  out:57  total:59
   examples.ecosystem.04_llx_integration.example_metric_driven_planning
     CC=9  in:0  out:57  total:57
   examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy
     CC=8  in:0  out:56  total:56
   planfile.cli.groups.examples.commands.create_examples_app
     CC=1  in:1  out:46  total:47
+  planfile.mcp.server.handle_tool_call
+    CC=27  in:1  out:42  total:43
   planfile.cli.groups.review.commands.review_strategy_cli
     CC=10  in:0  out:40  total:40
   examples.python-api.04_analytics_simple.main
     CC=1  in:0  out:35  total:35
   planfile.analysis.parsers.text_parser.analyze_text
     CC=13  in:4  out:30  total:34
+  planfile.testql_integration.upsert_testql_tickets
+    CC=15  in:1  out:31  total:32
+  planfile.todo_sync.sync_todo_checkboxes_from_planfile
+    CC=14  in:0  out:30  total:30
+  planfile.testql_integration._collect_external_ref_candidates
+    CC=9  in:1  out:29  total:30
   planfile.cli.project_detector.package._detect_from_package_json
     CC=7  in:1  out:28  total:29
+  planfile.cli.groups.sync.commands.watch_cmd
+    CC=6  in:0  out:29  total:29
   planfile.cli.groups.init.commands.init_strategy_cli
     CC=8  in:0  out:29  total:29
   planfile.cli.groups.health.commands.create_health_app
     CC=1  in:1  out:28  total:29
   planfile.cli.project_detector.fallback._detect_from_structure
     CC=9  in:1  out:27  total:28
+  planfile.cli.groups.ticket.commands.ticket_validate
+    CC=10  in:0  out:28  total:28
+  planfile.cli.groups.backlog.commands.backlog_delete
+    CC=11  in:0  out:27  total:27
   planfile.importers.redup_importer._parse_duplicates
     CC=9  in:1  out:26  total:27
-  planfile.runner.analyze_project_metrics
-    CC=12  in:1  out:25  total:26
-  examples.ecosystem.02_mcp_integration.example_mcp_session
-    CC=1  in:0  out:26  total:26
-  planfile.cli.project_detector.structure._analyze_directory_structure
-    CC=20  in:3  out:23  total:26
-  planfile.cli.groups.query.commands.stats_cmd
-    CC=5  in:0  out:24  total:24
-  planfile.runner.run_strategy
-    CC=8  in:1  out:23  total:24
-  planfile.importers.redup_importer._parse_toon_format
-    CC=9  in:1  out:22  total:23
-  planfile.cli.groups.query.commands.compare_strategies
-    CC=10  in:1  out:22  total:23
-  planfile.cli.project_detector.readme._find_readme_content
-    CC=16  in:2  out:20  total:22
 
 MODULES:
   Taskfile  [1 funcs]
     print  CC=0  out:0
   examples.ecosystem.02_mcp_integration  [6 funcs]
-    create_mcp_tool_definitions  CC=1  out:6
+    create_mcp_tool_definitions  CC=1  out:7
     example_mcp_session  CC=1  out:26
     run_mcp_tool  CC=4  out:6
     simulate_planfile_apply  CC=5  out:7
@@ -78,10 +78,7 @@ MODULES:
     example_read_tickets  CC=1  out:12
     example_update_tickets  CC=1  out:8
     main  CC=1  out:11
-  examples.python-api.03_integration  [8 funcs]
-    error  CC=3  out:4
-    metric_alert  CC=1  out:4
-    warning  CC=2  out:2
+  examples.python-api.03_integration  [5 funcs]
     example_ci_pipeline_integration  CC=4  out:7
     example_cli_tool_integration  CC=2  out:5
     example_custom_decorator  CC=3  out:17
@@ -98,12 +95,27 @@ MODULES:
     main  CC=1  out:11
   examples.python-api.04_analytics_simple  [1 funcs]
     main  CC=1  out:35
+  examples.python-api.05_dsl_usage  [6 funcs]
+    example_basic_dsl  CC=1  out:7
+    example_batch_operations  CC=4  out:5
+    example_parser_only  CC=1  out:8
+    example_query_and_export  CC=1  out:5
+    example_sprint_management  CC=1  out:5
+    example_validation_sync  CC=1  out:7
   examples.rest-api.03_python_client  [5 funcs]
     example_basic_operations  CC=1  out:10
     example_bulk_operations  CC=2  out:12
     example_error_handling  CC=3  out:7
     example_workflow  CC=1  out:12
     main  CC=4  out:21
+  examples.rest-api.04_dsl_usage  [7 funcs]
+    example_dsl_command  CC=1  out:3
+    example_dsl_create_ticket  CC=1  out:3
+    example_dsl_help  CC=1  out:3
+    example_dsl_sprint  CC=1  out:6
+    example_dsl_update_ticket  CC=1  out:3
+    example_dsl_validate_sync  CC=1  out:6
+    example_yaml_operations  CC=1  out:6
   examples.rest-api.04_javascript_client  [13 funcs]
     BASE_URL  CC=5  out:17
     client  CC=2  out:10
@@ -115,6 +127,13 @@ MODULES:
     moveTicket  CC=1  out:1
     request  CC=5  out:8
     ticket  CC=1  out:1
+  examples.rest-api.06_websocket  [6 funcs]
+    example_websocket_basic  CC=1  out:6
+    example_websocket_batch  CC=2  out:7
+    example_websocket_error_handling  CC=3  out:8
+    example_websocket_interactive  CC=2  out:9
+    example_websocket_raw_text  CC=1  out:7
+    main  CC=1  out:3
   planfile  [1 funcs]
     quick_ticket  CC=1  out:4
   planfile.analysis.external_tools  [3 funcs]
@@ -163,13 +182,17 @@ MODULES:
     _process_yaml_value  CC=4  out:7
     analyze_yaml  CC=4  out:20
     extract_from_yaml_structure  CC=5  out:8
-  planfile.api.server  [6 funcs]
+  planfile.api.server  [12 funcs]
+    create_sprint  CC=4  out:13
     create_ticket  CC=1  out:5
     delete_ticket  CC=2  out:4
+    done_ticket  CC=2  out:5
     get_ticket  CC=2  out:5
-    list_tickets  CC=3  out:6
+    get_yaml  CC=3  out:7
+    list_sprints  CC=3  out:7
+    list_tickets  CC=5  out:8
     move_ticket  CC=2  out:5
-    update_ticket  CC=4  out:7
+    patch_yaml  CC=6  out:11
   planfile.ci  [2 funcs]
     __init__  CC=4  out:5
     check_strategy_completion  CC=3  out:9
@@ -197,6 +220,21 @@ MODULES:
   planfile.cli.groups.auto.commands  [2 funcs]
     _initialize_backends  CC=3  out:4
     get_backend  CC=4  out:13
+  planfile.cli.groups.backlog.commands  [10 funcs]
+    _collect_backlog_to_delete  CC=6  out:5
+    _collect_targets_to_delete  CC=4  out:5
+    _get_planfile_yaml_path  CC=3  out:4
+    _load_planfile_yaml  CC=2  out:6
+    _matches_files  CC=5  out:2
+    _print_deletion_preview  CC=5  out:8
+    _save_planfile_yaml  CC=1  out:3
+    backlog_delete  CC=11  out:27
+    backlog_list  CC=10  out:14
+    create_backlog_table  CC=3  out:16
+  planfile.cli.groups.dsl.commands  [3 funcs]
+    _interactive_shell  CC=7  out:8
+    _run_single  CC=8  out:11
+    dsl_run  CC=2  out:7
   planfile.cli.groups.examples  [1 funcs]
     register_examples_commands  CC=1  out:1
   planfile.cli.groups.examples.commands  [2 funcs]
@@ -233,7 +271,9 @@ MODULES:
   planfile.cli.groups.review.utils  [2 funcs]
     _load_and_validate_strategy  CC=2  out:3
     _load_backend_config  CC=6  out:13
-  planfile.cli.groups.sync.commands  [7 funcs]
+  planfile.cli.groups.sync.commands  [10 funcs]
+    _resolve_watch_integrations  CC=4  out:5
+    _run_sync_once  CC=3  out:2
     all_cmd  CC=2  out:11
     github_cmd  CC=1  out:4
     gitlab_cmd  CC=1  out:4
@@ -241,6 +281,7 @@ MODULES:
     jira_cmd  CC=1  out:4
     markdown_cmd  CC=1  out:4
     sync_all_integrations  CC=3  out:5
+    watch_cmd  CC=6  out:29
   planfile.cli.groups.sync.core  [11 funcs]
     _collect_tickets_from_backlog  CC=4  out:4
     _collect_tickets_from_section  CC=3  out:5
@@ -252,15 +293,19 @@ MODULES:
     _process_planfile_v1  CC=9  out:11
     _ticket_matches_integration  CC=3  out:2
     _ticket_matches_integration_v1  CC=2  out:2
-  planfile.cli.groups.ticket.commands  [5 funcs]
+  planfile.cli.groups.ticket.commands  [10 funcs]
+    _apply_label_changes  CC=6  out:5
+    _auto_sync  CC=6  out:11
     _display_tickets  CC=6  out:9
+    _execute_bulk_updates  CC=4  out:6
+    _load_issue_records_from_file  CC=12  out:14
     create_ticket_table  CC=5  out:14
     load_import_tickets  CC=5  out:6
     ticket_import  CC=1  out:8
-    ticket_list  CC=5  out:9
-  planfile.cli.groups.validate  [1 funcs]
-    register_validate_commands  CC=1  out:1
-  planfile.cli.groups.validate.commands  [1 funcs]
+    ticket_list  CC=6  out:10
+    ticket_validate  CC=10  out:28
+  planfile.cli.groups.validate.commands  [2 funcs]
+    validate_schema_cli  CC=9  out:16
     validate_strategy_cli  CC=9  out:22
   planfile.cli.project_detector.fallback  [1 funcs]
     _detect_from_structure  CC=9  out:27
@@ -280,12 +325,15 @@ MODULES:
   planfile.cli.project_detector.inference  [3 funcs]
     _infer_domain  CC=4  out:4
     _infer_node_project_type  CC=9  out:5
-    _infer_python_project_type  CC=17  out:12
+    _infer_python_project_type  CC=11  out:11
   planfile.cli.project_detector.license  [1 funcs]
     _detect_license  CC=9  out:2
-  planfile.cli.project_detector.main  [2 funcs]
+  planfile.cli.project_detector.main  [5 funcs]
+    _build_detected_dict  CC=9  out:3
+    _determine_source  CC=4  out:3
+    _quality_gates_to_dict  CC=2  out:0
     detect_project  CC=4  out:5
-    get_detected_values  CC=15  out:7
+    get_detected_values  CC=1  out:2
   planfile.cli.project_detector.model_tier  [4 funcs]
     _detect_model_tier  CC=3  out:3
     _tier_from_config_files  CC=9  out:3
@@ -303,15 +351,25 @@ MODULES:
     _populate_project_from_data  CC=5  out:2
     _populate_project_metadata  CC=8  out:13
     _populate_readme_and_repository_details  CC=4  out:10
-  planfile.cli.project_detector.readme  [3 funcs]
-    _find_readme_content  CC=16  out:20
+  planfile.cli.project_detector.readme  [5 funcs]
+    _extract_description  CC=6  out:6
+    _extract_goal  CC=8  out:11
+    _find_readme_content  CC=4  out:5
     _find_readme_description  CC=1  out:1
     _find_readme_goal  CC=1  out:1
-  planfile.cli.project_detector.structure  [1 funcs]
-    _analyze_directory_structure  CC=20  out:23
+  planfile.cli.project_detector.structure  [4 funcs]
+    _analyze_directory_structure  CC=1  out:3
+    _find_src_dirs  CC=12  out:11
+    _has_tests  CC=2  out:2
+    _suggest_sprints  CC=6  out:8
   planfile.core.models.strategy  [2 funcs]
     export  CC=5  out:12
     to_yaml  CC=2  out:5
+  planfile.core.schema  [1 funcs]
+    validate_yaml_file  CC=5  out:5
+  planfile.dsl.executor  [2 funcs]
+    _exec_sync  CC=6  out:20
+    _exec_validate  CC=1  out:8
   planfile.examples  [5 funcs]
     example_create_strategy  CC=1  out:1
     example_programmatic_strategy  CC=1  out:11
@@ -378,7 +436,7 @@ MODULES:
   planfile.mcp.server  [4 funcs]
     _read_jsonrpc  CC=4  out:2
     _write_jsonrpc  CC=1  out:3
-    handle_tool_call  CC=14  out:17
+    handle_tool_call  CC=27  out:42
     main  CC=8  out:12
   planfile.runner  [7 funcs]
     _get_project_hash  CC=5  out:11
@@ -393,16 +451,16 @@ MODULES:
   planfile.sync.mock  [4 funcs]
     _create_ticket  CC=4  out:7
     _list_tickets  CC=11  out:13
-    _search_tickets  CC=4  out:11
-    _update_ticket  CC=8  out:4
+    _search_tickets  CC=5  out:14
+    _update_ticket  CC=8  out:5
   planfile.sync.operations  [15 funcs]
     _create_new_ticket  CC=4  out:8
-    _extract_ticket_data  CC=7  out:14
+    _extract_ticket_data  CC=9  out:16
     _fetch_external_tickets  CC=3  out:4
-    _import_new_ticket  CC=1  out:3
+    _import_new_ticket  CC=2  out:5
     _is_permission_error  CC=3  out:4
     _load_sprint_and_backlog  CC=5  out:4
-    _print_dry_run_action  CC=2  out:2
+    _print_dry_run_action  CC=3  out:4
     _print_permission_error  CC=1  out:9
     _process_external_ticket  CC=4  out:6
     _save_import_results  CC=5  out:6
@@ -410,6 +468,37 @@ MODULES:
     save_sync  CC=2  out:9
   planfile.sync.utils  [1 funcs]
     save_v1_format  CC=1  out:2
+  planfile.testql_integration  [34 funcs]
+    _append_ref_entry  CC=4  out:1
+    _attach_external_ref  CC=5  out:10
+    _build_task_pattern_entry  CC=3  out:4
+    _collect_error_messages  CC=7  out:5
+    _collect_external_ref_candidates  CC=9  out:29
+    _collect_failure_messages  CC=4  out:8
+    _collect_step_messages  CC=8  out:10
+    _collect_ticket_identity_keys  CC=14  out:57
+    _dedupe_messages  CC=3  out:3
+    _default_strategy_payload  CC=1  out:0
+  planfile.ticket_validation  [16 funcs]
+    _build_issue_indexes  CC=14  out:23
+    _collect_ticket_entries  CC=9  out:25
+    _count_file_lines  CC=5  out:4
+    _load_strategy  CC=3  out:3
+    _normalize_files  CC=8  out:11
+    _normalize_rel_path  CC=5  out:10
+    _normalize_rule  CC=2  out:3
+    _normalize_ticket_filters  CC=5  out:5
+    _parse_positive_int  CC=4  out:1
+    _resolve_existing_files  CC=3  out:3
+  planfile.todo_sync  [8 funcs]
+    _collect_markers_from_results  CC=6  out:6
+    _collect_markers_from_strategy  CC=13  out:17
+    _get_value  CC=2  out:3
+    _load_strategy  CC=3  out:3
+    _normalize_marker  CC=2  out:2
+    _resolve_todo_config  CC=7  out:10
+    _status_done  CC=2  out:3
+    sync_todo_checkboxes_from_planfile  CC=14  out:30
   planfile.utils.metrics  [4 funcs]
     _check_project_files  CC=2  out:1
     _collect_git_metrics  CC=8  out:15
@@ -429,6 +518,7 @@ MODULES:
     print_error  CC=0  out:0
 
 EDGES:
+  examples.llx_validator.create_validation_script → Taskfile.print
   examples.rest-api.04_javascript_client.BASE_URL → examples.rest-api.04_javascript_client.PlanfileClient.request
   examples.rest-api.04_javascript_client.PlanfileClient.health → examples.rest-api.04_javascript_client.PlanfileClient.createTicket
   examples.rest-api.04_javascript_client.PlanfileClient.listTickets → examples.rest-api.04_javascript_client.PlanfileClient.request
@@ -446,22 +536,14 @@ EDGES:
   examples.rest-api.04_javascript_client.PlanfileClient.fetched → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.updated → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.tickets → examples.rest-api.04_javascript_client.PlanfileClient.listTickets
-  examples.python-api.03_integration_simple.main → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.error → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.error → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.warning → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.warning → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.metric_alert → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.metric_alert → Taskfile.print
-  examples.python-api.03_integration.example_cli_tool_integration → Taskfile.print
-  examples.python-api.03_integration.example_monitoring_integration → Taskfile.print
-  examples.python-api.03_integration.example_ci_pipeline_integration → Taskfile.print
-  examples.python-api.03_integration.example_custom_decorator → Taskfile.print
-  examples.python-api.03_integration.main → Taskfile.print
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_cli_tool_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_monitoring_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_ci_pipeline_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_custom_decorator
+  examples.rest-api.03_python_client.example_basic_operations → Taskfile.print
+  examples.rest-api.03_python_client.example_bulk_operations → Taskfile.print
+  examples.rest-api.03_python_client.example_workflow → Taskfile.print
+  examples.rest-api.03_python_client.example_error_handling → Taskfile.print
+  examples.rest-api.03_python_client.main → Taskfile.print
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_basic_operations
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_bulk_operations
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_workflow
   examples.ecosystem.02_mcp_integration.run_mcp_tool → Taskfile.print
   examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_generate
   examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_apply
@@ -471,11 +553,18 @@ EDGES:
   examples.ecosystem.02_mcp_integration.example_mcp_session → Taskfile.print
   examples.ecosystem.02_mcp_integration.example_mcp_session → examples.ecosystem.02_mcp_integration.run_mcp_tool
   examples.ecosystem.02_mcp_integration.create_mcp_tool_definitions → Taskfile.print
-  examples.python-api.01_basic_usage.example_1_basic_initialization → Taskfile.print
-  examples.python-api.01_basic_usage.example_2_create_ticket → Taskfile.print
-  examples.python-api.01_basic_usage.example_3_quick_ticket → Taskfile.print
-  examples.python-api.01_basic_usage.example_3_quick_ticket → planfile.quick_ticket
-  examples.python-api.01_basic_usage.example_4_list_tickets → Taskfile.print
-  examples.python-api.01_basic_usage.main → Taskfile.print
-  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_1_basic_initialization
-  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_2_create_ticket
+  examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project → Taskfile.print
+  examples.ecosystem.04_llx_integration.example_metric_driven_planning → Taskfile.print
+  examples.ecosystem.04_llx_integration.create_llx_config_example → Taskfile.print
+  examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy → Taskfile.print
+  examples.ecosystem.03_proxy_routing.create_proxy_config_example → Taskfile.print
+  examples.ecosystem.03_proxy_routing.example_budget_tracking → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_basic_filtering → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_combined_filters → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_search_by_labels → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_export_filtered → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_statistics → Taskfile.print
+  examples.python-api.04_advanced_filtering.main → Taskfile.print
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_basic_filtering
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_combined_filters
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_search_by_labels

@@ -15,6 +15,34 @@ from planfile.server_common import get_planfile
 
 TOOLS = [
     {
+        "name": "planfile_dsl",
+        "description": (
+            "Execute a natural language / DSL command against planfile. "
+            "Supports: create/list/show/update/move/done/start/block/delete ticket(s), "
+            "list/add sprint, validate, sync, query, export. "
+            "Examples: 'create ticket \"Fix login\" priority=high', "
+            "'list tickets sprint=current status=open', "
+            "'update ticket PLF-001 status=done', "
+            "'move ticket PLF-001 to sprint=2', "
+            "'done ticket PLF-001', 'validate', 'sync github', 'help'."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "description": "DSL command string",
+                },
+                "project_path": {
+                    "type": "string",
+                    "default": ".",
+                    "description": "Path to project directory (default: current directory)",
+                },
+            },
+            "required": ["command"],
+        },
+    },
+    {
         "name": "planfile_list_tickets",
         "description": "List tickets in a sprint with optional filters.",
         "inputSchema": {
@@ -79,6 +107,42 @@ TOOLS = [
             "required": ["ticket_id", "to_sprint"],
         },
     },
+    {
+        "name": "planfile_yaml_get",
+        "description": "Read the full planfile.yaml as a JSON object.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_path": {"type": "string", "default": "."},
+            },
+        },
+    },
+    {
+        "name": "planfile_yaml_patch",
+        "description": (
+            "Patch a key in planfile.yaml using dot-notation path. "
+            "Example: path='metadata.model_tier', value='balanced'."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Dot-separated key path, e.g. 'metadata.model_tier'"},
+                "value": {"description": "New value to set (any JSON type)"},
+                "project_path": {"type": "string", "default": "."},
+            },
+            "required": ["path", "value"],
+        },
+    },
+    {
+        "name": "planfile_list_sprints",
+        "description": "List all sprints from planfile.yaml.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_path": {"type": "string", "default": "."},
+            },
+        },
+    },
 ]
 
 
@@ -86,6 +150,54 @@ TOOLS = [
 
 def handle_tool_call(name: str, arguments: dict) -> dict:
     """Dispatch an MCP tool call and return the result dict."""
+
+    if name == "planfile_dsl":
+        from planfile.dsl import DSLExecutor
+        executor = DSLExecutor(project_path=arguments.get("project_path", "."))
+        result = executor.run(arguments.get("command", ""))
+        return result.to_dict()
+
+    if name == "planfile_yaml_get":
+        import yaml
+        from pathlib import Path
+        pf = get_planfile()
+        pf_path = Path(pf.store.project_dir) / "planfile.yaml"
+        if not pf_path.exists():
+            return {"error": "planfile.yaml not found"}
+        with open(pf_path) as f:
+            return yaml.safe_load(f) or {}
+
+    if name == "planfile_yaml_patch":
+        import yaml
+        from pathlib import Path
+        pf = get_planfile()
+        pf_path = Path(pf.store.project_dir) / "planfile.yaml"
+        if not pf_path.exists():
+            return {"error": "planfile.yaml not found"}
+        with open(pf_path) as f:
+            data = yaml.safe_load(f) or {}
+        keys = arguments["path"].split(".")
+        node = data
+        for key in keys[:-1]:
+            if key not in node or not isinstance(node[key], dict):
+                node[key] = {}
+            node = node[key]
+        node[keys[-1]] = arguments["value"]
+        with open(pf_path, "w") as f:
+            yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+        return {"patched": arguments["path"], "value": arguments["value"]}
+
+    if name == "planfile_list_sprints":
+        import yaml
+        from pathlib import Path
+        pf = get_planfile()
+        pf_path = Path(pf.store.project_dir) / "planfile.yaml"
+        if not pf_path.exists():
+            return []
+        with open(pf_path) as f:
+            data = yaml.safe_load(f) or {}
+        return data.get("sprints", [])
+
     pf = get_planfile()
 
     if name == "planfile_list_tickets":

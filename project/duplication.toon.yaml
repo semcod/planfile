@@ -1,35 +1,39 @@
-# redup/duplication | 12 groups | 135f 13913L | 2026-04-25
+# redup/duplication | 15 groups | 149f 17240L | 2026-05-03
 
 SUMMARY:
-  files_scanned: 135
-  total_lines:   13913
-  dup_groups:    12
-  dup_fragments: 33
-  saved_lines:   122
-  scan_ms:       4575
+  files_scanned: 149
+  total_lines:   17240
+  dup_groups:    15
+  dup_fragments: 40
+  saved_lines:   172
+  scan_ms:       6825
 
 HOTSPOTS[7] (files with most duplication):
+  examples/rest-api/04_dsl_usage.py  dup=63L  groups=2  frags=5  (0.4%)
   planfile/cli/project_detector/gates.py  dup=32L  groups=2  frags=4  (0.2%)
   planfile/cli/groups/sync/commands.py  dup=28L  groups=1  frags=4  (0.2%)
-  planfile/cli/groups/sync/core.py  dup=24L  groups=1  frags=2  (0.2%)
+  planfile/cli/groups/sync/core.py  dup=24L  groups=1  frags=2  (0.1%)
   planfile/cli/groups/ticket/commands.py  dup=18L  groups=1  frags=2  (0.1%)
   planfile/cli/core/console.py  dup=15L  groups=1  frags=5  (0.1%)
   planfile/sync/base.py  dup=14L  groups=1  frags=1  (0.1%)
-  planfile/sync/jira.py  dup=14L  groups=1  frags=1  (0.1%)
 
-DUPLICATES[12] (ranked by impact):
+DUPLICATES[15] (ranked by impact):
+  [bef34080d3b159fe]   STRU  example_dsl_command  L=11 N=3 saved=22 sim=1.00
+      examples/rest-api/04_dsl_usage.py:6-16  (example_dsl_command)
+      examples/rest-api/04_dsl_usage.py:19-29  (example_dsl_create_ticket)
+      examples/rest-api/04_dsl_usage.py:32-42  (example_dsl_update_ticket)
   [73f23dc09aac9b7a]   STRU  github_cmd  L=7 N=4 saved=21 sim=1.00
-      planfile/cli/groups/sync/commands.py:10-16  (github_cmd)
-      planfile/cli/groups/sync/commands.py:19-25  (gitlab_cmd)
-      planfile/cli/groups/sync/commands.py:28-34  (jira_cmd)
-      planfile/cli/groups/sync/commands.py:37-43  (markdown_cmd)
-  [84118158d8b5d9f1]   STRU  register_apply_commands  L=3 N=6 saved=15 sim=1.00
-      planfile/cli/groups/apply/__init__.py:9-11  (register_apply_commands)
-      planfile/cli/groups/examples/__init__.py:9-11  (register_examples_commands)
-      planfile/cli/groups/health/__init__.py:9-11  (register_health_commands)
-      planfile/cli/groups/init/__init__.py:9-11  (register_init_commands)
-      planfile/cli/groups/review/__init__.py:9-11  (register_review_commands)
-      planfile/cli/groups/validate/__init__.py:9-11  (register_validate_commands)
+      planfile/cli/groups/sync/commands.py:15-21  (github_cmd)
+      planfile/cli/groups/sync/commands.py:24-30  (gitlab_cmd)
+      planfile/cli/groups/sync/commands.py:33-39  (jira_cmd)
+      planfile/cli/groups/sync/commands.py:42-48  (markdown_cmd)
+  [647474f57d8a2dab]   STRU  register_auto_commands  L=8 N=3 saved=16 sim=1.00
+      planfile/cli/groups/auto/__init__.py:11-18  (register_auto_commands)
+      planfile/cli/groups/backlog/__init__.py:11-18  (register_backlog_commands)
+      planfile/cli/groups/generate/__init__.py:11-18  (register_generate_commands)
+  [d2c29bc2b85437aa]   STRU  example_dsl_sprint  L=15 N=2 saved=15 sim=1.00
+      examples/rest-api/04_dsl_usage.py:45-59  (example_dsl_sprint)
+      examples/rest-api/04_dsl_usage.py:62-76  (example_dsl_validate_sync)
   [f071e098e43958d3]   STRU  map_priority  L=14 N=2 saved=14 sim=1.00
       planfile/sync/base.py:66-79  (map_priority)
       planfile/sync/jira.py:65-78  (map_priority)
@@ -39,109 +43,119 @@ DUPLICATES[12] (ranked by impact):
       planfile/cli/core/console.py:19-21  (print_warning)
       planfile/cli/core/console.py:24-26  (print_info)
       planfile/cli/core/console.py:29-31  (print_dim)
+  [84118158d8b5d9f1]   STRU  register_apply_commands  L=3 N=5 saved=12 sim=1.00
+      planfile/cli/groups/apply/__init__.py:9-11  (register_apply_commands)
+      planfile/cli/groups/examples/__init__.py:9-11  (register_examples_commands)
+      planfile/cli/groups/health/__init__.py:9-11  (register_health_commands)
+      planfile/cli/groups/init/__init__.py:9-11  (register_init_commands)
+      planfile/cli/groups/review/__init__.py:9-11  (register_review_commands)
   [6a6c4ffd98c596b0]   STRU  _collect_tickets_from_sprint  L=12 N=2 saved=12 sim=1.00
       planfile/cli/groups/sync/core.py:58-69  (_collect_tickets_from_sprint)
       planfile/cli/groups/sync/core.py:72-83  (_collect_tickets_from_backlog)
   [743611597bf1e270]   STRU  ticket_done  L=9 N=2 saved=9 sim=1.00
-      planfile/cli/groups/ticket/commands.py:137-145  (ticket_done)
-      planfile/cli/groups/ticket/commands.py:147-155  (ticket_start)
+      planfile/cli/groups/ticket/commands.py:280-288  (ticket_done)
+      planfile/cli/groups/ticket/commands.py:290-298  (ticket_start)
   [1d3d96e641f80678]   STRU  _detect_docker_gates  L=9 N=2 saved=9 sim=1.00
       planfile/cli/project_detector/gates.py:40-48  (_detect_docker_gates)
       planfile/cli/project_detector/gates.py:145-153  (_detect_doc_gates)
-  [647474f57d8a2dab]   STRU  register_auto_commands  L=8 N=2 saved=8 sim=1.00
-      planfile/cli/groups/auto/__init__.py:11-18  (register_auto_commands)
-      planfile/cli/groups/generate/__init__.py:11-18  (register_generate_commands)
   [9c4f9ae7fbca56f4]   STRU  _has_mypy_config  L=7 N=2 saved=7 sim=1.00
       planfile/cli/project_detector/gates.py:103-109  (_has_mypy_config)
       planfile/cli/project_detector/gates.py:136-142  (_has_bandit_config)
   [ea2851389f454151]   STRU  import_json  L=7 N=2 saved=7 sim=1.00
       planfile/importers/json_importer.py:8-14  (import_json)
       planfile/importers/yaml_importer.py:8-14  (import_yaml)
-  [1aa5c925a5a0c66c]   EXAC  __init__  L=4 N=2 saved=4 sim=1.00
-      examples/PROPOSED_API_IMPROVEMENTS.py:27-30  (__init__)
-      planfile/extensions/__init__.py:29-32  (__init__)
+  [a9991ab6527fc886]   EXAC  _load_strategy  L=6 N=2 saved=6 sim=1.00
+      planfile/ticket_validation.py:16-21  (_load_strategy)
+      planfile/todo_sync.py:15-20  (_load_strategy)
+  [41220f657f2d6a8d]   STRU  done_ticket  L=6 N=2 saved=6 sim=1.00
+      planfile/api/server.py:149-154  (done_ticket)
+      planfile/api/server.py:158-163  (start_ticket)
   [3252487e1015a40a]   STRU  _find_readme_description  L=4 N=2 saved=4 sim=1.00
-      planfile/cli/project_detector/readme.py:62-65  (_find_readme_description)
-      planfile/cli/project_detector/readme.py:68-71  (_find_readme_goal)
+      planfile/cli/project_detector/readme.py:57-60  (_find_readme_description)
+      planfile/cli/project_detector/readme.py:63-66  (_find_readme_goal)
 
-REFACTOR[12] (ranked by priority):
-  [1] ○ extract_function   → planfile/cli/groups/sync/utils/github_cmd.py
+REFACTOR[15] (ranked by priority):
+  [1] ○ extract_function   → examples/rest-api/utils/example_dsl_command.py
+      WHY: 3 occurrences of 11-line block across 1 files — saves 22 lines
+      FILES: examples/rest-api/04_dsl_usage.py
+  [2] ○ extract_function   → planfile/cli/groups/sync/utils/github_cmd.py
       WHY: 4 occurrences of 7-line block across 1 files — saves 21 lines
       FILES: planfile/cli/groups/sync/commands.py
-  [2] ○ extract_function   → planfile/cli/groups/utils/register_apply_commands.py
-      WHY: 6 occurrences of 3-line block across 6 files — saves 15 lines
-      FILES: planfile/cli/groups/apply/__init__.py, planfile/cli/groups/examples/__init__.py, planfile/cli/groups/health/__init__.py, planfile/cli/groups/init/__init__.py, planfile/cli/groups/review/__init__.py +1 more
-  [3] ○ extract_function   → planfile/sync/utils/map_priority.py
+  [3] ○ extract_function   → planfile/cli/groups/utils/register_auto_commands.py
+      WHY: 3 occurrences of 8-line block across 3 files — saves 16 lines
+      FILES: planfile/cli/groups/auto/__init__.py, planfile/cli/groups/backlog/__init__.py, planfile/cli/groups/generate/__init__.py
+  [4] ○ extract_function   → examples/rest-api/utils/example_dsl_sprint.py
+      WHY: 2 occurrences of 15-line block across 1 files — saves 15 lines
+      FILES: examples/rest-api/04_dsl_usage.py
+  [5] ○ extract_function   → planfile/sync/utils/map_priority.py
       WHY: 2 occurrences of 14-line block across 2 files — saves 14 lines
       FILES: planfile/sync/base.py, planfile/sync/jira.py
-  [4] ○ extract_function   → planfile/cli/core/utils/print_success.py
+  [6] ○ extract_function   → planfile/cli/core/utils/print_success.py
       WHY: 5 occurrences of 3-line block across 1 files — saves 12 lines
       FILES: planfile/cli/core/console.py
-  [5] ○ extract_function   → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
+  [7] ○ extract_function   → planfile/cli/groups/utils/register_apply_commands.py
+      WHY: 5 occurrences of 3-line block across 5 files — saves 12 lines
+      FILES: planfile/cli/groups/apply/__init__.py, planfile/cli/groups/examples/__init__.py, planfile/cli/groups/health/__init__.py, planfile/cli/groups/init/__init__.py, planfile/cli/groups/review/__init__.py
+  [8] ○ extract_function   → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
       WHY: 2 occurrences of 12-line block across 1 files — saves 12 lines
       FILES: planfile/cli/groups/sync/core.py
-  [6] ○ extract_function   → planfile/cli/groups/ticket/utils/ticket_done.py
+  [9] ○ extract_function   → planfile/cli/groups/ticket/utils/ticket_done.py
       WHY: 2 occurrences of 9-line block across 1 files — saves 9 lines
       FILES: planfile/cli/groups/ticket/commands.py
-  [7] ○ extract_function   → planfile/cli/project_detector/utils/_detect_docker_gates.py
+  [10] ○ extract_function   → planfile/cli/project_detector/utils/_detect_docker_gates.py
       WHY: 2 occurrences of 9-line block across 1 files — saves 9 lines
       FILES: planfile/cli/project_detector/gates.py
-  [8] ○ extract_function   → planfile/cli/groups/utils/register_auto_commands.py
-      WHY: 2 occurrences of 8-line block across 2 files — saves 8 lines
-      FILES: planfile/cli/groups/auto/__init__.py, planfile/cli/groups/generate/__init__.py
-  [9] ○ extract_function   → planfile/cli/project_detector/utils/_has_mypy_config.py
+  [11] ○ extract_function   → planfile/cli/project_detector/utils/_has_mypy_config.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: planfile/cli/project_detector/gates.py
-  [10] ○ extract_function   → planfile/importers/utils/import_json.py
+  [12] ○ extract_function   → planfile/importers/utils/import_json.py
       WHY: 2 occurrences of 7-line block across 2 files — saves 7 lines
       FILES: planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
-  [11] ○ extract_class      → utils/__init__.py
-      WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
-      FILES: examples/PROPOSED_API_IMPROVEMENTS.py, planfile/extensions/__init__.py
-  [12] ○ extract_function   → planfile/cli/project_detector/utils/_find_readme_description.py
+  [13] ○ extract_function   → planfile/utils/_load_strategy.py
+      WHY: 2 occurrences of 6-line block across 2 files — saves 6 lines
+      FILES: planfile/ticket_validation.py, planfile/todo_sync.py
+  [14] ○ extract_function   → planfile/api/utils/done_ticket.py
+      WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
+      FILES: planfile/api/server.py
+  [15] ○ extract_function   → planfile/cli/project_detector/utils/_find_readme_description.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: planfile/cli/project_detector/readme.py
 
-QUICK_WINS[10] (low risk, high savings — do first):
-  [1] extract_function   saved=21L  → planfile/cli/groups/sync/utils/github_cmd.py
+QUICK_WINS[14] (low risk, high savings — do first):
+  [1] extract_function   saved=22L  → examples/rest-api/utils/example_dsl_command.py
+      FILES: 04_dsl_usage.py
+  [2] extract_function   saved=21L  → planfile/cli/groups/sync/utils/github_cmd.py
       FILES: commands.py
-  [2] extract_function   saved=15L  → planfile/cli/groups/utils/register_apply_commands.py
-      FILES: __init__.py, __init__.py, __init__.py +3
-  [3] extract_function   saved=14L  → planfile/sync/utils/map_priority.py
+  [3] extract_function   saved=16L  → planfile/cli/groups/utils/register_auto_commands.py
+      FILES: __init__.py, __init__.py, __init__.py
+  [4] extract_function   saved=15L  → examples/rest-api/utils/example_dsl_sprint.py
+      FILES: 04_dsl_usage.py
+  [5] extract_function   saved=14L  → planfile/sync/utils/map_priority.py
       FILES: base.py, jira.py
-  [4] extract_function   saved=12L  → planfile/cli/core/utils/print_success.py
+  [6] extract_function   saved=12L  → planfile/cli/core/utils/print_success.py
       FILES: console.py
-  [5] extract_function   saved=12L  → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
+  [7] extract_function   saved=12L  → planfile/cli/groups/utils/register_apply_commands.py
+      FILES: __init__.py, __init__.py, __init__.py +2
+  [8] extract_function   saved=12L  → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
       FILES: core.py
-  [6] extract_function   saved=9L  → planfile/cli/groups/ticket/utils/ticket_done.py
+  [9] extract_function   saved=9L  → planfile/cli/groups/ticket/utils/ticket_done.py
       FILES: commands.py
-  [7] extract_function   saved=9L  → planfile/cli/project_detector/utils/_detect_docker_gates.py
+  [10] extract_function   saved=9L  → planfile/cli/project_detector/utils/_detect_docker_gates.py
       FILES: gates.py
-  [8] extract_function   saved=8L  → planfile/cli/groups/utils/register_auto_commands.py
-      FILES: __init__.py, __init__.py
-  [9] extract_function   saved=7L  → planfile/cli/project_detector/utils/_has_mypy_config.py
-      FILES: gates.py
-  [10] extract_function   saved=7L  → planfile/importers/utils/import_json.py
-      FILES: json_importer.py, yaml_importer.py
 
-DEPENDENCY_RISK[1] (duplicates spanning multiple packages):
-  __init__  packages=2  files=2
-      examples/PROPOSED_API_IMPROVEMENTS.py
-      planfile/extensions/__init__.py
-
-EFFORT_ESTIMATE (total ≈ 4.2h):
+EFFORT_ESTIMATE (total ≈ 5.7h):
+  medium example_dsl_command                 saved=22L  ~44min
   medium github_cmd                          saved=21L  ~42min
-  medium register_apply_commands             saved=15L  ~30min
+  medium register_auto_commands              saved=16L  ~32min
+  medium example_dsl_sprint                  saved=15L  ~30min
   easy   map_priority                        saved=14L  ~28min
   easy   print_success                       saved=12L  ~24min
+  easy   register_apply_commands             saved=12L  ~24min
   easy   _collect_tickets_from_sprint        saved=12L  ~24min
   easy   ticket_done                         saved=9L  ~18min
   easy   _detect_docker_gates                saved=9L  ~18min
-  easy   register_auto_commands              saved=8L  ~16min
-  easy   _has_mypy_config                    saved=7L  ~14min
-  easy   import_json                         saved=7L  ~14min
-  ... +2 more (~24min)
+  ... +5 more (~60min)
 
 METRICS-TARGET:
-  dup_groups:  12 → 0
-  saved_lines: 122 lines recoverable
+  dup_groups:  15 → 0
+  saved_lines: 172 lines recoverable

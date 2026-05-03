@@ -17,12 +17,12 @@ SUMD - Structured Unified Markdown Descriptor for AI-aware project refactorizati
 ## Metadata
 
 - **name**: `planfile`
-- **version**: `0.1.62`
+- **version**: `0.1.86`
 - **python_requires**: `>=3.10`
-- **license**: Apache-2.0
+- **license**: {'text': 'Apache-2.0'}
 - **ai_model**: `openrouter/qwen/qwen3-coder-next`
 - **ecosystem**: SUMD + DOQL + testql + taskfile
-- **generated_from**: pyproject.toml, Taskfile.yml, Makefile, testql(2), app.doql.less, goal.yaml, Dockerfile, docker-compose.yml, src(8 mod), project/(6 analysis files)
+- **generated_from**: pyproject.toml, Taskfile.yml, Makefile, testql(2), app.doql.less, goal.yaml, Dockerfile, docker-compose.yml, src(11 mod), project/(6 analysis files)
 
 ## Architecture
 
@@ -37,7 +37,7 @@ SUMD (description) → DOQL/source (code) → taskfile (automation) → testql (
 
 app {
   name: planfile;
-  version: 0.1.62;
+  version: 0.1.86;
 }
 
 dependencies {
@@ -54,7 +54,7 @@ entity[name="TicketSource"] {
 
 entity[name="Ticket"] {
   id: string!;
-  title: string!;
+  name: string!;
   status: !;
   priority: string!;
   sprint: string!;
@@ -64,6 +64,8 @@ entity[name="Ticket"] {
   labels: list[str]!;
   blocked_by: list[str]!;
   blocks: list[str]!;
+  file: str | None;
+  files: list[str]!;
   integration: list[str] | None;
   llm_hints: ModelHints | None;
   sync: json!;
@@ -125,6 +127,7 @@ entity[name="Strategy"] {
   tasks: dict[str, Any]!;
   quality_gates: list[QualityGate]!;
   metadata: dict[str, Any]!;
+  task_types: dict[str, int]!;
 }
 
 database[name="postgres"] {
@@ -579,6 +582,9 @@ environment[name="local"] {
 - `planfile.models`
 - `planfile.runner`
 - `planfile.server_common`
+- `planfile.testql_integration`
+- `planfile.ticket_validation`
+- `planfile.todo_sync`
 
 ## Workflows
 
@@ -1005,6 +1011,90 @@ pfix>=0.1.60
 
 *Top 5 modules by symbol density — signatures for LLM orientation.*
 
+### `planfile.testql_integration` (`planfile/testql_integration.py`)
+
+```python
+def _normalize_ref_text(value)  # CC=2, fan=2
+def _normalize_ref_url(value)  # CC=1, fan=2
+def _iter_external_refs(ticket)  # CC=4, fan=2
+def _collect_ticket_identity_keys(ticket)  # CC=14, fan=9 ⚠
+def _collect_external_ref_candidates(ticket, integration)  # CC=9, fan=9
+def _extract_result_field(result, field)  # CC=3, fan=5
+def _extract_created_ticket_ref(result)  # CC=1, fan=2
+def _extract_search_ticket_id(item)  # CC=3, fan=4
+def _looks_not_found_error(exc)  # CC=2, fan=2
+def _looks_already_exists_error(exc)  # CC=2, fan=2
+def _update_existing_ref_entry(refs, integration, ref_id, ref_key, ref_url)  # CC=6, fan=3
+def _append_ref_entry(refs, integration, ref_id, ref_key, ref_url)  # CC=4, fan=1
+def _update_ticket_integration_fields(ticket, integration, ref_id, ref_key, ref_url)  # CC=4, fan=1
+def _attach_external_ref(ticket, integration, ref)  # CC=5, fan=7
+def _resolve_update_reference(backend, ticket, integration)  # CC=9, fan=4
+def _extract_json_payload(text)  # CC=9, fan=7
+def _resolve_scenario_path(scenario_path, project_root)  # CC=2, fan=3
+def _resolve_testql_executable(testql_bin, testql_repo_path)  # CC=6, fan=5
+def run_testql_validation(scenario_path, project_path)  # CC=6, fan=11
+def _collect_step_messages(steps_raw)  # CC=8, fan=5
+def _collect_error_messages(errors_raw)  # CC=7, fan=3
+def _dedupe_messages(messages)  # CC=3, fan=3
+def _collect_failure_messages(report)  # CC=4, fan=6
+def _extract_file_from_message(message)  # CC=2, fan=2
+def build_testql_tickets(report, scenario_path)  # CC=6, fan=14
+def _default_strategy_payload()  # CC=1, fan=0
+def _load_or_init_strategy(strategy_file)  # CC=4, fan=5
+def _ensure_strategy_lists(strategy)  # CC=7, fan=3
+def _build_task_pattern_entry(ticket, ticket_id)  # CC=3, fan=1
+def _upsert_single_ticket(ticket, tasks, task_patterns, existing_task_ids, existing_pattern_ids, existing_identity_keys)  # CC=7, fan=9
+def upsert_testql_tickets(strategy_path, tickets)  # CC=15, fan=17 ⚠
+def _resolve_sync_backend(config, integration)  # CC=2, fan=2
+def _sync_ticket_to_backend(ticket, backend, integration)  # CC=6, fan=7
+def _sync_tickets_to_integration(tickets, backend, integration)  # CC=5, fan=2
+def sync_testql_tickets(tickets)  # CC=9, fan=12
+```
+
+### `planfile.ticket_validation` (`planfile/ticket_validation.py`)
+
+```python
+def _load_strategy(path)  # CC=3, fan=3
+def _normalize_rule(value)  # CC=2, fan=3
+def _normalize_rel_path(value, project_root)  # CC=5, fan=6
+def _normalize_files(ticket, project_root)  # CC=8, fan=8
+def _resolve_ticket_id(ticket, entry_ref)  # CC=4, fan=3
+def _iter_tasks_list(items, base_ref)  # CC=4, fan=3
+def _iter_tickets_dict(items, base_ref)  # CC=4, fan=3
+def _collect_ticket_entries(strategy)  # CC=9, fan=7
+def _parse_positive_int(value)  # CC=4, fan=1
+def _normalize_ticket_filters(ticket_ids)  # CC=5, fan=4
+def _build_issue_indexes(issue_records, project_root)  # CC=14, fan=10 ⚠
+def _count_file_lines(abs_path)  # CC=5, fan=4
+def _validate_rule_anchor(record, rule_id, files, rule_file_index, scan_available)  # CC=4, fan=1
+def _resolve_existing_files(files, project_root)  # CC=3, fan=3
+def _validate_line_anchor(record, files, line, project_root, file_line_index, scan_available)  # CC=7, fan=3
+def _validate_file_only(record, files, project_root)  # CC=3, fan=2
+def _validate_ticket(ticket, entry_ref, project_root, rule_file_index, file_line_index, scan_available)  # CC=8, fan=10
+def validate_planfile_tickets(strategy_path, project_path)  # CC=11, fan=12 ⚠
+```
+
+### `planfile.ci` (`planfile/ci.py`)
+
+```python
+class TestResult:  # Result of running tests.
+class BugReport:  # Generated bug report from test failures.
+class CIRunner:  # CI/CD runner with automated bug-fix loop and ticket creation
+    def __init__(strategy_path, project_path, backends, llx_command, max_iterations, auto_fix, planfile_instance)  # CC=4
+    def _extract_json_object(raw_output)  # CC=13 ⚠
+    def run_tests()  # CC=6
+    def run_code_analysis()  # CC=5
+    def generate_bug_report(test_result, metrics)  # CC=10 ⚠
+    def create_bug_tickets(bug_report)  # CC=7
+    def _resolve_target_file(bug_report)  # CC=6
+    def _task_patch_applied(results_payload)  # CC=6
+    def _extract_yaml_object(raw_output)  # CC=8
+    def auto_fix_bugs(bug_report)  # CC=5
+    def check_strategy_completion()  # CC=3
+    def run_loop()  # CC=7
+    def save_results(results, output_path)  # CC=2
+```
+
 ### `planfile.executor_standalone` (`planfile/executor_standalone.py`)
 
 ```python
@@ -1025,127 +1115,89 @@ class StrategyExecutor:  # Standalone strategy executor.
     def _get_project_metrics(project_path)  # CC=6
 ```
 
-### `planfile.ci` (`planfile/ci.py`)
+### `planfile.todo_sync` (`planfile/todo_sync.py`)
 
 ```python
-class TestResult:  # Result of running tests.
-class BugReport:  # Generated bug report from test failures.
-class CIRunner:  # CI/CD runner with automated bug-fix loop and ticket creation
-    def __init__(strategy_path, project_path, backends, llx_command, max_iterations, auto_fix, planfile_instance)  # CC=4
-    def run_tests()  # CC=6
-    def run_code_analysis()  # CC=5
-    def generate_bug_report(test_result, metrics)  # CC=2
-    def create_bug_tickets(bug_report)  # CC=7
-    def auto_fix_bugs(bug_report)  # CC=2
-    def check_strategy_completion()  # CC=3
-    def run_loop()  # CC=7
-    def save_results(results, output_path)  # CC=2
-```
-
-### `planfile.builder` (`planfile/builder.py`)
-
-```python
-def create_strategy_command(output, model, local)  # CC=1, fan=5
-class LLXStrategyBuilder:  # Interactive strategy builder using LLX.
-    def __init__(llx_path, model, local)  # CC=1
-    def _call_llx(prompt)  # CC=3
-    def ask_llm_questions()  # CC=4
-    def _parse_bullet_list(text)  # CC=4
-    def answers_to_strategy(answers)  # CC=3
-    def build_strategy(output_path)  # CC=2
-```
-
-### `planfile.runner` (`planfile/runner.py`)
-
-```python
-def load_valid_strategy(path)  # CC=3, fan=6
-def verify_strategy_post_execution(strategy, project_path, backend)  # CC=12, fan=6 ⚠
-def _get_project_hash(project_path)  # CC=5, fan=11
-def analyze_project_metrics(project_path)  # CC=12, fan=17 ⚠
-def apply_strategy_to_tickets(strategy, project_path, backend, dry_run)  # CC=8, fan=3
-def review_strategy(strategy, project_path, backends, backend_name)  # CC=14, fan=9 ⚠
-def run_strategy(strategy_path, project_path, backend, dry_run)  # CC=8, fan=8
-```
-
-### `planfile.examples` (`planfile/examples.py`)
-
-```python
-def example_create_strategy()  # CC=1, fan=1
-def example_validate_strategy()  # CC=2, fan=3
-def example_run_strategy()  # CC=1, fan=1
-def example_verify_strategy()  # CC=2, fan=3
-def example_programmatic_strategy()  # CC=1, fan=9
+def _load_strategy(path)  # CC=3, fan=3
+def _status_done(status)  # CC=2, fan=3
+def _get_value(item, key)  # CC=2, fan=3
+def _normalize_marker(value)  # CC=2, fan=2
+def _collect_markers_from_results(results)  # CC=6, fan=5
+def _collect_markers_from_strategy(strategy)  # CC=13, fan=6 ⚠
+def _resolve_todo_config(strategy, strategy_path, project_path, enabled_override)  # CC=7, fan=5
+def _line_matches_any_marker(body, markers)  # CC=2, fan=2
+def sync_todo_checkboxes_from_planfile(strategy_path, project_path)  # CC=14, fan=22 ⚠
 ```
 
 ## Call Graph
 
-*316 nodes · 347 edges · 83 modules · CC̄=2.2*
+*428 nodes · 455 edges · 92 modules · CC̄=2.2*
 
 ### Hubs (by degree)
 
 | Function | CC | in | out | total |
 |----------|----|----|-----|-------|
-| `print` *(in Taskfile)* | 0 | 323 | 0 | **323** |
+| `print` *(in Taskfile)* | 0 | 361 | 0 | **361** |
+| `_collect_ticket_identity_keys` *(in planfile.testql_integration)* | 14 ⚠ | 2 | 57 | **59** |
 | `example_metric_driven_planning` *(in examples.ecosystem.04_llx_integration)* | 9 | 0 | 57 | **57** |
 | `example_strategy_generation_with_proxy` *(in examples.ecosystem.03_proxy_routing)* | 8 | 0 | 56 | **56** |
 | `create_examples_app` *(in planfile.cli.groups.examples.commands)* | 1 | 1 | 46 | **47** |
+| `handle_tool_call` *(in planfile.mcp.server)* | 27 ⚠ | 1 | 42 | **43** |
 | `review_strategy_cli` *(in planfile.cli.groups.review.commands)* | 10 ⚠ | 0 | 40 | **40** |
 | `main` *(in examples.python-api.04_analytics_simple)* | 1 | 0 | 35 | **35** |
-| `analyze_text` *(in planfile.analysis.parsers.text_parser)* | 13 ⚠ | 4 | 30 | **34** |
-| `_detect_from_package_json` *(in planfile.cli.project_detector.package)* | 7 | 1 | 28 | **29** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/semcod/planfile
-# nodes: 316 | edges: 347 | modules: 83
+# nodes: 428 | edges: 455 | modules: 92
 # CC̄=2.2
 
 HUBS[20]:
   Taskfile.print
-    CC=0  in:323  out:0  total:323
+    CC=0  in:361  out:0  total:361
+  planfile.testql_integration._collect_ticket_identity_keys
+    CC=14  in:2  out:57  total:59
   examples.ecosystem.04_llx_integration.example_metric_driven_planning
     CC=9  in:0  out:57  total:57
   examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy
     CC=8  in:0  out:56  total:56
   planfile.cli.groups.examples.commands.create_examples_app
     CC=1  in:1  out:46  total:47
+  planfile.mcp.server.handle_tool_call
+    CC=27  in:1  out:42  total:43
   planfile.cli.groups.review.commands.review_strategy_cli
     CC=10  in:0  out:40  total:40
   examples.python-api.04_analytics_simple.main
     CC=1  in:0  out:35  total:35
   planfile.analysis.parsers.text_parser.analyze_text
     CC=13  in:4  out:30  total:34
+  planfile.testql_integration.upsert_testql_tickets
+    CC=15  in:1  out:31  total:32
+  planfile.todo_sync.sync_todo_checkboxes_from_planfile
+    CC=14  in:0  out:30  total:30
+  planfile.testql_integration._collect_external_ref_candidates
+    CC=9  in:1  out:29  total:30
   planfile.cli.project_detector.package._detect_from_package_json
     CC=7  in:1  out:28  total:29
+  planfile.cli.groups.sync.commands.watch_cmd
+    CC=6  in:0  out:29  total:29
   planfile.cli.groups.init.commands.init_strategy_cli
     CC=8  in:0  out:29  total:29
   planfile.cli.groups.health.commands.create_health_app
     CC=1  in:1  out:28  total:29
   planfile.cli.project_detector.fallback._detect_from_structure
     CC=9  in:1  out:27  total:28
+  planfile.cli.groups.ticket.commands.ticket_validate
+    CC=10  in:0  out:28  total:28
+  planfile.cli.groups.backlog.commands.backlog_delete
+    CC=11  in:0  out:27  total:27
   planfile.importers.redup_importer._parse_duplicates
     CC=9  in:1  out:26  total:27
-  planfile.runner.analyze_project_metrics
-    CC=12  in:1  out:25  total:26
-  examples.ecosystem.02_mcp_integration.example_mcp_session
-    CC=1  in:0  out:26  total:26
-  planfile.cli.project_detector.structure._analyze_directory_structure
-    CC=20  in:3  out:23  total:26
-  planfile.cli.groups.query.commands.stats_cmd
-    CC=5  in:0  out:24  total:24
-  planfile.runner.run_strategy
-    CC=8  in:1  out:23  total:24
-  planfile.importers.redup_importer._parse_toon_format
-    CC=9  in:1  out:22  total:23
-  planfile.cli.groups.query.commands.compare_strategies
-    CC=10  in:1  out:22  total:23
-  planfile.cli.project_detector.readme._find_readme_content
-    CC=16  in:2  out:20  total:22
 
 MODULES:
   Taskfile  [1 funcs]
     print  CC=0  out:0
   examples.ecosystem.02_mcp_integration  [6 funcs]
-    create_mcp_tool_definitions  CC=1  out:6
+    create_mcp_tool_definitions  CC=1  out:7
     example_mcp_session  CC=1  out:26
     run_mcp_tool  CC=4  out:6
     simulate_planfile_apply  CC=5  out:7
@@ -1175,10 +1227,7 @@ MODULES:
     example_read_tickets  CC=1  out:12
     example_update_tickets  CC=1  out:8
     main  CC=1  out:11
-  examples.python-api.03_integration  [8 funcs]
-    error  CC=3  out:4
-    metric_alert  CC=1  out:4
-    warning  CC=2  out:2
+  examples.python-api.03_integration  [5 funcs]
     example_ci_pipeline_integration  CC=4  out:7
     example_cli_tool_integration  CC=2  out:5
     example_custom_decorator  CC=3  out:17
@@ -1195,12 +1244,27 @@ MODULES:
     main  CC=1  out:11
   examples.python-api.04_analytics_simple  [1 funcs]
     main  CC=1  out:35
+  examples.python-api.05_dsl_usage  [6 funcs]
+    example_basic_dsl  CC=1  out:7
+    example_batch_operations  CC=4  out:5
+    example_parser_only  CC=1  out:8
+    example_query_and_export  CC=1  out:5
+    example_sprint_management  CC=1  out:5
+    example_validation_sync  CC=1  out:7
   examples.rest-api.03_python_client  [5 funcs]
     example_basic_operations  CC=1  out:10
     example_bulk_operations  CC=2  out:12
     example_error_handling  CC=3  out:7
     example_workflow  CC=1  out:12
     main  CC=4  out:21
+  examples.rest-api.04_dsl_usage  [7 funcs]
+    example_dsl_command  CC=1  out:3
+    example_dsl_create_ticket  CC=1  out:3
+    example_dsl_help  CC=1  out:3
+    example_dsl_sprint  CC=1  out:6
+    example_dsl_update_ticket  CC=1  out:3
+    example_dsl_validate_sync  CC=1  out:6
+    example_yaml_operations  CC=1  out:6
   examples.rest-api.04_javascript_client  [13 funcs]
     BASE_URL  CC=5  out:17
     client  CC=2  out:10
@@ -1212,6 +1276,13 @@ MODULES:
     moveTicket  CC=1  out:1
     request  CC=5  out:8
     ticket  CC=1  out:1
+  examples.rest-api.06_websocket  [6 funcs]
+    example_websocket_basic  CC=1  out:6
+    example_websocket_batch  CC=2  out:7
+    example_websocket_error_handling  CC=3  out:8
+    example_websocket_interactive  CC=2  out:9
+    example_websocket_raw_text  CC=1  out:7
+    main  CC=1  out:3
   planfile  [1 funcs]
     quick_ticket  CC=1  out:4
   planfile.analysis.external_tools  [3 funcs]
@@ -1260,13 +1331,17 @@ MODULES:
     _process_yaml_value  CC=4  out:7
     analyze_yaml  CC=4  out:20
     extract_from_yaml_structure  CC=5  out:8
-  planfile.api.server  [6 funcs]
+  planfile.api.server  [12 funcs]
+    create_sprint  CC=4  out:13
     create_ticket  CC=1  out:5
     delete_ticket  CC=2  out:4
+    done_ticket  CC=2  out:5
     get_ticket  CC=2  out:5
-    list_tickets  CC=3  out:6
+    get_yaml  CC=3  out:7
+    list_sprints  CC=3  out:7
+    list_tickets  CC=5  out:8
     move_ticket  CC=2  out:5
-    update_ticket  CC=4  out:7
+    patch_yaml  CC=6  out:11
   planfile.ci  [2 funcs]
     __init__  CC=4  out:5
     check_strategy_completion  CC=3  out:9
@@ -1294,6 +1369,21 @@ MODULES:
   planfile.cli.groups.auto.commands  [2 funcs]
     _initialize_backends  CC=3  out:4
     get_backend  CC=4  out:13
+  planfile.cli.groups.backlog.commands  [10 funcs]
+    _collect_backlog_to_delete  CC=6  out:5
+    _collect_targets_to_delete  CC=4  out:5
+    _get_planfile_yaml_path  CC=3  out:4
+    _load_planfile_yaml  CC=2  out:6
+    _matches_files  CC=5  out:2
+    _print_deletion_preview  CC=5  out:8
+    _save_planfile_yaml  CC=1  out:3
+    backlog_delete  CC=11  out:27
+    backlog_list  CC=10  out:14
+    create_backlog_table  CC=3  out:16
+  planfile.cli.groups.dsl.commands  [3 funcs]
+    _interactive_shell  CC=7  out:8
+    _run_single  CC=8  out:11
+    dsl_run  CC=2  out:7
   planfile.cli.groups.examples  [1 funcs]
     register_examples_commands  CC=1  out:1
   planfile.cli.groups.examples.commands  [2 funcs]
@@ -1330,7 +1420,9 @@ MODULES:
   planfile.cli.groups.review.utils  [2 funcs]
     _load_and_validate_strategy  CC=2  out:3
     _load_backend_config  CC=6  out:13
-  planfile.cli.groups.sync.commands  [7 funcs]
+  planfile.cli.groups.sync.commands  [10 funcs]
+    _resolve_watch_integrations  CC=4  out:5
+    _run_sync_once  CC=3  out:2
     all_cmd  CC=2  out:11
     github_cmd  CC=1  out:4
     gitlab_cmd  CC=1  out:4
@@ -1338,6 +1430,7 @@ MODULES:
     jira_cmd  CC=1  out:4
     markdown_cmd  CC=1  out:4
     sync_all_integrations  CC=3  out:5
+    watch_cmd  CC=6  out:29
   planfile.cli.groups.sync.core  [11 funcs]
     _collect_tickets_from_backlog  CC=4  out:4
     _collect_tickets_from_section  CC=3  out:5
@@ -1349,15 +1442,19 @@ MODULES:
     _process_planfile_v1  CC=9  out:11
     _ticket_matches_integration  CC=3  out:2
     _ticket_matches_integration_v1  CC=2  out:2
-  planfile.cli.groups.ticket.commands  [5 funcs]
+  planfile.cli.groups.ticket.commands  [10 funcs]
+    _apply_label_changes  CC=6  out:5
+    _auto_sync  CC=6  out:11
     _display_tickets  CC=6  out:9
+    _execute_bulk_updates  CC=4  out:6
+    _load_issue_records_from_file  CC=12  out:14
     create_ticket_table  CC=5  out:14
     load_import_tickets  CC=5  out:6
     ticket_import  CC=1  out:8
-    ticket_list  CC=5  out:9
-  planfile.cli.groups.validate  [1 funcs]
-    register_validate_commands  CC=1  out:1
-  planfile.cli.groups.validate.commands  [1 funcs]
+    ticket_list  CC=6  out:10
+    ticket_validate  CC=10  out:28
+  planfile.cli.groups.validate.commands  [2 funcs]
+    validate_schema_cli  CC=9  out:16
     validate_strategy_cli  CC=9  out:22
   planfile.cli.project_detector.fallback  [1 funcs]
     _detect_from_structure  CC=9  out:27
@@ -1377,12 +1474,15 @@ MODULES:
   planfile.cli.project_detector.inference  [3 funcs]
     _infer_domain  CC=4  out:4
     _infer_node_project_type  CC=9  out:5
-    _infer_python_project_type  CC=17  out:12
+    _infer_python_project_type  CC=11  out:11
   planfile.cli.project_detector.license  [1 funcs]
     _detect_license  CC=9  out:2
-  planfile.cli.project_detector.main  [2 funcs]
+  planfile.cli.project_detector.main  [5 funcs]
+    _build_detected_dict  CC=9  out:3
+    _determine_source  CC=4  out:3
+    _quality_gates_to_dict  CC=2  out:0
     detect_project  CC=4  out:5
-    get_detected_values  CC=15  out:7
+    get_detected_values  CC=1  out:2
   planfile.cli.project_detector.model_tier  [4 funcs]
     _detect_model_tier  CC=3  out:3
     _tier_from_config_files  CC=9  out:3
@@ -1400,15 +1500,25 @@ MODULES:
     _populate_project_from_data  CC=5  out:2
     _populate_project_metadata  CC=8  out:13
     _populate_readme_and_repository_details  CC=4  out:10
-  planfile.cli.project_detector.readme  [3 funcs]
-    _find_readme_content  CC=16  out:20
+  planfile.cli.project_detector.readme  [5 funcs]
+    _extract_description  CC=6  out:6
+    _extract_goal  CC=8  out:11
+    _find_readme_content  CC=4  out:5
     _find_readme_description  CC=1  out:1
     _find_readme_goal  CC=1  out:1
-  planfile.cli.project_detector.structure  [1 funcs]
-    _analyze_directory_structure  CC=20  out:23
+  planfile.cli.project_detector.structure  [4 funcs]
+    _analyze_directory_structure  CC=1  out:3
+    _find_src_dirs  CC=12  out:11
+    _has_tests  CC=2  out:2
+    _suggest_sprints  CC=6  out:8
   planfile.core.models.strategy  [2 funcs]
     export  CC=5  out:12
     to_yaml  CC=2  out:5
+  planfile.core.schema  [1 funcs]
+    validate_yaml_file  CC=5  out:5
+  planfile.dsl.executor  [2 funcs]
+    _exec_sync  CC=6  out:20
+    _exec_validate  CC=1  out:8
   planfile.examples  [5 funcs]
     example_create_strategy  CC=1  out:1
     example_programmatic_strategy  CC=1  out:11
@@ -1475,7 +1585,7 @@ MODULES:
   planfile.mcp.server  [4 funcs]
     _read_jsonrpc  CC=4  out:2
     _write_jsonrpc  CC=1  out:3
-    handle_tool_call  CC=14  out:17
+    handle_tool_call  CC=27  out:42
     main  CC=8  out:12
   planfile.runner  [7 funcs]
     _get_project_hash  CC=5  out:11
@@ -1490,16 +1600,16 @@ MODULES:
   planfile.sync.mock  [4 funcs]
     _create_ticket  CC=4  out:7
     _list_tickets  CC=11  out:13
-    _search_tickets  CC=4  out:11
-    _update_ticket  CC=8  out:4
+    _search_tickets  CC=5  out:14
+    _update_ticket  CC=8  out:5
   planfile.sync.operations  [15 funcs]
     _create_new_ticket  CC=4  out:8
-    _extract_ticket_data  CC=7  out:14
+    _extract_ticket_data  CC=9  out:16
     _fetch_external_tickets  CC=3  out:4
-    _import_new_ticket  CC=1  out:3
+    _import_new_ticket  CC=2  out:5
     _is_permission_error  CC=3  out:4
     _load_sprint_and_backlog  CC=5  out:4
-    _print_dry_run_action  CC=2  out:2
+    _print_dry_run_action  CC=3  out:4
     _print_permission_error  CC=1  out:9
     _process_external_ticket  CC=4  out:6
     _save_import_results  CC=5  out:6
@@ -1507,6 +1617,37 @@ MODULES:
     save_sync  CC=2  out:9
   planfile.sync.utils  [1 funcs]
     save_v1_format  CC=1  out:2
+  planfile.testql_integration  [34 funcs]
+    _append_ref_entry  CC=4  out:1
+    _attach_external_ref  CC=5  out:10
+    _build_task_pattern_entry  CC=3  out:4
+    _collect_error_messages  CC=7  out:5
+    _collect_external_ref_candidates  CC=9  out:29
+    _collect_failure_messages  CC=4  out:8
+    _collect_step_messages  CC=8  out:10
+    _collect_ticket_identity_keys  CC=14  out:57
+    _dedupe_messages  CC=3  out:3
+    _default_strategy_payload  CC=1  out:0
+  planfile.ticket_validation  [16 funcs]
+    _build_issue_indexes  CC=14  out:23
+    _collect_ticket_entries  CC=9  out:25
+    _count_file_lines  CC=5  out:4
+    _load_strategy  CC=3  out:3
+    _normalize_files  CC=8  out:11
+    _normalize_rel_path  CC=5  out:10
+    _normalize_rule  CC=2  out:3
+    _normalize_ticket_filters  CC=5  out:5
+    _parse_positive_int  CC=4  out:1
+    _resolve_existing_files  CC=3  out:3
+  planfile.todo_sync  [8 funcs]
+    _collect_markers_from_results  CC=6  out:6
+    _collect_markers_from_strategy  CC=13  out:17
+    _get_value  CC=2  out:3
+    _load_strategy  CC=3  out:3
+    _normalize_marker  CC=2  out:2
+    _resolve_todo_config  CC=7  out:10
+    _status_done  CC=2  out:3
+    sync_todo_checkboxes_from_planfile  CC=14  out:30
   planfile.utils.metrics  [4 funcs]
     _check_project_files  CC=2  out:1
     _collect_git_metrics  CC=8  out:15
@@ -1526,6 +1667,7 @@ MODULES:
     print_error  CC=0  out:0
 
 EDGES:
+  examples.llx_validator.create_validation_script → Taskfile.print
   examples.rest-api.04_javascript_client.BASE_URL → examples.rest-api.04_javascript_client.PlanfileClient.request
   examples.rest-api.04_javascript_client.PlanfileClient.health → examples.rest-api.04_javascript_client.PlanfileClient.createTicket
   examples.rest-api.04_javascript_client.PlanfileClient.listTickets → examples.rest-api.04_javascript_client.PlanfileClient.request
@@ -1543,22 +1685,14 @@ EDGES:
   examples.rest-api.04_javascript_client.PlanfileClient.fetched → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.updated → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.tickets → examples.rest-api.04_javascript_client.PlanfileClient.listTickets
-  examples.python-api.03_integration_simple.main → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.error → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.error → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.warning → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.warning → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.metric_alert → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.metric_alert → Taskfile.print
-  examples.python-api.03_integration.example_cli_tool_integration → Taskfile.print
-  examples.python-api.03_integration.example_monitoring_integration → Taskfile.print
-  examples.python-api.03_integration.example_ci_pipeline_integration → Taskfile.print
-  examples.python-api.03_integration.example_custom_decorator → Taskfile.print
-  examples.python-api.03_integration.main → Taskfile.print
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_cli_tool_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_monitoring_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_ci_pipeline_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_custom_decorator
+  examples.rest-api.03_python_client.example_basic_operations → Taskfile.print
+  examples.rest-api.03_python_client.example_bulk_operations → Taskfile.print
+  examples.rest-api.03_python_client.example_workflow → Taskfile.print
+  examples.rest-api.03_python_client.example_error_handling → Taskfile.print
+  examples.rest-api.03_python_client.main → Taskfile.print
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_basic_operations
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_bulk_operations
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_workflow
   examples.ecosystem.02_mcp_integration.run_mcp_tool → Taskfile.print
   examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_generate
   examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_apply
@@ -1568,14 +1702,21 @@ EDGES:
   examples.ecosystem.02_mcp_integration.example_mcp_session → Taskfile.print
   examples.ecosystem.02_mcp_integration.example_mcp_session → examples.ecosystem.02_mcp_integration.run_mcp_tool
   examples.ecosystem.02_mcp_integration.create_mcp_tool_definitions → Taskfile.print
-  examples.python-api.01_basic_usage.example_1_basic_initialization → Taskfile.print
-  examples.python-api.01_basic_usage.example_2_create_ticket → Taskfile.print
-  examples.python-api.01_basic_usage.example_3_quick_ticket → Taskfile.print
-  examples.python-api.01_basic_usage.example_3_quick_ticket → planfile.quick_ticket
-  examples.python-api.01_basic_usage.example_4_list_tickets → Taskfile.print
-  examples.python-api.01_basic_usage.main → Taskfile.print
-  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_1_basic_initialization
-  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_2_create_ticket
+  examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project → Taskfile.print
+  examples.ecosystem.04_llx_integration.example_metric_driven_planning → Taskfile.print
+  examples.ecosystem.04_llx_integration.create_llx_config_example → Taskfile.print
+  examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy → Taskfile.print
+  examples.ecosystem.03_proxy_routing.create_proxy_config_example → Taskfile.print
+  examples.ecosystem.03_proxy_routing.example_budget_tracking → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_basic_filtering → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_combined_filters → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_search_by_labels → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_export_filtered → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_statistics → Taskfile.print
+  examples.python-api.04_advanced_filtering.main → Taskfile.print
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_basic_filtering
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_combined_filters
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_search_by_labels
 ```
 
 ## Test Contracts
@@ -1598,56 +1739,56 @@ EDGES:
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/semcod/planfile
-# nodes: 316 | edges: 347 | modules: 83
+# nodes: 428 | edges: 455 | modules: 92
 # CC̄=2.2
 
 HUBS[20]:
   Taskfile.print
-    CC=0  in:323  out:0  total:323
+    CC=0  in:361  out:0  total:361
+  planfile.testql_integration._collect_ticket_identity_keys
+    CC=14  in:2  out:57  total:59
   examples.ecosystem.04_llx_integration.example_metric_driven_planning
     CC=9  in:0  out:57  total:57
   examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy
     CC=8  in:0  out:56  total:56
   planfile.cli.groups.examples.commands.create_examples_app
     CC=1  in:1  out:46  total:47
+  planfile.mcp.server.handle_tool_call
+    CC=27  in:1  out:42  total:43
   planfile.cli.groups.review.commands.review_strategy_cli
     CC=10  in:0  out:40  total:40
   examples.python-api.04_analytics_simple.main
     CC=1  in:0  out:35  total:35
   planfile.analysis.parsers.text_parser.analyze_text
     CC=13  in:4  out:30  total:34
+  planfile.testql_integration.upsert_testql_tickets
+    CC=15  in:1  out:31  total:32
+  planfile.todo_sync.sync_todo_checkboxes_from_planfile
+    CC=14  in:0  out:30  total:30
+  planfile.testql_integration._collect_external_ref_candidates
+    CC=9  in:1  out:29  total:30
   planfile.cli.project_detector.package._detect_from_package_json
     CC=7  in:1  out:28  total:29
+  planfile.cli.groups.sync.commands.watch_cmd
+    CC=6  in:0  out:29  total:29
   planfile.cli.groups.init.commands.init_strategy_cli
     CC=8  in:0  out:29  total:29
   planfile.cli.groups.health.commands.create_health_app
     CC=1  in:1  out:28  total:29
   planfile.cli.project_detector.fallback._detect_from_structure
     CC=9  in:1  out:27  total:28
+  planfile.cli.groups.ticket.commands.ticket_validate
+    CC=10  in:0  out:28  total:28
+  planfile.cli.groups.backlog.commands.backlog_delete
+    CC=11  in:0  out:27  total:27
   planfile.importers.redup_importer._parse_duplicates
     CC=9  in:1  out:26  total:27
-  planfile.runner.analyze_project_metrics
-    CC=12  in:1  out:25  total:26
-  examples.ecosystem.02_mcp_integration.example_mcp_session
-    CC=1  in:0  out:26  total:26
-  planfile.cli.project_detector.structure._analyze_directory_structure
-    CC=20  in:3  out:23  total:26
-  planfile.cli.groups.query.commands.stats_cmd
-    CC=5  in:0  out:24  total:24
-  planfile.runner.run_strategy
-    CC=8  in:1  out:23  total:24
-  planfile.importers.redup_importer._parse_toon_format
-    CC=9  in:1  out:22  total:23
-  planfile.cli.groups.query.commands.compare_strategies
-    CC=10  in:1  out:22  total:23
-  planfile.cli.project_detector.readme._find_readme_content
-    CC=16  in:2  out:20  total:22
 
 MODULES:
   Taskfile  [1 funcs]
     print  CC=0  out:0
   examples.ecosystem.02_mcp_integration  [6 funcs]
-    create_mcp_tool_definitions  CC=1  out:6
+    create_mcp_tool_definitions  CC=1  out:7
     example_mcp_session  CC=1  out:26
     run_mcp_tool  CC=4  out:6
     simulate_planfile_apply  CC=5  out:7
@@ -1677,10 +1818,7 @@ MODULES:
     example_read_tickets  CC=1  out:12
     example_update_tickets  CC=1  out:8
     main  CC=1  out:11
-  examples.python-api.03_integration  [8 funcs]
-    error  CC=3  out:4
-    metric_alert  CC=1  out:4
-    warning  CC=2  out:2
+  examples.python-api.03_integration  [5 funcs]
     example_ci_pipeline_integration  CC=4  out:7
     example_cli_tool_integration  CC=2  out:5
     example_custom_decorator  CC=3  out:17
@@ -1697,12 +1835,27 @@ MODULES:
     main  CC=1  out:11
   examples.python-api.04_analytics_simple  [1 funcs]
     main  CC=1  out:35
+  examples.python-api.05_dsl_usage  [6 funcs]
+    example_basic_dsl  CC=1  out:7
+    example_batch_operations  CC=4  out:5
+    example_parser_only  CC=1  out:8
+    example_query_and_export  CC=1  out:5
+    example_sprint_management  CC=1  out:5
+    example_validation_sync  CC=1  out:7
   examples.rest-api.03_python_client  [5 funcs]
     example_basic_operations  CC=1  out:10
     example_bulk_operations  CC=2  out:12
     example_error_handling  CC=3  out:7
     example_workflow  CC=1  out:12
     main  CC=4  out:21
+  examples.rest-api.04_dsl_usage  [7 funcs]
+    example_dsl_command  CC=1  out:3
+    example_dsl_create_ticket  CC=1  out:3
+    example_dsl_help  CC=1  out:3
+    example_dsl_sprint  CC=1  out:6
+    example_dsl_update_ticket  CC=1  out:3
+    example_dsl_validate_sync  CC=1  out:6
+    example_yaml_operations  CC=1  out:6
   examples.rest-api.04_javascript_client  [13 funcs]
     BASE_URL  CC=5  out:17
     client  CC=2  out:10
@@ -1714,6 +1867,13 @@ MODULES:
     moveTicket  CC=1  out:1
     request  CC=5  out:8
     ticket  CC=1  out:1
+  examples.rest-api.06_websocket  [6 funcs]
+    example_websocket_basic  CC=1  out:6
+    example_websocket_batch  CC=2  out:7
+    example_websocket_error_handling  CC=3  out:8
+    example_websocket_interactive  CC=2  out:9
+    example_websocket_raw_text  CC=1  out:7
+    main  CC=1  out:3
   planfile  [1 funcs]
     quick_ticket  CC=1  out:4
   planfile.analysis.external_tools  [3 funcs]
@@ -1762,13 +1922,17 @@ MODULES:
     _process_yaml_value  CC=4  out:7
     analyze_yaml  CC=4  out:20
     extract_from_yaml_structure  CC=5  out:8
-  planfile.api.server  [6 funcs]
+  planfile.api.server  [12 funcs]
+    create_sprint  CC=4  out:13
     create_ticket  CC=1  out:5
     delete_ticket  CC=2  out:4
+    done_ticket  CC=2  out:5
     get_ticket  CC=2  out:5
-    list_tickets  CC=3  out:6
+    get_yaml  CC=3  out:7
+    list_sprints  CC=3  out:7
+    list_tickets  CC=5  out:8
     move_ticket  CC=2  out:5
-    update_ticket  CC=4  out:7
+    patch_yaml  CC=6  out:11
   planfile.ci  [2 funcs]
     __init__  CC=4  out:5
     check_strategy_completion  CC=3  out:9
@@ -1796,6 +1960,21 @@ MODULES:
   planfile.cli.groups.auto.commands  [2 funcs]
     _initialize_backends  CC=3  out:4
     get_backend  CC=4  out:13
+  planfile.cli.groups.backlog.commands  [10 funcs]
+    _collect_backlog_to_delete  CC=6  out:5
+    _collect_targets_to_delete  CC=4  out:5
+    _get_planfile_yaml_path  CC=3  out:4
+    _load_planfile_yaml  CC=2  out:6
+    _matches_files  CC=5  out:2
+    _print_deletion_preview  CC=5  out:8
+    _save_planfile_yaml  CC=1  out:3
+    backlog_delete  CC=11  out:27
+    backlog_list  CC=10  out:14
+    create_backlog_table  CC=3  out:16
+  planfile.cli.groups.dsl.commands  [3 funcs]
+    _interactive_shell  CC=7  out:8
+    _run_single  CC=8  out:11
+    dsl_run  CC=2  out:7
   planfile.cli.groups.examples  [1 funcs]
     register_examples_commands  CC=1  out:1
   planfile.cli.groups.examples.commands  [2 funcs]
@@ -1832,7 +2011,9 @@ MODULES:
   planfile.cli.groups.review.utils  [2 funcs]
     _load_and_validate_strategy  CC=2  out:3
     _load_backend_config  CC=6  out:13
-  planfile.cli.groups.sync.commands  [7 funcs]
+  planfile.cli.groups.sync.commands  [10 funcs]
+    _resolve_watch_integrations  CC=4  out:5
+    _run_sync_once  CC=3  out:2
     all_cmd  CC=2  out:11
     github_cmd  CC=1  out:4
     gitlab_cmd  CC=1  out:4
@@ -1840,6 +2021,7 @@ MODULES:
     jira_cmd  CC=1  out:4
     markdown_cmd  CC=1  out:4
     sync_all_integrations  CC=3  out:5
+    watch_cmd  CC=6  out:29
   planfile.cli.groups.sync.core  [11 funcs]
     _collect_tickets_from_backlog  CC=4  out:4
     _collect_tickets_from_section  CC=3  out:5
@@ -1851,15 +2033,19 @@ MODULES:
     _process_planfile_v1  CC=9  out:11
     _ticket_matches_integration  CC=3  out:2
     _ticket_matches_integration_v1  CC=2  out:2
-  planfile.cli.groups.ticket.commands  [5 funcs]
+  planfile.cli.groups.ticket.commands  [10 funcs]
+    _apply_label_changes  CC=6  out:5
+    _auto_sync  CC=6  out:11
     _display_tickets  CC=6  out:9
+    _execute_bulk_updates  CC=4  out:6
+    _load_issue_records_from_file  CC=12  out:14
     create_ticket_table  CC=5  out:14
     load_import_tickets  CC=5  out:6
     ticket_import  CC=1  out:8
-    ticket_list  CC=5  out:9
-  planfile.cli.groups.validate  [1 funcs]
-    register_validate_commands  CC=1  out:1
-  planfile.cli.groups.validate.commands  [1 funcs]
+    ticket_list  CC=6  out:10
+    ticket_validate  CC=10  out:28
+  planfile.cli.groups.validate.commands  [2 funcs]
+    validate_schema_cli  CC=9  out:16
     validate_strategy_cli  CC=9  out:22
   planfile.cli.project_detector.fallback  [1 funcs]
     _detect_from_structure  CC=9  out:27
@@ -1879,12 +2065,15 @@ MODULES:
   planfile.cli.project_detector.inference  [3 funcs]
     _infer_domain  CC=4  out:4
     _infer_node_project_type  CC=9  out:5
-    _infer_python_project_type  CC=17  out:12
+    _infer_python_project_type  CC=11  out:11
   planfile.cli.project_detector.license  [1 funcs]
     _detect_license  CC=9  out:2
-  planfile.cli.project_detector.main  [2 funcs]
+  planfile.cli.project_detector.main  [5 funcs]
+    _build_detected_dict  CC=9  out:3
+    _determine_source  CC=4  out:3
+    _quality_gates_to_dict  CC=2  out:0
     detect_project  CC=4  out:5
-    get_detected_values  CC=15  out:7
+    get_detected_values  CC=1  out:2
   planfile.cli.project_detector.model_tier  [4 funcs]
     _detect_model_tier  CC=3  out:3
     _tier_from_config_files  CC=9  out:3
@@ -1902,15 +2091,25 @@ MODULES:
     _populate_project_from_data  CC=5  out:2
     _populate_project_metadata  CC=8  out:13
     _populate_readme_and_repository_details  CC=4  out:10
-  planfile.cli.project_detector.readme  [3 funcs]
-    _find_readme_content  CC=16  out:20
+  planfile.cli.project_detector.readme  [5 funcs]
+    _extract_description  CC=6  out:6
+    _extract_goal  CC=8  out:11
+    _find_readme_content  CC=4  out:5
     _find_readme_description  CC=1  out:1
     _find_readme_goal  CC=1  out:1
-  planfile.cli.project_detector.structure  [1 funcs]
-    _analyze_directory_structure  CC=20  out:23
+  planfile.cli.project_detector.structure  [4 funcs]
+    _analyze_directory_structure  CC=1  out:3
+    _find_src_dirs  CC=12  out:11
+    _has_tests  CC=2  out:2
+    _suggest_sprints  CC=6  out:8
   planfile.core.models.strategy  [2 funcs]
     export  CC=5  out:12
     to_yaml  CC=2  out:5
+  planfile.core.schema  [1 funcs]
+    validate_yaml_file  CC=5  out:5
+  planfile.dsl.executor  [2 funcs]
+    _exec_sync  CC=6  out:20
+    _exec_validate  CC=1  out:8
   planfile.examples  [5 funcs]
     example_create_strategy  CC=1  out:1
     example_programmatic_strategy  CC=1  out:11
@@ -1977,7 +2176,7 @@ MODULES:
   planfile.mcp.server  [4 funcs]
     _read_jsonrpc  CC=4  out:2
     _write_jsonrpc  CC=1  out:3
-    handle_tool_call  CC=14  out:17
+    handle_tool_call  CC=27  out:42
     main  CC=8  out:12
   planfile.runner  [7 funcs]
     _get_project_hash  CC=5  out:11
@@ -1992,16 +2191,16 @@ MODULES:
   planfile.sync.mock  [4 funcs]
     _create_ticket  CC=4  out:7
     _list_tickets  CC=11  out:13
-    _search_tickets  CC=4  out:11
-    _update_ticket  CC=8  out:4
+    _search_tickets  CC=5  out:14
+    _update_ticket  CC=8  out:5
   planfile.sync.operations  [15 funcs]
     _create_new_ticket  CC=4  out:8
-    _extract_ticket_data  CC=7  out:14
+    _extract_ticket_data  CC=9  out:16
     _fetch_external_tickets  CC=3  out:4
-    _import_new_ticket  CC=1  out:3
+    _import_new_ticket  CC=2  out:5
     _is_permission_error  CC=3  out:4
     _load_sprint_and_backlog  CC=5  out:4
-    _print_dry_run_action  CC=2  out:2
+    _print_dry_run_action  CC=3  out:4
     _print_permission_error  CC=1  out:9
     _process_external_ticket  CC=4  out:6
     _save_import_results  CC=5  out:6
@@ -2009,6 +2208,37 @@ MODULES:
     save_sync  CC=2  out:9
   planfile.sync.utils  [1 funcs]
     save_v1_format  CC=1  out:2
+  planfile.testql_integration  [34 funcs]
+    _append_ref_entry  CC=4  out:1
+    _attach_external_ref  CC=5  out:10
+    _build_task_pattern_entry  CC=3  out:4
+    _collect_error_messages  CC=7  out:5
+    _collect_external_ref_candidates  CC=9  out:29
+    _collect_failure_messages  CC=4  out:8
+    _collect_step_messages  CC=8  out:10
+    _collect_ticket_identity_keys  CC=14  out:57
+    _dedupe_messages  CC=3  out:3
+    _default_strategy_payload  CC=1  out:0
+  planfile.ticket_validation  [16 funcs]
+    _build_issue_indexes  CC=14  out:23
+    _collect_ticket_entries  CC=9  out:25
+    _count_file_lines  CC=5  out:4
+    _load_strategy  CC=3  out:3
+    _normalize_files  CC=8  out:11
+    _normalize_rel_path  CC=5  out:10
+    _normalize_rule  CC=2  out:3
+    _normalize_ticket_filters  CC=5  out:5
+    _parse_positive_int  CC=4  out:1
+    _resolve_existing_files  CC=3  out:3
+  planfile.todo_sync  [8 funcs]
+    _collect_markers_from_results  CC=6  out:6
+    _collect_markers_from_strategy  CC=13  out:17
+    _get_value  CC=2  out:3
+    _load_strategy  CC=3  out:3
+    _normalize_marker  CC=2  out:2
+    _resolve_todo_config  CC=7  out:10
+    _status_done  CC=2  out:3
+    sync_todo_checkboxes_from_planfile  CC=14  out:30
   planfile.utils.metrics  [4 funcs]
     _check_project_files  CC=2  out:1
     _collect_git_metrics  CC=8  out:15
@@ -2028,6 +2258,7 @@ MODULES:
     print_error  CC=0  out:0
 
 EDGES:
+  examples.llx_validator.create_validation_script → Taskfile.print
   examples.rest-api.04_javascript_client.BASE_URL → examples.rest-api.04_javascript_client.PlanfileClient.request
   examples.rest-api.04_javascript_client.PlanfileClient.health → examples.rest-api.04_javascript_client.PlanfileClient.createTicket
   examples.rest-api.04_javascript_client.PlanfileClient.listTickets → examples.rest-api.04_javascript_client.PlanfileClient.request
@@ -2045,22 +2276,14 @@ EDGES:
   examples.rest-api.04_javascript_client.PlanfileClient.fetched → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.updated → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.tickets → examples.rest-api.04_javascript_client.PlanfileClient.listTickets
-  examples.python-api.03_integration_simple.main → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.error → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.error → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.warning → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.warning → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.metric_alert → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.metric_alert → Taskfile.print
-  examples.python-api.03_integration.example_cli_tool_integration → Taskfile.print
-  examples.python-api.03_integration.example_monitoring_integration → Taskfile.print
-  examples.python-api.03_integration.example_ci_pipeline_integration → Taskfile.print
-  examples.python-api.03_integration.example_custom_decorator → Taskfile.print
-  examples.python-api.03_integration.main → Taskfile.print
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_cli_tool_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_monitoring_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_ci_pipeline_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_custom_decorator
+  examples.rest-api.03_python_client.example_basic_operations → Taskfile.print
+  examples.rest-api.03_python_client.example_bulk_operations → Taskfile.print
+  examples.rest-api.03_python_client.example_workflow → Taskfile.print
+  examples.rest-api.03_python_client.example_error_handling → Taskfile.print
+  examples.rest-api.03_python_client.main → Taskfile.print
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_basic_operations
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_bulk_operations
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_workflow
   examples.ecosystem.02_mcp_integration.run_mcp_tool → Taskfile.print
   examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_generate
   examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_apply
@@ -2070,119 +2293,129 @@ EDGES:
   examples.ecosystem.02_mcp_integration.example_mcp_session → Taskfile.print
   examples.ecosystem.02_mcp_integration.example_mcp_session → examples.ecosystem.02_mcp_integration.run_mcp_tool
   examples.ecosystem.02_mcp_integration.create_mcp_tool_definitions → Taskfile.print
-  examples.python-api.01_basic_usage.example_1_basic_initialization → Taskfile.print
-  examples.python-api.01_basic_usage.example_2_create_ticket → Taskfile.print
-  examples.python-api.01_basic_usage.example_3_quick_ticket → Taskfile.print
-  examples.python-api.01_basic_usage.example_3_quick_ticket → planfile.quick_ticket
-  examples.python-api.01_basic_usage.example_4_list_tickets → Taskfile.print
-  examples.python-api.01_basic_usage.main → Taskfile.print
-  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_1_basic_initialization
-  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_2_create_ticket
+  examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project → Taskfile.print
+  examples.ecosystem.04_llx_integration.example_metric_driven_planning → Taskfile.print
+  examples.ecosystem.04_llx_integration.create_llx_config_example → Taskfile.print
+  examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy → Taskfile.print
+  examples.ecosystem.03_proxy_routing.create_proxy_config_example → Taskfile.print
+  examples.ecosystem.03_proxy_routing.example_budget_tracking → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_basic_filtering → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_combined_filters → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_search_by_labels → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_export_filtered → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_statistics → Taskfile.print
+  examples.python-api.04_advanced_filtering.main → Taskfile.print
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_basic_filtering
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_combined_filters
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_search_by_labels
 ```
 
 ### Code Analysis (`project/analysis.toon.yaml`)
 
 ```toon markpact:analysis path=project/analysis.toon.yaml
-# code2llm | 278f 327693L | python:136,yaml:88,shell:39,json:7,yml:2,txt:2,toml:1,javascript:1 | 2026-04-25
-# CC̄=2.2 | critical:8/983 | dups:3 | cycles:0
+# code2llm | 293f 338177L | python:149,yaml:88,shell:39,json:9,yml:2,txt:2,toml:1,javascript:1 | 2026-05-03
+# CC̄=2.2 | critical:4/1375 | dups:0 | cycles:0
 
-HEALTH[9]:
-  🔴 DUP   3 classes duplicated
-  🟡 CC    demo_checkbox_tickets CC=15 (limit:15)
-  🟡 CC    _find_readme_content CC=16 (limit:15)
-  🟡 CC    _analyze_directory_structure CC=20 (limit:15)
-  🟡 CC    get_detected_values CC=15 (limit:15)
-  🟡 CC    _infer_python_project_type CC=17 (limit:15)
-  🟡 CC    _create_ticket CC=15 (limit:15)
-  🟡 CC    _update_ticket CC=15 (limit:15)
-  🟡 CC    get_stats CC=15 (limit:15)
+HEALTH[4]:
+  🟡 CC    upsert_testql_tickets CC=15 (limit:15)
+  🟡 CC    ticket_bulk_update CC=21 (limit:15)
+  🟡 CC    handle_tool_call CC=27 (limit:15)
+  🟡 CC    _extract_modifiers CC=15 (limit:15)
 
-REFACTOR[2]:
-  1. rm duplicates  (-3 dup classes)
-  2. split 8 high-CC methods  (CC>15)
+REFACTOR[1]:
+  1. split 4 high-CC methods  (CC>15)
 
-PIPELINES[326]:
-  [1] Src [BASE_URL]: BASE_URL → request
+PIPELINES[430]:
+  [1] Src [validate_strategy]: validate_strategy
       PURITY: 100% pure
-  [2] Src [url]: url
+  [2] Src [analyze_generated_code]: analyze_generated_code
       PURITY: 100% pure
-  [3] Src [response]: response
+  [3] Src [_is_llx_available]: _is_llx_available
       PURITY: 100% pure
-  [4] Src [client]: client → health → createTicket → request
+  [4] Src [_parse_llx_analysis]: _parse_llx_analysis
       PURITY: 100% pure
-  [5] Src [ticket]: ticket → createTicket → request
+  [5] Src [_basic_code_analysis]: _basic_code_analysis
       PURITY: 100% pure
 
 LAYERS:
-  planfile/                       CC̄=4.0    ←in:40  →out:34  !! split  ×DUP
+  planfile/                       CC̄=4.1    ←in:53  →out:34  !! split
+  │ !! testql_integration         711L  0C   35m  CC=15     ←1
+  │ !! commands                   519L  0C   23m  CC=21     ←0
+  │ ci                         472L  3C   13m  CC=13     ←0
   │ runner                     418L  0C    7m  CC=14     ←4
+  │ ticket_validation          362L  0C   18m  CC=14     ←2
   │ generator                  347L  1C   24m  CC=14     ←0
   │ executor_standalone        338L  3C   12m  CC=8      ←0
+  │ executor                   336L  2C   21m  CC=7      ←0
   │ yaml_loader                331L  0C   15m  CC=7      ←7
-  │ ci                         315L  3C    9m  CC=7      ←0
-  │ jira                       280L  1C   10m  CC=13     ←0
+  │ server                     331L  7C   21m  CC=6      ←0
+  │ !! server                     321L  0C    4m  CC=27     ←0
+  │ jira                       284L  1C   13m  CC=8      ←0
+  │ strategy                   273L  6C   14m  CC=12     ←0
   │ external_tools             268L  2C   12m  CC=12     ←0
-  │ !! strategy                   260L  6C   12m  CC=15     ←0
-  │ operations                 259L  0C   15m  CC=9      ←1
-  │ core                       256L  0C   11m  CC=9      ←1
+  │ operations                 260L  0C   15m  CC=10     ←1
+  │ core                       256L  0C   11m  CC=9      ←3
   │ commands                   244L  0C    8m  CC=10     ←0
-  │ !! github                     240L  1C    9m  CC=15     ←0
+  │ github                     238L  1C   13m  CC=8      ←0
   │ base                       236L  4C   21m  CC=4      ←0
   │ commands                   235L  0C    8m  CC=10     ←0
-  │ !! gitlab                     233L  1C    8m  CC=15     ←0
+  │ gitlab                     227L  1C   12m  CC=9      ←0
   │ metrics                    227L  0C    5m  CC=8      ←0
   │ redup_importer             221L  0C    5m  CC=11     ←1
   │ commands                   218L  0C   11m  CC=11     ←0
   │ generic                    216L  1C   10m  CC=6      ←0
-  │ server                     209L  0C    4m  CC=14     ←0
   │ sprint_generator           206L  1C   10m  CC=9      ←0
   │ config                     206L  1C   14m  CC=10     ←0
+  │ !! parser                     205L  2C    6m  CC=15     ←0
   │ commands                   197L  0C    3m  CC=13     ←1
   │ cli_loader                 194L  0C   10m  CC=7      ←0
+  │ commands                   194L  0C   12m  CC=11     ←0
+  │ __init__                   192L  1C   11m  CC=11     ←10
   │ toon_parser                189L  0C    7m  CC=11     ←2
+  │ todo_sync                  184L  0C    9m  CC=14     ←0
+  │ commands                   174L  0C   12m  CC=6      ←0
   │ gates                      170L  0C   13m  CC=8      ←3
-  │ commands                   168L  0C   12m  CC=6      ←0
-  │ __init__                   167L  1C    9m  CC=11     ←10
-  │ mock                       160L  1C    6m  CC=11     ←0
+  │ mock                       161L  1C    6m  CC=11     ←0
+  │ commands                   160L  0C    3m  CC=9      ←0
+  │ store                      151L  1C   13m  CC=6      ←0
   │ generator                  145L  0C    6m  CC=8      ←1
   │ examples                   139L  0C    5m  CC=2      ←0
   │ commands                   132L  0C    2m  CC=14     ←0
   │ code2llm_importer          129L  1C    9m  CC=13     ←1
+  │ commands                   128L  0C    5m  CC=13     ←0
   │ file_analyzer              127L  1C   10m  CC=9      ←0
+  │ backend                    124L  1C    8m  CC=5      ←0
   │ yaml_parser                123L  0C    7m  CC=5      ←2
   │ commands                   119L  0C    4m  CC=6      ←0
   │ text_parser                118L  0C    1m  CC=13     ←3
   │ pyproject                  117L  0C    9m  CC=8      ←1
+  │ schema                     114L  1C    4m  CC=8      ←1
   │ priorities                 111L  0C    3m  CC=4      ←0
   │ tickets                    110L  1C    6m  CC=12     ←0
   │ utils                      108L  0C    5m  CC=7      ←1
-  │ __init__                   104L  1C    5m  CC=3      ←0  ×DUP
+  │ __init__                   104L  1C    5m  CC=3      ←0
   │ commands                   100L  0C    1m  CC=10     ←0
-  │ server                      97L  2C    7m  CC=4      ←0
+  │ main                       100L  0C    5m  CC=9      ←1
   │ vallm_importer              96L  1C   10m  CC=4      ←1
-  │ commands                    91L  0C    7m  CC=3      ←0
-  │ !! main                        88L  0C    2m  CC=15     ←1
-  │ !! inference                   87L  0C    3m  CC=17     ←2
+  │ store_tickets               86L  1C    8m  CC=8      ←0
   │ utils                       86L  0C    3m  CC=7      ←1
+  │ inference                   80L  0C    3m  CC=11     ←2
   │ commands                    78L  0C    1m  CC=1      ←1
   │ adapters                    75L  6C    5m  CC=1      ←0
   │ package                     73L  0C    1m  CC=7      ←1
-  │ !! readme                      71L  0C    3m  CC=16     ←3
-  │ registry                    67L  1C    5m  CC=2      ←6
+  │ structure                   70L  0C    4m  CC=12     ←3
+  │ registry                    67L  1C    5m  CC=2      ←5
+  │ __init__                    67L  0C    0m  CC=0.0    ←0
   │ fallback                    66L  0C    1m  CC=9      ←1
+  │ readme                      66L  0C    5m  CC=8      ←3
+  │ commands                    63L  0C    3m  CC=2      ←0
   │ prompts                     63L  0C    1m  CC=5      ←1
   │ client                      63L  0C    1m  CC=4      ←1
-  │ __init__                    63L  0C    0m  CC=0.0    ←0
-  │ !! structure                   60L  0C    1m  CC=20     ←3
   │ model_tier                  60L  0C    4m  CC=9      ←3
-  │ commands                    59L  0C    3m  CC=2      ←0
-  │ store_tickets               54L  1C    4m  CC=7      ←0
-  │ ticket                      51L  2C    1m  CC=2      ←0
-  │ backend                     50L  1C    2m  CC=2      ←0
+  │ ticket                      49L  2C    0m  CC=0.0    ←0
+  │ base                        47L  3C    0m  CC=0.0    ←0
   │ state                       46L  1C    5m  CC=3      ←0
-  │ base                        46L  3C    0m  CC=0.0    ←0
   │ metrics_extractor           44L  0C    6m  CC=9      ←1
-  │ commands                    42L  0C    1m  CC=9      ←0
   │ models                      39L  3C    0m  CC=0.0    ←0
   │ __init__                    38L  0C    1m  CC=1      ←0
   │ git                         36L  0C    1m  CC=4      ←3
@@ -2204,10 +2437,13 @@ LAYERS:
   │ __init__                    23L  0C    0m  CC=0.0    ←0
   │ __init__                    22L  0C    1m  CC=1      ←0
   │ models                      21L  0C    0m  CC=0.0    ←0
+  │ __init__                    21L  0C    0m  CC=0.0    ←0
   │ extra_commands              20L  0C    1m  CC=1      ←0
+  │ __init__                    19L  0C    1m  CC=1      ←0
   │ __init__                    18L  0C    1m  CC=1      ←0
   │ __init__                    18L  0C    1m  CC=1      ←0
   │ __init__                    18L  0C    1m  CC=1      ←0
+  │ __init__                    15L  0C    1m  CC=1      ←0
   │ server_common               14L  0C    1m  CC=2      ←2
   │ yaml_importer               14L  0C    1m  CC=1      ←1
   │ json_importer               14L  0C    1m  CC=1      ←1
@@ -2218,27 +2454,24 @@ LAYERS:
   │ __init__                    11L  0C    1m  CC=1      ←0
   │ __init__                    11L  0C    1m  CC=1      ←0
   │ __init__                    11L  0C    1m  CC=1      ←0
-  │ __init__                    11L  0C    1m  CC=1      ←0
-  │ store                       11L  1C    0m  CC=0.0    ←0
   │ execution                    6L  0C    0m  CC=0.0    ←0
   │ constants                    5L  0C    0m  CC=0.0    ←0
+  │ __init__                     5L  0C    0m  CC=0.0    ←0
   │ __init__                     5L  0C    0m  CC=0.0    ←0
   │ __init__                     4L  0C    0m  CC=0.0    ←0
   │ __main__                     4L  0C    0m  CC=0.0    ←0
   │ __init__                     4L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     1L  0C    0m  CC=0.0    ←0
-  │ __init__                     1L  0C    0m  CC=0.0    ←0
-  │ gitlab                       1L  0C    0m  CC=0.0    ←0
-  │ generic                      1L  0C    0m  CC=0.0    ←0
-  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ base                         1L  0C    0m  CC=0.0    ←0
+  │ gitlab                       1L  0C    0m  CC=0.0    ←0
+  │ jira                         1L  0C    0m  CC=0.0    ←0
   │ github                       1L  0C    0m  CC=0.0    ←0
-  │ __init__                     0L  0C    0m  CC=0.0    ←0
-  │ __init__                     0L  0C    0m  CC=0.0    ←0
+  │ generic                      1L  0C    0m  CC=0.0    ←0
+  │ __init__                     1L  0C    0m  CC=0.0    ←0
   │ __init__                     0L  0C    0m  CC=0.0    ←0
   │
-  examples/                       CC̄=2.0    ←in:0  →out:2  ×DUP
+  examples/                       CC̄=1.9    ←in:0  →out:1
   │ !! ci-strategy.yaml          3100L  0C    0m  CC=0.0    ←0
   │ !! final-strategy.yaml       1197L  0C    0m  CC=0.0    ←0
   │ !! 04_llx_integration         503L  2C    9m  CC=12     ←1
@@ -2257,25 +2490,28 @@ LAYERS:
   │ microservices-migration.yaml   228L  0C    0m  CC=0.0    ←0
   │ security-hardening.yaml    225L  0C    0m  CC=0.0    ←0
   │ ml-pipeline-optimization.yaml   225L  0C    0m  CC=0.0    ←0
-  │ 03_integration             218L  1C    9m  CC=4      ←0  ×DUP
   │ common-tasks.yaml          218L  0C    0m  CC=0.0    ←0
-  │ PROPOSED_API_IMPROVEMENTS   217L  2C    7m  CC=13     ←0  ×DUP
   │ run_all_tests.sh           203L  0C    2m  CC=0.0    ←0
   │ llx_validator              185L  1C    7m  CC=4      ←0
   │ llm-config.yaml            181L  0C    0m  CC=0.0    ←0
   │ 02_ticket_management       172L  0C    6m  CC=3      ←0
+  │ PROPOSED_API_IMPROVEMENTS   168L  1C    3m  CC=13     ←0
   │ run.sh                     166L  0C    1m  CC=0.0    ←0
   │ 04_advanced_filtering      161L  0C    6m  CC=12     ←0
+  │ 03_integration             159L  0C    5m  CC=4      ←0
   │ test_readme_examples.sh    158L  1C    3m  CC=0.0    ←0
   │ 04_javascript_client.js    152L  1C   18m  CC=5      ←0
   │ backlog.yaml               139L  0C    0m  CC=0.0    ←0
   │ run.sh                     129L  0C    0m  CC=0.0    ←0
   │ tickets.planfile.yaml      128L  0C    0m  CC=0.0    ←0
   │ run.sh                     128L  0C    0m  CC=0.0    ←0
+  │ 06_websocket               117L  0C    6m  CC=3      ←0
   │ 01_basic_usage             112L  0C    5m  CC=3      ←0
-  │ !! demo                       109L  0C    1m  CC=15     ←0
+  │ 04_dsl_usage               111L  0C    7m  CC=1      ←0
+  │ 05_dsl_usage               109L  0C    6m  CC=4      ←0
   │ run.sh                     109L  0C    0m  CC=0.0    ←0
   │ merged.yaml                106L  0C    0m  CC=0.0    ←0
+  │ demo                       105L  0C    5m  CC=7      ←0
   │ 02_curl_examples.sh        102L  0C    2m  CC=0.0    ←0
   │ merged-strategy.yaml        96L  0C    0m  CC=0.0    ←0
   │ tickets.planfile.yaml       95L  0C    0m  CC=0.0    ←0
@@ -2284,12 +2520,14 @@ LAYERS:
   │ run.sh                      89L  0C    1m  CC=0.0    ←0
   │ planfile.yaml               85L  0C    0m  CC=0.0    ←0
   │ strategy_simple_v2.yaml     80L  0C    0m  CC=0.0    ←0
+  │ 01_dsl_usage                75L  0C    0m  CC=0.0    ←0
   │ tickets.planfile.yaml       70L  0C    0m  CC=0.0    ←0
   │ tickets.planfile.yaml       70L  0C    0m  CC=0.0    ←0
   │ validate_with_llx.sh        65L  0C    1m  CC=0.0    ←0
   │ web.json                    62L  0C    0m  CC=0.0    ←0
   │ web-template.json           62L  0C    0m  CC=0.0    ←0
   │ 04_analytics_simple         59L  0C    1m  CC=1      ←0
+  │ strategy-export.json        58L  0C    0m  CC=0.0    ←0
   │ test-strategy.json          58L  0C    0m  CC=0.0    ←0
   │ 03_integration_simple       52L  0C    1m  CC=3      ←0
   │ run_all.sh                  49L  0C    1m  CC=0.0    ←0
@@ -2307,7 +2545,6 @@ LAYERS:
   │ web-template.yaml           42L  0C    0m  CC=0.0    ←0
   │ template-mobile-healthcare.yaml    42L  0C    0m  CC=0.0    ←0
   │ template-ml-finance.yaml    42L  0C    0m  CC=0.0    ←0
-  │ strategy-export.yaml        42L  0C    0m  CC=0.0    ←0
   │ template-web-ecommerce.yaml    42L  0C    0m  CC=0.0    ←0
   │ gitlab.planfile.yaml        41L  0C    0m  CC=0.0    ←0
   │ run.sh                      40L  0C    0m  CC=0.0    ←0
@@ -2343,16 +2580,17 @@ LAYERS:
   │
   ./                              CC̄=0.8    ←in:0  →out:0
   │ !! goal.yaml                  513L  0C    0m  CC=0.0    ←0
-  │ Taskfile.yml               383L  0C    1m  CC=0.0    ←20
-  │ pyproject.toml             166L  0C    0m  CC=0.0    ←0
+  │ Taskfile.yml               383L  0C    1m  CC=0.0    ←23
+  │ pyproject.toml             168L  0C    0m  CC=0.0    ←0
   │ docker-compose.yml         126L  0C    0m  CC=0.0    ←0
+  │ prefact.yaml                91L  0C    0m  CC=0.0    ←0
   │ redsl.yaml                  72L  0C    0m  CC=0.0    ←0
   │ test-integrated.yaml        64L  0C    0m  CC=0.0    ←0
   │ project.sh                  48L  0C    0m  CC=0.0    ←0
-  │ mcp-server-example          28L  0C    4m  CC=1      ←0
   │ redsl_refactor_report.toon.yaml    25L  0C    0m  CC=0.0    ←0
   │ redsl_refactor_plan.toon.yaml    22L  0C    0m  CC=0.0    ←0
   │ tree.sh                      1L  0C    0m  CC=0.0    ←0
+  │ mcp-server-example           0L  0C    4m  CC=1      ←0
   │ Makefile                     0L  0C    0m  CC=0.0    ←0
   │ Dockerfile                   0L  0C    0m  CC=0.0    ←0
   │
@@ -2364,24 +2602,25 @@ LAYERS:
   │ project.sh                  40L  0C    0m  CC=0.0    ←0
   │
   project/                        CC̄=0.0    ←in:0  →out:0
-  │ !! map.toon.yaml              927L  0C  341m  CC=0.0    ←2
-  │ analysis.toon.yaml         249L  0C    0m  CC=0.0    ←0
+  │ !! calls.yaml                5656L  0C    0m  CC=0.0    ←0
+  │ !! map.toon.yaml             1216L  0C  526m  CC=0.0    ←2
+  │ !! calls.toon.yaml            547L  0C    0m  CC=0.0    ←0
+  │ analysis.toon.yaml         377L  0C    0m  CC=0.0    ←0
   │ analysis.toon.yaml         185L  0C    0m  CC=0.0    ←0
   │ analysis.toon.yaml         185L  0C    0m  CC=0.0    ←0
   │ analysis.toon.yaml         185L  0C    0m  CC=0.0    ←0
-  │ duplication.toon.yaml      148L  0C    0m  CC=0.0    ←0
+  │ duplication.toon.yaml      161L  0C    0m  CC=0.0    ←0
+  │ evolution.toon.yaml         65L  0C    0m  CC=0.0    ←0
   │ evolution.toon.yaml         59L  0C    0m  CC=0.0    ←0
-  │ evolution.toon.yaml         59L  0C    0m  CC=0.0    ←0
-  │ evolution.toon.yaml         59L  0C    0m  CC=0.0    ←0
-  │ evolution.toon.yaml         59L  0C    0m  CC=0.0    ←0
-  │ project.toon.yaml           51L  0C    0m  CC=0.0    ←0
+  │ project.toon.yaml           53L  0C    0m  CC=0.0    ←0
   │ prompt.txt                  47L  0C    0m  CC=0.0    ←0
   │ validation.toon.yaml        40L  0C    0m  CC=0.0    ←0
   │ validation.toon.yaml         5L  0C    0m  CC=0.0    ←0
   │
+  .taskill/                       CC̄=0.0    ←in:0  →out:0
+  │ state.json                  13L  0C    0m  CC=0.0    ←0
+  │
   web/                            CC̄=0.0    ←in:0  →out:0
-  │ web-template-v2.yaml        42L  0C    0m  CC=0.0    ←0
-  │ web-template-v3.yaml        42L  0C    0m  CC=0.0    ←0
   │ web-template.yaml           39L  0C    0m  CC=0.0    ←0
   │
   .planfile/                      CC̄=0.0    ←in:0  →out:0
@@ -2403,6 +2642,10 @@ LAYERS:
   │ llx-config-for-planfile.yaml    66L  0C    0m  CC=0.0    ←0
   │ SUMR.json                    9L  0C    0m  CC=0.0    ←0
   │
+  testql-scenarios/               CC̄=0.0    ←in:0  →out:0
+  │ generated-from-pytests.testql.toon.yaml     7L  0C    0m  CC=0.0    ←0
+  │ generated-unit-tests.testql.toon.yaml     7L  0C    0m  CC=0.0    ←0
+  │
   config/                         CC̄=0.0    ←in:0  →out:0
   │ goal.yaml                  429L  0C    0m  CC=0.0    ←0
   │ pyqual.yaml                190L  0C    0m  CC=0.0    ←0
@@ -2413,40 +2656,40 @@ LAYERS:
   ── zero ──
      Dockerfile                                0L
      Makefile                                  0L
-     planfile/cli/__init__.py                  0L
+     mcp-server-example.py                     0L
      planfile/loaders/__init__.py              0L
-     planfile/utils/__init__.py                0L
 
 COUPLING:
-                                  Taskfile  examples.python-api   examples.ecosystem             planfile         planfile.cli    examples.rest-api    planfile.analysis     planfile.loaders              scripts          project.map        planfile.sync         planfile.api   planfile.importers         planfile.llm             examples
-             Taskfile                   ──                 ←145                  ←95                  ←27                                       ←29                  ←15                   ←2                                                             ←6                                                             ←1                   ←1  hub
-  examples.python-api                  145                   ──                                        20                                                                                                                                                                                                                                         !! fan-out
-   examples.ecosystem                   95                                        ──                                                                                                                                                                                                                                     ←2                       !! fan-out
-             planfile                   27                  ←20                                        ──                  ←12                                                              1                                         1                                        ←6                    5                                        ←1  hub
-         planfile.cli                                                                                  12                   ──                                                             12                   15                                         2                                                              1                       !! fan-out
-    examples.rest-api                   29                                                                                                       ──                                                                                                                                                                                               !! fan-out
-    planfile.analysis                   15                                                                                                                            ──                                                              8                                                                                                           !! fan-out
-     planfile.loaders                    2                                                             ←1                  ←12                                                             ──                                                                                                                                                     hub
-              scripts                                                                                                      ←15                                                                                  ──                                                                                                                                hub
-          project.map                                                                                  ←1                                                             ←8                                                             ──                                                                                                           hub
-        planfile.sync                    6                                                                                  ←2                                                                                                                            ──                                                                                    
-         planfile.api                                                                                   6                                                                                                                                                                      ──                                                               
+                                  Taskfile  examples.python-api   examples.ecosystem             planfile    examples.rest-api         planfile.cli    planfile.analysis     planfile.loaders              scripts         planfile.api          project.map        planfile.sync   planfile.importers        planfile.core         planfile.llm
+             Taskfile                   ──                 ←158                  ←95                  ←27                  ←54                                       ←15                   ←2                                                                                  ←6                                        ←2                   ←1  hub
+  examples.python-api                  158                   ──                                        16                                                                                                                                                                                                                                         !! fan-out
+   examples.ecosystem                   95                                        ──                                                                                                                                                                                                                                                          ←2  !! fan-out
+             planfile                   27                  ←16                                        ──                                       ←20                                         1                                       ←12                    1                                         5                                            hub
+    examples.rest-api                   54                                                                                  ──                                                                                                                                                                                                                    !! fan-out
+         planfile.cli                                                                                  20                                        ──                                        12                   15                                                              2                                         2                    1  !! fan-out
+    planfile.analysis                   15                                                                                                                            ──                                                                                   8                                                                                      !! fan-out
+     planfile.loaders                    2                                                             ←1                                       ←12                                        ──                                                                                                                                                     hub
+              scripts                                                                                                                           ←15                                                             ──                                                                                                                                hub
+         planfile.api                                                                                  12                                                                                                                            ──                                                                                                           !! fan-out
+          project.map                                                                                  ←1                                                             ←8                                                                                  ──                                                                                      hub
+        planfile.sync                    6                                                                                                       ←2                                                                                                                            ──                                                               
    planfile.importers                                                                                  ←5                                                                                                                                                                                           ──                                            hub
-         planfile.llm                    1                                         2                                        ←1                                                                                                                                                                                           ──                     
-             examples                    1                                                              1                                                                                                                                                                                                                                     ──
+        planfile.core                    2                                                                                                       ←2                                                                                                                                                                      ──                     
+         planfile.llm                    1                                         2                                                             ←1                                                                                                                                                                                           ──
   CYCLES: none
-  HUB: planfile.loaders/ (fan-in=13)
-  HUB: Taskfile/ (fan-in=323)
-  HUB: project.map/ (fan-in=9)
-  HUB: planfile/ (fan-in=40)
-  HUB: scripts/ (fan-in=15)
   HUB: planfile.importers/ (fan-in=5)
-  SMELL: examples.python-api/ fan-out=165 → split needed
+  HUB: planfile/ (fan-in=53)
+  HUB: project.map/ (fan-in=9)
+  HUB: scripts/ (fan-in=15)
+  HUB: planfile.loaders/ (fan-in=13)
+  HUB: Taskfile/ (fan-in=361)
+  SMELL: examples.python-api/ fan-out=174 → split needed
+  SMELL: planfile.api/ fan-out=12 → split needed
   SMELL: examples.ecosystem/ fan-out=95 → split needed
-  SMELL: planfile.cli/ fan-out=42 → split needed
-  SMELL: planfile.analysis/ fan-out=23 → split needed
-  SMELL: examples.rest-api/ fan-out=29 → split needed
   SMELL: planfile/ fan-out=34 → split needed
+  SMELL: planfile.cli/ fan-out=52 → split needed
+  SMELL: examples.rest-api/ fan-out=54 → split needed
+  SMELL: planfile.analysis/ fan-out=23 → split needed
 
 EXTERNAL:
   validation: run `vallm batch .` → validation.toon
@@ -2456,38 +2699,42 @@ EXTERNAL:
 ### Duplication (`project/duplication.toon.yaml`)
 
 ```toon markpact:analysis path=project/duplication.toon.yaml
-# redup/duplication | 12 groups | 135f 13913L | 2026-04-25
+# redup/duplication | 15 groups | 149f 17240L | 2026-05-03
 
 SUMMARY:
-  files_scanned: 135
-  total_lines:   13913
-  dup_groups:    12
-  dup_fragments: 33
-  saved_lines:   122
-  scan_ms:       4575
+  files_scanned: 149
+  total_lines:   17240
+  dup_groups:    15
+  dup_fragments: 40
+  saved_lines:   172
+  scan_ms:       6825
 
 HOTSPOTS[7] (files with most duplication):
+  examples/rest-api/04_dsl_usage.py  dup=63L  groups=2  frags=5  (0.4%)
   planfile/cli/project_detector/gates.py  dup=32L  groups=2  frags=4  (0.2%)
   planfile/cli/groups/sync/commands.py  dup=28L  groups=1  frags=4  (0.2%)
-  planfile/cli/groups/sync/core.py  dup=24L  groups=1  frags=2  (0.2%)
+  planfile/cli/groups/sync/core.py  dup=24L  groups=1  frags=2  (0.1%)
   planfile/cli/groups/ticket/commands.py  dup=18L  groups=1  frags=2  (0.1%)
   planfile/cli/core/console.py  dup=15L  groups=1  frags=5  (0.1%)
   planfile/sync/base.py  dup=14L  groups=1  frags=1  (0.1%)
-  planfile/sync/jira.py  dup=14L  groups=1  frags=1  (0.1%)
 
-DUPLICATES[12] (ranked by impact):
+DUPLICATES[15] (ranked by impact):
+  [bef34080d3b159fe]   STRU  example_dsl_command  L=11 N=3 saved=22 sim=1.00
+      examples/rest-api/04_dsl_usage.py:6-16  (example_dsl_command)
+      examples/rest-api/04_dsl_usage.py:19-29  (example_dsl_create_ticket)
+      examples/rest-api/04_dsl_usage.py:32-42  (example_dsl_update_ticket)
   [73f23dc09aac9b7a]   STRU  github_cmd  L=7 N=4 saved=21 sim=1.00
-      planfile/cli/groups/sync/commands.py:10-16  (github_cmd)
-      planfile/cli/groups/sync/commands.py:19-25  (gitlab_cmd)
-      planfile/cli/groups/sync/commands.py:28-34  (jira_cmd)
-      planfile/cli/groups/sync/commands.py:37-43  (markdown_cmd)
-  [84118158d8b5d9f1]   STRU  register_apply_commands  L=3 N=6 saved=15 sim=1.00
-      planfile/cli/groups/apply/__init__.py:9-11  (register_apply_commands)
-      planfile/cli/groups/examples/__init__.py:9-11  (register_examples_commands)
-      planfile/cli/groups/health/__init__.py:9-11  (register_health_commands)
-      planfile/cli/groups/init/__init__.py:9-11  (register_init_commands)
-      planfile/cli/groups/review/__init__.py:9-11  (register_review_commands)
-      planfile/cli/groups/validate/__init__.py:9-11  (register_validate_commands)
+      planfile/cli/groups/sync/commands.py:15-21  (github_cmd)
+      planfile/cli/groups/sync/commands.py:24-30  (gitlab_cmd)
+      planfile/cli/groups/sync/commands.py:33-39  (jira_cmd)
+      planfile/cli/groups/sync/commands.py:42-48  (markdown_cmd)
+  [647474f57d8a2dab]   STRU  register_auto_commands  L=8 N=3 saved=16 sim=1.00
+      planfile/cli/groups/auto/__init__.py:11-18  (register_auto_commands)
+      planfile/cli/groups/backlog/__init__.py:11-18  (register_backlog_commands)
+      planfile/cli/groups/generate/__init__.py:11-18  (register_generate_commands)
+  [d2c29bc2b85437aa]   STRU  example_dsl_sprint  L=15 N=2 saved=15 sim=1.00
+      examples/rest-api/04_dsl_usage.py:45-59  (example_dsl_sprint)
+      examples/rest-api/04_dsl_usage.py:62-76  (example_dsl_validate_sync)
   [f071e098e43958d3]   STRU  map_priority  L=14 N=2 saved=14 sim=1.00
       planfile/sync/base.py:66-79  (map_priority)
       planfile/sync/jira.py:65-78  (map_priority)
@@ -2497,148 +2744,164 @@ DUPLICATES[12] (ranked by impact):
       planfile/cli/core/console.py:19-21  (print_warning)
       planfile/cli/core/console.py:24-26  (print_info)
       planfile/cli/core/console.py:29-31  (print_dim)
+  [84118158d8b5d9f1]   STRU  register_apply_commands  L=3 N=5 saved=12 sim=1.00
+      planfile/cli/groups/apply/__init__.py:9-11  (register_apply_commands)
+      planfile/cli/groups/examples/__init__.py:9-11  (register_examples_commands)
+      planfile/cli/groups/health/__init__.py:9-11  (register_health_commands)
+      planfile/cli/groups/init/__init__.py:9-11  (register_init_commands)
+      planfile/cli/groups/review/__init__.py:9-11  (register_review_commands)
   [6a6c4ffd98c596b0]   STRU  _collect_tickets_from_sprint  L=12 N=2 saved=12 sim=1.00
       planfile/cli/groups/sync/core.py:58-69  (_collect_tickets_from_sprint)
       planfile/cli/groups/sync/core.py:72-83  (_collect_tickets_from_backlog)
   [743611597bf1e270]   STRU  ticket_done  L=9 N=2 saved=9 sim=1.00
-      planfile/cli/groups/ticket/commands.py:137-145  (ticket_done)
-      planfile/cli/groups/ticket/commands.py:147-155  (ticket_start)
+      planfile/cli/groups/ticket/commands.py:280-288  (ticket_done)
+      planfile/cli/groups/ticket/commands.py:290-298  (ticket_start)
   [1d3d96e641f80678]   STRU  _detect_docker_gates  L=9 N=2 saved=9 sim=1.00
       planfile/cli/project_detector/gates.py:40-48  (_detect_docker_gates)
       planfile/cli/project_detector/gates.py:145-153  (_detect_doc_gates)
-  [647474f57d8a2dab]   STRU  register_auto_commands  L=8 N=2 saved=8 sim=1.00
-      planfile/cli/groups/auto/__init__.py:11-18  (register_auto_commands)
-      planfile/cli/groups/generate/__init__.py:11-18  (register_generate_commands)
   [9c4f9ae7fbca56f4]   STRU  _has_mypy_config  L=7 N=2 saved=7 sim=1.00
       planfile/cli/project_detector/gates.py:103-109  (_has_mypy_config)
       planfile/cli/project_detector/gates.py:136-142  (_has_bandit_config)
   [ea2851389f454151]   STRU  import_json  L=7 N=2 saved=7 sim=1.00
       planfile/importers/json_importer.py:8-14  (import_json)
       planfile/importers/yaml_importer.py:8-14  (import_yaml)
-  [1aa5c925a5a0c66c]   EXAC  __init__  L=4 N=2 saved=4 sim=1.00
-      examples/PROPOSED_API_IMPROVEMENTS.py:27-30  (__init__)
-      planfile/extensions/__init__.py:29-32  (__init__)
+  [a9991ab6527fc886]   EXAC  _load_strategy  L=6 N=2 saved=6 sim=1.00
+      planfile/ticket_validation.py:16-21  (_load_strategy)
+      planfile/todo_sync.py:15-20  (_load_strategy)
+  [41220f657f2d6a8d]   STRU  done_ticket  L=6 N=2 saved=6 sim=1.00
+      planfile/api/server.py:149-154  (done_ticket)
+      planfile/api/server.py:158-163  (start_ticket)
   [3252487e1015a40a]   STRU  _find_readme_description  L=4 N=2 saved=4 sim=1.00
-      planfile/cli/project_detector/readme.py:62-65  (_find_readme_description)
-      planfile/cli/project_detector/readme.py:68-71  (_find_readme_goal)
+      planfile/cli/project_detector/readme.py:57-60  (_find_readme_description)
+      planfile/cli/project_detector/readme.py:63-66  (_find_readme_goal)
 
-REFACTOR[12] (ranked by priority):
-  [1] ○ extract_function   → planfile/cli/groups/sync/utils/github_cmd.py
+REFACTOR[15] (ranked by priority):
+  [1] ○ extract_function   → examples/rest-api/utils/example_dsl_command.py
+      WHY: 3 occurrences of 11-line block across 1 files — saves 22 lines
+      FILES: examples/rest-api/04_dsl_usage.py
+  [2] ○ extract_function   → planfile/cli/groups/sync/utils/github_cmd.py
       WHY: 4 occurrences of 7-line block across 1 files — saves 21 lines
       FILES: planfile/cli/groups/sync/commands.py
-  [2] ○ extract_function   → planfile/cli/groups/utils/register_apply_commands.py
-      WHY: 6 occurrences of 3-line block across 6 files — saves 15 lines
-      FILES: planfile/cli/groups/apply/__init__.py, planfile/cli/groups/examples/__init__.py, planfile/cli/groups/health/__init__.py, planfile/cli/groups/init/__init__.py, planfile/cli/groups/review/__init__.py +1 more
-  [3] ○ extract_function   → planfile/sync/utils/map_priority.py
+  [3] ○ extract_function   → planfile/cli/groups/utils/register_auto_commands.py
+      WHY: 3 occurrences of 8-line block across 3 files — saves 16 lines
+      FILES: planfile/cli/groups/auto/__init__.py, planfile/cli/groups/backlog/__init__.py, planfile/cli/groups/generate/__init__.py
+  [4] ○ extract_function   → examples/rest-api/utils/example_dsl_sprint.py
+      WHY: 2 occurrences of 15-line block across 1 files — saves 15 lines
+      FILES: examples/rest-api/04_dsl_usage.py
+  [5] ○ extract_function   → planfile/sync/utils/map_priority.py
       WHY: 2 occurrences of 14-line block across 2 files — saves 14 lines
       FILES: planfile/sync/base.py, planfile/sync/jira.py
-  [4] ○ extract_function   → planfile/cli/core/utils/print_success.py
+  [6] ○ extract_function   → planfile/cli/core/utils/print_success.py
       WHY: 5 occurrences of 3-line block across 1 files — saves 12 lines
       FILES: planfile/cli/core/console.py
-  [5] ○ extract_function   → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
+  [7] ○ extract_function   → planfile/cli/groups/utils/register_apply_commands.py
+      WHY: 5 occurrences of 3-line block across 5 files — saves 12 lines
+      FILES: planfile/cli/groups/apply/__init__.py, planfile/cli/groups/examples/__init__.py, planfile/cli/groups/health/__init__.py, planfile/cli/groups/init/__init__.py, planfile/cli/groups/review/__init__.py
+  [8] ○ extract_function   → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
       WHY: 2 occurrences of 12-line block across 1 files — saves 12 lines
       FILES: planfile/cli/groups/sync/core.py
-  [6] ○ extract_function   → planfile/cli/groups/ticket/utils/ticket_done.py
+  [9] ○ extract_function   → planfile/cli/groups/ticket/utils/ticket_done.py
       WHY: 2 occurrences of 9-line block across 1 files — saves 9 lines
       FILES: planfile/cli/groups/ticket/commands.py
-  [7] ○ extract_function   → planfile/cli/project_detector/utils/_detect_docker_gates.py
+  [10] ○ extract_function   → planfile/cli/project_detector/utils/_detect_docker_gates.py
       WHY: 2 occurrences of 9-line block across 1 files — saves 9 lines
       FILES: planfile/cli/project_detector/gates.py
-  [8] ○ extract_function   → planfile/cli/groups/utils/register_auto_commands.py
-      WHY: 2 occurrences of 8-line block across 2 files — saves 8 lines
-      FILES: planfile/cli/groups/auto/__init__.py, planfile/cli/groups/generate/__init__.py
-  [9] ○ extract_function   → planfile/cli/project_detector/utils/_has_mypy_config.py
+  [11] ○ extract_function   → planfile/cli/project_detector/utils/_has_mypy_config.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: planfile/cli/project_detector/gates.py
-  [10] ○ extract_function   → planfile/importers/utils/import_json.py
+  [12] ○ extract_function   → planfile/importers/utils/import_json.py
       WHY: 2 occurrences of 7-line block across 2 files — saves 7 lines
       FILES: planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
-  [11] ○ extract_class      → utils/__init__.py
-      WHY: 2 occurrences of 4-line block across 2 files — saves 4 lines
-      FILES: examples/PROPOSED_API_IMPROVEMENTS.py, planfile/extensions/__init__.py
-  [12] ○ extract_function   → planfile/cli/project_detector/utils/_find_readme_description.py
+  [13] ○ extract_function   → planfile/utils/_load_strategy.py
+      WHY: 2 occurrences of 6-line block across 2 files — saves 6 lines
+      FILES: planfile/ticket_validation.py, planfile/todo_sync.py
+  [14] ○ extract_function   → planfile/api/utils/done_ticket.py
+      WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
+      FILES: planfile/api/server.py
+  [15] ○ extract_function   → planfile/cli/project_detector/utils/_find_readme_description.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: planfile/cli/project_detector/readme.py
 
-QUICK_WINS[10] (low risk, high savings — do first):
-  [1] extract_function   saved=21L  → planfile/cli/groups/sync/utils/github_cmd.py
+QUICK_WINS[14] (low risk, high savings — do first):
+  [1] extract_function   saved=22L  → examples/rest-api/utils/example_dsl_command.py
+      FILES: 04_dsl_usage.py
+  [2] extract_function   saved=21L  → planfile/cli/groups/sync/utils/github_cmd.py
       FILES: commands.py
-  [2] extract_function   saved=15L  → planfile/cli/groups/utils/register_apply_commands.py
-      FILES: __init__.py, __init__.py, __init__.py +3
-  [3] extract_function   saved=14L  → planfile/sync/utils/map_priority.py
+  [3] extract_function   saved=16L  → planfile/cli/groups/utils/register_auto_commands.py
+      FILES: __init__.py, __init__.py, __init__.py
+  [4] extract_function   saved=15L  → examples/rest-api/utils/example_dsl_sprint.py
+      FILES: 04_dsl_usage.py
+  [5] extract_function   saved=14L  → planfile/sync/utils/map_priority.py
       FILES: base.py, jira.py
-  [4] extract_function   saved=12L  → planfile/cli/core/utils/print_success.py
+  [6] extract_function   saved=12L  → planfile/cli/core/utils/print_success.py
       FILES: console.py
-  [5] extract_function   saved=12L  → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
+  [7] extract_function   saved=12L  → planfile/cli/groups/utils/register_apply_commands.py
+      FILES: __init__.py, __init__.py, __init__.py +2
+  [8] extract_function   saved=12L  → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
       FILES: core.py
-  [6] extract_function   saved=9L  → planfile/cli/groups/ticket/utils/ticket_done.py
+  [9] extract_function   saved=9L  → planfile/cli/groups/ticket/utils/ticket_done.py
       FILES: commands.py
-  [7] extract_function   saved=9L  → planfile/cli/project_detector/utils/_detect_docker_gates.py
+  [10] extract_function   saved=9L  → planfile/cli/project_detector/utils/_detect_docker_gates.py
       FILES: gates.py
-  [8] extract_function   saved=8L  → planfile/cli/groups/utils/register_auto_commands.py
-      FILES: __init__.py, __init__.py
-  [9] extract_function   saved=7L  → planfile/cli/project_detector/utils/_has_mypy_config.py
-      FILES: gates.py
-  [10] extract_function   saved=7L  → planfile/importers/utils/import_json.py
-      FILES: json_importer.py, yaml_importer.py
 
-DEPENDENCY_RISK[1] (duplicates spanning multiple packages):
-  __init__  packages=2  files=2
-      examples/PROPOSED_API_IMPROVEMENTS.py
-      planfile/extensions/__init__.py
-
-EFFORT_ESTIMATE (total ≈ 4.2h):
+EFFORT_ESTIMATE (total ≈ 5.7h):
+  medium example_dsl_command                 saved=22L  ~44min
   medium github_cmd                          saved=21L  ~42min
-  medium register_apply_commands             saved=15L  ~30min
+  medium register_auto_commands              saved=16L  ~32min
+  medium example_dsl_sprint                  saved=15L  ~30min
   easy   map_priority                        saved=14L  ~28min
   easy   print_success                       saved=12L  ~24min
+  easy   register_apply_commands             saved=12L  ~24min
   easy   _collect_tickets_from_sprint        saved=12L  ~24min
   easy   ticket_done                         saved=9L  ~18min
   easy   _detect_docker_gates                saved=9L  ~18min
-  easy   register_auto_commands              saved=8L  ~16min
-  easy   _has_mypy_config                    saved=7L  ~14min
-  easy   import_json                         saved=7L  ~14min
-  ... +2 more (~24min)
+  ... +5 more (~60min)
 
 METRICS-TARGET:
-  dup_groups:  12 → 0
-  saved_lines: 122 lines recoverable
+  dup_groups:  15 → 0
+  saved_lines: 172 lines recoverable
 ```
 
 ### Evolution / Churn (`project/evolution.toon.yaml`)
 
 ```toon markpact:analysis path=project/evolution.toon.yaml
-# code2llm/evolution | 830 func | 94f | 2026-04-25
+# code2llm/evolution | 1207 func | 103f | 2026-05-03
 
-NEXT[5] (ranked by impact):
-  [1] !  SPLIT-FUNC      _analyze_directory_structure  CC=20  fan=9
-      WHY: CC=20 exceeds 15
-      EFFORT: ~1h  IMPACT: 180
+NEXT[6] (ranked by impact):
+  [1] !! SPLIT           planfile/cli/groups/ticket/commands.py
+      WHY: 519L, 0 classes, max CC=21
+      EFFORT: ~4h  IMPACT: 10899
 
-  [2] !  SPLIT-FUNC      _find_readme_content  CC=16  fan=10
-      WHY: CC=16 exceeds 15
-      EFFORT: ~1h  IMPACT: 160
+  [2] !! SPLIT           planfile/testql_integration.py
+      WHY: 711L, 0 classes, max CC=15
+      EFFORT: ~4h  IMPACT: 10665
 
-  [3] !  SPLIT-FUNC      _infer_python_project_type  CC=17  fan=8
-      WHY: CC=17 exceeds 15
-      EFFORT: ~1h  IMPACT: 136
+  [3] !! SPLIT-FUNC      handle_tool_call  CC=27  fan=22
+      WHY: CC=27 exceeds 15
+      EFFORT: ~1h  IMPACT: 594
 
-  [4] !  SPLIT-FUNC      Strategy.get_stats  CC=15  fan=9
+  [4] !  SPLIT-FUNC      upsert_testql_tickets  CC=15  fan=20
       WHY: CC=15 exceeds 15
-      EFFORT: ~1h  IMPACT: 135
+      EFFORT: ~1h  IMPACT: 300
 
-  [5] !  SPLIT-FUNC      GitHubBackend._create_ticket  CC=15  fan=8
+  [5] !  SPLIT-FUNC      ticket_bulk_update  CC=21  fan=13
+      WHY: CC=21 exceeds 15
+      EFFORT: ~1h  IMPACT: 273
+
+  [6] !  SPLIT-FUNC      DSLParser._extract_modifiers  CC=15  fan=10
       WHY: CC=15 exceeds 15
-      EFFORT: ~1h  IMPACT: 120
+      EFFORT: ~1h  IMPACT: 150
 
 
-RISKS[0]: none
+RISKS[2]:
+  ⚠ Splitting planfile/testql_integration.py may break 35 import paths
+  ⚠ Splitting planfile/cli/groups/ticket/commands.py may break 23 import paths
 
 METRICS-TARGET:
   CC̄:          2.3 → ≤1.6
-  max-CC:      20 → ≤10
-  god-modules: 0 → 0
-  high-CC(≥15): 7 → ≤3
+  max-CC:      27 → ≤13
+  god-modules: 2 → 0
+  high-CC(≥15): 4 → ≤2
   hub-types:   0 → ≤0
 
 PATTERNS (language parser shared logic):
@@ -2666,7 +2929,7 @@ PATTERNS (language parser shared logic):
     - Standardized FunctionInfo/ClassInfo models
 
 HISTORY:
-  prev CC̄=3.8 → now CC̄=2.3
+  prev CC̄=2.4 → now CC̄=2.3
 ```
 
 ### Validation (`project/validation.toon.yaml`)

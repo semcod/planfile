@@ -510,4 +510,1304 @@ sprints:
   duration: 2 weeks
   objectives:
   - Fix code quality issues
-  task_patterns: []
+  task_patterns:
+  - id: ticket-c2fde1d9
+    name: Fix duplicate-imports issues
+    description: Resolve 3 duplicate-imports issues in planfile/analysis/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/__init__.py
+    rule_id: duplicate-imports
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-a3d599b0
+    name: Fix sorted-imports issues
+    description: Resolve 6 sorted-imports issues in planfile/__init__.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/__init__.py
+    rule_id: sorted-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-58960d82
+    name: Fix smart-return-type issues
+    description: Resolve 4 smart-return-type issues in planfile/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/__init__.py
+    rule_id: smart-return-type
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-499dcd75
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/__init__.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b8ac123d
+    name: Fix duplicate-imports issues
+    description: Resolve 9 duplicate-imports issues in planfile/__init__.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/__init__.py
+    rule_id: duplicate-imports
+    count: 9
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-77115806
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in planfile/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/__init__.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-fb9faa8d
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/analysis/file_analyzer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/analysis/file_analyzer.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5b6013d7
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/analysis/file_analyzer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/file_analyzer.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-11369df8
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in planfile/analysis/file_analyzer.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/file_analyzer.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-0643b0ac
+    name: Fix magic-numbers issues
+    description: Resolve 10 magic-numbers issues in planfile/analysis/external_tools.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/analysis/external_tools.py
+    rule_id: magic-numbers
+    count: 10
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-0f2241ce
+    name: Fix llm-generated-code issues
+    description: Resolve 1 llm-generated-code issues in planfile/analysis/external_tools.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/external_tools.py
+    rule_id: llm-generated-code
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-435049ed
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in planfile/analysis/generator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/generator.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-247dc79f
+    name: Fix magic-numbers issues
+    description: Resolve 3 magic-numbers issues in planfile/analysis/generators/strategy_builder.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/generators/strategy_builder.py
+    rule_id: magic-numbers
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-a299e4f0
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/analysis/parsers/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/analysis/parsers/__init__.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2588f063
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/analysis/parsers/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/parsers/__init__.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-89cb0c8a
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in planfile/analysis/parsers/text_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/parsers/text_parser.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-31e97a21
+    name: Fix magic-numbers issues
+    description: Resolve 7 magic-numbers issues in planfile/analysis/parsers/text_parser.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/analysis/parsers/text_parser.py
+    rule_id: magic-numbers
+    count: 7
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-81e690a1
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in planfile/analysis/parsers/toon_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/parsers/toon_parser.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-a6c3c7d5
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in planfile/analysis/parsers/toon_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/parsers/toon_parser.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e9ce6681
+    name: Fix magic-numbers issues
+    description: Resolve 3 magic-numbers issues in planfile/analysis/parsers/yaml_parser.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/parsers/yaml_parser.py
+    rule_id: magic-numbers
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-76fbb641
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in planfile/analysis/sprint_generator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/analysis/sprint_generator.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c9fc5dfe
+    name: Fix magic-numbers issues
+    description: Resolve 4 magic-numbers issues in planfile/analysis/sprint_generator.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/analysis/sprint_generator.py
+    rule_id: magic-numbers
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1d5db6c6
+    name: Fix ai-boilerplate issues
+    description: Resolve 1 ai-boilerplate issues in planfile/cli/__main__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/__main__.py
+    rule_id: ai-boilerplate
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-7925c4a3
+    name: Fix string-concat issues
+    description: Resolve 3 string-concat issues in planfile/ci.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/ci.py
+    rule_id: string-concat
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d6e6d90a
+    name: Fix magic-numbers issues
+    description: Resolve 2 magic-numbers issues in planfile/ci.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/ci.py
+    rule_id: magic-numbers
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-222286a8
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/cli/auto_loop.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/auto_loop.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-56a17b4b
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/cli/auto_loop.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/auto_loop.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1cd19983
+    name: Fix unused-imports issues
+    description: Resolve 8 unused-imports issues in planfile/cli/auto_loop.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/cli/auto_loop.py
+    rule_id: unused-imports
+    count: 8
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-6e55b295
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/cli/core/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/core/__init__.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ed4db60c
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/cli/core/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/core/__init__.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c9ea4bd6
+    name: Fix smart-return-type issues
+    description: Resolve 7 smart-return-type issues in planfile/api/server.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/api/server.py
+    rule_id: smart-return-type
+    count: 7
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1dd016af
+    name: Fix magic-numbers issues
+    description: Resolve 6 magic-numbers issues in planfile/api/server.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/api/server.py
+    rule_id: magic-numbers
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e0e73559
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in planfile/builder.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/builder.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-da35452a
+    name: Fix magic-numbers issues
+    description: Resolve 3 magic-numbers issues in planfile/builder.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/builder.py
+    rule_id: magic-numbers
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-aad6a1c3
+    name: Fix llm-generated-code issues
+    description: Resolve 6 llm-generated-code issues in planfile/builder.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/builder.py
+    rule_id: llm-generated-code
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ef2c99a5
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in planfile/cli/extra_commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/extra_commands.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ed42776e
+    name: Fix llm-hallucinations issues
+    description: Resolve 1 llm-hallucinations issues in planfile/cli/extra_commands.py
+    task_type: bugfix
+    priority: critical
+    estimate: 1d
+    files:
+    - planfile/cli/extra_commands.py
+    rule_id: llm-hallucinations
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-f19715ec
+    name: Fix llm-generated-code issues
+    description: Resolve 2 llm-generated-code issues in planfile/cli/core/registry.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/core/registry.py
+    rule_id: llm-generated-code
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8c79da0f
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in planfile/cli/groups/apply/commands.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/cli/groups/apply/commands.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-05e790d1
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/groups/apply/utils.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/apply/utils.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-dd0422a1
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/groups/auto/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/auto/commands.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-cbcafce8
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in planfile/cli/groups/auto/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/auto/commands.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-778db3c4
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/cli/groups/backlog/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/groups/backlog/commands.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-4408d5ba
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in planfile/cli/groups/backlog/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/backlog/commands.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-0cba269d
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/cli/groups/backlog/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/backlog/commands.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e90809aa
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in planfile/cli/groups/backlog/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/backlog/commands.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-6af68e7b
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/groups/generate/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/generate/commands.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-80dda13d
+    name: Fix duplicate-imports issues
+    description: Resolve 1 duplicate-imports issues in planfile/cli/groups/generate/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/generate/commands.py
+    rule_id: duplicate-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-dec21fab
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/cli/groups/init/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/groups/init/commands.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-6bf8e27f
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/cli/groups/init/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/init/commands.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-61aa351a
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in planfile/cli/groups/init/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/init/commands.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b63220b8
+    name: Fix magic-numbers issues
+    description: Resolve 3 magic-numbers issues in planfile/cli/groups/init/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/init/commands.py
+    rule_id: magic-numbers
+    count: 3
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b4e7e932
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/groups/review/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/review/commands.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-395289d1
+    name: Fix string-concat issues
+    description: Resolve 4 string-concat issues in planfile/cli/groups/query/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/groups/query/commands.py
+    rule_id: string-concat
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-26f09cab
+    name: Fix unused-imports issues
+    description: Resolve 6 unused-imports issues in planfile/cli/groups/query/commands.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/cli/groups/query/commands.py
+    rule_id: unused-imports
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-245e5770
+    name: Fix smart-return-type issues
+    description: Resolve 1 smart-return-type issues in planfile/cli/groups/review/utils.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/review/utils.py
+    rule_id: smart-return-type
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-92427171
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/cli/groups/sync/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/groups/sync/__init__.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-f3c1f13c
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/cli/groups/sync/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/sync/__init__.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-d5ed9dba
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/groups/sync/core.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/sync/core.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-4fee1e34
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/cli/groups/sync/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/groups/sync/commands.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8acce233
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/cli/groups/sync/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/sync/commands.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-8013258d
+    name: Fix unused-imports issues
+    description: Resolve 10 unused-imports issues in planfile/cli/groups/sync/commands.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/cli/groups/sync/commands.py
+    rule_id: unused-imports
+    count: 10
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ffdd7341
+    name: Fix duplicate-imports issues
+    description: Resolve 1 duplicate-imports issues in planfile/cli/groups/sync/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/sync/commands.py
+    rule_id: duplicate-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b7d976a6
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/cli/groups/validate/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/groups/validate/__init__.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-dd6b7dc7
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/cli/groups/validate/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/validate/__init__.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-42a4f6aa
+    name: Fix unused-imports issues
+    description: Resolve 4 unused-imports issues in planfile/cli/groups/validate/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/groups/validate/__init__.py
+    rule_id: unused-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5ec8ef63
+    name: Fix sorted-imports issues
+    description: Resolve 4 sorted-imports issues in planfile/cli/groups/ticket/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/groups/ticket/commands.py
+    rule_id: sorted-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-a60a2dae
+    name: Fix import-section-separators issues
+    description: Resolve 1 import-section-separators issues in planfile/cli/groups/ticket/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/ticket/commands.py
+    rule_id: import-section-separators
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1cc7763f
+    name: Fix unused-imports issues
+    description: Resolve 8 unused-imports issues in planfile/cli/groups/ticket/commands.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/cli/groups/ticket/commands.py
+    rule_id: unused-imports
+    count: 8
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-7c156c88
+    name: Fix duplicate-imports issues
+    description: Resolve 10 duplicate-imports issues in planfile/cli/groups/ticket/commands.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/cli/groups/ticket/commands.py
+    rule_id: duplicate-imports
+    count: 10
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-5b211a62
+    name: Fix relative-imports issues
+    description: Resolve 4 relative-imports issues in planfile/cli/project_detector/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/project_detector/__init__.py
+    rule_id: relative-imports
+    count: 4
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ef977421
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/__init__.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/__init__.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-1ecae3d9
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/base.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/base.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c08b31f2
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/groups/validate/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/validate/commands.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-36c5cc0f
+    name: Fix magic-numbers issues
+    description: Resolve 1 magic-numbers issues in planfile/cli/groups/validate/commands.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/groups/validate/commands.py
+    rule_id: magic-numbers
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-27b7e217
+    name: Fix relative-imports issues
+    description: Resolve 14 relative-imports issues in planfile/cli/project_detector/fallback.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - planfile/cli/project_detector/fallback.py
+    rule_id: relative-imports
+    count: 14
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-30e38c46
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in planfile/cli/project_detector/fallback.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/fallback.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-15a2073e
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/fallback.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/fallback.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e5c5b177
+    name: Fix relative-imports issues
+    description: Resolve 2 relative-imports issues in planfile/cli/project_detector/gates.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/gates.py
+    rule_id: relative-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-b978cb2d
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in planfile/cli/project_detector/gates.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/gates.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-c6a47ba4
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/gates.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/gates.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ef643685
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/git.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/git.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-3cb95755
+    name: Fix string-concat issues
+    description: Resolve 2 string-concat issues in planfile/cli/project_detector/inference.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/inference.py
+    rule_id: string-concat
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-0b3184c7
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/inference.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/inference.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-73b9087a
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/license.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/license.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-597fa693
+    name: Fix magic-numbers issues
+    description: Resolve 5 magic-numbers issues in planfile/cli/project_detector/license.py
+    task_type: prefactor
+    priority: medium
+    estimate: 2d
+    files:
+    - planfile/cli/project_detector/license.py
+    rule_id: magic-numbers
+    count: 5
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-18b357db
+    name: Fix relative-imports issues
+    description: Resolve 8 relative-imports issues in planfile/cli/project_detector/main.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/cli/project_detector/main.py
+    rule_id: relative-imports
+    count: 8
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-a3a32b96
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/main.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/main.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-037bd51b
+    name: Fix llm-generated-code issues
+    description: Resolve 2 llm-generated-code issues in planfile/cli/project_detector/main.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/main.py
+    rule_id: llm-generated-code
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-ff7f8eb7
+    name: Fix sorted-imports issues
+    description: Resolve 2 sorted-imports issues in planfile/cli/project_detector/model_tier.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/model_tier.py
+    rule_id: sorted-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-65a7b0ca
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/model_tier.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/model_tier.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2a1035ef
+    name: Fix relative-imports issues
+    description: Resolve 16 relative-imports issues in planfile/cli/project_detector/package.py
+    task_type: prefactor
+    priority: high
+    estimate: 3d
+    files:
+    - planfile/cli/project_detector/package.py
+    rule_id: relative-imports
+    count: 16
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-2a9b2d06
+    name: Fix sorted-imports issues
+    description: Resolve 2 sorted-imports issues in planfile/cli/project_detector/package.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/package.py
+    rule_id: sorted-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-281a09e5
+    name: Fix custom-import-organization issues
+    description: Resolve 1 custom-import-organization issues in planfile/cli/project_detector/package.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/package.py
+    rule_id: custom-import-organization
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-37efb683
+    name: Fix string-concat issues
+    description: Resolve 1 string-concat issues in planfile/cli/project_detector/package.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/package.py
+    rule_id: string-concat
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-428d4f9e
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/package.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/package.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-e88867b9
+    name: Fix relative-imports issues
+    description: Resolve 2 relative-imports issues in planfile/cli/project_detector/pyproject.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/pyproject.py
+    rule_id: relative-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-61b79902
+    name: Fix duplicate-imports issues
+    description: Resolve 1 duplicate-imports issues in planfile/cli/project_detector/pyproject.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/pyproject.py
+    rule_id: duplicate-imports
+    count: 1
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-843a36c1
+    name: Fix unused-imports issues
+    description: Resolve 2 unused-imports issues in planfile/cli/project_detector/readme.py
+    task_type: prefactor
+    priority: medium
+    estimate: 1d
+    files:
+    - planfile/cli/project_detector/readme.py
+    rule_id: unused-imports
+    count: 2
+    model_hints:
+      planning: balanced
+      implementation: balanced
+  - id: ticket-f06d9698
+    name: Fix magic-numbers issues
+    description: Resolve 6 magic-numbers issues in planfile/cli/project_detector/readme.py
+    task_type: prefactor
+    priority: high
+    estimate: 2d
+    files:
+    - planfile/cli/project_detector/readme.py
+    rule_id: magic-numbers
+    count: 6
+    model_hints:
+      planning: balanced
+      implementation: balanced

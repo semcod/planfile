@@ -746,6 +746,85 @@ class CustomQualityGate(QualityGate):
         pass
 ```
 
+### TestQL Ticket Generation & Sync Workflow
+
+Validate a TestQL scenario, generate tickets for failures, and sync them across integrations with deduplication.
+
+```yaml
+# planfile.yaml fragment after upsert
+schema: "1.0"
+sprints:
+  - id: sprint-1
+    name: "Quality Assurance"
+    duration: "2 weeks"
+    objectives:
+      - "Fix TestQL validation failures"
+    task_patterns:
+      - id: TQL-a1b2c3d4e5
+        name: "testql: smoke.testql.toon.yaml :: step 'health-check': status mismatch"
+        description: |
+          TestQL scenario failed: smoke.testql.toon.yaml
+
+          Failure #1:
+          step 'health-check': status mismatch
+
+          Runbook:
+          - Re-run: testql run smoke.testql.toon.yaml --output json
+          - Fix failing DSL expectation or implementation code.
+        task_type: fix
+        model_hints:
+          planning: balanced
+          implementation: balanced
+        priority: high
+        status: todo
+        file: ""
+
+tasks:
+  - id: TQL-a1b2c3d4e5
+    title: "testql: smoke.testql.toon.yaml :: step 'health-check': status mismatch"
+    description: "..."
+    action: fix
+    priority: 2
+    status: todo
+    labels:
+      - testql
+      - dsl-validation
+      - auto-generated
+    source: testql
+```
+
+#### Python script — end-to-end TestQL → planfile → integrations
+
+```python
+from pathlib import Path
+from planfile.testql_integration import (
+    run_testql_validation,
+    build_testql_tickets,
+    upsert_testql_tickets,
+    sync_testql_tickets,
+)
+
+scenario = Path("testql-scenarios/api-smoke.testql.toon.yaml")
+
+# 1. Validate
+report = run_testql_validation(scenario, dry_run=False)
+if report["ok"]:
+    print("All TestQL checks passed — no tickets needed.")
+    return
+
+# 2. Generate tickets from failures
+tickets = build_testql_tickets(report, scenario_path=scenario, max_tickets=10)
+
+# 3. Upsert into planfile.yaml (deduplicated by identity keys)
+upsert = upsert_testql_tickets("planfile.yaml", tickets)
+print(f"Upsert: created={upsert['created']} skipped={upsert['skipped']}")
+
+# 4. Sync to markdown TODO.md and configured backends (GitHub, Jira, GitLab)
+sync = sync_testql_tickets(tickets, include_configured=True)
+for rec in sync["integrations"]:
+    print(f"  {rec['integration']}: created={rec['created']} updated={rec['updated']} failed={rec['failed']}")
+```
+
 ---
 
 **Planfile Examples** - Real-world templates and configurations for every use case. 🚀

@@ -1,51 +1,53 @@
-# planfile | 983 func | 124f | 380733L | python | 2026-04-25
+# planfile | 1375 func | 136f | 402253L | python | 2026-05-03
 
 HEALTH:
-  CC̄=2.2  critical=39 (limit:10)  dup=6  cycles=0
+  CC̄=2.2  critical=47 (limit:10)  dup=4  cycles=0
 
 ALERTS[20]:
+  !!! cc_exceeded      handle_tool_call = 27 (limit:15)
   !!! high_fan_out     create_examples_app = 23 (limit:10)
   !!! high_fan_out     analyze_project_metrics = 22 (limit:10)
+  !!! high_fan_out     sync_todo_checkboxes_from_planfile = 22 (limit:10)
+  !!! high_fan_out     handle_tool_call = 22 (limit:10)
   !!! high_fan_out     review_strategy_cli = 21 (limit:10)
-  !!! high_fan_out     analyze_text = 20 (limit:10)
   !!! high_fan_out     example_metric_driven_planning = 20 (limit:10)
+  !!! high_fan_out     upsert_testql_tickets = 20 (limit:10)
+  !!! high_fan_out     analyze_text = 20 (limit:10)
   !!! high_fan_out     auto_loop_cmd = 20 (limit:10)
-  !!  cc_exceeded      _analyze_directory_structure = 20 (limit:15)
-  !!  high_fan_out     _detect_from_package_json = 18 (limit:10)
-  !!  high_fan_out     BASE_URL = 17 (limit:10)
-  !!  high_fan_out     Strategy.merge = 17 (limit:10)
 
-MODULES[278] (top by size):
+MODULES[293] (top by size):
   M[analyses/test-integrated.yaml] 289300L C:0 F:0 CC↑0 D:0 (yaml)
+  M[project/calls.yaml] 5656L C:0 F:0 CC↑0 D:0 (yaml)
   M[examples/advanced-usage/ci-strategy.yaml] 3100L C:0 F:0 CC↑0 D:0 (yaml)
   M[analyses/final-planfile.yaml] 1840L C:0 F:0 CC↑0 D:0 (yaml)
   M[analyses/integrated-planfile.yaml] 1668L C:0 F:0 CC↑0 D:0 (yaml)
   M[analyses/enhanced-analysis.yaml] 1311L C:0 F:0 CC↑0 D:0 (yaml)
   M[.planfile/sprints/current.yaml] 1226L C:0 F:0 CC↑0 D:0 (yaml)
+  M[project/map.toon.yaml] 1216L C:0 F:526 CC↑0 D:2 (yaml)
   M[examples/advanced-usage/final-strategy.yaml] 1197L C:0 F:0 CC↑0 D:0 (yaml)
-  M[project/map.toon.yaml] 927L C:0 F:341 CC↑0 D:2 (yaml)
+  M[planfile/testql_integration.py] 711L C:0 F:35 CC↑15 D:1 (python)
+  M[project/calls.toon.yaml] 547L C:0 F:0 CC↑0 D:0 (yaml)
+  M[planfile/cli/groups/ticket/commands.py] 519L C:0 F:23 CC↑21 D:0 (python)
   M[goal.yaml] 513L C:0 F:0 CC↑0 D:0 (yaml)
   M[examples/ecosystem/04_llx_integration.py] 503L C:2 F:9 CC↑12 D:1 (python)
-  M[config/goal.yaml] 429L C:0 F:0 CC↑0 D:0 (yaml)
-  M[planfile/runner.py] 418L C:0 F:7 CC↑14 D:4 (python)
-  M[Taskfile.yml] 383L C:0 F:1 CC↑0 D:20 (yml)
-  M[examples/ecosystem/02_mcp_integration.py] 381L C:0 F:6 CC↑9 D:0 (python)
-  M[examples/ecosystem/03_proxy_routing.py] 368L C:1 F:7 CC↑8 D:0 (python)
-  LANGS: python:136/yaml:88/shell:39/json:7/other:2/yml:2/txt:2/javascript:1/toml:1
+  M[planfile/ci.py] 472L C:3 F:13 CC↑13 D:0 (python)
+  LANGS: python:149/yaml:88/shell:39/json:9/other:2/yml:2/txt:2/javascript:1/toml:1
 
 HOTSPOTS[10]:
   ★ create_examples_app fan=23  // Create and return the examples sub-app.
   ★ analyze_project_metrics fan=22  // Analysis pipeline, 22 stages
+  ★ sync_todo_checkboxes_from_planfile fan=22  // Sync TODO.md checkboxes from planfile status and execution results.
+
+Sync is con
+  ★ handle_tool_call fan=22  // Dispatch an MCP tool call and return the result dict.
   ★ review_strategy_cli fan=21  // Review strategy execution and progress.
-  ★ analyze_text fan=20  // Analysis pipeline, 20 stages
-  ★ example_metric_driven_planning fan=20  // Example: Generate strategy based on actual project metrics.
 
 REFACTOR[15]:
-  [1] H/H Split god module examples/ecosystem/04_llx_integration.py (503L, 2 classes)
-  [2] H/H Split god module .planfile/sprints/current.yaml (1226L, 0 classes)
-  [3] H/H Split god module analyses/enhanced-analysis.yaml (1311L, 0 classes)
-  [4] H/H Split god module analyses/final-planfile.yaml (1840L, 0 classes)
-  [5] H/H Split god module analyses/integrated-planfile.yaml (1668L, 0 classes)
+  [1] H/L Split handle_tool_call (CC=27)
+  [2] H/H Split god module planfile/cli/groups/ticket/commands.py (519L, 0 classes)
+  [3] H/H Split god module planfile/testql_integration.py (711L, 0 classes)
+  [4] H/H Split god module examples/ecosystem/04_llx_integration.py (503L, 2 classes)
+  [5] H/H Split god module .planfile/sprints/current.yaml (1226L, 0 classes)
 
 EVOLUTION:
-  2026-04-25 CC̄=2.2 crit=39 380733L // Automated analysis
+  2026-05-03 CC̄=2.2 crit=47 402253L // Automated analysis

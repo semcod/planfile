@@ -95,6 +95,61 @@ def create_backlog_table(items):
         )
     return table
 
+def _collect_backlog_to_delete(
+    backlog: list, files: list[str] | None, rule_id: str | None
+) -> list[tuple[str, int, dict]]:
+    to_delete = []
+    for i, item in enumerate(backlog):
+        if files and _matches_files(item, files):
+            to_delete.append(('backlog', i, item))
+        elif rule_id and item.get('rule_id') == rule_id:
+            to_delete.append(('backlog', i, item))
+    return to_delete
+
+
+def _collect_targets_to_delete(
+    data: dict, files: list[str] | None
+) -> list[tuple[str, dict]]:
+    targets_to_delete = []
+    for phase_name, phase_data in data.get('targets', {}).items():
+        if isinstance(phase_data, dict) and _matches_files(phase_data, files):
+            targets_to_delete.append((phase_name, phase_data))
+    return targets_to_delete
+
+
+def _print_deletion_preview(
+    to_delete: list, targets_to_delete: list
+) -> None:
+    if to_delete:
+        console.print(f'[bold]Backlog items to delete:[/bold] ({len(to_delete)} total)')
+        for _section, _idx, item in to_delete:
+            console.print(f'  - {item.get("id", "")}: {item.get("name", "")}')
+    if targets_to_delete:
+        console.print(f'[bold]Targets entries to delete:[/bold] ({len(targets_to_delete)} total)')
+        for phase_name, _phase_data in targets_to_delete:
+            console.print(f'  - targets.{phase_name}')
+
+
+def _execute_backlog_deletion(data: dict, to_delete: list) -> None:
+    backlog = data.get('backlog', [])
+    for _section, idx, _ in sorted(to_delete, key=lambda x: x[1], reverse=True):
+        del backlog[idx]
+    data['backlog'] = backlog
+
+
+_TARGET_FIELDS_TO_STRIP = ('files', 'rule_id', 'count', 'model_hints', 'task_type', 'priority', 'estimate')
+
+
+def _execute_targets_deletion(data: dict, targets_to_delete: list) -> None:
+    targets_section = data.get('targets', {})
+    for phase_name, _ in targets_to_delete:
+        if phase_name not in targets_section:
+            continue
+        for field in _TARGET_FIELDS_TO_STRIP:
+            targets_section[phase_name].pop(field, None)
+    data['targets'] = targets_section
+
+
 def backlog_delete(
     files: list[str] = typer.Option(None, '--files', help='Delete backlog items matching file glob pattern(s)'),
     rule_id: str = typer.Option(None, '--rule-id', help='Delete backlog items with this rule ID'),
@@ -105,86 +160,35 @@ def backlog_delete(
     """Delete backlog items from planfile.yaml by filters (files, rule_id)."""
     data = _load_planfile_yaml()
     backlog = data.get('backlog', [])
-    
+
     if not backlog and not targets:
         console.print('[yellow]⚠[/yellow] No backlog items found.')
         raise typer.Exit(0)
-    
-    # Apply filters to backlog
-    to_delete = []
-    for i, item in enumerate(backlog):
-        should_delete = False
-        if files and _matches_files(item, files):
-            should_delete = True
-        if rule_id and item.get('rule_id') == rule_id:
-            should_delete = True
-        
-        if should_delete:
-            to_delete.append(('backlog', i, item))
-    
-    # Apply filters to targets section
-    targets_to_delete = []
-    if targets:
-        targets_section = data.get('targets', {})
-        for phase_name, phase_data in targets_section.items():
-            if isinstance(phase_data, dict) and _matches_files(phase_data, files):
-                targets_to_delete.append((phase_name, phase_data))
-    
+
+    to_delete = _collect_backlog_to_delete(backlog, files, rule_id)
+    targets_to_delete = _collect_targets_to_delete(data, files) if targets else []
+
     if not to_delete and not targets_to_delete:
         console.print('[yellow]⚠[/yellow] No items match the specified criteria.')
         raise typer.Exit(0)
-    
-    # Show what will be deleted
-    if to_delete:
-        console.print(f'[bold]Backlog items to delete:[/bold] ({len(to_delete)} total)')
-        for section, idx, item in to_delete:
-            console.print(f'  - {item.get("id", "")}: {item.get("name", "")}')
-    
-    if targets_to_delete:
-        console.print(f'[bold]Targets entries to delete:[/bold] ({len(targets_to_delete)} total)')
-        for phase_name, phase_data in targets_to_delete:
-            console.print(f'  - targets.{phase_name}')
-    
+
+    _print_deletion_preview(to_delete, targets_to_delete)
+
     if dry_run:
         console.print('[cyan]--dry-run[/cyan]: No items were deleted.')
         raise typer.Exit(0)
-    
-    # Confirm deletion
+
     if not force:
         total_items = len(to_delete) + len(targets_to_delete)
         confirm = typer.confirm(f'Delete {total_items} item(s)?')
         if not confirm:
             console.print('[dim]Cancelled.[/dim]')
             raise typer.Exit(0)
-    
-    # Execute backlog deletion (in reverse order to maintain indices)
+
     if to_delete:
-        for section, idx, _ in sorted(to_delete, key=lambda x: x[1], reverse=True):
-            del backlog[idx]
-        data['backlog'] = backlog
-    
-    # Execute targets deletion
+        _execute_backlog_deletion(data, to_delete)
     if targets_to_delete:
-        targets_section = data.get('targets', {})
-        for phase_name, _ in targets_to_delete:
-            if phase_name in targets_section:
-                # Remove files, rule_id, count, model_hints from the target
-                del targets_section[phase_name]['files']
-                if 'rule_id' in targets_section[phase_name]:
-                    del targets_section[phase_name]['rule_id']
-                if 'count' in targets_section[phase_name]:
-                    del targets_section[phase_name]['count']
-                if 'model_hints' in targets_section[phase_name]:
-                    del targets_section[phase_name]['model_hints']
-                if 'task_type' in targets_section[phase_name]:
-                    del targets_section[phase_name]['task_type']
-                if 'priority' in targets_section[phase_name]:
-                    del targets_section[phase_name]['priority']
-                if 'estimate' in targets_section[phase_name]:
-                    del targets_section[phase_name]['estimate']
-        data['targets'] = targets_section
-    
+        _execute_targets_deletion(data, targets_to_delete)
+
     _save_planfile_yaml(data)
-    
-    deleted_count = len(to_delete) + len(targets_to_delete)
-    console.print(f'[green]✓[/green] Deleted {deleted_count} item(s)')
+    console.print(f'[green]✓[/green] Deleted {len(to_delete) + len(targets_to_delete)} item(s)')

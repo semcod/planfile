@@ -34,13 +34,13 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.86-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-33.8h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.87-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-38.3h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $7.5000 (88 commits)
-- 👤 **Human dev:** ~$3378 (33.8h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $7.5000 (96 commits)
+- 👤 **Human dev:** ~$3835 (38.3h @ $100/h, 30min dedup)
 
-Generated on 2026-04-26 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-05-03 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
@@ -72,6 +72,7 @@ Generated on 2026-04-26 using [openrouter/qwen/qwen3-coder-next](https://openrou
 - 🤖 **LLX Integration**: Advanced code analysis and model selection
 - 🌉 **Proxy Routing**: Smart model routing via Proxym API
 - 📈 **Metrics-Driven**: Project metrics analysis for informed planning
+- 🗣️ **DSL (Domain Specific Language)**: Natural language-like commands for planfile operations
 
 # Basic installation
 pip install planfile
@@ -321,6 +322,104 @@ integrations:
     todo_file: TODO.md
 ```
 
+### 7. DSL (Domain Specific Language)
+
+Planfile includes a natural language-like DSL for quick operations:
+
+```bash
+# CLI DSL - single command
+planfile dsl "list tickets sprint=current status=open"
+planfile dsl 'create ticket "Fix login bug" priority=high'
+planfile dsl "update ticket PLF-001 status=done"
+planfile dsl "move ticket PLF-001 to sprint=2"
+planfile dsl "done ticket PLF-001"
+planfile dsl "validate"
+planfile dsl "sync github"
+
+# CLI DSL - interactive shell
+planfile dsl
+# Then type commands like:
+# > list tickets sprint=current
+# > create ticket "New task" priority=high
+# > exit
+
+# Format options
+planfile dsl "list tickets" --format json
+planfile dsl "list tickets" --format yaml
+```
+
+**Python API DSL:**
+
+```python
+from planfile import DSLExecutor
+
+executor = DSLExecutor(project_path=".")
+result = executor.run("list tickets sprint=current")
+print(result.ok, result.data)
+
+# Parser only
+from planfile import DSLParser
+parser = DSLParser()
+cmd = parser.parse('create ticket "Fix bug" priority=high')
+print(cmd.verb, cmd.target, cmd.params)
+```
+
+**REST API DSL:**
+
+```bash
+# Start server
+uvicorn planfile.api.server:app --reload
+
+# Execute DSL via HTTP
+curl -X POST "http://localhost:8000/dsl" \
+  -H "Content-Type: application/json" \
+  -d '{"command": "list tickets", "project_path": "."}'
+
+# WebSocket DSL
+ws://localhost:8000/ws?project_path=.
+```
+
+**MCP DSL Tool:**
+
+```bash
+# Start MCP server
+python -m planfile.mcp.server
+
+# MCP tool call (JSON-RPC)
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "planfile_dsl",
+    "arguments": {
+      "command": "list tickets sprint=current",
+      "project_path": "."
+    }
+  }
+}
+```
+
+**Supported DSL Commands:**
+- `list tickets` — list with filters (sprint, status, priority, label)
+- `create ticket` — create with name, priority, sprint, labels
+- `show ticket` — show ticket by ID
+- `update ticket` — update status, priority, name, labels
+- `move ticket` — move to another sprint
+- `done ticket` — mark as done
+- `start ticket` — mark as in_progress
+- `block ticket` — mark as blocked
+- `delete ticket` — delete ticket
+- `list sprints` — list all sprints
+- `add sprint` — add new sprint
+- `validate` — validate tickets
+- `sync` — sync to integrations (github, jira, gitlab, all)
+- `query` — query tickets with where clause
+- `export` — export to formats (json, yaml, html)
+- `help` — show command reference
+
+**Aliases:** add/new → create, ls → list, get/show → show, set/edit/patch → update, mv → move, finish/complete → done, begin → start
+
 # Run CI loop with strategy
 make ci-loop STRATEGY=strategy.yaml BACKENDS=github MAX_ITERATIONS=5
 
@@ -471,11 +570,15 @@ planfile examples run --all
 
 - **[checkbox-tickets](examples/checkbox-tickets/)** - Native markdown checkbox support (`- [ ]` / `- [x]`)
 - **[code2llm](examples/code2llm/)** - Code analysis with LLM integration
-- **[bash-generation](examples/bash-generation/)** - Generate bash scripts from strategies  
+- **[bash-generation](examples/bash-generation/)** - Generate bash scripts from strategies
 - **[cli-commands](examples/cli-commands/)** - CLI usage patterns
 - **[advanced-usage](examples/advanced-usage/)** - CI/CD integration examples
 - **[interactive-tests](examples/interactive-tests/)** - Interactive mode demonstrations
 - **[ecosystem](examples/ecosystem/)** - MCP, LLX, and proxy routing integrations
+- **[cli](examples/cli/)** - DSL command-line interface examples
+- **[mcp](examples/mcp/)** - MCP DSL tool integration
+- **[python-api](examples/python-api/)** - Python API DSL usage
+- **[rest-api](examples/rest-api/)** - REST API and WebSocket DSL
 
 # examples/quick-start.yaml
 name: "Quick Start Demo"

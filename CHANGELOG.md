@@ -1,5 +1,109 @@
 # Changelog
 
+## [0.1.10] - 2026-05-03
+
+### Fixed
+- Fix duplicate-imports issues (ticket-c2fde1d9)
+- Fix sorted-imports issues (ticket-a3d599b0)
+- Fix smart-return-type issues (ticket-58960d82)
+- Fix import-section-separators issues (ticket-499dcd75)
+- Fix duplicate-imports issues (ticket-b8ac123d)
+- Fix magic-numbers issues (ticket-77115806)
+- Fix sorted-imports issues (ticket-fb9faa8d)
+- Fix import-section-separators issues (ticket-5b6013d7)
+- Fix string-concat issues (ticket-11369df8)
+- Fix magic-numbers issues (ticket-0643b0ac)
+- Fix llm-generated-code issues (ticket-0f2241ce)
+- Fix magic-numbers issues (ticket-435049ed)
+- Fix magic-numbers issues (ticket-247dc79f)
+- Fix sorted-imports issues (ticket-a299e4f0)
+- Fix import-section-separators issues (ticket-2588f063)
+- Fix string-concat issues (ticket-89cb0c8a)
+- Fix magic-numbers issues (ticket-31e97a21)
+- Fix string-concat issues (ticket-81e690a1)
+- Fix magic-numbers issues (ticket-a6c3c7d5)
+- Fix magic-numbers issues (ticket-e9ce6681)
+- Fix string-concat issues (ticket-76fbb641)
+- Fix magic-numbers issues (ticket-c9fc5dfe)
+- Fix ai-boilerplate issues (ticket-1d5db6c6)
+- Fix string-concat issues (ticket-7925c4a3)
+- Fix magic-numbers issues (ticket-d6e6d90a)
+- Fix sorted-imports issues (ticket-222286a8)
+- Fix import-section-separators issues (ticket-56a17b4b)
+- Fix unused-imports issues (ticket-1cd19983)
+- Fix sorted-imports issues (ticket-6e55b295)
+- Fix import-section-separators issues (ticket-ed4db60c)
+- Fix smart-return-type issues (ticket-c9ea4bd6)
+- Fix magic-numbers issues (ticket-1dd016af)
+- Fix string-concat issues (ticket-e0e73559)
+- Fix magic-numbers issues (ticket-da35452a)
+- Fix llm-generated-code issues (ticket-aad6a1c3)
+- Fix smart-return-type issues (ticket-ef2c99a5)
+- Fix llm-hallucinations issues (ticket-ed42776e)
+- Fix llm-generated-code issues (ticket-f19715ec)
+- Fix unused-imports issues (ticket-8c79da0f)
+- Fix unused-imports issues (ticket-05e790d1)
+- Fix unused-imports issues (ticket-dd0422a1)
+- Fix magic-numbers issues (ticket-cbcafce8)
+- Fix sorted-imports issues (ticket-778db3c4)
+- Fix smart-return-type issues (ticket-4408d5ba)
+- Fix import-section-separators issues (ticket-0cba269d)
+- Fix string-concat issues (ticket-e90809aa)
+- Fix unused-imports issues (ticket-6af68e7b)
+- Fix duplicate-imports issues (ticket-80dda13d)
+- Fix sorted-imports issues (ticket-dec21fab)
+- Fix import-section-separators issues (ticket-6bf8e27f)
+- Fix string-concat issues (ticket-61aa351a)
+- Fix magic-numbers issues (ticket-b63220b8)
+- Fix unused-imports issues (ticket-b4e7e932)
+- Fix string-concat issues (ticket-395289d1)
+- Fix unused-imports issues (ticket-26f09cab)
+- Fix smart-return-type issues (ticket-245e5770)
+- Fix sorted-imports issues (ticket-92427171)
+- Fix import-section-separators issues (ticket-f3c1f13c)
+- Fix unused-imports issues (ticket-d5ed9dba)
+- Fix sorted-imports issues (ticket-4fee1e34)
+- Fix import-section-separators issues (ticket-8acce233)
+- Fix unused-imports issues (ticket-8013258d)
+- Fix duplicate-imports issues (ticket-ffdd7341)
+- Fix sorted-imports issues (ticket-b7d976a6)
+- Fix import-section-separators issues (ticket-dd6b7dc7)
+- Fix unused-imports issues (ticket-42a4f6aa)
+- Fix sorted-imports issues (ticket-5ec8ef63)
+- Fix import-section-separators issues (ticket-a60a2dae)
+- Fix unused-imports issues (ticket-1cc7763f)
+- Fix duplicate-imports issues (ticket-7c156c88)
+- Fix relative-imports issues (ticket-5b211a62)
+- Fix unused-imports issues (ticket-ef977421)
+- Fix unused-imports issues (ticket-1ecae3d9)
+- Fix unused-imports issues (ticket-c08b31f2)
+- Fix magic-numbers issues (ticket-36c5cc0f)
+- Fix relative-imports issues (ticket-27b7e217)
+- Fix string-concat issues (ticket-30e38c46)
+- Fix unused-imports issues (ticket-15a2073e)
+- Fix relative-imports issues (ticket-e5c5b177)
+- Fix string-concat issues (ticket-b978cb2d)
+- Fix unused-imports issues (ticket-c6a47ba4)
+- Fix unused-imports issues (ticket-ef643685)
+- Fix string-concat issues (ticket-3cb95755)
+- Fix unused-imports issues (ticket-0b3184c7)
+- Fix unused-imports issues (ticket-73b9087a)
+- Fix magic-numbers issues (ticket-597fa693)
+- Fix relative-imports issues (ticket-18b357db)
+- Fix unused-imports issues (ticket-a3a32b96)
+- Fix llm-generated-code issues (ticket-037bd51b)
+- Fix sorted-imports issues (ticket-ff7f8eb7)
+- Fix unused-imports issues (ticket-65a7b0ca)
+- Fix relative-imports issues (ticket-2a1035ef)
+- Fix sorted-imports issues (ticket-2a9b2d06)
+- Fix custom-import-organization issues (ticket-281a09e5)
+- Fix string-concat issues (ticket-37efb683)
+- Fix unused-imports issues (ticket-428d4f9e)
+- Fix relative-imports issues (ticket-e88867b9)
+- Fix duplicate-imports issues (ticket-61b79902)
+- Fix unused-imports issues (ticket-843a36c1)
+- Fix magic-numbers issues (ticket-f06d9698)
+
 ## [Unreleased]
 
 
@@ -28,6 +132,37 @@
 - feat: added configuration management tests
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
+
+## [0.1.87] - 2026-05-03
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+- Update SUMD.md
+- Update SUMR.md
+- Update TODO.md
+- Update docs/API.md
+- Update docs/EXAMPLES.md
+- Update examples/README.md
+- Update examples/cli/README.md
+- Update examples/mcp/README.md
+- ... and 4 more files
+
+### Test
+- Update tests/test_dsl.py
+
+### Other
+- Update app.doql.less
+- Update examples/cli/01_dsl_usage.py
+- Update examples/mcp/01_dsl_tool.py
+- Update examples/python-api/05_dsl_usage.py
+- Update examples/rest-api/04_dsl_usage.py
+- Update examples/rest-api/06_websocket.py
+- Update planfile.yaml
+- Update planfile/__init__.py
+- Update planfile/api/server.py
+- Update planfile/cli/commands.py
+- ... and 29 more files
 
 ## [0.1.86] - 2026-04-26
 

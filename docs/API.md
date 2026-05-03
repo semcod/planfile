@@ -560,23 +560,73 @@ github_priority = map_priority_to_system(
 color = get_priority_color(priority)
 ```
 
+#### TestQL Integration
+```python
+from planfile.testql_integration import (
+    run_testql_validation,
+    build_testql_tickets,
+    upsert_testql_tickets,
+    sync_testql_tickets,
+)
+
+# Run TestQL DSL validation against a scenario file
+validation = run_testql_validation(
+    scenario_path="scenarios/smoke.testql.toon.yaml",
+    project_path=".",
+    url="http://localhost:8101",
+    dry_run=False,
+    quiet=True,
+    testql_bin="testql",
+    testql_repo_path="/home/tom/github/oqlos/testql",
+)
+print(f"TestQL ok={validation['ok']} passed={validation['passed']} failed={validation['failed']}")
+
+# Build planfile task entries from a failed TestQL report
+if not validation["ok"]:
+    tickets = build_testql_tickets(
+        validation,
+        scenario_path="scenarios/smoke.testql.toon.yaml",
+        max_tickets=25,
+    )
+    print(f"Generated {len(tickets)} tickets")
+
+# Upsert tickets into planfile.yaml with identity-aware deduplication
+# Tickets are matched by local_id, external_id, external_key, and external_url
+# across integrations (github, gitlab, jira, markdown) to avoid duplicates.
+report = upsert_testql_tickets(
+    strategy_path="planfile.yaml",
+    tickets=tickets,
+    project_path=".",
+)
+print(f"Created {report['created']} tickets, skipped {report['skipped']}")
+
+# Sync tickets to configured backends (markdown first, then integrations)
+sync_report = sync_testql_tickets(
+    tickets,
+    project_path=".",
+    include_configured=True,
+)
+for item in sync_report["integrations"]:
+    print(f"{item['integration']}: created={item['created']} updated={item['updated']} skipped={item['skipped']} failed={item['failed']}")
+```
+
 # GitHub
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+GITHUB_TOKEN=${GITHUB_TOKEN}
 GITHUB_REPO=owner/repo
 
 # Jira
 JIRA_URL=https://company.atlassian.net
 JIRA_EMAIL=user@company.com
-JIRA_TOKEN=ATATT3xFfGF0_xxxxxxxxxx
+JIRA_TOKEN=${JIRA_TOKEN}
 JIRA_PROJECT=PROJ
 
 # GitLab
-GITLAB_TOKEN=glpat-xxxxxxxxxxxxxxxxxxxx
+GITLAB_TOKEN=${GITLAB_TOKEN}
 GITLAB_PROJECT_ID=123
 
 # AI Services
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxx
-ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxx
+OPENAI_API_KEY=${OPENAI_API_KEY}
+ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
 ```
 
 # ~/.planfile/config.yaml

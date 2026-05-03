@@ -185,6 +185,77 @@ def _count_file_lines(abs_path: Path) -> int | None:
         return None
 
 
+def _validate_rule_anchor(
+    record: dict[str, Any],
+    rule_id: str,
+    files: list[str],
+    rule_file_index: set[tuple[str, str]],
+    scan_available: bool,
+) -> dict[str, Any]:
+    if not scan_available:
+        record["reason"] = "scan_unavailable"
+        return record
+    if any((rule_id, rel_path) in rule_file_index for rel_path in files):
+        record["status"] = "current"
+        record["reason"] = "rule_match_found"
+    else:
+        record["status"] = "stale"
+        record["reason"] = "rule_no_longer_detected"
+    return record
+
+
+def _resolve_existing_files(files: list[str], project_root: Path) -> list[tuple[str, int]]:
+    existing: list[tuple[str, int]] = []
+    for rel_path in files:
+        abs_path = (project_root / rel_path).resolve()
+        total_lines = _count_file_lines(abs_path)
+        if total_lines is not None:
+            existing.append((rel_path, total_lines))
+    return existing
+
+
+def _validate_line_anchor(
+    record: dict[str, Any],
+    files: list[str],
+    line: int,
+    project_root: Path,
+    file_line_index: set[tuple[str, int]],
+    scan_available: bool,
+) -> dict[str, Any]:
+    existing_files = _resolve_existing_files(files, project_root)
+
+    if not existing_files:
+        record["status"] = "stale"
+        record["reason"] = "files_missing"
+        return record
+
+    if all(line > total_lines for _, total_lines in existing_files):
+        record["status"] = "stale"
+        record["reason"] = "line_out_of_range"
+        return record
+
+    if scan_available and any((rel_path, line) in file_line_index for rel_path, _ in existing_files):
+        record["status"] = "current"
+        record["reason"] = "line_match_found"
+        return record
+
+    record["reason"] = "line_exists_but_not_confirmed"
+    return record
+
+
+def _validate_file_only(
+    record: dict[str, Any],
+    files: list[str],
+    project_root: Path,
+) -> dict[str, Any]:
+    if any((project_root / rel_path).exists() for rel_path in files):
+        record["reason"] = "file_exists_but_no_rule_or_line"
+    else:
+        record["status"] = "stale"
+        record["reason"] = "files_missing"
+    return record
+
+
 def _validate_ticket(
     ticket: dict[str, Any],
     entry_ref: str,
@@ -211,52 +282,13 @@ def _validate_ticket(
     }
 
     if rule_id and files:
-        if not scan_available:
-            record["reason"] = "scan_unavailable"
-            return record
-        if any((rule_id, rel_path) in rule_file_index for rel_path in files):
-            record["status"] = "current"
-            record["reason"] = "rule_match_found"
-        else:
-            record["status"] = "stale"
-            record["reason"] = "rule_no_longer_detected"
-        return record
+        return _validate_rule_anchor(record, rule_id, files, rule_file_index, scan_available)
 
     if files and line is not None:
-        existing_files: list[tuple[str, int]] = []
-        for rel_path in files:
-            abs_path = (project_root / rel_path).resolve()
-            total_lines = _count_file_lines(abs_path)
-            if total_lines is None:
-                continue
-            existing_files.append((rel_path, total_lines))
-
-        if not existing_files:
-            record["status"] = "stale"
-            record["reason"] = "files_missing"
-            return record
-
-        if all(line > total_lines for _, total_lines in existing_files):
-            record["status"] = "stale"
-            record["reason"] = "line_out_of_range"
-            return record
-
-        if scan_available and any((rel_path, line) in file_line_index for rel_path, _ in existing_files):
-            record["status"] = "current"
-            record["reason"] = "line_match_found"
-            return record
-
-        record["reason"] = "line_exists_but_not_confirmed"
-        return record
+        return _validate_line_anchor(record, files, line, project_root, file_line_index, scan_available)
 
     if files:
-        existing_any = any((project_root / rel_path).exists() for rel_path in files)
-        if not existing_any:
-            record["status"] = "stale"
-            record["reason"] = "files_missing"
-        else:
-            record["reason"] = "file_exists_but_no_rule_or_line"
-        return record
+        return _validate_file_only(record, files, project_root)
 
     return record
 

@@ -22,12 +22,12 @@ SDLC automation platform - strategic project management with CI/CD integration a
 ## Metadata
 
 - **name**: `planfile`
-- **version**: `0.1.62`
+- **version**: `0.1.86`
 - **python_requires**: `>=3.10`
-- **license**: Apache-2.0
+- **license**: {'text': 'Apache-2.0'}
 - **ai_model**: `openrouter/qwen/qwen3-coder-next`
 - **ecosystem**: SUMD + DOQL + testql + taskfile
-- **generated_from**: pyproject.toml, Taskfile.yml, Makefile, testql(2), app.doql.less, goal.yaml, Dockerfile, docker-compose.yml, src(8 mod), project/(2 analysis files)
+- **generated_from**: pyproject.toml, Taskfile.yml, Makefile, testql(2), app.doql.less, goal.yaml, Dockerfile, docker-compose.yml, src(11 mod), project/(2 analysis files)
 
 ## Architecture
 
@@ -42,7 +42,7 @@ SUMD (description) → DOQL/source (code) → taskfile (automation) → testql (
 
 app {
   name: planfile;
-  version: 0.1.62;
+  version: 0.1.86;
 }
 
 dependencies {
@@ -59,7 +59,7 @@ entity[name="TicketSource"] {
 
 entity[name="Ticket"] {
   id: string!;
-  title: string!;
+  name: string!;
   status: !;
   priority: string!;
   sprint: string!;
@@ -69,6 +69,8 @@ entity[name="Ticket"] {
   labels: list[str]!;
   blocked_by: list[str]!;
   blocks: list[str]!;
+  file: str | None;
+  files: list[str]!;
   integration: list[str] | None;
   llm_hints: ModelHints | None;
   sync: json!;
@@ -130,6 +132,7 @@ entity[name="Strategy"] {
   tasks: dict[str, Any]!;
   quality_gates: list[QualityGate]!;
   metadata: dict[str, Any]!;
+  task_types: dict[str, int]!;
 }
 
 database[name="postgres"] {
@@ -584,6 +587,9 @@ environment[name="local"] {
 - `planfile.models`
 - `planfile.runner`
 - `planfile.server_common`
+- `planfile.testql_integration`
+- `planfile.ticket_validation`
+- `planfile.todo_sync`
 
 ## Interfaces
 
@@ -1012,7 +1018,7 @@ tasks:
 ```yaml
 project:
   name: planfile
-  version: 0.1.62
+  version: 0.1.86
   env: local
 ```
 
@@ -1115,21 +1121,22 @@ pip install -e .[dev]
 ### `project/map.toon.yaml`
 
 ```toon markpact:analysis path=project/map.toon.yaml
-# planfile | 212f 27270L | python:160,shell:39,javascript:6,css:6,less:1 | 2026-04-25
-# stats: 338 func | 78 cls | 212 mod | CC̄=4.2 | critical:25 | cycles:0
-# alerts[5]: CC _analyze_directory_structure=20; CC _infer_python_project_type=17; CC _find_readme_content=16; CC demo_checkbox_tickets=15; CC get_detected_values=15
-# hotspots[5]: create_examples_app fan=23; review_strategy_cli fan=21; auto_loop_cmd fan=20; example_metric_driven_planning fan=18; analyze_text fan=17
+# planfile | 239f 33390L | python:187,shell:39,javascript:6,css:6,less:1 | 2026-05-03
+# stats: 545 func | 90 cls | 239 mod | CC̄=4.2 | critical:36 | cycles:0
+# alerts[5]: CC handle_tool_call=27; CC ticket_bulk_update=21; CC upsert_testql_tickets=15; CC validate_strategy_yaml=14; CC main=14
+# hotspots[5]: create_examples_app fan=23; sync_todo_checkboxes_from_planfile fan=22; review_strategy_cli fan=21; auto_loop_cmd fan=20; handle_tool_call fan=20
 # evolution: baseline
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[212]:
-  app.doql.less,535
-  examples/PROPOSED_API_IMPROVEMENTS.py,218
+M[239]:
+  app.doql.less,538
+  examples/PROPOSED_API_IMPROVEMENTS.py,169
   examples/advanced-usage/ci-workflow.sh,17
   examples/advanced-usage/run.sh,30
   examples/bash-generation/test_planfile_generation.sh,278
   examples/bash-generation/verify_planfile.sh,246
-  examples/checkbox-tickets/demo.py,110
+  examples/checkbox-tickets/demo.py,106
   examples/checkbox-tickets/run.sh,35
+  examples/cli/01_dsl_usage.py,76
   examples/cli-commands/run.sh,30
   examples/cli-commands/run_fixed.sh,36
   examples/code2llm/run.sh,110
@@ -1139,6 +1146,7 @@ M[212]:
   examples/ecosystem/02_mcp_integration.py,382
   examples/ecosystem/03_proxy_routing.py,369
   examples/ecosystem/04_llx_integration.py,504
+  examples/ecosystem/mcp-server-example.py,29
   examples/external-tools/run.sh,13
   examples/github/planfile-sync.sh,11
   examples/github/run.sh,93
@@ -1153,13 +1161,15 @@ M[212]:
   examples/jira/run.sh,93
   examples/llm-integration/run.sh,14
   examples/llx_validator.py,186
+  examples/mcp/01_dsl_tool.py,152
   examples/multi-ticket/run.sh,167
   examples/python-api/01_basic_usage.py,113
   examples/python-api/02_ticket_management.py,173
-  examples/python-api/03_integration.py,219
+  examples/python-api/03_integration.py,160
   examples/python-api/03_integration_simple.py,53
   examples/python-api/04_advanced_filtering.py,162
   examples/python-api/04_analytics_simple.py,60
+  examples/python-api/05_dsl_usage.py,110
   examples/python-api/run_all.sh,31
   examples/quick-start/run.sh,41
   examples/quick-start/run_fixed.sh,48
@@ -1168,8 +1178,10 @@ M[212]:
   examples/rest-api/01_start_server.sh,48
   examples/rest-api/02_curl_examples.sh,103
   examples/rest-api/03_python_client.py,251
+  examples/rest-api/04_dsl_usage.py,112
   examples/rest-api/04_javascript_client.js,153
   examples/rest-api/05_integration_test.py,185
+  examples/rest-api/06_websocket.py,118
   examples/rest-api/run_all.sh,50
   examples/run.sh,14
   examples/run_all_tests.sh,204
@@ -1182,8 +1194,7 @@ M[212]:
   htmlcov/coverage_html_cb_dd2e7eb5.js,736
   htmlcov/style_cb_6b508a39.css,378
   htmlcov/style_cb_9ff733b0.css,390
-  mcp-server-example.py,29
-  planfile/__init__.py,168
+  planfile/__init__.py,193
   planfile/analysis/__init__.py,33
   planfile/analysis/external_tools.py,269
   planfile/analysis/file_analyzer.py,128
@@ -1199,13 +1210,13 @@ M[212]:
   planfile/analysis/parsers/yaml_parser.py,124
   planfile/analysis/sprint_generator.py,207
   planfile/api/__init__.py,2
-  planfile/api/server.py,98
+  planfile/api/server.py,332
   planfile/builder.py,386
-  planfile/ci.py,316
+  planfile/ci.py,473
   planfile/cli/__init__.py,1
   planfile/cli/__main__.py,5
   planfile/cli/auto_loop.py,27
-  planfile/cli/commands.py,60
+  planfile/cli/commands.py,64
   planfile/cli/core/__init__.py,36
   planfile/cli/core/console.py,32
   planfile/cli/core/errors.py,25
@@ -1217,6 +1228,10 @@ M[212]:
   planfile/cli/groups/apply/utils.py,109
   planfile/cli/groups/auto/__init__.py,19
   planfile/cli/groups/auto/commands.py,236
+  planfile/cli/groups/backlog/__init__.py,19
+  planfile/cli/groups/backlog/commands.py,195
+  planfile/cli/groups/dsl/__init__.py,6
+  planfile/cli/groups/dsl/commands.py,129
   planfile/cli/groups/examples/__init__.py,12
   planfile/cli/groups/examples/commands.py,198
   planfile/cli/groups/generate/__init__.py,19
@@ -1230,36 +1245,40 @@ M[212]:
   planfile/cli/groups/review/__init__.py,12
   planfile/cli/groups/review/commands.py,101
   planfile/cli/groups/review/utils.py,87
-  planfile/cli/groups/sync/__init__.py,19
-  planfile/cli/groups/sync/commands.py,92
+  planfile/cli/groups/sync/__init__.py,20
+  planfile/cli/groups/sync/commands.py,175
   planfile/cli/groups/sync/core.py,257
   planfile/cli/groups/ticket/__init__.py,39
-  planfile/cli/groups/ticket/commands.py,168
-  planfile/cli/groups/validate/__init__.py,12
-  planfile/cli/groups/validate/commands.py,43
+  planfile/cli/groups/ticket/commands.py,519
+  planfile/cli/groups/validate/__init__.py,16
+  planfile/cli/groups/validate/commands.py,161
   planfile/cli/project_detector/__init__.py,24
   planfile/cli/project_detector/base.py,35
   planfile/cli/project_detector/fallback.py,67
   planfile/cli/project_detector/gates.py,171
   planfile/cli/project_detector/git.py,37
-  planfile/cli/project_detector/inference.py,88
+  planfile/cli/project_detector/inference.py,81
   planfile/cli/project_detector/license.py,31
-  planfile/cli/project_detector/main.py,89
+  planfile/cli/project_detector/main.py,101
   planfile/cli/project_detector/model_tier.py,61
   planfile/cli/project_detector/package.py,74
   planfile/cli/project_detector/pyproject.py,118
-  planfile/cli/project_detector/readme.py,72
-  planfile/cli/project_detector/structure.py,61
+  planfile/cli/project_detector/readme.py,67
+  planfile/cli/project_detector/structure.py,71
   planfile/cli/project_detector.py,20
   planfile/core/__init__.py,6
-  planfile/core/models/__init__.py,64
-  planfile/core/models/base.py,47
-  planfile/core/models/strategy.py,260
-  planfile/core/models/ticket.py,52
+  planfile/core/models/__init__.py,68
+  planfile/core/models/base.py,48
+  planfile/core/models/strategy.py,273
+  planfile/core/models/ticket.py,50
   planfile/core/models.py,8
-  planfile/core/store.py,12
+  planfile/core/schema.py,115
+  planfile/core/store.py,152
   planfile/core/store_files.py,32
-  planfile/core/store_tickets.py,55
+  planfile/core/store_tickets.py,87
+  planfile/dsl/__init__.py,22
+  planfile/dsl/executor.py,337
+  planfile/dsl/parser.py,206
   planfile/examples.py,140
   planfile/execution.py,6
   planfile/executor_standalone.py,339
@@ -1287,26 +1306,29 @@ M[212]:
   planfile/loaders/cli_loader.py,195
   planfile/loaders/yaml_loader.py,332
   planfile/mcp/__init__.py,2
-  planfile/mcp/server.py,210
+  planfile/mcp/server.py,322
   planfile/models.py,22
   planfile/runner.py,419
   planfile/server_common.py,15
   planfile/sync/__init__.py,26
   planfile/sync/base.py,237
   planfile/sync/generic.py,217
-  planfile/sync/github.py,241
-  planfile/sync/gitlab.py,234
-  planfile/sync/jira.py,281
+  planfile/sync/github.py,239
+  planfile/sync/gitlab.py,228
+  planfile/sync/jira.py,285
   planfile/sync/markdown_backend/__init__.py,5
-  planfile/sync/markdown_backend/backend.py,51
+  planfile/sync/markdown_backend/backend.py,125
   planfile/sync/markdown_backend/constants.py,6
   planfile/sync/markdown_backend/files.py,25
   planfile/sync/markdown_backend/tickets.py,111
   planfile/sync/markdown_backend.py,5
-  planfile/sync/mock.py,161
-  planfile/sync/operations.py,260
+  planfile/sync/mock.py,162
+  planfile/sync/operations.py,261
   planfile/sync/state.py,47
   planfile/sync/utils.py,12
+  planfile/testql_integration.py,712
+  planfile/ticket_validation.py,363
+  planfile/todo_sync.py,185
   planfile/utils/__init__.py,1
   planfile/utils/metrics.py,228
   planfile/utils/priorities.py,112
@@ -1327,21 +1349,36 @@ M[212]:
   tests/llm_adapters/constants.py,25
   tests/llm_adapters/models.py,14
   tests/llm_adapters.py,488
+  tests/test_backlog.py,38
   tests/test_chars.py,10
+  tests/test_ci_runner.py,144
+  tests/test_dsl.py,372
+  tests/test_e2e_backlog.py,235
+  tests/test_e2e_schema.py,167
+  tests/test_e2e_ticket_files.py,39
   tests/test_integration.py,8
   tests/test_regex.py,32
   tests/test_regex2.py,21
+  tests/test_schema.py,163
   tests/test_strategy.py,62
+  tests/test_testql_integration.py,282
+  tests/test_ticket_files.py,225
+  tests/test_ticket_validation.py,241
+  tests/test_todo_sync.py,107
   tree.sh,2
   web/app.doql.css,361
 D:
   examples/PROPOSED_API_IMPROVEMENTS.py:
-    e: TicketLogger,PlanfileStoreExtended
-    TicketLogger: __init__(2),error(3),metric_alert(3),catch_errors(1)  # Native ticket logging - replaces 80-line example.
+    e: PlanfileStoreExtended
     PlanfileStoreExtended: stats(0),export(2),search(2)  # Extended store with analytics and export.
   examples/checkbox-tickets/demo.py:
-    e: demo_checkbox_tickets
+    e: _build_summary_table,_print_sample_tickets,_print_search_results,_print_toggle_demo,demo_checkbox_tickets
+    _build_summary_table(completed;pending)
+    _print_sample_tickets(tickets;label;icon;style)
+    _print_search_results(tickets;query)
+    _print_toggle_demo(ticket)
     demo_checkbox_tickets()
+  examples/cli/01_dsl_usage.py:
   examples/ecosystem/02_mcp_integration.py:
     e: run_mcp_tool,simulate_planfile_generate,simulate_planfile_apply,simulate_planfile_review,example_mcp_session,create_mcp_tool_definitions
     run_mcp_tool(tool_name;arguments)
@@ -1363,6 +1400,12 @@ D:
     example_metric_driven_planning()
     _calculate_complexity_score(metrics)
     create_llx_config_example()
+  examples/ecosystem/mcp-server-example.py:
+    e: planfile_generate,planfile_apply,planfile_review,main
+    planfile_generate(arguments)
+    planfile_apply(arguments)
+    planfile_review(arguments)
+    main()
   examples/interactive-tests/test_interactive_mode.py:
     e: run_interactive_planfile,test_interactive_mode,test_expect_script,main
     run_interactive_planfile(inputs;cwd)
@@ -1373,6 +1416,7 @@ D:
     e: create_validation_script,LLXValidator
     LLXValidator: __init__(1),validate_strategy(1),analyze_generated_code(1),_is_llx_available(0),_parse_llx_analysis(1),_basic_code_analysis(1)  # Use LLX to validate generated code and strategies.
     create_validation_script()
+  examples/mcp/01_dsl_tool.py:
   examples/python-api/01_basic_usage.py:
     e: example_1_basic_initialization,example_2_create_ticket,example_3_quick_ticket,example_4_list_tickets,main
     example_1_basic_initialization()
@@ -1389,8 +1433,7 @@ D:
     example_delete_and_move(ticket_ids)
     main()
   examples/python-api/03_integration.py:
-    e: example_cli_tool_integration,example_monitoring_integration,example_ci_pipeline_integration,example_custom_decorator,main,TicketLogger
-    TicketLogger: __init__(1),error(3),warning(2),metric_alert(3)  # Logger that creates tickets for errors and warnings.
+    e: example_cli_tool_integration,example_monitoring_integration,example_ci_pipeline_integration,example_custom_decorator,main
     example_cli_tool_integration()
     example_monitoring_integration()
     example_ci_pipeline_integration()
@@ -1410,6 +1453,14 @@ D:
   examples/python-api/04_analytics_simple.py:
     e: main
     main()
+  examples/python-api/05_dsl_usage.py:
+    e: example_basic_dsl,example_parser_only,example_batch_operations,example_sprint_management,example_validation_sync,example_query_and_export
+    example_basic_dsl()
+    example_parser_only()
+    example_batch_operations()
+    example_sprint_management()
+    example_validation_sync()
+    example_query_and_export()
   examples/rest-api/03_python_client.py:
     e: example_basic_operations,example_bulk_operations,example_workflow,example_error_handling,main,PlanfileClient
     PlanfileClient: __init__(1),_request(2),health(0),list_tickets(3),create_ticket(5),get_ticket(1),update_ticket(1),move_ticket(2),delete_ticket(1)  # Python client for planfile REST API.
@@ -1418,10 +1469,27 @@ D:
     example_workflow(client;ticket_id)
     example_error_handling(client)
     main()
+  examples/rest-api/04_dsl_usage.py:
+    e: example_dsl_command,example_dsl_create_ticket,example_dsl_update_ticket,example_dsl_sprint,example_dsl_validate_sync,example_dsl_help,example_yaml_operations
+    example_dsl_command()
+    example_dsl_create_ticket()
+    example_dsl_update_ticket()
+    example_dsl_sprint()
+    example_dsl_validate_sync()
+    example_dsl_help()
+    example_yaml_operations()
   examples/rest-api/05_integration_test.py:
     e: run_tests,TestPlanfileAPI
     TestPlanfileAPI: server(0),client(1),test_health_endpoint(1),test_create_and_get_ticket(1),test_update_ticket(1),test_list_tickets_with_filters(1),test_move_ticket(1)  # Integration tests for planfile REST API.
     run_tests()
+  examples/rest-api/06_websocket.py:
+    e: example_websocket_basic,example_websocket_interactive,example_websocket_error_handling,example_websocket_raw_text,example_websocket_batch,main
+    example_websocket_basic()
+    example_websocket_interactive()
+    example_websocket_error_handling()
+    example_websocket_raw_text()
+    example_websocket_batch()
+    main()
   examples/test_litellm_integration.py:
   examples/test_llm_adapters.py:
   examples/test_strategies.py:
@@ -1430,16 +1498,10 @@ D:
     test_strategy_generation(strategy_path)
     test_strategy_validation(strategy_path)
     main()
-  mcp-server-example.py:
-    e: planfile_generate,planfile_apply,planfile_review,main
-    planfile_generate(arguments)
-    planfile_apply(arguments)
-    planfile_review(arguments)
-    main()
   planfile/__init__.py:
     e: quick_ticket,__getattr__,Planfile
-    Planfile: __init__(1),auto_discover(2),create_ticket(1),get_ticket(1),list_tickets(0),update_ticket(1),create_tickets_bulk(3)  # Main entry point — convenience wrapper around PlanfileStore.
-    quick_ticket(title;tool)
+    Planfile: __init__(1),auto_discover(2),create_ticket(1),get_ticket(1),list_tickets(0),update_ticket(1),delete_ticket(1),delete_tickets(1),create_tickets_bulk(3)  # Main entry point — convenience wrapper around PlanfileStore.
+    quick_ticket(name;tool)
     __getattr__(name)
   planfile/analysis/__init__.py:
   planfile/analysis/external_tools.py:
@@ -1507,16 +1569,31 @@ D:
     SprintGenerator: __init__(1),generate_sprints(2),_group_issues_by_priority(1),_get_high_and_quality_issues(1),_get_remaining_medium_issues(1),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information.
   planfile/api/__init__.py:
   planfile/api/server.py:
-    e: list_tickets,create_ticket,get_ticket,update_ticket,delete_ticket,move_ticket,health,TicketCreate,TicketUpdate
+    e: list_tickets,create_ticket,get_ticket,update_ticket,delete_ticket,move_ticket,done_ticket,start_ticket,list_sprints,create_sprint,get_yaml,patch_yaml,dsl_command,dsl_help,websocket_dsl,health,root,TicketCreate,TicketUpdate,SprintCreate,DSLRequest,DSLResponse,YAMLPatchRequest,ConnectionManager
     TicketCreate:
     TicketUpdate:
-    list_tickets(sprint;status)
+    SprintCreate:
+    DSLRequest:
+    DSLResponse:
+    YAMLPatchRequest:
+    ConnectionManager: __init__(0),connect(1),disconnect(1),broadcast(1)
+    list_tickets(sprint;status;priority;source)
     create_ticket(body)
     get_ticket(ticket_id)
     update_ticket(ticket_id;body)
     delete_ticket(ticket_id)
     move_ticket(ticket_id;to_sprint)
+    done_ticket(ticket_id)
+    start_ticket(ticket_id)
+    list_sprints()
+    create_sprint(body)
+    get_yaml()
+    patch_yaml(body)
+    dsl_command(body)
+    dsl_help()
+    websocket_dsl(websocket;project_path)
     health()
+    root()
   planfile/builder.py:
     e: create_strategy_command,LLXStrategyBuilder
     LLXStrategyBuilder: __init__(3),_call_llx(1),ask_llm_questions(0),_parse_bullet_list(1),answers_to_strategy(1),build_strategy(1)  # Interactive strategy builder using LLX.
@@ -1525,7 +1602,7 @@ D:
     e: TestResult,BugReport,CIRunner
     TestResult:  # Result of running tests.
     BugReport:  # Generated bug report from test failures.
-    CIRunner: __init__(7),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop and ticket creation
+    CIRunner: __init__(7),_extract_json_object(1),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),_resolve_target_file(1),_task_patch_applied(1),_extract_yaml_object(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop and ticket creation
   planfile/cli/__init__.py:
   planfile/cli/__main__.py:
   planfile/cli/auto_loop.py:
@@ -1590,6 +1667,31 @@ D:
     _display_ticket_summary(results)
     auto_loop_cmd(strategy;project_path;backend;max_iterations;auto_fix;llx_command;output;dry_run)
     ci_status_cmd(project_path)
+  planfile/cli/groups/backlog/__init__.py:
+    e: register_backlog_commands
+    register_backlog_commands(app)
+  planfile/cli/groups/backlog/commands.py:
+    e: _get_planfile_yaml_path,_load_planfile_yaml,_save_planfile_yaml,_matches_files,backlog_list,create_backlog_table,_collect_backlog_to_delete,_collect_targets_to_delete,_print_deletion_preview,_execute_backlog_deletion,_execute_targets_deletion,backlog_delete
+    _get_planfile_yaml_path()
+    _load_planfile_yaml()
+    _save_planfile_yaml(data)
+    _matches_files(item;patterns)
+    backlog_list(files;rule_id;fmt)
+    create_backlog_table(items)
+    _collect_backlog_to_delete(backlog;files;rule_id)
+    _collect_targets_to_delete(data;files)
+    _print_deletion_preview(to_delete;targets_to_delete)
+    _execute_backlog_deletion(data;to_delete)
+    _execute_targets_deletion(data;targets_to_delete)
+    backlog_delete(files;rule_id;targets;dry_run;force)
+  planfile/cli/groups/dsl/__init__.py:
+  planfile/cli/groups/dsl/commands.py:
+    e: dsl_run,_run_single,_pretty_data,_interactive_shell,register_dsl_commands
+    dsl_run(command;project;fmt;fail_on_error)
+    _run_single(executor;command;fmt;fail_on_error)
+    _pretty_data(data)
+    _interactive_shell(executor;fmt)
+    register_dsl_commands(app)
   planfile/cli/groups/examples/__init__.py:
     e: register_examples_commands
     register_examples_commands(app)
@@ -1655,7 +1757,7 @@ D:
     e: register_sync_commands
     register_sync_commands(app)
   planfile/cli/groups/sync/commands.py:
-    e: github_cmd,gitlab_cmd,jira_cmd,markdown_cmd,handle_no_integrations,sync_all_integrations,all_cmd
+    e: github_cmd,gitlab_cmd,jira_cmd,markdown_cmd,handle_no_integrations,sync_all_integrations,all_cmd,_resolve_watch_integrations,_get_planfile_dir_states,_detect_changes,_run_sync_once,watch_cmd
     github_cmd(directory;dry_run;direction)
     gitlab_cmd(directory;dry_run;direction)
     jira_cmd(directory;dry_run;direction)
@@ -1663,6 +1765,11 @@ D:
     handle_no_integrations(directory;dry_run;direction)
     sync_all_integrations(integrations;directory;dry_run;direction)
     all_cmd(directory;dry_run;direction)
+    _resolve_watch_integrations(config;integrations)
+    _get_planfile_dir_states(planfile_dir)
+    _detect_changes(last;current)
+    _run_sync_once(to_sync;directory;direction)
+    watch_cmd(directory;interval;integrations;direction;once)
   planfile/cli/groups/sync/core.py:
     e: _initialize_backend,_ticket_matches_integration,_collect_tickets_from_sprint,_collect_tickets_from_backlog,_ticket_matches_integration_v1,_collect_tickets_from_section,_process_planfile_v1,_load_tickets_v1_format,_load_tickets_for_sync,_execute_sync_with_progress,sync_integration
     _initialize_backend(integration_name;config;show_header)
@@ -1680,25 +1787,38 @@ D:
     e: register_ticket_commands
     register_ticket_commands(app)
   planfile/cli/groups/ticket/commands.py:
-    e: _display_tickets,create_ticket_table,ticket_create,ticket_list,ticket_show,ticket_update,ticket_move,ticket_import,load_import_tickets,ticket_done,ticket_start,ticket_block
+    e: _auto_sync,_display_tickets,_load_issue_records_from_file,_print_ticket_validation_table,ticket_validate,create_ticket_table,ticket_create,ticket_list,ticket_show,ticket_update,ticket_move,ticket_import,load_import_tickets,ticket_done,ticket_start,ticket_block,_collect_delete_ids,_confirm_and_delete,ticket_delete,_print_bulk_update_preview,_apply_label_changes,_execute_bulk_updates,ticket_bulk_update
+    _auto_sync(directory;integrations;dry_run)
     _display_tickets(tickets;fmt)
+    _load_issue_records_from_file(issues_path)
+    _print_ticket_validation_table(tickets)
+    ticket_validate(ticket_ids;strategy;project;issues;fmt;stale_only;fail_on_stale)
     create_ticket_table(tickets)
-    ticket_create(title;priority;sprint;source;label;description;integration)
-    ticket_list(sprint;status;source;label;fmt)
+    ticket_create(name;priority;sprint;source;label;description;files;integration;sync;sync_dry_run)
+    ticket_list(sprint;status;source;label;files;fmt)
     ticket_show(ticket_id;fmt)
-    ticket_update(ticket_id;status;priority;title)
+    ticket_update(ticket_id;status;priority;name;sync;sync_dry_run)
     ticket_move(ticket_id;to_sprint)
     ticket_import(source;sprint;from_file)
     load_import_tickets(from_file;source)
     ticket_done(ticket_id)
     ticket_start(ticket_id)
     ticket_block(ticket_id;reason)
+    _collect_delete_ids(pf;ticket_ids;sprint;status;label;source;files)
+    _confirm_and_delete(pf;to_delete;dry_run;force)
+    ticket_delete(ticket_ids;sprint;status;label;source;files;dry_run;force;sync;sync_dry_run)
+    _print_bulk_update_preview(tickets;new_status;new_priority;add_label;remove_label;move_to_sprint)
+    _apply_label_changes(ticket;base_updates;add_label;remove_label)
+    _execute_bulk_updates(pf;tickets;base_updates;add_label;remove_label;move_to_sprint)
+    ticket_bulk_update(sprint;status_filter;label;source;files;new_status;new_priority;add_label;remove_label;move_to_sprint;dry_run;force;sync;sync_dry_run)
   planfile/cli/groups/validate/__init__.py:
     e: register_validate_commands
     register_validate_commands(app)
   planfile/cli/groups/validate/commands.py:
-    e: validate_strategy_cli
+    e: validate_strategy_cli,validate_schema_cli,validate_testql_cli
     validate_strategy_cli(strategy_path;verbose)
+    validate_schema_cli(file_path;file_type;verbose)
+    validate_testql_cli(scenario_path;project_path;url;dry_run;strategy_path;create_tickets;sync_targets;max_tickets;testql_bin;testql_repo_path)
   planfile/cli/project_detector/__init__.py:
   planfile/cli/project_detector/base.py:
     e: DetectedQualityGate,DetectedProject
@@ -1734,8 +1854,11 @@ D:
     e: _detect_license
     _detect_license(project_path)
   planfile/cli/project_detector/main.py:
-    e: detect_project,get_detected_values
+    e: detect_project,_quality_gates_to_dict,_determine_source,_build_detected_dict,get_detected_values
     detect_project(project_path)
+    _quality_gates_to_dict(gates)
+    _determine_source(detected)
+    _build_detected_dict(detected)
     get_detected_values()
   planfile/cli/project_detector/model_tier.py:
     e: _tier_from_env_vars,_tier_from_env_files,_tier_from_config_files,_detect_model_tier
@@ -1758,12 +1881,17 @@ D:
     _populate_readme_and_repository_details(project;project_path)
     _detect_from_pyproject(project_path)
   planfile/cli/project_detector/readme.py:
-    e: _find_readme_content,_find_readme_description,_find_readme_goal
+    e: _extract_description,_extract_goal,_find_readme_content,_find_readme_description,_find_readme_goal
+    _extract_description(lines)
+    _extract_goal(content)
     _find_readme_content(project_path)
     _find_readme_description(project_path)
     _find_readme_goal(project_path)
   planfile/cli/project_detector/structure.py:
-    e: _analyze_directory_structure
+    e: _has_tests,_find_src_dirs,_suggest_sprints,_analyze_directory_structure
+    _has_tests(project_path)
+    _find_src_dirs(project_path)
+    _suggest_sprints(project_path;src_dirs;has_tests)
     _analyze_directory_structure(project_path)
   planfile/cli/project_detector.py:
   planfile/core/__init__.py:
@@ -1780,21 +1908,34 @@ D:
     Sprint: convert_tasks(2)  # A sprint in the planfile.
     QualityGate: normalize_criteria(2)  # Quality gate definition.
     Goal:  # Project goal definition.
-    Strategy: get_task_patterns(1),get_sprint(1),validate_sprint_ids(2),compare(1),merge(2),export(1),get_stats(0),to_yaml(0)  # Main strategy configuration - simplified and more flexible.
+    Strategy: get_task_patterns(1),get_sprint(1),validate_sprint_ids(2),compare(1),merge(2),export(1),_count_task_types(0),_collect_durations(0),get_stats(0),to_yaml(0)  # Main strategy configuration - simplified and more flexible.
   planfile/core/models/ticket.py:
     e: TicketSource,Ticket
     TicketSource:  # Who/what created the ticket.
-    Ticket: __post_init__(0)  # Atomic unit of work in planfile.
+    Ticket:  # Atomic unit of work in planfile.
   planfile/core/models.py:
+  planfile/core/schema.py:
+    e: validate_yaml_file,SchemaValidator
+    SchemaValidator: validate_planfile(2),validate_sprint(2),get_current_schema_version(1)  # Validate planfile YAML files against schema definitions.
+    validate_yaml_file(file_path;file_type)
   planfile/core/store.py:
     e: Store
-    Store:
+    Store: __init__(1),is_initialized(0),init(0),_read_config(0),_write_config(1),next_id(0),_sprint_file(1),_all_sprint_files(0),create_ticket(1),get_ticket(1),update_ticket(1),delete_ticket(1),delete_tickets_bulk(1)  # File-based ticket store using .planfile/ directory.
   planfile/core/store_files.py:
     e: StoreFileMixin
     StoreFileMixin: _sprint_file(1),_all_sprint_files(0),_read_yaml_cached(1)
   planfile/core/store_tickets.py:
     e: TicketStoreMixin
-    TicketStoreMixin: _ticket_from_data(1),_tickets_from_sprint_data(1),_apply_filters(1),list_tickets(1)
+    TicketStoreMixin: _ticket_from_data(1),_tickets_from_sprint_data(1),_filter_by_files(2),_filter_by_labels(2),_filter_by_attribute(3),_apply_filters(1),_matches_files(2),list_tickets(1)
+  planfile/dsl/__init__.py:
+  planfile/dsl/executor.py:
+    e: DSLResult,DSLExecutor
+    DSLResult: to_dict(0)
+    DSLExecutor: __init__(1),pf(0),run(1),execute(1),_exec_help(1),_exec_unknown(1),_exec_create(1),_exec_create_sprint(1),_exec_list(1),_exec_list_sprints(1),_exec_show(1),_exec_update(1),_exec_move(1),_exec_done(1),_exec_start(1),_exec_block(1),_exec_delete(1),_exec_validate(1),_exec_sync(1),_exec_query(1),_exec_export(1)  # Execute DSL commands against a Planfile instance.
+  planfile/dsl/parser.py:
+    e: DSLCommand,DSLParser
+    DSLCommand: is_valid(0),to_dict(0)
+    DSLParser: parse(1),_extract_object(2),_extract_target(2),_extract_modifiers(2),_coerce(1)  # Parse natural language / DSL commands into DSLCommand object
   planfile/examples.py:
     e: example_create_strategy,example_validate_strategy,example_run_strategy,example_verify_strategy,example_programmatic_strategy
     example_create_strategy()
@@ -1931,27 +2072,27 @@ D:
     get_planfile(start_path)
   planfile/sync/__init__.py:
   planfile/sync/base.py:
-    e: TicketRef,TicketStatus,PMBackend,BasePMBackend
+    e: TicketRef,TicketState,PMBackend,BasePMBackend
     TicketRef:  # Reference to a created/updated ticket.
-    TicketStatus:  # Status of a ticket.
+    TicketState:  # State snapshot of a ticket.
     PMBackend: create_ticket(1),update_ticket(0),get_ticket(1),list_tickets(0),search_tickets(1)  # Protocol for PM system backends.
-    BasePMBackend: __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1),create_ticket(1),_create_ticket(6),update_ticket(7),_update_ticket(7),get_ticket(1),_get_ticket(1),list_tickets(4),_list_tickets(4),search_tickets(1),_search_tickets(1),build_ticket_ref(0),build_ticket_status(0)  # Base class for PM backends with common functionality.
+    BasePMBackend: __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1),create_ticket(1),_create_ticket(6),update_ticket(7),_update_ticket(7),get_ticket(1),_get_ticket(1),list_tickets(4),_list_tickets(4),search_tickets(1),_search_tickets(1),build_ticket_ref(0),build_ticket_state(0)  # Base class for PM backends with common functionality.
   planfile/sync/generic.py:
     e: GenericBackend
     GenericBackend: __init__(3),_validate_config(0),_make_request(4),_create_ticket(6),_update_ticket(7),_build_update_data(6),_get_ticket(1),_list_tickets(4),_search_tickets(1),_ticket_data_to_status(1)  # Generic HTTP API backend for PM systems.
   planfile/sync/github.py:
     e: GitHubBackend
-    GitHubBackend: __init__(2),_validate_config(0),_ensure_labels_exist(1),_create_ticket(7),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitHub Issues integration backend.
+    GitHubBackend: __init__(2),_validate_config(0),_ensure_labels_exist(1),_prepare_labels(2),_build_metadata_body(2),_create_ticket(7),_update_labels(3),_update_issue_state(2),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitHub Issues integration backend.
   planfile/sync/gitlab.py:
     e: GitLabBackend
-    GitLabBackend: __init__(3),_validate_config(0),_create_ticket(7),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitLab Issues integration backend.
+    GitLabBackend: __init__(3),_validate_config(0),_prepare_labels(2),_build_metadata_body(2),_create_ticket(7),_update_labels(3),_update_state(2),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitLab Issues integration backend.
   planfile/sync/jira.py:
     e: JiraBackend
-    JiraBackend: __init__(4),_validate_config(0),map_priority(1),_map_task_type_to_jira(1),_create_ticket(6),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend.
+    JiraBackend: __init__(4),_validate_config(0),map_priority(1),_map_task_type_to_jira(1),_build_metadata_section(1),_create_ticket(6),_build_update_fields(4),_transition_issue(2),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend.
   planfile/sync/markdown_backend/__init__.py:
   planfile/sync/markdown_backend/backend.py:
     e: MarkdownFileBackend
-    MarkdownFileBackend: __init__(2),_create_ticket(6)  # Backend for managing tickets in CHANGELOG.md and TODO.md fil
+    MarkdownFileBackend: __init__(2),_create_ticket(6),_update_ticket(7),_get_ticket(1),_list_tickets(4),_search_tickets(1),_find_ticket_file(1),_scan_ticket_ids(0)  # Backend for managing tickets in CHANGELOG.md and TODO.md fil
   planfile/sync/markdown_backend/constants.py:
   planfile/sync/markdown_backend/files.py:
     e: MarkdownFileManager
@@ -1986,6 +2127,74 @@ D:
   planfile/sync/utils.py:
     e: save_v1_format
     save_v1_format(file_path;data)
+  planfile/testql_integration.py:
+    e: _normalize_ref_text,_normalize_ref_url,_iter_external_refs,_collect_ticket_identity_keys,_collect_external_ref_candidates,_extract_result_field,_extract_created_ticket_ref,_extract_search_ticket_id,_looks_not_found_error,_looks_already_exists_error,_update_existing_ref_entry,_append_ref_entry,_update_ticket_integration_fields,_attach_external_ref,_resolve_update_reference,_extract_json_payload,_resolve_scenario_path,_resolve_testql_executable,run_testql_validation,_collect_step_messages,_collect_error_messages,_dedupe_messages,_collect_failure_messages,_extract_file_from_message,build_testql_tickets,_default_strategy_payload,_load_or_init_strategy,_ensure_strategy_lists,_build_task_pattern_entry,_upsert_single_ticket,upsert_testql_tickets,_resolve_sync_backend,_sync_ticket_to_backend,_sync_tickets_to_integration,sync_testql_tickets
+    _normalize_ref_text(value)
+    _normalize_ref_url(value)
+    _iter_external_refs(ticket)
+    _collect_ticket_identity_keys(ticket)
+    _collect_external_ref_candidates(ticket;integration)
+    _extract_result_field(result;field)
+    _extract_created_ticket_ref(result)
+    _extract_search_ticket_id(item)
+    _looks_not_found_error(exc)
+    _looks_already_exists_error(exc)
+    _update_existing_ref_entry(refs;integration;ref_id;ref_key;ref_url)
+    _append_ref_entry(refs;integration;ref_id;ref_key;ref_url)
+    _update_ticket_integration_fields(ticket;integration;ref_id;ref_key;ref_url)
+    _attach_external_ref(ticket;integration;ref)
+    _resolve_update_reference(backend;ticket;integration)
+    _extract_json_payload(text)
+    _resolve_scenario_path(scenario_path;project_root)
+    _resolve_testql_executable(testql_bin;testql_repo_path)
+    run_testql_validation(scenario_path;project_path)
+    _collect_step_messages(steps_raw)
+    _collect_error_messages(errors_raw)
+    _dedupe_messages(messages)
+    _collect_failure_messages(report)
+    _extract_file_from_message(message)
+    build_testql_tickets(report;scenario_path)
+    _default_strategy_payload()
+    _load_or_init_strategy(strategy_file)
+    _ensure_strategy_lists(strategy)
+    _build_task_pattern_entry(ticket;ticket_id)
+    _upsert_single_ticket(ticket;tasks;task_patterns;existing_task_ids;existing_pattern_ids;existing_identity_keys)
+    upsert_testql_tickets(strategy_path;tickets)
+    _resolve_sync_backend(config;integration)
+    _sync_ticket_to_backend(ticket;backend;integration)
+    _sync_tickets_to_integration(tickets;backend;integration)
+    sync_testql_tickets(tickets)
+  planfile/ticket_validation.py:
+    e: _load_strategy,_normalize_rule,_normalize_rel_path,_normalize_files,_resolve_ticket_id,_iter_tasks_list,_iter_tickets_dict,_collect_ticket_entries,_parse_positive_int,_normalize_ticket_filters,_build_issue_indexes,_count_file_lines,_validate_rule_anchor,_resolve_existing_files,_validate_line_anchor,_validate_file_only,_validate_ticket,validate_planfile_tickets
+    _load_strategy(path)
+    _normalize_rule(value)
+    _normalize_rel_path(value;project_root)
+    _normalize_files(ticket;project_root)
+    _resolve_ticket_id(ticket;entry_ref)
+    _iter_tasks_list(items;base_ref)
+    _iter_tickets_dict(items;base_ref)
+    _collect_ticket_entries(strategy)
+    _parse_positive_int(value)
+    _normalize_ticket_filters(ticket_ids)
+    _build_issue_indexes(issue_records;project_root)
+    _count_file_lines(abs_path)
+    _validate_rule_anchor(record;rule_id;files;rule_file_index;scan_available)
+    _resolve_existing_files(files;project_root)
+    _validate_line_anchor(record;files;line;project_root;file_line_index;scan_available)
+    _validate_file_only(record;files;project_root)
+    _validate_ticket(ticket;entry_ref;project_root;rule_file_index;file_line_index;scan_available)
+    validate_planfile_tickets(strategy_path;project_path)
+  planfile/todo_sync.py:
+    e: _load_strategy,_status_done,_get_value,_normalize_marker,_collect_markers_from_results,_collect_markers_from_strategy,_resolve_todo_config,_line_matches_any_marker,sync_todo_checkboxes_from_planfile
+    _load_strategy(path)
+    _status_done(status)
+    _get_value(item;key)
+    _normalize_marker(value)
+    _collect_markers_from_results(results)
+    _collect_markers_from_strategy(strategy)
+    _resolve_todo_config(strategy;strategy_path;project_path;enabled_override)
+    _line_matches_any_marker(body;markers)
+    sync_todo_checkboxes_from_planfile(strategy_path;project_path)
   planfile/utils/__init__.py:
   planfile/utils/metrics.py:
     e: _collect_git_metrics,_count_files_by_language,_check_project_files,analyze_project_metrics,calculate_strategy_health
@@ -2025,21 +2234,198 @@ D:
     OpenRouterAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for OpenRouter API.
     LocalLLMAdapter: __init__(1),test_strategy_generation(2),_test_ollama(2),_test_openai_compatible(2),get_available_models(0)  # Adapter for local LLM servers (Ollama, LM Studio, etc.).
     LLMTestRunner: __init__(0),register_adapter(2),test_strategy_with_all_adapters(2),generate_report(1),_generate_header(0),_generate_summary_table(1),_generate_detailed_results(1),_generate_successful_tests_section(1),_generate_failed_tests_section(1)  # Run tests across multiple LLM adapters.
+  tests/test_backlog.py:
+    e: test_backlog_list_no_items,test_matches_files
+    test_backlog_list_no_items()
+    test_matches_files()
   tests/test_chars.py:
+  tests/test_ci_runner.py:
+    e: _make_runner,test_generate_bug_report_accepts_title_key,test_generate_bug_report_parses_markdown_json,test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend,test_auto_fix_bugs_returns_false_without_target_file
+    _make_runner(auto_fix)
+    test_generate_bug_report_accepts_title_key(monkeypatch)
+    test_generate_bug_report_parses_markdown_json(monkeypatch)
+    test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend(monkeypatch;tmp_path)
+    test_auto_fix_bugs_returns_false_without_target_file(monkeypatch;tmp_path)
+  tests/test_dsl.py:
+    e: _make_mock_ticket,TestDSLParser,TestDSLExecutor
+    TestDSLParser: setup_method(0),test_parse_empty(0),test_parse_help(0),test_parse_unknown_verb(0),test_parse_list_tickets(0),test_parse_list_tickets_with_filters(0),test_parse_list_sprints(0),test_parse_create_ticket_quoted(0),test_parse_create_ticket_sprint(0),test_parse_create_aliases(0),test_parse_show_ticket(0),test_parse_ticket_id_uppercase(0),test_parse_update_ticket(0),test_parse_set_alias(0),test_parse_set_labels(0),test_parse_move_ticket(0),test_parse_move_ticket_to_value(0),test_parse_done(0),test_parse_done_aliases(0),test_parse_start(0),test_parse_block(0),test_parse_delete(0),test_parse_delete_aliases(0),test_parse_validate(0),test_parse_sync(0),test_parse_sync_all(0),test_parse_query_where(0),test_parse_export(0),test_coerce_bool_true(0),test_coerce_bool_false(0),test_coerce_int(0),test_to_dict(0),test_is_valid(0)
+    TestDSLExecutor: _executor_with_mock(0),test_help(0),test_unknown_verb(0),test_list_tickets(0),test_list_tickets_empty(0),test_create_ticket(0),test_create_ticket_missing_name(0),test_show_ticket(0),test_show_ticket_not_found(0),test_show_ticket_missing_id(0),test_update_ticket(0),test_update_ticket_no_params(0),test_update_ticket_not_found(0),test_done_ticket(0),test_start_ticket(0),test_block_ticket(0),test_block_ticket_with_reason(0),test_delete_ticket(0),test_delete_ticket_not_found(0),test_move_ticket(0),test_move_ticket_missing_sprint(0),test_dsl_result_to_dict(0),test_query_delegates_to_list(0),test_executor_handles_exception(0)
+    _make_mock_ticket(ticket_id;name;status;priority)
+  tests/test_e2e_backlog.py:
+    e: test_e2e_backlog_list_empty,test_e2e_backlog_list_with_items,test_e2e_backlog_list_with_files_filter,test_e2e_backlog_delete_dry_run,test_e2e_backlog_delete_force,test_e2e_backlog_delete_targets
+    test_e2e_backlog_list_empty()
+    test_e2e_backlog_list_with_items()
+    test_e2e_backlog_list_with_files_filter()
+    test_e2e_backlog_delete_dry_run()
+    test_e2e_backlog_delete_force()
+    test_e2e_backlog_delete_targets()
+  tests/test_e2e_schema.py:
+    e: test_e2e_validate_schema_valid_planfile,test_e2e_validate_schema_missing_required_field,test_e2e_validate_schema_version_mismatch,test_e2e_validate_schema_invalid_yaml,test_e2e_validate_schema_sprint_yaml,test_e2e_validate_schema_verbose
+    test_e2e_validate_schema_valid_planfile()
+    test_e2e_validate_schema_missing_required_field()
+    test_e2e_validate_schema_version_mismatch()
+    test_e2e_validate_schema_invalid_yaml()
+    test_e2e_validate_schema_sprint_yaml()
+    test_e2e_validate_schema_verbose()
+  tests/test_e2e_ticket_files.py:
+    e: test_e2e_ticket_create_with_files,test_e2e_ticket_list_with_files_filter,test_e2e_ticket_delete_with_files_filter,test_e2e_ticket_bulk_update_with_files_filter,test_e2e_ticket_with_single_file_field
+    test_e2e_ticket_create_with_files()
+    test_e2e_ticket_list_with_files_filter()
+    test_e2e_ticket_delete_with_files_filter()
+    test_e2e_ticket_bulk_update_with_files_filter()
+    test_e2e_ticket_with_single_file_field()
   tests/test_integration.py:
     e: test_integration
     test_integration()
   tests/test_regex.py:
   tests/test_regex2.py:
+  tests/test_schema.py:
+    e: test_validate_planfile_valid,test_validate_planfile_missing_required_field,test_validate_planfile_schema_version_mismatch,test_validate_planfile_wrong_type,test_validate_sprint_valid,test_validate_sprint_missing_required_field,test_validate_sprint_missing_sprint_id,test_validate_yaml_file_planfile,test_validate_yaml_file_invalid_yaml,test_validate_yaml_file_not_found,test_get_current_schema_version
+    test_validate_planfile_valid()
+    test_validate_planfile_missing_required_field()
+    test_validate_planfile_schema_version_mismatch()
+    test_validate_planfile_wrong_type()
+    test_validate_sprint_valid()
+    test_validate_sprint_missing_required_field()
+    test_validate_sprint_missing_sprint_id()
+    test_validate_yaml_file_planfile()
+    test_validate_yaml_file_invalid_yaml()
+    test_validate_yaml_file_not_found()
+    test_get_current_schema_version()
   tests/test_strategy.py:
     e: test_basic_models,test_yaml_loading
     test_basic_models()
     test_yaml_loading()
+  tests/test_testql_integration.py:
+    e: _write,test_build_testql_tickets_from_failed_report,test_build_testql_tickets_handles_compact_report_steps_count,test_upsert_testql_tickets_updates_tasks_and_sprint_patterns,test_upsert_testql_tickets_deduplicates_by_external_url,test_sync_testql_tickets_runs_markdown_first,test_sync_testql_tickets_updates_by_external_id,test_sync_testql_tickets_updates_by_url_search,test_resolve_testql_executable_falls_back_to_local_repo,_FakeBackend,_UpdateAwareBackend
+    _FakeBackend: __init__(2),create_ticket(1)
+    _UpdateAwareBackend: __init__(1),create_ticket(1),update_ticket(1),search_tickets(1)
+    _write(path;content)
+    test_build_testql_tickets_from_failed_report()
+    test_build_testql_tickets_handles_compact_report_steps_count()
+    test_upsert_testql_tickets_updates_tasks_and_sprint_patterns(tmp_path)
+    test_upsert_testql_tickets_deduplicates_by_external_url(tmp_path)
+    test_sync_testql_tickets_runs_markdown_first(tmp_path;monkeypatch)
+    test_sync_testql_tickets_updates_by_external_id(tmp_path;monkeypatch)
+    test_sync_testql_tickets_updates_by_url_search(tmp_path;monkeypatch)
+    test_resolve_testql_executable_falls_back_to_local_repo(tmp_path;monkeypatch)
+  tests/test_ticket_files.py:
+    e: test_ticket_model_with_files,test_ticket_model_with_file,test_ticket_model_default_files,test_store_filter_by_files,test_store_filter_by_file,test_store_filter_by_files_and_file,test_store_filter_by_files_glob_pattern,test_store_filter_no_files,test_store_filter_multiple_patterns,test_store_matches_files,test_ticket_create_with_files
+    test_ticket_model_with_files()
+    test_ticket_model_with_file()
+    test_ticket_model_default_files()
+    test_store_filter_by_files()
+    test_store_filter_by_file()
+    test_store_filter_by_files_and_file()
+    test_store_filter_by_files_glob_pattern()
+    test_store_filter_no_files()
+    test_store_filter_multiple_patterns()
+    test_store_matches_files()
+    test_ticket_create_with_files()
+  tests/test_ticket_validation.py:
+    e: _write,test_validate_planfile_tickets_rule_based_current_and_stale,test_validate_planfile_tickets_line_based_without_scan,test_validate_planfile_tickets_collects_backlog_and_sprint_sections,test_validate_planfile_tickets_filters_specific_ticket_ids,test_validate_planfile_tickets_empty_ticket_ids_returns_all,test_validate_planfile_tickets_nonexistent_ids_returns_empty
+    _write(path;content)
+    test_validate_planfile_tickets_rule_based_current_and_stale(tmp_path)
+    test_validate_planfile_tickets_line_based_without_scan(tmp_path)
+    test_validate_planfile_tickets_collects_backlog_and_sprint_sections(tmp_path)
+    test_validate_planfile_tickets_filters_specific_ticket_ids(tmp_path)
+    test_validate_planfile_tickets_empty_ticket_ids_returns_all(tmp_path)
+    test_validate_planfile_tickets_nonexistent_ids_returns_empty(tmp_path)
+  tests/test_todo_sync.py:
+    e: _write,test_sync_todo_checkboxes_from_planfile_uses_strategy_statuses,test_sync_todo_checkboxes_from_planfile_uses_results_markers,test_sync_todo_checkboxes_from_planfile_respects_disabled_setting
+    _write(path;content)
+    test_sync_todo_checkboxes_from_planfile_uses_strategy_statuses(tmp_path)
+    test_sync_todo_checkboxes_from_planfile_uses_results_markers(tmp_path)
+    test_sync_todo_checkboxes_from_planfile_respects_disabled_setting(tmp_path)
 ```
 
 ## Source Map
 
 *Top 5 modules by symbol density — signatures for LLM orientation.*
+
+### `planfile.testql_integration` (`planfile/testql_integration.py`)
+
+```python
+def _normalize_ref_text(value)  # CC=2, fan=2
+def _normalize_ref_url(value)  # CC=1, fan=2
+def _iter_external_refs(ticket)  # CC=4, fan=2
+def _collect_ticket_identity_keys(ticket)  # CC=14, fan=9 ⚠
+def _collect_external_ref_candidates(ticket, integration)  # CC=9, fan=9
+def _extract_result_field(result, field)  # CC=3, fan=5
+def _extract_created_ticket_ref(result)  # CC=1, fan=2
+def _extract_search_ticket_id(item)  # CC=3, fan=4
+def _looks_not_found_error(exc)  # CC=2, fan=2
+def _looks_already_exists_error(exc)  # CC=2, fan=2
+def _update_existing_ref_entry(refs, integration, ref_id, ref_key, ref_url)  # CC=6, fan=3
+def _append_ref_entry(refs, integration, ref_id, ref_key, ref_url)  # CC=4, fan=1
+def _update_ticket_integration_fields(ticket, integration, ref_id, ref_key, ref_url)  # CC=4, fan=1
+def _attach_external_ref(ticket, integration, ref)  # CC=5, fan=7
+def _resolve_update_reference(backend, ticket, integration)  # CC=9, fan=4
+def _extract_json_payload(text)  # CC=9, fan=7
+def _resolve_scenario_path(scenario_path, project_root)  # CC=2, fan=3
+def _resolve_testql_executable(testql_bin, testql_repo_path)  # CC=6, fan=5
+def run_testql_validation(scenario_path, project_path)  # CC=6, fan=11
+def _collect_step_messages(steps_raw)  # CC=8, fan=5
+def _collect_error_messages(errors_raw)  # CC=7, fan=3
+def _dedupe_messages(messages)  # CC=3, fan=3
+def _collect_failure_messages(report)  # CC=4, fan=6
+def _extract_file_from_message(message)  # CC=2, fan=2
+def build_testql_tickets(report, scenario_path)  # CC=6, fan=14
+def _default_strategy_payload()  # CC=1, fan=0
+def _load_or_init_strategy(strategy_file)  # CC=4, fan=5
+def _ensure_strategy_lists(strategy)  # CC=7, fan=3
+def _build_task_pattern_entry(ticket, ticket_id)  # CC=3, fan=1
+def _upsert_single_ticket(ticket, tasks, task_patterns, existing_task_ids, existing_pattern_ids, existing_identity_keys)  # CC=7, fan=9
+def upsert_testql_tickets(strategy_path, tickets)  # CC=15, fan=17 ⚠
+def _resolve_sync_backend(config, integration)  # CC=2, fan=2
+def _sync_ticket_to_backend(ticket, backend, integration)  # CC=6, fan=7
+def _sync_tickets_to_integration(tickets, backend, integration)  # CC=5, fan=2
+def sync_testql_tickets(tickets)  # CC=9, fan=12
+```
+
+### `planfile.ticket_validation` (`planfile/ticket_validation.py`)
+
+```python
+def _load_strategy(path)  # CC=3, fan=3
+def _normalize_rule(value)  # CC=2, fan=3
+def _normalize_rel_path(value, project_root)  # CC=5, fan=6
+def _normalize_files(ticket, project_root)  # CC=8, fan=8
+def _resolve_ticket_id(ticket, entry_ref)  # CC=4, fan=3
+def _iter_tasks_list(items, base_ref)  # CC=4, fan=3
+def _iter_tickets_dict(items, base_ref)  # CC=4, fan=3
+def _collect_ticket_entries(strategy)  # CC=9, fan=7
+def _parse_positive_int(value)  # CC=4, fan=1
+def _normalize_ticket_filters(ticket_ids)  # CC=5, fan=4
+def _build_issue_indexes(issue_records, project_root)  # CC=14, fan=10 ⚠
+def _count_file_lines(abs_path)  # CC=5, fan=4
+def _validate_rule_anchor(record, rule_id, files, rule_file_index, scan_available)  # CC=4, fan=1
+def _resolve_existing_files(files, project_root)  # CC=3, fan=3
+def _validate_line_anchor(record, files, line, project_root, file_line_index, scan_available)  # CC=7, fan=3
+def _validate_file_only(record, files, project_root)  # CC=3, fan=2
+def _validate_ticket(ticket, entry_ref, project_root, rule_file_index, file_line_index, scan_available)  # CC=8, fan=10
+def validate_planfile_tickets(strategy_path, project_path)  # CC=11, fan=12 ⚠
+```
+
+### `planfile.ci` (`planfile/ci.py`)
+
+```python
+class TestResult:  # Result of running tests.
+class BugReport:  # Generated bug report from test failures.
+class CIRunner:  # CI/CD runner with automated bug-fix loop and ticket creation
+    def __init__(strategy_path, project_path, backends, llx_command, max_iterations, auto_fix, planfile_instance)  # CC=4
+    def _extract_json_object(raw_output)  # CC=13 ⚠
+    def run_tests()  # CC=6
+    def run_code_analysis()  # CC=5
+    def generate_bug_report(test_result, metrics)  # CC=10 ⚠
+    def create_bug_tickets(bug_report)  # CC=7
+    def _resolve_target_file(bug_report)  # CC=6
+    def _task_patch_applied(results_payload)  # CC=6
+    def _extract_yaml_object(raw_output)  # CC=8
+    def auto_fix_bugs(bug_report)  # CC=5
+    def check_strategy_completion()  # CC=3
+    def run_loop()  # CC=7
+    def save_results(results, output_path)  # CC=2
+```
 
 ### `planfile.executor_standalone` (`planfile/executor_standalone.py`)
 
@@ -2061,127 +2447,89 @@ class StrategyExecutor:  # Standalone strategy executor.
     def _get_project_metrics(project_path)  # CC=6
 ```
 
-### `planfile.ci` (`planfile/ci.py`)
+### `planfile.todo_sync` (`planfile/todo_sync.py`)
 
 ```python
-class TestResult:  # Result of running tests.
-class BugReport:  # Generated bug report from test failures.
-class CIRunner:  # CI/CD runner with automated bug-fix loop and ticket creation
-    def __init__(strategy_path, project_path, backends, llx_command, max_iterations, auto_fix, planfile_instance)  # CC=4
-    def run_tests()  # CC=6
-    def run_code_analysis()  # CC=5
-    def generate_bug_report(test_result, metrics)  # CC=2
-    def create_bug_tickets(bug_report)  # CC=7
-    def auto_fix_bugs(bug_report)  # CC=2
-    def check_strategy_completion()  # CC=3
-    def run_loop()  # CC=7
-    def save_results(results, output_path)  # CC=2
-```
-
-### `planfile.builder` (`planfile/builder.py`)
-
-```python
-def create_strategy_command(output, model, local)  # CC=1, fan=5
-class LLXStrategyBuilder:  # Interactive strategy builder using LLX.
-    def __init__(llx_path, model, local)  # CC=1
-    def _call_llx(prompt)  # CC=3
-    def ask_llm_questions()  # CC=4
-    def _parse_bullet_list(text)  # CC=4
-    def answers_to_strategy(answers)  # CC=3
-    def build_strategy(output_path)  # CC=2
-```
-
-### `planfile.runner` (`planfile/runner.py`)
-
-```python
-def load_valid_strategy(path)  # CC=3, fan=6
-def verify_strategy_post_execution(strategy, project_path, backend)  # CC=12, fan=6 ⚠
-def _get_project_hash(project_path)  # CC=5, fan=11
-def analyze_project_metrics(project_path)  # CC=12, fan=17 ⚠
-def apply_strategy_to_tickets(strategy, project_path, backend, dry_run)  # CC=8, fan=3
-def review_strategy(strategy, project_path, backends, backend_name)  # CC=14, fan=9 ⚠
-def run_strategy(strategy_path, project_path, backend, dry_run)  # CC=8, fan=8
-```
-
-### `planfile.examples` (`planfile/examples.py`)
-
-```python
-def example_create_strategy()  # CC=1, fan=1
-def example_validate_strategy()  # CC=2, fan=3
-def example_run_strategy()  # CC=1, fan=1
-def example_verify_strategy()  # CC=2, fan=3
-def example_programmatic_strategy()  # CC=1, fan=9
+def _load_strategy(path)  # CC=3, fan=3
+def _status_done(status)  # CC=2, fan=3
+def _get_value(item, key)  # CC=2, fan=3
+def _normalize_marker(value)  # CC=2, fan=2
+def _collect_markers_from_results(results)  # CC=6, fan=5
+def _collect_markers_from_strategy(strategy)  # CC=13, fan=6 ⚠
+def _resolve_todo_config(strategy, strategy_path, project_path, enabled_override)  # CC=7, fan=5
+def _line_matches_any_marker(body, markers)  # CC=2, fan=2
+def sync_todo_checkboxes_from_planfile(strategy_path, project_path)  # CC=14, fan=22 ⚠
 ```
 
 ## Call Graph
 
-*316 nodes · 347 edges · 83 modules · CC̄=2.2*
+*428 nodes · 455 edges · 92 modules · CC̄=2.2*
 
 ### Hubs (by degree)
 
 | Function | CC | in | out | total |
 |----------|----|----|-----|-------|
-| `print` *(in Taskfile)* | 0 | 323 | 0 | **323** |
+| `print` *(in Taskfile)* | 0 | 361 | 0 | **361** |
+| `_collect_ticket_identity_keys` *(in planfile.testql_integration)* | 14 ⚠ | 2 | 57 | **59** |
 | `example_metric_driven_planning` *(in examples.ecosystem.04_llx_integration)* | 9 | 0 | 57 | **57** |
 | `example_strategy_generation_with_proxy` *(in examples.ecosystem.03_proxy_routing)* | 8 | 0 | 56 | **56** |
 | `create_examples_app` *(in planfile.cli.groups.examples.commands)* | 1 | 1 | 46 | **47** |
+| `handle_tool_call` *(in planfile.mcp.server)* | 27 ⚠ | 1 | 42 | **43** |
 | `review_strategy_cli` *(in planfile.cli.groups.review.commands)* | 10 ⚠ | 0 | 40 | **40** |
 | `main` *(in examples.python-api.04_analytics_simple)* | 1 | 0 | 35 | **35** |
-| `analyze_text` *(in planfile.analysis.parsers.text_parser)* | 13 ⚠ | 4 | 30 | **34** |
-| `_detect_from_package_json` *(in planfile.cli.project_detector.package)* | 7 | 1 | 28 | **29** |
 
 ```toon markpact:analysis path=project/calls.toon.yaml
 # code2llm call graph | /home/tom/github/semcod/planfile
-# nodes: 316 | edges: 347 | modules: 83
+# nodes: 428 | edges: 455 | modules: 92
 # CC̄=2.2
 
 HUBS[20]:
   Taskfile.print
-    CC=0  in:323  out:0  total:323
+    CC=0  in:361  out:0  total:361
+  planfile.testql_integration._collect_ticket_identity_keys
+    CC=14  in:2  out:57  total:59
   examples.ecosystem.04_llx_integration.example_metric_driven_planning
     CC=9  in:0  out:57  total:57
   examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy
     CC=8  in:0  out:56  total:56
   planfile.cli.groups.examples.commands.create_examples_app
     CC=1  in:1  out:46  total:47
+  planfile.mcp.server.handle_tool_call
+    CC=27  in:1  out:42  total:43
   planfile.cli.groups.review.commands.review_strategy_cli
     CC=10  in:0  out:40  total:40
   examples.python-api.04_analytics_simple.main
     CC=1  in:0  out:35  total:35
   planfile.analysis.parsers.text_parser.analyze_text
     CC=13  in:4  out:30  total:34
+  planfile.testql_integration.upsert_testql_tickets
+    CC=15  in:1  out:31  total:32
+  planfile.todo_sync.sync_todo_checkboxes_from_planfile
+    CC=14  in:0  out:30  total:30
+  planfile.testql_integration._collect_external_ref_candidates
+    CC=9  in:1  out:29  total:30
   planfile.cli.project_detector.package._detect_from_package_json
     CC=7  in:1  out:28  total:29
+  planfile.cli.groups.sync.commands.watch_cmd
+    CC=6  in:0  out:29  total:29
   planfile.cli.groups.init.commands.init_strategy_cli
     CC=8  in:0  out:29  total:29
   planfile.cli.groups.health.commands.create_health_app
     CC=1  in:1  out:28  total:29
   planfile.cli.project_detector.fallback._detect_from_structure
     CC=9  in:1  out:27  total:28
+  planfile.cli.groups.ticket.commands.ticket_validate
+    CC=10  in:0  out:28  total:28
+  planfile.cli.groups.backlog.commands.backlog_delete
+    CC=11  in:0  out:27  total:27
   planfile.importers.redup_importer._parse_duplicates
     CC=9  in:1  out:26  total:27
-  planfile.runner.analyze_project_metrics
-    CC=12  in:1  out:25  total:26
-  examples.ecosystem.02_mcp_integration.example_mcp_session
-    CC=1  in:0  out:26  total:26
-  planfile.cli.project_detector.structure._analyze_directory_structure
-    CC=20  in:3  out:23  total:26
-  planfile.cli.groups.query.commands.stats_cmd
-    CC=5  in:0  out:24  total:24
-  planfile.runner.run_strategy
-    CC=8  in:1  out:23  total:24
-  planfile.importers.redup_importer._parse_toon_format
-    CC=9  in:1  out:22  total:23
-  planfile.cli.groups.query.commands.compare_strategies
-    CC=10  in:1  out:22  total:23
-  planfile.cli.project_detector.readme._find_readme_content
-    CC=16  in:2  out:20  total:22
 
 MODULES:
   Taskfile  [1 funcs]
     print  CC=0  out:0
   examples.ecosystem.02_mcp_integration  [6 funcs]
-    create_mcp_tool_definitions  CC=1  out:6
+    create_mcp_tool_definitions  CC=1  out:7
     example_mcp_session  CC=1  out:26
     run_mcp_tool  CC=4  out:6
     simulate_planfile_apply  CC=5  out:7
@@ -2211,10 +2559,7 @@ MODULES:
     example_read_tickets  CC=1  out:12
     example_update_tickets  CC=1  out:8
     main  CC=1  out:11
-  examples.python-api.03_integration  [8 funcs]
-    error  CC=3  out:4
-    metric_alert  CC=1  out:4
-    warning  CC=2  out:2
+  examples.python-api.03_integration  [5 funcs]
     example_ci_pipeline_integration  CC=4  out:7
     example_cli_tool_integration  CC=2  out:5
     example_custom_decorator  CC=3  out:17
@@ -2231,12 +2576,27 @@ MODULES:
     main  CC=1  out:11
   examples.python-api.04_analytics_simple  [1 funcs]
     main  CC=1  out:35
+  examples.python-api.05_dsl_usage  [6 funcs]
+    example_basic_dsl  CC=1  out:7
+    example_batch_operations  CC=4  out:5
+    example_parser_only  CC=1  out:8
+    example_query_and_export  CC=1  out:5
+    example_sprint_management  CC=1  out:5
+    example_validation_sync  CC=1  out:7
   examples.rest-api.03_python_client  [5 funcs]
     example_basic_operations  CC=1  out:10
     example_bulk_operations  CC=2  out:12
     example_error_handling  CC=3  out:7
     example_workflow  CC=1  out:12
     main  CC=4  out:21
+  examples.rest-api.04_dsl_usage  [7 funcs]
+    example_dsl_command  CC=1  out:3
+    example_dsl_create_ticket  CC=1  out:3
+    example_dsl_help  CC=1  out:3
+    example_dsl_sprint  CC=1  out:6
+    example_dsl_update_ticket  CC=1  out:3
+    example_dsl_validate_sync  CC=1  out:6
+    example_yaml_operations  CC=1  out:6
   examples.rest-api.04_javascript_client  [13 funcs]
     BASE_URL  CC=5  out:17
     client  CC=2  out:10
@@ -2248,6 +2608,13 @@ MODULES:
     moveTicket  CC=1  out:1
     request  CC=5  out:8
     ticket  CC=1  out:1
+  examples.rest-api.06_websocket  [6 funcs]
+    example_websocket_basic  CC=1  out:6
+    example_websocket_batch  CC=2  out:7
+    example_websocket_error_handling  CC=3  out:8
+    example_websocket_interactive  CC=2  out:9
+    example_websocket_raw_text  CC=1  out:7
+    main  CC=1  out:3
   planfile  [1 funcs]
     quick_ticket  CC=1  out:4
   planfile.analysis.external_tools  [3 funcs]
@@ -2296,13 +2663,17 @@ MODULES:
     _process_yaml_value  CC=4  out:7
     analyze_yaml  CC=4  out:20
     extract_from_yaml_structure  CC=5  out:8
-  planfile.api.server  [6 funcs]
+  planfile.api.server  [12 funcs]
+    create_sprint  CC=4  out:13
     create_ticket  CC=1  out:5
     delete_ticket  CC=2  out:4
+    done_ticket  CC=2  out:5
     get_ticket  CC=2  out:5
-    list_tickets  CC=3  out:6
+    get_yaml  CC=3  out:7
+    list_sprints  CC=3  out:7
+    list_tickets  CC=5  out:8
     move_ticket  CC=2  out:5
-    update_ticket  CC=4  out:7
+    patch_yaml  CC=6  out:11
   planfile.ci  [2 funcs]
     __init__  CC=4  out:5
     check_strategy_completion  CC=3  out:9
@@ -2330,6 +2701,21 @@ MODULES:
   planfile.cli.groups.auto.commands  [2 funcs]
     _initialize_backends  CC=3  out:4
     get_backend  CC=4  out:13
+  planfile.cli.groups.backlog.commands  [10 funcs]
+    _collect_backlog_to_delete  CC=6  out:5
+    _collect_targets_to_delete  CC=4  out:5
+    _get_planfile_yaml_path  CC=3  out:4
+    _load_planfile_yaml  CC=2  out:6
+    _matches_files  CC=5  out:2
+    _print_deletion_preview  CC=5  out:8
+    _save_planfile_yaml  CC=1  out:3
+    backlog_delete  CC=11  out:27
+    backlog_list  CC=10  out:14
+    create_backlog_table  CC=3  out:16
+  planfile.cli.groups.dsl.commands  [3 funcs]
+    _interactive_shell  CC=7  out:8
+    _run_single  CC=8  out:11
+    dsl_run  CC=2  out:7
   planfile.cli.groups.examples  [1 funcs]
     register_examples_commands  CC=1  out:1
   planfile.cli.groups.examples.commands  [2 funcs]
@@ -2366,7 +2752,9 @@ MODULES:
   planfile.cli.groups.review.utils  [2 funcs]
     _load_and_validate_strategy  CC=2  out:3
     _load_backend_config  CC=6  out:13
-  planfile.cli.groups.sync.commands  [7 funcs]
+  planfile.cli.groups.sync.commands  [10 funcs]
+    _resolve_watch_integrations  CC=4  out:5
+    _run_sync_once  CC=3  out:2
     all_cmd  CC=2  out:11
     github_cmd  CC=1  out:4
     gitlab_cmd  CC=1  out:4
@@ -2374,6 +2762,7 @@ MODULES:
     jira_cmd  CC=1  out:4
     markdown_cmd  CC=1  out:4
     sync_all_integrations  CC=3  out:5
+    watch_cmd  CC=6  out:29
   planfile.cli.groups.sync.core  [11 funcs]
     _collect_tickets_from_backlog  CC=4  out:4
     _collect_tickets_from_section  CC=3  out:5
@@ -2385,15 +2774,19 @@ MODULES:
     _process_planfile_v1  CC=9  out:11
     _ticket_matches_integration  CC=3  out:2
     _ticket_matches_integration_v1  CC=2  out:2
-  planfile.cli.groups.ticket.commands  [5 funcs]
+  planfile.cli.groups.ticket.commands  [10 funcs]
+    _apply_label_changes  CC=6  out:5
+    _auto_sync  CC=6  out:11
     _display_tickets  CC=6  out:9
+    _execute_bulk_updates  CC=4  out:6
+    _load_issue_records_from_file  CC=12  out:14
     create_ticket_table  CC=5  out:14
     load_import_tickets  CC=5  out:6
     ticket_import  CC=1  out:8
-    ticket_list  CC=5  out:9
-  planfile.cli.groups.validate  [1 funcs]
-    register_validate_commands  CC=1  out:1
-  planfile.cli.groups.validate.commands  [1 funcs]
+    ticket_list  CC=6  out:10
+    ticket_validate  CC=10  out:28
+  planfile.cli.groups.validate.commands  [2 funcs]
+    validate_schema_cli  CC=9  out:16
     validate_strategy_cli  CC=9  out:22
   planfile.cli.project_detector.fallback  [1 funcs]
     _detect_from_structure  CC=9  out:27
@@ -2413,12 +2806,15 @@ MODULES:
   planfile.cli.project_detector.inference  [3 funcs]
     _infer_domain  CC=4  out:4
     _infer_node_project_type  CC=9  out:5
-    _infer_python_project_type  CC=17  out:12
+    _infer_python_project_type  CC=11  out:11
   planfile.cli.project_detector.license  [1 funcs]
     _detect_license  CC=9  out:2
-  planfile.cli.project_detector.main  [2 funcs]
+  planfile.cli.project_detector.main  [5 funcs]
+    _build_detected_dict  CC=9  out:3
+    _determine_source  CC=4  out:3
+    _quality_gates_to_dict  CC=2  out:0
     detect_project  CC=4  out:5
-    get_detected_values  CC=15  out:7
+    get_detected_values  CC=1  out:2
   planfile.cli.project_detector.model_tier  [4 funcs]
     _detect_model_tier  CC=3  out:3
     _tier_from_config_files  CC=9  out:3
@@ -2436,15 +2832,25 @@ MODULES:
     _populate_project_from_data  CC=5  out:2
     _populate_project_metadata  CC=8  out:13
     _populate_readme_and_repository_details  CC=4  out:10
-  planfile.cli.project_detector.readme  [3 funcs]
-    _find_readme_content  CC=16  out:20
+  planfile.cli.project_detector.readme  [5 funcs]
+    _extract_description  CC=6  out:6
+    _extract_goal  CC=8  out:11
+    _find_readme_content  CC=4  out:5
     _find_readme_description  CC=1  out:1
     _find_readme_goal  CC=1  out:1
-  planfile.cli.project_detector.structure  [1 funcs]
-    _analyze_directory_structure  CC=20  out:23
+  planfile.cli.project_detector.structure  [4 funcs]
+    _analyze_directory_structure  CC=1  out:3
+    _find_src_dirs  CC=12  out:11
+    _has_tests  CC=2  out:2
+    _suggest_sprints  CC=6  out:8
   planfile.core.models.strategy  [2 funcs]
     export  CC=5  out:12
     to_yaml  CC=2  out:5
+  planfile.core.schema  [1 funcs]
+    validate_yaml_file  CC=5  out:5
+  planfile.dsl.executor  [2 funcs]
+    _exec_sync  CC=6  out:20
+    _exec_validate  CC=1  out:8
   planfile.examples  [5 funcs]
     example_create_strategy  CC=1  out:1
     example_programmatic_strategy  CC=1  out:11
@@ -2511,7 +2917,7 @@ MODULES:
   planfile.mcp.server  [4 funcs]
     _read_jsonrpc  CC=4  out:2
     _write_jsonrpc  CC=1  out:3
-    handle_tool_call  CC=14  out:17
+    handle_tool_call  CC=27  out:42
     main  CC=8  out:12
   planfile.runner  [7 funcs]
     _get_project_hash  CC=5  out:11
@@ -2526,16 +2932,16 @@ MODULES:
   planfile.sync.mock  [4 funcs]
     _create_ticket  CC=4  out:7
     _list_tickets  CC=11  out:13
-    _search_tickets  CC=4  out:11
-    _update_ticket  CC=8  out:4
+    _search_tickets  CC=5  out:14
+    _update_ticket  CC=8  out:5
   planfile.sync.operations  [15 funcs]
     _create_new_ticket  CC=4  out:8
-    _extract_ticket_data  CC=7  out:14
+    _extract_ticket_data  CC=9  out:16
     _fetch_external_tickets  CC=3  out:4
-    _import_new_ticket  CC=1  out:3
+    _import_new_ticket  CC=2  out:5
     _is_permission_error  CC=3  out:4
     _load_sprint_and_backlog  CC=5  out:4
-    _print_dry_run_action  CC=2  out:2
+    _print_dry_run_action  CC=3  out:4
     _print_permission_error  CC=1  out:9
     _process_external_ticket  CC=4  out:6
     _save_import_results  CC=5  out:6
@@ -2543,6 +2949,37 @@ MODULES:
     save_sync  CC=2  out:9
   planfile.sync.utils  [1 funcs]
     save_v1_format  CC=1  out:2
+  planfile.testql_integration  [34 funcs]
+    _append_ref_entry  CC=4  out:1
+    _attach_external_ref  CC=5  out:10
+    _build_task_pattern_entry  CC=3  out:4
+    _collect_error_messages  CC=7  out:5
+    _collect_external_ref_candidates  CC=9  out:29
+    _collect_failure_messages  CC=4  out:8
+    _collect_step_messages  CC=8  out:10
+    _collect_ticket_identity_keys  CC=14  out:57
+    _dedupe_messages  CC=3  out:3
+    _default_strategy_payload  CC=1  out:0
+  planfile.ticket_validation  [16 funcs]
+    _build_issue_indexes  CC=14  out:23
+    _collect_ticket_entries  CC=9  out:25
+    _count_file_lines  CC=5  out:4
+    _load_strategy  CC=3  out:3
+    _normalize_files  CC=8  out:11
+    _normalize_rel_path  CC=5  out:10
+    _normalize_rule  CC=2  out:3
+    _normalize_ticket_filters  CC=5  out:5
+    _parse_positive_int  CC=4  out:1
+    _resolve_existing_files  CC=3  out:3
+  planfile.todo_sync  [8 funcs]
+    _collect_markers_from_results  CC=6  out:6
+    _collect_markers_from_strategy  CC=13  out:17
+    _get_value  CC=2  out:3
+    _load_strategy  CC=3  out:3
+    _normalize_marker  CC=2  out:2
+    _resolve_todo_config  CC=7  out:10
+    _status_done  CC=2  out:3
+    sync_todo_checkboxes_from_planfile  CC=14  out:30
   planfile.utils.metrics  [4 funcs]
     _check_project_files  CC=2  out:1
     _collect_git_metrics  CC=8  out:15
@@ -2562,6 +2999,7 @@ MODULES:
     print_error  CC=0  out:0
 
 EDGES:
+  examples.llx_validator.create_validation_script → Taskfile.print
   examples.rest-api.04_javascript_client.BASE_URL → examples.rest-api.04_javascript_client.PlanfileClient.request
   examples.rest-api.04_javascript_client.PlanfileClient.health → examples.rest-api.04_javascript_client.PlanfileClient.createTicket
   examples.rest-api.04_javascript_client.PlanfileClient.listTickets → examples.rest-api.04_javascript_client.PlanfileClient.request
@@ -2579,22 +3017,14 @@ EDGES:
   examples.rest-api.04_javascript_client.PlanfileClient.fetched → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.updated → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.tickets → examples.rest-api.04_javascript_client.PlanfileClient.listTickets
-  examples.python-api.03_integration_simple.main → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.error → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.error → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.warning → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.warning → Taskfile.print
-  examples.python-api.03_integration.TicketLogger.metric_alert → planfile.quick_ticket
-  examples.python-api.03_integration.TicketLogger.metric_alert → Taskfile.print
-  examples.python-api.03_integration.example_cli_tool_integration → Taskfile.print
-  examples.python-api.03_integration.example_monitoring_integration → Taskfile.print
-  examples.python-api.03_integration.example_ci_pipeline_integration → Taskfile.print
-  examples.python-api.03_integration.example_custom_decorator → Taskfile.print
-  examples.python-api.03_integration.main → Taskfile.print
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_cli_tool_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_monitoring_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_ci_pipeline_integration
-  examples.python-api.03_integration.main → examples.python-api.03_integration.example_custom_decorator
+  examples.rest-api.03_python_client.example_basic_operations → Taskfile.print
+  examples.rest-api.03_python_client.example_bulk_operations → Taskfile.print
+  examples.rest-api.03_python_client.example_workflow → Taskfile.print
+  examples.rest-api.03_python_client.example_error_handling → Taskfile.print
+  examples.rest-api.03_python_client.main → Taskfile.print
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_basic_operations
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_bulk_operations
+  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_workflow
   examples.ecosystem.02_mcp_integration.run_mcp_tool → Taskfile.print
   examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_generate
   examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_apply
@@ -2604,14 +3034,21 @@ EDGES:
   examples.ecosystem.02_mcp_integration.example_mcp_session → Taskfile.print
   examples.ecosystem.02_mcp_integration.example_mcp_session → examples.ecosystem.02_mcp_integration.run_mcp_tool
   examples.ecosystem.02_mcp_integration.create_mcp_tool_definitions → Taskfile.print
-  examples.python-api.01_basic_usage.example_1_basic_initialization → Taskfile.print
-  examples.python-api.01_basic_usage.example_2_create_ticket → Taskfile.print
-  examples.python-api.01_basic_usage.example_3_quick_ticket → Taskfile.print
-  examples.python-api.01_basic_usage.example_3_quick_ticket → planfile.quick_ticket
-  examples.python-api.01_basic_usage.example_4_list_tickets → Taskfile.print
-  examples.python-api.01_basic_usage.main → Taskfile.print
-  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_1_basic_initialization
-  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_2_create_ticket
+  examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project → Taskfile.print
+  examples.ecosystem.04_llx_integration.example_metric_driven_planning → Taskfile.print
+  examples.ecosystem.04_llx_integration.create_llx_config_example → Taskfile.print
+  examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy → Taskfile.print
+  examples.ecosystem.03_proxy_routing.create_proxy_config_example → Taskfile.print
+  examples.ecosystem.03_proxy_routing.example_budget_tracking → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_basic_filtering → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_combined_filters → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_search_by_labels → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_export_filtered → Taskfile.print
+  examples.python-api.04_advanced_filtering.example_statistics → Taskfile.print
+  examples.python-api.04_advanced_filtering.main → Taskfile.print
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_basic_filtering
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_combined_filters
+  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_search_by_labels
 ```
 
 ## Test Contracts

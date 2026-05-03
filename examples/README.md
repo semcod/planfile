@@ -44,10 +44,23 @@ examples/
 │   ├── README.md
 │   ├── run.sh
 │   └── external_tools_examples.py
-└── advanced-usage/           # 🎯 Advanced patterns and workflows
+├── advanced-usage/           # 🎯 Advanced patterns and workflows
+│   ├── README.md
+│   ├── run.sh
+│   └── advanced_usage_examples.py
+├── cli/                      # 🗣️ CLI DSL examples
+│   ├── README.md
+│   └── 01_dsl_usage.py
+├── mcp/                      # 🤖 MCP DSL tool examples
+│   ├── README.md
+│   └── 01_dsl_tool.py
+├── python-api/               # 🐍 Python API DSL examples
+│   ├── README.md
+│   └── 05_dsl_usage.py
+└── rest-api/                 # 🌐 REST API DSL examples
     ├── README.md
-    ├── run.sh
-    └── advanced_usage_examples.py
+    ├── 04_dsl_usage.py
+    └── 06_websocket.py
 ```
 
 # Optional integrations
@@ -209,6 +222,70 @@ Advanced patterns and workflows:
 
 ```bash
 cd advanced-usage && ./run.sh
+```
+
+### 🗣️ CLI DSL (cli/)
+
+DSL (Domain Specific Language) usage via command-line:
+- Natural language-like commands
+- Interactive REPL shell
+- Single command execution
+- Format options (text/json/yaml)
+- Project path support
+
+```bash
+planfile dsl "list tickets sprint=current"
+planfile dsl 'create ticket "Fix bug" priority=high'
+planfile dsl  # interactive shell
+```
+
+### 🤖 MCP DSL (mcp/)
+
+MCP (Model Context Protocol) DSL tool examples:
+- LLM agent integration
+- JSON-RPC stdio transport
+- DSL command execution via MCP
+- YAML read/patch operations
+- Sprint management
+
+```bash
+python -m planfile.mcp.server
+```
+
+### 🐍 Python API DSL (python-api/)
+
+DSL usage via Python library:
+- DSLParser for parsing commands
+- DSLExecutor for execution
+- Batch operations
+- Sprint management
+- Validation and sync
+
+```python
+from planfile import DSLExecutor
+executor = DSLExecutor(project_path=".")
+result = executor.run("list tickets sprint=current")
+```
+
+### 🌐 REST API DSL (rest-api/)
+
+DSL usage via REST API:
+- POST /dsl endpoint
+- WebSocket /ws endpoint
+- YAML operations
+- Sprint CRUD
+
+```bash
+# Start server
+uvicorn planfile.api.server:app --reload
+
+# DSL via HTTP
+curl -X POST http://localhost:8000/dsl \
+  -H "Content-Type: application/json" \
+  -d '{"command": "list tickets", "project_path": "."}'
+
+# DSL via WebSocket
+ws://localhost:8000/ws?project_path=.
 ```
 
 ### Automated Validation

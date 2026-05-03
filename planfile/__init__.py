@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.86"
+__version__ = "0.1.87"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -39,6 +39,7 @@ from planfile.testql_integration import (
 )
 from planfile.ticket_validation import validate_planfile_tickets
 from planfile.todo_sync import sync_todo_checkboxes_from_planfile
+from planfile.dsl import DSLParser, DSLExecutor, DSLResult
 
 # Backward compat aliases
 StrategyV1 = Strategy
@@ -144,6 +145,8 @@ __all__ = [
     "upsert_testql_tickets",
     "sync_testql_tickets",
     "validate_planfile_tickets",
+    # DSL
+    "DSLParser", "DSLExecutor", "DSLResult",
 ]
 
 # Lazy loading functions for executors

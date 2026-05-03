@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import time
 from pathlib import Path
+from typing import Any
 
 import typer
 
@@ -95,6 +96,40 @@ def all_cmd(
     sync_all_integrations(integrations, directory, dry_run, direction)
 
 
+def _resolve_watch_integrations(config: Any, integrations: list[str] | None) -> list[str]:
+    if integrations:
+        return list(integrations)
+    to_sync = list(config.config.get("integrations", {}).keys())
+    if "markdown" not in to_sync:
+        to_sync.append("markdown")
+    return to_sync or ["markdown"]
+
+
+def _get_planfile_dir_states(planfile_dir: Path) -> dict[str, float]:
+    states: dict[str, float] = {}
+    for path in planfile_dir.rglob("*.yaml"):
+        try:
+            states[str(path)] = path.stat().st_mtime
+        except OSError:
+            pass
+    return states
+
+
+def _detect_changes(last: dict[str, float], current: dict[str, float]) -> bool:
+    for path, mtime in current.items():
+        if path not in last or last[path] != mtime:
+            return True
+    return any(path not in current for path in last)
+
+
+def _run_sync_once(to_sync: list[str], directory: str, direction: str) -> None:
+    for integration in to_sync:
+        try:
+            sync_integration(integration, directory, False, direction, show_header=False)
+        except Exception as e:
+            console.print(f"[yellow]⚠️ Sync failed for {integration}: {e}[/yellow]")
+
+
 def watch_cmd(
     directory: str = typer.Argument(".", help="Directory to watch"),
     interval: int = typer.Option(5, "--interval", "-i", help="Polling interval in seconds"),
@@ -112,16 +147,7 @@ def watch_cmd(
 
     config = IntegrationConfig(directory)
     config.load_configs()
-
-    if integrations:
-        to_sync = integrations
-    else:
-        to_sync = list(config.config.get("integrations", {}).keys())
-        if "markdown" not in to_sync:
-            to_sync.append("markdown")
-
-    if not to_sync:
-        to_sync = ["markdown"]
+    to_sync = _resolve_watch_integrations(config, integrations)
 
     console.print(f"[blue]👁️ Watching {planfile_dir} for changes...[/blue]")
     console.print(f"[dim]   Sync targets: {', '.join(to_sync)}[/dim]")
@@ -129,52 +155,20 @@ def watch_cmd(
     console.print(f"[dim]   Direction: {direction}[/dim]")
     console.print("[dim]   Press Ctrl+C to stop[/dim]\n")
 
-    def get_file_states() -> dict[str, float]:
-        states = {}
-        for path in planfile_dir.rglob("*.yaml"):
-            try:
-                states[str(path)] = path.stat().st_mtime
-            except OSError:
-                pass
-        return states
-
-    last_states = get_file_states()
-
     if once:
         console.print("[blue]🔄 Running one-time sync...[/blue]")
-        for integration in to_sync:
-            try:
-                sync_integration(integration, directory, False, direction, show_header=False)
-            except Exception as e:
-                console.print(f"[yellow]⚠️ Sync failed for {integration}: {e}[/yellow]")
+        _run_sync_once(to_sync, directory, direction)
         return
 
+    last_states = _get_planfile_dir_states(planfile_dir)
     try:
         while True:
             time.sleep(interval)
-            current_states = get_file_states()
-
-            changed = False
-            for path, mtime in current_states.items():
-                if path not in last_states or last_states[path] != mtime:
-                    changed = True
-                    break
-
-            if not changed:
-                for path in last_states:
-                    if path not in current_states:
-                        changed = True
-                        break
-
-            if changed:
+            current_states = _get_planfile_dir_states(planfile_dir)
+            if _detect_changes(last_states, current_states):
                 console.print(f"[blue]📝 Detected changes at {time.strftime('%H:%M:%S')}[/blue]")
-                for integration in to_sync:
-                    try:
-                        sync_integration(integration, directory, False, direction, show_header=False)
-                    except Exception as e:
-                        console.print(f"[yellow]⚠️ Sync failed for {integration}: {e}[/yellow]")
+                _run_sync_once(to_sync, directory, direction)
                 console.print("")
                 last_states = current_states
-
     except KeyboardInterrupt:
         console.print("\n[dim]👋 Watch stopped.[/dim]")

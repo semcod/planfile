@@ -4,6 +4,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import typer
 import yaml
@@ -309,6 +310,49 @@ def ticket_block(ticket_id: str=typer.Argument(..., help='Ticket ID to block'), 
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Blocked {ticket.id}')
 
+def _collect_delete_ids(
+    pf: Any,
+    ticket_ids: list[str] | None,
+    sprint: str | None,
+    status: str | None,
+    label: list[str] | None,
+    source: str | None,
+    files: list[str] | None,
+) -> list[str]:
+    to_delete: list[str] = list(ticket_ids or [])
+    if sprint or status or label or source or files:
+        filters: dict = {}
+        if status:
+            filters['status'] = status
+        if source:
+            filters['source'] = source
+        if label:
+            filters['labels'] = list(label)
+        if files:
+            filters['files'] = files
+        sprint_arg = sprint if sprint else 'all'
+        for t in pf.list_tickets(sprint=sprint_arg, **filters):
+            if t.id not in to_delete:
+                to_delete.append(t.id)
+    return to_delete
+
+
+def _confirm_and_delete(
+    pf: Any, to_delete: list[str], dry_run: bool, force: bool
+) -> tuple[list[str], list[str]]:
+    console.print(f'[bold]Tickets to delete:[/bold] ({len(to_delete)} total)')
+    for tid in sorted(to_delete):
+        console.print(f'  - {tid}')
+    if dry_run:
+        console.print('[cyan]--dry-run[/cyan]: No tickets were deleted.')
+        raise typer.Exit(0)
+    if not force:
+        if not typer.confirm(f'Delete {len(to_delete)} ticket(s)?'):
+            console.print('[dim]Cancelled.[/dim]')
+            raise typer.Exit(0)
+    return pf.delete_tickets(to_delete)
+
+
 def ticket_delete(
     ticket_ids: list[str] = typer.Argument(None, help='Ticket ID(s) to delete (e.g., PLF-001 PLF-002)'),
     sprint: str = typer.Option(None, '-s', '--sprint', help='Delete all tickets in sprint (use "all" for all sprints)'),
@@ -325,53 +369,12 @@ def ticket_delete(
     from planfile import Planfile
     pf = Planfile.auto_discover()
 
-    # Collect tickets to delete
-    to_delete: list[str] = []
-
-    if ticket_ids:
-        to_delete.extend(ticket_ids)
-
-    # Filter-based deletion
-    if sprint or status or label or source or files:
-        filters = {}
-        if status:
-            filters['status'] = status
-        if source:
-            filters['source'] = source
-        if label:
-            filters['labels'] = list(label)
-        if files:
-            filters['files'] = files
-
-        sprint_arg = sprint if sprint else 'all'
-        tickets = pf.list_tickets(sprint=sprint_arg, **filters)
-
-        for t in tickets:
-            if t.id not in to_delete:
-                to_delete.append(t.id)
-
+    to_delete = _collect_delete_ids(pf, ticket_ids, sprint, status, label, source, files)
     if not to_delete:
         console.print('[yellow]⚠[/yellow] No tickets match the specified criteria.')
         raise typer.Exit(0)
 
-    # Show what will be deleted
-    console.print(f'[bold]Tickets to delete:[/bold] ({len(to_delete)} total)')
-    for tid in sorted(to_delete):
-        console.print(f'  - {tid}')
-
-    if dry_run:
-        console.print('[cyan]--dry-run[/cyan]: No tickets were deleted.')
-        raise typer.Exit(0)
-
-    # Confirm deletion
-    if not force:
-        confirm = typer.confirm(f'Delete {len(to_delete)} ticket(s)?')
-        if not confirm:
-            console.print('[dim]Cancelled.[/dim]')
-            raise typer.Exit(0)
-
-    # Execute deletion
-    deleted, not_found = pf.delete_tickets(to_delete)
+    deleted, not_found = _confirm_and_delete(pf, to_delete, dry_run, force)
 
     if deleted:
         console.print(f'[green]✓[/green] Deleted {len(deleted)} ticket(s): {", ".join(deleted)}')
@@ -380,6 +383,69 @@ def ticket_delete(
 
     if sync and deleted:
         _auto_sync(str(pf.store.project_dir), None, sync_dry_run)
+
+def _print_bulk_update_preview(
+    tickets: list,
+    new_status: str | None,
+    new_priority: str | None,
+    add_label: list[str] | None,
+    remove_label: list[str] | None,
+    move_to_sprint: str | None,
+) -> None:
+    console.print(f'[bold]Tickets to update:[/bold] ({len(tickets)} total)')
+    for t in tickets:
+        console.print(f'  - {t.id}: {t.name}')
+    console.print('\n[bold]Updates to apply:[/bold]')
+    if new_status:
+        console.print(f'  status: {new_status}')
+    if new_priority:
+        console.print(f'  priority: {new_priority}')
+    if add_label:
+        console.print(f'  add labels: {", ".join(add_label)}')
+    if remove_label:
+        console.print(f'  remove labels: {", ".join(remove_label)}')
+    if move_to_sprint:
+        console.print(f'  move to sprint: {move_to_sprint}')
+
+
+def _apply_label_changes(
+    ticket: Any,
+    base_updates: dict,
+    add_label: list[str] | None,
+    remove_label: list[str] | None,
+) -> dict:
+    updates = dict(base_updates)
+    if add_label or remove_label:
+        current_labels = set(ticket.labels or [])
+        if add_label:
+            current_labels.update(add_label)
+        if remove_label:
+            current_labels.difference_update(remove_label)
+        updates['labels'] = list(current_labels)
+    return updates
+
+
+def _execute_bulk_updates(
+    pf: Any,
+    tickets: list,
+    base_updates: dict,
+    add_label: list[str] | None,
+    remove_label: list[str] | None,
+    move_to_sprint: str | None,
+) -> tuple[list[str], list[tuple[str, str]]]:
+    updated: list[str] = []
+    failed: list[tuple[str, str]] = []
+    for t in tickets:
+        try:
+            ticket_updates = _apply_label_changes(t, base_updates, add_label, remove_label)
+            pf.update_ticket(t.id, **ticket_updates)
+            if move_to_sprint:
+                pf.store.move_ticket(t.id, move_to_sprint)
+            updated.append(t.id)
+        except Exception as e:
+            failed.append((t.id, str(e)))
+    return updated, failed
+
 
 def ticket_bulk_update(
     sprint: str = typer.Option(None, '-s', '--sprint', help='Update tickets in sprint (use "all" for all sprints)'),
@@ -402,8 +468,7 @@ def ticket_bulk_update(
     from planfile import Planfile
     pf = Planfile.auto_discover()
 
-    # Build filters
-    filters = {}
+    filters: dict = {}
     if status_filter:
         filters['status'] = status_filter
     if source:
@@ -420,70 +485,28 @@ def ticket_bulk_update(
         console.print('[yellow]⚠[/yellow] No tickets match the specified criteria.')
         raise typer.Exit(0)
 
-    # Build updates
-    updates = {}
+    base_updates: dict = {}
     if new_status:
-        updates['status'] = new_status
+        base_updates['status'] = new_status
     if new_priority:
-        updates['priority'] = new_priority
+        base_updates['priority'] = new_priority
 
-    if not updates and not add_label and not remove_label and not move_to_sprint:
+    if not base_updates and not add_label and not remove_label and not move_to_sprint:
         console.print('[yellow]⚠[/yellow] No updates specified. Use --new-status, --new-priority, --add-label, --remove-label, or --move-to-sprint.')
         raise typer.Exit(1)
 
-    # Show what will be updated
-    console.print(f'[bold]Tickets to update:[/bold] ({len(tickets)} total)')
-    for t in tickets:
-        console.print(f'  - {t.id}: {t.name}')
-
-    console.print(f'\n[bold]Updates to apply:[/bold]')
-    if new_status:
-        console.print(f'  status: {new_status}')
-    if new_priority:
-        console.print(f'  priority: {new_priority}')
-    if add_label:
-        console.print(f'  add labels: {", ".join(add_label)}')
-    if remove_label:
-        console.print(f'  remove labels: {", ".join(remove_label)}')
-    if move_to_sprint:
-        console.print(f'  move to sprint: {move_to_sprint}')
+    _print_bulk_update_preview(tickets, new_status, new_priority, add_label, remove_label, move_to_sprint)
 
     if dry_run:
         console.print('\n[cyan]--dry-run[/cyan]: No tickets were updated.')
         raise typer.Exit(0)
 
-    # Confirm update
     if not force:
-        confirm = typer.confirm(f'\nUpdate {len(tickets)} ticket(s)?')
-        if not confirm:
+        if not typer.confirm(f'\nUpdate {len(tickets)} ticket(s)?'):
             console.print('[dim]Cancelled.[/dim]')
             raise typer.Exit(0)
 
-    # Execute updates
-    updated = []
-    failed = []
-    for t in tickets:
-        try:
-            ticket_updates = dict(updates)
-
-            # Handle label modifications
-            if add_label or remove_label:
-                current_labels = set(t.labels or [])
-                if add_label:
-                    current_labels.update(add_label)
-                if remove_label:
-                    current_labels.difference_update(remove_label)
-                ticket_updates['labels'] = list(current_labels)
-
-            pf.update_ticket(t.id, **ticket_updates)
-
-            # Handle sprint move separately
-            if move_to_sprint:
-                pf.store.move_ticket(t.id, move_to_sprint)
-
-            updated.append(t.id)
-        except Exception as e:
-            failed.append((t.id, str(e)))
+    updated, failed = _execute_bulk_updates(pf, tickets, base_updates, add_label, remove_label, move_to_sprint)
 
     if updated:
         console.print(f'[green]✓[/green] Updated {len(updated)} ticket(s): {", ".join(updated)}')
@@ -491,6 +514,6 @@ def ticket_bulk_update(
         console.print(f'[red]✗[/red] Failed to update {len(failed)} ticket(s):')
         for tid, err in failed:
             console.print(f'  - {tid}: {err}')
-    
+
     if sync and updated:
         _auto_sync(str(pf.store.project_dir), None, sync_dry_run)

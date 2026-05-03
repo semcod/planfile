@@ -14,6 +14,7 @@ from planfile.cli.groups.query import register_query_commands
 from planfile.cli.groups.review import register_review_commands
 from planfile.cli.groups.sync import register_sync_commands
 from planfile.cli.groups.ticket import register_ticket_commands
+from planfile.cli.groups.dsl import register_dsl_commands
 from planfile.cli.groups.validate import register_validate_commands
 
 app = typer.Typer(help="planfile — universal ticket standard for developer toolchains")
@@ -41,6 +42,7 @@ def main_callback(
 # Register all command groups
 register_apply_commands(app)
 register_auto_commands(app)
+register_dsl_commands(app)
 register_backlog_commands(app)
 register_generate_commands(app)
 register_init_commands(app)
