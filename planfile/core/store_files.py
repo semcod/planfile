@@ -12,20 +12,33 @@ class StoreFileMixin:
         return sorted(self.base_dir.glob("*.yaml"))
 
     def _read_yaml_cached(self, path: Path) -> dict[str, Any] | None:
+        """Read a YAML sprint file with mtime-aware caching.
+
+        The cache is keyed by ``(path, mtime_ns)`` so that external
+        writers (e.g. ``koru --queue`` running in a separate process)
+        invalidate the cache automatically. Without the mtime check the
+        long-running ``planfile.api.server`` would serve stale ticket
+        state until the uvicorn worker restarted.
+        """
         cached = getattr(self, "_yaml_cache", None)
         if cached is None:
             cached = {}
             self._yaml_cache = cached
         key = str(path)
-        if key in cached:
-            return cached[key]
         if not path.exists():
-            cached[key] = None
+            cached.pop(key, None)
             return None
+        try:
+            mtime_ns = path.stat().st_mtime_ns
+        except OSError:
+            mtime_ns = -1
+        entry = cached.get(key)
+        if entry is not None and entry[0] == mtime_ns:
+            return entry[1]
         try:
             import yaml
             data = yaml.safe_load(path.read_text()) or {}
         except Exception:
             data = None
-        cached[key] = data
+        cached[key] = (mtime_ns, data)
         return data
