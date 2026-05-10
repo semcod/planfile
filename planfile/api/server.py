@@ -869,6 +869,9 @@ def _dashboard_html() -> str:
       events: 0,
       notifications: "Notification" in window && Notification.permission === "granted",
       queue: localStorage.getItem("planfile.queue") || "all",
+      selectedTicketId: null,
+      selectedTicket: null,
+      ticketEvents: [],
       seenTicketStates: new Map(),
       lastTickets: [],
     };
@@ -877,6 +880,8 @@ def _dashboard_html() -> str:
     const status = $("status");
     const ticketsEl = $("tickets");
     const eventsEl = $("events");
+    const detailEl = $("ticket-detail");
+    const detailStatusEl = $("detail-status");
 
     function setStatus(text, kind) {
       status.textContent = text;
@@ -889,8 +894,27 @@ def _dashboard_html() -> str:
       }[ch]));
     }
 
+    function stringifyDetail(value) {
+      if (value === null || value === undefined || value === "") return "";
+      return typeof value === "string" ? value : JSON.stringify(value, null, 2);
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString();
+    }
+
     function ticketState(ticket) {
       return ticket?.execution?.state || ticket?.status || "unknown";
+    }
+
+    function ticketEventId(event) {
+      if (event?.ticket_id && event.ticket_id !== "-") return String(event.ticket_id);
+      if (event?.ticket?.id) return String(event.ticket.id);
+      if (event?.details?.ticket_id) return String(event.details.ticket_id);
+      return "";
     }
 
     function isNotifiableEvent(event) {
@@ -939,6 +963,15 @@ def _dashboard_html() -> str:
 
     function eventMatchesQueue(event) {
       return state.queue === "all" || eventQueue(event) === state.queue;
+    }
+
+    function eventLevel(event) {
+      const raw = String(event?.level || event?.status || event?.ticket?.execution?.state || event?.action || "info").toLowerCase();
+      if (["error", "failed", "failure"].includes(raw) || event?.ticket?.execution?.last_error) return "error";
+      if (["warning", "warn", "waiting_input", "waiting"].includes(raw)) return "warning";
+      if (["done", "completed", "ok", "success"].includes(raw)) return "done";
+      if (["running", "started", "claim"].includes(raw)) return "running";
+      return "info";
     }
 
     function notifyTicket(ticket, reason) {
@@ -993,6 +1026,213 @@ def _dashboard_html() -> str:
       $("event-count").textContent = "0 events";
     }
 
+    function renderTickets(tickets) {
+      ticketsEl.innerHTML = tickets
+        .filter((t) => t.status !== "done" && t.status !== "canceled")
+        .slice(0, 80)
+        .map((t) => {
+          const stateName = ticketState(t);
+          const queue = ticketQueue(t);
+          const selectedClass = t.id === state.selectedTicketId ? " selected" : "";
+          return `
+            <div class="ticket${selectedClass}" data-ticket-id="${escapeHtml(t.id)}" role="button" tabindex="0">
+              <div class="title">${escapeHtml(t.id)} ${escapeHtml(t.name)}</div>
+              <div class="meta">
+                <span class="pill ${escapeHtml(stateName)}">${escapeHtml(stateName)}</span>
+                <span class="pill">${escapeHtml(t.priority || "normal")}</span>
+                <span class="pill">${escapeHtml(queue)}</span>
+              </div>
+            </div>
+          `;
+        })
+        .join("") || '<div class="empty">No active tickets in this queue</div>';
+    }
+
+    function detailBlock(title, body) {
+      if (!body) return "";
+      return `<div class="detail-block"><h4>${escapeHtml(title)}</h4>${body}</div>`;
+    }
+
+    function keyValues(rows) {
+      const visible = rows.filter(([, value]) => value !== undefined && value !== null && value !== "" && value !== "-");
+      if (!visible.length) return "";
+      return `<div class="kv">${visible.map(([key, value]) => `<span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong>`).join("")}</div>`;
+    }
+
+    function relatedTicketIds(ticket, events) {
+      const ids = new Set([...(ticket?.blocked_by || []), ...(ticket?.blocks || [])]);
+      const textParts = [
+        ticket?.description,
+        ticket?.inputs?.prompt,
+        ...(ticket?.outputs?.notes || []),
+        ...events.map((event) => `${event.message || ""} ${stringifyDetail(event.details)}`),
+      ];
+      for (const text of textParts) {
+        for (const match of String(text || "").matchAll(/\bPLF-\d+\b/g)) {
+          if (match[0] !== ticket?.id) ids.add(match[0]);
+        }
+      }
+      return Array.from(ids).sort();
+    }
+
+    function renderRelated(ids) {
+      if (!ids.length) return '<div class="empty">No linked tickets detected yet.</div>';
+      return `<div class="related">${ids.map((id) => `<button class="pill" data-related-ticket-id="${escapeHtml(id)}">${escapeHtml(id)}</button>`).join("")}</div>`;
+    }
+
+    function addTimelineItem(items, when, level, title, body = "", details = null) {
+      if (!when && !title && !body && !details) return;
+      items.push({
+        when: when || null,
+        level: level || "info",
+        title,
+        body,
+        details,
+        order: items.length,
+      });
+    }
+
+    function buildTicketTimeline(ticket, events) {
+      const items = [];
+      const execution = ticket?.execution || {};
+      addTimelineItem(items, ticket?.created_at, "info", "ticket created", ticket?.source?.tool ? `source: ${ticket.source.tool}` : "");
+      if (execution.started_at) addTimelineItem(items, execution.started_at, "running", "execution started", execution.assigned_to || "");
+      if (execution.state === "waiting_input") {
+        addTimelineItem(items, ticket?.updated_at, "warning", "waiting for human input", ticket?.inputs?.prompt || execution.last_error || "");
+      }
+      if (execution.last_error) addTimelineItem(items, ticket?.updated_at, "error", "last error", execution.last_error);
+      if (execution.finished_at) addTimelineItem(items, execution.finished_at, execution.state || "done", "execution finished", execution.state || "");
+      for (const entry of ticket?.history || []) {
+        addTimelineItem(items, entry.created_at || entry.timestamp || entry.when, entry.level || entry.status || "info", entry.action || "history", entry.message || entry.note || "", entry);
+      }
+      for (const note of ticket?.outputs?.notes || []) {
+        addTimelineItem(items, ticket?.updated_at, "info", "output note", note);
+      }
+      for (const event of events) {
+        const management = event.type === "management.event";
+        const title = management
+          ? `${event.source || "koru"} / ${event.tool || "tool"} / ${event.action || "-"}`
+          : `${event.type || "event"} / ${event.action || "-"}`;
+        const body = management ? event.message : event.ticket?.name;
+        const details = management ? event.details : event.ticket?.execution?.last_error;
+        addTimelineItem(items, event.created_at, eventLevel(event), title, body, details);
+      }
+      if (ticket?.updated_at && ticket.updated_at !== ticket.created_at) {
+        addTimelineItem(items, ticket.updated_at, ticketState(ticket), "ticket updated", statusLabel(ticket));
+      }
+      return items.sort((a, b) => {
+        const at = a.when ? new Date(a.when).getTime() : 0;
+        const bt = b.when ? new Date(b.when).getTime() : 0;
+        if (at === bt) return a.order - b.order;
+        return at - bt;
+      });
+    }
+
+    function renderTimelineItem(item) {
+      const details = stringifyDetail(item.details);
+      return `
+        <div class="timeline-item ${escapeHtml(item.level)}">
+          <div class="title">${escapeHtml(item.title || "event")}</div>
+          <div class="meta"><span class="pill ${escapeHtml(item.level)}">${escapeHtml(item.level)}</span><span>${escapeHtml(formatDate(item.when))}</span></div>
+          ${item.body ? `<pre>${escapeHtml(item.body)}</pre>` : ""}
+          ${details ? `<pre>${escapeHtml(details)}</pre>` : ""}
+        </div>
+      `;
+    }
+
+    function renderTicketTimeline(ticket, events) {
+      const items = buildTicketTimeline(ticket, events);
+      if (!items.length) return '<div class="empty">No ticket timeline entries yet.</div>';
+      return `<div class="timeline">${items.map(renderTimelineItem).join("")}</div>`;
+    }
+
+    function renderTicketDetail(ticket, events = []) {
+      if (!ticket) {
+        detailStatusEl.textContent = "select a ticket";
+        detailEl.className = "detail empty";
+        detailEl.textContent = "Select a ticket from the queue to inspect status history, tool logs, related work, and human input blockers.";
+        return;
+      }
+      const execution = ticket.execution || {};
+      const executor = ticket.executor || {};
+      const inputs = ticket.inputs || {};
+      const outputs = ticket.outputs || {};
+      const source = ticket.source || {};
+      const stateName = ticketState(ticket);
+      const related = relatedTicketIds(ticket, events);
+      detailStatusEl.textContent = ticket.id;
+      detailEl.className = "detail";
+      detailEl.innerHTML = `
+        <h3>${escapeHtml(ticket.id)} ${escapeHtml(ticket.name)}</h3>
+        <div class="meta">
+          <span class="pill ${escapeHtml(stateName)}">${escapeHtml(statusLabel(ticket))}</span>
+          <span class="pill">${escapeHtml(ticket.priority || "normal")}</span>
+          <span class="pill">${escapeHtml(ticketQueue(ticket))}</span>
+        </div>
+        ${ticket.description ? `<pre>${escapeHtml(ticket.description)}</pre>` : ""}
+        ${detailBlock("Lifecycle", keyValues([
+          ["created", formatDate(ticket.created_at)],
+          ["updated", formatDate(ticket.updated_at)],
+          ["source", [source.tool, source.version].filter(Boolean).join(" ")],
+          ["labels", (ticket.labels || []).join(", ")],
+        ]))}
+        ${detailBlock("Current work", keyValues([
+          ["executor", [executor.kind, executor.mode, executor.handler].filter(Boolean).join(" / ")],
+          ["state", execution.state],
+          ["assigned_to", execution.assigned_to],
+          ["attempt", execution.attempt !== undefined ? `${execution.attempt}/${execution.max_attempts || 1}` : ""],
+          ["started", formatDate(execution.started_at)],
+          ["finished", formatDate(execution.finished_at)],
+          ["lease_expires", formatDate(execution.lease_expires_at)],
+          ["last_error", execution.last_error],
+        ]))}
+        ${detailBlock("Human/API/Tool inputs", keyValues([
+          ["prompt", inputs.prompt],
+          ["env_keys", (inputs.env_keys || []).join(", ")],
+          ["script", inputs.script],
+          ["api", [inputs.api_method, inputs.api_endpoint].filter(Boolean).join(" ")],
+          ["mcp_tool", inputs.mcp_tool],
+          ["llm_model", inputs.llm_model],
+        ]))}
+        ${detailBlock("Outputs", keyValues([
+          ["artifacts", (outputs.artifacts || []).join(", ")],
+          ["notes", (outputs.notes || []).join(" | ")],
+          ["result", stringifyDetail(outputs.result)],
+        ]))}
+        ${detailBlock("Related tickets and splits", renderRelated(related))}
+        ${detailBlock("Timeline and tool logs", renderTicketTimeline(ticket, events))}
+      `;
+    }
+
+    async function selectTicket(ticketId, options = {}) {
+      if (!ticketId) return;
+      state.selectedTicketId = ticketId;
+      renderTickets(selectedTickets(state.lastTickets));
+      if (!options.silent) {
+        detailStatusEl.textContent = "loading...";
+        detailEl.className = "detail empty";
+        detailEl.textContent = `Loading ${ticketId}...`;
+      }
+      const [ticketResponse, eventsResponse] = await Promise.all([
+        fetch(`/tickets/${encodeURIComponent(ticketId)}`, { cache: "no-store" }),
+        fetch(`/events?ticket_id=${encodeURIComponent(ticketId)}&limit=500`, { cache: "no-store" }),
+      ]);
+      if (!ticketResponse.ok) throw new Error(`Ticket ${ticketId} returned HTTP ${ticketResponse.status}`);
+      state.selectedTicket = await ticketResponse.json();
+      state.ticketEvents = eventsResponse.ok ? await eventsResponse.json() : [];
+      renderTicketDetail(state.selectedTicket, state.ticketEvents);
+      renderTickets(selectedTickets(state.lastTickets));
+    }
+
+    function refreshSelectedTicket() {
+      if (!state.selectedTicketId) return;
+      selectTicket(state.selectedTicketId, { silent: true }).catch((error) => {
+        detailStatusEl.textContent = "error";
+        detailEl.className = "detail";
+        detailEl.innerHTML = `<pre>${escapeHtml(String(error))}</pre>`;
+      });
+    }
+
     function addEvent(event, options = {}) {
       if (!eventMatchesQueue(event)) return;
       const notifyEvent = options.notifyEvent !== false;
@@ -1014,10 +1254,15 @@ def _dashboard_html() -> str:
         <div class="title">${escapeHtml(eventTitle)}</div>
         <div class="meta"><span class="pill ${escapeHtml(eventState)}">${escapeHtml(eventState)}</span><span class="pill">${escapeHtml(eventQueue(event))}</span><span>${when.toLocaleTimeString()}</span></div>
         ${eventMessage ? `<pre>${escapeHtml(eventMessage)}</pre>` : ""}
-        ${eventDetail ? `<pre>${escapeHtml(typeof eventDetail === "string" ? eventDetail : JSON.stringify(eventDetail, null, 2))}</pre>` : ""}
+        ${eventDetail ? `<pre>${escapeHtml(stringifyDetail(eventDetail))}</pre>` : ""}
       `;
       eventsEl.prepend(item);
       while (eventsEl.children.length > 100) eventsEl.lastChild.remove();
+      if (state.selectedTicketId && ticketEventId(event) === state.selectedTicketId) {
+        state.ticketEvents.push(event);
+        renderTicketDetail(state.selectedTicket, state.ticketEvents);
+        refreshSelectedTicket();
+      }
       if (notifyEvent) notify(event);
       if (refresh) refreshTickets({ notifyChanges: false });
     }
@@ -1048,24 +1293,13 @@ def _dashboard_html() -> str:
       $("m-waiting").textContent = waiting;
       $("m-failed").textContent = failed;
       $("updated").textContent = new Date().toLocaleTimeString();
-      ticketsEl.innerHTML = visibleTickets
-        .filter((t) => t.status !== "done" && t.status !== "canceled")
-        .slice(0, 80)
-        .map((t) => {
-          const stateName = ticketState(t);
-          const queue = ticketQueue(t);
-          return `
-            <div class="ticket">
-              <div class="title">${escapeHtml(t.id)} ${escapeHtml(t.name)}</div>
-              <div class="meta">
-                <span class="pill ${escapeHtml(stateName)}">${escapeHtml(stateName)}</span>
-                <span class="pill">${escapeHtml(t.priority || "normal")}</span>
-                <span class="pill">${escapeHtml(queue)}</span>
-              </div>
-            </div>
-          `;
-        })
-        .join("") || '<div class="empty">No active tickets in this queue</div>';
+      renderTickets(visibleTickets);
+      if (state.selectedTicketId && !tickets.some((ticket) => ticket.id === state.selectedTicketId)) {
+        state.selectedTicketId = null;
+        state.selectedTicket = null;
+        state.ticketEvents = [];
+        renderTicketDetail(null);
+      }
     }
 
     function connect() {
@@ -1085,6 +1319,22 @@ def _dashboard_html() -> str:
         }
       };
     }
+
+    ticketsEl.addEventListener("click", (event) => {
+      const node = event.target.closest("[data-ticket-id]");
+      if (node) selectTicket(node.dataset.ticketId).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: node.dataset.ticketId, ticket: { execution: { state: "failed", last_error: String(error) } } }));
+    });
+    ticketsEl.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const node = event.target.closest("[data-ticket-id]");
+      if (!node) return;
+      event.preventDefault();
+      selectTicket(node.dataset.ticketId).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: node.dataset.ticketId, ticket: { execution: { state: "failed", last_error: String(error) } } }));
+    });
+    detailEl.addEventListener("click", (event) => {
+      const node = event.target.closest("[data-related-ticket-id]");
+      if (node) selectTicket(node.dataset.relatedTicketId).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: node.dataset.relatedTicketId, ticket: { execution: { state: "failed", last_error: String(error) } } }));
+    });
 
     $("notify").onclick = async () => {
       if (!("Notification" in window)) {
@@ -1111,7 +1361,10 @@ def _dashboard_html() -> str:
         new Notification("planfile notifications are enabled", { body: "Ticket status changes and errors will appear while this dashboard is open." });
       }
     };
-    $("refresh").onclick = () => refreshTickets({ notifyChanges: true });
+    $("refresh").onclick = () => {
+      refreshTickets({ notifyChanges: true });
+      refreshSelectedTicket();
+    };
     $("queue-filter").onchange = (event) => {
       state.queue = event.target.value;
       localStorage.setItem("planfile.queue", state.queue);
@@ -1123,7 +1376,10 @@ def _dashboard_html() -> str:
     $("notify").textContent = state.notifications ? "Notifications enabled" : "Enable notifications";
     refreshTickets().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
     loadEventHistory().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
-    setInterval(() => refreshTickets({ notifyChanges: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } })), 15000);
+    setInterval(() => {
+      refreshTickets({ notifyChanges: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
+      refreshSelectedTicket();
+    }, 15000);
     connect();
   </script>
 </body>

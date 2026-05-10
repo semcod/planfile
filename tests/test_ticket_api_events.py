@@ -96,6 +96,13 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "setInterval" in response.text
     assert "loadEventHistory" in response.text
     assert "/events?limit=100" in response.text
+    assert "Ticket Detail" in response.text
+    assert "ticket-detail" in response.text
+    assert "data-ticket-id" in response.text
+    assert "function selectTicket(ticketId" in response.text
+    assert "/events?ticket_id=" in response.text
+    assert "renderTicketTimeline" in response.text
+    assert "Related tickets and splits" in response.text
     assert '{ cache: "no-store" }' in response.text
     assert "scanTicketStatuses" in response.text
     assert "Ticket status changes and errors" in response.text
@@ -232,6 +239,49 @@ def test_management_event_api_broadcasts_records_and_filters_by_queue():
     assert event["details"]["ticket_id"] == "PLF-074"
     assert runtime_events[-1]["type"] == "management.event"
     assert default_events == []
+
+
+def test_events_api_filters_management_events_by_ticket_id():
+    server._manager.active.clear()
+    server._event_history.clear()
+
+    client = TestClient(server.app)
+
+    assert client.post(
+        "/events/ingest",
+        json={
+            "source": "koru",
+            "tool": "koru.shell",
+            "action": "step-log",
+            "status": "warning",
+            "level": "warning",
+            "queue": "c2004-refactor",
+            "message": "human input required before continuing",
+            "details": {"ticket_id": "PLF-070", "split_ticket_id": "PLF-077"},
+        },
+    ).status_code == 200
+    assert client.post(
+        "/events/ingest",
+        json={
+            "source": "koru",
+            "tool": "koru.shell",
+            "action": "step-log",
+            "status": "info",
+            "level": "info",
+            "queue": "c2004-runtime",
+            "message": "unrelated",
+            "details": {"ticket_id": "PLF-074"},
+        },
+    ).status_code == 200
+
+    response = client.get("/events?ticket_id=PLF-070")
+    events = response.json()
+
+    assert response.headers["cache-control"] == "no-store, max-age=0"
+    assert len(events) == 1
+    assert events[0]["ticket_id"] == "PLF-070"
+    assert events[0]["details"]["split_ticket_id"] == "PLF-077"
+    assert client.get("/events?ticket_id=PLF-999").json() == []
 
 
 def test_tickets_api_reads_updated_store_and_disables_cache(tmp_path, monkeypatch):
