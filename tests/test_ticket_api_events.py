@@ -87,6 +87,7 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
+    assert response.headers["cache-control"] == "no-store, max-age=0"
     assert "planfile queue dashboard" in response.text
     assert "Notification.requestPermission" in response.text
     assert "new WebSocket" in response.text
@@ -95,6 +96,14 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "setInterval" in response.text
     assert "loadEventHistory" in response.text
     assert "/events?limit=100" in response.text
+    assert '{ cache: "no-store" }' in response.text
+    assert "scanTicketStatuses" in response.text
+    assert "Ticket status changes and errors" in response.text
+    assert "management.event" in response.text
+    assert "if (event?.queue) return String(event.queue);" in response.text
+    assert "function isRunningTicket(ticket)" in response.text
+    assert 'ticket?.status === "in_progress"' in response.text
+    assert "const running = visibleTickets.filter(isRunningTicket).length;" in response.text
 
 
 def test_favicon_returns_no_content():
@@ -147,9 +156,13 @@ def test_events_api_returns_recent_events_and_filters_by_queue(tmp_path, monkeyp
     assert client.post(f"/tickets/{default_ticket.id}/ready").status_code == 200
     assert client.post(f"/tickets/{refactor_ticket.id}/ready").status_code == 200
 
-    all_events = client.get("/events").json()
-    refactor_events = client.get("/events?queue=c2004-refactor").json()
+    all_response = client.get("/events")
+    refactor_response = client.get("/events?queue=c2004-refactor")
+    all_events = all_response.json()
+    refactor_events = refactor_response.json()
 
+    assert all_response.headers["cache-control"] == "no-store, max-age=0"
+    assert refactor_response.headers["cache-control"] == "no-store, max-age=0"
     assert [event["ticket_id"] for event in all_events][-2:] == [
         default_ticket.id,
         refactor_ticket.id,
@@ -181,3 +194,61 @@ def test_test_event_api_broadcasts_and_records_synthetic_error():
     assert event["ticket"]["execution"]["state"] == "failed"
     assert event["ticket"]["execution"]["last_error"] == "Synthetic failure"
     assert history[-1]["type"] == "dashboard.test"
+
+
+def test_management_event_api_broadcasts_records_and_filters_by_queue():
+    server._manager.active.clear()
+    server._event_history.clear()
+
+    client = TestClient(server.app)
+    with client.websocket_connect("/ws") as ws:
+        assert ws.receive_json()["ok"] is True
+
+        response = client.post(
+            "/events/ingest",
+            json={
+                "source": "koru",
+                "tool": "koru.queue",
+                "action": "completed",
+                "status": "completed",
+                "level": "info",
+                "queue": "c2004-runtime",
+                "message": "Executed PLF-074",
+                "details": {"ticket_id": "PLF-074", "executor": "shell"},
+            },
+        )
+
+        assert response.status_code == 200
+        event = ws.receive_json()
+
+    runtime_events = client.get("/events?queue=c2004-runtime").json()
+    default_events = client.get("/events?queue=default").json()
+
+    assert event["type"] == "management.event"
+    assert event["tool"] == "koru.queue"
+    assert event["action"] == "completed"
+    assert event["queue"] == "c2004-runtime"
+    assert event["details"]["ticket_id"] == "PLF-074"
+    assert runtime_events[-1]["type"] == "management.event"
+    assert default_events == []
+
+
+def test_tickets_api_reads_updated_store_and_disables_cache(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Status changes outside dashboard",
+        source=TicketSource(tool="human"),
+        execution=TicketExecution(queue="default", state="ready"),
+    )
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    first = client.get("/tickets?sprint=all")
+    pf.complete_ticket(ticket.id, note="done outside API")
+    second = client.get("/tickets?sprint=all")
+
+    assert first.headers["cache-control"] == "no-store, max-age=0"
+    assert second.headers["cache-control"] == "no-store, max-age=0"
+    assert next(item for item in first.json() if item["id"] == ticket.id)["status"] == "open"
+    assert next(item for item in second.json() if item["id"] == ticket.id)["status"] == "done"

@@ -5,26 +5,43 @@ Run with: uvicorn planfile.api.server:app --reload
 
 from __future__ import annotations
 
+import asyncio
 import json
+import os
 from collections import deque
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 try:
     from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import HTMLResponse, Response
     from pydantic import BaseModel
-except ImportError:
-    raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn")
+except ImportError as exc:
+    raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
 
-from planfile.server_common import get_planfile
 from planfile.core.models import TicketExecution, TicketExecutor, TicketInputs, TicketOutputs
+from planfile.server_common import get_planfile
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    await _start_planfile_watcher()
+    try:
+        yield
+    finally:
+        await _stop_planfile_watcher()
+
 
 app = FastAPI(
     title="planfile",
     description="Universal ticket standard — REST + WebSocket + DSL API",
     version="0.3.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -33,6 +50,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+NO_STORE_HEADERS = {"Cache-Control": "no-store, max-age=0"}
 
 
 # ── Schemas ────────────────────────────────────────────────────────────────────
@@ -111,15 +130,28 @@ class TestEventRequest(BaseModel):
     state: str = "failed"
 
 
+class ManagementEventRequest(BaseModel):
+    source: str = "koru"
+    tool: str = "koru"
+    action: str
+    status: str = "info"
+    message: str = ""
+    queue: str = "default"
+    level: str = "info"
+    details: dict[str, Any] = {}
+
+
 # ── Tickets ────────────────────────────────────────────────────────────────────
 
 @app.get("/tickets", tags=["tickets"])
 def list_tickets(
+    response: Response,
     sprint: str = Query("current"),
     status: str | None = Query(None),
     priority: str | None = Query(None),
     source: str | None = Query(None),
 ):
+    response.headers.update(NO_STORE_HEADERS)
     pf = get_planfile()
     filters: dict = {}
     if status:
@@ -284,8 +316,6 @@ async def ready_ticket(ticket_id: str):
 
 @app.get("/sprints", tags=["sprints"])
 def list_sprints():
-    import yaml
-    from pathlib import Path
     pf = get_planfile()
     pf_path = Path(pf.store.project_dir) / "planfile.yaml"
     if not pf_path.exists():
@@ -297,8 +327,6 @@ def list_sprints():
 
 @app.post("/sprints", status_code=201, tags=["sprints"])
 def create_sprint(body: SprintCreate):
-    import yaml
-    from pathlib import Path
     pf = get_planfile()
     pf_path = Path(pf.store.project_dir) / "planfile.yaml"
     if not pf_path.exists():
@@ -319,8 +347,6 @@ def create_sprint(body: SprintCreate):
 
 @app.get("/yaml", tags=["yaml"])
 def get_yaml():
-    import yaml
-    from pathlib import Path
     pf = get_planfile()
     pf_path = Path(pf.store.project_dir) / "planfile.yaml"
     if not pf_path.exists():
@@ -332,8 +358,6 @@ def get_yaml():
 @app.patch("/yaml", tags=["yaml"])
 def patch_yaml(body: YAMLPatchRequest):
     """Patch a top-level key in planfile.yaml. path=key, value=new_value."""
-    import yaml
-    from pathlib import Path
     pf = get_planfile()
     pf_path = Path(pf.store.project_dir) / "planfile.yaml"
     if not pf_path.exists():
@@ -366,7 +390,7 @@ def dsl_command(body: DSLRequest) -> DSLResponse:
 @app.get("/dsl/help", tags=["dsl"])
 def dsl_help():
     """Return DSL command reference."""
-    from planfile.dsl import DSLExecutor, DSLCommand
+    from planfile.dsl import DSLCommand, DSLExecutor
     executor = DSLExecutor()
     result = executor.execute(DSLCommand(verb="help"))
     return {"help": result.message}
@@ -397,9 +421,13 @@ class ConnectionManager:
 _manager = ConnectionManager()
 _EVENT_HISTORY_LIMIT = 200
 _event_history: deque[dict[str, Any]] = deque(maxlen=_EVENT_HISTORY_LIMIT)
+_watch_task: asyncio.Task | None = None
+_watch_snapshot: dict[str, str] = {}
 
 
 def _event_queue(event: dict[str, Any]) -> str:
+    if event.get("queue"):
+        return str(event["queue"])
     ticket = event.get("ticket")
     if not isinstance(ticket, dict):
         return "default"
@@ -413,12 +441,118 @@ def _remember_event(event: dict[str, Any]) -> None:
     _event_history.append(event)
 
 
+def _ticket_signature(ticket) -> str:
+    data = ticket.model_dump(mode="json", exclude_none=True)
+    execution = data.get("execution") or {}
+    return json.dumps(
+        {
+            "status": data.get("status"),
+            "priority": data.get("priority"),
+            "name": data.get("name"),
+            "updated_at": data.get("updated_at"),
+            "execution_state": execution.get("state"),
+            "execution_queue": execution.get("queue"),
+            "execution_assigned_to": execution.get("assigned_to"),
+            "execution_last_error": execution.get("last_error"),
+            "execution_finished_at": execution.get("finished_at"),
+        },
+        sort_keys=True,
+    )
+
+
+def _current_ticket_snapshot() -> tuple[dict[str, str], dict[str, Any]]:
+    tickets = get_planfile().list_tickets(sprint="all")
+    snapshot = {ticket.id: _ticket_signature(ticket) for ticket in tickets}
+    by_id = {ticket.id: ticket for ticket in tickets}
+    return snapshot, by_id
+
+
+async def _watch_planfile_changes(interval_seconds: float = 3.0) -> None:
+    """Broadcast status changes made outside this API, such as CLI updates."""
+    global _watch_snapshot
+    try:
+        _watch_snapshot, _ = _current_ticket_snapshot()
+    except Exception as exc:  # pragma: no cover - defensive runtime telemetry
+        _watch_snapshot = {}
+        _remember_event(
+            {
+                "type": "dashboard",
+                "action": "watch-error",
+                "ticket_id": "-",
+                "created_at": datetime.now(UTC).isoformat(),
+                "ticket": {"execution": {"state": "failed", "last_error": str(exc)}},
+            }
+        )
+
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            current, by_id = _current_ticket_snapshot()
+        except Exception as exc:  # pragma: no cover - defensive runtime telemetry
+            payload = {
+                "type": "dashboard",
+                "action": "watch-error",
+                "ticket_id": "-",
+                "created_at": datetime.now(UTC).isoformat(),
+                "ticket": {"execution": {"state": "failed", "last_error": str(exc)}},
+            }
+            _remember_event(payload)
+            await _manager.broadcast(payload)
+            continue
+
+        previous = _watch_snapshot
+        for ticket_id, signature in current.items():
+            old_signature = previous.get(ticket_id)
+            if old_signature is None:
+                await _broadcast_ticket_event("ticket.external.changed", "external-create", by_id[ticket_id])
+            elif old_signature != signature:
+                await _broadcast_ticket_event("ticket.external.changed", "external-update", by_id[ticket_id])
+        _watch_snapshot = current
+
+
+async def _start_planfile_watcher() -> None:
+    global _watch_task
+    _remember_event(
+        {
+            "type": "management.event",
+            "action": "started",
+            "ticket_id": "-",
+            "created_at": datetime.now(UTC).isoformat(),
+            "source": "planfile",
+            "tool": "planfile.api",
+            "queue": "koru-management",
+            "level": "info",
+            "status": "running",
+            "message": "planfile API server started",
+            "details": {"watcher_enabled": os.environ.get("PLANFILE_DISABLE_WATCHER") != "1"},
+        }
+    )
+    if os.environ.get("PLANFILE_DISABLE_WATCHER") == "1":
+        return
+    if _watch_task is None or _watch_task.done():
+        _watch_task = asyncio.create_task(_watch_planfile_changes())
+
+
+async def _stop_planfile_watcher() -> None:
+    global _watch_task
+    if _watch_task is None:
+        return
+    _watch_task.cancel()
+    try:
+        await _watch_task
+    except asyncio.CancelledError:
+        pass
+    _watch_task = None
+
+
 @app.get("/events", tags=["events"])
 def list_events(
+    response: Response,
     limit: int = Query(100, ge=1, le=500),
     queue: str | None = Query(None),
 ):
     """Return recent ticket events for dashboards that reconnect late."""
+    response.headers.update(NO_STORE_HEADERS)
     events = list(_event_history)
     if queue:
         events = [event for event in events if _event_queue(event) == queue]
@@ -444,6 +578,27 @@ async def create_test_event(body: TestEventRequest):
                 "updated_at": created_at,
             },
         },
+    }
+    _remember_event(payload)
+    await _manager.broadcast(payload)
+    return payload
+
+
+@app.post("/events/ingest", tags=["events"])
+async def ingest_management_event(body: ManagementEventRequest):
+    """Ingest a management-layer event for dashboards and operators."""
+    payload = {
+        "type": "management.event",
+        "action": body.action,
+        "ticket_id": "-",
+        "created_at": datetime.now(UTC).isoformat(),
+        "source": body.source,
+        "tool": body.tool,
+        "queue": body.queue,
+        "level": body.level,
+        "status": body.status,
+        "message": body.message,
+        "details": body.details,
     }
     _remember_event(payload)
     await _manager.broadcast(payload)
@@ -644,7 +799,7 @@ def _dashboard_html() -> str:
       events: 0,
       notifications: "Notification" in window && Notification.permission === "granted",
       queue: localStorage.getItem("planfile.queue") || "all",
-      seenFailed: new Set(),
+      seenTicketStates: new Map(),
       lastTickets: [],
     };
     const $ = (id) => document.getElementById(id);
@@ -668,13 +823,23 @@ def _dashboard_html() -> str:
       return ticket?.execution?.state || ticket?.status || "unknown";
     }
 
-    function isErrorEvent(event) {
-      const state = ticketState(event.ticket);
-      return event.action === "fail" || state === "failed" || state === "error" || Boolean(event.ticket?.execution?.last_error);
+    function isNotifiableEvent(event) {
+      if (event?.type === "management.event") {
+        return ["error", "failed", "warning"].includes(String(event.level || event.status || "").toLowerCase());
+      }
+      if (!event?.ticket) return false;
+      if (event.type === "raw") return false;
+      return Boolean(event.ticket_id || event.ticket.id || event.action);
     }
 
-    function ticketKey(ticket) {
-      return `${ticket?.id || "unknown"}:${ticketState(ticket)}:${ticket?.execution?.last_error || ""}`;
+    function ticketSignature(ticket) {
+      return `${ticket?.status || "unknown"}:${ticketState(ticket)}:${ticket?.execution?.last_error || ""}`;
+    }
+
+    function statusLabel(ticket) {
+      const statusName = ticket?.status || "unknown";
+      const stateName = ticketState(ticket);
+      return statusName === stateName ? stateName : `${statusName}/${stateName}`;
     }
 
     function ticketQueue(ticket) {
@@ -686,7 +851,18 @@ def _dashboard_html() -> str:
       return stateName === "failed" || stateName === "error" || Boolean(ticket?.execution?.last_error);
     }
 
+    function isRunningTicket(ticket) {
+      const stateName = ticketState(ticket);
+      return ticket?.status === "in_progress" || stateName === "running" || stateName === "in_progress";
+    }
+
+    function isWaitingTicket(ticket) {
+      const stateName = ticketState(ticket);
+      return stateName === "waiting_input" || stateName === "waiting";
+    }
+
     function eventQueue(event) {
+      if (event?.queue) return String(event.queue);
       return event?.ticket ? ticketQueue(event.ticket) : "default";
     }
 
@@ -697,11 +873,17 @@ def _dashboard_html() -> str:
     function notifyTicket(ticket, reason) {
       if (!state.notifications || Notification.permission !== "granted" || !ticket) return;
       const body = ticket.execution?.last_error || ticket.name || reason || "planfile event";
-      new Notification(`planfile ${ticket.id || "ticket"} failed`, { body });
+      new Notification(`planfile ${ticket.id || "ticket"} ${statusLabel(ticket)}`, { body });
     }
 
     function notify(event) {
-      if (!isErrorEvent(event)) return;
+      if (!isNotifiableEvent(event)) return;
+      if (event?.type === "management.event") {
+        if (!state.notifications || Notification.permission !== "granted") return;
+        const body = event.message || JSON.stringify(event.details || {});
+        new Notification(`${event.tool || event.source || "koru"} ${event.action || "event"}`, { body });
+        return;
+      }
       notifyTicket(event.ticket, event.action);
     }
 
@@ -719,15 +901,18 @@ def _dashboard_html() -> str:
       select.value = state.queue;
     }
 
-    function scanFailedTickets(tickets, { notifyFailures = false, resetSeen = false } = {}) {
-      if (resetSeen) state.seenFailed.clear();
+    function scanTicketStatuses(tickets, { notifyChanges = false, resetSeen = false } = {}) {
+      if (resetSeen) state.seenTicketStates.clear();
       for (const ticket of tickets) {
-        if (!isFailedTicket(ticket)) continue;
-        const key = ticketKey(ticket);
-        if (notifyFailures && !state.seenFailed.has(key)) {
-          notifyTicket(ticket, "detected by dashboard polling");
+        const key = ticket?.id || "unknown";
+        const signature = ticketSignature(ticket);
+        const previous = state.seenTicketStates.get(key);
+        if (notifyChanges && previous && previous !== signature) {
+          notifyTicket(ticket, `status changed: ${previous} -> ${signature}`);
+        } else if (notifyChanges && !previous) {
+          notifyTicket(ticket, "new ticket detected by dashboard polling");
         }
-        state.seenFailed.add(key);
+        state.seenTicketStates.set(key, signature);
       }
     }
 
@@ -747,21 +932,28 @@ def _dashboard_html() -> str:
       item.className = "event";
       const stateName = ticketState(event.ticket);
       const when = event.created_at ? new Date(event.created_at) : new Date();
+      const management = event.type === "management.event";
+      const eventTitle = management
+        ? `${event.source || "koru"} / ${event.tool || "tool"} / ${event.action || "-"}`
+        : `${event.type || "event"} / ${event.action || "-"} / ${event.ticket_id || "-"}`;
+      const eventState = management ? (event.status || event.level || "info") : stateName;
+      const eventMessage = management ? event.message : event.ticket?.name;
+      const eventDetail = management ? event.details : event.ticket?.execution?.last_error;
       item.innerHTML = `
-        <div class="title">${escapeHtml(event.type || "event")} / ${escapeHtml(event.action || "-")} / ${escapeHtml(event.ticket_id || "-")}</div>
-        <div class="meta"><span class="pill ${escapeHtml(stateName)}">${escapeHtml(stateName)}</span><span>${when.toLocaleTimeString()}</span></div>
-        ${event.ticket?.name ? `<pre>${escapeHtml(event.ticket.name)}</pre>` : ""}
-        ${event.ticket?.execution?.last_error ? `<pre>${escapeHtml(event.ticket.execution.last_error)}</pre>` : ""}
+        <div class="title">${escapeHtml(eventTitle)}</div>
+        <div class="meta"><span class="pill ${escapeHtml(eventState)}">${escapeHtml(eventState)}</span><span class="pill">${escapeHtml(eventQueue(event))}</span><span>${when.toLocaleTimeString()}</span></div>
+        ${eventMessage ? `<pre>${escapeHtml(eventMessage)}</pre>` : ""}
+        ${eventDetail ? `<pre>${escapeHtml(typeof eventDetail === "string" ? eventDetail : JSON.stringify(eventDetail, null, 2))}</pre>` : ""}
       `;
       eventsEl.prepend(item);
       while (eventsEl.children.length > 100) eventsEl.lastChild.remove();
       if (notifyEvent) notify(event);
-      if (refresh) refreshTickets({ notifyFailures: false });
+      if (refresh) refreshTickets({ notifyChanges: false });
     }
 
     async function loadEventHistory() {
       const queueParam = state.queue === "all" ? "" : `&queue=${encodeURIComponent(state.queue)}`;
-      const response = await fetch(`/events?limit=100${queueParam}`);
+      const response = await fetch(`/events?limit=100${queueParam}`, { cache: "no-store" });
       const events = await response.json();
       resetEvents();
       for (const event of events) {
@@ -770,15 +962,15 @@ def _dashboard_html() -> str:
     }
 
     async function refreshTickets(options = {}) {
-      const response = await fetch("/tickets?sprint=all");
+      const response = await fetch("/tickets?sprint=all", { cache: "no-store" });
       const tickets = await response.json();
       state.lastTickets = tickets;
       updateQueueOptions(tickets);
       const visibleTickets = selectedTickets(tickets);
-      scanFailedTickets(visibleTickets, options);
+      scanTicketStatuses(visibleTickets, options);
       const open = visibleTickets.filter((t) => t.status === "open").length;
-      const running = visibleTickets.filter((t) => ticketState(t) === "running").length;
-      const waiting = visibleTickets.filter((t) => ticketState(t) === "waiting_input").length;
+      const running = visibleTickets.filter(isRunningTicket).length;
+      const waiting = visibleTickets.filter(isWaitingTicket).length;
       const failed = visibleTickets.filter(isFailedTicket).length;
       $("m-open").textContent = open;
       $("m-running").textContent = running;
@@ -832,7 +1024,7 @@ def _dashboard_html() -> str:
       state.notifications = permission === "granted";
       $("notify").textContent = state.notifications ? "Notifications enabled" : `Notifications: ${permission}`;
       if (state.notifications) {
-        refreshTickets({ notifyFailures: true, resetSeen: true });
+        refreshTickets({ notifyChanges: false, resetSeen: true });
       }
     };
     $("test-notify").onclick = async () => {
@@ -845,14 +1037,14 @@ def _dashboard_html() -> str:
         state.notifications = permission === "granted";
       }
       if (state.notifications) {
-        new Notification("planfile notifications are enabled", { body: "Error events will appear here while this dashboard is open." });
+        new Notification("planfile notifications are enabled", { body: "Ticket status changes and errors will appear while this dashboard is open." });
       }
     };
-    $("refresh").onclick = () => refreshTickets({ notifyFailures: true });
+    $("refresh").onclick = () => refreshTickets({ notifyChanges: true });
     $("queue-filter").onchange = (event) => {
       state.queue = event.target.value;
       localStorage.setItem("planfile.queue", state.queue);
-      refreshTickets({ notifyFailures: false });
+      refreshTickets({ notifyChanges: false, resetSeen: true });
       loadEventHistory().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
     };
     $("docs").onclick = () => location.href = "/docs";
@@ -860,7 +1052,7 @@ def _dashboard_html() -> str:
     $("notify").textContent = state.notifications ? "Notifications enabled" : "Enable notifications";
     refreshTickets().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
     loadEventHistory().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
-    setInterval(() => refreshTickets({ notifyFailures: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } })), 15000);
+    setInterval(() => refreshTickets({ notifyChanges: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } })), 15000);
     connect();
   </script>
 </body>
@@ -882,6 +1074,7 @@ async def _broadcast_ticket_event(
     }
     if ticket is not None:
         payload["ticket"] = ticket.model_dump(mode="json", exclude_none=True)
+        _watch_snapshot[ticket.id] = _ticket_signature(ticket)
     _remember_event(payload)
     await _manager.broadcast(payload)
 
@@ -926,7 +1119,7 @@ def health():
 
 @app.get("/", response_class=HTMLResponse, tags=["system"])
 def root():
-    return HTMLResponse(_dashboard_html())
+    return HTMLResponse(_dashboard_html(), headers=NO_STORE_HEADERS)
 
 
 @app.get("/favicon.ico", include_in_schema=False)
