@@ -437,6 +437,22 @@ def _event_queue(event: dict[str, Any]) -> str:
     return str(execution.get("queue") or "default")
 
 
+def _event_ticket_id(event: dict[str, Any]) -> str:
+    ticket_id = event.get("ticket_id")
+    if ticket_id and ticket_id != "-":
+        return str(ticket_id)
+
+    ticket = event.get("ticket")
+    if isinstance(ticket, dict) and ticket.get("id"):
+        return str(ticket["id"])
+
+    details = event.get("details")
+    if isinstance(details, dict) and details.get("ticket_id"):
+        return str(details["ticket_id"])
+
+    return ""
+
+
 def _remember_event(event: dict[str, Any]) -> None:
     _event_history.append(event)
 
@@ -550,12 +566,15 @@ def list_events(
     response: Response,
     limit: int = Query(100, ge=1, le=500),
     queue: str | None = Query(None),
+    ticket_id: str | None = Query(None),
 ):
     """Return recent ticket events for dashboards that reconnect late."""
     response.headers.update(NO_STORE_HEADERS)
     events = list(_event_history)
     if queue:
         events = [event for event in events if _event_queue(event) == queue]
+    if ticket_id:
+        events = [event for event in events if _event_ticket_id(event) == ticket_id]
     return events[-limit:]
 
 
@@ -590,7 +609,7 @@ async def ingest_management_event(body: ManagementEventRequest):
     payload = {
         "type": "management.event",
         "action": body.action,
-        "ticket_id": "-",
+        "ticket_id": str(body.details.get("ticket_id") or "-"),
         "created_at": datetime.now(UTC).isoformat(),
         "source": body.source,
         "tool": body.tool,
@@ -649,7 +668,7 @@ def _dashboard_html() -> str:
     h1 { font-size: 18px; margin: 0; font-weight: 650; }
     main {
       display: grid;
-      grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+      grid-template-columns: minmax(300px, 420px) minmax(320px, 520px) minmax(0, 1fr);
       gap: 16px;
       padding: 16px;
     }
@@ -723,10 +742,21 @@ def _dashboard_html() -> str:
     }
     .metric strong { display: block; font-size: 24px; line-height: 1.1; }
     .metric span { color: var(--muted); }
-    .list, .events { max-height: calc(100vh - 178px); overflow: auto; }
+    .list, .events, .detail { max-height: calc(100vh - 178px); overflow: auto; }
     .ticket, .event {
       border-bottom: 1px solid var(--line);
       padding: 10px 14px;
+    }
+    .ticket {
+      cursor: pointer;
+      outline: 0;
+    }
+    .ticket:hover, .ticket:focus-visible {
+      background: #1c2026;
+    }
+    .ticket.selected {
+      background: #202936;
+      box-shadow: inset 3px 0 0 var(--info);
     }
     .ticket:last-child, .event:last-child { border-bottom: 0; }
     .title { font-weight: 620; word-break: break-word; }
@@ -745,6 +775,42 @@ def _dashboard_html() -> str:
     .pill.done { color: var(--ok); border-color: #2b6040; }
     .pill.waiting_input { color: var(--warn); border-color: #715d2c; }
     .empty { color: var(--muted); padding: 14px; }
+    .detail { padding: 14px; }
+    .detail h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+    .detail-block {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      margin-top: 12px;
+    }
+    .detail-block h4 {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: minmax(96px, 150px) minmax(0, 1fr);
+      gap: 6px 10px;
+      color: var(--muted);
+    }
+    .kv strong { color: var(--text); font-weight: 560; word-break: break-word; }
+    .timeline { display: grid; gap: 10px; }
+    .timeline-item {
+      border-left: 3px solid var(--line);
+      padding-left: 10px;
+    }
+    .timeline-item.error, .timeline-item.failed { border-left-color: var(--err); }
+    .timeline-item.warning, .timeline-item.waiting_input { border-left-color: var(--warn); }
+    .timeline-item.info, .timeline-item.running { border-left-color: var(--info); }
+    .timeline-item.done, .timeline-item.completed { border-left-color: var(--ok); }
+    .related { display: flex; flex-wrap: wrap; gap: 8px; }
+    .related .pill { cursor: pointer; }
     pre {
       margin: 8px 0 0;
       color: var(--muted);
@@ -755,7 +821,7 @@ def _dashboard_html() -> str:
     @media (max-width: 820px) {
       header { align-items: flex-start; flex-direction: column; }
       main { grid-template-columns: 1fr; }
-      .list, .events { max-height: none; }
+      .list, .events, .detail { max-height: none; }
     }
   </style>
 </head>
@@ -788,6 +854,10 @@ def _dashboard_html() -> str:
         <div class="metric"><strong id="m-failed">0</strong><span>failed</span></div>
       </div>
       <div id="tickets" class="list"></div>
+    </section>
+    <section>
+      <div class="section-head"><h2>Ticket Detail</h2><span id="detail-status" class="status">select a ticket</span></div>
+      <div id="ticket-detail" class="detail empty">Select a ticket from the queue to inspect status history, tool logs, related work, and human input blockers.</div>
     </section>
     <section>
       <div class="section-head"><h2>Live Events</h2><span id="event-count" class="status">0 events</span></div>
