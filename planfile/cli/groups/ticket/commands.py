@@ -1,14 +1,13 @@
 """Ticket management CLI commands."""
 import json
-import re
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import typer
 import yaml
 from rich.table import Table
+
 from planfile.cli.core import console
 
 
@@ -16,10 +15,10 @@ def _auto_sync(directory: str, integrations: list[str] | None = None, dry_run: b
     """Auto-sync changes to configured integrations after ticket modification."""
     from planfile.cli.groups.sync.core import sync_integration
     from planfile.integrations.config import IntegrationConfig
-    
+
     config = IntegrationConfig(directory)
     config.load_configs()
-    
+
     # Determine which integrations to sync
     if integrations:
         to_sync = integrations
@@ -29,13 +28,13 @@ def _auto_sync(directory: str, integrations: list[str] | None = None, dry_run: b
         # Always include markdown as fallback
         if "markdown" not in to_sync:
             to_sync.append("markdown")
-    
+
     if not to_sync:
         console.print("[dim]ℹ️ No integrations configured for auto-sync[/dim]")
         return
-    
+
     console.print(f"\n[blue]🔄 Auto-syncing to: {', '.join(to_sync)}...[/blue]")
-    
+
     for integration in to_sync:
         try:
             sync_integration(integration, directory, dry_run, "to", show_header=False)
@@ -45,7 +44,7 @@ def _auto_sync(directory: str, integrations: list[str] | None = None, dry_run: b
 def _display_tickets(tickets, fmt: str='table') -> None:
     """Display tickets in the requested format."""
     if fmt == 'json':
-        console.print(json.dumps([t.model_dump(mode='json', exclude_none=True) for t in tickets], indent=2, default=str))
+        print(json.dumps([t.model_dump(mode='json', exclude_none=True) for t in tickets], indent=2, default=str))
         return
     if fmt == 'yaml':
         console.print(yaml.dump([t.model_dump(mode='json', exclude_none=True) for t in tickets], default_flow_style=False, sort_keys=False))
@@ -71,7 +70,7 @@ def _load_issue_records_from_file(issues_path: str | None) -> list[dict] | None:
         data = yaml.safe_load(path.read_text(encoding='utf-8'))
     except Exception as e:
         console.print(f"[red]✗[/red] Failed to read issues file: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
     if isinstance(data, list):
         return [item for item in data if isinstance(item, dict)]
@@ -137,7 +136,7 @@ def ticket_validate(
     if fmt == 'json':
         payload = dict(report)
         payload['tickets'] = visible_tickets
-        console.print(json.dumps(payload, indent=2, default=str))
+        print(json.dumps(payload, indent=2, default=str))
     elif fmt == 'yaml':
         payload = dict(report)
         payload['tickets'] = visible_tickets
@@ -186,7 +185,7 @@ def ticket_create(name: str=typer.Argument(..., help='Ticket name'), priority: s
         ticket_data['integration'] = list(integration)
     ticket = pf.create_ticket(**ticket_data)
     console.print(f'[green]✓[/green] Created {ticket.id}: {ticket.name}')
-    
+
     if sync:
         _auto_sync(str(pf.store.project_dir), integration, sync_dry_run)
 
@@ -260,7 +259,7 @@ def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: 
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Updated {ticket.id}')
-    
+
     if sync:
         _auto_sync(str(pf.store.project_dir), None, sync_dry_run)
 

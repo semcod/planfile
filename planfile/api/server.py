@@ -853,6 +853,7 @@ def _dashboard_html() -> str:
 
     function isRunningTicket(ticket) {
       const stateName = ticketState(ticket);
+      if (isWaitingTicket(ticket) || isFailedTicket(ticket) || stateName === "done") return false;
       return ticket?.status === "in_progress" || stateName === "running" || stateName === "in_progress";
     }
 

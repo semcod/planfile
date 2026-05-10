@@ -1,8 +1,10 @@
 """Backlog management CLI commands."""
 import fnmatch
 from pathlib import Path
+
 import typer
 import yaml
+
 from planfile.cli.core import console
 
 app = typer.Typer(help="Manage backlog items in planfile.yaml")
@@ -51,24 +53,24 @@ def backlog_list(
     """List backlog items from planfile.yaml with optional filters."""
     data = _load_planfile_yaml()
     backlog = data.get('backlog', [])
-    
+
     # Apply filters
     filtered = backlog
     if files:
         filtered = [item for item in filtered if _matches_files(item, files)]
     if rule_id:
         filtered = [item for item in filtered if item.get('rule_id') == rule_id]
-    
+
     if fmt == 'json':
         import json
-        console.print(json.dumps(filtered, indent=2, default=str))
+        print(json.dumps(filtered, indent=2, default=str))
     elif fmt == 'yaml':
         console.print(yaml.dump(filtered, default_flow_style=False, sort_keys=False))
     else:
         if not filtered:
             console.print('[dim]No backlog items found.[/dim]')
             return
-        
+
         table = create_backlog_table(filtered)
         console.print(table)
 
@@ -81,7 +83,7 @@ def create_backlog_table(items):
     table.add_column('Rule ID', style='dim')
     table.add_column('Files', style='dim')
     table.add_column('Priority', style='yellow')
-    
+
     for item in items:
         files_str = ', '.join(item.get('files', [])[:2])
         if len(item.get('files', [])) > 2:

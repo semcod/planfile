@@ -36,11 +36,10 @@ def dsl_run(
 
 
 def _run_single(executor, command: str, fmt: str, fail_on_error: bool) -> None:
-    from planfile.dsl import DSLExecutor
     result = executor.run(command)
 
     if fmt == "json":
-        console.print(json.dumps(result.to_dict(), indent=2, default=str))
+        print(json.dumps(result.to_dict(), indent=2, default=str))
     elif fmt == "yaml":
         console.print(yaml.dump(result.to_dict(), default_flow_style=False, sort_keys=False, allow_unicode=True))
     else:
@@ -120,7 +119,7 @@ def register_dsl_commands(app: typer.Typer) -> None:
     @dsl_app.command("help")
     def dsl_help_cmd() -> None:
         """Show DSL command reference."""
-        from planfile.dsl import DSLExecutor, DSLCommand
+        from planfile.dsl import DSLCommand, DSLExecutor
         executor = DSLExecutor()
         result = executor.execute(DSLCommand(verb="help"))
         console.print(result.message or "")

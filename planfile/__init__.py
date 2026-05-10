@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.89"
+__version__ = "0.1.90"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 

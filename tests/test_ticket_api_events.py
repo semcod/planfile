@@ -103,6 +103,7 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "if (event?.queue) return String(event.queue);" in response.text
     assert "function isRunningTicket(ticket)" in response.text
     assert 'ticket?.status === "in_progress"' in response.text
+    assert "if (isWaitingTicket(ticket) || isFailedTicket(ticket) || stateName === \"done\") return false;" in response.text
     assert "const running = visibleTickets.filter(isRunningTicket).length;" in response.text
 
 
