@@ -6,16 +6,20 @@ Run with: uvicorn planfile.api.server:app --reload
 from __future__ import annotations
 
 import json
+from collections import deque
+from datetime import UTC, datetime
 from typing import Any
 
 try:
     from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
     from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.responses import HTMLResponse, Response
     from pydantic import BaseModel
 except ImportError:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn")
 
 from planfile.server_common import get_planfile
+from planfile.core.models import TicketExecution, TicketExecutor, TicketInputs, TicketOutputs
 
 app = FastAPI(
     title="planfile",
@@ -39,6 +43,10 @@ class TicketCreate(BaseModel):
     sprint: str = "current"
     description: str = ""
     labels: list[str] = []
+    executor: TicketExecutor | None = None
+    execution: TicketExecution | None = None
+    inputs: TicketInputs | None = None
+    outputs: TicketOutputs | None = None
 
 
 class TicketUpdate(BaseModel):
@@ -47,6 +55,10 @@ class TicketUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     labels: list[str] | None = None
+    executor: TicketExecutor | None = None
+    execution: TicketExecution | None = None
+    inputs: TicketInputs | None = None
+    outputs: TicketOutputs | None = None
 
 
 class SprintCreate(BaseModel):
@@ -73,6 +85,32 @@ class YAMLPatchRequest(BaseModel):
     value: Any
 
 
+class TicketClaimRequest(BaseModel):
+    assigned_to: str | None = None
+    lease_seconds: int | None = None
+
+
+class TicketCompleteRequest(BaseModel):
+    note: str | None = None
+    result: Any = None
+    artifacts: list[str] = []
+
+
+class TicketFailRequest(BaseModel):
+    error: str
+
+
+class TicketInputRequest(BaseModel):
+    prompt: str
+    env_keys: list[str] = []
+
+
+class TestEventRequest(BaseModel):
+    queue: str = "default"
+    message: str = "Synthetic dashboard error event"
+    state: str = "failed"
+
+
 # ── Tickets ────────────────────────────────────────────────────────────────────
 
 @app.get("/tickets", tags=["tickets"])
@@ -95,7 +133,7 @@ def list_tickets(
 
 
 @app.post("/tickets", status_code=201, tags=["tickets"])
-def create_ticket(body: TicketCreate):
+async def create_ticket(body: TicketCreate):
     pf = get_planfile()
     from planfile import TicketSource
     ticket = pf.create_ticket(
@@ -104,8 +142,22 @@ def create_ticket(body: TicketCreate):
         sprint=body.sprint,
         description=body.description,
         labels=body.labels,
+        executor=body.executor,
+        execution=body.execution,
+        inputs=body.inputs,
+        outputs=body.outputs,
         source=TicketSource(tool="api"),
     )
+    await _broadcast_ticket_event("ticket.changed", "create", ticket)
+    return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.get("/tickets/next", tags=["tickets"])
+def next_ticket(sprint: str = Query("current"), queue: str | None = Query(None)):
+    pf = get_planfile()
+    ticket = pf.next_ticket(sprint=sprint, queue=queue)
+    if not ticket:
+        return None
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
@@ -119,47 +171,112 @@ def get_ticket(ticket_id: str):
 
 
 @app.patch("/tickets/{ticket_id}", tags=["tickets"])
-def update_ticket(ticket_id: str, body: TicketUpdate):
+async def update_ticket(ticket_id: str, body: TicketUpdate):
     pf = get_planfile()
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     ticket = pf.update_ticket(ticket_id, **updates)
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.changed", "update", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
 @app.delete("/tickets/{ticket_id}", status_code=204, tags=["tickets"])
-def delete_ticket(ticket_id: str):
+async def delete_ticket(ticket_id: str):
     pf = get_planfile()
     ok = pf.store.delete_ticket(ticket_id)
     if not ok:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.changed", "delete", ticket_id=ticket_id)
 
 
 @app.post("/tickets/{ticket_id}/move", tags=["tickets"])
-def move_ticket(ticket_id: str, to_sprint: str = Query(...)):
+async def move_ticket(ticket_id: str, to_sprint: str = Query(...)):
     pf = get_planfile()
     ok = pf.store.move_ticket(ticket_id, to_sprint)
     if not ok:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.changed", "move", ticket_id=ticket_id)
     return {"moved": ticket_id, "to": to_sprint}
 
 
 @app.post("/tickets/{ticket_id}/done", tags=["tickets"])
-def done_ticket(ticket_id: str):
+async def done_ticket(ticket_id: str):
     pf = get_planfile()
-    ticket = pf.update_ticket(ticket_id, status="done")
+    ticket = pf.complete_ticket(ticket_id)
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.execution.changed", "done", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
 @app.post("/tickets/{ticket_id}/start", tags=["tickets"])
-def start_ticket(ticket_id: str):
+async def start_ticket(ticket_id: str, body: TicketClaimRequest | None = None):
     pf = get_planfile()
-    ticket = pf.update_ticket(ticket_id, status="in_progress")
+    assigned_to = body.assigned_to if body else None
+    ticket = pf.start_ticket(ticket_id, assigned_to=assigned_to)
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.execution.changed", "start", ticket)
+    return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/claim", tags=["tickets"])
+async def claim_ticket(ticket_id: str, body: TicketClaimRequest):
+    pf = get_planfile()
+    ticket = pf.claim_ticket(
+        ticket_id,
+        assigned_to=body.assigned_to,
+        lease_seconds=body.lease_seconds,
+    )
+    if not ticket:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.execution.changed", "claim", ticket)
+    return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/complete", tags=["tickets"])
+async def complete_ticket(ticket_id: str, body: TicketCompleteRequest):
+    pf = get_planfile()
+    ticket = pf.complete_ticket(
+        ticket_id,
+        note=body.note,
+        result=body.result,
+        artifacts=body.artifacts,
+    )
+    if not ticket:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.execution.changed", "complete", ticket)
+    return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/fail", tags=["tickets"])
+async def fail_ticket(ticket_id: str, body: TicketFailRequest):
+    pf = get_planfile()
+    ticket = pf.fail_ticket(ticket_id, error=body.error)
+    if not ticket:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.execution.changed", "fail", ticket)
+    return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/input-required", tags=["tickets"])
+async def wait_for_input(ticket_id: str, body: TicketInputRequest):
+    pf = get_planfile()
+    ticket = pf.wait_for_input(ticket_id, prompt=body.prompt, env_keys=body.env_keys)
+    if not ticket:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.execution.changed", "input_required", ticket)
+    return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/ready", tags=["tickets"])
+async def ready_ticket(ticket_id: str):
+    pf = get_planfile()
+    ticket = pf.ready_ticket(ticket_id)
+    if not ticket:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.execution.changed", "ready", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
@@ -278,6 +395,495 @@ class ConnectionManager:
 
 
 _manager = ConnectionManager()
+_EVENT_HISTORY_LIMIT = 200
+_event_history: deque[dict[str, Any]] = deque(maxlen=_EVENT_HISTORY_LIMIT)
+
+
+def _event_queue(event: dict[str, Any]) -> str:
+    ticket = event.get("ticket")
+    if not isinstance(ticket, dict):
+        return "default"
+    execution = ticket.get("execution")
+    if not isinstance(execution, dict):
+        return "default"
+    return str(execution.get("queue") or "default")
+
+
+def _remember_event(event: dict[str, Any]) -> None:
+    _event_history.append(event)
+
+
+@app.get("/events", tags=["events"])
+def list_events(
+    limit: int = Query(100, ge=1, le=500),
+    queue: str | None = Query(None),
+):
+    """Return recent ticket events for dashboards that reconnect late."""
+    events = list(_event_history)
+    if queue:
+        events = [event for event in events if _event_queue(event) == queue]
+    return events[-limit:]
+
+
+@app.post("/events/test", tags=["events"])
+async def create_test_event(body: TestEventRequest):
+    """Broadcast a synthetic dashboard event without mutating a real ticket."""
+    created_at = datetime.now(UTC).isoformat()
+    payload = {
+        "type": "dashboard.test",
+        "action": "error",
+        "ticket_id": "TEST",
+        "created_at": created_at,
+        "ticket": {
+            "id": "TEST",
+            "name": body.message,
+            "execution": {
+                "queue": body.queue,
+                "state": body.state,
+                "last_error": body.message,
+                "updated_at": created_at,
+            },
+        },
+    }
+    _remember_event(payload)
+    await _manager.broadcast(payload)
+    return payload
+
+
+def _dashboard_html() -> str:
+    """Return the small built-in queue dashboard."""
+    return r"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>planfile queue</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101114;
+      --panel: #181b20;
+      --panel-2: #20242b;
+      --text: #f4f6f8;
+      --muted: #a8b0ba;
+      --line: #303640;
+      --ok: #53d18a;
+      --warn: #f5c451;
+      --err: #ff6b6b;
+      --info: #7ab8ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: #14171c;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    h1 { font-size: 18px; margin: 0; font-weight: 650; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-width: 0;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    h2 { font-size: 14px; margin: 0; color: var(--muted); font-weight: 620; }
+    button {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--info); }
+    select {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 10px;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--warn);
+      display: inline-block;
+    }
+    .dot.ok { background: var(--ok); }
+    .dot.err { background: var(--err); }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+    }
+    .metric {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .metric strong { display: block; font-size: 24px; line-height: 1.1; }
+    .metric span { color: var(--muted); }
+    .list, .events { max-height: calc(100vh - 178px); overflow: auto; }
+    .ticket, .event {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 14px;
+    }
+    .ticket:last-child, .event:last-child { border-bottom: 0; }
+    .title { font-weight: 620; word-break: break-word; }
+    .meta { color: var(--muted); margin-top: 4px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 1px 8px;
+      color: var(--muted);
+      background: #15181d;
+    }
+    .pill.failed, .pill.error { color: var(--err); border-color: #6a3333; }
+    .pill.running { color: var(--info); border-color: #31516f; }
+    .pill.done { color: var(--ok); border-color: #2b6040; }
+    .pill.waiting_input { color: var(--warn); border-color: #715d2c; }
+    .empty { color: var(--muted); padding: 14px; }
+    pre {
+      margin: 8px 0 0;
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+    }
+    @media (max-width: 820px) {
+      header { align-items: flex-start; flex-direction: column; }
+      main { grid-template-columns: 1fr; }
+      .list, .events { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>planfile queue dashboard</h1>
+      <div class="status"><span id="dot" class="dot"></span><span id="status">connecting...</span></div>
+    </div>
+    <div class="controls">
+      <button id="notify">Enable notifications</button>
+      <button id="test-notify">Test notification</button>
+      <button id="refresh">Refresh tickets</button>
+      <button id="docs">API docs</button>
+    </div>
+  </header>
+  <main>
+    <section>
+      <div class="section-head"><h2>Queue Summary</h2><span id="updated" class="status">never</span></div>
+      <div class="toolbar">
+        <label for="queue-filter" class="status">Queue</label>
+        <select id="queue-filter">
+          <option value="all">all</option>
+        </select>
+      </div>
+      <div class="metrics">
+        <div class="metric"><strong id="m-open">0</strong><span>open</span></div>
+        <div class="metric"><strong id="m-running">0</strong><span>running</span></div>
+        <div class="metric"><strong id="m-waiting">0</strong><span>waiting</span></div>
+        <div class="metric"><strong id="m-failed">0</strong><span>failed</span></div>
+      </div>
+      <div id="tickets" class="list"></div>
+    </section>
+    <section>
+      <div class="section-head"><h2>Live Events</h2><span id="event-count" class="status">0 events</span></div>
+      <div id="events" class="events"></div>
+    </section>
+  </main>
+  <script>
+    const state = {
+      events: 0,
+      notifications: "Notification" in window && Notification.permission === "granted",
+      queue: localStorage.getItem("planfile.queue") || "all",
+      seenFailed: new Set(),
+      lastTickets: [],
+    };
+    const $ = (id) => document.getElementById(id);
+    const dot = $("dot");
+    const status = $("status");
+    const ticketsEl = $("tickets");
+    const eventsEl = $("events");
+
+    function setStatus(text, kind) {
+      status.textContent = text;
+      dot.className = "dot " + (kind || "");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[ch]));
+    }
+
+    function ticketState(ticket) {
+      return ticket?.execution?.state || ticket?.status || "unknown";
+    }
+
+    function isErrorEvent(event) {
+      const state = ticketState(event.ticket);
+      return event.action === "fail" || state === "failed" || state === "error" || Boolean(event.ticket?.execution?.last_error);
+    }
+
+    function ticketKey(ticket) {
+      return `${ticket?.id || "unknown"}:${ticketState(ticket)}:${ticket?.execution?.last_error || ""}`;
+    }
+
+    function ticketQueue(ticket) {
+      return ticket?.execution?.queue || "default";
+    }
+
+    function isFailedTicket(ticket) {
+      const stateName = ticketState(ticket);
+      return stateName === "failed" || stateName === "error" || Boolean(ticket?.execution?.last_error);
+    }
+
+    function eventQueue(event) {
+      return event?.ticket ? ticketQueue(event.ticket) : "default";
+    }
+
+    function eventMatchesQueue(event) {
+      return state.queue === "all" || eventQueue(event) === state.queue;
+    }
+
+    function notifyTicket(ticket, reason) {
+      if (!state.notifications || Notification.permission !== "granted" || !ticket) return;
+      const body = ticket.execution?.last_error || ticket.name || reason || "planfile event";
+      new Notification(`planfile ${ticket.id || "ticket"} failed`, { body });
+    }
+
+    function notify(event) {
+      if (!isErrorEvent(event)) return;
+      notifyTicket(event.ticket, event.action);
+    }
+
+    function selectedTickets(tickets) {
+      if (state.queue === "all") return tickets;
+      return tickets.filter((ticket) => ticketQueue(ticket) === state.queue);
+    }
+
+    function updateQueueOptions(tickets) {
+      const queues = Array.from(new Set(tickets.map(ticketQueue))).sort();
+      const select = $("queue-filter");
+      const html = ['<option value="all">all</option>', ...queues.map((queue) => `<option value="${escapeHtml(queue)}">${escapeHtml(queue)}</option>`)].join("");
+      if (select.innerHTML !== html) select.innerHTML = html;
+      if (!["all", ...queues].includes(state.queue)) state.queue = "all";
+      select.value = state.queue;
+    }
+
+    function scanFailedTickets(tickets, { notifyFailures = false, resetSeen = false } = {}) {
+      if (resetSeen) state.seenFailed.clear();
+      for (const ticket of tickets) {
+        if (!isFailedTicket(ticket)) continue;
+        const key = ticketKey(ticket);
+        if (notifyFailures && !state.seenFailed.has(key)) {
+          notifyTicket(ticket, "detected by dashboard polling");
+        }
+        state.seenFailed.add(key);
+      }
+    }
+
+    function resetEvents() {
+      state.events = 0;
+      eventsEl.innerHTML = "";
+      $("event-count").textContent = "0 events";
+    }
+
+    function addEvent(event, options = {}) {
+      if (!eventMatchesQueue(event)) return;
+      const notifyEvent = options.notifyEvent !== false;
+      const refresh = options.refresh !== false;
+      state.events += 1;
+      $("event-count").textContent = `${state.events} events`;
+      const item = document.createElement("div");
+      item.className = "event";
+      const stateName = ticketState(event.ticket);
+      const when = event.created_at ? new Date(event.created_at) : new Date();
+      item.innerHTML = `
+        <div class="title">${escapeHtml(event.type || "event")} / ${escapeHtml(event.action || "-")} / ${escapeHtml(event.ticket_id || "-")}</div>
+        <div class="meta"><span class="pill ${escapeHtml(stateName)}">${escapeHtml(stateName)}</span><span>${when.toLocaleTimeString()}</span></div>
+        ${event.ticket?.name ? `<pre>${escapeHtml(event.ticket.name)}</pre>` : ""}
+        ${event.ticket?.execution?.last_error ? `<pre>${escapeHtml(event.ticket.execution.last_error)}</pre>` : ""}
+      `;
+      eventsEl.prepend(item);
+      while (eventsEl.children.length > 100) eventsEl.lastChild.remove();
+      if (notifyEvent) notify(event);
+      if (refresh) refreshTickets({ notifyFailures: false });
+    }
+
+    async function loadEventHistory() {
+      const queueParam = state.queue === "all" ? "" : `&queue=${encodeURIComponent(state.queue)}`;
+      const response = await fetch(`/events?limit=100${queueParam}`);
+      const events = await response.json();
+      resetEvents();
+      for (const event of events) {
+        addEvent(event, { notifyEvent: false, refresh: false });
+      }
+    }
+
+    async function refreshTickets(options = {}) {
+      const response = await fetch("/tickets?sprint=all");
+      const tickets = await response.json();
+      state.lastTickets = tickets;
+      updateQueueOptions(tickets);
+      const visibleTickets = selectedTickets(tickets);
+      scanFailedTickets(visibleTickets, options);
+      const open = visibleTickets.filter((t) => t.status === "open").length;
+      const running = visibleTickets.filter((t) => ticketState(t) === "running").length;
+      const waiting = visibleTickets.filter((t) => ticketState(t) === "waiting_input").length;
+      const failed = visibleTickets.filter(isFailedTicket).length;
+      $("m-open").textContent = open;
+      $("m-running").textContent = running;
+      $("m-waiting").textContent = waiting;
+      $("m-failed").textContent = failed;
+      $("updated").textContent = new Date().toLocaleTimeString();
+      ticketsEl.innerHTML = visibleTickets
+        .filter((t) => t.status !== "done" && t.status !== "canceled")
+        .slice(0, 80)
+        .map((t) => {
+          const stateName = ticketState(t);
+          const queue = ticketQueue(t);
+          return `
+            <div class="ticket">
+              <div class="title">${escapeHtml(t.id)} ${escapeHtml(t.name)}</div>
+              <div class="meta">
+                <span class="pill ${escapeHtml(stateName)}">${escapeHtml(stateName)}</span>
+                <span class="pill">${escapeHtml(t.priority || "normal")}</span>
+                <span class="pill">${escapeHtml(queue)}</span>
+              </div>
+            </div>
+          `;
+        })
+        .join("") || '<div class="empty">No active tickets in this queue</div>';
+    }
+
+    function connect() {
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(`${protocol}//${location.host}/ws`);
+      ws.onopen = () => setStatus("connected", "ok");
+      ws.onclose = () => {
+        setStatus("disconnected, retrying...", "err");
+        setTimeout(connect, 2000);
+      };
+      ws.onerror = () => setStatus("websocket error", "err");
+      ws.onmessage = (message) => {
+        try {
+          addEvent(JSON.parse(message.data));
+        } catch {
+          addEvent({ type: "raw", action: "message", ticket_id: "-", ticket: { name: message.data } });
+        }
+      };
+    }
+
+    $("notify").onclick = async () => {
+      if (!("Notification" in window)) {
+        alert("Browser notifications are not supported here.");
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      state.notifications = permission === "granted";
+      $("notify").textContent = state.notifications ? "Notifications enabled" : `Notifications: ${permission}`;
+      if (state.notifications) {
+        refreshTickets({ notifyFailures: true, resetSeen: true });
+      }
+    };
+    $("test-notify").onclick = async () => {
+      if (!("Notification" in window)) {
+        alert("Browser notifications are not supported here.");
+        return;
+      }
+      if (Notification.permission !== "granted") {
+        const permission = await Notification.requestPermission();
+        state.notifications = permission === "granted";
+      }
+      if (state.notifications) {
+        new Notification("planfile notifications are enabled", { body: "Error events will appear here while this dashboard is open." });
+      }
+    };
+    $("refresh").onclick = () => refreshTickets({ notifyFailures: true });
+    $("queue-filter").onchange = (event) => {
+      state.queue = event.target.value;
+      localStorage.setItem("planfile.queue", state.queue);
+      refreshTickets({ notifyFailures: false });
+      loadEventHistory().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
+    };
+    $("docs").onclick = () => location.href = "/docs";
+
+    $("notify").textContent = state.notifications ? "Notifications enabled" : "Enable notifications";
+    refreshTickets().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
+    loadEventHistory().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
+    setInterval(() => refreshTickets({ notifyFailures: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } })), 15000);
+    connect();
+  </script>
+</body>
+</html>"""
+
+
+async def _broadcast_ticket_event(
+    event_type: str,
+    action: str,
+    ticket=None,
+    ticket_id: str | None = None,
+) -> None:
+    """Notify WebSocket clients about ticket lifecycle changes."""
+    payload = {
+        "type": event_type,
+        "action": action,
+        "ticket_id": ticket.id if ticket is not None else ticket_id,
+        "created_at": datetime.now(UTC).isoformat(),
+    }
+    if ticket is not None:
+        payload["ticket"] = ticket.model_dump(mode="json", exclude_none=True)
+    _remember_event(payload)
+    await _manager.broadcast(payload)
 
 
 @app.websocket("/ws", name="ws_dsl")
@@ -318,14 +924,11 @@ def health():
     return {"status": "ok", "version": planfile.__version__}
 
 
-@app.get("/", tags=["system"])
+@app.get("/", response_class=HTMLResponse, tags=["system"])
 def root():
-    return {
-        "service": "planfile",
-        "docs": "/docs",
-        "ws": "/ws",
-        "dsl": "/dsl",
-        "tickets": "/tickets",
-        "sprints": "/sprints",
-        "yaml": "/yaml",
-    }
+    return HTMLResponse(_dashboard_html())
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)

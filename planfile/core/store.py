@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from enum import Enum
 from pathlib import Path
-from datetime import datetime
 
 import yaml
+from pydantic import BaseModel
 
+from .models import Ticket
 from .store_files import StoreFileMixin
 from .store_tickets import TicketStoreMixin
-from .models import Ticket, TicketStatus
 
 
 class Store(StoreFileMixin, TicketStoreMixin):
@@ -104,14 +106,30 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 return self._ticket_from_data(tickets[ticket_id])
         return None
 
+    def _serialize_update_value(self, value):
+        """Convert rich Python/Pydantic values into YAML-safe primitives."""
+        if isinstance(value, BaseModel):
+            return value.model_dump(mode="json", exclude_none=True)
+        if isinstance(value, Enum):
+            return value.value
+        if isinstance(value, list):
+            return [self._serialize_update_value(item) for item in value]
+        if isinstance(value, dict):
+            return {key: self._serialize_update_value(item) for key, item in value.items()}
+        return value
+
     def update_ticket(self, ticket_id: str, **updates) -> Ticket | None:
         for sprint_file in self._all_sprint_files():
             data = yaml.safe_load(sprint_file.read_text()) or {}
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
-                tickets[ticket_id].update(updates)
-                tickets[ticket_id]["updated_at"] = datetime.utcnow().isoformat()
+                serialized_updates = {
+                    key: self._serialize_update_value(value)
+                    for key, value in updates.items()
+                }
+                tickets[ticket_id].update(serialized_updates)
+                tickets[ticket_id]["updated_at"] = datetime.now(UTC).isoformat()
                 sprint_file.write_text(
                     yaml.dump(data, default_flow_style=False, allow_unicode=True), encoding="utf-8"
                 )

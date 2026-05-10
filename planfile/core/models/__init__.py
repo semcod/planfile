@@ -31,6 +31,10 @@ from .strategy import (
 # Ticket models
 from .ticket import (
     Ticket,
+    TicketExecution,
+    TicketExecutor,
+    TicketInputs,
+    TicketOutputs,
     TicketSource,
 )
 
@@ -59,9 +63,12 @@ __all__ = [
     "Task",
     "TaskPattern",
     "Ticket",
+    "TicketExecution",
+    "TicketExecutor",
+    "TicketInputs",
+    "TicketOutputs",
     "TicketSource",
 ]
 
 # Resolve forward references now that TicketStatus is available
 Ticket.model_rebuild()
-

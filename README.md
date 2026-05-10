@@ -34,13 +34,13 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.87-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-38.3h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.88-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-39.3h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $7.5000 (96 commits)
-- 👤 **Human dev:** ~$3835 (38.3h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $7.5000 (97 commits)
+- 👤 **Human dev:** ~$3935 (39.3h @ $100/h, 30min dedup)
 
-Generated on 2026-05-03 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-05-10 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
@@ -166,7 +166,7 @@ pf = Planfile.auto_discover(".")
 
 # Create tickets programmatically
 ticket = pf.create_ticket(
-    title="Fix authentication bug",
+    name="Fix authentication bug",
     description="Users cannot login with OAuth",
     priority="high",
     labels=["bug", "backend"]
@@ -186,7 +186,7 @@ uvicorn planfile.api.server:app --reload --port 8000
 curl "http://localhost:8000/tickets?sprint=current"
 curl -X POST "http://localhost:8000/tickets" \
   -H "Content-Type: application/json" \
-  -d '{"title": "API fix", "priority": "high"}'
+  -d '{"name": "API fix", "priority": "high"}'
 ```
 
 ### 5. Ticket Management CLI
@@ -200,6 +200,18 @@ planfile ticket create "Fix login bug" -p high -l bug -l backend
 # List tickets with filters
 planfile ticket list --status open
 planfile ticket list --label bug --format json
+
+# Show the next runnable ticket in a queue-like workflow
+planfile ticket next
+planfile ticket next --format json
+
+# Lifecycle for queue-driven execution
+planfile ticket input PLF-001 --prompt "Provide OPENROUTER_API_KEY" --env-key OPENROUTER_API_KEY
+planfile ticket ready PLF-001
+planfile ticket claim PLF-001 --assigned-to koru-shell
+planfile ticket start PLF-001 --assigned-to koru-shell
+planfile ticket fail PLF-001 --error "HTTP 502 from upstream"
+planfile ticket complete PLF-001 --note "Bootstrap done" --artifact reports/bootstrap.json
 
 # Update a single ticket
 planfile ticket update PLF-001 --status done
@@ -218,6 +230,79 @@ planfile ticket delete --status done --force
 planfile ticket delete --sprint old-sprint --label archive
 
 # Preview deletions without executing
+
+### 6. Queue-Oriented Execution Metadata
+
+`planfile` tickets can also carry lightweight execution metadata for queue-like
+workflows, which makes them a good control plane for tools like `koru`.
+
+Common fields:
+
+- `executor.kind` — who should perform the task: `human | shell | mcp | api | llm`
+- `executor.mode` — `interactive` or `automatic`
+- `executor.handler` — script, tool, or adapter name
+- `execution.state` — `pending | ready | running | waiting_input | done | failed | skipped`
+- `inputs.*` — prompt, env keys, script path, API request, MCP tool, model hint
+- `outputs.*` — artifacts, notes, structured result payload
+
+Example:
+
+```yaml
+tickets:
+  PLF-001:
+    name: "Bootstrap OpenRouter integration"
+    status: open
+    priority: high
+    executor:
+      kind: shell
+      mode: automatic
+      handler: scripts/bootstrap.sh
+    execution:
+      queue: default
+      state: ready
+      max_attempts: 3
+    inputs:
+      env_keys:
+        - OPENROUTER_API_KEY
+      script: scripts/bootstrap.sh
+      api_endpoint: null
+      api_method: GET
+      api_headers: {}
+      api_body: null
+      api_timeout_seconds: 30
+    outputs:
+      artifacts:
+        - reports/bootstrap.json
+```
+
+For API-executed tasks, tools such as `koru` can use `executor.kind: api`
+with `inputs.api_endpoint`, `inputs.api_method`, `inputs.api_headers`,
+`inputs.api_body`, and `inputs.api_timeout_seconds`.
+
+`planfile ticket next` returns the highest-priority runnable open ticket whose
+dependencies in `blocked_by` are already `done` or `canceled`.
+
+Execution changes are also broadcast to WebSocket clients connected to `/ws`.
+This lets tools such as `koru` or a small dashboard watch the queue without
+polling every endpoint.
+
+Example event:
+
+```json
+{
+  "type": "ticket.execution.changed",
+  "action": "claim",
+  "ticket_id": "PLF-001",
+  "ticket": {
+    "id": "PLF-001",
+    "name": "Bootstrap OpenRouter integration",
+    "execution": {
+      "state": "ready",
+      "assigned_to": "koru-shell"
+    }
+  }
+}
+```
 planfile ticket delete --label old --dry-run
 
 # Bulk update tickets by filters

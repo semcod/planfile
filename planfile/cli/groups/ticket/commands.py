@@ -216,7 +216,28 @@ def ticket_show(ticket_id: str=typer.Argument(..., help='Ticket ID (e.g. PLF-001
         raise typer.Exit(1)
     data = ticket.model_dump(mode='json', exclude_none=True)
     if fmt == 'json':
-        console.print(json.dumps(data, indent=2, default=str))
+        print(json.dumps(data, indent=2, default=str))
+    else:
+        console.print(yaml.dump(data, default_flow_style=False, sort_keys=False))
+
+
+def ticket_next(
+    sprint: str = typer.Option('current', '-s', '--sprint'),
+    queue: str | None = typer.Option(None, '--queue', help='Only consider tickets in this execution queue'),
+    fmt: str = typer.Option('yaml', '--format', help='yaml | json'),
+) -> None:
+    """Show the next runnable ticket for queue-like workflows."""
+    from planfile import Planfile
+
+    pf = Planfile.auto_discover()
+    ticket = pf.next_ticket(sprint=sprint, queue=queue)
+    if not ticket:
+        console.print('[dim]No runnable ticket found.[/dim]')
+        raise typer.Exit(0)
+
+    data = ticket.model_dump(mode='json', exclude_none=True)
+    if fmt == 'json':
+        print(json.dumps(data, indent=2, default=str))
     else:
         console.print(yaml.dump(data, default_flow_style=False, sort_keys=False))
 
@@ -281,21 +302,93 @@ def ticket_done(ticket_id: str=typer.Argument(..., help='Ticket ID to mark as do
     """Mark ticket as done (shortcut for update --status done)."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
-    ticket = pf.update_ticket(ticket_id, status='done')
+    ticket = pf.complete_ticket(ticket_id)
     if not ticket:
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Marked {ticket.id} as [green]done[/green]')
 
-def ticket_start(ticket_id: str=typer.Argument(..., help='Ticket ID to start working on')) -> None:
-    """Mark ticket as in_progress (shortcut for update --status in_progress)."""
+def ticket_claim(
+    ticket_id: str=typer.Argument(..., help='Ticket ID to claim'),
+    assigned_to: str | None=typer.Option(None, '--assigned-to', help='Worker/agent claiming the ticket'),
+    lease_seconds: int | None=typer.Option(None, '--lease-seconds', help='Optional soft lease duration in seconds'),
+) -> None:
+    """Claim a ticket for a worker without starting execution yet."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
-    ticket = pf.update_ticket(ticket_id, status='in_progress')
+    ticket = pf.claim_ticket(ticket_id, assigned_to=assigned_to, lease_seconds=lease_seconds)
+    if not ticket:
+        console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
+        raise typer.Exit(1)
+    assignee = ticket.execution.assigned_to if ticket.execution else assigned_to
+    suffix = f' by [cyan]{assignee}[/cyan]' if assignee else ''
+    console.print(f'[green]✓[/green] Claimed {ticket.id}{suffix}')
+
+def ticket_start(
+    ticket_id: str=typer.Argument(..., help='Ticket ID to start working on'),
+    assigned_to: str | None=typer.Option(None, '--assigned-to', help='Worker/agent starting the ticket'),
+) -> None:
+    """Mark ticket as in_progress and execution state as running."""
+    from planfile import Planfile
+    pf = Planfile.auto_discover()
+    ticket = pf.start_ticket(ticket_id, assigned_to=assigned_to)
     if not ticket:
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Started {ticket.id} → [yellow]in_progress[/yellow]')
+
+def ticket_ready(ticket_id: str=typer.Argument(..., help='Ticket ID to make runnable again')) -> None:
+    """Mark execution state as ready after human input or manual recovery."""
+    from planfile import Planfile
+    pf = Planfile.auto_discover()
+    ticket = pf.ready_ticket(ticket_id)
+    if not ticket:
+        console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
+        raise typer.Exit(1)
+    console.print(f'[green]✓[/green] Ticket {ticket.id} is [green]ready[/green]')
+
+def ticket_fail(
+    ticket_id: str=typer.Argument(..., help='Ticket ID to mark as failed'),
+    error: str=typer.Option(..., '--error', '-e', help='Failure reason'),
+) -> None:
+    """Mark execution as failed and record the last error."""
+    from planfile import Planfile
+    pf = Planfile.auto_discover()
+    ticket = pf.fail_ticket(ticket_id, error=error)
+    if not ticket:
+        console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
+        raise typer.Exit(1)
+    console.print(f'[green]✓[/green] Marked {ticket.id} as [red]failed[/red]')
+
+def ticket_input(
+    ticket_id: str=typer.Argument(..., help='Ticket ID waiting on human or external input'),
+    prompt: str=typer.Option(..., '--prompt', help='Human-facing instruction or missing input'),
+    env_key: list[str] | None=typer.Option(None, '--env-key', help='Required environment key(s)'),
+) -> None:
+    """Mark a ticket as waiting for input and attach the prompt/env requirements."""
+    from planfile import Planfile
+    pf = Planfile.auto_discover()
+    ticket = pf.wait_for_input(ticket_id, prompt=prompt, env_keys=list(env_key or []))
+    if not ticket:
+        console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
+        raise typer.Exit(1)
+    console.print(f'[green]✓[/green] Ticket {ticket.id} now waits for input')
+
+def ticket_complete(
+    ticket_id: str=typer.Argument(..., help='Ticket ID to complete'),
+    note: str | None=typer.Option(None, '--note', help='Completion note to append'),
+    artifact: list[str] | None=typer.Option(None, '--artifact', help='Artifact path(s) produced by the task'),
+    result_json: str | None=typer.Option(None, '--result-json', help='Structured JSON result payload'),
+) -> None:
+    """Complete a ticket and optionally attach outputs."""
+    from planfile import Planfile
+    pf = Planfile.auto_discover()
+    result = json.loads(result_json) if result_json else None
+    ticket = pf.complete_ticket(ticket_id, note=note, result=result, artifacts=list(artifact or []))
+    if not ticket:
+        console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
+        raise typer.Exit(1)
+    console.print(f'[green]✓[/green] Completed {ticket.id}')
 
 def ticket_block(ticket_id: str=typer.Argument(..., help='Ticket ID to block'), reason: str=typer.Option(None, '-r', '--reason', help='Block reason')) -> None:
     """Mark ticket as blocked (shortcut for update --status blocked)."""

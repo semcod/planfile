@@ -133,6 +133,29 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.88] - 2026-05-10
+
+### Docs
+- Update README.md
+- Update examples/c2004-healing/README.md
+
+### Test
+- Update tests/test_ticket_api_events.py
+- Update tests/test_ticket_execution.py
+
+### Other
+- Update examples/c2004-healing/planfile.yaml
+- Update examples/c2004-healing/ticket_builder.py
+- Update planfile/__init__.py
+- Update planfile/api/server.py
+- Update planfile/cli/groups/ticket/__init__.py
+- Update planfile/cli/groups/ticket/commands.py
+- Update planfile/core/models/__init__.py
+- Update planfile/core/models/strategy.py
+- Update planfile/core/models/ticket.py
+- Update planfile/core/store.py
+- ... and 1 more files
+
 ## [0.1.87] - 2026-05-03
 
 ### Docs

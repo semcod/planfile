@@ -1,6 +1,6 @@
 """Strategy models - sprints, tasks, goals, quality gates."""
 from typing import Any, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from .base import DEFAULT_SPRINT_LENGTH_DAYS, DAYS_PER_WEEK, INITIAL_SPRINT_ID, TaskType
 
 class ModelHints(BaseModel):
@@ -22,6 +22,8 @@ class ModelHints(BaseModel):
 
 class Task(BaseModel):
     """A task in a sprint - simplified and directly embedded."""
+    model_config = ConfigDict(protected_namespaces=())
+
     name: str = Field(..., description='Task name')
     description: str = Field(..., description='Task description')
     type: TaskType = Field(TaskType.feature, description='Type of task')

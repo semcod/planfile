@@ -1,0 +1,104 @@
+# Sample planfile.yaml — output of running the c2004 healing pipeline once.
+# Showcases the LLM-ready schema (label=llm-ready, 7-section description).
+#
+# Generate with:
+#   python ticket_builder.py    # demo — prints what the description looks like
+#   planfile ticket create ... --description "$(...)"
+#
+# Real c2004 file lives at https://github.com/maskservice/c2004/blob/main/planfile.yaml
+
+name: "c2004 — auto-generated tickets demo"
+project_name: c2004-fleet-management
+project_type: refactoring
+domain: fleet-management
+goal: Demonstrate the planfile LLM-ready ticket schema produced by healing-webhook.
+
+sprints:
+  - id: current
+    name: Current Sprint
+    duration: rolling
+    objectives:
+      - Auto-create tickets from Prometheus alerts and TestQL probe failures.
+      - Make every ticket consumable by Windsurf, Cursor, Claude Code, aider verbatim.
+
+tickets:
+  - id: PLF-DEMO-1
+    name: "[alertmanager] EndpointDown: Endpoint /api/v3/devices returning 500"
+    status: open
+    priority: critical
+    sprint: current
+    source:
+      tool: alertmanager
+      timestamp: '2026-05-08T16:30:00Z'
+      context:
+        alertname: EndpointDown
+        instance: http://localhost:8101/api/v3/devices
+        component: endpoint
+    labels:
+      - alertmanager
+      - auto-generated
+      - component:endpoint
+      - llm-ready
+      - severity:critical
+    description: |
+      ## 🚨 Context
+
+      - **Alert:** EndpointDown
+      - **Severity:** critical
+      - **Component:** endpoint
+      - **Stack:** c2004 monorepo (FastAPI backend + Vue/Vite frontend + connect-* microservices)
+      - **Repo:** /home/tom/github/maskservice/c2004
+      - **Commit:** `fed97a86`
+      - **Detected at:** 2026-05-08T16:30:00Z
+      - **Source:** alertmanager
+
+      **Summary:** Endpoint /api/v3/devices returning 500
+
+      ## 🔁 Reproduction
+
+      ```bash
+      task monitor:probe
+      curl -sS -m 4 -o /dev/null -w '%{http_code}\n' 'http://localhost:8101/api/v3/devices'
+      ```
+
+      Expected → HTTP 200 / `probe_success=1`.
+      Observed → `500 Internal Server Error`.
+
+      ## 📂 Likely-affected areas
+
+      - `connect-*/backend/`
+      - `backend/api/routes/v3/`
+      - `packages/backend-shared-py/src/shared/`
+
+      ## ✅ Acceptance criteria
+
+      Agent must leave the repo green against **all** of the following:
+
+      - [ ] GET http://localhost:8101/api/v3/devices → 200 (was failing)
+      - [ ] GET http://localhost:8101/api/v3/health → 200
+      - [ ] `task monitor:probe` exits 0
+      - [ ] `task test` passes for affected sub-packages
+      - [ ] `redsl gate check` returns exit code 0
+
+      ## 🔒 Constraints
+
+      - Do NOT modify generated code.
+      - Do NOT bump dependencies in requirements.txt without evidence.
+      - Keep changes under ~80 lines.
+      - Always write a regression test that would have caught this alert.
+
+      ## 🤖 Prompt (LLM-agnostic — copy/paste verbatim)
+
+      > You are assigned the following ticket. Produce a minimal patch that
+      > satisfies every acceptance criterion.
+      >
+      > Alert EndpointDown fired: Endpoint /api/v3/devices returning 500.
+      > Component=endpoint, severity=critical. Root-cause the failure and
+      > land a minimal, tested patch.
+      >
+      > Workflow:
+      > 1. Read the files listed in "Likely-affected areas".
+      > 2. Reproduce the failure using the `Reproduction` block.
+      > 3. Propose a patch; stay within the constraints.
+      > 4. Run `task monitor:probe` to confirm acceptance criteria pass.
+      > 5. Summarise the root cause in 3 sentences for the PR description.
