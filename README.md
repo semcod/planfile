@@ -73,6 +73,7 @@ Generated on 2026-05-10 using [openrouter/qwen/qwen3-coder-next](https://openrou
 - 🌉 **Proxy Routing**: Smart model routing via Proxym API
 - 📈 **Metrics-Driven**: Project metrics analysis for informed planning
 - 🗣️ **DSL (Domain Specific Language)**: Natural language-like commands for planfile operations
+- 🐛 **Bug-First Priority**: Automatic bug prioritization over features for quality assurance
 
 # Basic installation
 pip install planfile
@@ -154,6 +155,58 @@ planfile strategy review \
   --strategy ./strategy.yaml \
   --project . \
   --backend github
+```
+
+## 🐛 Bug-First Priority System
+
+Planfile automatically prioritizes bugs over features to ensure quality and stability:
+
+### **Automatic Priority Ordering**
+Tickets are sorted by:
+1. **Priority Level**: critical > high > normal > low
+2. **Bug Flag**: bugs come before features at the same priority level
+3. **Creation Date**: older tickets first within the same category
+4. **Ticket ID**: final tiebreaker
+
+### **How It Works**
+```python
+# Example sorting behavior
+Priority: critical
+├── Bug tickets (sorted by creation date)
+└── Feature tickets (sorted by creation date)
+
+Priority: normal  
+├── Bug tickets (sorted by creation date)
+└── Feature tickets (sorted by creation date)
+```
+
+### **Label-Based Detection**
+- Tickets with `bug` label are treated as bugs
+- All other tickets are treated as features
+- No manual configuration required
+
+### **Integration with Koru**
+- **Koru** auto-promotes bugs to higher priorities
+- **Planfile** respects bug-first ordering in `next_ticket()`
+- **Consistent behavior** across both systems
+- **Seamless workflow** whether using koru or planfile directly
+
+### **Benefits**
+- 🔧 **Quality First**: Bugs fixed before new features
+- ⚡ **Automatic Triage**: No manual priority adjustments needed
+- 🎯 **Predictable Execution**: Consistent ordering across all operations
+- 🛡️ **Stability Assurance**: Prevents feature development while bugs exist
+- 🔄 **Unified System**: Works with koru's auto-promotion and auto-repair modes
+
+### **Usage Example**
+```python
+from planfile import Planfile
+
+pf = Planfile.auto_discover()
+next_ticket = pf.next_ticket()
+
+# Returns highest priority ticket, bugs first
+# Critical bugs > Critical features > High bugs > High features > ...
 ```
 
 ### 4. Using Python Library

@@ -101,7 +101,11 @@ class Planfile:
         return self.store.list_tickets(**filters)
 
     def next_ticket(self, sprint: str = "current", queue: str | None = None) -> Ticket | None:
-        """Return the next runnable ticket for queue-like workflows."""
+        """Return the next runnable ticket for queue-like workflows.
+        
+        Uses bug-first priority: bugs are always preferred over features
+        when they have the same priority level.
+        """
         priority_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
         runnable_states = {"pending", "ready", ""}
         blocked_statuses = {"done", "canceled"}
@@ -137,14 +141,21 @@ class Planfile:
         if not runnable:
             return None
 
-        return sorted(
-            runnable,
-            key=lambda t: (
-                priority_order.get(str(t.priority), 99),
-                str(t.created_at),
-                t.id,
-            ),
-        )[0]
+        def _ticket_sort_key(ticket: Ticket):
+            """Bug-first sorting key: priority, bug flag, created_at, id."""
+            priority_score = priority_order.get(str(ticket.priority), 99)
+            
+            # Bug flag: bugs get 0, features get 1 (so bugs sort first)
+            is_bug = 0 if ticket.labels and "bug" in ticket.labels else 1
+            
+            return (
+                priority_score,
+                is_bug,
+                str(ticket.created_at),
+                ticket.id,
+            )
+
+        return sorted(runnable, key=_ticket_sort_key)[0]
 
     def update_ticket(self, ticket_id: str, **updates):
         return self.store.update_ticket(ticket_id, **updates)
