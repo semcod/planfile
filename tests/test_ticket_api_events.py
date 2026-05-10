@@ -72,6 +72,35 @@ def test_ticket_update_api_broadcasts_ticket_changed_event(tmp_path, monkeypatch
     assert event["ticket"]["priority"] == "high"
 
 
+def test_ticket_lifecycle_api_persists_history_for_detail_panel(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Needs durable history",
+        source=TicketSource(tool="human"),
+        execution=TicketExecution(queue="default", state="pending"),
+    )
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    assert client.post(
+        f"/tickets/{ticket.id}/claim",
+        json={"assigned_to": "koru-shell"},
+    ).status_code == 200
+    assert client.post(
+        f"/tickets/{ticket.id}/input-required",
+        json={"prompt": "Provide API key", "env_keys": ["OPENROUTER_API_KEY"]},
+    ).status_code == 200
+
+    loaded = client.get(f"/tickets/{ticket.id}").json()
+
+    assert [entry["action"] for entry in loaded["history"]] == ["update", "update"]
+    assert loaded["history"][0]["changes"] == ["execution"]
+    assert loaded["history"][0]["execution_state"] == "ready"
+    assert loaded["history"][1]["execution_state"] == "waiting_input"
+    assert loaded["history"][1]["previous_execution_state"] == "ready"
+
+
 def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     pf.create_ticket(

@@ -118,18 +118,60 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return {key: self._serialize_update_value(item) for key, item in value.items()}
         return value
 
+    @staticmethod
+    def _execution_state(ticket_data: dict) -> str | None:
+        execution = ticket_data.get("execution")
+        if not isinstance(execution, dict):
+            return None
+        return execution.get("state")
+
+    @classmethod
+    def _build_history_entry(
+        cls,
+        previous: dict,
+        current: dict,
+        changed_keys: list[str],
+    ) -> dict:
+        previous_status = previous.get("status")
+        current_status = current.get("status")
+        previous_state = cls._execution_state(previous)
+        current_state = cls._execution_state(current)
+        entry = {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "action": "update",
+            "source": "planfile.store",
+            "changes": changed_keys,
+        }
+        if previous_status != current_status:
+            entry["status"] = current_status
+            entry["previous_status"] = previous_status
+        if previous_state != current_state:
+            entry["execution_state"] = current_state
+            entry["previous_execution_state"] = previous_state
+        return entry
+
     def update_ticket(self, ticket_id: str, **updates) -> Ticket | None:
         for sprint_file in self._all_sprint_files():
             data = yaml.safe_load(sprint_file.read_text()) or {}
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
+                previous = dict(tickets[ticket_id])
                 serialized_updates = {
                     key: self._serialize_update_value(value)
                     for key, value in updates.items()
                 }
                 tickets[ticket_id].update(serialized_updates)
                 tickets[ticket_id]["updated_at"] = datetime.now(UTC).isoformat()
+                changed_keys = sorted(
+                    key
+                    for key, value in serialized_updates.items()
+                    if key != "history" and previous.get(key) != value
+                )
+                if changed_keys and "history" not in serialized_updates:
+                    history = list(tickets[ticket_id].get("history") or [])
+                    history.append(self._build_history_entry(previous, tickets[ticket_id], changed_keys))
+                    tickets[ticket_id]["history"] = history[-200:]
                 sprint_file.write_text(
                     yaml.dump(data, default_flow_style=False, allow_unicode=True), encoding="utf-8"
                 )
