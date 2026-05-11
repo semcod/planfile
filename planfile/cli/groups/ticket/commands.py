@@ -205,6 +205,41 @@ def ticket_list(sprint: str=typer.Option('current', '-s', '--sprint'), status: s
     tickets = pf.list_tickets(sprint=sprint, **filters)
     _display_tickets(tickets, fmt)
 
+def _annotate_blockers(pf: Any, data: dict) -> None:
+    """Decorate `blocked_by` with each blocker's current status.
+
+    Adds a sibling key ``blocker_states`` mapping each blocker ID to its
+    current status (``done``, ``in_progress``, ``open``, …). Resolved
+    blockers (``status == 'done'``) are additionally collected under
+    ``resolved_blockers`` so it's obvious at a glance which dependencies
+    are no longer gating the ticket.
+
+    No-op when ``blocked_by`` is empty or missing. Never mutates the
+    underlying ticket — purely a display enhancement (PLF-koru
+    improvement #3).
+    """
+    blocked_by = data.get('blocked_by') or []
+    if not blocked_by:
+        return
+    states: dict[str, str] = {}
+    resolved: list[str] = []
+    for blocker_id in blocked_by:
+        blocker = pf.get_ticket(blocker_id)
+        if blocker is None:
+            states[blocker_id] = 'missing'
+            continue
+        status_val = blocker.status
+        status_str = (
+            status_val.value if hasattr(status_val, 'value') else str(status_val)
+        )
+        states[blocker_id] = status_str
+        if status_str == 'done':
+            resolved.append(blocker_id)
+    data['blocker_states'] = states
+    if resolved:
+        data['resolved_blockers'] = resolved
+
+
 def ticket_show(ticket_id: str=typer.Argument(..., help='Ticket ID (e.g. PLF-001)'), fmt: str=typer.Option('yaml', '--format', help='yaml | json')) -> None:
     """Show details of a single ticket."""
     from planfile import Planfile
@@ -214,6 +249,7 @@ def ticket_show(ticket_id: str=typer.Argument(..., help='Ticket ID (e.g. PLF-001
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     data = ticket.model_dump(mode='json', exclude_none=True)
+    _annotate_blockers(pf, data)
     if fmt == 'json':
         print(json.dumps(data, indent=2, default=str))
     else:
@@ -240,8 +276,8 @@ def ticket_next(
     else:
         console.print(yaml.dump(data, default_flow_style=False, sort_keys=False))
 
-def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: str | None=typer.Option(None, help='New status'), priority: str | None=typer.Option(None, '-p', '--priority'), name: str | None=typer.Option(None, help='New name'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after update'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
-    """Update ticket fields."""
+def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: str | None=typer.Option(None, help='New status'), priority: str | None=typer.Option(None, '-p', '--priority'), name: str | None=typer.Option(None, help='New name'), description: str | None=typer.Option(None, '-d', '--description', help='New description (replaces existing)'), note: str | None=typer.Option(None, '-n', '--note', help='Append a note to outputs.notes (additive, does NOT replace description)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after update'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
+    """Update ticket fields. `--note` appends to outputs.notes without replacing other fields."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
     updates = {}
@@ -251,6 +287,15 @@ def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: 
         updates['priority'] = priority
     if name:
         updates['name'] = name
+    if description is not None:
+        updates['description'] = description
+    if note:
+        # Read the ticket first so we can append to its existing notes.
+        current = pf.get_ticket(ticket_id)
+        if current is None:
+            console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
+            raise typer.Exit(1)
+        updates['outputs'] = pf._append_note(current, note)
     if not updates:
         console.print('[yellow]⚠[/yellow] No updates specified.')
         raise typer.Exit(1)
@@ -336,11 +381,11 @@ def ticket_start(
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Started {ticket.id} → [yellow]in_progress[/yellow]')
 
-def ticket_ready(ticket_id: str=typer.Argument(..., help='Ticket ID to make runnable again')) -> None:
+def ticket_ready(ticket_id: str=typer.Argument(..., help='Ticket ID to make runnable again'), note: str | None=typer.Option(None, '-n', '--note', help='Optional note appended to outputs.notes (e.g. resolution of the input phase)')) -> None:
     """Mark execution state as ready after human input or manual recovery."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
-    ticket = pf.ready_ticket(ticket_id)
+    ticket = pf.ready_ticket(ticket_id, note=note)
     if not ticket:
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
@@ -363,11 +408,12 @@ def ticket_input(
     ticket_id: str=typer.Argument(..., help='Ticket ID waiting on human or external input'),
     prompt: str=typer.Option(..., '--prompt', help='Human-facing instruction or missing input'),
     env_key: list[str] | None=typer.Option(None, '--env-key', help='Required environment key(s)'),
+    note: str | None=typer.Option(None, '-n', '--note', help='Optional note appended to outputs.notes (e.g. agent diagnosis context)'),
 ) -> None:
     """Mark a ticket as waiting for input and attach the prompt/env requirements."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
-    ticket = pf.wait_for_input(ticket_id, prompt=prompt, env_keys=list(env_key or []))
+    ticket = pf.wait_for_input(ticket_id, prompt=prompt, env_keys=list(env_key or []), note=note)
     if not ticket:
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)

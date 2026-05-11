@@ -194,3 +194,112 @@ def test_ticket_execution_waiting_input_ready_and_fail(tmp_path):
     assert failed.execution.state == "failed"
     assert failed.execution.last_error == "Remote API returned HTTP 502"
     assert failed.execution.attempt == 1
+
+
+def test_wait_for_input_appends_note_to_outputs_notes(tmp_path):
+    """`pf.wait_for_input(..., note=...)` should append to outputs.notes
+    so an agent can record *why* it is escalating to a human (PLF-koru #7).
+    """
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Need env var",
+        source=TicketSource(tool="human"),
+        executor=TicketExecutor(kind="human", mode="interactive"),
+        execution=TicketExecution(state="pending"),
+    )
+
+    waiting = pf.wait_for_input(
+        ticket.id,
+        prompt="Provide OPENROUTER_API_KEY",
+        env_keys=["OPENROUTER_API_KEY"],
+        note="agent diagnostic: tried 3 fallback keys, all 401",
+    )
+    assert waiting is not None
+    assert waiting.outputs is not None
+    assert waiting.outputs.notes == [
+        "agent diagnostic: tried 3 fallback keys, all 401"
+    ]
+    # Subsequent calls should *append* rather than replace.
+    waiting2 = pf.wait_for_input(
+        ticket.id,
+        prompt="Updated prompt",
+        note="second escalation: rate limit reached at provider",
+    )
+    assert waiting2 is not None
+    assert waiting2.outputs is not None
+    assert waiting2.outputs.notes == [
+        "agent diagnostic: tried 3 fallback keys, all 401",
+        "second escalation: rate limit reached at provider",
+    ]
+
+
+def test_append_note_helper_preserves_artifacts_and_result(tmp_path):
+    """`_append_note` should additively grow notes while preserving
+    artifacts and result fields (shared by ready/input/update flows)."""
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="With outputs",
+        source=TicketSource(tool="human"),
+        outputs=TicketOutputs(
+            artifacts=["report.json"],
+            notes=["initial"],
+            result={"score": 0.9},
+        ),
+    )
+    outputs = pf._append_note(ticket, "follow-up observation")
+    assert outputs.notes == ["initial", "follow-up observation"]
+    assert outputs.artifacts == ["report.json"]
+    assert outputs.result == {"score": 0.9}
+
+
+def test_annotate_blockers_marks_resolved_blockers(tmp_path):
+    """`planfile ticket show` should annotate `blocked_by` with each
+    blocker's current status, surfacing already-resolved blockers under
+    `resolved_blockers` (PLF-koru improvement #3).
+    """
+    from planfile.cli.groups.ticket.commands import _annotate_blockers
+
+    pf = Planfile(str(tmp_path))
+    blocker = pf.create_ticket(name="Blocker", source=TicketSource(tool="human"))
+    blocked = pf.create_ticket(
+        name="Blocked",
+        source=TicketSource(tool="human"),
+        blocked_by=[blocker.id],
+    )
+    pf.complete_ticket(blocker.id)
+
+    data = pf.get_ticket(blocked.id).model_dump(mode="json", exclude_none=True)
+    _annotate_blockers(pf, data)
+
+    assert data["blocker_states"] == {blocker.id: "done"}
+    assert data["resolved_blockers"] == [blocker.id]
+
+
+def test_annotate_blockers_handles_missing_blocker(tmp_path):
+    """A blocker referenced by ID but never created should be flagged
+    `missing` instead of crashing the renderer."""
+    from planfile.cli.groups.ticket.commands import _annotate_blockers
+
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Ghost-blocked",
+        source=TicketSource(tool="human"),
+        blocked_by=["PLF-DOES-NOT-EXIST"],
+    )
+    data = pf.get_ticket(ticket.id).model_dump(mode="json", exclude_none=True)
+    _annotate_blockers(pf, data)
+    assert data["blocker_states"] == {"PLF-DOES-NOT-EXIST": "missing"}
+    # No resolved_blockers field because nothing actually resolved.
+    assert "resolved_blockers" not in data
+
+
+def test_annotate_blockers_is_noop_when_no_blockers(tmp_path):
+    """No `blocked_by` → no annotation keys added (clean ticket show)."""
+    from planfile.cli.groups.ticket.commands import _annotate_blockers
+
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Free", source=TicketSource(tool="human"))
+    data = pf.get_ticket(ticket.id).model_dump(mode="json", exclude_none=True)
+    _annotate_blockers(pf, data)
+    assert "blocker_states" not in data
+    assert "resolved_blockers" not in data

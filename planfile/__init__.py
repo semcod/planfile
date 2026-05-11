@@ -252,11 +252,28 @@ class Planfile:
         )
         return self.update_ticket(ticket_id, execution=execution)
 
+    def _append_note(self, ticket: Ticket, note: str) -> TicketOutputs:
+        """Build an updated TicketOutputs with `note` appended to existing notes.
+
+        Preserves existing artifacts and result. Shared by ready_ticket,
+        wait_for_input and update_ticket --note (PLF-koru improvement #7).
+        """
+        existing_notes = list(ticket.outputs.notes) if ticket.outputs else []
+        existing_artifacts = list(ticket.outputs.artifacts) if ticket.outputs else []
+        return self._merge_model(
+            ticket.outputs,
+            TicketOutputs,
+            notes=existing_notes + [note],
+            artifacts=existing_artifacts,
+            result=ticket.outputs.result if ticket.outputs else None,
+        )
+
     def wait_for_input(
         self,
         ticket_id: str,
         prompt: str,
         env_keys: list[str] | None = None,
+        note: str | None = None,
     ) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
@@ -276,9 +293,12 @@ class Planfile:
             state="waiting_input",
             lease_expires_at=None,
         )
-        return self.update_ticket(ticket_id, execution=execution, inputs=inputs)
+        updates: dict = {"execution": execution, "inputs": inputs}
+        if note:
+            updates["outputs"] = self._append_note(ticket, note)
+        return self.update_ticket(ticket_id, **updates)
 
-    def ready_ticket(self, ticket_id: str) -> Ticket | None:
+    def ready_ticket(self, ticket_id: str, note: str | None = None) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
             return None
@@ -289,7 +309,10 @@ class Planfile:
             state="ready",
             last_error=None,
         )
-        return self.update_ticket(ticket_id, execution=execution)
+        updates: dict = {"execution": execution}
+        if note:
+            updates["outputs"] = self._append_note(ticket, note)
+        return self.update_ticket(ticket_id, **updates)
 
     def delete_ticket(self, ticket_id: str) -> bool:
         """Delete a single ticket by ID. Returns True if deleted, False if not found."""
