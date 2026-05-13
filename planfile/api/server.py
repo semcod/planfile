@@ -25,6 +25,11 @@ except ImportError as exc:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
 
 from planfile.core.models import TicketExecution, TicketExecutor, TicketInputs, TicketOutputs
+from planfile.runtime_context import (
+    build_runtime_context,
+    load_runtime_context_config,
+    save_runtime_context_config,
+)
 from planfile.server_common import get_planfile
 
 
@@ -134,11 +139,17 @@ class ManagementEventRequest(BaseModel):
     source: str = "koru"
     tool: str = "koru"
     action: str
+    ticket_id: str | None = None
     status: str = "info"
     message: str = ""
     queue: str = "default"
     level: str = "info"
     details: dict[str, Any] = {}
+
+
+class RuntimeContextConfigRequest(BaseModel):
+    enabled: dict[str, bool] = {}
+    overrides: dict[str, Any] = {}
 
 
 # ── Tickets ────────────────────────────────────────────────────────────────────
@@ -606,10 +617,14 @@ async def create_test_event(body: TestEventRequest):
 @app.post("/events/ingest", tags=["events"])
 async def ingest_management_event(body: ManagementEventRequest):
     """Ingest a management-layer event for dashboards and operators."""
+    ticket_id = str(body.ticket_id or body.details.get("ticket_id") or "-")
+    details = dict(body.details)
+    if ticket_id != "-":
+        details.setdefault("ticket_id", ticket_id)
     payload = {
         "type": "management.event",
         "action": body.action,
-        "ticket_id": str(body.details.get("ticket_id") or "-"),
+        "ticket_id": ticket_id,
         "created_at": datetime.now(UTC).isoformat(),
         "source": body.source,
         "tool": body.tool,
@@ -617,11 +632,150 @@ async def ingest_management_event(body: ManagementEventRequest):
         "level": body.level,
         "status": body.status,
         "message": body.message,
-        "details": body.details,
+        "details": details,
     }
     _remember_event(payload)
     await _manager.broadcast(payload)
     return payload
+
+
+def _runtime_context_project() -> Path:
+    return get_planfile().store.project_dir
+
+
+@app.get("/api/runtime-context", tags=["runtime-context"])
+def get_runtime_context():
+    return build_runtime_context(_runtime_context_project())
+
+
+@app.get("/api/runtime-context/config", tags=["runtime-context"])
+def get_runtime_context_config():
+    return load_runtime_context_config(_runtime_context_project())
+
+
+@app.put("/api/runtime-context/config", tags=["runtime-context"])
+def update_runtime_context_config(body: RuntimeContextConfigRequest):
+    return save_runtime_context_config(_runtime_context_project(), body.model_dump())
+
+
+@app.get("/runtime-context", response_class=HTMLResponse, tags=["runtime-context"])
+def runtime_context_page():
+    return HTMLResponse(_runtime_context_html(), headers=NO_STORE_HEADERS)
+
+
+def _runtime_context_html() -> str:
+    return r"""<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Planfile Runtime Context</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e5e7eb; }
+    header { position: sticky; top: 0; z-index: 2; padding: 16px 24px; border-bottom: 1px solid #1e293b; background: rgba(15,23,42,.96); backdrop-filter: blur(10px); }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    h2 { margin: 0 0 12px; font-size: 18px; }
+    h3 { margin: 14px 0 8px; font-size: 15px; color: #bae6fd; }
+    button { cursor: pointer; border: 1px solid #334155; border-radius: 10px; padding: 8px 12px; color: #e5e7eb; background: #0f172a; }
+    button.primary { border-color: #0284c7; background: #0369a1; }
+    main { display: grid; grid-template-columns: 280px 1fr; gap: 18px; padding: 18px; }
+    aside, section { border: 1px solid #1e293b; border-radius: 14px; background: #0f172a; padding: 16px; }
+    label { display: flex; align-items: center; gap: 8px; margin: 10px 0; color: #cbd5e1; }
+    input[type="checkbox"] { width: 18px; height: 18px; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+    .card { border: 1px solid #334155; border-radius: 12px; padding: 14px; background: #111827; }
+    .muted { color: #94a3b8; }
+    .pill { display: inline-block; margin: 2px; padding: 3px 8px; border-radius: 999px; background: #1e293b; color: #bfdbfe; font-size: 12px; }
+    pre { overflow: auto; max-height: 520px; padding: 12px; border-radius: 10px; background: #020617; border: 1px solid #1e293b; }
+    code { color: #bae6fd; }
+    .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+    .summary span { padding: 6px 10px; border-radius: 999px; background: #172554; color: #bfdbfe; }
+    a { color: #7dd3fc; text-decoration: none; }
+    @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Topology / Runtime Context</h1>
+  <div class="muted">Systemy, biblioteki, algorytmy, API, aplikacje i pipeline’y aktualnego projektu planfile.</div>
+  <div class="summary" id="summary"></div>
+</header>
+<main>
+  <aside>
+    <h2>Widoczność sekcji</h2>
+    <div id="checks"></div>
+    <div class="toolbar">
+      <button class="primary" onclick="saveConfig()">Zapisz</button>
+      <button onclick="loadContext()">Odśwież</button>
+      <button onclick="showRaw()">JSON</button>
+    </div>
+    <p class="muted">Checkboxy zapisują konfigurację w <code>.koru/runtime-context.json</code>.</p>
+    <p><a href="/">← dashboard</a></p>
+  </aside>
+  <section>
+    <div id="content"></div>
+  </section>
+</main>
+<script>
+const labels = {
+  systems: 'Systemy / kontenery', libraries: 'Biblioteki i zależności', algorithms: 'Algorytmy',
+  apis: 'API', applications: 'Aplikacje', pipelines: 'Pipeline’y / taski', topology: 'Graf topologii'
+};
+let ctx = null;
+let cfg = null;
+async function loadContext() {
+  ctx = await fetch('/api/runtime-context', {cache: 'no-store'}).then(r => r.json());
+  cfg = ctx.config;
+  renderChecks(); renderSummary(); renderContent();
+}
+function renderChecks() {
+  document.getElementById('checks').innerHTML = Object.entries(labels).map(([key, label]) =>
+    `<label><input type="checkbox" data-key="${key}" ${cfg.enabled[key] ? 'checked' : ''}> ${label}</label>`
+  ).join('');
+}
+function renderSummary() {
+  const s = ctx.summary || {};
+  document.getElementById('summary').innerHTML = [
+    `project: ${s.project || '-'}`, `version: ${s.version || '-'}`, `services: ${s.services || 0}`,
+    `workspaces: ${s.workspaces || 0}`, `pipelines: ${s.pipelines || 0}`, `topology nodes: ${s.topology_nodes || 0}`
+  ].map(v => `<span>${escapeHtml(v)}</span>`).join('');
+}
+async function saveConfig() {
+  const enabled = {};
+  document.querySelectorAll('input[type="checkbox"]').forEach(input => enabled[input.dataset.key] = input.checked);
+  cfg = await fetch('/api/runtime-context/config', {
+    method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...cfg, enabled})
+  }).then(r => r.json());
+  await loadContext();
+}
+function showRaw() { document.getElementById('content').innerHTML = `<pre>${escapeHtml(JSON.stringify(ctx, null, 2))}</pre>`; }
+function renderContent() {
+  const parts = [];
+  if (ctx.systems?.length) parts.push(section('Systemy', ctx.systems.map(service => card(
+    service.name,
+    [`compose: ${(service.compose_files || []).join(', ')}`, `ports: ${(service.ports || []).join(', ') || '-'}`, `depends: ${(service.depends_on || []).join(', ') || '-'}`],
+    Object.keys(service.environment || {}).slice(0, 12)
+  )).join('')));
+  if (ctx.libraries?.node || ctx.libraries?.python) parts.push(section('Biblioteki', [
+    ctx.libraries.node ? card(`Node: ${ctx.libraries.node.name}`, [ctx.libraries.node.description || '', `workspaces: ${(ctx.libraries.node.workspaces || []).length}`], Object.keys(ctx.libraries.node.dependencies || {}).concat(Object.keys(ctx.libraries.node.devDependencies || {}))) : '',
+    ctx.libraries.python ? card(`Python: ${ctx.libraries.python.name}`, [ctx.libraries.python.description || '', `version: ${ctx.libraries.python.version || '-'}`], ctx.libraries.python.dependencies || []) : ''
+  ].join('')));
+  if (ctx.algorithms?.length) parts.push(section('Algorytmy', ctx.algorithms.map(a => card(a.name, [a.role, a.source], [])).join('')));
+  if (ctx.apis?.length) parts.push(section('API', ctx.apis.map(a => card(a.name, [a.base_url], a.endpoints || [])).join('')));
+  if (ctx.applications?.length) parts.push(section('Aplikacje', ctx.applications.map(a => card(a.name, [a.role, a.url], [])).join('')));
+  if (ctx.pipelines?.length) parts.push(section('Pipeline’y', ctx.pipelines.map(p => card(p.name, [p.description || '-', p.interactive ? 'interactive' : 'batch'], [])).join('')));
+  if (ctx.topology?.node_count !== undefined) parts.push(section('Topologia', card('TestQL topology', [`nodes: ${ctx.topology.node_count}`, `edges: ${ctx.topology.edge_count}`, `traces: ${ctx.topology.trace_count}`, `confidence: ${ctx.topology.confidence || '-'}`], (ctx.topology.metadata?.source_types || [])) + `<pre>${escapeHtml(JSON.stringify({nodes: ctx.topology.nodes, edges: ctx.topology.edges, traces: ctx.topology.traces}, null, 2))}</pre>`));
+  document.getElementById('content').innerHTML = parts.join('') || '<p class="muted">Brak aktywnych sekcji. Włącz sekcje checkboxami.</p>';
+}
+function section(title, html) { return `<h2>${escapeHtml(title)}</h2><div class="grid">${html}</div>`; }
+function card(title, lines, pills) { return `<div class="card"><h3>${escapeHtml(title || '-')}</h3>${(lines || []).filter(Boolean).map(line => `<div class="muted">${escapeHtml(String(line))}</div>`).join('')}<div>${(pills || []).slice(0, 30).map(p => `<span class="pill">${escapeHtml(String(p))}</span>`).join('')}</div></div>`; }
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
+loadContext();
+</script>
+</body>
+</html>"""
 
 
 def _dashboard_html() -> str:
@@ -775,6 +929,51 @@ def _dashboard_html() -> str:
     .pill.done { color: var(--ok); border-color: #2b6040; }
     .pill.waiting_input { color: var(--warn); border-color: #715d2c; }
     .empty { color: var(--muted); padding: 14px; }
+    .new-ticket {
+      padding: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .new-ticket h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 620;
+    }
+    .form-grid { display: grid; gap: 10px; }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    .form-row label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      min-width: 100px;
+      flex: 1;
+    }
+    .form-row input, .form-row textarea, .form-row select {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font: inherit;
+    }
+    .form-row textarea { min-height: 72px; resize: vertical; width: 100%; }
+    .form-msg { font-size: 12px; margin-top: 8px; min-height: 1.2em; }
+    .form-msg.err { color: var(--err); }
+    .form-msg.ok { color: var(--ok); }
+    label.field-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
     .detail { padding: 14px; }
     .detail h3 {
       margin: 0 0 10px;
@@ -811,6 +1010,17 @@ def _dashboard_html() -> str:
     .timeline-item.done, .timeline-item.completed { border-left-color: var(--ok); }
     .related { display: flex; flex-wrap: wrap; gap: 8px; }
     .related .pill { cursor: pointer; }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .tab.active {
+      border-color: var(--info);
+      color: var(--text);
+      background: #213048;
+    }
     pre {
       margin: 8px 0 0;
       color: var(--muted);
@@ -828,7 +1038,7 @@ def _dashboard_html() -> str:
 <body>
   <header>
     <div>
-      <h1>planfile queue dashboard</h1>
+      <h1>planfile queue dashboard <a href="/runtime-context" style="color: var(--info); font-size: 13px; margin-left: 12px; text-decoration: none;">Topology / Runtime Context</a></h1>
       <div class="status"><span id="dot" class="dot"></span><span id="status">connecting...</span></div>
     </div>
     <div class="controls">
@@ -846,12 +1056,62 @@ def _dashboard_html() -> str:
         <select id="queue-filter">
           <option value="all">all</option>
         </select>
+        <label for="status-filter" class="status">Status</label>
+        <select id="status-filter">
+          <option value="active">active</option>
+          <option value="all">all</option>
+        </select>
       </div>
       <div class="metrics">
         <div class="metric"><strong id="m-open">0</strong><span>open</span></div>
         <div class="metric"><strong id="m-running">0</strong><span>running</span></div>
         <div class="metric"><strong id="m-waiting">0</strong><span>waiting</span></div>
         <div class="metric"><strong id="m-failed">0</strong><span>failed</span></div>
+      </div>
+      <div class="new-ticket">
+        <h3>New ticket</h3>
+        <form id="new-ticket-form">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="field">Title
+                <input type="text" id="nt-name" required maxlength="500" placeholder="Short title" autocomplete="off" />
+              </label>
+              <label class="field">Priority
+                <select id="nt-priority">
+                  <option value="normal">normal</option>
+                  <option value="low">low</option>
+                  <option value="high">high</option>
+                  <option value="critical">critical</option>
+                </select>
+              </label>
+              <label class="field">Sprint
+                <input type="text" id="nt-sprint" value="current" />
+              </label>
+              <label class="field">Queue
+                <input type="text" id="nt-queue" placeholder="defaults from filter or default" autocomplete="off" />
+              </label>
+            </div>
+            <label class="field-block">Description
+              <textarea id="nt-desc" placeholder="Optional details"></textarea>
+            </label>
+            <div class="form-row">
+              <label class="field">Labels
+                <input type="text" id="nt-labels" placeholder="comma-separated, e.g. bug, triage" autocomplete="off" />
+              </label>
+              <label class="field">Executor kind
+                <select id="nt-executor">
+                  <option value="human">human</option>
+                  <option value="shell">shell</option>
+                  <option value="llm">llm</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-row">
+              <button type="submit" id="nt-submit">Create ticket</button>
+            </div>
+          </div>
+          <div id="nt-msg" class="form-msg" aria-live="polite"></div>
+        </form>
       </div>
       <div id="tickets" class="list"></div>
     </section>
@@ -868,10 +1128,12 @@ def _dashboard_html() -> str:
     const state = {
       events: 0,
       notifications: "Notification" in window && Notification.permission === "granted",
-      queue: localStorage.getItem("planfile.queue") || "all",
+      queue: "all",
+      statusFilter: "active",
       selectedTicketId: null,
       selectedTicket: null,
       ticketEvents: [],
+      detailTab: "overview",
       seenTicketStates: new Map(),
       lastTickets: [],
     };
@@ -882,6 +1144,42 @@ def _dashboard_html() -> str:
     const eventsEl = $("events");
     const detailEl = $("ticket-detail");
     const detailStatusEl = $("detail-status");
+    const detailTabs = new Set(["overview", "timeline", "logs", "raw"]);
+    const commonStatusFilters = ["active", "all", "open", "in_progress", "ready", "pending", "running", "waiting_input", "waiting", "failed", "done", "canceled"];
+
+    function normalizeTab(tab) {
+      return detailTabs.has(tab) ? tab : "overview";
+    }
+
+    function applyUrlState() {
+      const params = new URLSearchParams(location.search);
+      state.queue = params.get("queue") || localStorage.getItem("planfile.queue") || "all";
+      state.statusFilter = params.get("status") || localStorage.getItem("planfile.statusFilter") || "active";
+      state.selectedTicketId = params.get("ticket") || params.get("ticket_id") || null;
+      state.detailTab = normalizeTab(params.get("tab") || localStorage.getItem("planfile.detailTab") || "overview");
+    }
+
+    function syncUrlState(options = {}) {
+      const params = new URLSearchParams(location.search);
+      if (state.queue && state.queue !== "all") params.set("queue", state.queue);
+      else params.delete("queue");
+      if (state.statusFilter && state.statusFilter !== "active") params.set("status", state.statusFilter);
+      else params.delete("status");
+      if (state.selectedTicketId) params.set("ticket", state.selectedTicketId);
+      else {
+        params.delete("ticket");
+        params.delete("ticket_id");
+      }
+      if (state.detailTab && state.detailTab !== "overview") params.set("tab", state.detailTab);
+      else params.delete("tab");
+      const query = params.toString();
+      const nextUrl = `${location.pathname}${query ? `?${query}` : ""}${location.hash || ""}`;
+      const currentUrl = `${location.pathname}${location.search}${location.hash || ""}`;
+      if (nextUrl === currentUrl) return;
+      const payload = { queue: state.queue, status: state.statusFilter, ticket: state.selectedTicketId, tab: state.detailTab };
+      if (options.replace) history.replaceState(payload, "", nextUrl);
+      else history.pushState(payload, "", nextUrl);
+    }
 
     function setStatus(text, kind) {
       status.textContent = text;
@@ -965,6 +1263,24 @@ def _dashboard_html() -> str:
       return state.queue === "all" || eventQueue(event) === state.queue;
     }
 
+    function ticketLifecycleValues(ticket) {
+      return new Set([
+        String(ticket?.status || "unknown"),
+        String(ticketState(ticket)),
+      ]);
+    }
+
+    function isActiveTicket(ticket) {
+      const values = ticketLifecycleValues(ticket);
+      return !values.has("done") && !values.has("canceled") && !values.has("cancelled");
+    }
+
+    function ticketMatchesStatus(ticket) {
+      if (state.statusFilter === "all") return true;
+      if (state.statusFilter === "active") return isActiveTicket(ticket);
+      return ticketLifecycleValues(ticket).has(state.statusFilter);
+    }
+
     function eventLevel(event) {
       const raw = String(event?.level || event?.status || event?.ticket?.execution?.state || event?.action || "info").toLowerCase();
       if (["error", "failed", "failure"].includes(raw) || event?.ticket?.execution?.last_error) return "error";
@@ -992,8 +1308,10 @@ def _dashboard_html() -> str:
     }
 
     function selectedTickets(tickets) {
-      if (state.queue === "all") return tickets;
-      return tickets.filter((ticket) => ticketQueue(ticket) === state.queue);
+      return tickets.filter((ticket) => {
+        const queueMatches = state.queue === "all" || ticketQueue(ticket) === state.queue;
+        return queueMatches && ticketMatchesStatus(ticket);
+      });
     }
 
     function updateQueueOptions(tickets) {
@@ -1003,6 +1321,27 @@ def _dashboard_html() -> str:
       if (select.innerHTML !== html) select.innerHTML = html;
       if (!["all", ...queues].includes(state.queue)) state.queue = "all";
       select.value = state.queue;
+    }
+
+    function updateStatusOptions(tickets) {
+      const discovered = new Set(commonStatusFilters);
+      for (const ticket of tickets) {
+        for (const value of ticketLifecycleValues(ticket)) {
+          if (value && value !== "unknown") discovered.add(value);
+        }
+      }
+      const statuses = Array.from(discovered);
+      const labels = {
+        active: "active",
+        all: "all",
+        in_progress: "in progress",
+        waiting_input: "waiting input",
+      };
+      const select = $("status-filter");
+      const html = statuses.map((status) => `<option value="${escapeHtml(status)}">${escapeHtml(labels[status] || status)}</option>`).join("");
+      if (select.innerHTML !== html) select.innerHTML = html;
+      if (!statuses.includes(state.statusFilter)) state.statusFilter = "active";
+      select.value = state.statusFilter;
     }
 
     function scanTicketStatuses(tickets, { notifyChanges = false, resetSeen = false } = {}) {
@@ -1028,7 +1367,6 @@ def _dashboard_html() -> str:
 
     function renderTickets(tickets) {
       ticketsEl.innerHTML = tickets
-        .filter((t) => t.status !== "done" && t.status !== "canceled")
         .slice(0, 80)
         .map((t) => {
           const stateName = ticketState(t);
@@ -1146,6 +1484,39 @@ def _dashboard_html() -> str:
       return `<div class="timeline">${items.map(renderTimelineItem).join("")}</div>`;
     }
 
+    function renderDetailTabs() {
+      const labels = {
+        overview: "Overview",
+        timeline: "Timeline",
+        logs: "Tool logs",
+        raw: "Raw JSON",
+      };
+      return `<div class="tabs">${Array.from(detailTabs).map((tab) => `
+        <button class="tab ${tab === state.detailTab ? "active" : ""}" data-detail-tab="${escapeHtml(tab)}">${escapeHtml(labels[tab] || tab)}</button>
+      `).join("")}</div>`;
+    }
+
+    function renderTicketEventLog(events) {
+      if (!events.length) return '<div class="empty">No management or tool events linked to this ticket yet.</div>';
+      return `<div class="timeline">${events.map((event) => {
+        const management = event.type === "management.event";
+        const title = management
+          ? `${event.source || "koru"} / ${event.tool || "tool"} / ${event.action || "-"}`
+          : `${event.type || "event"} / ${event.action || "-"}`;
+        const message = management ? event.message : event.ticket?.name;
+        const details = management ? event.details : event.ticket?.execution?.last_error;
+        const level = eventLevel(event);
+        return `
+          <div class="timeline-item ${escapeHtml(level)}">
+            <div class="title">${escapeHtml(title)}</div>
+            <div class="meta"><span class="pill ${escapeHtml(level)}">${escapeHtml(level)}</span><span>${escapeHtml(formatDate(event.created_at))}</span></div>
+            ${message ? `<pre>${escapeHtml(message)}</pre>` : ""}
+            ${details ? `<pre>${escapeHtml(stringifyDetail(details))}</pre>` : ""}
+          </div>
+        `;
+      }).join("")}</div>`;
+    }
+
     function renderTicketDetail(ticket, events = []) {
       if (!ticket) {
         detailStatusEl.textContent = "select a ticket";
@@ -1160,15 +1531,7 @@ def _dashboard_html() -> str:
       const source = ticket.source || {};
       const stateName = ticketState(ticket);
       const related = relatedTicketIds(ticket, events);
-      detailStatusEl.textContent = ticket.id;
-      detailEl.className = "detail";
-      detailEl.innerHTML = `
-        <h3>${escapeHtml(ticket.id)} ${escapeHtml(ticket.name)}</h3>
-        <div class="meta">
-          <span class="pill ${escapeHtml(stateName)}">${escapeHtml(statusLabel(ticket))}</span>
-          <span class="pill">${escapeHtml(ticket.priority || "normal")}</span>
-          <span class="pill">${escapeHtml(ticketQueue(ticket))}</span>
-        </div>
+      const overviewHtml = `
         ${ticket.description ? `<pre>${escapeHtml(ticket.description)}</pre>` : ""}
         ${detailBlock("Lifecycle", keyValues([
           ["created", formatDate(ticket.created_at)],
@@ -1200,13 +1563,31 @@ def _dashboard_html() -> str:
           ["result", stringifyDetail(outputs.result)],
         ]))}
         ${detailBlock("Related tickets and splits", renderRelated(related))}
-        ${detailBlock("Timeline and tool logs", renderTicketTimeline(ticket, events))}
+      `;
+      const tabHtml = {
+        overview: overviewHtml,
+        timeline: detailBlock("Timeline", renderTicketTimeline(ticket, events)),
+        logs: detailBlock("Tool logs", renderTicketEventLog(events)),
+        raw: detailBlock("Raw ticket JSON", `<pre>${escapeHtml(JSON.stringify(ticket, null, 2))}</pre>`),
+      }[state.detailTab] || overviewHtml;
+      detailStatusEl.textContent = ticket.id;
+      detailEl.className = "detail";
+      detailEl.innerHTML = `
+        <h3>${escapeHtml(ticket.id)} ${escapeHtml(ticket.name)}</h3>
+        <div class="meta">
+          <span class="pill ${escapeHtml(stateName)}">${escapeHtml(statusLabel(ticket))}</span>
+          <span class="pill">${escapeHtml(ticket.priority || "normal")}</span>
+          <span class="pill">${escapeHtml(ticketQueue(ticket))}</span>
+        </div>
+        ${renderDetailTabs()}
+        ${tabHtml}
       `;
     }
 
     async function selectTicket(ticketId, options = {}) {
       if (!ticketId) return;
       state.selectedTicketId = ticketId;
+      if (options.updateUrl !== false) syncUrlState();
       renderTickets(selectedTickets(state.lastTickets));
       if (!options.silent) {
         detailStatusEl.textContent = "loading...";
@@ -1282,6 +1663,7 @@ def _dashboard_html() -> str:
       const tickets = await response.json();
       state.lastTickets = tickets;
       updateQueueOptions(tickets);
+      updateStatusOptions(tickets);
       const visibleTickets = selectedTickets(tickets);
       scanTicketStatuses(visibleTickets, options);
       const open = visibleTickets.filter((t) => t.status === "open").length;
@@ -1298,6 +1680,7 @@ def _dashboard_html() -> str:
         state.selectedTicketId = null;
         state.selectedTicket = null;
         state.ticketEvents = [];
+        syncUrlState({ replace: true });
         renderTicketDetail(null);
       }
     }
@@ -1332,6 +1715,14 @@ def _dashboard_html() -> str:
       selectTicket(node.dataset.ticketId).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: node.dataset.ticketId, ticket: { execution: { state: "failed", last_error: String(error) } } }));
     });
     detailEl.addEventListener("click", (event) => {
+      const tabNode = event.target.closest("[data-detail-tab]");
+      if (tabNode) {
+        state.detailTab = normalizeTab(tabNode.dataset.detailTab);
+        localStorage.setItem("planfile.detailTab", state.detailTab);
+        syncUrlState();
+        renderTicketDetail(state.selectedTicket, state.ticketEvents);
+        return;
+      }
       const node = event.target.closest("[data-related-ticket-id]");
       if (node) selectTicket(node.dataset.relatedTicketId).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: node.dataset.relatedTicketId, ticket: { execution: { state: "failed", last_error: String(error) } } }));
     });
@@ -1365,17 +1756,115 @@ def _dashboard_html() -> str:
       refreshTickets({ notifyChanges: true });
       refreshSelectedTicket();
     };
+
+    $("new-ticket-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const msg = $("nt-msg");
+      msg.textContent = "";
+      msg.className = "form-msg";
+      const name = $("nt-name").value.trim();
+      if (!name) {
+        msg.textContent = "Title is required.";
+        msg.classList.add("err");
+        return;
+      }
+      const queueInput = $("nt-queue").value.trim();
+      const queue =
+        queueInput || (state.queue === "all" ? "default" : state.queue);
+      const labels = $("nt-labels")
+        .value.split(",")
+        .map((part) => part.trim())
+        .filter(Boolean);
+      const execKind = $("nt-executor").value;
+      const mode = execKind === "human" ? "interactive" : "automatic";
+      const body = {
+        name,
+        priority: $("nt-priority").value,
+        sprint: $("nt-sprint").value.trim() || "current",
+        description: $("nt-desc").value.trim(),
+        labels,
+        executor: { kind: execKind, mode },
+        execution: { queue, state: "ready" },
+      };
+      try {
+        const response = await fetch("/tickets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+          let detail = response.statusText || "Create failed";
+          try {
+            const err = await response.json();
+            if (Array.isArray(err.detail)) {
+              detail = err.detail
+                .map((item) =>
+                  typeof item === "object" && item.msg ? item.msg : String(item)
+                )
+                .join("; ");
+            } else if (typeof err.detail === "string") {
+              detail = err.detail;
+            }
+          } catch {
+            /* ignore */
+          }
+          msg.textContent = detail;
+          msg.classList.add("err");
+          return;
+        }
+        const created = await response.json();
+        msg.textContent = `Created ${created.id}`;
+        msg.classList.add("ok");
+        $("nt-name").value = "";
+        $("nt-desc").value = "";
+        $("nt-labels").value = "";
+        await refreshTickets({ notifyChanges: false, resetSeen: false });
+        await selectTicket(created.id);
+      } catch (error) {
+        msg.textContent = String(error);
+        msg.classList.add("err");
+      }
+    });
     $("queue-filter").onchange = (event) => {
       state.queue = event.target.value;
       localStorage.setItem("planfile.queue", state.queue);
+      syncUrlState();
       refreshTickets({ notifyChanges: false, resetSeen: true });
       loadEventHistory().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
+    };
+    $("status-filter").onchange = (event) => {
+      state.statusFilter = event.target.value;
+      localStorage.setItem("planfile.statusFilter", state.statusFilter);
+      syncUrlState();
+      refreshTickets({ notifyChanges: false, resetSeen: true });
     };
     $("docs").onclick = () => location.href = "/docs";
 
     $("notify").textContent = state.notifications ? "Notifications enabled" : "Enable notifications";
-    refreshTickets().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
-    loadEventHistory().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
+
+    async function initializeDashboard() {
+      applyUrlState();
+      syncUrlState({ replace: true });
+      await refreshTickets();
+      await loadEventHistory();
+      if (state.selectedTicketId) {
+        await selectTicket(state.selectedTicketId, { silent: true, updateUrl: false });
+      }
+    }
+
+    window.addEventListener("popstate", () => {
+      applyUrlState();
+      refreshTickets({ notifyChanges: false, resetSeen: true })
+        .then(() => loadEventHistory())
+        .then(() => {
+          if (state.selectedTicketId) return selectTicket(state.selectedTicketId, { silent: true, updateUrl: false });
+          renderTicketDetail(null);
+          return null;
+        })
+        .catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
+    });
+
+    initializeDashboard().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
     setInterval(() => {
       refreshTickets({ notifyChanges: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
       refreshSelectedTicket();

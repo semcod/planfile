@@ -19,23 +19,23 @@ def validate_strategy_yaml(file_path):
             strategy = yaml.safe_load(f)
 
         # Check required fields
-        required_fields = ['name', 'project_name', 'project_type', 'domain', 'goal']
+        required_fields = ["name", "project_name", "project_type", "domain", "goal"]
         missing = [field for field in required_fields if field not in strategy]
         if missing:
             print(f"  ❌ Missing required fields: {', '.join(missing)}")
             return False
 
         # Check sprints
-        if 'sprints' in strategy:
-            for sprint in strategy['sprints']:
-                if 'id' not in sprint or 'name' not in sprint:
+        if "sprints" in strategy:
+            for sprint in strategy["sprints"]:
+                if "id" not in sprint or "name" not in sprint:
                     print("  ❌ Sprint missing id or name")
                     return False
 
         # Check quality gates
-        if 'quality_gates' in strategy:
-            for gate in strategy['quality_gates']:
-                if 'metric' not in gate or 'threshold' not in gate:
+        if "quality_gates" in strategy:
+            for gate in strategy["quality_gates"]:
+                if "metric" not in gate or "threshold" not in gate:
                     print("  ❌ Quality gate missing metric or threshold")
                     return False
 
@@ -49,15 +49,18 @@ def validate_strategy_yaml(file_path):
         print(f"  ❌ Error: {e}")
         return False
 
+
 def test_strategy_generation(strategy_path):
     """Test strategy generation with the YAML file."""
     print(f"\n🚀 Testing generation with: {strategy_path.name}")
 
     cmd = [
-        sys.executable, '-m', 'planfile.cli.commands',
-        'generate',
-        '--dry-run',
-        str(strategy_path)
+        sys.executable,
+        "-m",
+        "planfile.cli.commands",
+        "generate",
+        "--dry-run",
+        str(strategy_path),
     ]
 
     try:
@@ -75,15 +78,12 @@ def test_strategy_generation(strategy_path):
         print(f"  ❌ Error: {e}")
         return False
 
+
 def test_strategy_validation(strategy_path):
     """Test strategy validation."""
     print(f"\n✅ Testing validation for: {strategy_path.name}")
 
-    cmd = [
-        sys.executable, '-m', 'planfile.cli.commands',
-        'validate',
-        str(strategy_path)
-    ]
+    cmd = [sys.executable, "-m", "planfile.cli.commands", "validate", str(strategy_path)]
 
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -99,6 +99,7 @@ def test_strategy_validation(strategy_path):
     except Exception as e:
         print(f"  ❌ Error: {e}")
         return False
+
 
 def main():
     """Run all tests."""
@@ -135,19 +136,23 @@ def main():
             # Test generation (dry run)
             generation_ok = test_strategy_generation(strategy_file)
 
-            results.append({
-                'file': strategy_file.name,
-                'valid': valid,
-                'validation': validation_ok,
-                'generation': generation_ok
-            })
+            results.append(
+                {
+                    "file": strategy_file.name,
+                    "valid": valid,
+                    "validation": validation_ok,
+                    "generation": generation_ok,
+                }
+            )
         else:
-            results.append({
-                'file': strategy_file.name,
-                'valid': False,
-                'validation': False,
-                'generation': False
-            })
+            results.append(
+                {
+                    "file": strategy_file.name,
+                    "valid": False,
+                    "validation": False,
+                    "generation": False,
+                }
+            )
 
     # Summary
     print("\n" + "=" * 60)
@@ -155,7 +160,7 @@ def main():
     print("=" * 60)
 
     total = len(results)
-    passed = sum(1 for r in results if all([r['valid'], r['validation'], r['generation']]))
+    passed = sum(1 for r in results if all([r["valid"], r["validation"], r["generation"]]))
 
     print(f"\nTotal strategies: {total}")
     print(f"✅ Passed: {passed}")
@@ -164,15 +169,19 @@ def main():
     if total - passed > 0:
         print("\nFailed strategies:")
         for r in results:
-            if not all([r['valid'], r['validation'], r['generation']]):
+            if not all([r["valid"], r["validation"], r["generation"]]):
                 status = []
-                if not r['valid']: status.append("invalid")
-                if not r['validation']: status.append("validation failed")
-                if not r['generation']: status.append("generation failed")
+                if not r["valid"]:
+                    status.append("invalid")
+                if not r["validation"]:
+                    status.append("validation failed")
+                if not r["generation"]:
+                    status.append("generation failed")
                 print(f"  - {r['file']}: {', '.join(status)}")
 
     # Exit with appropriate code
     sys.exit(0 if passed == total else 1)
+
 
 if __name__ == "__main__":
     main()

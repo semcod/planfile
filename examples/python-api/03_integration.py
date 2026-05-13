@@ -15,10 +15,10 @@ from planfile.extensions import TicketLogger
 def example_cli_tool_integration():
     """Show integration with a CLI tool."""
     print("=== Example: CLI Tool Integration ===\n")
-    
+
     # Simulate a deployment tool that logs failures
     logger = TicketLogger("deploy-tool")
-    
+
     try:
         # Simulate deployment failure
         raise RuntimeError("Failed to connect to production database")
@@ -26,54 +26,50 @@ def example_cli_tool_integration():
         logger.error(
             message="Deployment failed: Database connection error",
             exception=e,
-            context={
-                "environment": "production",
-                "version": "2.1.0",
-                "server": "prod-01"
-            }
+            context={"environment": "production", "version": "2.1.0", "server": "prod-01"},
         )
-    
+
     print()
 
 
 def example_monitoring_integration():
     """Monitoring system integration."""
     print("=== Example: Monitoring Integration ===\n")
-    
+
     logger = TicketLogger("system-monitor")
-    
+
     # Simulate metric checks
     cpu_usage = 95  # Percentage
     memory_usage = 88
     disk_usage = 92
-    
+
     if cpu_usage > 90:
         logger.metric_alert("CPU Usage", cpu_usage, 90)
-    
+
     if memory_usage > 85:
         logger.metric_alert("Memory Usage", memory_usage, 85)
-    
+
     if disk_usage > 90:
         logger.metric_alert("Disk Usage", disk_usage, 90)
-    
+
     print()
 
 
 def example_ci_pipeline_integration():
     """CI pipeline failure tracking."""
     print("=== Example: CI Pipeline Integration ===\n")
-    
+
     logger = TicketLogger("ci-pipeline")
-    
+
     # Simulate test failures
     test_results = {
         "tests/test_api.py::test_login": "FAILED",
         "tests/test_api.py::test_logout": "PASSED",
-        "tests/test_db.py::test_connection": "FAILED"
+        "tests/test_db.py::test_connection": "FAILED",
     }
-    
+
     failed_tests = [t for t, r in test_results.items() if r == "FAILED"]
-    
+
     if failed_tests:
         logger.error(
             message=f"CI Pipeline failed: {len(failed_tests)} tests failed",
@@ -81,19 +77,20 @@ def example_ci_pipeline_integration():
                 "failed_tests": failed_tests,
                 "total_tests": len(test_results),
                 "branch": "main",
-                "commit": "abc123"
-            }
+                "commit": "abc123",
+            },
         )
-    
+
     print()
 
 
 def example_custom_decorator():
     """Decorator for automatic error tracking."""
     print("=== Example: Error Tracking Decorator ===\n")
-    
+
     def track_errors(tool_name):
         """Decorator to track function errors as tickets."""
+
         def decorator(func):
             def wrapper(*args, **kwargs):
                 try:
@@ -108,51 +105,53 @@ def example_custom_decorator():
                             "function": func.__name__,
                             "exception": str(e),
                             "args": str(args),
-                            "kwargs": str(kwargs)
+                            "kwargs": str(kwargs),
                         },
-                        type="bug"
+                        type="bug",
                     )
                     raise  # Re-raise after logging
+
             return wrapper
+
         return decorator
-    
+
     @track_errors("data-processor")
     def process_data(data):
         """Simulate data processing that might fail."""
         if not data:
             raise ValueError("Empty data provided")
         return sum(data) / len(data)
-    
+
     # This will work
     try:
         result = process_data([1, 2, 3, 4, 5])
         print(f"✓ Processed successfully: {result}")
     except Exception:
         pass
-    
+
     # This will fail and create a ticket
     try:
         process_data([])
     except Exception:
         print("✗ Error tracked as ticket")
-    
+
     print()
 
 
 def main():
     """Run all examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Planfile Python Library - Tool Integration")
-    print("="*60 + "\n")
-    
+    print("=" * 60 + "\n")
+
     example_cli_tool_integration()
     example_monitoring_integration()
     example_ci_pipeline_integration()
     example_custom_decorator()
-    
-    print("="*60)
+
+    print("=" * 60)
     print("Integration examples completed!")
-    print("="*60)
+    print("=" * 60)
 
 
 if __name__ == "__main__":

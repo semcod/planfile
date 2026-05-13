@@ -121,12 +121,22 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "Notification.requestPermission" in response.text
     assert "new WebSocket" in response.text
     assert "queue-filter" in response.text
+    assert "status-filter" in response.text
     assert "Test notification" in response.text
     assert "setInterval" in response.text
     assert "loadEventHistory" in response.text
+    assert "applyUrlState" in response.text
+    assert "syncUrlState" in response.text
+    assert 'params.set("ticket", state.selectedTicketId)' in response.text
+    assert 'params.set("queue", state.queue)' in response.text
+    assert 'params.set("status", state.statusFilter)' in response.text
+    assert 'params.set("tab", state.detailTab)' in response.text
     assert "/events?limit=100" in response.text
     assert "Ticket Detail" in response.text
     assert "ticket-detail" in response.text
+    assert "data-detail-tab" in response.text
+    assert "Tool logs" in response.text
+    assert "Raw JSON" in response.text
     assert "data-ticket-id" in response.text
     assert "function selectTicket(ticketId" in response.text
     assert "/events?ticket_id=" in response.text
@@ -138,9 +148,44 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "management.event" in response.text
     assert "if (event?.queue) return String(event.queue);" in response.text
     assert "function isRunningTicket(ticket)" in response.text
+    assert "function ticketMatchesStatus(ticket)" in response.text
+    assert 'localStorage.setItem("planfile.statusFilter", state.statusFilter)' in response.text
     assert 'ticket?.status === "in_progress"' in response.text
     assert "if (isWaitingTicket(ticket) || isFailedTicket(ticket) || stateName === \"done\") return false;" in response.text
     assert "const running = visibleTickets.filter(isRunningTicket).length;" in response.text
+    assert "/runtime-context" in response.text
+
+
+def test_runtime_context_api_and_page(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    page = client.get("/runtime-context")
+    assert page.status_code == 200
+    assert "Topology / Runtime Context" in page.text
+    assert "/api/runtime-context" in page.text
+
+    response = client.get("/api/runtime-context")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["project_root"] == str(tmp_path.resolve())
+    assert payload["summary"]["project"] == tmp_path.name
+    assert payload["config"]["enabled"]["systems"] is True
+
+    update = client.put(
+        "/api/runtime-context/config",
+        json={"enabled": {"systems": False, "pipelines": True}, "overrides": {"note": "test"}},
+    )
+    assert update.status_code == 200
+    saved = update.json()
+    assert saved["enabled"]["systems"] is False
+    assert saved["enabled"]["pipelines"] is True
+    assert saved["overrides"]["note"] == "test"
+
+    refreshed = client.get("/api/runtime-context").json()
+    assert refreshed["config"]["enabled"]["systems"] is False
+    assert refreshed["systems"] == []
 
 
 def test_favicon_returns_no_content():
@@ -247,11 +292,12 @@ def test_management_event_api_broadcasts_records_and_filters_by_queue():
                 "source": "koru",
                 "tool": "koru.queue",
                 "action": "completed",
+                "ticket_id": "PLF-074",
                 "status": "completed",
                 "level": "info",
                 "queue": "c2004-runtime",
                 "message": "Executed PLF-074",
-                "details": {"ticket_id": "PLF-074", "executor": "shell"},
+                "details": {"executor": "shell"},
             },
         )
 
@@ -265,6 +311,7 @@ def test_management_event_api_broadcasts_records_and_filters_by_queue():
     assert event["tool"] == "koru.queue"
     assert event["action"] == "completed"
     assert event["queue"] == "c2004-runtime"
+    assert event["ticket_id"] == "PLF-074"
     assert event["details"]["ticket_id"] == "PLF-074"
     assert runtime_events[-1]["type"] == "management.event"
     assert default_events == []
@@ -332,3 +379,30 @@ def test_tickets_api_reads_updated_store_and_disables_cache(tmp_path, monkeypatc
     assert second.headers["cache-control"] == "no-store, max-age=0"
     assert next(item for item in first.json() if item["id"] == ticket.id)["status"] == "open"
     assert next(item for item in second.json() if item["id"] == ticket.id)["status"] == "done"
+
+
+def test_post_tickets_creates_ticket_via_json_api(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+    response = client.post(
+        "/tickets",
+        json={
+            "name": "Created from REST",
+            "description": "via dashboard API",
+            "priority": "high",
+            "sprint": "current",
+            "labels": ["dashboard", "api"],
+            "executor": {"kind": "human", "mode": "interactive"},
+            "execution": {"queue": "default", "state": "ready"},
+        },
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Created from REST"
+    assert data["id"]
+    assert data["execution"]["queue"] == "default"
+    assert data["executor"]["kind"] == "human"
+
+    listed = client.get("/tickets?sprint=all").json()
+    assert any(t["id"] == data["id"] for t in listed)

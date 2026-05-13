@@ -23,9 +23,7 @@ class LLXValidator:
         try:
             # Check strategy structure
             result = subprocess.run(
-                [self.llx_path, "validate", str(strategy_path)],
-                capture_output=True,
-                text=True
+                [self.llx_path, "validate", str(strategy_path)], capture_output=True, text=True
             )
 
             if result.returncode == 0:
@@ -43,9 +41,7 @@ class LLXValidator:
         try:
             # Use LLX code analysis tools
             result = subprocess.run(
-                [self.llx_path, "analyze", str(code_path)],
-                capture_output=True,
-                text=True
+                [self.llx_path, "analyze", str(code_path)], capture_output=True, text=True
             )
 
             if result.returncode == 0:
@@ -66,49 +62,48 @@ class LLXValidator:
     def _parse_llx_analysis(self, output: str) -> dict[str, Any]:
         """Parse LLX analysis output."""
         # Parse LLX output format
-        lines = output.strip().split('\n')
+        lines = output.strip().split("\n")
         metrics = {}
 
         for line in lines:
-            if ':' in line:
-                key, value = line.split(':', 1)
+            if ":" in line:
+                key, value = line.split(":", 1)
                 metrics[key.strip()] = value.strip()
 
-        return {
-            "tool": "llx",
-            "metrics": metrics,
-            "valid": True
-        }
+        return {"tool": "llx", "metrics": metrics, "valid": True}
 
     def _basic_code_analysis(self, code_path: Path) -> dict[str, Any]:
         """Basic code analysis without LLX."""
         try:
-            content = code_path.read_text(encoding='utf-8')
+            content = code_path.read_text(encoding="utf-8")
 
             analysis = {
                 "tool": "basic",
                 "lines": len(content.splitlines()),
                 "characters": len(content),
-                "file_type": code_path.suffix
+                "file_type": code_path.suffix,
             }
 
-            if code_path.suffix == '.py':
+            if code_path.suffix == ".py":
                 # Basic Python metrics
-                analysis.update({
-                    "imports": content.count('import ') + content.count('from '),
-                    "functions": content.count('def '),
-                    "classes": content.count('class '),
-                    "comments": content.count('#')
-                })
+                analysis.update(
+                    {
+                        "imports": content.count("import ") + content.count("from "),
+                        "functions": content.count("def "),
+                        "classes": content.count("class "),
+                        "comments": content.count("#"),
+                    }
+                )
 
             return analysis
         except Exception as e:
             return {"error": str(e)}
 
+
 # Create a simple validation script using LLX
 def create_validation_script():
     """Create a validation script that uses LLX."""
-    script = '''#!/bin/bash
+    script = """#!/bin/bash
 # Validate planfile examples using LLX
 
 echo "Planfile Example Validation with LLX"
@@ -173,13 +168,14 @@ find . -type f \\( -name "*.yaml" -o -name "*.yml" -o -name "*.py" -o -name "*.j
 done
 
 echo "\\nValidation complete!"
-'''
+"""
 
     with open("./validate_with_llx.sh", "w") as f:
         f.write(script)
 
     os.chmod("./validate_with_llx.sh", 0o755)
     print("✅ Created validation script: ./validate_with_llx.sh")
+
 
 if __name__ == "__main__":
     create_validation_script()

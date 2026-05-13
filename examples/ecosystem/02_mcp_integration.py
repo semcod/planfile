@@ -1,4 +1,3 @@
-
 CONSTANT_3 = 3
 CONSTANT_4 = 4
 CONSTANT_4 = 4.1
@@ -38,6 +37,7 @@ def run_mcp_tool(tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     else:
         return {"error": f"Unknown tool: {tool_name}"}
 
+
 def simulate_planfile_generate(args: dict[str, Any]) -> dict[str, Any]:
     """Simulate planfile generate tool."""
     project_path = args.get("project_path", ".")
@@ -53,27 +53,27 @@ def simulate_planfile_generate(args: dict[str, Any]) -> dict[str, Any]:
         "max_cc": MAX_18,
         "critical_count": CONSTANT_3,
         "god_modules": 2,
-        "dup_groups": CONSTANT_5
+        "dup_groups": CONSTANT_5,
     }
 
     # Generate strategy based on metrics
     strategy = {
-        "project": {
-            "name": Path(project_path).name,
-            "focus": focus,
-            "metrics": metrics
-        },
+        "project": {"name": Path(project_path).name, "focus": focus, "metrics": metrics},
         "sprints": [],
-        "quality_gates": []
+        "quality_gates": [],
     }
 
     # Generate sprints
     for i in range(sprints):
         sprint = {
-            "id": f"sprint-{i+1}",
-            "name": f"Sprint {i+1}: {'Critical Fixes' if i == 0 else 'Refactoring' if i == 1 else 'Polish'}",
-            "goal": "Reduce complexity and improve code quality" if i == 0 else "Refactor god modules" if i == 1 else "Add tests and documentation",
-            "task_patterns": []
+            "id": f"sprint-{i + 1}",
+            "name": f"Sprint {i + 1}: {'Critical Fixes' if i == 0 else 'Refactoring' if i == 1 else 'Polish'}",
+            "goal": "Reduce complexity and improve code quality"
+            if i == 0
+            else "Refactor god modules"
+            if i == 1
+            else "Add tests and documentation",
+            "task_patterns": [],
         }
 
         # Add tasks based on focus
@@ -84,14 +84,14 @@ def simulate_planfile_generate(args: dict[str, Any]) -> dict[str, Any]:
                         "name": f"Split high-CC function (CC={metrics['max_cc']})",
                         "task_type": "refactor",
                         "priority": "critical",
-                        "model_hints": {"planning": "premium", "implementation": "balanced"}
+                        "model_hints": {"planning": "premium", "implementation": "balanced"},
                     },
                     {
                         "name": f"Extract {metrics['god_modules']} god modules",
                         "task_type": "refactor",
                         "priority": "high",
-                        "model_hints": {"planning": "premium", "implementation": "premium"}
-                    }
+                        "model_hints": {"planning": "premium", "implementation": "premium"},
+                    },
                 ]
             elif i == 1:
                 sprint["task_patterns"] = [
@@ -99,7 +99,7 @@ def simulate_planfile_generate(args: dict[str, Any]) -> dict[str, Any]:
                         "name": "Implement repository pattern",
                         "task_type": "refactor",
                         "priority": "medium",
-                        "model_hints": {"planning": "balanced", "implementation": "balanced"}
+                        "model_hints": {"planning": "balanced", "implementation": "balanced"},
                     }
                 ]
 
@@ -107,30 +107,21 @@ def simulate_planfile_generate(args: dict[str, Any]) -> dict[str, Any]:
 
     # Add quality gates
     strategy["quality_gates"] = [
-        {
-            "name": "Complexity Gate",
-            "metric": "avg_cc",
-            "threshold": CONSTANT_3,
-            "operator": "<="
-        },
+        {"name": "Complexity Gate", "metric": "avg_cc", "threshold": CONSTANT_3, "operator": "<="},
         {
             "name": "Coverage Gate",
             "metric": "test_coverage",
             "threshold": CONSTANT_80,
-            "operator": ">="
-        }
+            "operator": ">=",
+        },
     ]
 
     # Save strategy
     output_file = args.get("output", "strategy.yaml")
     print(f"✓ Strategy generated and saved to: {output_file}")
 
-    return {
-        "success": True,
-        "strategy": strategy,
-        "metrics": metrics,
-        "output_file": output_file
-    }
+    return {"success": True, "strategy": strategy, "metrics": metrics, "output_file": output_file}
+
 
 def simulate_planfile_apply(args: dict[str, Any]) -> dict[str, Any]:
     """Simulate planfile apply tool."""
@@ -142,7 +133,7 @@ def simulate_planfile_apply(args: dict[str, Any]) -> dict[str, Any]:
     strategy = {
         "sprints": [
             {"id": "sprint-1", "task_patterns": [{"name": "Task 1"}, {"name": "Task 2"}]},
-            {"id": "sprint-2", "task_patterns": [{"name": "Task 3"}]}
+            {"id": "sprint-2", "task_patterns": [{"name": "Task 3"}]},
         ]
     }
 
@@ -166,8 +157,9 @@ def simulate_planfile_apply(args: dict[str, Any]) -> dict[str, Any]:
         "dry_run": dry_run,
         "total_tasks": total_tasks,
         "tickets_created": tickets,
-        "message": f"{'Dry run completed' if dry_run else f'Created {len(tickets)} tickets'}"
+        "message": f"{'Dry run completed' if dry_run else f'Created {len(tickets)} tickets'}",
     }
+
 
 def simulate_planfile_review(args: dict[str, Any]) -> dict[str, Any]:
     """Simulate planfile review tool."""
@@ -177,9 +169,9 @@ def simulate_planfile_review(args: dict[str, Any]) -> dict[str, Any]:
     # Simulate collecting metrics
     current_metrics = {
         "avg_cc": CONSTANT_4,  # Improved from 5.2
-        "max_cc": MAX_12,   # Improved from 18
+        "max_cc": MAX_12,  # Improved from 18
         "test_coverage": CONSTANT_65,  # Added coverage
-        "god_modules": 1,     # Reduced from 2
+        "god_modules": 1,  # Reduced from 2
     }
 
     # Calculate progress
@@ -189,8 +181,18 @@ def simulate_planfile_review(args: dict[str, Any]) -> dict[str, Any]:
 
     # Check quality gates
     quality_gates = [
-        {"name": "Complexity Gate", "threshold": CONSTANT_3, "current": current_metrics["avg_cc"], "passed": False},
-        {"name": "Coverage Gate", "threshold": CONSTANT_80, "current": current_metrics["test_coverage"], "passed": False}
+        {
+            "name": "Complexity Gate",
+            "threshold": CONSTANT_3,
+            "current": current_metrics["avg_cc"],
+            "passed": False,
+        },
+        {
+            "name": "Coverage Gate",
+            "threshold": CONSTANT_80,
+            "current": current_metrics["test_coverage"],
+            "passed": False,
+        },
     ]
 
     return {
@@ -200,16 +202,17 @@ def simulate_planfile_review(args: dict[str, Any]) -> dict[str, Any]:
             "tasks_completed": completed_tasks,
             "total_tasks": total_tasks,
             "sprints_completed": 1,
-            "total_sprints": CONSTANT_3
+            "total_sprints": CONSTANT_3,
         },
         "metrics": current_metrics,
         "quality_gates": quality_gates,
         "recommendations": [
             "Focus on reducing cyclomatic complexity in remaining modules",
             "Increase test coverage to meet quality gate",
-            "Complete remaining tasks in Sprint 2"
-        ]
+            "Complete remaining tasks in Sprint 2",
+        ],
     }
+
 
 def example_mcp_session():
     """Example of an LLM agent using planfile MCP tools."""
@@ -234,13 +237,16 @@ def example_mcp_session():
     print("STEP 1: Generate Strategy")
     print("=" * CONSTANT_40)
 
-    result1 = run_mcp_tool("planfile_generate", {
-        "project_path": "./my-project",
-        "model": "anthropic/claude-sonnet-4",
-        "sprints": CONSTANT_3,
-        "focus": "complexity",
-        "output": "refactor-strategy.yaml"
-    })
+    result1 = run_mcp_tool(
+        "planfile_generate",
+        {
+            "project_path": "./my-project",
+            "model": "anthropic/claude-sonnet-4",
+            "sprints": CONSTANT_3,
+            "focus": "complexity",
+            "output": "refactor-strategy.yaml",
+        },
+    )
 
     print(f"Result: {json.dumps(result1, indent=2)}")
 
@@ -249,11 +255,10 @@ def example_mcp_session():
     print("STEP 2: Apply Strategy")
     print("=" * CONSTANT_40)
 
-    result2 = run_mcp_tool("planfile_apply", {
-        "strategy_path": "refactor-strategy.yaml",
-        "backend": "github",
-        "dry_run": True
-    })
+    result2 = run_mcp_tool(
+        "planfile_apply",
+        {"strategy_path": "refactor-strategy.yaml", "backend": "github", "dry_run": True},
+    )
 
     print(f"Result: {json.dumps(result2, indent=2)}")
 
@@ -262,10 +267,10 @@ def example_mcp_session():
     print("STEP 3: Review Progress")
     print("=" * CONSTANT_40)
 
-    result3 = run_mcp_tool("planfile_review", {
-        "strategy_path": "refactor-strategy.yaml",
-        "project_path": "./my-project"
-    })
+    result3 = run_mcp_tool(
+        "planfile_review",
+        {"strategy_path": "refactor-strategy.yaml", "project_path": "./my-project"},
+    )
 
     print(f"Result: {json.dumps(result3, indent=2)}")
 
@@ -290,6 +295,7 @@ def example_mcp_session():
 
     print(conclusion)
 
+
 def create_mcp_tool_definitions():
     """Create MCP tool definitions for integration."""
     tools = [
@@ -302,10 +308,13 @@ def create_mcp_tool_definitions():
                     "project_path": {"type": "string", "default": "."},
                     "model": {"type": "string", "description": "LiteLLM model ID"},
                     "sprints": {"type": "integer", "default": CONSTANT_3},
-                    "focus": {"type": "string", "enum": ["complexity", "duplication", "tests", "docs"]},
-                    "output": {"type": "string", "default": "strategy.yaml"}
-                }
-            }
+                    "focus": {
+                        "type": "string",
+                        "enum": ["complexity", "duplication", "tests", "docs"],
+                    },
+                    "output": {"type": "string", "default": "strategy.yaml"},
+                },
+            },
         },
         {
             "name": "planfile_apply",
@@ -317,9 +326,9 @@ def create_mcp_tool_definitions():
                     "strategy_path": {"type": "string"},
                     "project_path": {"type": "string", "default": "."},
                     "backend": {"type": "string", "enum": ["github", "jira", "gitlab", "generic"]},
-                    "dry_run": {"type": "boolean", "default": False}
-                }
-            }
+                    "dry_run": {"type": "boolean", "default": False},
+                },
+            },
         },
         {
             "name": "planfile_review",
@@ -329,10 +338,10 @@ def create_mcp_tool_definitions():
                 "required": ["strategy_path"],
                 "properties": {
                     "strategy_path": {"type": "string"},
-                    "project_path": {"type": "string", "default": "."}
-                }
-            }
-        }
+                    "project_path": {"type": "string", "default": "."},
+                },
+            },
+        },
     ]
 
     # Save tool definitions
@@ -342,7 +351,7 @@ def create_mcp_tool_definitions():
     print("\n✅ MCP tool definitions saved to: mcp-tools.json")
 
     # Create example MCP server integration
-    server_code = '''
+    server_code = """
 # Example MCP Server Integration
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -369,12 +378,13 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-'''
+"""
 
     output_file = Path(__file__).resolve().parent / "mcp-server-example.py"
     output_file.write_text(server_code, encoding="utf-8")
 
     print(f"✅ MCP server example saved to: {output_file}")
+
 
 if __name__ == "__main__":
     example_mcp_session()

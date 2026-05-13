@@ -24,6 +24,30 @@ class Store(StoreFileMixin, TicketStoreMixin):
     def is_initialized(self) -> bool:
         return self._config_path.exists()
 
+    def load_sprint(self, sprint: str) -> dict:
+        """Load sprint data from YAML."""
+        path = self._sprint_file(sprint)
+        data = self._read_yaml_cached(path) or {}
+        return data.get("sprint") or data
+
+    def load_backlog(self) -> dict:
+        """Load backlog data from YAML."""
+        path = self._sprint_file("backlog")
+        data = self._read_yaml_cached(path) or {}
+        return data.get("sprint") or data
+
+    def save_sprint(self, sprint: str, data: dict) -> None:
+        """Save sprint data back to YAML."""
+        path = self._sprint_file(sprint)
+        # Ensure format matches expected nesting
+        wrapped = {"sprint": data} if "sprint" not in data else data
+        path.write_text(
+            yaml.dump(wrapped, default_flow_style=False, allow_unicode=True),
+            encoding="utf-8"
+        )
+        if hasattr(self, "_yaml_cache"):
+            self._yaml_cache.pop(str(path), None)
+
     def init(self) -> None:
         """Create the .planfile/ structure from scratch."""
         self.base_dir.mkdir(parents=True, exist_ok=True)

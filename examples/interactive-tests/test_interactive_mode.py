@@ -1,100 +1,159 @@
 CONSTANT_60 = 60
 CONSTANT_493 = 493
-'\nInteractive mode test script for planfile\nTests repeatable generation in interactive mode\n'
+"\nInteractive mode test script for planfile\nTests repeatable generation in interactive mode\n"
 import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
+
 def run_interactive_planfile(inputs, cwd=None) -> tuple:
     """Run planfile in interactive mode with given inputs"""
-    cmd = ['planfile', 'init', '--interactive']
-    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=cwd)
-    stdout, stderr = proc.communicate(input=inputs + '\n')
+    cmd = ["planfile", "init", "--interactive"]
+    proc = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=cwd,
+    )
+    stdout, stderr = proc.communicate(input=inputs + "\n")
     return (proc.returncode, stdout, stderr)
+
 
 def test_interactive_mode() -> bool:
     """Test interactive mode generation"""
-    print('Testing interactive mode...')
+    print("Testing interactive mode...")
     with tempfile.TemporaryDirectory() as test_dir:
-        print(f'Test directory: {test_dir}')
-        print('\n=== Test 1: Basic interactive input ===')
-        inputs = ['Interactive Test Project', 'A project created in interactive mode', 'generic', 'n', 'n', 'n', 'n']
-        returncode, stdout, stderr = run_interactive_planfile('\n'.join(inputs), cwd=test_dir)
+        print(f"Test directory: {test_dir}")
+        print("\n=== Test 1: Basic interactive input ===")
+        inputs = [
+            "Interactive Test Project",
+            "A project created in interactive mode",
+            "generic",
+            "n",
+            "n",
+            "n",
+            "n",
+        ]
+        returncode, stdout, stderr = run_interactive_planfile("\n".join(inputs), cwd=test_dir)
         if returncode != 0:
-            print(f'❌ Interactive mode failed with code {returncode}')
-            print(f'stderr: {stderr}')
+            print(f"❌ Interactive mode failed with code {returncode}")
+            print(f"stderr: {stderr}")
             return False
-        print('✓ Interactive mode completed')
-        planfile_path = Path(test_dir) / 'planfile.yaml'
+        print("✓ Interactive mode completed")
+        planfile_path = Path(test_dir) / "planfile.yaml"
         if not planfile_path.exists():
-            print('❌ planfile.yaml was not created')
+            print("❌ planfile.yaml was not created")
             return False
-        print('✓ planfile.yaml created')
+        print("✓ planfile.yaml created")
         with open(planfile_path) as f:
             content = f.read()
-        print('\nGenerated content:')
+        print("\nGenerated content:")
         print(content)
-        if 'Interactive Test Project' in content:
-            print('✓ Project name correctly set')
+        if "Interactive Test Project" in content:
+            print("✓ Project name correctly set")
         else:
-            print('❌ Project name not found in generated file')
+            print("❌ Project name not found in generated file")
             return False
-        print('\n=== Test 2: Repeat generation (consistency test) ===')
+        print("\n=== Test 2: Repeat generation (consistency test) ===")
         planfile_path.unlink()
-        returncode2, stdout2, stderr2 = run_interactive_planfile('\n'.join(inputs), cwd=test_dir)
+        returncode2, stdout2, stderr2 = run_interactive_planfile("\n".join(inputs), cwd=test_dir)
         if returncode2 != 0:
-            print('❌ Second interactive run failed')
+            print("❌ Second interactive run failed")
             return False
         with open(planfile_path) as f:
             content2 = f.read()
         if content == content2:
-            print('✓ Generation is consistent')
+            print("✓ Generation is consistent")
         else:
-            print('⚠️  Generation differs between runs')
-            print('\nFirst run:')
+            print("⚠️  Generation differs between runs")
+            print("\nFirst run:")
             print(content)
-            print('\nSecond run:')
+            print("\nSecond run:")
             print(content2)
-        print('\n=== Test 3: Interactive with custom options ===')
-        custom_dir = Path(test_dir) / 'custom'
+        print("\n=== Test 3: Interactive with custom options ===")
+        custom_dir = Path(test_dir) / "custom"
         custom_dir.mkdir()
-        inputs3 = ['Custom Interactive Project', 'A project with custom sprints and tasks', 'github', 'y', '3', 'Sprint 1', '2024-01-01', '2024-01-07', 'Setup phase', 'Sprint 2', '2024-01-08', '2024-01-14', 'Development', 'Sprint 3', '2024-01-15', '2024-01-21', 'Testing', 'y', '2', 'Initialize repository', 'feature', 'high', '1', 'Setup project structure', 'feature', 'medium', '1', 'y', '2', 'Test Coverage', 'coverage', '80', 'All Tests Pass', 'tests', '100', 'n']
-        returncode3, stdout3, stderr3 = run_interactive_planfile('\n'.join(inputs3), cwd=str(custom_dir))
+        inputs3 = [
+            "Custom Interactive Project",
+            "A project with custom sprints and tasks",
+            "github",
+            "y",
+            "3",
+            "Sprint 1",
+            "2024-01-01",
+            "2024-01-07",
+            "Setup phase",
+            "Sprint 2",
+            "2024-01-08",
+            "2024-01-14",
+            "Development",
+            "Sprint 3",
+            "2024-01-15",
+            "2024-01-21",
+            "Testing",
+            "y",
+            "2",
+            "Initialize repository",
+            "feature",
+            "high",
+            "1",
+            "Setup project structure",
+            "feature",
+            "medium",
+            "1",
+            "y",
+            "2",
+            "Test Coverage",
+            "coverage",
+            "80",
+            "All Tests Pass",
+            "tests",
+            "100",
+            "n",
+        ]
+        returncode3, stdout3, stderr3 = run_interactive_planfile(
+            "\n".join(inputs3), cwd=str(custom_dir)
+        )
         if returncode3 != 0:
-            print('❌ Custom interactive run failed')
-            print(f'stderr: {stderr3}')
+            print("❌ Custom interactive run failed")
+            print(f"stderr: {stderr3}")
             return False
-        print('✓ Custom interactive mode completed')
-        custom_planfile = custom_dir / 'planfile.yaml'
+        print("✓ Custom interactive mode completed")
+        custom_planfile = custom_dir / "planfile.yaml"
         with open(custom_planfile) as f:
             custom_content = f.read()
-        if 'Sprint 1' in custom_content and 'Initialize repository' in custom_content:
-            print('✓ Custom sprints and tasks added')
+        if "Sprint 1" in custom_content and "Initialize repository" in custom_content:
+            print("✓ Custom sprints and tasks added")
         else:
-            print('❌ Custom content not found')
+            print("❌ Custom content not found")
             return False
-        sprint_count = custom_content.count('- id:')
-        task_count = custom_content.count('  - name:')
-        gate_count = custom_content.count('  - name:')
-        print(f'✓ Generated {sprint_count} sprints, {task_count} tasks, {gate_count} quality gates')
-        print('\n=== Test 4: Invalid input handling ===')
-        invalid_dir = Path(test_dir) / 'invalid'
+        sprint_count = custom_content.count("- id:")
+        task_count = custom_content.count("  - name:")
+        gate_count = custom_content.count("  - name:")
+        print(f"✓ Generated {sprint_count} sprints, {task_count} tasks, {gate_count} quality gates")
+        print("\n=== Test 4: Invalid input handling ===")
+        invalid_dir = Path(test_dir) / "invalid"
         invalid_dir.mkdir()
-        inputs4 = ['', '', '', 'n', 'n', 'n', 'n']
-        returncode4, stdout4, stderr4 = run_interactive_planfile('\n'.join(inputs4), cwd=str(invalid_dir))
+        inputs4 = ["", "", "", "n", "n", "n", "n"]
+        returncode4, stdout4, stderr4 = run_interactive_planfile(
+            "\n".join(inputs4), cwd=str(invalid_dir)
+        )
         if returncode4 == 0:
-            print('✓ Handled empty inputs gracefully')
+            print("✓ Handled empty inputs gracefully")
         else:
-            print('⚠️  Failed with empty inputs (may be expected)')
+            print("⚠️  Failed with empty inputs (may be expected)")
     return True
+
 
 def test_expect_script() -> None:
     """Test using expect script for more realistic interaction"""
-    print('\n=== Testing with expect script ===')
+    print("\n=== Testing with expect script ===")
     expect_script = '#!/usr/bin/expect -f\nset timeout 5\nspawn planfile init --interactive\n\nexpect "Project name:"\nsend "Expect Test Project\\r"\n\nexpect "Project description:"\nsend "Project created via expect\\r"\n\nexpect "Backend type"\nsend "generic\\r"\n\nexpect "Add custom sprints?"\nsend "n\\r"\n\nexpect "Add custom tasks?"\nsend "n\\r"\n\nexpect "Add quality gates?"\nsend "n\\r"\n\nexpect "Add integrations?"\nsend "n\\r"\n\nexpect eof\n'
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.exp', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".exp", delete=False) as f:
         f.write(expect_script)
         script_path = f.name
     try:
@@ -102,32 +161,33 @@ def test_expect_script() -> None:
         with tempfile.TemporaryDirectory() as test_dir:
             result = subprocess.run([script_path], cwd=test_dir, capture_output=True, text=True)
             if result.returncode == 0:
-                print('✓ Expect script executed successfully')
-                planfile_path = Path(test_dir) / 'planfile.yaml'
+                print("✓ Expect script executed successfully")
+                planfile_path = Path(test_dir) / "planfile.yaml"
                 if planfile_path.exists():
-                    print('✓ planfile.yaml created by expect script')
+                    print("✓ planfile.yaml created by expect script")
                     with open(planfile_path) as f:
                         content = f.read()
-                    if 'Expect Test Project' in content:
-                        print('✓ Content correctly set')
+                    if "Expect Test Project" in content:
+                        print("✓ Content correctly set")
                     else:
-                        print('❌ Content not as expected')
+                        print("❌ Content not as expected")
                 else:
-                    print('❌ planfile.yaml not created')
+                    print("❌ planfile.yaml not created")
             else:
-                print('⚠️  Expect script not available or failed')
-                print(f'Error: {result.stderr}')
+                print("⚠️  Expect script not available or failed")
+                print(f"Error: {result.stderr}")
     finally:
         os.unlink(script_path)
 
+
 def main() -> None:
     """Run all interactive tests"""
-    print('=' * 60)
-    print('INTERACTIVE MODE TESTS')
-    print('=' * 60)
-    result = subprocess.run(['planfile', '--help'], capture_output=True, text=True)
+    print("=" * 60)
+    print("INTERACTIVE MODE TESTS")
+    print("=" * 60)
+    result = subprocess.run(["planfile", "--help"], capture_output=True, text=True)
     if result.returncode != 0:
-        print('❌ planfile command not found')
+        print("❌ planfile command not found")
         sys.exit(1)
     success = True
     try:
@@ -135,17 +195,19 @@ def main() -> None:
             success = False
         test_expect_script()
     except KeyboardInterrupt:
-        print('\n⚠️  Test interrupted by user')
+        print("\n⚠️  Test interrupted by user")
         success = False
     except Exception as e:
-        print(f'\n❌ Test failed with error: {e}')
+        print(f"\n❌ Test failed with error: {e}")
         success = False
-    print('\n' + '=' * 60)
+    print("\n" + "=" * 60)
     if success:
-        print('✅ All interactive tests completed!')
+        print("✅ All interactive tests completed!")
     else:
-        print('❌ Some tests failed')
+        print("❌ Some tests failed")
         sys.exit(1)
-    print('=' * 60)
-if __name__ == '__main__':
+    print("=" * 60)
+
+
+if __name__ == "__main__":
     main()

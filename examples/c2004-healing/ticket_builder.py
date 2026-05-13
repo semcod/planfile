@@ -32,7 +32,6 @@ import subprocess
 import textwrap
 from typing import Any
 
-
 LLM_READY_TEMPLATE = """\
 ## 🚨 Context
 
@@ -149,13 +148,13 @@ def _format_acceptance(items: list[str]) -> str:
 def _reproduction_for(labels: dict[str, str]) -> str:
     lines = ["task monitor:probe"]
     if "instance" in labels:
-        lines.append(
-            f"curl -sS -m 4 -o /dev/null -w '%{{http_code}}\\n' '{labels['instance']}'"
-        )
+        lines.append(f"curl -sS -m 4 -o /dev/null -w '%{{http_code}}\\n' '{labels['instance']}'")
     return "\n".join(lines)
 
 
-def build_ticket_payload(alert: dict[str, Any], *, repo: str, source: str = "healing-webhook") -> dict:
+def build_ticket_payload(
+    alert: dict[str, Any], *, repo: str, source: str = "healing-webhook"
+) -> dict:
     """Convert an Alertmanager alert into planfile ticket kwargs."""
     labels = alert.get("labels", {}) or {}
     annotations = alert.get("annotations", {}) or {}
@@ -192,10 +191,20 @@ def build_ticket_payload(alert: dict[str, Any], *, repo: str, source: str = "hea
 
     return {
         "name": f"[{source}] {alertname}: {summary[:80]}",
-        "priority": {"critical": "critical", "error": "high", "warning": "normal"}.get(severity, "normal"),
+        "priority": {"critical": "critical", "error": "high", "warning": "normal"}.get(
+            severity, "normal"
+        ),
         "source": source,
         "description": description,
-        "labels": sorted({source, "auto-generated", "llm-ready", f"severity:{severity}", f"component:{component}"}),
+        "labels": sorted(
+            {
+                source,
+                "auto-generated",
+                "llm-ready",
+                f"severity:{severity}",
+                f"component:{component}",
+            }
+        ),
     }
 
 

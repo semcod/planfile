@@ -234,12 +234,15 @@ def sync_integration(
         store, directory, integration_name
     )
 
-    if not all_tickets:
-        print_warning("No tickets to sync")
+    if not all_tickets and direction == "to":
+        print_warning("No local tickets to sync to external system")
         console.print("[dim]   Searched: .planfile/ structure and *.planfile.yaml files[/dim]")
         return
 
-    console.print(f"📊 Found {len(all_tickets)} tickets for {integration_name} (source: {tickets_source})")
+    if all_tickets:
+        console.print(f"📊 Found {len(all_tickets)} tickets for {integration_name} (source: {tickets_source})")
+    else:
+        console.print(f"📊 Found 0 local tickets for {integration_name} (scanning external system next)")
 
     if dry_run:
         console.print("\n[cyan]🔍 DRY RUN - No changes will be made[/cyan]")

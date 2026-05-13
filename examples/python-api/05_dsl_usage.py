@@ -50,7 +50,7 @@ def example_batch_operations():
     result = executor.run("query tickets where priority=high")
     if result.ok:
         for ticket in result.data:
-            result = executor.run(f'move ticket {ticket["id"]} to=2')
+            result = executor.run(f"move ticket {ticket['id']} to=2")
 
 
 def example_sprint_management():

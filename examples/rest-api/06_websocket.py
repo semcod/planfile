@@ -37,7 +37,7 @@ async def example_websocket_interactive():
             "list tickets sprint=current",
             'create ticket "Fix login bug" priority=high',
             "list sprints",
-            "validate"
+            "validate",
         ]
 
         for cmd in commands:

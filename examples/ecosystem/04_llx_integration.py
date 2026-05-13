@@ -1,4 +1,3 @@
-
 MAX_3 = 3
 MAX_4 = 4
 MAX_5 = 5
@@ -26,6 +25,7 @@ import yaml
 @dataclass
 class ProjectMetrics:
     """Project metrics from LLX analysis."""
+
     total_files: int
     total_lines: int
     avg_cc: float
@@ -36,6 +36,7 @@ class ProjectMetrics:
     languages: list[str]
     coupling_score: float
     cohesion_score: float
+
 
 class LLXIntegration:
     """Integration with LLX for code analysis and model selection."""
@@ -67,25 +68,25 @@ class LLXIntegration:
         """Parse LLX analysis output."""
         # This would parse actual LLX output format
         # For now, simulate based on typical LLX output
-        lines = output.strip().split('\n')
+        lines = output.strip().split("\n")
         data = {}
 
         for line in lines:
-            if ':' in line:
-                key, value = line.split(':', 1)
+            if ":" in line:
+                key, value = line.split(":", 1)
                 data[key.strip()] = value.strip()
 
         return ProjectMetrics(
-            total_files=int(data.get('total_files', 0)),
-            total_lines=int(data.get('total_lines', 0)),
-            avg_cc=float(data.get('avg_cc', 0)),
-            max_cc=int(data.get('max_cc', 0)),
-            critical_count=int(data.get('critical_count', 0)),
-            god_modules=int(data.get('god_modules', 0)),
-            dup_groups=int(data.get('dup_groups', 0)),
-            languages=data.get('languages', 'python').split(','),
-            coupling_score=float(data.get('coupling', 0)),
-            cohesion_score=float(data.get('cohesion', 0))
+            total_files=int(data.get("total_files", 0)),
+            total_lines=int(data.get("total_lines", 0)),
+            avg_cc=float(data.get("avg_cc", 0)),
+            max_cc=int(data.get("max_cc", 0)),
+            critical_count=int(data.get("critical_count", 0)),
+            god_modules=int(data.get("god_modules", 0)),
+            dup_groups=int(data.get("dup_groups", 0)),
+            languages=data.get("languages", "python").split(","),
+            coupling_score=float(data.get("coupling", 0)),
+            cohesion_score=float(data.get("cohesion", 0)),
         )
 
     def _basic_analysis(self, project_path: str) -> ProjectMetrics:
@@ -98,21 +99,26 @@ class LLXIntegration:
         cc_count = 0
 
         for root, dirs, fnames in os.walk(project_path):
-            dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
             for fname in fnames:
-                if fname.endswith('.py'):
+                if fname.endswith(".py"):
                     files += 1
                     filepath = Path(root) / fname
 
                     try:
-                        with open(filepath, encoding='utf-8') as f:
+                        with open(filepath, encoding="utf-8") as f:
                             content = f.read()
                             line_count = len(content.splitlines())
                             lines += line_count
 
                             # Simple CC estimation (very basic)
-                            cc = content.count(' if ') + content.count(' for ') + content.count(' while ') + 1
+                            cc = (
+                                content.count(" if ")
+                                + content.count(" for ")
+                                + content.count(" while ")
+                                + 1
+                            )
                             max_cc = max(max_cc, cc)
                             total_cc += cc
                             cc_count += 1
@@ -129,9 +135,9 @@ class LLXIntegration:
             critical_count=sum(1 for cc in [max_cc] if cc >= MAX_15),
             god_modules=1 if lines > CONSTANT_500 else 0,  # Simplified
             dup_groups=0,  # Would need duplication analysis
-            languages=['python'],
+            languages=["python"],
             coupling_score=0.5,  # Placeholder
-            cohesion_score=0.5   # Placeholder
+            cohesion_score=0.5,  # Placeholder
         )
 
     def select_model(self, metrics: ProjectMetrics, task_hint: str) -> str:
@@ -152,26 +158,28 @@ class LLXIntegration:
             "planning": {
                 "high": "anthropic/claude-opus-4",
                 "medium": "anthropic/claude-sonnet-4",
-                "low": "anthropic/claude-haiku-4.5"
+                "low": "anthropic/claude-haiku-4.5",
             },
             "refactor": {
                 "high": "anthropic/claude-opus-4",
                 "medium": "anthropic/claude-sonnet-4",
-                "low": "openai/gpt-4"
+                "low": "openai/gpt-4",
             },
             "test": {
                 "high": "anthropic/claude-sonnet-4",
                 "medium": "anthropic/claude-haiku-4.5",
-                "low": "anthropic/claude-haiku-4.5"
+                "low": "anthropic/claude-haiku-4.5",
             },
             "docs": {
                 "high": "anthropic/claude-sonnet-4",
                 "medium": "anthropic/claude-haiku-4.5",
-                "low": "openai/gpt-3.5-turbo"
-            }
+                "low": "openai/gpt-3.5-turbo",
+            },
         }
 
-        return task_models.get(task_hint, task_models["refactor"]).get(complexity_tier, "anthropic/claude-sonnet-4")
+        return task_models.get(task_hint, task_models["refactor"]).get(
+            complexity_tier, "anthropic/claude-sonnet-4"
+        )
 
     def get_task_scope(self, metrics: ProjectMetrics) -> dict[str, int]:
         """Estimate task scope based on metrics."""
@@ -181,9 +189,10 @@ class LLXIntegration:
             "standard_refactors": max(0, metrics.total_files // 10 - metrics.critical_count),
             "test_writing": max(MAX_5, metrics.total_files // MAX_5),
             "documentation": max(MAX_3, metrics.total_files // MAX_15),
-            "quality_gates": MAX_3
+            "quality_gates": MAX_3,
         }
         return tasks
+
 
 def example_metric_driven_planning():
     """Example: Generate strategy based on actual project metrics."""
@@ -241,11 +250,11 @@ def example_metric_driven_planning():
                 "total_lines": metrics.total_lines,
                 "avg_cc": round(metrics.avg_cc, 2),
                 "max_cc": metrics.max_cc,
-                "complexity_score": _calculate_complexity_score(metrics)
-            }
+                "complexity_score": _calculate_complexity_score(metrics),
+            },
         },
         "sprints": [],
-        "quality_gates": []
+        "quality_gates": [],
     }
 
     # Generate sprints based on metrics
@@ -255,71 +264,83 @@ def example_metric_driven_planning():
     # Sprint 1: Critical issues
     sprint1_tasks = []
     if metrics.critical_count > 0:
-        sprint1_tasks.append({
-            "name": f"Fix {metrics.critical_count} critical functions (CC≥15)",
-            "task_type": "refactor",
-            "priority": "critical",
-            "estimated_hours": metrics.critical_count * MAX_4,
-            "model_hints": {
-                "planning": model_selections["refactor"],
-                "implementation": model_selections["refactor"],
-                "review": model_selections["refactor"]
+        sprint1_tasks.append(
+            {
+                "name": f"Fix {metrics.critical_count} critical functions (CC≥15)",
+                "task_type": "refactor",
+                "priority": "critical",
+                "estimated_hours": metrics.critical_count * MAX_4,
+                "model_hints": {
+                    "planning": model_selections["refactor"],
+                    "implementation": model_selections["refactor"],
+                    "review": model_selections["refactor"],
+                },
             }
-        })
+        )
 
     if metrics.god_modules > 0:
-        sprint1_tasks.append({
-            "name": f"Split {metrics.god_modules} god modules",
-            "task_type": "refactor",
-            "priority": "critical",
-            "estimated_hours": metrics.god_modules * MAX_8,
-            "model_hints": {
-                "planning": model_selections["refactor"],
-                "implementation": model_selections["refactor"],
-                "review": model_selections["refactor"]
+        sprint1_tasks.append(
+            {
+                "name": f"Split {metrics.god_modules} god modules",
+                "task_type": "refactor",
+                "priority": "critical",
+                "estimated_hours": metrics.god_modules * MAX_8,
+                "model_hints": {
+                    "planning": model_selections["refactor"],
+                    "implementation": model_selections["refactor"],
+                    "review": model_selections["refactor"],
+                },
             }
-        })
+        )
 
-    strategy["sprints"].append({
-        "id": "sprint-1",
-        "name": "Critical Complexity Reduction",
-        "goal": f"Reduce max CC from {metrics.max_cc} to <15",
-        "task_patterns": sprint1_tasks
-    })
+    strategy["sprints"].append(
+        {
+            "id": "sprint-1",
+            "name": "Critical Complexity Reduction",
+            "goal": f"Reduce max CC from {metrics.max_cc} to <15",
+            "task_patterns": sprint1_tasks,
+        }
+    )
 
     # Sprint 2: Systematic improvements
     sprint2_tasks = []
     if metrics.dup_groups > 0:
-        sprint2_tasks.append({
-            "name": f"Eliminate {metrics.dup_groups} duplicate code groups",
-            "task_type": "refactor",
-            "priority": "high",
-            "estimated_hours": metrics.dup_groups * MAX_3,
-            "model_hints": {
-                "planning": model_selections["refactor"],
-                "implementation": model_selections["refactor"],
-                "review": model_selections["test"]
+        sprint2_tasks.append(
+            {
+                "name": f"Eliminate {metrics.dup_groups} duplicate code groups",
+                "task_type": "refactor",
+                "priority": "high",
+                "estimated_hours": metrics.dup_groups * MAX_3,
+                "model_hints": {
+                    "planning": model_selections["refactor"],
+                    "implementation": model_selections["refactor"],
+                    "review": model_selections["test"],
+                },
             }
-        })
+        )
 
-    sprint2_tasks.append({
-        "name": "Improve code structure and patterns",
-        "task_type": "refactor",
-        "priority": "medium",
-        "estimated_hours": max(MAX_8, metrics.total_files // 10),
-        "model_hints": {
-            "planning": model_selections["planning"],
-            "implementation": model_selections["refactor"],
-            "review": model_selections["refactor"]
+    sprint2_tasks.append(
+        {
+            "name": "Improve code structure and patterns",
+            "task_type": "refactor",
+            "priority": "medium",
+            "estimated_hours": max(MAX_8, metrics.total_files // 10),
+            "model_hints": {
+                "planning": model_selections["planning"],
+                "implementation": model_selections["refactor"],
+                "review": model_selections["refactor"],
+            },
         }
-    })
+    )
 
-    strategy["sprints"].append({
-        "id": "sprint-2",
-        "name": "Code Quality Enhancement",
-        "goal": "Improve maintainability and reduce duplication",
-        "task_patterns": sprint2_tasks
-    })
+    strategy["sprints"].append(
+        {
+            "id": "sprint-2",
+            "name": "Code Quality Enhancement",
+            "goal": "Improve maintainability and reduce duplication",
+            "task_patterns": sprint2_tasks,
+        }
+    )
 
     # Sprint 3: Testing and documentation
     sprint3_tasks = [
@@ -331,8 +352,8 @@ def example_metric_driven_planning():
             "model_hints": {
                 "planning": model_selections["test"],
                 "implementation": model_selections["test"],
-                "review": model_selections["test"]
-            }
+                "review": model_selections["test"],
+            },
         },
         {
             "name": f"Generate documentation ({task_scope['documentation']} docs)",
@@ -342,17 +363,19 @@ def example_metric_driven_planning():
             "model_hints": {
                 "planning": model_selections["docs"],
                 "implementation": model_selections["docs"],
-                "review": model_selections["docs"]
-            }
-        }
+                "review": model_selections["docs"],
+            },
+        },
     ]
 
-    strategy["sprints"].append({
-        "id": "sprint-3",
-        "name": "Testing & Documentation",
-        "goal": "Achieve 80% test coverage and complete documentation",
-        "task_patterns": sprint3_tasks
-    })
+    strategy["sprints"].append(
+        {
+            "id": "sprint-3",
+            "name": "Testing & Documentation",
+            "goal": "Achieve 80% test coverage and complete documentation",
+            "task_patterns": sprint3_tasks,
+        }
+    )
 
     # Add quality gates based on current metrics
     strategy["quality_gates"] = [
@@ -361,22 +384,22 @@ def example_metric_driven_planning():
             "metric": "avg_cc",
             "threshold": max(MAX_3, metrics.avg_cc * 0.6),
             "operator": "<=",
-            "current": metrics.avg_cc
+            "current": metrics.avg_cc,
         },
         {
             "name": "Test Coverage",
             "metric": "test_coverage",
             "threshold": CONSTANT_80,
             "operator": ">=",
-            "current": 0  # Would need actual coverage analysis
+            "current": 0,  # Would need actual coverage analysis
         },
         {
             "name": "Code Duplication",
             "metric": "duplication_percent",
             "threshold": MAX_5,
             "operator": "<=",
-            "current": metrics.dup_groups * 10  # Rough estimate
-        }
+            "current": metrics.dup_groups * 10,  # Rough estimate
+        },
     ]
 
     # Save strategy
@@ -388,54 +411,39 @@ def example_metric_driven_planning():
     # Summary
     print("\n5. Strategy Summary:")
     print(f"  Total sprints: {len(strategy['sprints'])}")
-    total_tasks = sum(len(s['task_patterns']) for s in strategy['sprints'])
+    total_tasks = sum(len(s["task_patterns"]) for s in strategy["sprints"])
     print(f"  Total tasks: {total_tasks}")
     total_hours = sum(
-        sum(t.get('estimated_hours', 0) for t in s['task_patterns'])
-        for s in strategy['sprints']
+        sum(t.get("estimated_hours", 0) for t in s["task_patterns"]) for s in strategy["sprints"]
     )
     print(f"  Estimated hours: {total_hours}")
     print(f"  Quality gates: {len(strategy['quality_gates'])}")
+
 
 def _calculate_complexity_score(metrics: ProjectMetrics) -> float:
     """Calculate overall complexity score (0-100)."""
     # Weight different factors
     cc_score = min(100, metrics.avg_cc * 10)  # 40% weight
     size_score = min(100, metrics.total_lines / 100)  # 30% weight
-    structure_score = (metrics.god_modules * MAX_20 + metrics.critical_count * MAX_15)  # 30% weight
+    structure_score = metrics.god_modules * MAX_20 + metrics.critical_count * MAX_15  # 30% weight
 
-    return (cc_score * 0.4 + size_score * 0.3 + structure_score * 0.3)
+    return cc_score * 0.4 + size_score * 0.3 + structure_score * 0.3
+
 
 def create_llx_config_example():
     """Create example LLX configuration for planfile integration."""
     config = {
         "analysis": {
             "tools": ["code2llm", "redup", "vallm"],
-            "exclude_patterns": [
-                "*/__pycache__/*",
-                "*/venv/*",
-                "*/.tox/*",
-                "*/tests/*"
-            ],
+            "exclude_patterns": ["*/__pycache__/*", "*/venv/*", "*/.tox/*", "*/tests/*"],
             "metrics": {
                 "complexity": {
                     "tool": "code2llm",
-                    "threshold": {
-                        "low": MAX_5,
-                        "medium": 10,
-                        "high": MAX_15
-                    }
+                    "threshold": {"low": MAX_5, "medium": 10, "high": MAX_15},
                 },
-                "duplication": {
-                    "tool": "redup",
-                    "min_lines": 10,
-                    "min_duplicates": 2
-                },
-                "coverage": {
-                    "tool": "vallm",
-                    "exclude_test_files": False
-                }
-            }
+                "duplication": {"tool": "redup", "min_lines": 10, "min_duplicates": 2},
+                "coverage": {"tool": "vallm", "exclude_test_files": False},
+            },
         },
         "model_selection": {
             "rules": [
@@ -444,46 +452,44 @@ def create_llx_config_example():
                     "conditions": {
                         "avg_cc": {"gt": MAX_8},
                         "max_cc": {"gt": MAX_20},
-                        "god_modules": {"gt": 0}
+                        "god_modules": {"gt": 0},
                     },
                     "models": ["anthropic/claude-opus-4"],
-                    "reasoning": "High complexity requires strongest model"
+                    "reasoning": "High complexity requires strongest model",
                 },
                 {
                     "name": "medium_complexity_refactor",
                     "conditions": {
                         "avg_cc": {"gt": MAX_4, "lte": MAX_8},
-                        "total_files": {"gt": MAX_20}
+                        "total_files": {"gt": MAX_20},
                     },
                     "models": ["anthropic/claude-sonnet-4", "openai/gpt-4"],
-                    "reasoning": "Medium complexity needs balanced model"
+                    "reasoning": "Medium complexity needs balanced model",
                 },
                 {
                     "name": "low_complexity_tasks",
-                    "conditions": {
-                        "avg_cc": {"lte": MAX_4},
-                        "task_type": ["test", "docs"]
-                    },
+                    "conditions": {"avg_cc": {"lte": MAX_4}, "task_type": ["test", "docs"]},
                     "models": ["anthropic/claude-haiku-4.5", "openai/gpt-3.5-turbo"],
-                    "reasoning": "Simple tasks can use cheaper models"
-                }
+                    "reasoning": "Simple tasks can use cheaper models",
+                },
             ],
-            "fallback": "anthropic/claude-sonnet-4"
+            "fallback": "anthropic/claude-sonnet-4",
         },
         "integration": {
             "planfile": {
                 "auto_analyze": True,
                 "cache_metrics": True,
                 "cache_ttl": CONSTANT_3600,
-                "export_format": "yaml"
+                "export_format": "yaml",
             }
-        }
+        },
     }
 
     with open("llx-config-for-planfile.yaml", "w") as f:
         yaml.dump(config, f, default_flow_style=False, indent=2)
 
     print("\n✅ LLX configuration saved to: llx-config-for-planfile.yaml")
+
 
 if __name__ == "__main__":
     example_metric_driven_planning()

@@ -11,8 +11,14 @@ class TicketStoreMixin:
         try:
             if 'id' not in t_data:
                 return None
+            t_data = dict(t_data)
+            # legacy YAML compat: 'title' → 'name'
+            if 'name' not in t_data and 'title' in t_data:
+                t_data['name'] = t_data.pop('title')
+            # legacy YAML compat: British 'cancelled' → American 'canceled'
+            if t_data.get('status') == 'cancelled':
+                t_data['status'] = 'canceled'
             if 'integration' in t_data and isinstance(t_data['integration'], str):
-                t_data = dict(t_data)
                 t_data['labels'] = [t_data.pop('integration')]
             return Ticket(**t_data)
         except Exception:
@@ -36,7 +42,10 @@ class TicketStoreMixin:
         return [t for t in tickets if any(label in (t.labels or []) for label in labels)]
 
     def _filter_by_attribute(self, tickets: list[Ticket], key: str, value: Any) -> list[Ticket]:
-        return [t for t in tickets if getattr(t, key, None) == value]
+        def _normalize(v: Any) -> str:
+            return v.value if hasattr(v, 'value') else str(v)
+        value_str = _normalize(value)
+        return [t for t in tickets if _normalize(getattr(t, key, None)) == value_str]
 
     def _apply_filters(self, tickets: list[Ticket], **filters) -> list[Ticket]:
         result = tickets

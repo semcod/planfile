@@ -8,7 +8,6 @@ These features would allow reducing example code by ~60%.
 # AVAILABLE: planfile.extensions module
 # ============================================================
 
-from planfile.extensions import TicketLogger
 
 # Usage:
 #     from planfile.extensions import TicketLogger
@@ -26,15 +25,16 @@ from planfile.extensions import TicketLogger
 # PROPOSED: PlanfileStore extensions
 # ============================================================
 
+
 class PlanfileStoreExtended:
     """
     Extended store with analytics and export.
     """
-    
+
     def stats(self) -> dict:
         """
         Get ticket statistics - replaces 30-line example.
-        
+
         Returns:
             {
                 "total": 100,
@@ -46,19 +46,21 @@ class PlanfileStoreExtended:
         """
         tickets = self.list_tickets()
         from collections import Counter
-        
+
         return {
             "total": len(tickets),
-            "by_status": Counter(t.status.value if hasattr(t.status, 'value') else str(t.status) for t in tickets),
+            "by_status": Counter(
+                t.status.value if hasattr(t.status, "value") else str(t.status) for t in tickets
+            ),
             "by_priority": Counter(t.priority for t in tickets),
             "by_label": Counter(label for t in tickets for label in (t.labels or [])),
-            "by_sprint": Counter(t.sprint for t in tickets)
+            "by_sprint": Counter(t.sprint for t in tickets),
         }
-    
+
     def export(self, format: str = "json", filter_sprint: str = None, **filters) -> str:
         """
         Export tickets to various formats - replaces 20-line example.
-        
+
         Usage:
             csv_data = pf.store.export("csv", sprint="current")
             md_data = pf.store.export("markdown", status="open")
@@ -66,26 +68,32 @@ class PlanfileStoreExtended:
         tickets = self.list_tickets(**filters)
         if filter_sprint:
             tickets = [t for t in tickets if t.sprint == filter_sprint]
-        
+
         if format == "json":
             import json
+
             return json.dumps([t.model_dump() for t in tickets], indent=2)
-        
+
         elif format == "csv":
             import csv
             import io
+
             output = io.StringIO()
             writer = csv.writer(output)
             writer.writerow(["id", "title", "status", "priority", "sprint", "labels"])
             for t in tickets:
-                writer.writerow([
-                    t.id, t.title, 
-                    t.status.value if hasattr(t.status, 'value') else t.status,
-                    t.priority, t.sprint,
-                    "|".join(t.labels or [])
-                ])
+                writer.writerow(
+                    [
+                        t.id,
+                        t.title,
+                        t.status.value if hasattr(t.status, "value") else t.status,
+                        t.priority,
+                        t.sprint,
+                        "|".join(t.labels or []),
+                    ]
+                )
             return output.getvalue()
-        
+
         elif format == "markdown":
             lines = ["# Tickets\n"]
             for t in tickets:
@@ -94,21 +102,21 @@ class PlanfileStoreExtended:
                 if t.labels:
                     lines.append(f"  - Labels: {', '.join(t.labels)}")
             return "\n".join(lines)
-        
+
         else:
             raise ValueError(f"Unknown format: {format}")
-    
+
     def search(self, query: str, search_fields: list = None) -> list:
         """
         Full-text search in tickets - not present in examples.
-        
+
         Usage:
             results = pf.store.search("authentication", search_fields=["title", "description"])
         """
         search_fields = search_fields or ["title", "description"]
         tickets = self.list_tickets()
         query_lower = query.lower()
-        
+
         results = []
         for t in tickets:
             for field in search_fields:
@@ -129,7 +137,7 @@ class PlanfileStoreExtended:
 # Proposed extended API:
 #   pf.list_tickets(
 #       sprint="current",
-#       status="open", 
+#       status="open",
 #       priority="high",
 #       labels=["bug", "backend"],  # NEW: filter by labels (AND logic)
 #       labels_any=True,           # NEW: OR logic instead of AND

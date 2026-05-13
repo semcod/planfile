@@ -26,4 +26,7 @@ def import_from_source(path: str, source: str, **kwargs) -> list[dict]:
     elif path.endswith(".yaml") or path.endswith(".yml"):
         from planfile.importers.yaml_importer import import_yaml
         return import_yaml(path, **kwargs)
+    elif path.endswith(".md"):
+        from planfile.importers.markdown_importer import import_markdown
+        return import_markdown(path, **kwargs)
     raise ValueError(f"Unknown format: {path}")

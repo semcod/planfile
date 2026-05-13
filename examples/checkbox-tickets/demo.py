@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """Demo script showing planfile's checkbox ticket support."""
 
+# Add parent directory to path for imports
+import sys
 import tempfile
 from pathlib import Path
 
-# Add parent directory to path for imports
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from planfile.sync.markdown_backend import MarkdownFileBackend
 from rich.console import Console
 from rich.table import Table
+
+from planfile.sync.markdown_backend import MarkdownFileBackend
 
 console = Console()
 
@@ -22,14 +23,10 @@ def _build_summary_table(completed: list, pending: list) -> Table:
     table.add_column("Count", style="magenta")
     table.add_column("IDs", style="dim")
     table.add_row(
-        "✅ Completed",
-        str(len(completed)),
-        ", ".join([t.id[:20] + "..." for t in completed[:2]])
+        "✅ Completed", str(len(completed)), ", ".join([t.id[:20] + "..." for t in completed[:2]])
     )
     table.add_row(
-        "⏳ Pending",
-        str(len(pending)),
-        ", ".join([t.id[:20] + "..." for t in pending[:2]])
+        "⏳ Pending", str(len(pending)), ", ".join([t.id[:20] + "..." for t in pending[:2]])
     )
     return table
 
@@ -52,10 +49,10 @@ def _print_search_results(tickets: list, query: str) -> None:
 
 def _print_toggle_demo(ticket) -> None:
     """Print toggle demo information."""
-    console.print(f"\n[bold]🔄 Toggle Demo:[/bold]")
+    console.print("\n[bold]🔄 Toggle Demo:[/bold]")
     console.print(f"  Ticket: {ticket.id}")
     console.print(f"  Current status: {ticket.status}")
-    console.print(f"\n  [dim]To mark as completed, run:[/dim]")
+    console.print("\n  [dim]To mark as completed, run:[/dim]")
     console.print(f"  [cyan]backend._toggle_checkbox_status('{ticket.id}', True)[/cyan]")
 
 
@@ -68,15 +65,12 @@ def demo_checkbox_tickets():
         console.print("[red]❌ TODO.md not found![/red]")
         return
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
         f.write("# Changelog\n\n")
         changelog_path = Path(f.name)
 
     try:
-        backend = MarkdownFileBackend(
-            changelog_file=str(changelog_path),
-            todo_file=str(todo_path)
-        )
+        backend = MarkdownFileBackend(changelog_file=str(changelog_path), todo_file=str(todo_path))
 
         console.print("[bold]📋 Listing all tickets from TODO.md:[/bold]\n")
         tickets = backend._list_tickets()

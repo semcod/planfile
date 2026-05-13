@@ -1,4 +1,3 @@
-
 CONSTANT_3 = 3
 CONSTANT_5 = 5
 CONSTANT_6 = 6.2
@@ -36,14 +35,16 @@ class ProxyClient:
     def __init__(self, base_url: str = "http://localhost:4000"):
         self.base_url = base_url
 
-    async def chat(self, messages: list[dict], model: str = None, task_type: str = None) -> dict[str, Any]:
+    async def chat(
+        self, messages: list[dict], model: str = None, task_type: str = None
+    ) -> dict[str, Any]:
         """Send chat request through proxy with smart routing."""
         payload = {
             "messages": messages,
             "task_type": task_type,  # Let proxy choose model based on task
             "model": model,  # Optional override
             "max_tokens": MAX_4096,
-            "temperature": 0.2
+            "temperature": 0.2,
         }
 
         async with aiohttp.ClientSession() as session:
@@ -52,11 +53,7 @@ class ProxyClient:
 
     async def get_routing_decision(self, task_type: str, complexity: str) -> dict[str, Any]:
         """Get routing decision from proxy."""
-        payload = {
-            "task_type": task_type,
-            "complexity": complexity,
-            "budget_limit": 1.0
-        }
+        payload = {"task_type": task_type, "complexity": complexity, "budget_limit": 1.0}
 
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{self.base_url}/routing/decide", json=payload) as resp:
@@ -67,6 +64,7 @@ class ProxyClient:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{self.base_url}/api/stats") as resp:
                 return await resp.json()
+
 
 async def example_strategy_generation_with_proxy():
     """Example: Generate strategy using proxy for smart model routing."""
@@ -84,7 +82,7 @@ async def example_strategy_generation_with_proxy():
         "max_cc": MAX_24,
         "critical_count": CONSTANT_5,
         "god_modules": CONSTANT_3,
-        "dup_groups": CONSTANT_8
+        "dup_groups": CONSTANT_8,
     }
 
     # Step 1: Get routing decisions for different tasks
@@ -95,7 +93,7 @@ async def example_strategy_generation_with_proxy():
         ("refactor", "critical", "Split god module with CC=24"),
         ("test", "medium", "Write unit tests for service layer"),
         ("docs", "low", "Generate API documentation"),
-        ("review", "medium", "Review code changes")
+        ("review", "medium", "Review code changes"),
     ]
 
     routing_decisions = {}
@@ -130,8 +128,11 @@ async def example_strategy_generation_with_proxy():
 
     for task_type in ["planning"]:
         messages = [
-            {"role": "system", "content": "You are a software engineering strategist. Generate YAML output only."},
-            {"role": "user", "content": strategy_prompt}
+            {
+                "role": "system",
+                "content": "You are a software engineering strategist. Generate YAML output only.",
+            },
+            {"role": "user", "content": strategy_prompt},
         ]
 
         result = await proxy.chat(messages, task_type=task_type)
@@ -168,8 +169,11 @@ async def example_strategy_generation_with_proxy():
         """
 
         messages = [
-            {"role": "system", "content": f"You are an expert software engineer specializing in {task_type}."},
-            {"role": "user", "content": task_prompt}
+            {
+                "role": "system",
+                "content": f"You are an expert software engineer specializing in {task_type}.",
+            },
+            {"role": "user", "content": task_prompt},
         ]
 
         result = await proxy.chat(messages, task_type=task_type)
@@ -217,7 +221,10 @@ async def example_strategy_generation_with_proxy():
     print("\nCost Comparison:")
     print(f"  Smart routing: ${total_cost:.4f}")
     print(f"  All premium:   ${total_premium_cost:.4f}")
-    print(f"  Savings:       ${total_premium_cost - total_cost:.4f} ({((total_premium_cost - total_cost) / total_premium_cost * 100):.1f}%)")
+    print(
+        f"  Savings:       ${total_premium_cost - total_cost:.4f} ({((total_premium_cost - total_cost) / total_premium_cost * 100):.1f}%)"
+    )
+
 
 def create_proxy_config_example():
     """Create example proxy configuration for planfile integration."""
@@ -226,89 +233,71 @@ def create_proxy_config_example():
             "rules": [
                 {
                     "name": "planfile_planning",
-                    "pattern": {
-                        "task_type": "planning",
-                        "min_complexity": "medium"
-                    },
+                    "pattern": {"task_type": "planning", "min_complexity": "medium"},
                     "models": ["anthropic/claude-sonnet-4", "openai/gpt-4"],
                     "fallback": True,
-                    "max_cost_per_request": 2.0
+                    "max_cost_per_request": 2.0,
                 },
                 {
                     "name": "planfile_critical_refactor",
-                    "pattern": {
-                        "task_type": "refactor",
-                        "complexity": "critical"
-                    },
+                    "pattern": {"task_type": "refactor", "complexity": "critical"},
                     "models": ["anthropic/claude-opus-4"],
-                    "max_cost_per_request": CONSTANT_5
+                    "max_cost_per_request": CONSTANT_5,
                 },
                 {
                     "name": "planfile_standard_refactor",
-                    "pattern": {
-                        "task_type": "refactor",
-                        "complexity": ["low", "medium"]
-                    },
+                    "pattern": {"task_type": "refactor", "complexity": ["low", "medium"]},
                     "models": ["anthropic/claude-sonnet-4", "openai/gpt-4"],
-                    "max_cost_per_request": 1.0
+                    "max_cost_per_request": 1.0,
                 },
                 {
                     "name": "planfile_tests",
-                    "pattern": {
-                        "task_type": "test"
-                    },
+                    "pattern": {"task_type": "test"},
                     "models": ["anthropic/claude-haiku-4.5", "openai/gpt-3.5-turbo"],
                     "prefer_cheap": True,
-                    "max_cost_per_request": 0.5
+                    "max_cost_per_request": 0.5,
                 },
                 {
                     "name": "planfile_docs",
-                    "pattern": {
-                        "task_type": "docs"
-                    },
+                    "pattern": {"task_type": "docs"},
                     "models": ["anthropic/claude-haiku-4.5"],
                     "prefer_cheap": True,
-                    "max_cost_per_request": 0.3
+                    "max_cost_per_request": 0.3,
                 },
                 {
                     "name": "planfile_review",
-                    "pattern": {
-                        "task_type": "review"
-                    },
+                    "pattern": {"task_type": "review"},
                     "models": ["anthropic/claude-sonnet-4"],
-                    "max_cost_per_request": 1.0
-                }
+                    "max_cost_per_request": 1.0,
+                },
             ]
         },
         "budget": {
             "daily_limit": CONSTANT_50,
             "monthly_limit": CONSTANT_500,
-            "per_project_limits": {
-                "planfile": {
-                    "daily": CONSTANT_20,
-                    "monthly": CONSTANT_200
-                }
-            }
+            "per_project_limits": {"planfile": {"daily": CONSTANT_20, "monthly": CONSTANT_200}},
         },
         "cache": {
             "enabled": True,
             "strategy_similarity_threshold": 0.8,
             "task_cache_ttl": CONSTANT_3600,
-            "strategy_cache_ttl": CONSTANT_86400
+            "strategy_cache_ttl": CONSTANT_86400,
         },
         "analytics": {
             "track_project_metrics": True,
             "track_model_performance": True,
-            "optimize_routing": True
-        }
+            "optimize_routing": True,
+        },
     }
 
     # Save configuration
     with open("proxy-planfile-config.yaml", "w") as f:
         import yaml
+
         yaml.dump(config, f, default_flow_style=False, indent=2)
 
     print("\n✅ Proxy configuration saved to: proxy-planfile-config.yaml")
+
 
 async def example_budget_tracking():
     """Example: Budget tracking with proxy."""
@@ -322,18 +311,30 @@ async def example_budget_tracking():
     stats = await proxy.get_usage_stats()
 
     print("\nCurrent Budget Status:")
-    print(f"  Daily Usage: ${stats.get('daily_usage', 0):.2f} / ${stats.get('daily_limit', CONSTANT_50):.2f}")
-    print(f"  Monthly Usage: ${stats.get('monthly_usage', 0):.2f} / ${stats.get('monthly_limit', CONSTANT_500):.2f}")
+    print(
+        f"  Daily Usage: ${stats.get('daily_usage', 0):.2f} / ${stats.get('daily_limit', CONSTANT_50):.2f}"
+    )
+    print(
+        f"  Monthly Usage: ${stats.get('monthly_usage', 0):.2f} / ${stats.get('monthly_limit', CONSTANT_500):.2f}"
+    )
     print(f"  Project (planfile): ${stats.get('project_usage', {}).get('planfile', 0):.2f}")
 
     # Simulate budget-aware routing
     print("\nBudget-Aware Routing Decisions:")
 
     scenarios = [
-        {"daily_remaining": 10.0, "task": "critical_refactor", "decision": "Use premium model (within budget)"},
+        {
+            "daily_remaining": 10.0,
+            "task": "critical_refactor",
+            "decision": "Use premium model (within budget)",
+        },
         {"daily_remaining": 1.0, "task": "standard_refactor", "decision": "Use balanced model"},
         {"daily_remaining": 0.5, "task": "docs", "decision": "Use cheap model"},
-        {"daily_remaining": 0.1, "task": "any", "decision": "Queue for tomorrow or use local model"}
+        {
+            "daily_remaining": 0.1,
+            "task": "any",
+            "decision": "Queue for tomorrow or use local model",
+        },
     ]
 
     for scenario in scenarios:
@@ -344,6 +345,7 @@ async def example_budget_tracking():
         print(f"\n  Daily remaining: ${remaining:.2f}")
         print(f"  Task: {task}")
         print(f"  Decision: {decision}")
+
 
 if __name__ == "__main__":
     print("Planfile + Proxy Integration Examples")
