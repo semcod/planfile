@@ -267,7 +267,10 @@ def ticket_next(
     pf = Planfile.auto_discover()
     ticket = pf.next_ticket(sprint=sprint, queue=queue)
     if not ticket:
-        console.print('[dim]No runnable ticket found.[/dim]')
+        if fmt == "json":
+            print("null")
+        else:
+            console.print("[dim]No runnable ticket found.[/dim]")
         raise typer.Exit(0)
 
     data = ticket.model_dump(mode='json', exclude_none=True)
