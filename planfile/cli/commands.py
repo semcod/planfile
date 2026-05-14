@@ -12,6 +12,7 @@ from planfile.cli.groups.generate import register_generate_commands
 from planfile.cli.groups.init import register_init_commands
 from planfile.cli.groups.query import register_query_commands
 from planfile.cli.groups.review import register_review_commands
+from planfile.cli.groups.serve import register_serve_commands
 from planfile.cli.groups.sync import register_sync_commands
 from planfile.cli.groups.ticket import register_ticket_commands
 from planfile.cli.groups.dsl import register_dsl_commands
@@ -48,6 +49,7 @@ register_generate_commands(app)
 register_init_commands(app)
 register_query_commands(app)
 register_review_commands(app)
+register_serve_commands(app)
 register_sync_commands(app)
 register_ticket_commands(app)
 register_validate_commands(app)
