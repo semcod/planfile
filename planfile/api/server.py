@@ -1021,6 +1021,20 @@ def _dashboard_html() -> str:
       color: var(--text);
       background: #213048;
     }
+    .detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 0 0 12px;
+    }
+    .detail-actions .copy-feedback {
+      font-size: 12px;
+      color: var(--ok);
+    }
+    .detail-actions .copy-feedback.err {
+      color: var(--err);
+    }
     pre {
       margin: 8px 0 0;
       color: var(--muted);
@@ -1484,6 +1498,69 @@ def _dashboard_html() -> str:
       return `<div class="timeline">${items.map(renderTimelineItem).join("")}</div>`;
     }
 
+    function ticketDetailExportPayload(tab) {
+      const ticket = state.selectedTicket;
+      const events = state.ticketEvents || [];
+      const activeTab = tab || state.detailTab || "overview";
+      const base = {
+        exported_at: new Date().toISOString(),
+        ticket_id: ticket?.id || null,
+        tab: activeTab,
+      };
+      if (!ticket) return base;
+      if (activeTab === "timeline") {
+        return {
+          ...base,
+          ticket,
+          timeline: buildTicketTimeline(ticket, events),
+          events,
+        };
+      }
+      if (activeTab === "logs") {
+        return { ...base, ticket, events };
+      }
+      if (activeTab === "raw") {
+        return { ...base, ticket };
+      }
+      return {
+        ...base,
+        ticket,
+        timeline: buildTicketTimeline(ticket, events),
+        events,
+      };
+    }
+
+    async function copyJsonToClipboard(text) {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      try {
+        if (!document.execCommand("copy")) {
+          throw new Error("execCommand('copy') failed");
+        }
+      } finally {
+        document.body.removeChild(area);
+      }
+    }
+
+    async function copyTicketDetailJson(options = {}) {
+      if (!state.selectedTicket) {
+        throw new Error("Select a ticket first");
+      }
+      const tab = options.tab || state.detailTab;
+      const json = JSON.stringify(ticketDetailExportPayload(tab), null, 2);
+      await copyJsonToClipboard(json);
+      return json.length;
+    }
+
     function renderDetailTabs() {
       const labels = {
         overview: "Overview",
@@ -1494,6 +1571,14 @@ def _dashboard_html() -> str:
       return `<div class="tabs">${Array.from(detailTabs).map((tab) => `
         <button class="tab ${tab === state.detailTab ? "active" : ""}" data-detail-tab="${escapeHtml(tab)}">${escapeHtml(labels[tab] || tab)}</button>
       `).join("")}</div>`;
+    }
+
+    function renderDetailActions() {
+      if (!state.selectedTicket) return "";
+      return `<div class="detail-actions">
+        <button type="button" data-copy-ticket-json title="Copy ticket payload for the active tab as JSON">Copy JSON to clipboard</button>
+        <span class="copy-feedback" id="copy-json-feedback" hidden aria-live="polite"></span>
+      </div>`;
     }
 
     function renderTicketEventLog(events) {
@@ -1580,6 +1665,7 @@ def _dashboard_html() -> str:
           <span class="pill">${escapeHtml(ticketQueue(ticket))}</span>
         </div>
         ${renderDetailTabs()}
+        ${renderDetailActions()}
         ${tabHtml}
       `;
     }
@@ -1715,6 +1801,35 @@ def _dashboard_html() -> str:
       selectTicket(node.dataset.ticketId).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: node.dataset.ticketId, ticket: { execution: { state: "failed", last_error: String(error) } } }));
     });
     detailEl.addEventListener("click", (event) => {
+      const copyBtn = event.target.closest("[data-copy-ticket-json]");
+      if (copyBtn) {
+        event.preventDefault();
+        const feedback = $("copy-json-feedback");
+        if (feedback) {
+          feedback.hidden = false;
+          feedback.className = "copy-feedback";
+          feedback.textContent = "Copying...";
+        }
+        copyTicketDetailJson()
+          .then((length) => {
+            if (feedback) {
+              feedback.textContent = `Copied ${length} characters`;
+              feedback.className = "copy-feedback";
+            } else if (state.selectedTicketId) {
+              detailStatusEl.textContent = `${state.selectedTicketId} — JSON copied`;
+            }
+          })
+          .catch((error) => {
+            const message = String(error);
+            if (feedback) {
+              feedback.textContent = message;
+              feedback.className = "copy-feedback err";
+            } else {
+              alert(message);
+            }
+          });
+        return;
+      }
       const tabNode = event.target.closest("[data-detail-tab]");
       if (tabNode) {
         state.detailTab = normalizeTab(tabNode.dataset.detailTab);

@@ -131,6 +131,9 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert 'params.set("queue", state.queue)' in response.text
     assert 'params.set("status", state.statusFilter)' in response.text
     assert 'params.set("tab", state.detailTab)' in response.text
+    assert "Copy JSON to clipboard" in response.text
+    assert "copyTicketDetailJson" in response.text
+    assert "ticketDetailExportPayload" in response.text
     assert "/events?limit=100" in response.text
     assert "Ticket Detail" in response.text
     assert "ticket-detail" in response.text
