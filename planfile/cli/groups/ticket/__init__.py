@@ -2,6 +2,7 @@
 
 import typer
 
+from planfile.cli.core import console
 from planfile.cli.groups.ticket.commands import (
     ticket_block,
     ticket_claim,
@@ -26,7 +27,14 @@ from planfile.cli.groups.ticket.commands import (
 
 def register_ticket_commands(app: typer.Typer) -> None:
     """Register ticket subcommands on the typer app."""
-    ticket_app = typer.Typer(help="Manage tickets")
+    ticket_app = typer.Typer(help="Manage tickets", invoke_without_command=True)
+
+    @ticket_app.callback(invoke_without_command=True)
+    def ticket_callback(ctx: typer.Context) -> None:
+        """Manage tickets."""
+        if ctx.invoked_subcommand is None:
+            console.print(ctx.get_help())
+            raise typer.Exit()
 
     ticket_app.command("create")(ticket_create)
     ticket_app.command("list")(ticket_list)

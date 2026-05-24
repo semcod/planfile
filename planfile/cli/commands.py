@@ -18,7 +18,10 @@ from planfile.cli.groups.ticket import register_ticket_commands
 from planfile.cli.groups.dsl import register_dsl_commands
 from planfile.cli.groups.validate import register_validate_commands
 
-app = typer.Typer(help="planfile — universal ticket standard for developer toolchains")
+app = typer.Typer(
+    help="planfile — universal ticket standard for developer toolchains",
+    invoke_without_command=True,
+)
 logger = logging.getLogger(__name__)
 
 def version_callback(value: bool) -> None:
@@ -30,6 +33,7 @@ def version_callback(value: bool) -> None:
 
 @app.callback()
 def main_callback(
+    ctx: typer.Context,
     version: bool | None = typer.Option(
         None, "--version", "-v",
         help="Show CLI version and exit",
@@ -37,7 +41,9 @@ def main_callback(
         is_eager=True
     )
 ) -> None:
-    pass
+    if ctx.invoked_subcommand is None:
+        console.print(ctx.get_help())
+        raise typer.Exit()
 
 
 # Register all command groups

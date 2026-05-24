@@ -133,6 +133,21 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.98] - 2026-05-24
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/test_cli_help.py
+
+### Other
+- Update planfile/__init__.py
+- Update planfile/cli/commands.py
+- Update planfile/cli/groups/ticket/__init__.py
+- Update planfile/core/store.py
+- Update uv.lock
+
 ## [0.1.97] - 2026-05-19
 
 ### Docs

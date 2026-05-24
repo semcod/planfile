@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import tempfile
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
@@ -20,6 +23,44 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self.base_dir = self.project_dir / ".planfile"
         self._config_path = self.base_dir / "config.yaml"
         self._sprints_dir = self.base_dir / "sprints"
+        self._lock_path = self.base_dir / ".store.lock"
+
+    @contextmanager
+    def mutation_lock(self):
+        """Serialize multi-process YAML mutations."""
+        self.base_dir.mkdir(parents=True, exist_ok=True)
+        lock_file = self._lock_path.open("a+", encoding="utf-8")
+        try:
+            try:
+                import fcntl
+
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            except ImportError:
+                pass
+            yield
+        finally:
+            try:
+                import fcntl
+
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            except ImportError:
+                pass
+            lock_file.close()
+
+    def _write_yaml_atomic(self, path: Path, data: dict, *, allow_unicode: bool = False) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        content = yaml.dump(data, default_flow_style=False, allow_unicode=allow_unicode)
+        fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
+        tmp_path = Path(tmp_name)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(content)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp_path, path)
+        finally:
+            if tmp_path.exists():
+                tmp_path.unlink()
 
     def is_initialized(self) -> bool:
         return self._config_path.exists()
@@ -41,10 +82,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
         path = self._sprint_file(sprint)
         # Ensure format matches expected nesting
         wrapped = {"sprint": data} if "sprint" not in data else data
-        path.write_text(
-            yaml.dump(wrapped, default_flow_style=False, allow_unicode=True),
-            encoding="utf-8"
-        )
+        with self.mutation_lock():
+            self._write_yaml_atomic(path, wrapped, allow_unicode=True)
         if hasattr(self, "_yaml_cache"):
             self._yaml_cache.pop(str(path), None)
 
@@ -76,9 +115,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return yaml.safe_load(self._config_path.read_text()) or {}
 
     def _write_config(self, config: dict) -> None:
-        self._config_path.write_text(yaml.dump(config, default_flow_style=False), encoding="utf-8")
+        self._write_yaml_atomic(self._config_path, config)
 
-    def next_id(self) -> str:
+    def _next_id_unlocked(self) -> str:
         config = self._read_config()
         prefix = config.get("prefix", "PLF")
         nid = config.get("next_id", 1)
@@ -86,6 +125,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         config["next_id"] = nid + 1
         self._write_config(config)
         return ticket_id
+
+    def next_id(self) -> str:
+        with self.mutation_lock():
+            return self._next_id_unlocked()
 
     # --- Override base_dir for StoreFileMixin ---
     def _sprint_file(self, sprint: str) -> Path:
@@ -96,6 +139,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def create_ticket(self, ticket: Ticket) -> Ticket:
         """Persist a ticket into the current sprint file."""
+        with self.mutation_lock():
+            return self._create_ticket_unlocked(ticket)
+
+    def _create_ticket_unlocked(self, ticket: Ticket) -> Ticket:
+        """Persist a ticket while the caller holds ``mutation_lock``."""
         sprint = ticket.sprint or "current"
         sprint_file = self._sprint_file(sprint)
 
@@ -111,7 +159,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         sprint_data["tickets"][ticket.id] = ticket.model_dump(mode="json", exclude_none=True)
         data["sprint"] = sprint_data
 
-        sprint_file.write_text(yaml.dump(data, default_flow_style=False, allow_unicode=True), encoding="utf-8")
+        self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
 
         # Invalidate yaml cache
         if hasattr(self, "_yaml_cache"):

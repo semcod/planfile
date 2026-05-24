@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.97"
+__version__ = "0.1.98"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -90,9 +90,10 @@ class Planfile:
         return cls(start_path)  # init in CWD
 
     def create_ticket(self, name: str, **kwargs) -> Ticket:
-        ticket_id = self.store.next_id()
-        ticket = Ticket(id=ticket_id, name=name, **kwargs)
-        return self.store.create_ticket(ticket)
+        with self.store.mutation_lock():
+            ticket_id = self.store._next_id_unlocked()
+            ticket = Ticket(id=ticket_id, name=name, **kwargs)
+            return self.store._create_ticket_unlocked(ticket)
 
     def get_ticket(self, ticket_id: str):
         return self.store.get_ticket(ticket_id)
