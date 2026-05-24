@@ -133,6 +133,14 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.102] - 2026-05-24
+
+### Docs
+- Update README.md
+
+### Other
+- Update config/goal.yaml
+
 ## [0.1.101] - 2026-05-24
 
 ### Docs

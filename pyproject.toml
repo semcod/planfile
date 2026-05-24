@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planfile"
-version = "0.1.101"
+version = "0.1.102"
 description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -33,7 +33,9 @@ dependencies = [
     "PyGithub>=2.0",
 ]
 
-license = "Apache-2.0"
+[project.license]
+text = "Apache-2.0"
+
 [project.scripts]
 planfile = "planfile.cli.commands:main"
 

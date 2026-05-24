@@ -223,7 +223,7 @@ git:
     format: '{prefix}{version}'
 strategies:
   python:
-    test: pytest --help | grep -q -- "-n" && pytest tests/ -v -n auto || pytest tests/ -v
+    test: bash -c 'pytest --help | grep -q -- "-n" && pytest tests/ -v -n auto || pytest tests/ -v'
     build: python -m build
     publish: twine upload dist/planfile-{version}*
     publish_enabled: true
