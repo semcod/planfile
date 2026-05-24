@@ -133,6 +133,19 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.100] - 2026-05-24
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/test_mcp_server.py
+
+### Other
+- Update .planfile/sprints/current.yaml
+- Update planfile/mcp/server.py
+- Update uv.lock
+
 ## [0.1.99] - 2026-05-24
 
 ### Docs

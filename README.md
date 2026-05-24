@@ -34,10 +34,10 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.99-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$20.14-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-50.8h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.100-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$20.01-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-50.8h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $20.1412 (111 commits)
+- 🤖 **LLM usage:** $20.0143 (112 commits)
 - 👤 **Human dev:** ~$5083 (50.8h @ $100/h, 30min dedup)
 
 Generated on 2026-05-24 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
@@ -814,7 +814,31 @@ pip install -e ".[dev]"
 # Run linting
 ruff check src/ tests/
 ruff format src/ tests/
+
+# Run complete test suite (REST, WebSockets, MCP, CLI, DSL)
+pytest
 ```
+
+### 🌐 API, WebSocket & MCP Architecture
+
+Planfile is built with standard, production-ready interfaces for both humans and AI agents:
+
+1. **REST API**: A robust, fully typed **FastAPI** server exposing comprehensive endpoints for managing tickets, sprints, and system configurations.
+   * Start with: `uvicorn planfile.api.server:app --reload`
+   * API endpoints cover: ticket lifecycle (claim, start, complete, fail), event ingestion, and live configurations.
+
+2. **WebSockets (WS)**: High-performance bidirectional connection manager under `/ws`.
+   * Automatically broadcasts ticket execution changes (`ticket.execution.changed`) and ticket updates (`ticket.changed`) in real-time.
+   * Supports executing DSL commands dynamically in-session.
+
+3. **MCP Server**: Implements the official **Model Context Protocol (MCP)** (version `2024-11-05`) via standard JSON-RPC over `stdio`.
+   * Start with: `python -m planfile.mcp.server`
+   * Registers various tools like `planfile_dsl`, `planfile_list_tickets`, `planfile_yaml_get`, and `planfile_yaml_patch` to allow LLM agents to orchestrate files and tickets directly.
+
+4. **Testing Coverage**:
+   * All API, WebSocket lifecycle events, and state mutations are thoroughly tested.
+   * `tests/test_ticket_api_events.py` verifies FastAPI routes, WebSocket broadcasts, event histories, and queue dashboards.
+   * `tests/test_mcp_server.py` tests JSON-RPC Handlers, stdio lifecycle, and YAML-patch operations of the Model Context Protocol server.
 
 ### Project Structure
 
