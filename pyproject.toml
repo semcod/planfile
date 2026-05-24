@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planfile"
-version = "0.1.100"
+version = "0.1.101"
 description = "SDLC automation platform - strategic project management with CI/CD integration and automated bug-fix loops"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -60,6 +60,7 @@ all = [
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
+    "pytest-xdist>=3.0",
     "fastapi>=0.111",
     "uvicorn[standard]>=0.30",
     "ruff>=0.5",

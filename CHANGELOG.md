@@ -133,6 +133,16 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.101] - 2026-05-24
+
+### Docs
+- Update README.md
+
+### Other
+- Update config/goal.yaml
+- Update planfile/core/store.py
+- Update uv.lock
+
 ## [0.1.100] - 2026-05-24
 
 ### Docs
