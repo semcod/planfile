@@ -272,11 +272,41 @@ class Store(StoreFileMixin, TicketStoreMixin):
         """Delete multiple tickets by ID. Returns (deleted_ids, not_found_ids)."""
         deleted = []
         not_found = []
+
+        # Load all sprint files into memory
+        sprint_contents = {}
+        for sprint_file in self._all_sprint_files():
+            try:
+                data = yaml.safe_load(sprint_file.read_text(encoding="utf-8")) or {}
+            except Exception:
+                data = {}
+            sprint_contents[sprint_file] = data
+
+        modified_files = set()
+
         for ticket_id in ticket_ids:
-            if self.delete_ticket(ticket_id):
-                deleted.append(ticket_id)
-            else:
+            found = False
+            for sprint_file, data in sprint_contents.items():
+                sprint_data = data.get("sprint", data)
+                tickets = sprint_data.get("tickets", {})
+                if isinstance(tickets, dict) and ticket_id in tickets:
+                    del tickets[ticket_id]
+                    modified_files.add(sprint_file)
+                    deleted.append(ticket_id)
+                    found = True
+                    break
+            if not found:
                 not_found.append(ticket_id)
+
+        # Write only the modified sprint files back to disk, exactly once!
+        for sprint_file in modified_files:
+            data = sprint_contents[sprint_file]
+            sprint_file.write_text(
+                yaml.dump(data, default_flow_style=False, allow_unicode=True), encoding="utf-8"
+            )
+            if hasattr(self, "_yaml_cache"):
+                self._yaml_cache.pop(str(sprint_file), None)
+
         return deleted, not_found
 
 
