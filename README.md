@@ -34,13 +34,13 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.102-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$7.50-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-52.5h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.103-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$19.83-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-52.5h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $7.5000 (114 commits)
-- 👤 **Human dev:** ~$5248 (52.5h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $19.8258 (115 commits)
+- 👤 **Human dev:** ~$5251 (52.5h @ $100/h, 30min dedup)
 
-Generated on 2026-05-24 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-06-05 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
@@ -835,10 +835,14 @@ Planfile is built with standard, production-ready interfaces for both humans and
    * Start with: `python -m planfile.mcp.server`
    * Registers various tools like `planfile_dsl`, `planfile_list_tickets`, `planfile_yaml_get`, and `planfile_yaml_patch` to allow LLM agents to orchestrate files and tickets directly.
 
-4. **Testing Coverage**:
+4. **Testing Coverage & Parallel Execution**:
    * All API, WebSocket lifecycle events, and state mutations are thoroughly tested.
    * `tests/test_ticket_api_events.py` verifies FastAPI routes, WebSocket broadcasts, event histories, and queue dashboards.
    * `tests/test_mcp_server.py` tests JSON-RPC Handlers, stdio lifecycle, and YAML-patch operations of the Model Context Protocol server.
+   * **Parallel Testing**: Supports running test suites in parallel using `pytest -n auto` (via `pytest-xdist`). Configured with a fallback-safe shell executor command to automatically execute sequentially if `pytest-xdist` is not installed, preventing pipeline crashes.
+
+5. **LibYAML High-Performance C-Bindings**:
+   * The file-based ticket store utilizes LibYAML's fast C-extensions (`CSafeLoader` and `CDumper`) when available, resulting in **up to 50x faster** load, write, and bulk-update speeds. Automatically falls back gracefully to pure Python implementations if C-bindings are not present.
 
 ### Project Structure
 

@@ -1,39 +1,39 @@
-# redup/duplication | 15 groups | 149f 17240L | 2026-05-03
+# redup/duplication | 15 groups | 154f 20203L | 2026-05-29
 
 SUMMARY:
-  files_scanned: 149
-  total_lines:   17240
+  files_scanned: 154
+  total_lines:   20203
   dup_groups:    15
   dup_fragments: 40
-  saved_lines:   172
-  scan_ms:       6825
+  saved_lines:   168
+  scan_ms:       6741
 
 HOTSPOTS[7] (files with most duplication):
-  examples/rest-api/04_dsl_usage.py  dup=63L  groups=2  frags=5  (0.4%)
+  examples/rest-api/04_dsl_usage.py  dup=54L  groups=2  frags=5  (0.3%)
+  planfile/api/server.py  dup=32L  groups=2  frags=4  (0.2%)
   planfile/cli/project_detector/gates.py  dup=32L  groups=2  frags=4  (0.2%)
-  planfile/cli/groups/sync/commands.py  dup=28L  groups=1  frags=4  (0.2%)
+  planfile/cli/groups/sync/commands.py  dup=28L  groups=1  frags=4  (0.1%)
   planfile/cli/groups/sync/core.py  dup=24L  groups=1  frags=2  (0.1%)
-  planfile/cli/groups/ticket/commands.py  dup=18L  groups=1  frags=2  (0.1%)
   planfile/cli/core/console.py  dup=15L  groups=1  frags=5  (0.1%)
   planfile/sync/base.py  dup=14L  groups=1  frags=1  (0.1%)
 
 DUPLICATES[15] (ranked by impact):
-  [bef34080d3b159fe]   STRU  example_dsl_command  L=11 N=3 saved=22 sim=1.00
-      examples/rest-api/04_dsl_usage.py:6-16  (example_dsl_command)
-      examples/rest-api/04_dsl_usage.py:19-29  (example_dsl_create_ticket)
-      examples/rest-api/04_dsl_usage.py:32-42  (example_dsl_update_ticket)
   [73f23dc09aac9b7a]   STRU  github_cmd  L=7 N=4 saved=21 sim=1.00
       planfile/cli/groups/sync/commands.py:15-21  (github_cmd)
       planfile/cli/groups/sync/commands.py:24-30  (gitlab_cmd)
       planfile/cli/groups/sync/commands.py:33-39  (jira_cmd)
       planfile/cli/groups/sync/commands.py:42-48  (markdown_cmd)
+  [bef34080d3b159fe]   STRU  example_dsl_command  L=8 N=3 saved=16 sim=1.00
+      examples/rest-api/04_dsl_usage.py:6-13  (example_dsl_command)
+      examples/rest-api/04_dsl_usage.py:16-26  (example_dsl_create_ticket)
+      examples/rest-api/04_dsl_usage.py:29-36  (example_dsl_update_ticket)
   [647474f57d8a2dab]   STRU  register_auto_commands  L=8 N=3 saved=16 sim=1.00
       planfile/cli/groups/auto/__init__.py:11-18  (register_auto_commands)
       planfile/cli/groups/backlog/__init__.py:11-18  (register_backlog_commands)
       planfile/cli/groups/generate/__init__.py:11-18  (register_generate_commands)
-  [d2c29bc2b85437aa]   STRU  example_dsl_sprint  L=15 N=2 saved=15 sim=1.00
-      examples/rest-api/04_dsl_usage.py:45-59  (example_dsl_sprint)
-      examples/rest-api/04_dsl_usage.py:62-76  (example_dsl_validate_sync)
+  [d2c29bc2b85437aa]   STRU  example_dsl_sprint  L=14 N=2 saved=14 sim=1.00
+      examples/rest-api/04_dsl_usage.py:39-52  (example_dsl_sprint)
+      examples/rest-api/04_dsl_usage.py:55-67  (example_dsl_validate_sync)
   [f071e098e43958d3]   STRU  map_priority  L=14 N=2 saved=14 sim=1.00
       planfile/sync/base.py:66-79  (map_priority)
       planfile/sync/jira.py:65-78  (map_priority)
@@ -52,12 +52,15 @@ DUPLICATES[15] (ranked by impact):
   [6a6c4ffd98c596b0]   STRU  _collect_tickets_from_sprint  L=12 N=2 saved=12 sim=1.00
       planfile/cli/groups/sync/core.py:58-69  (_collect_tickets_from_sprint)
       planfile/cli/groups/sync/core.py:72-83  (_collect_tickets_from_backlog)
-  [743611597bf1e270]   STRU  ticket_done  L=9 N=2 saved=9 sim=1.00
-      planfile/cli/groups/ticket/commands.py:280-288  (ticket_done)
-      planfile/cli/groups/ticket/commands.py:290-298  (ticket_start)
+  [e2dda26843972587]   STRU  claim_ticket  L=11 N=2 saved=11 sim=1.00
+      planfile/api/server.py:268-278  (claim_ticket)
+      planfile/api/server.py:307-313  (wait_for_input)
   [1d3d96e641f80678]   STRU  _detect_docker_gates  L=9 N=2 saved=9 sim=1.00
       planfile/cli/project_detector/gates.py:40-48  (_detect_docker_gates)
       planfile/cli/project_detector/gates.py:145-153  (_detect_doc_gates)
+  [0b798241a270c2a6]   STRU  done_ticket  L=7 N=2 saved=7 sim=1.00
+      planfile/api/server.py:247-253  (done_ticket)
+      planfile/api/server.py:317-323  (ready_ticket)
   [9c4f9ae7fbca56f4]   STRU  _has_mypy_config  L=7 N=2 saved=7 sim=1.00
       planfile/cli/project_detector/gates.py:103-109  (_has_mypy_config)
       planfile/cli/project_detector/gates.py:136-142  (_has_bandit_config)
@@ -67,25 +70,22 @@ DUPLICATES[15] (ranked by impact):
   [a9991ab6527fc886]   EXAC  _load_strategy  L=6 N=2 saved=6 sim=1.00
       planfile/ticket_validation.py:16-21  (_load_strategy)
       planfile/todo_sync.py:15-20  (_load_strategy)
-  [41220f657f2d6a8d]   STRU  done_ticket  L=6 N=2 saved=6 sim=1.00
-      planfile/api/server.py:149-154  (done_ticket)
-      planfile/api/server.py:158-163  (start_ticket)
   [3252487e1015a40a]   STRU  _find_readme_description  L=4 N=2 saved=4 sim=1.00
       planfile/cli/project_detector/readme.py:57-60  (_find_readme_description)
       planfile/cli/project_detector/readme.py:63-66  (_find_readme_goal)
 
 REFACTOR[15] (ranked by priority):
-  [1] ○ extract_function   → examples/rest-api/utils/example_dsl_command.py
-      WHY: 3 occurrences of 11-line block across 1 files — saves 22 lines
-      FILES: examples/rest-api/04_dsl_usage.py
-  [2] ○ extract_function   → planfile/cli/groups/sync/utils/github_cmd.py
+  [1] ○ extract_function   → planfile/cli/groups/sync/utils/github_cmd.py
       WHY: 4 occurrences of 7-line block across 1 files — saves 21 lines
       FILES: planfile/cli/groups/sync/commands.py
+  [2] ○ extract_function   → examples/rest-api/utils/example_dsl_command.py
+      WHY: 3 occurrences of 8-line block across 1 files — saves 16 lines
+      FILES: examples/rest-api/04_dsl_usage.py
   [3] ○ extract_function   → planfile/cli/groups/utils/register_auto_commands.py
       WHY: 3 occurrences of 8-line block across 3 files — saves 16 lines
       FILES: planfile/cli/groups/auto/__init__.py, planfile/cli/groups/backlog/__init__.py, planfile/cli/groups/generate/__init__.py
   [4] ○ extract_function   → examples/rest-api/utils/example_dsl_sprint.py
-      WHY: 2 occurrences of 15-line block across 1 files — saves 15 lines
+      WHY: 2 occurrences of 14-line block across 1 files — saves 14 lines
       FILES: examples/rest-api/04_dsl_usage.py
   [5] ○ extract_function   → planfile/sync/utils/map_priority.py
       WHY: 2 occurrences of 14-line block across 2 files — saves 14 lines
@@ -99,36 +99,36 @@ REFACTOR[15] (ranked by priority):
   [8] ○ extract_function   → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
       WHY: 2 occurrences of 12-line block across 1 files — saves 12 lines
       FILES: planfile/cli/groups/sync/core.py
-  [9] ○ extract_function   → planfile/cli/groups/ticket/utils/ticket_done.py
-      WHY: 2 occurrences of 9-line block across 1 files — saves 9 lines
-      FILES: planfile/cli/groups/ticket/commands.py
+  [9] ○ extract_function   → planfile/api/utils/claim_ticket.py
+      WHY: 2 occurrences of 11-line block across 1 files — saves 11 lines
+      FILES: planfile/api/server.py
   [10] ○ extract_function   → planfile/cli/project_detector/utils/_detect_docker_gates.py
       WHY: 2 occurrences of 9-line block across 1 files — saves 9 lines
       FILES: planfile/cli/project_detector/gates.py
-  [11] ○ extract_function   → planfile/cli/project_detector/utils/_has_mypy_config.py
+  [11] ○ extract_function   → planfile/api/utils/done_ticket.py
+      WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
+      FILES: planfile/api/server.py
+  [12] ○ extract_function   → planfile/cli/project_detector/utils/_has_mypy_config.py
       WHY: 2 occurrences of 7-line block across 1 files — saves 7 lines
       FILES: planfile/cli/project_detector/gates.py
-  [12] ○ extract_function   → planfile/importers/utils/import_json.py
+  [13] ○ extract_function   → planfile/importers/utils/import_json.py
       WHY: 2 occurrences of 7-line block across 2 files — saves 7 lines
       FILES: planfile/importers/json_importer.py, planfile/importers/yaml_importer.py
-  [13] ○ extract_function   → planfile/utils/_load_strategy.py
+  [14] ○ extract_function   → planfile/utils/_load_strategy.py
       WHY: 2 occurrences of 6-line block across 2 files — saves 6 lines
       FILES: planfile/ticket_validation.py, planfile/todo_sync.py
-  [14] ○ extract_function   → planfile/api/utils/done_ticket.py
-      WHY: 2 occurrences of 6-line block across 1 files — saves 6 lines
-      FILES: planfile/api/server.py
   [15] ○ extract_function   → planfile/cli/project_detector/utils/_find_readme_description.py
       WHY: 2 occurrences of 4-line block across 1 files — saves 4 lines
       FILES: planfile/cli/project_detector/readme.py
 
 QUICK_WINS[14] (low risk, high savings — do first):
-  [1] extract_function   saved=22L  → examples/rest-api/utils/example_dsl_command.py
-      FILES: 04_dsl_usage.py
-  [2] extract_function   saved=21L  → planfile/cli/groups/sync/utils/github_cmd.py
+  [1] extract_function   saved=21L  → planfile/cli/groups/sync/utils/github_cmd.py
       FILES: commands.py
+  [2] extract_function   saved=16L  → examples/rest-api/utils/example_dsl_command.py
+      FILES: 04_dsl_usage.py
   [3] extract_function   saved=16L  → planfile/cli/groups/utils/register_auto_commands.py
       FILES: __init__.py, __init__.py, __init__.py
-  [4] extract_function   saved=15L  → examples/rest-api/utils/example_dsl_sprint.py
+  [4] extract_function   saved=14L  → examples/rest-api/utils/example_dsl_sprint.py
       FILES: 04_dsl_usage.py
   [5] extract_function   saved=14L  → planfile/sync/utils/map_priority.py
       FILES: base.py, jira.py
@@ -138,24 +138,24 @@ QUICK_WINS[14] (low risk, high savings — do first):
       FILES: __init__.py, __init__.py, __init__.py +2
   [8] extract_function   saved=12L  → planfile/cli/groups/sync/utils/_collect_tickets_from_sprint.py
       FILES: core.py
-  [9] extract_function   saved=9L  → planfile/cli/groups/ticket/utils/ticket_done.py
-      FILES: commands.py
+  [9] extract_function   saved=11L  → planfile/api/utils/claim_ticket.py
+      FILES: server.py
   [10] extract_function   saved=9L  → planfile/cli/project_detector/utils/_detect_docker_gates.py
       FILES: gates.py
 
-EFFORT_ESTIMATE (total ≈ 5.7h):
-  medium example_dsl_command                 saved=22L  ~44min
+EFFORT_ESTIMATE (total ≈ 5.6h):
   medium github_cmd                          saved=21L  ~42min
+  medium example_dsl_command                 saved=16L  ~32min
   medium register_auto_commands              saved=16L  ~32min
-  medium example_dsl_sprint                  saved=15L  ~30min
+  easy   example_dsl_sprint                  saved=14L  ~28min
   easy   map_priority                        saved=14L  ~28min
   easy   print_success                       saved=12L  ~24min
   easy   register_apply_commands             saved=12L  ~24min
   easy   _collect_tickets_from_sprint        saved=12L  ~24min
-  easy   ticket_done                         saved=9L  ~18min
+  easy   claim_ticket                        saved=11L  ~22min
   easy   _detect_docker_gates                saved=9L  ~18min
-  ... +5 more (~60min)
+  ... +5 more (~62min)
 
 METRICS-TARGET:
   dup_groups:  15 → 0
-  saved_lines: 172 lines recoverable
+  saved_lines: 168 lines recoverable

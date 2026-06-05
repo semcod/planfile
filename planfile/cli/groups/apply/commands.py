@@ -107,8 +107,9 @@ def apply_strategy_cli(
     strategy = load_and_validate_strategy(strategy_path)
     backend_config = load_backend_config(backend, config_file)
 
-    # Mock backend doesn't need configuration
-    if backend != "mock" and not all(v for v in backend_config.values() if v is not None):
+    # Mock and generic backends don't require full configuration
+    _no_config_required = {"mock", "generic"}
+    if backend not in _no_config_required and not all(v for v in backend_config.values() if v is not None):
         print_error("Missing backend configuration. Use --config-file or set environment variables.")
         raise typer.Exit(1)
 

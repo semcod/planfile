@@ -133,6 +133,26 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.103] - 2026-06-05
+
+### Docs
+- Update README.md
+- Update project/README.md
+- Update project/context.md
+
+### Other
+- Update planfile/cli/groups/apply/commands.py
+- Update planfile/cli/groups/apply/utils.py
+- Update planfile/sync/operations.py
+- Update project/analysis.toon.yaml
+- Update project/calls.mmd
+- Update project/calls.png
+- Update project/calls.toon.yaml
+- Update project/calls.yaml
+- Update project/compact_flow.mmd
+- Update project/compact_flow.png
+- ... and 11 more files
+
 ## [0.1.102] - 2026-05-24
 
 ### Docs

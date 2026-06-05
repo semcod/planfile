@@ -1,0 +1,4868 @@
+source: code2llm
+# generated in 0.54s
+schema: code2llm.planfile_tickets.v1
+project_root: /home/tom/github/semcod/planfile
+tickets:
+- signal: code2llm_cc
+  title: 'Reduce cyclomatic complexity: planfile.mcp.server.handle_tool_call (CC=27)'
+  description: 'code2llm reports `planfile.mcp.server.handle_tool_call` at `planfile/mcp/server.py:151`
+    with cyclomatic complexity 27 (limit 15).
+
+
+    Extract smaller functions, flatten conditionals, or split strategy branches. Re-run
+    code2llm after the change and keep tests green.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - complexity
+  - refactor
+  files:
+  - planfile/mcp/server.py
+  dedupe_key: code2llm:cc:planfile/mcp/server.py:planfile.mcp.server.handle_tool_call
+- signal: code2llm_god
+  title: 'Split god module: planfile/api/server.py'
+  description: 'code2llm reports `planfile/api/server.py` as a large module (2058
+    lines, 14 classes).
+
+
+    Split it by responsibility, keep public imports stable, and add focused tests
+    around the moved behavior.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - god-module
+  - refactor
+  files:
+  - planfile/api/server.py
+  dedupe_key: code2llm:god:planfile/api/server.py
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _detect_from_package_json'
+  description: 'code2llm reports `God Function: _detect_from_package_json` in `planfile/cli/project_detector/package.py:18`.
+
+
+    Function ''_detect_from_package_json'' is oversized: CC=7, fan-out=18, mutations=24.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/project_detector/package.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/project_detector/package.py:18:God
+    Function: _detect_from_package_json'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _detect_from_structure'
+  description: 'code2llm reports `God Function: _detect_from_structure` in `planfile/cli/project_detector/fallback.py:16`.
+
+
+    Function ''_detect_from_structure'' is oversized: CC=9, fan-out=16, mutations=22.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/project_detector/fallback.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/project_detector/fallback.py:16:God
+    Function: _detect_from_structure'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _parse_toon_format'
+  description: 'code2llm reports `God Function: _parse_toon_format` in `planfile/importers/redup_importer.py:36`.
+
+
+    Function ''_parse_toon_format'' is oversized: CC=9, fan-out=13, mutations=25.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/importers/redup_importer.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/importers/redup_importer.py:36:God
+    Function: _parse_toon_format'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: analyze_project_metrics'
+  description: 'code2llm reports `God Function: analyze_project_metrics` in `planfile/runner.py:136`.
+
+
+    Function ''analyze_project_metrics'' is oversized: CC=12, fan-out=22, mutations=14.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/runner.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/runner.py:136:God Function: analyze_project_metrics'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: analyze_text'
+  description: 'code2llm reports `God Function: analyze_text` in `planfile/analysis/parsers/text_parser.py:29`.
+
+
+    Function ''analyze_text'' is oversized: CC=13, fan-out=20, mutations=17.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/parsers/text_parser.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/parsers/text_parser.py:29:God
+    Function: analyze_text'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: example_metric_driven_planning'
+  description: 'code2llm reports `God Function: example_metric_driven_planning` in
+    `examples/ecosystem/04_llx_integration.py:197`.
+
+
+    Function ''example_metric_driven_planning'' is oversized: CC=9, fan-out=20, mutations=25.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/ecosystem/04_llx_integration.py
+  dedupe_key: 'code2llm:smell:god_function:examples/ecosystem/04_llx_integration.py:197:God
+    Function: example_metric_driven_planning'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: sync_todo_checkboxes_from_planfile'
+  description: 'code2llm reports `God Function: sync_todo_checkboxes_from_planfile`
+    in `planfile/todo_sync.py:106`.
+
+
+    Function ''sync_todo_checkboxes_from_planfile'' is oversized: CC=14, fan-out=22,
+    mutations=23.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/todo_sync.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/todo_sync.py:106:God Function:
+    sync_todo_checkboxes_from_planfile'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: _'
+  description: 'code2llm reports `Shotgun Surgery: _` in `planfile/cli/project_detector/readme.py:57`.
+
+
+    Mutation of variable ''_'' spans 7 functions. Changing this logic requires work
+    in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/project_detector/readme.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/project_detector/readme.py:57:Shotgun
+    Surgery: _'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: all_tickets'
+  description: 'code2llm reports `Shotgun Surgery: all_tickets` in `planfile/cli/groups/sync/core.py:212`.
+
+
+    Mutation of variable ''all_tickets'' spans 8 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/sync/core.py:212:Shotgun
+    Surgery: all_tickets'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: app'
+  description: 'code2llm reports `Shotgun Surgery: app` in `planfile/cli/groups/auto/__init__.py:11`.
+
+
+    Mutation of variable ''app'' spans 17 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/auto/__init__.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/auto/__init__.py:11:Shotgun
+    Surgery: app'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: backend'
+  description: 'code2llm reports `Shotgun Surgery: backend` in `planfile/testql_integration.py:676`.
+
+
+    Mutation of variable ''backend'' spans 8 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/testql_integration.py:676:Shotgun
+    Surgery: backend'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: backlog'
+  description: 'code2llm reports `Shotgun Surgery: backlog` in `planfile/cli/groups/sync/core.py:156`.
+
+
+    Mutation of variable ''backlog'' spans 9 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/sync/core.py:156:Shotgun
+    Surgery: backlog'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: config'
+  description: 'code2llm reports `Shotgun Surgery: config` in `planfile/testql_integration.py:676`.
+
+
+    Mutation of variable ''config'' spans 17 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/testql_integration.py:676:Shotgun
+    Surgery: config'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: coverage'
+  description: 'code2llm reports `Shotgun Surgery: coverage` in `planfile/runner.py:56`.
+
+
+    Mutation of variable ''coverage'' spans 6 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/runner.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/runner.py:56:Shotgun Surgery:
+    coverage'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: current'
+  description: 'code2llm reports `Shotgun Surgery: current` in `planfile/analysis/generators/strategy_builder.py:23`.
+
+
+    Mutation of variable ''current'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/analysis/generators/strategy_builder.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/analysis/generators/strategy_builder.py:23:Shotgun
+    Surgery: current'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: deps'
+  description: 'code2llm reports `Shotgun Surgery: deps` in `planfile/cli/project_detector/gates.py:29`.
+
+
+    Mutation of variable ''deps'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/project_detector/gates.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/project_detector/gates.py:29:Shotgun
+    Surgery: deps'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: description'
+  description: 'code2llm reports `Shotgun Surgery: description` in `planfile/cli/groups/examples/commands.py:108`.
+
+
+    Mutation of variable ''description'' spans 6 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/examples/commands.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/examples/commands.py:108:Shotgun
+    Surgery: description'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: executor'
+  description: 'code2llm reports `Shotgun Surgery: executor` in `examples/python-api/05_dsl_usage.py:86`.
+
+
+    Mutation of variable ''executor'' spans 12 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - examples/python-api/05_dsl_usage.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:examples/python-api/05_dsl_usage.py:86:Shotgun
+    Surgery: executor'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: files'
+  description: 'code2llm reports `Shotgun Surgery: files` in `planfile/ticket_validation.py:259`.
+
+
+    Mutation of variable ''files'' spans 6 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/ticket_validation.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/ticket_validation.py:259:Shotgun
+    Surgery: files'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: filters'
+  description: 'code2llm reports `Shotgun Surgery: filters` in `planfile/cli/groups/ticket/commands.py:591`.
+
+
+    Mutation of variable ''filters'' spans 6 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/ticket/commands.py:591:Shotgun
+    Surgery: filters'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: labels'
+  description: 'code2llm reports `Shotgun Surgery: labels` in `planfile/importers/vallm_importer.py:90`.
+
+
+    Mutation of variable ''labels'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/importers/vallm_importer.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/importers/vallm_importer.py:90:Shotgun
+    Surgery: labels'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: line'
+  description: 'code2llm reports `Shotgun Surgery: line` in `planfile/analysis/parsers/toon_parser.py:57`.
+
+
+    Mutation of variable ''line'' spans 8 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/analysis/parsers/toon_parser.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/analysis/parsers/toon_parser.py:57:Shotgun
+    Surgery: line'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: lines'
+  description: 'code2llm reports `Shotgun Surgery: lines` in `planfile/analysis/parsers/toon_parser.py:157`.
+
+
+    Mutation of variable ''lines'' spans 16 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/analysis/parsers/toon_parser.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/analysis/parsers/toon_parser.py:157:Shotgun
+    Surgery: lines'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: metrics'
+  description: 'code2llm reports `Shotgun Surgery: metrics` in `planfile/utils/metrics.py:135`.
+
+
+    Mutation of variable ''metrics'' spans 29 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/utils/metrics.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/utils/metrics.py:135:Shotgun
+    Surgery: metrics'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: normalized'
+  description: 'code2llm reports `Shotgun Surgery: normalized` in `planfile/ticket_validation.py:45`.
+
+
+    Mutation of variable ''normalized'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/ticket_validation.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/ticket_validation.py:45:Shotgun
+    Surgery: normalized'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: path'
+  description: 'code2llm reports `Shotgun Surgery: path` in `planfile/loaders/yaml_loader.py:26`.
+
+
+    Mutation of variable ''path'' spans 18 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/loaders/yaml_loader.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/loaders/yaml_loader.py:26:Shotgun
+    Surgery: path'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: patterns'
+  description: 'code2llm reports `Shotgun Surgery: patterns` in `planfile/examples.py:65`.
+
+
+    Mutation of variable ''patterns'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/examples.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/examples.py:65:Shotgun Surgery:
+    patterns'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: pf'
+  description: 'code2llm reports `Shotgun Surgery: pf` in `planfile/cli/groups/ticket/commands.py:410`.
+
+
+    Mutation of variable ''pf'' spans 43 functions. Changing this logic requires work
+    in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/ticket/commands.py:410:Shotgun
+    Surgery: pf'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: progress'
+  description: 'code2llm reports `Shotgun Surgery: progress` in `planfile/cli/groups/sync/core.py:185`.
+
+
+    Mutation of variable ''progress'' spans 7 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/sync/core.py:185:Shotgun
+    Surgery: progress'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: project'
+  description: 'code2llm reports `Shotgun Surgery: project` in `planfile/cli/project_detector/pyproject.py:90`.
+
+
+    Mutation of variable ''project'' spans 9 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/project_detector/pyproject.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/project_detector/pyproject.py:90:Shotgun
+    Surgery: project'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: project_path'
+  description: 'code2llm reports `Shotgun Surgery: project_path` in `planfile/runtime_context.py:201`.
+
+
+    Mutation of variable ''project_path'' spans 8 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/runtime_context.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/runtime_context.py:201:Shotgun
+    Surgery: project_path'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: project_root'
+  description: 'code2llm reports `Shotgun Surgery: project_root` in `planfile/testql_integration.py:676`.
+
+
+    Mutation of variable ''project_root'' spans 6 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/testql_integration.py:676:Shotgun
+    Surgery: project_root'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: raw'
+  description: 'code2llm reports `Shotgun Surgery: raw` in `planfile/testql_integration.py:26`.
+
+
+    Mutation of variable ''raw'' spans 7 functions. Changing this logic requires work
+    in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/testql_integration.py:26:Shotgun
+    Surgery: raw'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: report'
+  description: 'code2llm reports `Shotgun Surgery: report` in `planfile/todo_sync.py:106`.
+
+
+    Mutation of variable ''report'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/todo_sync.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/todo_sync.py:106:Shotgun Surgery:
+    report'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: result'
+  description: 'code2llm reports `Shotgun Surgery: result` in `examples/python-api/05_dsl_usage.py:86`.
+
+
+    Mutation of variable ''result'' spans 42 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - examples/python-api/05_dsl_usage.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:examples/python-api/05_dsl_usage.py:86:Shotgun
+    Surgery: result'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: results'
+  description: 'code2llm reports `Shotgun Surgery: results` in `planfile/runner.py:365`.
+
+
+    Mutation of variable ''results'' spans 15 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/runner.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/runner.py:365:Shotgun Surgery:
+    results'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: sprint'
+  description: 'code2llm reports `Shotgun Surgery: sprint` in `planfile/cli/groups/sync/core.py:156`.
+
+
+    Mutation of variable ''sprint'' spans 13 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/sync/core.py:156:Shotgun
+    Surgery: sprint'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: sprints'
+  description: 'code2llm reports `Shotgun Surgery: sprints` in `planfile/cli/groups/init/commands.py:71`.
+
+
+    Mutation of variable ''sprints'' spans 14 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/init/commands.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/init/commands.py:71:Shotgun
+    Surgery: sprints'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: stats'
+  description: 'code2llm reports `Shotgun Surgery: stats` in `planfile/cli/groups/query/commands.py:47`.
+
+
+    Mutation of variable ''stats'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/query/commands.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/query/commands.py:47:Shotgun
+    Surgery: stats'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: status'
+  description: 'code2llm reports `Shotgun Surgery: status` in `planfile/loaders/cli_loader.py:116`.
+
+
+    Mutation of variable ''status'' spans 6 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/loaders/cli_loader.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/loaders/cli_loader.py:116:Shotgun
+    Surgery: status'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: strategy'
+  description: 'code2llm reports `Shotgun Surgery: strategy` in `planfile/todo_sync.py:106`.
+
+
+    Mutation of variable ''strategy'' spans 26 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/todo_sync.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/todo_sync.py:106:Shotgun Surgery:
+    strategy'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: table'
+  description: 'code2llm reports `Shotgun Surgery: table` in `examples/checkbox-tickets/demo.py:19`.
+
+
+    Mutation of variable ''table'' spans 13 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - examples/checkbox-tickets/demo.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:examples/checkbox-tickets/demo.py:19:Shotgun
+    Surgery: table'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: task'
+  description: 'code2llm reports `Shotgun Surgery: task` in `planfile/cli/groups/auto/commands.py:111`.
+
+
+    Mutation of variable ''task'' spans 7 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/auto/commands.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/auto/commands.py:111:Shotgun
+    Surgery: task'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: tasks'
+  description: 'code2llm reports `Shotgun Surgery: tasks` in `planfile/analysis/parsers/toon_parser.py:157`.
+
+
+    Mutation of variable ''tasks'' spans 16 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/analysis/parsers/toon_parser.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/analysis/parsers/toon_parser.py:157:Shotgun
+    Surgery: tasks'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: ticket'
+  description: 'code2llm reports `Shotgun Surgery: ticket` in `planfile/cli/groups/ticket/commands.py:410`.
+
+
+    Mutation of variable ''ticket'' spans 52 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/ticket/commands.py:410:Shotgun
+    Surgery: ticket'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: title'
+  description: 'code2llm reports `Shotgun Surgery: title` in `planfile/testql_integration.py:436`.
+
+
+    Mutation of variable ''title'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/testql_integration.py:436:Shotgun
+    Surgery: title'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: updated'
+  description: 'code2llm reports `Shotgun Surgery: updated` in `planfile/todo_sync.py:106`.
+
+
+    Mutation of variable ''updated'' spans 6 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/todo_sync.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/todo_sync.py:106:Shotgun Surgery:
+    updated'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: v1_data'
+  description: 'code2llm reports `Shotgun Surgery: v1_data` in `planfile/cli/groups/sync/core.py:212`.
+
+
+    Mutation of variable ''v1_data'' spans 5 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/cli/groups/sync/core.py:212:Shotgun
+    Surgery: v1_data'
+- signal: code2llm_smell_shotgun_surgery
+  title: 'Address code smell: Shotgun Surgery: value'
+  description: 'code2llm reports `Shotgun Surgery: value` in `planfile/ticket_validation.py:130`.
+
+
+    Mutation of variable ''value'' spans 9 functions. Changing this logic requires
+    work in many places.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: high
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - shotgun-surgery
+  files:
+  - planfile/ticket_validation.py
+  dedupe_key: 'code2llm:smell:shotgun_surgery:planfile/ticket_validation.py:130:Shotgun
+    Surgery: value'
+- signal: code2llm_cc
+  title: 'Reduce cyclomatic complexity: planfile.cli.groups.ticket.commands.ticket_bulk_update
+    (CC=21)'
+  description: 'code2llm reports `planfile.cli.groups.ticket.commands.ticket_bulk_update`
+    at `planfile/cli/groups/ticket/commands.py:591` with cyclomatic complexity 21
+    (limit 15).
+
+
+    Extract smaller functions, flatten conditionals, or split strategy branches. Re-run
+    code2llm after the change and keep tests green.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - complexity
+  - refactor
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: code2llm:cc:planfile/cli/groups/ticket/commands.py:planfile.cli.groups.ticket.commands.ticket_bulk_update
+- signal: code2llm_cc
+  title: 'Reduce cyclomatic complexity: planfile.dsl.parser.DSLParser._extract_modifiers
+    (CC=15)'
+  description: 'code2llm reports `planfile.dsl.parser.DSLParser._extract_modifiers`
+    at `planfile/dsl/parser.py:152` with cyclomatic complexity 15 (limit 15).
+
+
+    Extract smaller functions, flatten conditionals, or split strategy branches. Re-run
+    code2llm after the change and keep tests green.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - complexity
+  - refactor
+  files:
+  - planfile/dsl/parser.py
+  dedupe_key: code2llm:cc:planfile/dsl/parser.py:planfile.dsl.parser.DSLParser._extract_modifiers
+- signal: code2llm_cc
+  title: 'Reduce cyclomatic complexity: planfile.runtime_context._compose_services
+    (CC=17)'
+  description: 'code2llm reports `planfile.runtime_context._compose_services` at `planfile/runtime_context.py:130`
+    with cyclomatic complexity 17 (limit 15).
+
+
+    Extract smaller functions, flatten conditionals, or split strategy branches. Re-run
+    code2llm after the change and keep tests green.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - complexity
+  - refactor
+  files:
+  - planfile/runtime_context.py
+  dedupe_key: code2llm:cc:planfile/runtime_context.py:planfile.runtime_context._compose_services
+- signal: code2llm_cc
+  title: 'Reduce cyclomatic complexity: planfile.testql_integration.upsert_testql_tickets
+    (CC=15)'
+  description: 'code2llm reports `planfile.testql_integration.upsert_testql_tickets`
+    at `planfile/testql_integration.py:573` with cyclomatic complexity 15 (limit 15).
+
+
+    Extract smaller functions, flatten conditionals, or split strategy branches. Re-run
+    code2llm after the change and keep tests green.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - complexity
+  - refactor
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: code2llm:cc:planfile/testql_integration.py:planfile.testql_integration.upsert_testql_tickets
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: dry_run, direction, directory'
+  description: 'code2llm reports `Data Clump: dry_run, direction, directory` in `planfile/cli/groups/sync/commands.py:15`.
+
+
+    Arguments (dry_run, direction, directory) are used together in multiple functions:
+    planfile.cli.groups.sync.commands.github_cmd, planfile.cli.groups.sync.commands.gitlab_cmd,
+    planfile.cli.groups.sync.commands.jira_cmd, planfile.cli.groups.sync.commands.markdown_cmd,
+    planfile.cli.groups.sync.commands.handle_no_integrations, planfile.cli.groups.sync.commands.all_cmd.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/cli/groups/sync/commands.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/cli/groups/sync/commands.py:15:Data
+    Clump: dry_run, direction, directory'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: dry_run, direction, directory'
+  description: 'code2llm reports `Data Clump: dry_run, direction, directory` in `planfile/cli/groups/sync/commands.py:24`.
+
+
+    Arguments (dry_run, direction, directory) are used together in multiple functions:
+    planfile.cli.groups.sync.commands.github_cmd, planfile.cli.groups.sync.commands.gitlab_cmd,
+    planfile.cli.groups.sync.commands.jira_cmd, planfile.cli.groups.sync.commands.markdown_cmd,
+    planfile.cli.groups.sync.commands.handle_no_integrations, planfile.cli.groups.sync.commands.all_cmd.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/cli/groups/sync/commands.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/cli/groups/sync/commands.py:24:Data
+    Clump: dry_run, direction, directory'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: dry_run, direction, directory'
+  description: 'code2llm reports `Data Clump: dry_run, direction, directory` in `planfile/cli/groups/sync/commands.py:33`.
+
+
+    Arguments (dry_run, direction, directory) are used together in multiple functions:
+    planfile.cli.groups.sync.commands.github_cmd, planfile.cli.groups.sync.commands.gitlab_cmd,
+    planfile.cli.groups.sync.commands.jira_cmd, planfile.cli.groups.sync.commands.markdown_cmd,
+    planfile.cli.groups.sync.commands.handle_no_integrations, planfile.cli.groups.sync.commands.all_cmd.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/cli/groups/sync/commands.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/cli/groups/sync/commands.py:33:Data
+    Clump: dry_run, direction, directory'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: dry_run, direction, directory'
+  description: 'code2llm reports `Data Clump: dry_run, direction, directory` in `planfile/cli/groups/sync/commands.py:42`.
+
+
+    Arguments (dry_run, direction, directory) are used together in multiple functions:
+    planfile.cli.groups.sync.commands.github_cmd, planfile.cli.groups.sync.commands.gitlab_cmd,
+    planfile.cli.groups.sync.commands.jira_cmd, planfile.cli.groups.sync.commands.markdown_cmd,
+    planfile.cli.groups.sync.commands.handle_no_integrations, planfile.cli.groups.sync.commands.all_cmd.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/cli/groups/sync/commands.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/cli/groups/sync/commands.py:42:Data
+    Clump: dry_run, direction, directory'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: dry_run, direction, directory'
+  description: 'code2llm reports `Data Clump: dry_run, direction, directory` in `planfile/cli/groups/sync/commands.py:51`.
+
+
+    Arguments (dry_run, direction, directory) are used together in multiple functions:
+    planfile.cli.groups.sync.commands.github_cmd, planfile.cli.groups.sync.commands.gitlab_cmd,
+    planfile.cli.groups.sync.commands.jira_cmd, planfile.cli.groups.sync.commands.markdown_cmd,
+    planfile.cli.groups.sync.commands.handle_no_integrations, planfile.cli.groups.sync.commands.all_cmd.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/cli/groups/sync/commands.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/cli/groups/sync/commands.py:51:Data
+    Clump: dry_run, direction, directory'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: dry_run, direction, directory'
+  description: 'code2llm reports `Data Clump: dry_run, direction, directory` in `planfile/cli/groups/sync/commands.py:78`.
+
+
+    Arguments (dry_run, direction, directory) are used together in multiple functions:
+    planfile.cli.groups.sync.commands.github_cmd, planfile.cli.groups.sync.commands.gitlab_cmd,
+    planfile.cli.groups.sync.commands.jira_cmd, planfile.cli.groups.sync.commands.markdown_cmd,
+    planfile.cli.groups.sync.commands.handle_no_integrations, planfile.cli.groups.sync.commands.all_cmd.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/cli/groups/sync/commands.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/cli/groups/sync/commands.py:78:Data
+    Clump: dry_run, direction, directory'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: issue, self, status'
+  description: 'code2llm reports `Data Clump: issue, self, status` in `planfile/sync/gitlab.py:122`.
+
+
+    Arguments (issue, self, status) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._update_state,
+    planfile.sync.github.GitHubBackend._update_issue_state, planfile.sync.jira.JiraBackend._transition_issue.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/gitlab.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/gitlab.py:122:Data Clump: issue,
+    self, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: issue, self, status'
+  description: 'code2llm reports `Data Clump: issue, self, status` in `planfile/sync/github.py:150`.
+
+
+    Arguments (issue, self, status) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._update_state,
+    planfile.sync.github.GitHubBackend._update_issue_state, planfile.sync.jira.JiraBackend._transition_issue.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/github.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/github.py:150:Data Clump: issue,
+    self, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: issue, self, status'
+  description: 'code2llm reports `Data Clump: issue, self, status` in `planfile/sync/jira.py:171`.
+
+
+    Arguments (issue, self, status) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._update_state,
+    planfile.sync.github.GitHubBackend._update_issue_state, planfile.sync.jira.JiraBackend._transition_issue.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/jira.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/jira.py:171:Data Clump: issue,
+    self, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: line, issues, line_num, file_path, metrics'
+  description: 'code2llm reports `Data Clump: line, issues, line_num, file_path, metrics`
+    in `planfile/analysis/parsers/toon_parser.py:99`.
+
+
+    Arguments (line, issues, line_num, file_path, metrics) are used together in multiple
+    functions: planfile.analysis.parsers.toon_parser._parse_health_section, planfile.analysis.parsers.toon_parser._skip_section,
+    planfile.analysis.parsers.toon_parser._parse_summary_section.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/parsers/toon_parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/parsers/toon_parser.py:99:Data
+    Clump: line, issues, line_num, file_path, metrics'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: line, issues, line_num, file_path, metrics'
+  description: 'code2llm reports `Data Clump: line, issues, line_num, file_path, metrics`
+    in `planfile/analysis/parsers/toon_parser.py:118`.
+
+
+    Arguments (line, issues, line_num, file_path, metrics) are used together in multiple
+    functions: planfile.analysis.parsers.toon_parser._parse_health_section, planfile.analysis.parsers.toon_parser._skip_section,
+    planfile.analysis.parsers.toon_parser._parse_summary_section.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/parsers/toon_parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/parsers/toon_parser.py:118:Data
+    Clump: line, issues, line_num, file_path, metrics'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: line, issues, line_num, file_path, metrics'
+  description: 'code2llm reports `Data Clump: line, issues, line_num, file_path, metrics`
+    in `planfile/analysis/parsers/toon_parser.py:123`.
+
+
+    Arguments (line, issues, line_num, file_path, metrics) are used together in multiple
+    functions: planfile.analysis.parsers.toon_parser._parse_health_section, planfile.analysis.parsers.toon_parser._skip_section,
+    planfile.analysis.parsers.toon_parser._parse_summary_section.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/parsers/toon_parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/parsers/toon_parser.py:123:Data
+    Clump: line, issues, line_num, file_path, metrics'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: obj, visited, self'
+  description: 'code2llm reports `Data Clump: obj, visited, self` in `planfile/analysis/generator.py:291`.
+
+
+    Arguments (obj, visited, self) are used together in multiple functions: planfile.analysis.generator.PlanfileGenerator._check_circular_ref,
+    planfile.analysis.generator.PlanfileGenerator._serialize_object_attrs, planfile.analysis.generator.PlanfileGenerator._serialize_dict_items,
+    planfile.analysis.generator.PlanfileGenerator._serialize_list_items, planfile.analysis.generator.PlanfileGenerator._make_serializable.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generator.py:291:Data Clump:
+    obj, visited, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: obj, visited, self'
+  description: 'code2llm reports `Data Clump: obj, visited, self` in `planfile/analysis/generator.py:298`.
+
+
+    Arguments (obj, visited, self) are used together in multiple functions: planfile.analysis.generator.PlanfileGenerator._check_circular_ref,
+    planfile.analysis.generator.PlanfileGenerator._serialize_object_attrs, planfile.analysis.generator.PlanfileGenerator._serialize_dict_items,
+    planfile.analysis.generator.PlanfileGenerator._serialize_list_items, planfile.analysis.generator.PlanfileGenerator._make_serializable.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generator.py:298:Data Clump:
+    obj, visited, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: obj, visited, self'
+  description: 'code2llm reports `Data Clump: obj, visited, self` in `planfile/analysis/generator.py:307`.
+
+
+    Arguments (obj, visited, self) are used together in multiple functions: planfile.analysis.generator.PlanfileGenerator._check_circular_ref,
+    planfile.analysis.generator.PlanfileGenerator._serialize_object_attrs, planfile.analysis.generator.PlanfileGenerator._serialize_dict_items,
+    planfile.analysis.generator.PlanfileGenerator._serialize_list_items, planfile.analysis.generator.PlanfileGenerator._make_serializable.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generator.py:307:Data Clump:
+    obj, visited, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: obj, visited, self'
+  description: 'code2llm reports `Data Clump: obj, visited, self` in `planfile/analysis/generator.py:314`.
+
+
+    Arguments (obj, visited, self) are used together in multiple functions: planfile.analysis.generator.PlanfileGenerator._check_circular_ref,
+    planfile.analysis.generator.PlanfileGenerator._serialize_object_attrs, planfile.analysis.generator.PlanfileGenerator._serialize_dict_items,
+    planfile.analysis.generator.PlanfileGenerator._serialize_list_items, planfile.analysis.generator.PlanfileGenerator._make_serializable.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generator.py:314:Data Clump:
+    obj, visited, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: obj, visited, self'
+  description: 'code2llm reports `Data Clump: obj, visited, self` in `planfile/analysis/generator.py:320`.
+
+
+    Arguments (obj, visited, self) are used together in multiple functions: planfile.analysis.generator.PlanfileGenerator._check_circular_ref,
+    planfile.analysis.generator.PlanfileGenerator._serialize_object_attrs, planfile.analysis.generator.PlanfileGenerator._serialize_dict_items,
+    planfile.analysis.generator.PlanfileGenerator._serialize_list_items, planfile.analysis.generator.PlanfileGenerator._make_serializable.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generator.py:320:Data Clump:
+    obj, visited, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: path, self, data, parent_key'
+  description: 'code2llm reports `Data Clump: path, self, data, parent_key` in `planfile/analysis/file_analyzer.py:64`.
+
+
+    Arguments (path, self, data, parent_key) are used together in multiple functions:
+    planfile.analysis.file_analyzer.FileAnalyzer._extract_from_yaml_structure, planfile.analysis.file_analyzer.FileAnalyzer._extract_from_json_structure.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/file_analyzer.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/file_analyzer.py:64:Data
+    Clump: path, self, data, parent_key'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: path, self, data, parent_key'
+  description: 'code2llm reports `Data Clump: path, self, data, parent_key` in `planfile/analysis/file_analyzer.py:67`.
+
+
+    Arguments (path, self, data, parent_key) are used together in multiple functions:
+    planfile.analysis.file_analyzer.FileAnalyzer._extract_from_yaml_structure, planfile.analysis.file_analyzer.FileAnalyzer._extract_from_json_structure.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/file_analyzer.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/file_analyzer.py:67:Data
+    Clump: path, self, data, parent_key'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, issue, self, labels'
+  description: 'code2llm reports `Data Clump: priority, issue, self, labels` in `planfile/sync/gitlab.py:113`.
+
+
+    Arguments (priority, issue, self, labels) are used together in multiple functions:
+    planfile.sync.gitlab.GitLabBackend._update_labels, planfile.sync.github.GitHubBackend._update_labels.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/gitlab.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/gitlab.py:113:Data Clump: priority,
+    issue, self, labels'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, issue, self, labels'
+  description: 'code2llm reports `Data Clump: priority, issue, self, labels` in `planfile/sync/github.py:136`.
+
+
+    Arguments (priority, issue, self, labels) are used together in multiple functions:
+    planfile.sync.gitlab.GitLabBackend._update_labels, planfile.sync.github.GitHubBackend._update_labels.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/github.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/github.py:136:Data Clump: priority,
+    issue, self, labels'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, self, labels'
+  description: 'code2llm reports `Data Clump: priority, self, labels` in `planfile/sync/gitlab.py:54`.
+
+
+    Arguments (priority, self, labels) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._prepare_labels,
+    planfile.sync.github.GitHubBackend._prepare_labels.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/gitlab.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/gitlab.py:54:Data Clump: priority,
+    self, labels'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, self, labels'
+  description: 'code2llm reports `Data Clump: priority, self, labels` in `planfile/sync/github.py:68`.
+
+
+    Arguments (priority, self, labels) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._prepare_labels,
+    planfile.sync.github.GitHubBackend._prepare_labels.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/github.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/github.py:68:Data Clump: priority,
+    self, labels'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, self, labels, assignee, metadata,
+    body, name'
+  description: 'code2llm reports `Data Clump: priority, self, labels, assignee, metadata,
+    body, name` in `planfile/sync/generic.py:74`.
+
+
+    Arguments (priority, self, labels, assignee, metadata, body, name) are used together
+    in multiple functions: planfile.sync.generic.GenericBackend._create_ticket, planfile.sync.mock.MockBackend._create_ticket,
+    planfile.sync.base.BasePMBackend._create_ticket, planfile.sync.markdown_backend.backend.MarkdownFileBackend._create_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/generic.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/generic.py:74:Data Clump: priority,
+    self, labels, assignee, metadata, body, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, self, labels, assignee, metadata,
+    body, name'
+  description: 'code2llm reports `Data Clump: priority, self, labels, assignee, metadata,
+    body, name` in `planfile/sync/mock.py:17`.
+
+
+    Arguments (priority, self, labels, assignee, metadata, body, name) are used together
+    in multiple functions: planfile.sync.generic.GenericBackend._create_ticket, planfile.sync.mock.MockBackend._create_ticket,
+    planfile.sync.base.BasePMBackend._create_ticket, planfile.sync.markdown_backend.backend.MarkdownFileBackend._create_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/mock.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/mock.py:17:Data Clump: priority,
+    self, labels, assignee, metadata, body, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, self, labels, assignee, metadata,
+    body, name'
+  description: 'code2llm reports `Data Clump: priority, self, labels, assignee, metadata,
+    body, name` in `planfile/sync/base.py:109`.
+
+
+    Arguments (priority, self, labels, assignee, metadata, body, name) are used together
+    in multiple functions: planfile.sync.generic.GenericBackend._create_ticket, planfile.sync.mock.MockBackend._create_ticket,
+    planfile.sync.base.BasePMBackend._create_ticket, planfile.sync.markdown_backend.backend.MarkdownFileBackend._create_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/base.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/base.py:109:Data Clump: priority,
+    self, labels, assignee, metadata, body, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, self, labels, assignee, metadata,
+    body, name'
+  description: 'code2llm reports `Data Clump: priority, self, labels, assignee, metadata,
+    body, name` in `planfile/sync/markdown_backend/backend.py:23`.
+
+
+    Arguments (priority, self, labels, assignee, metadata, body, name) are used together
+    in multiple functions: planfile.sync.generic.GenericBackend._create_ticket, planfile.sync.mock.MockBackend._create_ticket,
+    planfile.sync.base.BasePMBackend._create_ticket, planfile.sync.markdown_backend.backend.MarkdownFileBackend._create_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/markdown_backend/backend.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/markdown_backend/backend.py:23:Data
+    Clump: priority, self, labels, assignee, metadata, body, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, self, labels, backend_tag, assignee,
+    metadata, body, name'
+  description: 'code2llm reports `Data Clump: priority, self, labels, backend_tag,
+    assignee, metadata, body, name` in `planfile/sync/gitlab.py:76`.
+
+
+    Arguments (priority, self, labels, backend_tag, assignee, metadata, body, name)
+    are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._create_ticket,
+    planfile.sync.github.GitHubBackend._create_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/gitlab.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/gitlab.py:76:Data Clump: priority,
+    self, labels, backend_tag, assignee, metadata, body, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: priority, self, labels, backend_tag, assignee,
+    metadata, body, name'
+  description: 'code2llm reports `Data Clump: priority, self, labels, backend_tag,
+    assignee, metadata, body, name` in `planfile/sync/github.py:104`.
+
+
+    Arguments (priority, self, labels, backend_tag, assignee, metadata, body, name)
+    are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._create_ticket,
+    planfile.sync.github.GitHubBackend._create_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/github.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/github.py:104:Data Clump: priority,
+    self, labels, backend_tag, assignee, metadata, body, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: refs, ref_url, integration, ref_id, ref_key'
+  description: 'code2llm reports `Data Clump: refs, ref_url, integration, ref_id,
+    ref_key` in `planfile/testql_integration.py:173`.
+
+
+    Arguments (refs, ref_url, integration, ref_id, ref_key) are used together in multiple
+    functions: planfile.testql_integration._update_existing_ref_entry, planfile.testql_integration._append_ref_entry.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/testql_integration.py:173:Data Clump:
+    refs, ref_url, integration, ref_id, ref_key'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: refs, ref_url, integration, ref_id, ref_key'
+  description: 'code2llm reports `Data Clump: refs, ref_url, integration, ref_id,
+    ref_key` in `planfile/testql_integration.py:189`.
+
+
+    Arguments (refs, ref_url, integration, ref_id, ref_key) are used together in multiple
+    functions: planfile.testql_integration._update_existing_ref_entry, planfile.testql_integration._append_ref_entry.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/testql_integration.py:189:Data Clump:
+    refs, ref_url, integration, ref_id, ref_key'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, cmd, tokens'
+  description: 'code2llm reports `Data Clump: self, cmd, tokens` in `planfile/dsl/parser.py:130`.
+
+
+    Arguments (self, cmd, tokens) are used together in multiple functions: planfile.dsl.parser.DSLParser._extract_object,
+    planfile.dsl.parser.DSLParser._extract_target, planfile.dsl.parser.DSLParser._extract_modifiers.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/dsl/parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/dsl/parser.py:130:Data Clump: self,
+    cmd, tokens'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, cmd, tokens'
+  description: 'code2llm reports `Data Clump: self, cmd, tokens` in `planfile/dsl/parser.py:139`.
+
+
+    Arguments (self, cmd, tokens) are used together in multiple functions: planfile.dsl.parser.DSLParser._extract_object,
+    planfile.dsl.parser.DSLParser._extract_target, planfile.dsl.parser.DSLParser._extract_modifiers.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/dsl/parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/dsl/parser.py:139:Data Clump: self,
+    cmd, tokens'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, cmd, tokens'
+  description: 'code2llm reports `Data Clump: self, cmd, tokens` in `planfile/dsl/parser.py:152`.
+
+
+    Arguments (self, cmd, tokens) are used together in multiple functions: planfile.dsl.parser.DSLParser._extract_object,
+    planfile.dsl.parser.DSLParser._extract_target, planfile.dsl.parser.DSLParser._extract_modifiers.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/dsl/parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/dsl/parser.py:152:Data Clump: self,
+    cmd, tokens'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, labels, assignee, limit, status'
+  description: 'code2llm reports `Data Clump: self, labels, assignee, limit, status`
+    in `planfile/sync/generic.py:167`.
+
+
+    Arguments (self, labels, assignee, limit, status) are used together in multiple
+    functions: planfile.sync.generic.GenericBackend._list_tickets, planfile.sync.mock.MockBackend._list_tickets,
+    planfile.sync.base.BasePMBackend.list_tickets, planfile.sync.base.BasePMBackend._list_tickets,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._list_tickets, planfile.sync.jira.JiraBackend._list_tickets.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/generic.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/generic.py:167:Data Clump:
+    self, labels, assignee, limit, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, labels, assignee, limit, status'
+  description: 'code2llm reports `Data Clump: self, labels, assignee, limit, status`
+    in `planfile/sync/mock.py:106`.
+
+
+    Arguments (self, labels, assignee, limit, status) are used together in multiple
+    functions: planfile.sync.generic.GenericBackend._list_tickets, planfile.sync.mock.MockBackend._list_tickets,
+    planfile.sync.base.BasePMBackend.list_tickets, planfile.sync.base.BasePMBackend._list_tickets,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._list_tickets, planfile.sync.jira.JiraBackend._list_tickets.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/mock.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/mock.py:106:Data Clump: self,
+    labels, assignee, limit, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, labels, assignee, limit, status'
+  description: 'code2llm reports `Data Clump: self, labels, assignee, limit, status`
+    in `planfile/sync/base.py:165`.
+
+
+    Arguments (self, labels, assignee, limit, status) are used together in multiple
+    functions: planfile.sync.generic.GenericBackend._list_tickets, planfile.sync.mock.MockBackend._list_tickets,
+    planfile.sync.base.BasePMBackend.list_tickets, planfile.sync.base.BasePMBackend._list_tickets,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._list_tickets, planfile.sync.jira.JiraBackend._list_tickets.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/base.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/base.py:165:Data Clump: self,
+    labels, assignee, limit, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, labels, assignee, limit, status'
+  description: 'code2llm reports `Data Clump: self, labels, assignee, limit, status`
+    in `planfile/sync/base.py:181`.
+
+
+    Arguments (self, labels, assignee, limit, status) are used together in multiple
+    functions: planfile.sync.generic.GenericBackend._list_tickets, planfile.sync.mock.MockBackend._list_tickets,
+    planfile.sync.base.BasePMBackend.list_tickets, planfile.sync.base.BasePMBackend._list_tickets,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._list_tickets, planfile.sync.jira.JiraBackend._list_tickets.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/base.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/base.py:181:Data Clump: self,
+    labels, assignee, limit, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, labels, assignee, limit, status'
+  description: 'code2llm reports `Data Clump: self, labels, assignee, limit, status`
+    in `planfile/sync/markdown_backend/backend.py:76`.
+
+
+    Arguments (self, labels, assignee, limit, status) are used together in multiple
+    functions: planfile.sync.generic.GenericBackend._list_tickets, planfile.sync.mock.MockBackend._list_tickets,
+    planfile.sync.base.BasePMBackend.list_tickets, planfile.sync.base.BasePMBackend._list_tickets,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._list_tickets, planfile.sync.jira.JiraBackend._list_tickets.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/markdown_backend/backend.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/markdown_backend/backend.py:76:Data
+    Clump: self, labels, assignee, limit, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, labels, assignee, limit, status'
+  description: 'code2llm reports `Data Clump: self, labels, assignee, limit, status`
+    in `planfile/sync/jira.py:228`.
+
+
+    Arguments (self, labels, assignee, limit, status) are used together in multiple
+    functions: planfile.sync.generic.GenericBackend._list_tickets, planfile.sync.mock.MockBackend._list_tickets,
+    planfile.sync.base.BasePMBackend.list_tickets, planfile.sync.base.BasePMBackend._list_tickets,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._list_tickets, planfile.sync.jira.JiraBackend._list_tickets.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/jira.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/jira.py:228:Data Clump: self,
+    labels, assignee, limit, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, labels, backend_tag, assignee, limit,
+    status'
+  description: 'code2llm reports `Data Clump: self, labels, backend_tag, assignee,
+    limit, status` in `planfile/sync/gitlab.py:182`.
+
+
+    Arguments (self, labels, backend_tag, assignee, limit, status) are used together
+    in multiple functions: planfile.sync.gitlab.GitLabBackend._list_tickets, planfile.sync.github.GitHubBackend._list_tickets.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/gitlab.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/gitlab.py:182:Data Clump: self,
+    labels, backend_tag, assignee, limit, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, labels, backend_tag, assignee, limit,
+    status'
+  description: 'code2llm reports `Data Clump: self, labels, backend_tag, assignee,
+    limit, status` in `planfile/sync/github.py:199`.
+
+
+    Arguments (self, labels, backend_tag, assignee, limit, status) are used together
+    in multiple functions: planfile.sync.gitlab.GitLabBackend._list_tickets, planfile.sync.github.GitHubBackend._list_tickets.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/github.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/github.py:199:Data Clump: self,
+    labels, backend_tag, assignee, limit, status'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, metadata, body'
+  description: 'code2llm reports `Data Clump: self, metadata, body` in `planfile/sync/gitlab.py:61`.
+
+
+    Arguments (self, metadata, body) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._build_metadata_body,
+    planfile.sync.github.GitHubBackend._build_metadata_body.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/gitlab.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/gitlab.py:61:Data Clump: self,
+    metadata, body'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, metadata, body'
+  description: 'code2llm reports `Data Clump: self, metadata, body` in `planfile/sync/github.py:89`.
+
+
+    Arguments (self, metadata, body) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._build_metadata_body,
+    planfile.sync.github.GitHubBackend._build_metadata_body.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/github.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/github.py:89:Data Clump: self,
+    metadata, body'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, priority, labels, assignee, status,
+    body, ticket_id, name'
+  description: 'code2llm reports `Data Clump: self, priority, labels, assignee, status,
+    body, ticket_id, name` in `planfile/sync/generic.py:109`.
+
+
+    Arguments (self, priority, labels, assignee, status, body, ticket_id, name) are
+    used together in multiple functions: planfile.sync.generic.GenericBackend._update_ticket,
+    planfile.sync.mock.MockBackend._update_ticket, planfile.sync.base.BasePMBackend.update_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/generic.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/generic.py:109:Data Clump:
+    self, priority, labels, assignee, status, body, ticket_id, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, priority, labels, assignee, status,
+    body, ticket_id, name'
+  description: 'code2llm reports `Data Clump: self, priority, labels, assignee, status,
+    body, ticket_id, name` in `planfile/sync/mock.py:56`.
+
+
+    Arguments (self, priority, labels, assignee, status, body, ticket_id, name) are
+    used together in multiple functions: planfile.sync.generic.GenericBackend._update_ticket,
+    planfile.sync.mock.MockBackend._update_ticket, planfile.sync.base.BasePMBackend.update_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/mock.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/mock.py:56:Data Clump: self,
+    priority, labels, assignee, status, body, ticket_id, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, priority, labels, assignee, status,
+    body, ticket_id, name'
+  description: 'code2llm reports `Data Clump: self, priority, labels, assignee, status,
+    body, ticket_id, name` in `planfile/sync/base.py:121`.
+
+
+    Arguments (self, priority, labels, assignee, status, body, ticket_id, name) are
+    used together in multiple functions: planfile.sync.generic.GenericBackend._update_ticket,
+    planfile.sync.mock.MockBackend._update_ticket, planfile.sync.base.BasePMBackend.update_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/base.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/base.py:121:Data Clump: self,
+    priority, labels, assignee, status, body, ticket_id, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, priority, labels, assignee, title,
+    status, ticket_id, body'
+  description: 'code2llm reports `Data Clump: self, priority, labels, assignee, title,
+    status, ticket_id, body` in `planfile/sync/base.py:143`.
+
+
+    Arguments (self, priority, labels, assignee, title, status, ticket_id, body) are
+    used together in multiple functions: planfile.sync.base.BasePMBackend._update_ticket,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._update_ticket, planfile.sync.jira.JiraBackend._update_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/base.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/base.py:143:Data Clump: self,
+    priority, labels, assignee, title, status, ticket_id, body'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, priority, labels, assignee, title,
+    status, ticket_id, body'
+  description: 'code2llm reports `Data Clump: self, priority, labels, assignee, title,
+    status, ticket_id, body` in `planfile/sync/markdown_backend/backend.py:50`.
+
+
+    Arguments (self, priority, labels, assignee, title, status, ticket_id, body) are
+    used together in multiple functions: planfile.sync.base.BasePMBackend._update_ticket,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._update_ticket, planfile.sync.jira.JiraBackend._update_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/markdown_backend/backend.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/markdown_backend/backend.py:50:Data
+    Clump: self, priority, labels, assignee, title, status, ticket_id, body'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, priority, labels, assignee, title,
+    status, ticket_id, body'
+  description: 'code2llm reports `Data Clump: self, priority, labels, assignee, title,
+    status, ticket_id, body` in `planfile/sync/jira.py:179`.
+
+
+    Arguments (self, priority, labels, assignee, title, status, ticket_id, body) are
+    used together in multiple functions: planfile.sync.base.BasePMBackend._update_ticket,
+    planfile.sync.markdown_backend.backend.MarkdownFileBackend._update_ticket, planfile.sync.jira.JiraBackend._update_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/jira.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/jira.py:179:Data Clump: self,
+    priority, labels, assignee, title, status, ticket_id, body'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, priority, labels, backend_tag, assignee,
+    status, body, ticket_id, name'
+  description: 'code2llm reports `Data Clump: self, priority, labels, backend_tag,
+    assignee, status, body, ticket_id, name` in `planfile/sync/gitlab.py:130`.
+
+
+    Arguments (self, priority, labels, backend_tag, assignee, status, body, ticket_id,
+    name) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._update_ticket,
+    planfile.sync.github.GitHubBackend._update_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/gitlab.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/gitlab.py:130:Data Clump: self,
+    priority, labels, backend_tag, assignee, status, body, ticket_id, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: self, priority, labels, backend_tag, assignee,
+    status, body, ticket_id, name'
+  description: 'code2llm reports `Data Clump: self, priority, labels, backend_tag,
+    assignee, status, body, ticket_id, name` in `planfile/sync/github.py:158`.
+
+
+    Arguments (self, priority, labels, backend_tag, assignee, status, body, ticket_id,
+    name) are used together in multiple functions: planfile.sync.gitlab.GitLabBackend._update_ticket,
+    planfile.sync.github.GitHubBackend._update_ticket.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/github.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/github.py:158:Data Clump: self,
+    priority, labels, backend_tag, assignee, status, body, ticket_id, name'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: summary, focus_area, metrics'
+  description: 'code2llm reports `Data Clump: summary, focus_area, metrics` in `planfile/analysis/generators/strategy_builder.py:4`.
+
+
+    Arguments (summary, focus_area, metrics) are used together in multiple functions:
+    planfile.analysis.generators.strategy_builder.generate_goal, planfile.analysis.generators.strategy_builder.generate_goals.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generators/strategy_builder.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generators/strategy_builder.py:4:Data
+    Clump: summary, focus_area, metrics'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: summary, focus_area, metrics'
+  description: 'code2llm reports `Data Clump: summary, focus_area, metrics` in `planfile/analysis/generators/strategy_builder.py:23`.
+
+
+    Arguments (summary, focus_area, metrics) are used together in multiple functions:
+    planfile.analysis.generators.strategy_builder.generate_goal, planfile.analysis.generators.strategy_builder.generate_goals.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generators/strategy_builder.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generators/strategy_builder.py:23:Data
+    Clump: summary, focus_area, metrics'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: summary, focus_area, self, metrics'
+  description: 'code2llm reports `Data Clump: summary, focus_area, self, metrics`
+    in `planfile/analysis/generator.py:250`.
+
+
+    Arguments (summary, focus_area, self, metrics) are used together in multiple functions:
+    planfile.analysis.generator.PlanfileGenerator._generate_goal, planfile.analysis.generator.PlanfileGenerator._generate_goals.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generator.py:250:Data Clump:
+    summary, focus_area, self, metrics'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: summary, focus_area, self, metrics'
+  description: 'code2llm reports `Data Clump: summary, focus_area, self, metrics`
+    in `planfile/analysis/generator.py:253`.
+
+
+    Arguments (summary, focus_area, self, metrics) are used together in multiple functions:
+    planfile.analysis.generator.PlanfileGenerator._generate_goal, planfile.analysis.generator.PlanfileGenerator._generate_goals.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/generator.py:253:Data Clump:
+    summary, focus_area, self, metrics'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: target_file, title, self'
+  description: 'code2llm reports `Data Clump: target_file, title, self` in `planfile/sync/markdown_backend/tickets.py:32`.
+
+
+    Arguments (target_file, title, self) are used together in multiple functions:
+    planfile.sync.markdown_backend.tickets.MarkdownTicketHelpers._generate_ticket_id,
+    planfile.sync.markdown_backend.tickets.MarkdownTicketHelpers._ticket_exists_by_title.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/markdown_backend/tickets.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/markdown_backend/tickets.py:32:Data
+    Clump: target_file, title, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: target_file, title, self'
+  description: 'code2llm reports `Data Clump: target_file, title, self` in `planfile/sync/markdown_backend/tickets.py:42`.
+
+
+    Arguments (target_file, title, self) are used together in multiple functions:
+    planfile.sync.markdown_backend.tickets.MarkdownTicketHelpers._generate_ticket_id,
+    planfile.sync.markdown_backend.tickets.MarkdownTicketHelpers._ticket_exists_by_title.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/markdown_backend/tickets.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/markdown_backend/tickets.py:42:Data
+    Clump: target_file, title, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: ticket, integration, backend'
+  description: 'code2llm reports `Data Clump: ticket, integration, backend` in `planfile/testql_integration.py:230`.
+
+
+    Arguments (ticket, integration, backend) are used together in multiple functions:
+    planfile.testql_integration._resolve_update_reference, planfile.testql_integration._sync_ticket_to_backend.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/testql_integration.py:230:Data Clump:
+    ticket, integration, backend'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: ticket, integration, backend'
+  description: 'code2llm reports `Data Clump: ticket, integration, backend` in `planfile/testql_integration.py:632`.
+
+
+    Arguments (ticket, integration, backend) are used together in multiple functions:
+    planfile.testql_integration._resolve_update_reference, planfile.testql_integration._sync_ticket_to_backend.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/testql_integration.py:632:Data Clump:
+    ticket, integration, backend'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: tickets, value, self'
+  description: 'code2llm reports `Data Clump: tickets, value, self` in `planfile/core/store_tickets.py:36`.
+
+
+    Arguments (tickets, value, self) are used together in multiple functions: planfile.core.store_tickets.TicketStoreMixin._filter_by_files,
+    planfile.core.store_tickets.TicketStoreMixin._filter_by_labels.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/core/store_tickets.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/core/store_tickets.py:36:Data Clump:
+    tickets, value, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: tickets, value, self'
+  description: 'code2llm reports `Data Clump: tickets, value, self` in `planfile/core/store_tickets.py:40`.
+
+
+    Arguments (tickets, value, self) are used together in multiple functions: planfile.core.store_tickets.TicketStoreMixin._filter_by_files,
+    planfile.core.store_tickets.TicketStoreMixin._filter_by_labels.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/core/store_tickets.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/core/store_tickets.py:40:Data Clump:
+    tickets, value, self'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: v1_data, v1_source_file, store'
+  description: 'code2llm reports `Data Clump: v1_data, v1_source_file, store` in `planfile/sync/operations.py:96`.
+
+
+    Arguments (v1_data, v1_source_file, store) are used together in multiple functions:
+    planfile.sync.operations._save_sync_results, planfile.sync.operations._load_sprint_and_backlog.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/operations.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/operations.py:96:Data Clump:
+    v1_data, v1_source_file, store'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: v1_data, v1_source_file, store'
+  description: 'code2llm reports `Data Clump: v1_data, v1_source_file, store` in `planfile/sync/operations.py:108`.
+
+
+    Arguments (v1_data, v1_source_file, store) are used together in multiple functions:
+    planfile.sync.operations._save_sync_results, planfile.sync.operations._load_sprint_and_backlog.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/sync/operations.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/sync/operations.py:108:Data Clump:
+    v1_data, v1_source_file, store'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: visited, path, data, parent_key'
+  description: 'code2llm reports `Data Clump: visited, path, data, parent_key` in
+    `planfile/analysis/parsers/yaml_parser.py:44`.
+
+
+    Arguments (visited, path, data, parent_key) are used together in multiple functions:
+    planfile.analysis.parsers.yaml_parser._process_yaml_dict, planfile.analysis.parsers.yaml_parser._process_yaml_list,
+    planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/parsers/yaml_parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/parsers/yaml_parser.py:44:Data
+    Clump: visited, path, data, parent_key'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: visited, path, data, parent_key'
+  description: 'code2llm reports `Data Clump: visited, path, data, parent_key` in
+    `planfile/analysis/parsers/yaml_parser.py:56`.
+
+
+    Arguments (visited, path, data, parent_key) are used together in multiple functions:
+    planfile.analysis.parsers.yaml_parser._process_yaml_dict, planfile.analysis.parsers.yaml_parser._process_yaml_list,
+    planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/parsers/yaml_parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/parsers/yaml_parser.py:56:Data
+    Clump: visited, path, data, parent_key'
+- signal: code2llm_smell_data_clump
+  title: 'Address code smell: Data Clump: visited, path, data, parent_key'
+  description: 'code2llm reports `Data Clump: visited, path, data, parent_key` in
+    `planfile/analysis/parsers/yaml_parser.py:64`.
+
+
+    Arguments (visited, path, data, parent_key) are used together in multiple functions:
+    planfile.analysis.parsers.yaml_parser._process_yaml_dict, planfile.analysis.parsers.yaml_parser._process_yaml_list,
+    planfile.analysis.parsers.yaml_parser.extract_from_yaml_structure.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - data-clump
+  files:
+  - planfile/analysis/parsers/yaml_parser.py
+  dedupe_key: 'code2llm:smell:data_clump:planfile/analysis/parsers/yaml_parser.py:64:Data
+    Clump: visited, path, data, parent_key'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: BASE_URL'
+  description: 'code2llm reports `God Function: BASE_URL` in `examples/rest-api/04_javascript_client.js:5`.
+
+
+    Function ''BASE_URL'' is oversized: CC=5, fan-out=17, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/rest-api/04_javascript_client.js
+  dedupe_key: 'code2llm:smell:god_function:examples/rest-api/04_javascript_client.js:5:God
+    Function: BASE_URL'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _annotate_blockers'
+  description: 'code2llm reports `God Function: _annotate_blockers` in `planfile/cli/groups/ticket/commands.py:208`.
+
+
+    Function ''_annotate_blockers'' is oversized: CC=8, fan-out=5, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:208:God
+    Function: _annotate_blockers'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _basic_analysis'
+  description: 'code2llm reports `God Function: _basic_analysis` in `examples/ecosystem/04_llx_integration.py:92`.
+
+
+    Function ''_basic_analysis'' is oversized: CC=12, fan-out=12, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/ecosystem/04_llx_integration.py
+  dedupe_key: 'code2llm:smell:god_function:examples/ecosystem/04_llx_integration.py:92:God
+    Function: _basic_analysis'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _build_issue_indexes'
+  description: 'code2llm reports `God Function: _build_issue_indexes` in `planfile/ticket_validation.py:141`.
+
+
+    Function ''_build_issue_indexes'' is oversized: CC=14, fan-out=11, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/ticket_validation.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/ticket_validation.py:141:God Function:
+    _build_issue_indexes'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _choice'
+  description: 'code2llm reports `God Function: _choice` in `planfile/cli/groups/init/commands.py:14`.
+
+
+    Function ''_choice'' is oversized: CC=11, fan-out=7, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/init/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/init/commands.py:14:God
+    Function: _choice'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _collect_delete_ids'
+  description: 'code2llm reports `God Function: _collect_delete_ids` in `planfile/cli/groups/ticket/commands.py:454`.
+
+
+    Function ''_collect_delete_ids'' is oversized: CC=14, fan-out=3, mutations=6.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:454:God
+    Function: _collect_delete_ids'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _collect_git_metrics'
+  description: 'code2llm reports `God Function: _collect_git_metrics` in `planfile/utils/metrics.py:6`.
+
+
+    Function ''_collect_git_metrics'' is oversized: CC=8, fan-out=7, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/utils/metrics.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/utils/metrics.py:6:God Function:
+    _collect_git_metrics'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _collect_markers_from_strategy'
+  description: 'code2llm reports `God Function: _collect_markers_from_strategy` in
+    `planfile/todo_sync.py:52`.
+
+
+    Function ''_collect_markers_from_strategy'' is oversized: CC=13, fan-out=8, mutations=4.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/todo_sync.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/todo_sync.py:52:God Function:
+    _collect_markers_from_strategy'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _collect_preset_sprints'
+  description: 'code2llm reports `God Function: _collect_preset_sprints` in `planfile/cli/groups/init/commands.py:71`.
+
+
+    Function ''_collect_preset_sprints'' is oversized: CC=5, fan-out=9, mutations=10.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/init/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/init/commands.py:71:God
+    Function: _collect_preset_sprints'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _collect_ticket_entries'
+  description: 'code2llm reports `God Function: _collect_ticket_entries` in `planfile/ticket_validation.py:94`.
+
+
+    Function ''_collect_ticket_entries'' is oversized: CC=9, fan-out=9, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/ticket_validation.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/ticket_validation.py:94:God Function:
+    _collect_ticket_entries'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _collect_ticket_identity_keys'
+  description: 'code2llm reports `God Function: _collect_ticket_identity_keys` in
+    `planfile/testql_integration.py:33`.
+
+
+    Function ''_collect_ticket_identity_keys'' is oversized: CC=14, fan-out=12, mutations=4.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:33:God Function:
+    _collect_ticket_identity_keys'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _count_files_by_language'
+  description: 'code2llm reports `God Function: _count_files_by_language` in `planfile/utils/metrics.py:53`.
+
+
+    Function ''_count_files_by_language'' is oversized: CC=6, fan-out=11, mutations=12.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/utils/metrics.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/utils/metrics.py:53:God Function:
+    _count_files_by_language'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _create_refactor_ticket'
+  description: 'code2llm reports `God Function: _create_refactor_ticket` in `planfile/importers/redup_importer.py:151`.
+
+
+    Function ''_create_refactor_ticket'' is oversized: CC=9, fan-out=10, mutations=16.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/importers/redup_importer.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/importers/redup_importer.py:151:God
+    Function: _create_refactor_ticket'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _create_ticket_unlocked'
+  description: 'code2llm reports `God Function: _create_ticket_unlocked` in `planfile/core/store.py:149`.
+
+
+    Function ''_create_ticket_unlocked'' is oversized: CC=6, fan-out=11, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/core/store.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/core/store.py:149:God Function:
+    _create_ticket_unlocked'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _discover_examples'
+  description: 'code2llm reports `God Function: _discover_examples` in `planfile/cli/groups/examples/commands.py:108`.
+
+
+    Function ''_discover_examples'' is oversized: CC=13, fan-out=14, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/examples/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/examples/commands.py:108:God
+    Function: _discover_examples'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _display_summary'
+  description: 'code2llm reports `God Function: _display_summary` in `planfile/cli/groups/init/commands.py:124`.
+
+
+    Function ''_display_summary'' is oversized: CC=1, fan-out=6, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/init/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/init/commands.py:124:God
+    Function: _display_summary'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _display_summary_table'
+  description: 'code2llm reports `God Function: _display_summary_table` in `planfile/cli/groups/auto/commands.py:65`.
+
+
+    Function ''_display_summary_table'' is oversized: CC=4, fan-out=7, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/auto/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/auto/commands.py:65:God
+    Function: _display_summary_table'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _ensure_strategy_lists'
+  description: 'code2llm reports `God Function: _ensure_strategy_lists` in `planfile/testql_integration.py:510`.
+
+
+    Function ''_ensure_strategy_lists'' is oversized: CC=7, fan-out=4, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:510:God
+    Function: _ensure_strategy_lists'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _evolution_item_to_ticket'
+  description: 'code2llm reports `God Function: _evolution_item_to_ticket` in `planfile/importers/code2llm_importer.py:86`.
+
+
+    Function ''_evolution_item_to_ticket'' is oversized: CC=6, fan-out=7, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/importers/code2llm_importer.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/importers/code2llm_importer.py:86:God
+    Function: _evolution_item_to_ticket'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _exec_create_sprint'
+  description: 'code2llm reports `God Function: _exec_create_sprint` in `planfile/dsl/executor.py:120`.
+
+
+    Function ''_exec_create_sprint'' is oversized: CC=5, fan-out=13, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/dsl/executor.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/dsl/executor.py:120:God Function:
+    _exec_create_sprint'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _exec_sync'
+  description: 'code2llm reports `God Function: _exec_sync` in `planfile/dsl/executor.py:286`.
+
+
+    Function ''_exec_sync'' is oversized: CC=6, fan-out=13, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/dsl/executor.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/dsl/executor.py:286:God Function:
+    _exec_sync'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _execute_example'
+  description: 'code2llm reports `God Function: _execute_example` in `planfile/cli/groups/examples/commands.py:164`.
+
+
+    Function ''_execute_example'' is oversized: CC=7, fan-out=7, mutations=14.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/examples/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/examples/commands.py:164:God
+    Function: _execute_example'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _external_to_internal_analysis'
+  description: 'code2llm reports `God Function: _external_to_internal_analysis` in
+    `planfile/analysis/generator.py:79`.
+
+
+    Function ''_external_to_internal_analysis'' is oversized: CC=14, fan-out=3, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/generator.py:79:God Function:
+    _external_to_internal_analysis'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _extract_json_object'
+  description: 'code2llm reports `God Function: _extract_json_object` in `planfile/ci.py:75`.
+
+
+    Function ''_extract_json_object'' is oversized: CC=13, fan-out=7, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/ci.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/ci.py:75:God Function: _extract_json_object'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _extract_json_payload'
+  description: 'code2llm reports `God Function: _extract_json_payload` in `planfile/testql_integration.py:258`.
+
+
+    Function ''_extract_json_payload'' is oversized: CC=9, fan-out=7, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:258:God
+    Function: _extract_json_payload'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _get_project_hash'
+  description: 'code2llm reports `God Function: _get_project_hash` in `planfile/runner.py:119`.
+
+
+    Function ''_get_project_hash'' is oversized: CC=5, fan-out=11, mutations=5.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/runner.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/runner.py:119:God Function: _get_project_hash'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _handle_in_next'
+  description: 'code2llm reports `God Function: _handle_in_next` in `planfile/importers/code2llm_importer.py:54`.
+
+
+    Function ''_handle_in_next'' is oversized: CC=13, fan-out=9, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/importers/code2llm_importer.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/importers/code2llm_importer.py:54:God
+    Function: _handle_in_next'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _infer_python_project_type'
+  description: 'code2llm reports `God Function: _infer_python_project_type` in `planfile/cli/project_detector/inference.py:8`.
+
+
+    Function ''_infer_python_project_type'' is oversized: CC=11, fan-out=11, mutations=4.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/project_detector/inference.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/project_detector/inference.py:8:God
+    Function: _infer_python_project_type'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _load_tickets_for_sync'
+  description: 'code2llm reports `God Function: _load_tickets_for_sync` in `planfile/cli/groups/sync/core.py:156`.
+
+
+    Function ''_load_tickets_for_sync'' is oversized: CC=3, fan-out=7, mutations=18.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/sync/core.py:156:God
+    Function: _load_tickets_for_sync'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _load_tickets_v1_format'
+  description: 'code2llm reports `God Function: _load_tickets_v1_format` in `planfile/cli/groups/sync/core.py:136`.
+
+
+    Function ''_load_tickets_v1_format'' is oversized: CC=2, fan-out=4, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/sync/core.py:136:God
+    Function: _load_tickets_v1_format'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _make_serializable'
+  description: 'code2llm reports `God Function: _make_serializable` in `planfile/analysis/generator.py:320`.
+
+
+    Function ''_make_serializable'' is oversized: CC=8, fan-out=13, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/generator.py:320:God
+    Function: _make_serializable'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _md_metrics'
+  description: 'code2llm reports `God Function: _md_metrics` in `planfile/loaders/cli_loader.py:144`.
+
+
+    Function ''_md_metrics'' is oversized: CC=6, fan-out=5, mutations=13.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/loaders/cli_loader.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/loaders/cli_loader.py:144:God
+    Function: _md_metrics'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _md_sprints'
+  description: 'code2llm reports `God Function: _md_sprints` in `planfile/loaders/cli_loader.py:116`.
+
+
+    Function ''_md_sprints'' is oversized: CC=7, fan-out=4, mutations=10.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/loaders/cli_loader.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/loaders/cli_loader.py:116:God
+    Function: _md_sprints'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _md_tasks'
+  description: 'code2llm reports `God Function: _md_tasks` in `planfile/loaders/cli_loader.py:93`.
+
+
+    Function ''_md_tasks'' is oversized: CC=7, fan-out=4, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/loaders/cli_loader.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/loaders/cli_loader.py:93:God Function:
+    _md_tasks'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _normalize_files'
+  description: 'code2llm reports `God Function: _normalize_files` in `planfile/ticket_validation.py:45`.
+
+
+    Function ''_normalize_files'' is oversized: CC=8, fan-out=9, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/ticket_validation.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/ticket_validation.py:45:God Function:
+    _normalize_files'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _parse_duplicates'
+  description: 'code2llm reports `God Function: _parse_duplicates` in `planfile/importers/redup_importer.py:75`.
+
+
+    Function ''_parse_duplicates'' is oversized: CC=9, fan-out=10, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/importers/redup_importer.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/importers/redup_importer.py:75:God
+    Function: _parse_duplicates'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _parse_refactor'
+  description: 'code2llm reports `God Function: _parse_refactor` in `planfile/importers/redup_importer.py:117`.
+
+
+    Function ''_parse_refactor'' is oversized: CC=11, fan-out=10, mutations=10.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/importers/redup_importer.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/importers/redup_importer.py:117:God
+    Function: _parse_refactor'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _parse_toon_header'
+  description: 'code2llm reports `God Function: _parse_toon_header` in `planfile/analysis/parsers/toon_parser.py:8`.
+
+
+    Function ''_parse_toon_header'' is oversized: CC=11, fan-out=10, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/parsers/toon_parser.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/parsers/toon_parser.py:8:God
+    Function: _parse_toon_header'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _populate_project_metadata'
+  description: 'code2llm reports `God Function: _populate_project_metadata` in `planfile/cli/project_detector/pyproject.py:33`.
+
+
+    Function ''_populate_project_metadata'' is oversized: CC=8, fan-out=5, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/project_detector/pyproject.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/project_detector/pyproject.py:33:God
+    Function: _populate_project_metadata'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _populate_readme_and_repository_details'
+  description: 'code2llm reports `God Function: _populate_readme_and_repository_details`
+    in `planfile/cli/project_detector/pyproject.py:90`.
+
+
+    Function ''_populate_readme_and_repository_details'' is oversized: CC=4, fan-out=8,
+    mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/project_detector/pyproject.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/project_detector/pyproject.py:90:God
+    Function: _populate_readme_and_repository_details'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _pretty_data'
+  description: 'code2llm reports `God Function: _pretty_data` in `planfile/cli/groups/dsl/commands.py:58`.
+
+
+    Function ''_pretty_data'' is oversized: CC=13, fan-out=11, mutations=4.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/dsl/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/dsl/commands.py:58:God
+    Function: _pretty_data'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _print_ticket_validation_table'
+  description: 'code2llm reports `God Function: _print_ticket_validation_table` in
+    `planfile/cli/groups/ticket/commands.py:87`.
+
+
+    Function ''_print_ticket_validation_table'' is oversized: CC=4, fan-out=9, mutations=12.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:87:God
+    Function: _print_ticket_validation_table'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _process_planfile_v1'
+  description: 'code2llm reports `God Function: _process_planfile_v1` in `planfile/cli/groups/sync/core.py:104`.
+
+
+    Function ''_process_planfile_v1'' is oversized: CC=9, fan-out=7, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/sync/core.py:104:God
+    Function: _process_planfile_v1'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _resolve_todo_config'
+  description: 'code2llm reports `God Function: _resolve_todo_config` in `planfile/todo_sync.py:77`.
+
+
+    Function ''_resolve_todo_config'' is oversized: CC=7, fan-out=7, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/todo_sync.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/todo_sync.py:77:God Function:
+    _resolve_todo_config'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _sync_tickets_to_integration'
+  description: 'code2llm reports `God Function: _sync_tickets_to_integration` in `planfile/testql_integration.py:657`.
+
+
+    Function ''_sync_tickets_to_integration'' is oversized: CC=5, fan-out=2, mutations=12.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:657:God
+    Function: _sync_tickets_to_integration'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _update_ticket_integration_fields'
+  description: 'code2llm reports `God Function: _update_ticket_integration_fields`
+    in `planfile/testql_integration.py:202`.
+
+
+    Function ''_update_ticket_integration_fields'' is oversized: CC=4, fan-out=1,
+    mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:202:God
+    Function: _update_ticket_integration_fields'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _upsert_single_ticket'
+  description: 'code2llm reports `God Function: _upsert_single_ticket` in `planfile/testql_integration.py:547`.
+
+
+    Function ''_upsert_single_ticket'' is oversized: CC=7, fan-out=11, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:547:God
+    Function: _upsert_single_ticket'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _validate_line_anchor'
+  description: 'code2llm reports `God Function: _validate_line_anchor` in `planfile/ticket_validation.py:217`.
+
+
+    Function ''_validate_line_anchor'' is oversized: CC=7, fan-out=3, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/ticket_validation.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/ticket_validation.py:217:God Function:
+    _validate_line_anchor'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: _write_yaml_atomic'
+  description: 'code2llm reports `God Function: _write_yaml_atomic` in `planfile/core/store.py:54`.
+
+
+    Function ''_write_yaml_atomic'' is oversized: CC=2, fan-out=13, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/core/store.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/core/store.py:54:God Function:
+    _write_yaml_atomic'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: analyze_project_metrics'
+  description: 'code2llm reports `God Function: analyze_project_metrics` in `planfile/utils/metrics.py:135`.
+
+
+    Function ''analyze_project_metrics'' is oversized: CC=3, fan-out=9, mutations=13.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/utils/metrics.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/utils/metrics.py:135:God Function:
+    analyze_project_metrics'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: analyze_toon'
+  description: 'code2llm reports `God Function: analyze_toon` in `planfile/analysis/parsers/toon_parser.py:157`.
+
+
+    Function ''analyze_toon'' is oversized: CC=5, fan-out=14, mutations=15.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/parsers/toon_parser.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/parsers/toon_parser.py:157:God
+    Function: analyze_toon'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: analyze_yaml'
+  description: 'code2llm reports `God Function: analyze_yaml` in `planfile/analysis/parsers/yaml_parser.py:81`.
+
+
+    Function ''analyze_yaml'' is oversized: CC=4, fan-out=12, mutations=17.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/parsers/yaml_parser.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/parsers/yaml_parser.py:81:God
+    Function: analyze_yaml'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: answers_to_strategy'
+  description: 'code2llm reports `God Function: answers_to_strategy` in `planfile/builder.py:249`.
+
+
+    Function ''answers_to_strategy'' is oversized: CC=3, fan-out=12, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/builder.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/builder.py:249:God Function: answers_to_strategy'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: apply_strategy_cli'
+  description: 'code2llm reports `God Function: apply_strategy_cli` in `planfile/cli/groups/apply/commands.py:93`.
+
+
+    Function ''apply_strategy_cli'' is oversized: CC=6, fan-out=14, mutations=6.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/apply/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/apply/commands.py:93:God
+    Function: apply_strategy_cli'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: apply_strategy_to_tickets'
+  description: 'code2llm reports `God Function: apply_strategy_to_tickets` in `planfile/runner.py:213`.
+
+
+    Function ''apply_strategy_to_tickets'' is oversized: CC=8, fan-out=3, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/runner.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/runner.py:213:God Function: apply_strategy_to_tickets'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: auto_fix_bugs'
+  description: 'code2llm reports `God Function: auto_fix_bugs` in `planfile/ci.py:324`.
+
+
+    Function ''auto_fix_bugs'' is oversized: CC=5, fan-out=12, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/ci.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/ci.py:324:God Function: auto_fix_bugs'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: auto_loop_cmd'
+  description: 'code2llm reports `God Function: auto_loop_cmd` in `planfile/cli/groups/auto/commands.py:111`.
+
+
+    Function ''auto_loop_cmd'' is oversized: CC=10, fan-out=20, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/auto/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/auto/commands.py:111:God
+    Function: auto_loop_cmd'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: backlog_delete'
+  description: 'code2llm reports `God Function: backlog_delete` in `planfile/cli/groups/backlog/commands.py:155`.
+
+
+    Function ''backlog_delete'' is oversized: CC=11, fan-out=13, mutations=6.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/backlog/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/backlog/commands.py:155:God
+    Function: backlog_delete'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: build_runtime_context'
+  description: 'code2llm reports `God Function: build_runtime_context` in `planfile/runtime_context.py:201`.
+
+
+    Function ''build_runtime_context'' is oversized: CC=12, fan-out=18, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/runtime_context.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/runtime_context.py:201:God Function:
+    build_runtime_context'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: build_testql_tickets'
+  description: 'code2llm reports `God Function: build_testql_tickets` in `planfile/testql_integration.py:436`.
+
+
+    Function ''build_testql_tickets'' is oversized: CC=6, fan-out=14, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:436:God
+    Function: build_testql_tickets'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: build_ticket_payload'
+  description: 'code2llm reports `God Function: build_ticket_payload` in `examples/c2004-healing/ticket_builder.py:155`.
+
+
+    Function ''build_ticket_payload'' is oversized: CC=7, fan-out=14, mutations=10.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/c2004-healing/ticket_builder.py
+  dedupe_key: 'code2llm:smell:god_function:examples/c2004-healing/ticket_builder.py:155:God
+    Function: build_ticket_payload'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: calculate_strategy_health'
+  description: 'code2llm reports `God Function: calculate_strategy_health` in `planfile/utils/metrics.py:178`.
+
+
+    Function ''calculate_strategy_health'' is oversized: CC=7, fan-out=7, mutations=14.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/utils/metrics.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/utils/metrics.py:178:God Function:
+    calculate_strategy_health'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: calculate_strategy_stats'
+  description: 'code2llm reports `God Function: calculate_strategy_stats` in `planfile/cli/groups/query/commands.py:19`.
+
+
+    Function ''calculate_strategy_stats'' is oversized: CC=7, fan-out=8, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/query/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/query/commands.py:19:God
+    Function: calculate_strategy_stats'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: calculate_task_priority'
+  description: 'code2llm reports `God Function: calculate_task_priority` in `planfile/utils/priorities.py:5`.
+
+
+    Function ''calculate_task_priority'' is oversized: CC=4, fan-out=5, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/utils/priorities.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/utils/priorities.py:5:God Function:
+    calculate_task_priority'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: ci_status_cmd'
+  description: 'code2llm reports `God Function: ci_status_cmd` in `planfile/cli/groups/auto/commands.py:201`.
+
+
+    Function ''ci_status_cmd'' is oversized: CC=6, fan-out=13, mutations=6.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/auto/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/auto/commands.py:201:God
+    Function: ci_status_cmd'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: compare_cmd'
+  description: 'code2llm reports `God Function: compare_cmd` in `planfile/cli/groups/query/commands.py:114`.
+
+
+    Function ''compare_cmd'' is oversized: CC=7, fan-out=11, mutations=3.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/query/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/query/commands.py:114:God
+    Function: compare_cmd'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: compare_strategies'
+  description: 'code2llm reports `God Function: compare_strategies` in `planfile/cli/groups/query/commands.py:79`.
+
+
+    Function ''compare_strategies'' is oversized: CC=10, fan-out=9, mutations=14.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/query/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/query/commands.py:79:God
+    Function: compare_strategies'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: create_backlog_table'
+  description: 'code2llm reports `God Function: create_backlog_table` in `planfile/cli/groups/backlog/commands.py:77`.
+
+
+    Function ''create_backlog_table'' is oversized: CC=3, fan-out=6, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/backlog/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/backlog/commands.py:77:God
+    Function: create_backlog_table'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: create_examples_app'
+  description: 'code2llm reports `God Function: create_examples_app` in `planfile/cli/groups/examples/commands.py:18`.
+
+
+    Function ''create_examples_app'' is oversized: CC=1, fan-out=23, mutations=1.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/examples/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/examples/commands.py:18:God
+    Function: create_examples_app'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: create_sprint'
+  description: 'code2llm reports `God Function: create_sprint` in `planfile/api/server.py:340`.
+
+
+    Function ''create_sprint'' is oversized: CC=4, fan-out=12, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/api/server.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/api/server.py:340:God Function:
+    create_sprint'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: create_ticket_table'
+  description: 'code2llm reports `God Function: create_ticket_table` in `planfile/cli/groups/ticket/commands.py:158`.
+
+
+    Function ''create_ticket_table'' is oversized: CC=5, fan-out=9, mutations=14.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:158:God
+    Function: create_ticket_table'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: delete_tickets_bulk'
+  description: 'code2llm reports `God Function: delete_tickets_bulk` in `planfile/core/store.py:275`.
+
+
+    Function ''delete_tickets_bulk'' is oversized: CC=11, fan-out=16, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/core/store.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/core/store.py:275:God Function:
+    delete_tickets_bulk'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: demo_checkbox_tickets'
+  description: 'code2llm reports `God Function: demo_checkbox_tickets` in `examples/checkbox-tickets/demo.py:59`.
+
+
+    Function ''demo_checkbox_tickets'' is oversized: CC=7, fan-out=14, mutations=6.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/checkbox-tickets/demo.py
+  dedupe_key: 'code2llm:smell:god_function:examples/checkbox-tickets/demo.py:59:God
+    Function: demo_checkbox_tickets'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: display_apply_results'
+  description: 'code2llm reports `God Function: display_apply_results` in `planfile/cli/groups/apply/commands.py:49`.
+
+
+    Function ''display_apply_results'' is oversized: CC=5, fan-out=7, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/apply/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/apply/commands.py:49:God
+    Function: display_apply_results'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: example_statistics'
+  description: 'code2llm reports `God Function: example_statistics` in `examples/python-api/04_advanced_filtering.py:99`.
+
+
+    Function ''example_statistics'' is oversized: CC=8, fan-out=8, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/python-api/04_advanced_filtering.py
+  dedupe_key: 'code2llm:smell:god_function:examples/python-api/04_advanced_filtering.py:99:God
+    Function: example_statistics'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: example_strategy_generation_with_proxy'
+  description: 'code2llm reports `God Function: example_strategy_generation_with_proxy`
+    in `examples/ecosystem/03_proxy_routing.py:69`.
+
+
+    Function ''example_strategy_generation_with_proxy'' is oversized: CC=8, fan-out=15,
+    mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/ecosystem/03_proxy_routing.py
+  dedupe_key: 'code2llm:smell:god_function:examples/ecosystem/03_proxy_routing.py:69:God
+    Function: example_strategy_generation_with_proxy'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: export'
+  description: 'code2llm reports `God Function: export` in `examples/PROPOSED_API_IMPROVEMENTS.py:60`.
+
+
+    Function ''export'' is oversized: CC=13, fan-out=11, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/PROPOSED_API_IMPROVEMENTS.py
+  dedupe_key: 'code2llm:smell:god_function:examples/PROPOSED_API_IMPROVEMENTS.py:60:God
+    Function: export'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: export_cmd'
+  description: 'code2llm reports `God Function: export_cmd` in `planfile/cli/groups/query/commands.py:147`.
+
+
+    Function ''export_cmd'' is oversized: CC=5, fan-out=12, mutations=1.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/query/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/query/commands.py:147:God
+    Function: export_cmd'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: export_results_to_markdown'
+  description: 'code2llm reports `God Function: export_results_to_markdown` in `planfile/loaders/cli_loader.py:173`.
+
+
+    Function ''export_results_to_markdown'' is oversized: CC=1, fan-out=11, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/loaders/cli_loader.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/loaders/cli_loader.py:173:God
+    Function: export_results_to_markdown'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: generate_from_analysis'
+  description: 'code2llm reports `God Function: generate_from_analysis` in `planfile/analysis/generator.py:182`.
+
+
+    Function ''generate_from_analysis'' is oversized: CC=2, fan-out=15, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/generator.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/generator.py:182:God
+    Function: generate_from_analysis'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: generate_from_files_cmd'
+  description: 'code2llm reports `God Function: generate_from_files_cmd` in `planfile/cli/groups/generate/commands.py:50`.
+
+
+    Function ''generate_from_files_cmd'' is oversized: CC=14, fan-out=14, mutations=5.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/generate/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/generate/commands.py:50:God
+    Function: generate_from_files_cmd'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: generate_goals'
+  description: 'code2llm reports `God Function: generate_goals` in `planfile/analysis/generators/strategy_builder.py:23`.
+
+
+    Function ''generate_goals'' is oversized: CC=13, fan-out=2, mutations=19.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/generators/strategy_builder.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/generators/strategy_builder.py:23:God
+    Function: generate_goals'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: generate_quality_gates'
+  description: 'code2llm reports `God Function: generate_quality_gates` in `planfile/analysis/generators/strategy_builder.py:68`.
+
+
+    Function ''generate_quality_gates'' is oversized: CC=3, fan-out=1, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/generators/strategy_builder.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/generators/strategy_builder.py:68:God
+    Function: generate_quality_gates'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: generate_success_criteria'
+  description: 'code2llm reports `God Function: generate_success_criteria` in `planfile/analysis/generators/strategy_builder.py:201`.
+
+
+    Function ''generate_success_criteria'' is oversized: CC=3, fan-out=1, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/generators/strategy_builder.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/generators/strategy_builder.py:201:God
+    Function: generate_success_criteria'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: generate_target_metrics'
+  description: 'code2llm reports `God Function: generate_target_metrics` in `planfile/analysis/generators/strategy_builder.py:163`.
+
+
+    Function ''generate_target_metrics'' is oversized: CC=1, fan-out=4, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/generators/strategy_builder.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/generators/strategy_builder.py:163:God
+    Function: generate_target_metrics'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: generate_tasks'
+  description: 'code2llm reports `God Function: generate_tasks` in `planfile/analysis/generators/strategy_builder.py:118`.
+
+
+    Function ''generate_tasks'' is oversized: CC=7, fan-out=2, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/generators/strategy_builder.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/generators/strategy_builder.py:118:God
+    Function: generate_tasks'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: import_markdown'
+  description: 'code2llm reports `God Function: import_markdown` in `planfile/importers/markdown_importer.py:6`.
+
+
+    Function ''import_markdown'' is oversized: CC=10, fan-out=14, mutations=15.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/importers/markdown_importer.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/importers/markdown_importer.py:6:God
+    Function: import_markdown'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: init_strategy_cli'
+  description: 'code2llm reports `God Function: init_strategy_cli` in `planfile/cli/groups/init/commands.py:157`.
+
+
+    Function ''init_strategy_cli'' is oversized: CC=8, fan-out=15, mutations=13.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/init/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/init/commands.py:157:God
+    Function: init_strategy_cli'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: load_runtime_context_config'
+  description: 'code2llm reports `God Function: load_runtime_context_config` in `planfile/runtime_context.py:64`.
+
+
+    Function ''load_runtime_context_config'' is oversized: CC=5, fan-out=9, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/runtime_context.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/runtime_context.py:64:God Function:
+    load_runtime_context_config'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: load_tasks_yaml'
+  description: 'code2llm reports `God Function: load_tasks_yaml` in `planfile/loaders/yaml_loader.py:186`.
+
+
+    Function ''load_tasks_yaml'' is oversized: CC=5, fan-out=6, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/loaders/yaml_loader.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/loaders/yaml_loader.py:186:God
+    Function: load_tasks_yaml'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: main'
+  description: 'code2llm reports `God Function: main` in `examples/python-api/04_analytics_simple.py:12`.
+
+
+    Function ''main'' is oversized: CC=1, fan-out=10, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/python-api/04_analytics_simple.py
+  dedupe_key: 'code2llm:smell:god_function:examples/python-api/04_analytics_simple.py:12:God
+    Function: main'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: main'
+  description: 'code2llm reports `God Function: main` in `examples/rest-api/03_python_client.py:197`.
+
+
+    Function ''main'' is oversized: CC=4, fan-out=11, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/rest-api/03_python_client.py
+  dedupe_key: 'code2llm:smell:god_function:examples/rest-api/03_python_client.py:197:God
+    Function: main'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: main'
+  description: 'code2llm reports `God Function: main` in `planfile/mcp/server.py:269`.
+
+
+    Function ''main'' is oversized: CC=8, fan-out=6, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/mcp/server.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/mcp/server.py:269:God Function:
+    main'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: merge'
+  description: 'code2llm reports `God Function: merge` in `planfile/core/models/strategy.py:161`.
+
+
+    Function ''merge'' is oversized: CC=12, fan-out=17, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/core/models/strategy.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/core/models/strategy.py:161:God
+    Function: merge'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: next_ticket'
+  description: 'code2llm reports `God Function: next_ticket` in `planfile/__init__.py:104`.
+
+
+    Function ''next_ticket'' is oversized: CC=14, fan-out=7, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/__init__.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/__init__.py:104:God Function:
+    next_ticket'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: parse_code2llm_output'
+  description: 'code2llm reports `God Function: parse_code2llm_output` in `planfile/analysis/external_tools.py:144`.
+
+
+    Function ''parse_code2llm_output'' is oversized: CC=12, fan-out=13, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/analysis/external_tools.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/analysis/external_tools.py:144:God
+    Function: parse_code2llm_output'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: patch_yaml'
+  description: 'code2llm reports `God Function: patch_yaml` in `planfile/api/server.py:370`.
+
+
+    Function ''patch_yaml'' is oversized: CC=6, fan-out=10, mutations=10.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/api/server.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/api/server.py:370:God Function:
+    patch_yaml'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: review_strategy'
+  description: 'code2llm reports `God Function: review_strategy` in `planfile/runner.py:276`.
+
+
+    Function ''review_strategy'' is oversized: CC=14, fan-out=9, mutations=20.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/runner.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/runner.py:276:God Function: review_strategy'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: review_strategy_cli'
+  description: 'code2llm reports `God Function: review_strategy_cli` in `planfile/cli/groups/review/commands.py:19`.
+
+
+    Function ''review_strategy_cli'' is oversized: CC=10, fan-out=21, mutations=15.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/review/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/review/commands.py:19:God
+    Function: review_strategy_cli'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: run_testql_validation'
+  description: 'code2llm reports `God Function: run_testql_validation` in `planfile/testql_integration.py:314`.
+
+
+    Function ''run_testql_validation'' is oversized: CC=6, fan-out=12, mutations=23.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:314:God
+    Function: run_testql_validation'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: run_tests'
+  description: 'code2llm reports `God Function: run_tests` in `planfile/ci.py:109`.
+
+
+    Function ''run_tests'' is oversized: CC=6, fan-out=11, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/ci.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/ci.py:109:God Function: run_tests'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: simulate_planfile_apply'
+  description: 'code2llm reports `God Function: simulate_planfile_apply` in `examples/ecosystem/02_mcp_integration.py:126`.
+
+
+    Function ''simulate_planfile_apply'' is oversized: CC=5, fan-out=4, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/ecosystem/02_mcp_integration.py
+  dedupe_key: 'code2llm:smell:god_function:examples/ecosystem/02_mcp_integration.py:126:God
+    Function: simulate_planfile_apply'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: simulate_planfile_generate'
+  description: 'code2llm reports `God Function: simulate_planfile_generate` in `examples/ecosystem/02_mcp_integration.py:41`.
+
+
+    Function ''simulate_planfile_generate'' is oversized: CC=9, fan-out=5, mutations=12.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/ecosystem/02_mcp_integration.py
+  dedupe_key: 'code2llm:smell:god_function:examples/ecosystem/02_mcp_integration.py:41:God
+    Function: simulate_planfile_generate'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: simulate_planfile_review'
+  description: 'code2llm reports `God Function: simulate_planfile_review` in `examples/ecosystem/02_mcp_integration.py:164`.
+
+
+    Function ''simulate_planfile_review'' is oversized: CC=1, fan-out=1, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - examples/ecosystem/02_mcp_integration.py
+  dedupe_key: 'code2llm:smell:god_function:examples/ecosystem/02_mcp_integration.py:164:God
+    Function: simulate_planfile_review'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: stats_cmd'
+  description: 'code2llm reports `God Function: stats_cmd` in `planfile/cli/groups/query/commands.py:47`.
+
+
+    Function ''stats_cmd'' is oversized: CC=5, fan-out=13, mutations=13.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/query/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/query/commands.py:47:God
+    Function: stats_cmd'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: sync_from_external'
+  description: 'code2llm reports `God Function: sync_from_external` in `planfile/sync/operations.py:152`.
+
+
+    Function ''sync_from_external'' is oversized: CC=7, fan-out=7, mutations=12.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/sync/operations.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/sync/operations.py:152:God Function:
+    sync_from_external'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: sync_integration'
+  description: 'code2llm reports `God Function: sync_integration` in `planfile/cli/groups/sync/core.py:212`.
+
+
+    Function ''sync_integration'' is oversized: CC=7, fan-out=9, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/sync/core.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/sync/core.py:212:God
+    Function: sync_integration'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: sync_testql_tickets'
+  description: 'code2llm reports `God Function: sync_testql_tickets` in `planfile/testql_integration.py:676`.
+
+
+    Function ''sync_testql_tickets'' is oversized: CC=9, fan-out=13, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/testql_integration.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/testql_integration.py:676:God
+    Function: sync_testql_tickets'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: sync_to_external'
+  description: 'code2llm reports `God Function: sync_to_external` in `planfile/sync/operations.py:15`.
+
+
+    Function ''sync_to_external'' is oversized: CC=10, fan-out=11, mutations=4.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/sync/operations.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/sync/operations.py:15:God Function:
+    sync_to_external'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: ticket_delete'
+  description: 'code2llm reports `God Function: ticket_delete` in `planfile/cli/groups/ticket/commands.py:497`.
+
+
+    Function ''ticket_delete'' is oversized: CC=6, fan-out=11, mutations=6.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:497:God
+    Function: ticket_delete'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: ticket_list'
+  description: 'code2llm reports `God Function: ticket_list` in `planfile/cli/groups/ticket/commands.py:192`.
+
+
+    Function ''ticket_list'' is oversized: CC=6, fan-out=5, mutations=7.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:192:God
+    Function: ticket_list'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: ticket_show'
+  description: 'code2llm reports `God Function: ticket_show` in `planfile/cli/groups/ticket/commands.py:243`.
+
+
+    Function ''ticket_show'' is oversized: CC=3, fan-out=11, mutations=3.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:243:God
+    Function: ticket_show'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: ticket_update'
+  description: 'code2llm reports `God Function: ticket_update` in `planfile/cli/groups/ticket/commands.py:282`.
+
+
+    Function ''ticket_update'' is oversized: CC=10, fan-out=10, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:282:God
+    Function: ticket_update'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: ticket_validate'
+  description: 'code2llm reports `God Function: ticket_validate` in `planfile/cli/groups/ticket/commands.py:112`.
+
+
+    Function ''ticket_validate'' is oversized: CC=10, fan-out=14, mutations=8.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/ticket/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/ticket/commands.py:112:God
+    Function: ticket_validate'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: update_ticket'
+  description: 'code2llm reports `God Function: update_ticket` in `planfile/core/store.py:229`.
+
+
+    Function ''update_ticket'' is oversized: CC=12, fan-out=24, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/core/store.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/core/store.py:229:God Function:
+    update_ticket'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: validate_planfile_tickets'
+  description: 'code2llm reports `God Function: validate_planfile_tickets` in `planfile/ticket_validation.py:296`.
+
+
+    Function ''validate_planfile_tickets'' is oversized: CC=11, fan-out=12, mutations=17.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/ticket_validation.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/ticket_validation.py:296:God Function:
+    validate_planfile_tickets'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: validate_schema_cli'
+  description: 'code2llm reports `God Function: validate_schema_cli` in `planfile/cli/groups/validate/commands.py:52`.
+
+
+    Function ''validate_schema_cli'' is oversized: CC=9, fan-out=10, mutations=11.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/validate/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/validate/commands.py:52:God
+    Function: validate_schema_cli'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: validate_strategy_cli'
+  description: 'code2llm reports `God Function: validate_strategy_cli` in `planfile/cli/groups/validate/commands.py:20`.
+
+
+    Function ''validate_strategy_cli'' is oversized: CC=9, fan-out=11, mutations=2.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/validate/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/validate/commands.py:20:God
+    Function: validate_strategy_cli'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: validate_testql_cli'
+  description: 'code2llm reports `God Function: validate_testql_cli` in `planfile/cli/groups/validate/commands.py:99`.
+
+
+    Function ''validate_testql_cli'' is oversized: CC=9, fan-out=15, mutations=4.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/validate/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/validate/commands.py:99:God
+    Function: validate_testql_cli'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: verify_strategy_post_execution'
+  description: 'code2llm reports `God Function: verify_strategy_post_execution` in
+    `planfile/runner.py:56`.
+
+
+    Function ''verify_strategy_post_execution'' is oversized: CC=12, fan-out=6, mutations=9.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/runner.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/runner.py:56:God Function: verify_strategy_post_execution'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: watch_cmd'
+  description: 'code2llm reports `God Function: watch_cmd` in `planfile/cli/groups/sync/commands.py:133`.
+
+
+    Function ''watch_cmd'' is oversized: CC=6, fan-out=15, mutations=6.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/cli/groups/sync/commands.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/cli/groups/sync/commands.py:133:God
+    Function: watch_cmd'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Function: websocket_dsl'
+  description: 'code2llm reports `God Function: websocket_dsl` in `planfile/api/server.py:2014`.
+
+
+    Function ''websocket_dsl'' is oversized: CC=5, fan-out=11, mutations=0.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/api/server.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/api/server.py:2014:God Function:
+    websocket_dsl'
+- signal: code2llm_smell_god_function
+  title: 'Address code smell: God Module: planfile.api.server'
+  description: 'code2llm reports `God Module: planfile.api.server` in `planfile/api/server.py:1`.
+
+
+    Module ''planfile.api.server'' is too large (48 functions, 14 classes). Consider
+    splitting into sub-modules.
+
+
+    Make the smallest refactor that removes the smell and run local tests.'
+  priority: normal
+  labels:
+  - llm-ready
+  - code2llm
+  - code-smell
+  - god-function
+  files:
+  - planfile/api/server.py
+  dedupe_key: 'code2llm:smell:god_function:planfile/api/server.py:1:God Module: planfile.api.server'
+applied: []
+skipped: []

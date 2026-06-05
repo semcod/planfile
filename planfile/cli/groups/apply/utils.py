@@ -82,6 +82,11 @@ def load_backend_config(backend: str, config_file: Path | None) -> dict:
                 "token": os.environ.get("GITLAB_TOKEN"),
                 "project_id": os.environ.get("GITLAB_PROJECT_ID")
             }
+        elif backend == "generic":
+            backend_config = {
+                "base_url": os.environ.get("GENERIC_BASE_URL", ""),
+                "api_key": os.environ.get("GENERIC_API_KEY"),
+            }
 
     return backend_config
 

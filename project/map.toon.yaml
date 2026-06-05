@@ -1,670 +1,293 @@
-# planfile | 239f 33390L | python:187,shell:39,javascript:6,css:6,less:1 | 2026-05-03
-# stats: 545 func | 90 cls | 239 mod | CC̄=4.2 | critical:36 | cycles:0
-# alerts[5]: CC handle_tool_call=27; CC ticket_bulk_update=21; CC upsert_testql_tickets=15; CC validate_strategy_yaml=14; CC main=14
-# hotspots[5]: create_examples_app fan=23; sync_todo_checkboxes_from_planfile fan=22; review_strategy_cli fan=21; auto_loop_cmd fan=20; handle_tool_call fan=20
-# evolution: baseline
+# planfile | 273f 331187L | yaml:62,yml:3,toml:1,python:158,shell:39,txt:1,json:6,javascript:1 | 2026-05-29
+# generated in 0.10s
+# stats: 943 func | 0 cls | 273 mod | CC̄=3.7 | critical:5 | cycles:0
+# alerts[5]: CC handle_tool_call=27; fan-out Store.update_ticket=24; fan-out create_examples_app=23; fan-out analyze_project_metrics=22; fan-out handle_tool_call=22
+# hotspots[5]: Store.update_ticket fan=24; create_examples_app fan=23; analyze_project_metrics fan=22; sync_todo_checkboxes_from_planfile fan=22; handle_tool_call fan=22
+# evolution: CC̄ 2.3→3.7 (regressed +1.4)
 # Keys: M=modules, D=details, i=imports, e=exports, c=classes, f=functions, m=methods
-M[239]:
-  app.doql.less,538
-  examples/PROPOSED_API_IMPROVEMENTS.py,169
-  examples/advanced-usage/ci-workflow.sh,17
-  examples/advanced-usage/run.sh,30
-  examples/bash-generation/test_planfile_generation.sh,278
-  examples/bash-generation/verify_planfile.sh,246
-  examples/checkbox-tickets/demo.py,106
-  examples/checkbox-tickets/run.sh,35
-  examples/cli/01_dsl_usage.py,76
-  examples/cli-commands/run.sh,30
-  examples/cli-commands/run_fixed.sh,36
-  examples/code2llm/run.sh,110
-  examples/comprehensive-example/run.sh,30
-  examples/demo-without-keys/run.sh,18
-  examples/ecosystem/01_full_workflow.sh,353
-  examples/ecosystem/02_mcp_integration.py,382
-  examples/ecosystem/03_proxy_routing.py,369
-  examples/ecosystem/04_llx_integration.py,504
-  examples/ecosystem/mcp-server-example.py,29
-  examples/external-tools/run.sh,13
-  examples/github/planfile-sync.sh,11
-  examples/github/run.sh,93
-  examples/gitlab/run.sh,90
-  examples/htmlcov/coverage_html_cb_dd2e7eb5.js,736
-  examples/htmlcov/style_cb_9ff733b0.css,390
-  examples/integrated-functionality/run.sh,39
-  examples/interactive-tests/htmlcov/coverage_html_cb_dd2e7eb5.js,736
-  examples/interactive-tests/htmlcov/style_cb_9ff733b0.css,390
-  examples/interactive-tests/test_interactive_expect.sh,279
-  examples/interactive-tests/test_interactive_mode.py,151
-  examples/jira/run.sh,93
-  examples/llm-integration/run.sh,14
-  examples/llx_validator.py,186
-  examples/mcp/01_dsl_tool.py,152
-  examples/multi-ticket/run.sh,167
-  examples/python-api/01_basic_usage.py,113
-  examples/python-api/02_ticket_management.py,173
-  examples/python-api/03_integration.py,160
-  examples/python-api/03_integration_simple.py,53
-  examples/python-api/04_advanced_filtering.py,162
-  examples/python-api/04_analytics_simple.py,60
-  examples/python-api/05_dsl_usage.py,110
-  examples/python-api/run_all.sh,31
-  examples/quick-start/run.sh,41
-  examples/quick-start/run_fixed.sh,48
-  examples/readme-tests/test_readme_examples.sh,159
-  examples/redup/run.sh,129
-  examples/rest-api/01_start_server.sh,48
-  examples/rest-api/02_curl_examples.sh,103
-  examples/rest-api/03_python_client.py,251
-  examples/rest-api/04_dsl_usage.py,112
-  examples/rest-api/04_javascript_client.js,153
-  examples/rest-api/05_integration_test.py,185
-  examples/rest-api/06_websocket.py,118
-  examples/rest-api/run_all.sh,50
-  examples/run.sh,14
-  examples/run_all_tests.sh,204
-  examples/test_litellm_integration.py,367
-  examples/test_llm_adapters.py,213
-  examples/test_strategies.py,179
-  examples/validate_with_llx.sh,66
-  examples/vallm/run.sh,130
-  htmlcov/coverage_html_cb_6fb7b396.js,734
-  htmlcov/coverage_html_cb_dd2e7eb5.js,736
-  htmlcov/style_cb_6b508a39.css,378
-  htmlcov/style_cb_9ff733b0.css,390
-  planfile/__init__.py,193
-  planfile/analysis/__init__.py,33
-  planfile/analysis/external_tools.py,269
-  planfile/analysis/file_analyzer.py,128
-  planfile/analysis/generator.py,348
-  planfile/analysis/generators/__init__.py,24
-  planfile/analysis/generators/metrics_extractor.py,45
-  planfile/analysis/generators/strategy_builder.py,220
-  planfile/analysis/models.py,40
-  planfile/analysis/parsers/__init__.py,13
-  planfile/analysis/parsers/json_parser.py,32
-  planfile/analysis/parsers/text_parser.py,119
-  planfile/analysis/parsers/toon_parser.py,190
-  planfile/analysis/parsers/yaml_parser.py,124
-  planfile/analysis/sprint_generator.py,207
-  planfile/api/__init__.py,2
-  planfile/api/server.py,332
-  planfile/builder.py,386
-  planfile/ci.py,473
-  planfile/cli/__init__.py,1
-  planfile/cli/__main__.py,5
-  planfile/cli/auto_loop.py,27
-  planfile/cli/commands.py,64
-  planfile/cli/core/__init__.py,36
-  planfile/cli/core/console.py,32
-  planfile/cli/core/errors.py,25
-  planfile/cli/core/progress.py,32
-  planfile/cli/core/registry.py,68
-  planfile/cli/extra_commands.py,21
-  planfile/cli/groups/apply/__init__.py,12
+M[273]:
+  .gitlab-ci.yml,234
+  Dockerfile,48
+  Makefile,203
+  Taskfile.yml,383
+  analyses/SUMR.json,9
+  analyses/analysis-generated.yaml,310
+  analyses/enhanced-analysis.yaml,1311
+  analyses/final-planfile.yaml,1840
+  analyses/integrated-planfile.yaml,1668
+  analyses/llx-config-for-planfile.yaml,66
+  analyses/llx-driven-strategy.yaml,77
+  analyses/refactoring_summary.json,83
+  analyses/sumd.json,144
+  analyses/test-integrated.yaml,289300
+  config/goal.yaml,429
+  config/mcp-tools.json,87
+  config/planfile-auto.yaml,174
+  config/prefact.yaml,31
+  config/pyqual.yaml,190
+  docker-compose.yml,126
+  examples/PROPOSED_API_IMPROVEMENTS.py,176
+  examples/advanced-usage/ci-strategy.yaml,3100
+  examples/advanced-usage/ci-workflow.sh,16
+  examples/advanced-usage/final-strategy.yaml,1197
+  examples/advanced-usage/run.sh,29
+  examples/advanced-usage/security-baseline.yaml,46
+  examples/bash-generation/test_planfile_generation.sh,277
+  examples/bash-generation/verify_planfile.sh,245
+  examples/c2004-healing/planfile.yaml,104
+  examples/c2004-healing/ticket_builder.py,234
+  examples/checkbox-tickets/demo.py,99
+  examples/checkbox-tickets/run.sh,34
+  examples/cli-commands/run.sh,29
+  examples/cli-commands/run_fixed.sh,35
+  examples/cli-commands/test-strategy.yaml,42
+  examples/cli/01_dsl_usage.py,75
+  examples/code2llm/planfile.yaml,18
+  examples/code2llm/run.sh,109
+  examples/comprehensive-example/run.sh,29
+  examples/demo-without-keys/run.sh,17
+  examples/ecosystem/01_full_workflow.sh,352
+  examples/ecosystem/02_mcp_integration.py,391
+  examples/ecosystem/03_proxy_routing.py,370
+  examples/ecosystem/04_llx_integration.py,509
+  examples/ecosystem/mcp-server-example.py,33
+  examples/external-tools/run.sh,12
+  examples/github/github.planfile.yaml,37
+  examples/github/planfile.yaml,85
+  examples/github/planfile-sync.sh,10
+  examples/github/run.sh,92
+  examples/github/tickets.planfile.yaml,95
+  examples/gitlab/gitlab.planfile.yaml,41
+  examples/gitlab/run.sh,89
+  examples/gitlab/tickets.planfile.yaml,70
+  examples/integrated-functionality/merged.yaml,106
+  examples/integrated-functionality/merged-strategy.yaml,96
+  examples/integrated-functionality/ml-finance.yaml,46
+  examples/integrated-functionality/mobile-healthcare.yaml,46
+  examples/integrated-functionality/run.sh,38
+  examples/integrated-functionality/strategy-export.yaml,42
+  examples/integrated-functionality/strategy-export-dict.txt,1
+  examples/integrated-functionality/template-ml-finance.yaml,42
+  examples/integrated-functionality/template-mobile-healthcare.yaml,42
+  examples/integrated-functionality/template-web-ecommerce.yaml,42
+  examples/integrated-functionality/web.json,62
+  examples/integrated-functionality/web-ecommerce.yaml,46
+  examples/interactive-tests/test_interactive_expect.sh,278
+  examples/jira/jira.planfile.yaml,45
+  examples/jira/run.sh,92
+  examples/jira/tickets.planfile.yaml,70
+  examples/llm-integration/llm-config.yaml,181
+  examples/llm-integration/run.sh,13
+  examples/llx_validator.py,181
+  examples/multi-ticket/github.planfile.yaml,35
+  examples/multi-ticket/gitlab.planfile.yaml,38
+  examples/multi-ticket/jira.planfile.yaml,43
+  examples/multi-ticket/run.sh,166
+  examples/multi-ticket/tickets.planfile.yaml,128
+  examples/python-api/01_basic_usage.py,106
+  examples/python-api/02_ticket_management.py,166
+  examples/python-api/03_integration.py,158
+  examples/python-api/03_integration_simple.py,52
+  examples/python-api/04_advanced_filtering.py,152
+  examples/python-api/04_analytics_simple.py,59
+  examples/python-api/05_dsl_usage.py,109
+  examples/python-api/run_all.sh,30
+  examples/quick-start.yaml,278
+  examples/quick-start/run.sh,40
+  examples/quick-start/run_fixed.sh,47
+  examples/quick-start/web-template.json,62
+  examples/readme-tests/test_readme_examples.sh,158
+  examples/redup/planfile.yaml,17
+  examples/redup/run.sh,128
+  examples/rest-api/01_start_server.sh,47
+  examples/rest-api/02_curl_examples.sh,102
+  examples/rest-api/03_python_client.py,239
+  examples/rest-api/04_dsl_usage.py,101
+  examples/rest-api/04_javascript_client.js,152
+  examples/rest-api/06_websocket.py,117
+  examples/rest-api/run_all.sh,49
+  examples/run.sh,13
+  examples/run_all_tests.sh,203
+  examples/strategies/ecommerce-mvp.yaml,290
+  examples/strategies/microservices-migration.yaml,228
+  examples/strategies/ml-pipeline-optimization.yaml,225
+  examples/strategies/onboarding.yaml,275
+  examples/strategies/security-hardening.yaml,225
+  examples/strategy_free_test.yaml,24
+  examples/strategy_simple_v2.yaml,80
+  examples/tasks/common-tasks.yaml,218
+  examples/test-strategy.yaml,42
+  examples/validate_with_llx.sh,65
+  examples/vallm/planfile.yaml,18
+  examples/vallm/run.sh,129
+  examples/web-template.yaml,42
+  goal.yaml,513
+  planfile/__init__.py,414
+  planfile/analysis/__init__.py,32
+  planfile/analysis/external_tools.py,268
+  planfile/analysis/file_analyzer.py,127
+  planfile/analysis/generator.py,347
+  planfile/analysis/generators/__init__.py,23
+  planfile/analysis/generators/metrics_extractor.py,44
+  planfile/analysis/generators/strategy_builder.py,219
+  planfile/analysis/models.py,39
+  planfile/analysis/parsers/__init__.py,12
+  planfile/analysis/parsers/json_parser.py,31
+  planfile/analysis/parsers/text_parser.py,118
+  planfile/analysis/parsers/toon_parser.py,189
+  planfile/analysis/parsers/yaml_parser.py,123
+  planfile/analysis/sprint_generator.py,206
+  planfile/api/__init__.py,1
+  planfile/api/server.py,2058
+  planfile/builder.py,385
+  planfile/ci.py,472
+  planfile/cli/__init__.py,0
+  planfile/cli/__main__.py,4
+  planfile/cli/auto_loop.py,26
+  planfile/cli/commands.py,71
+  planfile/cli/core/__init__.py,35
+  planfile/cli/core/console.py,31
+  planfile/cli/core/errors.py,24
+  planfile/cli/core/progress.py,31
+  planfile/cli/core/registry.py,67
+  planfile/cli/extra_commands.py,20
+  planfile/cli/groups/apply/__init__.py,11
   planfile/cli/groups/apply/commands.py,120
-  planfile/cli/groups/apply/utils.py,109
-  planfile/cli/groups/auto/__init__.py,19
-  planfile/cli/groups/auto/commands.py,236
-  planfile/cli/groups/backlog/__init__.py,19
-  planfile/cli/groups/backlog/commands.py,195
-  planfile/cli/groups/dsl/__init__.py,6
-  planfile/cli/groups/dsl/commands.py,129
-  planfile/cli/groups/examples/__init__.py,12
-  planfile/cli/groups/examples/commands.py,198
-  planfile/cli/groups/generate/__init__.py,19
-  planfile/cli/groups/generate/commands.py,133
-  planfile/cli/groups/health/__init__.py,12
-  planfile/cli/groups/health/commands.py,79
-  planfile/cli/groups/init/__init__.py,12
+  planfile/cli/groups/apply/utils.py,113
+  planfile/cli/groups/auto/__init__.py,18
+  planfile/cli/groups/auto/commands.py,235
+  planfile/cli/groups/backlog/__init__.py,18
+  planfile/cli/groups/backlog/commands.py,196
+  planfile/cli/groups/dsl/__init__.py,5
+  planfile/cli/groups/dsl/commands.py,127
+  planfile/cli/groups/examples/__init__.py,11
+  planfile/cli/groups/examples/commands.py,197
+  planfile/cli/groups/generate/__init__.py,18
+  planfile/cli/groups/generate/commands.py,132
+  planfile/cli/groups/health/__init__.py,11
+  planfile/cli/groups/health/commands.py,78
+  planfile/cli/groups/init/__init__.py,11
   planfile/cli/groups/init/commands.py,218
-  planfile/cli/groups/query/__init__.py,23
-  planfile/cli/groups/query/commands.py,245
-  planfile/cli/groups/review/__init__.py,12
-  planfile/cli/groups/review/commands.py,101
-  planfile/cli/groups/review/utils.py,87
-  planfile/cli/groups/sync/__init__.py,20
-  planfile/cli/groups/sync/commands.py,175
-  planfile/cli/groups/sync/core.py,257
-  planfile/cli/groups/ticket/__init__.py,39
-  planfile/cli/groups/ticket/commands.py,519
-  planfile/cli/groups/validate/__init__.py,16
-  planfile/cli/groups/validate/commands.py,161
-  planfile/cli/project_detector/__init__.py,24
-  planfile/cli/project_detector/base.py,35
-  planfile/cli/project_detector/fallback.py,67
-  planfile/cli/project_detector/gates.py,171
-  planfile/cli/project_detector/git.py,37
-  planfile/cli/project_detector/inference.py,81
-  planfile/cli/project_detector/license.py,31
-  planfile/cli/project_detector/main.py,101
-  planfile/cli/project_detector/model_tier.py,61
-  planfile/cli/project_detector/package.py,74
-  planfile/cli/project_detector/pyproject.py,118
-  planfile/cli/project_detector/readme.py,67
-  planfile/cli/project_detector/structure.py,71
-  planfile/cli/project_detector.py,20
-  planfile/core/__init__.py,6
-  planfile/core/models/__init__.py,68
-  planfile/core/models/base.py,48
-  planfile/core/models/strategy.py,273
-  planfile/core/models/ticket.py,50
-  planfile/core/models.py,8
-  planfile/core/schema.py,115
-  planfile/core/store.py,152
-  planfile/core/store_files.py,32
-  planfile/core/store_tickets.py,87
-  planfile/dsl/__init__.py,22
-  planfile/dsl/executor.py,337
-  planfile/dsl/parser.py,206
-  planfile/examples.py,140
+  planfile/cli/groups/query/__init__.py,22
+  planfile/cli/groups/query/commands.py,244
+  planfile/cli/groups/review/__init__.py,11
+  planfile/cli/groups/review/commands.py,100
+  planfile/cli/groups/review/utils.py,86
+  planfile/cli/groups/serve/__init__.py,11
+  planfile/cli/groups/serve/commands.py,32
+  planfile/cli/groups/sync/__init__.py,19
+  planfile/cli/groups/sync/commands.py,174
+  planfile/cli/groups/sync/core.py,259
+  planfile/cli/groups/ticket/__init__.py,58
+  planfile/cli/groups/ticket/commands.py,660
+  planfile/cli/groups/validate/__init__.py,15
+  planfile/cli/groups/validate/commands.py,160
+  planfile/cli/project_detector/__init__.py,23
+  planfile/cli/project_detector/base.py,34
+  planfile/cli/project_detector/fallback.py,66
+  planfile/cli/project_detector/gates.py,170
+  planfile/cli/project_detector/git.py,36
+  planfile/cli/project_detector/inference.py,80
+  planfile/cli/project_detector/license.py,30
+  planfile/cli/project_detector/main.py,100
+  planfile/cli/project_detector/model_tier.py,60
+  planfile/cli/project_detector/package.py,73
+  planfile/cli/project_detector/pyproject.py,117
+  planfile/cli/project_detector/readme.py,66
+  planfile/cli/project_detector/structure.py,70
+  planfile/core/__init__.py,5
+  planfile/core/models/__init__.py,74
+  planfile/core/models/base.py,47
+  planfile/core/models/strategy.py,275
+  planfile/core/models/ticket.py,102
+  planfile/core/schema.py,114
+  planfile/core/store.py,317
+  planfile/core/store_files.py,44
+  planfile/core/store_tickets.py,95
+  planfile/dsl/__init__.py,21
+  planfile/dsl/executor.py,336
+  planfile/dsl/parser.py,205
+  planfile/examples.py,139
   planfile/execution.py,6
-  planfile/executor_standalone.py,339
-  planfile/extensions/__init__.py,105
-  planfile/importers/__init__.py,30
-  planfile/importers/code2llm_importer.py,130
-  planfile/importers/common.py,36
-  planfile/importers/json_importer.py,15
-  planfile/importers/redup_importer.py,222
-  planfile/importers/vallm_importer.py,97
-  planfile/importers/yaml_importer.py,15
-  planfile/integrations/__init__.py,5
-  planfile/integrations/base.py,2
-  planfile/integrations/config.py,207
-  planfile/integrations/generic.py,2
-  planfile/integrations/github.py,2
-  planfile/integrations/gitlab.py,2
-  planfile/integrations/jira.py,2
-  planfile/llm/__init__.py,2
-  planfile/llm/adapters.py,76
-  planfile/llm/client.py,64
-  planfile/llm/generator.py,146
-  planfile/llm/prompts.py,64
-  planfile/loaders/__init__.py,1
-  planfile/loaders/cli_loader.py,195
-  planfile/loaders/yaml_loader.py,332
-  planfile/mcp/__init__.py,2
+  planfile/executor_standalone.py,338
+  planfile/extensions/__init__.py,104
+  planfile/importers/__init__.py,32
+  planfile/importers/code2llm_importer.py,129
+  planfile/importers/common.py,35
+  planfile/importers/json_importer.py,14
+  planfile/importers/markdown_importer.py,58
+  planfile/importers/redup_importer.py,221
+  planfile/importers/vallm_importer.py,96
+  planfile/importers/yaml_importer.py,14
+  planfile/integrations/__init__.py,4
+  planfile/integrations/base.py,1
+  planfile/integrations/config.py,206
+  planfile/integrations/generic.py,1
+  planfile/integrations/github.py,1
+  planfile/integrations/gitlab.py,1
+  planfile/integrations/jira.py,1
+  planfile/llm/__init__.py,1
+  planfile/llm/adapters.py,75
+  planfile/llm/client.py,63
+  planfile/llm/generator.py,145
+  planfile/llm/prompts.py,63
+  planfile/loaders/__init__.py,0
+  planfile/loaders/cli_loader.py,194
+  planfile/loaders/yaml_loader.py,331
+  planfile/mcp/__init__.py,1
   planfile/mcp/server.py,322
-  planfile/models.py,22
-  planfile/runner.py,419
-  planfile/server_common.py,15
-  planfile/sync/__init__.py,26
-  planfile/sync/base.py,237
-  planfile/sync/generic.py,217
-  planfile/sync/github.py,239
-  planfile/sync/gitlab.py,228
-  planfile/sync/jira.py,285
-  planfile/sync/markdown_backend/__init__.py,5
-  planfile/sync/markdown_backend/backend.py,125
-  planfile/sync/markdown_backend/constants.py,6
-  planfile/sync/markdown_backend/files.py,25
-  planfile/sync/markdown_backend/tickets.py,111
-  planfile/sync/markdown_backend.py,5
-  planfile/sync/mock.py,162
-  planfile/sync/operations.py,261
-  planfile/sync/state.py,47
-  planfile/sync/utils.py,12
-  planfile/testql_integration.py,712
-  planfile/ticket_validation.py,363
-  planfile/todo_sync.py,185
-  planfile/utils/__init__.py,1
-  planfile/utils/metrics.py,228
-  planfile/utils/priorities.py,112
+  planfile/models.py,21
+  planfile/runner.py,418
+  planfile/runtime_context.py,246
+  planfile/server_common.py,14
+  planfile/sync/__init__.py,25
+  planfile/sync/base.py,236
+  planfile/sync/generic.py,216
+  planfile/sync/github.py,238
+  planfile/sync/gitlab.py,227
+  planfile/sync/jira.py,284
+  planfile/sync/markdown_backend/__init__.py,4
+  planfile/sync/markdown_backend/backend.py,124
+  planfile/sync/markdown_backend/constants.py,5
+  planfile/sync/markdown_backend/files.py,24
+  planfile/sync/markdown_backend/tickets.py,110
+  planfile/sync/mock.py,161
+  planfile/sync/operations.py,260
+  planfile/sync/state.py,46
+  planfile/sync/utils.py,11
+  planfile/testql_integration.py,711
+  planfile/ticket_validation.py,362
+  planfile/todo_sync.py,184
+  planfile/utils/__init__.py,0
+  planfile/utils/metrics.py,227
+  planfile/utils/priorities.py,111
+  prefact.yaml,91
   project.sh,48
-  scripts/auto_generate_planfile.sh,125
-  scripts/cleanup_redundant.sh,72
-  scripts/docker-entrypoint.sh,175
+  pyproject.toml,176
+  redsl.yaml,72
+  redsl_refactor_plan.toon.yaml,22
+  redsl_refactor_report.toon.yaml,25
+  scripts/auto_generate_planfile.sh,124
+  scripts/cleanup_redundant.sh,71
+  scripts/docker-entrypoint.sh,174
   scripts/project.sh,40
-  scripts/run_examples.sh,287
-  tests/htmlcov/coverage_html_cb_dd2e7eb5.js,736
-  tests/htmlcov/style_cb_9ff733b0.css,390
-  tests/llm_adapters/__init__.py,20
-  tests/llm_adapters/adapters/__init__.py,10
-  tests/llm_adapters/adapters/lite_llm.py,89
-  tests/llm_adapters/adapters/local_llm.py,34
-  tests/llm_adapters/adapters/open_router.py,99
-  tests/llm_adapters/base.py,20
-  tests/llm_adapters/constants.py,25
-  tests/llm_adapters/models.py,14
-  tests/llm_adapters.py,488
-  tests/test_backlog.py,38
-  tests/test_chars.py,10
-  tests/test_ci_runner.py,144
-  tests/test_dsl.py,372
-  tests/test_e2e_backlog.py,235
-  tests/test_e2e_schema.py,167
-  tests/test_e2e_ticket_files.py,39
-  tests/test_integration.py,8
-  tests/test_regex.py,32
-  tests/test_regex2.py,21
-  tests/test_schema.py,163
-  tests/test_strategy.py,62
-  tests/test_testql_integration.py,282
-  tests/test_ticket_files.py,225
-  tests/test_ticket_validation.py,241
-  tests/test_todo_sync.py,107
-  tree.sh,2
-  web/app.doql.css,361
+  scripts/run_examples.sh,286
+  test-integrated.yaml,64
+  testql-scenarios/generated-from-pytests.testql.toon.yaml,7
+  testql-scenarios/generated-unit-tests.testql.toon.yaml,7
+  tree.sh,1
+  web/web-template.yaml,39
+  web/web-template-v2.yaml,42
+  web/web-template-v3.yaml,42
 D:
-  examples/PROPOSED_API_IMPROVEMENTS.py:
-    e: PlanfileStoreExtended
-    PlanfileStoreExtended: stats(0),export(2),search(2)  # Extended store with analytics and export.
-  examples/checkbox-tickets/demo.py:
-    e: _build_summary_table,_print_sample_tickets,_print_search_results,_print_toggle_demo,demo_checkbox_tickets
-    _build_summary_table(completed;pending)
-    _print_sample_tickets(tickets;label;icon;style)
-    _print_search_results(tickets;query)
-    _print_toggle_demo(ticket)
-    demo_checkbox_tickets()
-  examples/cli/01_dsl_usage.py:
-  examples/ecosystem/02_mcp_integration.py:
-    e: run_mcp_tool,simulate_planfile_generate,simulate_planfile_apply,simulate_planfile_review,example_mcp_session,create_mcp_tool_definitions
-    run_mcp_tool(tool_name;arguments)
-    simulate_planfile_generate(args)
-    simulate_planfile_apply(args)
-    simulate_planfile_review(args)
-    example_mcp_session()
-    create_mcp_tool_definitions()
-  examples/ecosystem/03_proxy_routing.py:
-    e: example_strategy_generation_with_proxy,create_proxy_config_example,example_budget_tracking,ProxyClient
-    ProxyClient: __init__(1),chat(3),get_routing_decision(2),get_usage_stats(0)  # Client for interacting with Proxym API.
-    example_strategy_generation_with_proxy()
-    create_proxy_config_example()
-    example_budget_tracking()
-  examples/ecosystem/04_llx_integration.py:
-    e: example_metric_driven_planning,_calculate_complexity_score,create_llx_config_example,ProjectMetrics,LLXIntegration
-    ProjectMetrics:  # Project metrics from LLX analysis.
-    LLXIntegration: __init__(1),analyze_project(2),_parse_llx_output(1),_basic_analysis(1),select_model(2),get_task_scope(1)  # Integration with LLX for code analysis and model selection.
-    example_metric_driven_planning()
-    _calculate_complexity_score(metrics)
-    create_llx_config_example()
-  examples/ecosystem/mcp-server-example.py:
-    e: planfile_generate,planfile_apply,planfile_review,main
-    planfile_generate(arguments)
-    planfile_apply(arguments)
-    planfile_review(arguments)
+  planfile/mcp/server.py:
+    e: handle_tool_call,_read_jsonrpc,_write_jsonrpc,main
+    handle_tool_call(name;arguments)
+    _read_jsonrpc()
+    _write_jsonrpc(obj)
     main()
-  examples/interactive-tests/test_interactive_mode.py:
-    e: run_interactive_planfile,test_interactive_mode,test_expect_script,main
-    run_interactive_planfile(inputs;cwd)
-    test_interactive_mode()
-    test_expect_script()
-    main()
-  examples/llx_validator.py:
-    e: create_validation_script,LLXValidator
-    LLXValidator: __init__(1),validate_strategy(1),analyze_generated_code(1),_is_llx_available(0),_parse_llx_analysis(1),_basic_code_analysis(1)  # Use LLX to validate generated code and strategies.
-    create_validation_script()
-  examples/mcp/01_dsl_tool.py:
-  examples/python-api/01_basic_usage.py:
-    e: example_1_basic_initialization,example_2_create_ticket,example_3_quick_ticket,example_4_list_tickets,main
-    example_1_basic_initialization()
-    example_2_create_ticket()
-    example_3_quick_ticket()
-    example_4_list_tickets()
-    main()
-  examples/python-api/02_ticket_management.py:
-    e: example_create_tickets,example_read_tickets,example_update_tickets,example_bulk_operations,example_delete_and_move,main
-    example_create_tickets()
-    example_read_tickets(ticket_ids)
-    example_update_tickets(ticket_ids)
-    example_bulk_operations()
-    example_delete_and_move(ticket_ids)
-    main()
-  examples/python-api/03_integration.py:
-    e: example_cli_tool_integration,example_monitoring_integration,example_ci_pipeline_integration,example_custom_decorator,main
-    example_cli_tool_integration()
-    example_monitoring_integration()
-    example_ci_pipeline_integration()
-    example_custom_decorator()
-    main()
-  examples/python-api/03_integration_simple.py:
-    e: main
-    main()
-  examples/python-api/04_advanced_filtering.py:
-    e: example_basic_filtering,example_combined_filters,example_search_by_labels,example_export_filtered,example_statistics,main
-    example_basic_filtering()
-    example_combined_filters()
-    example_search_by_labels()
-    example_export_filtered()
-    example_statistics()
-    main()
-  examples/python-api/04_analytics_simple.py:
-    e: main
-    main()
-  examples/python-api/05_dsl_usage.py:
-    e: example_basic_dsl,example_parser_only,example_batch_operations,example_sprint_management,example_validation_sync,example_query_and_export
-    example_basic_dsl()
-    example_parser_only()
-    example_batch_operations()
-    example_sprint_management()
-    example_validation_sync()
-    example_query_and_export()
-  examples/rest-api/03_python_client.py:
-    e: example_basic_operations,example_bulk_operations,example_workflow,example_error_handling,main,PlanfileClient
-    PlanfileClient: __init__(1),_request(2),health(0),list_tickets(3),create_ticket(5),get_ticket(1),update_ticket(1),move_ticket(2),delete_ticket(1)  # Python client for planfile REST API.
-    example_basic_operations(client)
-    example_bulk_operations(client)
-    example_workflow(client;ticket_id)
-    example_error_handling(client)
-    main()
-  examples/rest-api/04_dsl_usage.py:
-    e: example_dsl_command,example_dsl_create_ticket,example_dsl_update_ticket,example_dsl_sprint,example_dsl_validate_sync,example_dsl_help,example_yaml_operations
-    example_dsl_command()
-    example_dsl_create_ticket()
-    example_dsl_update_ticket()
-    example_dsl_sprint()
-    example_dsl_validate_sync()
-    example_dsl_help()
-    example_yaml_operations()
-  examples/rest-api/05_integration_test.py:
-    e: run_tests,TestPlanfileAPI
-    TestPlanfileAPI: server(0),client(1),test_health_endpoint(1),test_create_and_get_ticket(1),test_update_ticket(1),test_list_tickets_with_filters(1),test_move_ticket(1)  # Integration tests for planfile REST API.
-    run_tests()
-  examples/rest-api/06_websocket.py:
-    e: example_websocket_basic,example_websocket_interactive,example_websocket_error_handling,example_websocket_raw_text,example_websocket_batch,main
-    example_websocket_basic()
-    example_websocket_interactive()
-    example_websocket_error_handling()
-    example_websocket_raw_text()
-    example_websocket_batch()
-    main()
-  examples/test_litellm_integration.py:
-  examples/test_llm_adapters.py:
-  examples/test_strategies.py:
-    e: validate_strategy_yaml,test_strategy_generation,test_strategy_validation,main
-    validate_strategy_yaml(file_path)
-    test_strategy_generation(strategy_path)
-    test_strategy_validation(strategy_path)
-    main()
-  planfile/__init__.py:
-    e: quick_ticket,__getattr__,Planfile
-    Planfile: __init__(1),auto_discover(2),create_ticket(1),get_ticket(1),list_tickets(0),update_ticket(1),delete_ticket(1),delete_tickets(1),create_tickets_bulk(3)  # Main entry point — convenience wrapper around PlanfileStore.
-    quick_ticket(name;tool)
-    __getattr__(name)
-  planfile/analysis/__init__.py:
-  planfile/analysis/external_tools.py:
-    e: run_external_analysis,AnalysisResults,ExternalToolRunner
-    AnalysisResults:  # Results from external tool analysis.
-    ExternalToolRunner: __init__(1),run_all(0),run_code2llm(0),run_vallm(0),run_redup(0),parse_code2llm_output(0),parse_vallm_output(0),parse_redup_output(0),_mock_code2llm_data(0),_mock_vallm_data(0),_mock_redup_data(0)  # Runner for external code analysis tools.
-    run_external_analysis(project_path)
-  planfile/analysis/file_analyzer.py:
-    e: FileAnalyzer
-    FileAnalyzer: __init__(0),analyze_file(1),_analyze_toon(1),_analyze_yaml(1),_analyze_json(1),_analyze_text(1),_extract_from_yaml_structure(3),_extract_from_json_structure(3),analyze_directory(2),_generate_summary(3)  # Analyzes YAML/JSON files to extract issues and metrics.
-  planfile/analysis/generator.py:
-    e: PlanfileGenerator
-    PlanfileGenerator: __init__(0),_default_limits(0),generate_with_external_tools(5),_external_to_internal_analysis(1),_extract_external_metrics(2),generate_from_analysis(6),generate_from_current_project(3),_extract_key_metrics(2),_generate_goal(3),_generate_goals(3),_generate_quality_gates(1),_generate_tasks(1),_parse_effort(1),_generate_target_metrics(1),_generate_risks(1),_generate_success_criteria(1),_create_strategy_object(1),_is_primitive(1),_serialize_primitive(1),_check_circular_ref(2),_serialize_object_attrs(2),_serialize_dict_items(2),_serialize_list_items(2),_make_serializable(2)  # Generate comprehensive planfile from file analysis.
-  planfile/analysis/generators/__init__.py:
-  planfile/analysis/generators/metrics_extractor.py:
-    e: extract_key_metrics,_extract_cc_metrics,_extract_critical_metrics,_extract_validation_metrics,_extract_duplication_metrics,_extract_coverage_metrics
-    extract_key_metrics(analysis_result;external_metrics)
-    _extract_cc_metrics(analysis_result;metrics)
-    _extract_critical_metrics(analysis_result;metrics)
-    _extract_validation_metrics(analysis_result;metrics)
-    _extract_duplication_metrics(analysis_result;metrics)
-    _extract_coverage_metrics(analysis_result;metrics)
-  planfile/analysis/generators/strategy_builder.py:
-    e: generate_goal,generate_goals,generate_quality_gates,generate_tasks,parse_effort,generate_target_metrics,generate_risks,generate_success_criteria
-    generate_goal(summary;metrics;focus_area)
-    generate_goals(summary;metrics;focus_area)
-    generate_quality_gates(metrics)
-    generate_tasks(analysis_result)
-    parse_effort(effort)
-    generate_target_metrics(current)
-    generate_risks(analysis_result)
-    generate_success_criteria(metrics)
-  planfile/analysis/models.py:
-    e: ExtractedIssue,ExtractedMetric,ExtractedTask
-    ExtractedIssue:  # Represents an issue extracted from a file.
-    ExtractedMetric:  # Represents a metric extracted from a file.
-    ExtractedTask:  # Represents a task extracted from a file.
-  planfile/analysis/parsers/__init__.py:
-  planfile/analysis/parsers/json_parser.py:
-    e: analyze_json
-    analyze_json(file_path)
-  planfile/analysis/parsers/text_parser.py:
-    e: analyze_text
-    analyze_text(file_path)
-  planfile/analysis/parsers/toon_parser.py:
-    e: _parse_toon_header,_parse_toon_sections,_determine_section,_parse_health_section,_skip_section,_parse_summary_section,analyze_toon
-    _parse_toon_header(line;file_path;metrics;issues)
-    _parse_toon_sections(lines;file_path;metrics;issues)
-    _determine_section(line;current_section)
-    _parse_health_section(line;line_num;file_path;metrics;issues)
-    _skip_section(line;line_num;file_path;metrics;issues)
-    _parse_summary_section(line;line_num;file_path;metrics;issues)
-    analyze_toon(file_path)
-  planfile/analysis/parsers/yaml_parser.py:
-    e: _is_issue_content,_create_issue_from_value,_process_yaml_value,_process_yaml_dict,_process_yaml_list,extract_from_yaml_structure,analyze_yaml
-    _is_issue_content(value)
-    _create_issue_from_value(value;full_key;path)
-    _process_yaml_value(value;full_key;path;visited)
-    _process_yaml_dict(data;path;parent_key;visited)
-    _process_yaml_list(data;path;parent_key;visited)
-    extract_from_yaml_structure(data;path;parent_key;visited)
-    analyze_yaml(file_path)
-  planfile/analysis/sprint_generator.py:
-    e: SprintGenerator
-    SprintGenerator: __init__(1),generate_sprints(2),_group_issues_by_priority(1),_get_high_and_quality_issues(1),_get_remaining_medium_issues(1),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information.
-  planfile/api/__init__.py:
-  planfile/api/server.py:
-    e: list_tickets,create_ticket,get_ticket,update_ticket,delete_ticket,move_ticket,done_ticket,start_ticket,list_sprints,create_sprint,get_yaml,patch_yaml,dsl_command,dsl_help,websocket_dsl,health,root,TicketCreate,TicketUpdate,SprintCreate,DSLRequest,DSLResponse,YAMLPatchRequest,ConnectionManager
-    TicketCreate:
-    TicketUpdate:
-    SprintCreate:
-    DSLRequest:
-    DSLResponse:
-    YAMLPatchRequest:
-    ConnectionManager: __init__(0),connect(1),disconnect(1),broadcast(1)
-    list_tickets(sprint;status;priority;source)
-    create_ticket(body)
-    get_ticket(ticket_id)
-    update_ticket(ticket_id;body)
-    delete_ticket(ticket_id)
-    move_ticket(ticket_id;to_sprint)
-    done_ticket(ticket_id)
-    start_ticket(ticket_id)
-    list_sprints()
-    create_sprint(body)
-    get_yaml()
-    patch_yaml(body)
-    dsl_command(body)
-    dsl_help()
-    websocket_dsl(websocket;project_path)
-    health()
-    root()
-  planfile/builder.py:
-    e: create_strategy_command,LLXStrategyBuilder
-    LLXStrategyBuilder: __init__(3),_call_llx(1),ask_llm_questions(0),_parse_bullet_list(1),answers_to_strategy(1),build_strategy(1)  # Interactive strategy builder using LLX.
-    create_strategy_command(output;model;local)
-  planfile/ci.py:
-    e: TestResult,BugReport,CIRunner
-    TestResult:  # Result of running tests.
-    BugReport:  # Generated bug report from test failures.
-    CIRunner: __init__(7),_extract_json_object(1),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),_resolve_target_file(1),_task_patch_applied(1),_extract_yaml_object(1),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop and ticket creation
-  planfile/cli/__init__.py:
-  planfile/cli/__main__.py:
-  planfile/cli/auto_loop.py:
-    e: create_auto_app
-    create_auto_app()
-  planfile/cli/commands.py:
-    e: version_callback,main_callback,main
-    version_callback(value)
-    main_callback(version)
-    main()
-  planfile/cli/core/__init__.py:
-  planfile/cli/core/console.py:
-    e: print_success,print_error,print_warning,print_info,print_dim
-    print_success(message)
-    print_error(message)
-    print_warning(message)
-    print_info(message)
-    print_dim(message)
-  planfile/cli/core/errors.py:
-    e: exit_with_error,exit_with_warning,handle_exception
-    exit_with_error(message;code)
-    exit_with_warning(message;code)
-    handle_exception(e;context)
-  planfile/cli/core/progress.py:
-    e: with_spinner,create_progress
-    with_spinner(description;fn)
-    create_progress()
-  planfile/cli/core/registry.py:
-    e: register_simple_command,register_typer_group,CommandRegistry
-    CommandRegistry: __init__(0),register(1),apply_all(1)  # Registry for CLI command groups.
-    register_simple_command(app;name;command;help_text)
-    register_typer_group(app;name;factory;help_text)
-  planfile/cli/extra_commands.py:
-    e: add_extra_commands
-    add_extra_commands(app)
-  planfile/cli/groups/apply/__init__.py:
-    e: register_apply_commands
-    register_apply_commands(app)
-  planfile/cli/groups/apply/commands.py:
-    e: execute_apply_strategy,display_apply_results,save_results,apply_strategy_cli
-    execute_apply_strategy(strategy;project_path;backend;dry_run;sprint_ids)
-    display_apply_results(results)
-    save_results(results;output)
-    apply_strategy_cli(strategy_path;project_path;backend;config_file;dry_run;sprint_filter;output;verbose)
-  planfile/cli/groups/apply/utils.py:
-    e: get_backend,load_and_validate_strategy,load_backend_config,parse_sprint_filter,select_backend
-    get_backend(backend_type;config)
-    load_and_validate_strategy(strategy_path)
-    load_backend_config(backend;config_file)
-    parse_sprint_filter(sprint_filter)
-    select_backend(backend;backend_config)
-  planfile/cli/groups/auto/__init__.py:
-    e: register_auto_commands
-    register_auto_commands(app)
-  planfile/cli/groups/auto/commands.py:
-    e: get_backend,_validate_strategy,_initialize_backends,_display_summary_table,_display_final_status,_display_ticket_summary,auto_loop_cmd,ci_status_cmd
-    get_backend(backend_type)
-    _validate_strategy(strategy)
-    _initialize_backends(backend)
-    _display_summary_table(results)
-    _display_final_status(results;strategy)
-    _display_ticket_summary(results)
-    auto_loop_cmd(strategy;project_path;backend;max_iterations;auto_fix;llx_command;output;dry_run)
-    ci_status_cmd(project_path)
-  planfile/cli/groups/backlog/__init__.py:
-    e: register_backlog_commands
-    register_backlog_commands(app)
-  planfile/cli/groups/backlog/commands.py:
-    e: _get_planfile_yaml_path,_load_planfile_yaml,_save_planfile_yaml,_matches_files,backlog_list,create_backlog_table,_collect_backlog_to_delete,_collect_targets_to_delete,_print_deletion_preview,_execute_backlog_deletion,_execute_targets_deletion,backlog_delete
-    _get_planfile_yaml_path()
-    _load_planfile_yaml()
-    _save_planfile_yaml(data)
-    _matches_files(item;patterns)
-    backlog_list(files;rule_id;fmt)
-    create_backlog_table(items)
-    _collect_backlog_to_delete(backlog;files;rule_id)
-    _collect_targets_to_delete(data;files)
-    _print_deletion_preview(to_delete;targets_to_delete)
-    _execute_backlog_deletion(data;to_delete)
-    _execute_targets_deletion(data;targets_to_delete)
-    backlog_delete(files;rule_id;targets;dry_run;force)
-  planfile/cli/groups/dsl/__init__.py:
-  planfile/cli/groups/dsl/commands.py:
-    e: dsl_run,_run_single,_pretty_data,_interactive_shell,register_dsl_commands
-    dsl_run(command;project;fmt;fail_on_error)
-    _run_single(executor;command;fmt;fail_on_error)
-    _pretty_data(data)
-    _interactive_shell(executor;fmt)
-    register_dsl_commands(app)
-  planfile/cli/groups/examples/__init__.py:
-    e: register_examples_commands
-    register_examples_commands(app)
-  planfile/cli/groups/examples/commands.py:
-    e: create_examples_app,_discover_examples,_execute_example
-    create_examples_app()
-    _discover_examples(examples_dir)
-    _execute_example(ex)
-  planfile/cli/groups/generate/__init__.py:
-    e: register_generate_commands
-    register_generate_commands(app)
-  planfile/cli/groups/generate/commands.py:
-    e: generate_strategy_cli,generate_from_files_cmd
-    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
-    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;external_tools;compact;verbose)
-  planfile/cli/groups/health/__init__.py:
-    e: register_health_commands
-    register_health_commands(app)
-  planfile/cli/groups/health/commands.py:
-    e: create_health_app
-    create_health_app()
-  planfile/cli/groups/init/__init__.py:
-    e: register_init_commands
-    register_init_commands(app)
-  planfile/cli/groups/init/commands.py:
-    e: _choice,_ask,_ask_list,_collect_custom_sprints,_collect_preset_sprints,_collect_sprint_data,_build_sprints_yaml,_assemble_quality_gates,_display_summary,_save_strategy,init_strategy_cli
-    _choice(prompt;options;default;detected)
-    _ask(prompt;default;required;detected)
-    _ask_list(prompt;example)
-    _collect_custom_sprints()
-    _collect_preset_sprints(project_type)
-    _collect_sprint_data(project_type)
-    _build_sprints_yaml(sprints_data)
-    _assemble_quality_gates(focus;detected_gates;extra_gates)
-    _display_summary(name;project_type;domain;goal_short;sprints_yaml;focus;model_tier;output)
-    _save_strategy(strategy_dict;output;yes)
-    init_strategy_cli(output;yes)
-  planfile/cli/groups/query/__init__.py:
-    e: register_query_commands
-    register_query_commands(app)
-  planfile/cli/groups/query/commands.py:
-    e: calculate_strategy_stats,stats_cmd,compare_strategies,compare_cmd,export_cmd,_export_to_csv,_export_to_html,merge_cmd
-    calculate_strategy_stats(strategy)
-    stats_cmd(strategy_file)
-    compare_strategies(s1;s2)
-    compare_cmd(strategy1;strategy2;output)
-    export_cmd(strategy_file;format;output)
-    _export_to_csv(strategy;file_path)
-    _export_to_html(strategy;file_path)
-    merge_cmd(strategy_files;output;name)
-  planfile/cli/groups/review/__init__.py:
-    e: register_review_commands
-    register_review_commands(app)
-  planfile/cli/groups/review/commands.py:
-    e: review_strategy_cli
-    review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
-  planfile/cli/groups/review/utils.py:
-    e: get_backend,_load_backend_config,_load_and_validate_strategy
-    get_backend(backend_type;config)
-    _load_backend_config(backend;config_file)
-    _load_and_validate_strategy(strategy_path)
-  planfile/cli/groups/sync/__init__.py:
-    e: register_sync_commands
-    register_sync_commands(app)
-  planfile/cli/groups/sync/commands.py:
-    e: github_cmd,gitlab_cmd,jira_cmd,markdown_cmd,handle_no_integrations,sync_all_integrations,all_cmd,_resolve_watch_integrations,_get_planfile_dir_states,_detect_changes,_run_sync_once,watch_cmd
-    github_cmd(directory;dry_run;direction)
-    gitlab_cmd(directory;dry_run;direction)
-    jira_cmd(directory;dry_run;direction)
-    markdown_cmd(directory;dry_run;direction)
-    handle_no_integrations(directory;dry_run;direction)
-    sync_all_integrations(integrations;directory;dry_run;direction)
-    all_cmd(directory;dry_run;direction)
-    _resolve_watch_integrations(config;integrations)
-    _get_planfile_dir_states(planfile_dir)
-    _detect_changes(last;current)
-    _run_sync_once(to_sync;directory;direction)
-    watch_cmd(directory;interval;integrations;direction;once)
-  planfile/cli/groups/sync/core.py:
-    e: _initialize_backend,_ticket_matches_integration,_collect_tickets_from_sprint,_collect_tickets_from_backlog,_ticket_matches_integration_v1,_collect_tickets_from_section,_process_planfile_v1,_load_tickets_v1_format,_load_tickets_for_sync,_execute_sync_with_progress,sync_integration
-    _initialize_backend(integration_name;config;show_header)
-    _ticket_matches_integration(ticket;integration_name)
-    _collect_tickets_from_sprint(sprint;integration_name)
-    _collect_tickets_from_backlog(backlog;integration_name)
-    _ticket_matches_integration_v1(ticket;integration_name)
-    _collect_tickets_from_section(data;section;integration_name)
-    _process_planfile_v1(planfile_path;integration_name;all_tickets;tickets_source;v1_source_file;v1_data)
-    _load_tickets_v1_format(directory;integration_name)
-    _load_tickets_for_sync(store;directory;integration_name)
-    _execute_sync_with_progress(backend;all_tickets;dry_run;store;integration_name;v1_source_file;v1_data;direction)
-    sync_integration(integration_name;directory;dry_run;direction;show_header)
-  planfile/cli/groups/ticket/__init__.py:
-    e: register_ticket_commands
-    register_ticket_commands(app)
   planfile/cli/groups/ticket/commands.py:
-    e: _auto_sync,_display_tickets,_load_issue_records_from_file,_print_ticket_validation_table,ticket_validate,create_ticket_table,ticket_create,ticket_list,ticket_show,ticket_update,ticket_move,ticket_import,load_import_tickets,ticket_done,ticket_start,ticket_block,_collect_delete_ids,_confirm_and_delete,ticket_delete,_print_bulk_update_preview,_apply_label_changes,_execute_bulk_updates,ticket_bulk_update
+    e: _auto_sync,_display_tickets,_load_issue_records_from_file,_print_ticket_validation_table,ticket_validate,create_ticket_table,ticket_create,ticket_list,_annotate_blockers,ticket_show,ticket_next,ticket_update,ticket_move,ticket_import,load_import_tickets,ticket_done,ticket_claim,ticket_start,ticket_ready,ticket_fail,ticket_input,ticket_complete,ticket_block,_collect_delete_ids,_confirm_and_delete,ticket_delete,_print_bulk_update_preview,_apply_label_changes,_execute_bulk_updates,ticket_bulk_update
     _auto_sync(directory;integrations;dry_run)
     _display_tickets(tickets;fmt)
     _load_issue_records_from_file(issues_path)
@@ -673,13 +296,20 @@ D:
     create_ticket_table(tickets)
     ticket_create(name;priority;sprint;source;label;description;files;integration;sync;sync_dry_run)
     ticket_list(sprint;status;source;label;files;fmt)
+    _annotate_blockers(pf;data)
     ticket_show(ticket_id;fmt)
-    ticket_update(ticket_id;status;priority;name;sync;sync_dry_run)
+    ticket_next(sprint;queue;fmt)
+    ticket_update(ticket_id;status;priority;name;description;note;sync;sync_dry_run)
     ticket_move(ticket_id;to_sprint)
     ticket_import(source;sprint;from_file)
     load_import_tickets(from_file;source)
     ticket_done(ticket_id)
-    ticket_start(ticket_id)
+    ticket_claim(ticket_id;assigned_to;lease_seconds)
+    ticket_start(ticket_id;assigned_to)
+    ticket_ready(ticket_id;note)
+    ticket_fail(ticket_id;error)
+    ticket_input(ticket_id;prompt;env_key;note)
+    ticket_complete(ticket_id;note;artifact;result_json)
     ticket_block(ticket_id;reason)
     _collect_delete_ids(pf;ticket_ids;sprint;status;label;source;files)
     _confirm_and_delete(pf;to_delete;dry_run;force)
@@ -688,322 +318,23 @@ D:
     _apply_label_changes(ticket;base_updates;add_label;remove_label)
     _execute_bulk_updates(pf;tickets;base_updates;add_label;remove_label;move_to_sprint)
     ticket_bulk_update(sprint;status_filter;label;source;files;new_status;new_priority;add_label;remove_label;move_to_sprint;dry_run;force;sync;sync_dry_run)
-  planfile/cli/groups/validate/__init__.py:
-    e: register_validate_commands
-    register_validate_commands(app)
-  planfile/cli/groups/validate/commands.py:
-    e: validate_strategy_cli,validate_schema_cli,validate_testql_cli
-    validate_strategy_cli(strategy_path;verbose)
-    validate_schema_cli(file_path;file_type;verbose)
-    validate_testql_cli(scenario_path;project_path;url;dry_run;strategy_path;create_tickets;sync_targets;max_tickets;testql_bin;testql_repo_path)
-  planfile/cli/project_detector/__init__.py:
-  planfile/cli/project_detector/base.py:
-    e: DetectedQualityGate,DetectedProject
-    DetectedQualityGate:  # Detected quality gate from project files.
-    DetectedProject:  # Container for detected project information.
-  planfile/cli/project_detector/fallback.py:
-    e: _detect_from_structure
-    _detect_from_structure(project_path)
-  planfile/cli/project_detector/gates.py:
-    e: _detect_test_gates,_has_pytest_config,_detect_docker_gates,_detect_ci_gates,_detect_quality_tool_gates,_find_quality_tools,_has_ruff_config,_has_mypy_config,_detect_security_gates,_find_security_tools,_has_bandit_config,_detect_doc_gates,_detect_quality_gates
-    _detect_test_gates(project_path;pyproject_data)
-    _has_pytest_config(project_path;pyproject_data)
-    _detect_docker_gates(project_path)
-    _detect_ci_gates(project_path)
-    _detect_quality_tool_gates(project_path;pyproject_data)
-    _find_quality_tools(project_path;pyproject_data)
-    _has_ruff_config(project_path;pyproject_data)
-    _has_mypy_config(project_path;pyproject_data)
-    _detect_security_gates(project_path;pyproject_data)
-    _find_security_tools(project_path;pyproject_data)
-    _has_bandit_config(project_path;pyproject_data)
-    _detect_doc_gates(project_path)
-    _detect_quality_gates(project_path;pyproject_data)
-  planfile/cli/project_detector/git.py:
-    e: _detect_git_authors
-    _detect_git_authors(project_path)
-  planfile/cli/project_detector/inference.py:
-    e: _infer_python_project_type,_infer_node_project_type,_infer_domain
-    _infer_python_project_type(deps;pyproject_data;project_path)
-    _infer_node_project_type(deps;package_data)
-    _infer_domain(keywords;classifiers;description)
-  planfile/cli/project_detector/license.py:
-    e: _detect_license
-    _detect_license(project_path)
-  planfile/cli/project_detector/main.py:
-    e: detect_project,_quality_gates_to_dict,_determine_source,_build_detected_dict,get_detected_values
-    detect_project(project_path)
-    _quality_gates_to_dict(gates)
-    _determine_source(detected)
-    _build_detected_dict(detected)
-    get_detected_values()
-  planfile/cli/project_detector/model_tier.py:
-    e: _tier_from_env_vars,_tier_from_env_files,_tier_from_config_files,_detect_model_tier
-    _tier_from_env_vars()
-    _tier_from_env_files(project_path)
-    _tier_from_config_files(project_path)
-    _detect_model_tier(project_path)
-  planfile/cli/project_detector/package.py:
-    e: _detect_from_package_json
-    _detect_from_package_json(project_path)
-  planfile/cli/project_detector/pyproject.py:
-    e: _import_toml_loader,_load_pyproject_data,_populate_project_metadata,_populate_poetry_metadata,_populate_project_from_data,_get_project_dependencies,_populate_inferred_project_details,_populate_readme_and_repository_details,_detect_from_pyproject
-    _import_toml_loader()
-    _load_pyproject_data(pyproject_path)
-    _populate_project_metadata(project;data)
-    _populate_poetry_metadata(project;data)
-    _populate_project_from_data(project;data)
-    _get_project_dependencies(data)
-    _populate_inferred_project_details(project;data;project_path)
-    _populate_readme_and_repository_details(project;project_path)
-    _detect_from_pyproject(project_path)
-  planfile/cli/project_detector/readme.py:
-    e: _extract_description,_extract_goal,_find_readme_content,_find_readme_description,_find_readme_goal
-    _extract_description(lines)
-    _extract_goal(content)
-    _find_readme_content(project_path)
-    _find_readme_description(project_path)
-    _find_readme_goal(project_path)
-  planfile/cli/project_detector/structure.py:
-    e: _has_tests,_find_src_dirs,_suggest_sprints,_analyze_directory_structure
-    _has_tests(project_path)
-    _find_src_dirs(project_path)
-    _suggest_sprints(project_path;src_dirs;has_tests)
-    _analyze_directory_structure(project_path)
-  planfile/cli/project_detector.py:
-  planfile/core/__init__.py:
-  planfile/core/models/__init__.py:
-  planfile/core/models/base.py:
-    e: TaskType,ModelTier,TicketStatus
-    TaskType:  # Type of task in the planfile.
-    ModelTier:  # Model tier for different phases of work.
-    TicketStatus:  # Status of a ticket.
-  planfile/core/models/strategy.py:
-    e: ModelHints,Task,Sprint,QualityGate,Goal,Strategy
-    ModelHints: convert_str_to_tier(2)  # AI model hints for different phases of task execution.
-    Task: normalize_model_hints(2)  # A task in a sprint - simplified and directly embedded.
-    Sprint: convert_tasks(2)  # A sprint in the planfile.
-    QualityGate: normalize_criteria(2)  # Quality gate definition.
-    Goal:  # Project goal definition.
-    Strategy: get_task_patterns(1),get_sprint(1),validate_sprint_ids(2),compare(1),merge(2),export(1),_count_task_types(0),_collect_durations(0),get_stats(0),to_yaml(0)  # Main strategy configuration - simplified and more flexible.
-  planfile/core/models/ticket.py:
-    e: TicketSource,Ticket
-    TicketSource:  # Who/what created the ticket.
-    Ticket:  # Atomic unit of work in planfile.
-  planfile/core/models.py:
-  planfile/core/schema.py:
-    e: validate_yaml_file,SchemaValidator
-    SchemaValidator: validate_planfile(2),validate_sprint(2),get_current_schema_version(1)  # Validate planfile YAML files against schema definitions.
-    validate_yaml_file(file_path;file_type)
-  planfile/core/store.py:
-    e: Store
-    Store: __init__(1),is_initialized(0),init(0),_read_config(0),_write_config(1),next_id(0),_sprint_file(1),_all_sprint_files(0),create_ticket(1),get_ticket(1),update_ticket(1),delete_ticket(1),delete_tickets_bulk(1)  # File-based ticket store using .planfile/ directory.
-  planfile/core/store_files.py:
-    e: StoreFileMixin
-    StoreFileMixin: _sprint_file(1),_all_sprint_files(0),_read_yaml_cached(1)
-  planfile/core/store_tickets.py:
-    e: TicketStoreMixin
-    TicketStoreMixin: _ticket_from_data(1),_tickets_from_sprint_data(1),_filter_by_files(2),_filter_by_labels(2),_filter_by_attribute(3),_apply_filters(1),_matches_files(2),list_tickets(1)
-  planfile/dsl/__init__.py:
-  planfile/dsl/executor.py:
-    e: DSLResult,DSLExecutor
-    DSLResult: to_dict(0)
-    DSLExecutor: __init__(1),pf(0),run(1),execute(1),_exec_help(1),_exec_unknown(1),_exec_create(1),_exec_create_sprint(1),_exec_list(1),_exec_list_sprints(1),_exec_show(1),_exec_update(1),_exec_move(1),_exec_done(1),_exec_start(1),_exec_block(1),_exec_delete(1),_exec_validate(1),_exec_sync(1),_exec_query(1),_exec_export(1)  # Execute DSL commands against a Planfile instance.
-  planfile/dsl/parser.py:
-    e: DSLCommand,DSLParser
-    DSLCommand: is_valid(0),to_dict(0)
-    DSLParser: parse(1),_extract_object(2),_extract_target(2),_extract_modifiers(2),_coerce(1)  # Parse natural language / DSL commands into DSLCommand object
-  planfile/examples.py:
-    e: example_create_strategy,example_validate_strategy,example_run_strategy,example_verify_strategy,example_programmatic_strategy
-    example_create_strategy()
-    example_validate_strategy()
-    example_run_strategy()
-    example_verify_strategy()
-    example_programmatic_strategy()
-  planfile/execution.py:
-  planfile/executor_standalone.py:
-    e: create_openai_client,create_litellm_client,execute_strategy,TaskResult,LLMClient,StrategyExecutor
-    TaskResult:  # Result of executing a task.
-    LLMClient: __init__(2),chat(2)  # Simple LLM client interface.
-    StrategyExecutor: __init__(2),_default_config(0),execute_strategy(2),_execute_task(4),_select_model(1),_build_prompt(2),_get_project_metrics(1)  # Standalone strategy executor.
-    create_openai_client(api_key;model)
-    create_litellm_client(api_key;model)
-    execute_strategy(strategy_path;project_path)
-  planfile/extensions/__init__.py:
-    e: TicketLogger
-    TicketLogger: __init__(2),error(4),warning(2),metric_alert(4),catch_errors(1)  # Logger that creates tickets for errors, warnings, and alerts
-  planfile/importers/__init__.py:
-    e: register_importer,import_from_source
-    register_importer(name;importer_cls)
-    import_from_source(path;source)
-  planfile/importers/code2llm_importer.py:
-    e: import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health,EvolutionParser
-    EvolutionParser: __init__(1),parse(1),_process_line(1),_handle_outside(1),_handle_in_next(1)  # State machine parser for evolution.toon NEXT[] sections.
-    import_code2llm(toon_path;auto_priority;sprint)
-    _parse_evolution(content;auto_priority)
-    _evolution_item_to_ticket(item;auto_priority)
-    _parse_health(content;auto_priority)
-  planfile/importers/common.py:
-    e: normalize_ticket_dict,load_structured_tickets
-    normalize_ticket_dict(item)
-    load_structured_tickets(path;loader)
-  planfile/importers/json_importer.py:
-    e: import_json
-    import_json(path)
-  planfile/importers/redup_importer.py:
-    e: import_redup,_parse_toon_format,_parse_duplicates,_parse_refactor,_create_refactor_ticket
-    import_redup(file_path)
-    _parse_toon_format(content)
-    _parse_duplicates(text)
-    _parse_refactor(text)
-    _create_refactor_ticket(item;index)
-  planfile/importers/vallm_importer.py:
-    e: import_vallm,_auto_labels,VallmParser
-    VallmParser: __init__(1),parse(1),_process_line(1),_is_file_entry(1),_is_issue_entry(1),_parse_file_entry(1),_parse_issue_entry(1),_determine_priority(1)  # Parser for vallm validation.toon files.
-    import_vallm(toon_path;auto_priority)
-    _auto_labels(rule)
-  planfile/importers/yaml_importer.py:
-    e: import_yaml
-    import_yaml(path)
-  planfile/integrations/__init__.py:
-  planfile/integrations/base.py:
-  planfile/integrations/config.py:
-    e: IntegrationConfig
-    IntegrationConfig: __init__(1),load_dotenv(0),_expand_env_vars(1),discover_configs(0),load_configs(0),get_integration_config(1),get_project_config(0),get_sprint_config(0),get_backlog_config(0),_deep_merge(2),validate_integration(1),has_configured_integrations(0),get_default_backend(0),get_integration_backend(1)  # Manages integration configuration with support for multiple 
-  planfile/integrations/generic.py:
-  planfile/integrations/github.py:
-  planfile/integrations/gitlab.py:
-  planfile/integrations/jira.py:
-  planfile/llm/__init__.py:
-  planfile/llm/adapters.py:
-    e: LLMTestResult,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAdapter,LocalLLMAdapter,LLMTestRunner
-    LLMTestResult:
-    BaseLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)
-    LiteLLMAdapter:
-    OpenRouterAdapter:
-    LocalLLMAdapter:
-    LLMTestRunner: __init__(0),register_adapter(2)
-  planfile/llm/client.py:
-    e: call_llm
-    call_llm(prompt;model;temperature)
-  planfile/llm/generator.py:
-    e: generate_strategy,_collect_metrics,_auto_select_model,_parse_strategy_response,_fix_yaml_formatting,_basic_metrics
-    generate_strategy(project_path)
-    _collect_metrics(project_path;toon_dir)
-    _auto_select_model(metrics)
-    _parse_strategy_response(response)
-    _fix_yaml_formatting(yaml_text)
-    _basic_metrics(project_path)
-  planfile/llm/prompts.py:
-    e: build_strategy_prompt
-    build_strategy_prompt(metrics;sprints;focus)
-  planfile/loaders/__init__.py:
-  planfile/loaders/cli_loader.py:
-    e: load_from_json,save_to_json,load_strategy_from_json,save_strategy_to_json,_md_header,_md_summary,_md_tasks,_md_sprints,_md_metrics,export_results_to_markdown
-    load_from_json(file_path)
-    save_to_json(data;file_path)
-    load_strategy_from_json(file_path)
-    save_strategy_to_json(strategy;file_path)
-    _md_header(results)
-    _md_summary(results)
-    _md_tasks(results)
-    _md_sprints(results)
-    _md_metrics(results)
-    export_results_to_markdown(results;file_path)
-  planfile/loaders/yaml_loader.py:
-    e: load_yaml,save_yaml,load_strategy_yaml,_transform_task_patterns,_transform_sprints,_transform_goal,_format_validation_error,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,_check_required_keys,_validate_sprints,_validate_gates,_validate_task_patterns,validate_strategy_schema
-    load_yaml(file_path)
-    save_yaml(data;file_path)
-    load_strategy_yaml(file_path)
-    _transform_task_patterns(data)
-    _transform_sprints(data)
-    _transform_goal(data)
-    _format_validation_error(e;file_path)
-    save_strategy_yaml(strategy;file_path)
-    load_tasks_yaml(file_path)
-    merge_strategy_with_tasks(strategy;tasks_file)
-    _check_required_keys(data;issues)
-    _validate_sprints(data;issues)
-    _validate_gates(data;issues)
-    _validate_task_patterns(data;issues)
-    validate_strategy_schema(file_path)
-  planfile/mcp/__init__.py:
-  planfile/mcp/server.py:
-    e: handle_tool_call,_read_jsonrpc,_write_jsonrpc,main
-    handle_tool_call(name;arguments)
-    _read_jsonrpc()
-    _write_jsonrpc(obj)
-    main()
-  planfile/models.py:
-  planfile/runner.py:
-    e: load_valid_strategy,verify_strategy_post_execution,_get_project_hash,analyze_project_metrics,apply_strategy_to_tickets,review_strategy,run_strategy
-    load_valid_strategy(path)
-    verify_strategy_post_execution(strategy;project_path;backend)
-    _get_project_hash(project_path)
-    analyze_project_metrics(project_path)
-    apply_strategy_to_tickets(strategy;project_path;backend;dry_run)
-    review_strategy(strategy;project_path;backends;backend_name)
-    run_strategy(strategy_path;project_path;backend;dry_run)
-  planfile/server_common.py:
-    e: get_planfile
-    get_planfile(start_path)
-  planfile/sync/__init__.py:
-  planfile/sync/base.py:
-    e: TicketRef,TicketState,PMBackend,BasePMBackend
-    TicketRef:  # Reference to a created/updated ticket.
-    TicketState:  # State snapshot of a ticket.
-    PMBackend: create_ticket(1),update_ticket(0),get_ticket(1),list_tickets(0),search_tickets(1)  # Protocol for PM system backends.
-    BasePMBackend: __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1),create_ticket(1),_create_ticket(6),update_ticket(7),_update_ticket(7),get_ticket(1),_get_ticket(1),list_tickets(4),_list_tickets(4),search_tickets(1),_search_tickets(1),build_ticket_ref(0),build_ticket_state(0)  # Base class for PM backends with common functionality.
-  planfile/sync/generic.py:
-    e: GenericBackend
-    GenericBackend: __init__(3),_validate_config(0),_make_request(4),_create_ticket(6),_update_ticket(7),_build_update_data(6),_get_ticket(1),_list_tickets(4),_search_tickets(1),_ticket_data_to_status(1)  # Generic HTTP API backend for PM systems.
-  planfile/sync/github.py:
-    e: GitHubBackend
-    GitHubBackend: __init__(2),_validate_config(0),_ensure_labels_exist(1),_prepare_labels(2),_build_metadata_body(2),_create_ticket(7),_update_labels(3),_update_issue_state(2),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitHub Issues integration backend.
-  planfile/sync/gitlab.py:
-    e: GitLabBackend
-    GitLabBackend: __init__(3),_validate_config(0),_prepare_labels(2),_build_metadata_body(2),_create_ticket(7),_update_labels(3),_update_state(2),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitLab Issues integration backend.
-  planfile/sync/jira.py:
-    e: JiraBackend
-    JiraBackend: __init__(4),_validate_config(0),map_priority(1),_map_task_type_to_jira(1),_build_metadata_section(1),_create_ticket(6),_build_update_fields(4),_transition_issue(2),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend.
-  planfile/sync/markdown_backend/__init__.py:
-  planfile/sync/markdown_backend/backend.py:
-    e: MarkdownFileBackend
-    MarkdownFileBackend: __init__(2),_create_ticket(6),_update_ticket(7),_get_ticket(1),_list_tickets(4),_search_tickets(1),_find_ticket_file(1),_scan_ticket_ids(0)  # Backend for managing tickets in CHANGELOG.md and TODO.md fil
-  planfile/sync/markdown_backend/constants.py:
-  planfile/sync/markdown_backend/files.py:
-    e: MarkdownFileManager
-    MarkdownFileManager: _ensure_files_exist(0)  # File existence and bootstrap helpers for markdown ticket fil
-  planfile/sync/markdown_backend/tickets.py:
-    e: MarkdownTicketHelpers
-    MarkdownTicketHelpers: _determine_target_file(3),_generate_ticket_id(2),_ticket_exists(2),_ticket_exists_by_title(2),_format_ticket_entry(7),_write_ticket_to_file(2)  # Ticket routing, lookup, formatting, and persistence helpers.
-  planfile/sync/markdown_backend.py:
-  planfile/sync/mock.py:
-    e: MockBackend
-    MockBackend: __init__(0),_create_ticket(6),_update_ticket(7),_get_ticket(1),_list_tickets(4),_search_tickets(1)  # Mock backend for examples and testing that doesn't require a
-  planfile/sync/operations.py:
-    e: sync_to_external,_update_existing_ticket,_create_new_ticket,_is_permission_error,_print_permission_error,_save_sync_results,_load_sprint_and_backlog,_fetch_external_tickets,_process_external_ticket,sync_from_external,_extract_ticket_data,_print_dry_run_action,_update_local_ticket,_import_new_ticket,_save_import_results
-    sync_to_external(backend;tickets;dry_run;store;integration_name;v1_source_file;v1_data)
-    _update_existing_ticket(backend;ticket;ticket_id;external_id;integration_name;sync_state)
-    _create_new_ticket(backend;ticket;ticket_id;integration_name;sync_state;ticket_map)
-    _is_permission_error(e)
-    _print_permission_error(ticket_id)
-    _save_sync_results(store;v1_source_file;v1_data)
-    _load_sprint_and_backlog(store;v1_source_file;v1_data)
-    _fetch_external_tickets(backend;integration_name)
-    _process_external_ticket(ext_ticket;sprint;backlog;sync_state;integration_name;dry_run;imported_count;updated_count)
-    sync_from_external(backend;store;dry_run;integration_name;v1_source_file;v1_data)
-    _extract_ticket_data(ext_ticket)
-    _print_dry_run_action(planfile_id;ext_data)
-    _update_local_ticket(sprint;backlog;planfile_id;ext_data;updated_count)
-    _import_new_ticket(backlog;ext_data;integration_name;sync_state;imported_count)
-    _save_import_results(store;v1_source_file;v1_data;sprint;backlog;imported_count;updated_count)
-  planfile/sync/state.py:
-    e: SyncState
-    SyncState: __init__(2),get_last_sync(0),save_sync(1),get_remote_id(1),get_local_id(1)  # Persist mapping between local ticket IDs and remote IDs.
-  planfile/sync/utils.py:
-    e: save_v1_format
-    save_v1_format(file_path;data)
+  planfile/runtime_context.py:
+    e: _now,_read_json,_read_yaml,_read_toml,_write_json,runtime_context_config_path,load_runtime_context_config,save_runtime_context_config,_package_summary,_pyproject_summary,_compose_paths,_compose_services,_task_pipelines,_topology_summary,build_runtime_context
+    _now()
+    _read_json(path)
+    _read_yaml(path)
+    _read_toml(path)
+    _write_json(path;data)
+    runtime_context_config_path(project)
+    load_runtime_context_config(project)
+    save_runtime_context_config(project;data)
+    _package_summary(project)
+    _pyproject_summary(project)
+    _compose_paths(project)
+    _compose_services(project)
+    _task_pipelines(project)
+    _topology_summary(project)
+    build_runtime_context(project)
   planfile/testql_integration.py:
     e: _normalize_ref_text,_normalize_ref_url,_iter_external_refs,_collect_ticket_identity_keys,_collect_external_ref_candidates,_extract_result_field,_extract_created_ticket_ref,_extract_search_ticket_id,_looks_not_found_error,_looks_already_exists_error,_update_existing_ref_entry,_append_ref_entry,_update_ticket_integration_fields,_attach_external_ref,_resolve_update_reference,_extract_json_payload,_resolve_scenario_path,_resolve_testql_executable,run_testql_validation,_collect_step_messages,_collect_error_messages,_dedupe_messages,_collect_failure_messages,_extract_file_from_message,build_testql_tickets,_default_strategy_payload,_load_or_init_strategy,_ensure_strategy_lists,_build_task_pattern_entry,_upsert_single_ticket,upsert_testql_tickets,_resolve_sync_backend,_sync_ticket_to_backend,_sync_tickets_to_integration,sync_testql_tickets
     _normalize_ref_text(value)
@@ -1041,6 +372,35 @@ D:
     _sync_ticket_to_backend(ticket;backend;integration)
     _sync_tickets_to_integration(tickets;backend;integration)
     sync_testql_tickets(tickets)
+  planfile/dsl/parser.py:
+    e: DSLCommand,DSLParser
+    DSLCommand: to_dict(0)
+    DSLParser: parse(1),_extract_object(2),_extract_target(2),_extract_modifiers(2),_coerce(0)  # Parse natural language / DSL commands into DSLCommand object...
+  planfile/__init__.py:
+    e: Planfile,quick_ticket,__getattr__
+    Planfile: _utcnow(-1),__init__(1),auto_discover(1),create_ticket(1),get_ticket(1),list_tickets(0),next_ticket(2),update_ticket(1),_merge_model(1),claim_ticket(3),start_ticket(2),complete_ticket(4),fail_ticket(2),_append_note(2),wait_for_input(4),ready_ticket(2),delete_ticket(1),delete_tickets(1),create_tickets_bulk(3)  # Main entry point — convenience wrapper around PlanfileStore...
+    quick_ticket(name;tool)
+    __getattr__(name)
+  planfile/runner.py:
+    e: load_valid_strategy,verify_strategy_post_execution,_get_project_hash,analyze_project_metrics,apply_strategy_to_tickets,review_strategy,run_strategy
+    load_valid_strategy(path)
+    verify_strategy_post_execution(strategy;project_path;backend)
+    _get_project_hash(project_path)
+    analyze_project_metrics(project_path)
+    apply_strategy_to_tickets(strategy;project_path;backend;dry_run)
+    review_strategy(strategy;project_path;backends;backend_name)
+    run_strategy(strategy_path;project_path;backend;dry_run)
+  planfile/todo_sync.py:
+    e: _load_strategy,_status_done,_get_value,_normalize_marker,_collect_markers_from_results,_collect_markers_from_strategy,_resolve_todo_config,_line_matches_any_marker,sync_todo_checkboxes_from_planfile
+    _load_strategy(path)
+    _status_done(status)
+    _get_value(item;key)
+    _normalize_marker(value)
+    _collect_markers_from_results(results)
+    _collect_markers_from_strategy(strategy)
+    _resolve_todo_config(strategy;strategy_path;project_path;enabled_override)
+    _line_matches_any_marker(body;markers)
+    sync_todo_checkboxes_from_planfile(strategy_path;project_path)
   planfile/ticket_validation.py:
     e: _load_strategy,_normalize_rule,_normalize_rel_path,_normalize_files,_resolve_ticket_id,_iter_tasks_list,_iter_tickets_dict,_collect_ticket_entries,_parse_positive_int,_normalize_ticket_filters,_build_issue_indexes,_count_file_lines,_validate_rule_anchor,_resolve_existing_files,_validate_line_anchor,_validate_file_only,_validate_ticket,validate_planfile_tickets
     _load_strategy(path)
@@ -1061,18 +421,321 @@ D:
     _validate_file_only(record;files;project_root)
     _validate_ticket(ticket;entry_ref;project_root;rule_file_index;file_line_index;scan_available)
     validate_planfile_tickets(strategy_path;project_path)
-  planfile/todo_sync.py:
-    e: _load_strategy,_status_done,_get_value,_normalize_marker,_collect_markers_from_results,_collect_markers_from_strategy,_resolve_todo_config,_line_matches_any_marker,sync_todo_checkboxes_from_planfile
-    _load_strategy(path)
-    _status_done(status)
-    _get_value(item;key)
-    _normalize_marker(value)
-    _collect_markers_from_results(results)
-    _collect_markers_from_strategy(strategy)
-    _resolve_todo_config(strategy;strategy_path;project_path;enabled_override)
-    _line_matches_any_marker(body;markers)
-    sync_todo_checkboxes_from_planfile(strategy_path;project_path)
-  planfile/utils/__init__.py:
+  planfile/analysis/generator.py:
+    e: PlanfileGenerator
+    PlanfileGenerator: __init__(0),_default_limits(0),generate_with_external_tools(5),_external_to_internal_analysis(1),_extract_external_metrics(2),generate_from_analysis(6),generate_from_current_project(3),_extract_key_metrics(2),_generate_goal(3),_generate_goals(3),_generate_quality_gates(1),_generate_tasks(1),_parse_effort(1),_generate_target_metrics(1),_generate_risks(1),_generate_success_criteria(1),_create_strategy_object(1),_is_primitive(1),_serialize_primitive(1),_check_circular_ref(2),_serialize_object_attrs(2),_serialize_dict_items(2),_serialize_list_items(2),_make_serializable(2)  # Generate comprehensive planfile from file analysis...
+  planfile/cli/groups/generate/commands.py:
+    e: generate_strategy_cli,generate_from_files_cmd
+    generate_strategy_cli(project_path;output;model;sprints;focus;toon_dir;dry_run)
+    generate_from_files_cmd(project_path;output;project_name;max_sprints;focus;patterns;external_tools;compact;verbose)
+  examples/PROPOSED_API_IMPROVEMENTS.py:
+    e: PlanfileStoreExtended
+    PlanfileStoreExtended: stats(0),export(2),search(2)  # Extended store with analytics and export...
+  planfile/ci.py:
+    e: TestResult,BugReport,CIRunner
+    TestResult:  # Result of running tests...
+    BugReport:  # Generated bug report from test failures...
+    CIRunner: __init__(7),_extract_json_object(0),run_tests(0),run_code_analysis(0),generate_bug_report(2),create_bug_tickets(1),_resolve_target_file(1),_task_patch_applied(0),_extract_yaml_object(0),auto_fix_bugs(1),check_strategy_completion(0),run_loop(0),save_results(2)  # CI/CD runner with automated bug-fix loop and ticket creation...
+  planfile/analysis/parsers/text_parser.py:
+    e: analyze_text
+    analyze_text(file_path)
+  planfile/analysis/generators/strategy_builder.py:
+    e: generate_goal,generate_goals,generate_quality_gates,generate_tasks,parse_effort,generate_target_metrics,generate_risks,generate_success_criteria
+    generate_goal(summary;metrics;focus_area)
+    generate_goals(summary;metrics;focus_area)
+    generate_quality_gates(metrics)
+    generate_tasks(analysis_result)
+    parse_effort(effort)
+    generate_target_metrics(current)
+    generate_risks(analysis_result)
+    generate_success_criteria(metrics)
+  planfile/importers/code2llm_importer.py:
+    e: EvolutionParser,import_code2llm,_parse_evolution,_evolution_item_to_ticket,_parse_health
+    EvolutionParser: __init__(1),parse(1),_process_line(1),_handle_outside(1),_handle_in_next(1)  # State machine parser for evolution.toon NEXT[] sections...
+    import_code2llm(toon_path;auto_priority;sprint)
+    _parse_evolution(content;auto_priority)
+    _evolution_item_to_ticket(item;auto_priority)
+    _parse_health(content;auto_priority)
+  planfile/cli/groups/dsl/commands.py:
+    e: dsl_run,_run_single,_pretty_data,_interactive_shell,register_dsl_commands
+    dsl_run(command;project;fmt;fail_on_error)
+    _run_single(executor;command;fmt;fail_on_error)
+    _pretty_data(data)
+    _interactive_shell(executor;fmt)
+    register_dsl_commands(app)
+  planfile/cli/groups/examples/commands.py:
+    e: create_examples_app,_discover_examples,_execute_example
+    create_examples_app()
+    _discover_examples(examples_dir)
+    _execute_example(ex)
+  examples/python-api/04_advanced_filtering.py:
+    e: example_basic_filtering,example_combined_filters,example_search_by_labels,example_export_filtered,example_statistics,main
+    example_basic_filtering()
+    example_combined_filters()
+    example_search_by_labels()
+    example_export_filtered()
+    example_statistics()
+    main()
+  planfile/sync/markdown_backend/tickets.py:
+    e: MarkdownTicketHelpers
+    MarkdownTicketHelpers: _determine_target_file(3),_generate_ticket_id(2),_ticket_exists(2),_ticket_exists_by_title(2),_format_ticket_entry(7),_write_ticket_to_file(2)  # Ticket routing, lookup, formatting, and persistence helpers...
+  examples/ecosystem/04_llx_integration.py:
+    e: ProjectMetrics,LLXIntegration,example_metric_driven_planning,_calculate_complexity_score,create_llx_config_example
+    ProjectMetrics:  # Project metrics from LLX analysis...
+    LLXIntegration: __init__(1),analyze_project(2),_parse_llx_output(1),_basic_analysis(1),select_model(2),get_task_scope(1)  # Integration with LLX for code analysis and model selection...
+    example_metric_driven_planning()
+    _calculate_complexity_score(metrics)
+    create_llx_config_example()
+  planfile/analysis/external_tools.py:
+    e: AnalysisResults,ExternalToolRunner,run_external_analysis
+    AnalysisResults:  # Results from external tool analysis...
+    ExternalToolRunner: __init__(1),run_all(0),run_code2llm(0),run_vallm(0),run_redup(0),parse_code2llm_output(0),parse_vallm_output(0),parse_redup_output(0),_mock_code2llm_data(0),_mock_vallm_data(0),_mock_redup_data(0)  # Runner for external code analysis tools...
+    run_external_analysis(project_path)
+  planfile/core/store.py:
+    e: Store
+    Store(StoreFileMixin,TicketStoreMixin): __init__(1),mutation_lock(0),_write_yaml_atomic(2),is_initialized(0),load_sprint(1),load_backlog(0),save_sprint(2),init(0),_read_config(0),_write_config(1),_next_id_unlocked(0),next_id(0),_sprint_file(1),_all_sprint_files(0),create_ticket(1),_create_ticket_unlocked(1),get_ticket(1),_serialize_update_value(1),_execution_state(0),_build_history_entry(3),update_ticket(1),delete_ticket(1),delete_tickets_bulk(1)  # File-based ticket store using .planfile/ directory...
+  planfile/cli/project_detector/structure.py:
+    e: _has_tests,_find_src_dirs,_suggest_sprints,_analyze_directory_structure
+    _has_tests(project_path)
+    _find_src_dirs(project_path)
+    _suggest_sprints(project_path;src_dirs;has_tests)
+    _analyze_directory_structure(project_path)
+  planfile/core/models/strategy.py:
+    e: ModelHints,Task,Sprint,QualityGate,Goal,Strategy
+    ModelHints(BaseModel): convert_str_to_tier(1)  # AI model hints for different phases of task execution...
+    Task(BaseModel): normalize_model_hints(1)  # A task in a sprint - simplified and directly embedded...
+    Sprint(BaseModel): convert_tasks(1)  # A sprint in the planfile...
+    QualityGate(BaseModel): normalize_criteria(1)  # Quality gate definition...
+    Goal(BaseModel):  # Project goal definition...
+    Strategy(BaseModel): get_task_patterns(1),get_sprint(1),validate_sprint_ids(1),compare(1),merge(2),export(1),_count_task_types(0),_collect_durations(0),get_stats(0),to_yaml(0)  # Main strategy configuration - simplified and more flexible...
+  planfile/importers/redup_importer.py:
+    e: import_redup,_parse_toon_format,_parse_duplicates,_parse_refactor,_create_refactor_ticket
+    import_redup(file_path)
+    _parse_toon_format(content)
+    _parse_duplicates(text)
+    _parse_refactor(text)
+    _create_refactor_ticket(item;index)
+  planfile/analysis/parsers/toon_parser.py:
+    e: _parse_toon_header,_parse_toon_sections,_determine_section,_parse_health_section,_skip_section,_parse_summary_section,analyze_toon
+    _parse_toon_header(line;file_path;metrics;issues)
+    _parse_toon_sections(lines;file_path;metrics;issues)
+    _determine_section(line;current_section)
+    _parse_health_section(line;line_num;file_path;metrics;issues)
+    _skip_section(line;line_num;file_path;metrics;issues)
+    _parse_summary_section(line;line_num;file_path;metrics;issues)
+    analyze_toon(file_path)
+  planfile/cli/groups/backlog/commands.py:
+    e: _get_planfile_yaml_path,_load_planfile_yaml,_save_planfile_yaml,_matches_files,backlog_list,create_backlog_table,_collect_backlog_to_delete,_collect_targets_to_delete,_print_deletion_preview,_execute_backlog_deletion,_execute_targets_deletion,backlog_delete
+    _get_planfile_yaml_path()
+    _load_planfile_yaml()
+    _save_planfile_yaml(data)
+    _matches_files(item;patterns)
+    backlog_list(files;rule_id;fmt)
+    create_backlog_table(items)
+    _collect_backlog_to_delete(backlog;files;rule_id)
+    _collect_targets_to_delete(data;files)
+    _print_deletion_preview(to_delete;targets_to_delete)
+    _execute_backlog_deletion(data;to_delete)
+    _execute_targets_deletion(data;targets_to_delete)
+    backlog_delete(files;rule_id;targets;dry_run;force)
+  planfile/cli/groups/init/commands.py:
+    e: _choice,_ask,_ask_list,_collect_custom_sprints,_collect_preset_sprints,_collect_sprint_data,_build_sprints_yaml,_assemble_quality_gates,_display_summary,_save_strategy,init_strategy_cli
+    _choice(prompt;options;default;detected)
+    _ask(prompt;default;required;detected)
+    _ask_list(prompt;example)
+    _collect_custom_sprints()
+    _collect_preset_sprints(project_type)
+    _collect_sprint_data(project_type)
+    _build_sprints_yaml(sprints_data)
+    _assemble_quality_gates(focus;detected_gates;extra_gates)
+    _display_summary(name;project_type;domain;goal_short;sprints_yaml;focus;model_tier;output)
+    _save_strategy(strategy_dict;output;yes)
+    init_strategy_cli(output;yes)
+  planfile/cli/project_detector/inference.py:
+    e: _infer_python_project_type,_infer_node_project_type,_infer_domain
+    _infer_python_project_type(deps;pyproject_data;project_path)
+    _infer_node_project_type(deps;package_data)
+    _infer_domain(keywords;classifiers;description)
+  planfile/sync/mock.py:
+    e: MockBackend
+    MockBackend(BasePMBackend): __init__(0),_create_ticket(6),_update_ticket(7),_get_ticket(1),_list_tickets(4),_search_tickets(1)  # Mock backend for examples and testing that doesn't require a...
+  planfile/sync/operations.py:
+    e: sync_to_external,_update_existing_ticket,_create_new_ticket,_is_permission_error,_print_permission_error,_save_sync_results,_load_sprint_and_backlog,_fetch_external_tickets,_process_external_ticket,sync_from_external,_extract_ticket_data,_print_dry_run_action,_update_local_ticket,_import_new_ticket,_save_import_results
+    sync_to_external(backend;tickets;dry_run;store;integration_name;v1_source_file;v1_data)
+    _update_existing_ticket(backend;ticket;ticket_id;external_id;integration_name;sync_state)
+    _create_new_ticket(backend;ticket;ticket_id;integration_name;sync_state;ticket_map)
+    _is_permission_error(e)
+    _print_permission_error(ticket_id)
+    _save_sync_results(store;v1_source_file;v1_data)
+    _load_sprint_and_backlog(store;v1_source_file;v1_data)
+    _fetch_external_tickets(backend;integration_name)
+    _process_external_ticket(ext_ticket;sprint;backlog;sync_state;integration_name;dry_run;imported_count;updated_count)
+    sync_from_external(backend;store;dry_run;integration_name;v1_source_file;v1_data)
+    _extract_ticket_data(ext_ticket)
+    _print_dry_run_action(planfile_id;ext_data)
+    _update_local_ticket(sprint;backlog;planfile_id;ext_data;updated_count)
+    _import_new_ticket(backlog;ext_data;integration_name;sync_state;imported_count)
+    _save_import_results(store;v1_source_file;v1_data;sprint;backlog;imported_count;updated_count)
+  planfile/importers/markdown_importer.py:
+    e: import_markdown
+    import_markdown(path)
+  planfile/cli/groups/review/commands.py:
+    e: review_strategy_cli
+    review_strategy_cli(strategy_path;project_path;backend;config_file;output;verbose)
+  planfile/cli/groups/query/commands.py:
+    e: calculate_strategy_stats,stats_cmd,compare_strategies,compare_cmd,export_cmd,_export_to_csv,_export_to_html,merge_cmd
+    calculate_strategy_stats(strategy)
+    stats_cmd(strategy_file)
+    compare_strategies(s1;s2)
+    compare_cmd(strategy1;strategy2;output)
+    export_cmd(strategy_file;format;output)
+    _export_to_csv(strategy;file_path)
+    _export_to_html(strategy;file_path)
+    merge_cmd(strategy_files;output;name)
+  planfile/cli/groups/auto/commands.py:
+    e: get_backend,_validate_strategy,_initialize_backends,_display_summary_table,_display_final_status,_display_ticket_summary,auto_loop_cmd,ci_status_cmd
+    get_backend(backend_type)
+    _validate_strategy(strategy)
+    _initialize_backends(backend)
+    _display_summary_table(results)
+    _display_final_status(results;strategy)
+    _display_ticket_summary(results)
+    auto_loop_cmd(strategy;project_path;backend;max_iterations;auto_fix;llx_command;output;dry_run)
+    ci_status_cmd(project_path)
+  planfile/integrations/config.py:
+    e: IntegrationConfig
+    IntegrationConfig: __init__(1),load_dotenv(0),_expand_env_vars(1),discover_configs(0),load_configs(0),get_integration_config(1),get_project_config(0),get_sprint_config(0),get_backlog_config(0),_deep_merge(2),validate_integration(1),has_configured_integrations(0),get_default_backend(0),get_integration_backend(1)  # Manages integration configuration with support for multiple ...
+  planfile/analysis/file_analyzer.py:
+    e: FileAnalyzer
+    FileAnalyzer: __init__(0),analyze_file(1),_analyze_toon(1),_analyze_yaml(1),_analyze_json(1),_analyze_text(1),_extract_from_yaml_structure(3),_extract_from_json_structure(3),analyze_directory(2),_generate_summary(3)  # Analyzes YAML/JSON files to extract issues and metrics...
+  examples/ecosystem/02_mcp_integration.py:
+    e: run_mcp_tool,simulate_planfile_generate,simulate_planfile_apply,simulate_planfile_review,example_mcp_session,create_mcp_tool_definitions
+    run_mcp_tool(tool_name;arguments)
+    simulate_planfile_generate(args)
+    simulate_planfile_apply(args)
+    simulate_planfile_review(args)
+    example_mcp_session()
+    create_mcp_tool_definitions()
+  planfile/analysis/generators/metrics_extractor.py:
+    e: extract_key_metrics,_extract_cc_metrics,_extract_critical_metrics,_extract_validation_metrics,_extract_duplication_metrics,_extract_coverage_metrics
+    extract_key_metrics(analysis_result;external_metrics)
+    _extract_cc_metrics(analysis_result;metrics)
+    _extract_critical_metrics(analysis_result;metrics)
+    _extract_validation_metrics(analysis_result;metrics)
+    _extract_duplication_metrics(analysis_result;metrics)
+    _extract_coverage_metrics(analysis_result;metrics)
+  planfile/analysis/sprint_generator.py:
+    e: SprintGenerator
+    SprintGenerator: __init__(1),generate_sprints(2),_group_issues_by_priority(1),_get_high_and_quality_issues(1),_get_remaining_medium_issues(1),_create_sprint(5),_map_category_to_task_type(1),_get_highest_priority(1),_estimate_effort(1),generate_tickets(1)  # Generates sprints and tickets from extracted information...
+  planfile/importers/__init__.py:
+    e: register_importer,import_from_source
+    register_importer(name;importer_cls)
+    import_from_source(path;source)
+  planfile/cli/groups/sync/core.py:
+    e: _initialize_backend,_ticket_matches_integration,_collect_tickets_from_sprint,_collect_tickets_from_backlog,_ticket_matches_integration_v1,_collect_tickets_from_section,_process_planfile_v1,_load_tickets_v1_format,_load_tickets_for_sync,_execute_sync_with_progress,sync_integration
+    _initialize_backend(integration_name;config;show_header)
+    _ticket_matches_integration(ticket;integration_name)
+    _collect_tickets_from_sprint(sprint;integration_name)
+    _collect_tickets_from_backlog(backlog;integration_name)
+    _ticket_matches_integration_v1(ticket;integration_name)
+    _collect_tickets_from_section(data;section;integration_name)
+    _process_planfile_v1(planfile_path;integration_name;all_tickets;tickets_source;v1_source_file;v1_data)
+    _load_tickets_v1_format(directory;integration_name)
+    _load_tickets_for_sync(store;directory;integration_name)
+    _execute_sync_with_progress(backend;all_tickets;dry_run;store;integration_name;v1_source_file;v1_data;direction)
+    sync_integration(integration_name;directory;dry_run;direction;show_header)
+  planfile/cli/groups/validate/commands.py:
+    e: validate_strategy_cli,validate_schema_cli,validate_testql_cli
+    validate_strategy_cli(strategy_path;verbose)
+    validate_schema_cli(file_path;file_type;verbose)
+    validate_testql_cli(scenario_path;project_path;url;dry_run;strategy_path;create_tickets;sync_targets;max_tickets;testql_bin;testql_repo_path)
+  planfile/cli/project_detector/license.py:
+    e: _detect_license
+    _detect_license(project_path)
+  planfile/cli/project_detector/fallback.py:
+    e: _detect_from_structure
+    _detect_from_structure(project_path)
+  planfile/cli/project_detector/main.py:
+    e: detect_project,_quality_gates_to_dict,_determine_source,_build_detected_dict,get_detected_values
+    detect_project(project_path)
+    _quality_gates_to_dict(gates)
+    _determine_source(detected)
+    _build_detected_dict(detected)
+    get_detected_values()
+  planfile/cli/project_detector/model_tier.py:
+    e: _tier_from_env_vars,_tier_from_env_files,_tier_from_config_files,_detect_model_tier
+    _tier_from_env_vars()
+    _tier_from_env_files(project_path)
+    _tier_from_config_files(project_path)
+    _detect_model_tier(project_path)
+  planfile/sync/gitlab.py:
+    e: GitLabBackend
+    GitLabBackend(BasePMBackend): __init__(3),_validate_config(0),_prepare_labels(2),_build_metadata_body(2),_create_ticket(7),_update_labels(3),_update_state(2),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitLab Issues integration backend...
+  planfile/executor_standalone.py:
+    e: TaskResult,LLMClient,StrategyExecutor,create_openai_client,create_litellm_client,execute_strategy
+    TaskResult:  # Result of executing a task...
+    LLMClient: __init__(2),chat(2)  # Simple LLM client interface...
+    StrategyExecutor: __init__(2),_default_config(0),execute_strategy(2),_execute_task(4),_select_model(1),_build_prompt(2),_get_project_metrics(1)  # Standalone strategy executor...
+    create_openai_client(api_key;model)
+    create_litellm_client(api_key;model)
+    execute_strategy(strategy_path;project_path)
+  planfile/core/schema.py:
+    e: SchemaValidator,validate_yaml_file
+    SchemaValidator: validate_planfile(1),validate_sprint(1),get_current_schema_version(0)  # Validate planfile YAML files against schema definitions...
+    validate_yaml_file(file_path;file_type)
+  planfile/core/store_files.py:
+    e: StoreFileMixin
+    StoreFileMixin: _sprint_file(1),_all_sprint_files(0),_read_yaml_cached(1)
+  planfile/core/store_tickets.py:
+    e: TicketStoreMixin
+    TicketStoreMixin: _ticket_from_data(1),_tickets_from_sprint_data(1),_filter_by_files(2),_filter_by_labels(2),_filter_by_attribute(3),_apply_filters(1),_matches_files(2),list_tickets(1)
+  examples/ecosystem/03_proxy_routing.py:
+    e: ProxyClient,example_strategy_generation_with_proxy,create_proxy_config_example,example_budget_tracking
+    ProxyClient: __init__(1),chat(3),get_routing_decision(2),get_usage_stats(0)  # Client for interacting with Proxym API...
+    example_strategy_generation_with_proxy()
+    create_proxy_config_example()
+    example_budget_tracking()
+  planfile/cli/project_detector/readme.py:
+    e: _extract_description,_extract_goal,_find_readme_content,_find_readme_description,_find_readme_goal
+    _extract_description(lines)
+    _extract_goal(content)
+    _find_readme_content(project_path)
+    _find_readme_description(project_path)
+    _find_readme_goal(project_path)
+  planfile/cli/project_detector/gates.py:
+    e: _detect_test_gates,_has_pytest_config,_detect_docker_gates,_detect_ci_gates,_detect_quality_tool_gates,_find_quality_tools,_has_ruff_config,_has_mypy_config,_detect_security_gates,_find_security_tools,_has_bandit_config,_detect_doc_gates,_detect_quality_gates
+    _detect_test_gates(project_path;pyproject_data)
+    _has_pytest_config(project_path;pyproject_data)
+    _detect_docker_gates(project_path)
+    _detect_ci_gates(project_path)
+    _detect_quality_tool_gates(project_path;pyproject_data)
+    _find_quality_tools(project_path;pyproject_data)
+    _has_ruff_config(project_path;pyproject_data)
+    _has_mypy_config(project_path;pyproject_data)
+    _detect_security_gates(project_path;pyproject_data)
+    _find_security_tools(project_path;pyproject_data)
+    _has_bandit_config(project_path;pyproject_data)
+    _detect_doc_gates(project_path)
+    _detect_quality_gates(project_path;pyproject_data)
+  planfile/llm/generator.py:
+    e: generate_strategy,_collect_metrics,_auto_select_model,_parse_strategy_response,_fix_yaml_formatting,_basic_metrics
+    generate_strategy(project_path)
+    _collect_metrics(project_path;toon_dir)
+    _auto_select_model(metrics)
+    _parse_strategy_response(response)
+    _fix_yaml_formatting(yaml_text)
+    _basic_metrics(project_path)
+  planfile/cli/project_detector/pyproject.py:
+    e: _import_toml_loader,_load_pyproject_data,_populate_project_metadata,_populate_poetry_metadata,_populate_project_from_data,_get_project_dependencies,_populate_inferred_project_details,_populate_readme_and_repository_details,_detect_from_pyproject
+    _import_toml_loader()
+    _load_pyproject_data(pyproject_path)
+    _populate_project_metadata(project;data)
+    _populate_poetry_metadata(project;data)
+    _populate_project_from_data(project;data)
+    _get_project_dependencies(data)
+    _populate_inferred_project_details(project;data;project_path)
+    _populate_readme_and_repository_details(project;project_path)
+    _detect_from_pyproject(project_path)
   planfile/utils/metrics.py:
     e: _collect_git_metrics,_count_files_by_language,_check_project_files,analyze_project_metrics,calculate_strategy_health
     _collect_git_metrics(path)
@@ -1080,137 +743,671 @@ D:
     _check_project_files(path)
     analyze_project_metrics(project_path)
     calculate_strategy_health(strategy_results)
+  planfile/sync/github.py:
+    e: GitHubBackend
+    GitHubBackend(BasePMBackend): __init__(2),_validate_config(0),_ensure_labels_exist(1),_prepare_labels(2),_build_metadata_body(2),_create_ticket(7),_update_labels(3),_update_issue_state(2),_update_ticket(8),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(5),_search_tickets(1)  # GitHub Issues integration backend...
+  planfile/sync/jira.py:
+    e: JiraBackend
+    JiraBackend(BasePMBackend): __init__(4),_validate_config(0),map_priority(1),_map_task_type_to_jira(1),_build_metadata_section(1),_create_ticket(6),_build_update_fields(4),_transition_issue(2),_update_ticket(7),_get_ticket(1),_issue_to_ticket_status(1),_list_tickets(4),_search_tickets(1)  # Jira integration backend...
+  examples/checkbox-tickets/demo.py:
+    e: _build_summary_table,_print_sample_tickets,_print_search_results,_print_toggle_demo,demo_checkbox_tickets
+    _build_summary_table(completed;pending)
+    _print_sample_tickets(tickets;label;icon;style)
+    _print_search_results(tickets;query)
+    _print_toggle_demo(ticket)
+    demo_checkbox_tickets()
+  planfile/loaders/yaml_loader.py:
+    e: load_yaml,save_yaml,load_strategy_yaml,_transform_task_patterns,_transform_sprints,_transform_goal,_format_validation_error,save_strategy_yaml,load_tasks_yaml,merge_strategy_with_tasks,_check_required_keys,_validate_sprints,_validate_gates,_validate_task_patterns,validate_strategy_schema
+    load_yaml(file_path)
+    save_yaml(data;file_path)
+    load_strategy_yaml(file_path)
+    _transform_task_patterns(data)
+    _transform_sprints(data)
+    _transform_goal(data)
+    _format_validation_error(e;file_path)
+    save_strategy_yaml(strategy;file_path)
+    load_tasks_yaml(file_path)
+    merge_strategy_with_tasks(strategy;tasks_file)
+    _check_required_keys(data;issues)
+    _validate_sprints(data;issues)
+    _validate_gates(data;issues)
+    _validate_task_patterns(data;issues)
+    validate_strategy_schema(file_path)
+  planfile/loaders/cli_loader.py:
+    e: load_from_json,save_to_json,load_strategy_from_json,save_strategy_to_json,_md_header,_md_summary,_md_tasks,_md_sprints,_md_metrics,export_results_to_markdown
+    load_from_json(file_path)
+    save_to_json(data;file_path)
+    load_strategy_from_json(file_path)
+    save_strategy_to_json(strategy;file_path)
+    _md_header(results)
+    _md_summary(results)
+    _md_tasks(results)
+    _md_sprints(results)
+    _md_metrics(results)
+    export_results_to_markdown(results;file_path)
+  examples/c2004-healing/ticket_builder.py:
+    e: _git_commit,_infer_paths,_format_paths,_default_acceptance,_format_acceptance,_reproduction_for,build_ticket_payload
+    _git_commit(repo)
+    _infer_paths(component;labels)
+    _format_paths(paths)
+    _default_acceptance(instance)
+    _format_acceptance(items)
+    _reproduction_for(labels)
+    build_ticket_payload(alert)
+  planfile/cli/groups/review/utils.py:
+    e: get_backend,_load_backend_config,_load_and_validate_strategy
+    get_backend(backend_type;config)
+    _load_backend_config(backend;config_file)
+    _load_and_validate_strategy(strategy_path)
+  planfile/cli/groups/apply/utils.py:
+    e: get_backend,load_and_validate_strategy,load_backend_config,parse_sprint_filter,select_backend
+    get_backend(backend_type;config)
+    load_and_validate_strategy(strategy_path)
+    load_backend_config(backend;config_file)
+    parse_sprint_filter(sprint_filter)
+    select_backend(backend;backend_config)
+  planfile/cli/project_detector/package.py:
+    e: _detect_from_package_json
+    _detect_from_package_json(project_path)
+  planfile/dsl/executor.py:
+    e: DSLResult,DSLExecutor
+    DSLResult: to_dict(0)
+    DSLExecutor: __init__(1),run(1),execute(1),_exec_help(1),_exec_unknown(1),_exec_create(1),_exec_create_sprint(1),_exec_list(1),_exec_list_sprints(1),_exec_show(1),_exec_update(1),_exec_move(1),_exec_done(1),_exec_start(1),_exec_block(1),_exec_delete(1),_exec_validate(1),_exec_sync(1),_exec_query(1),_exec_export(1)  # Execute DSL commands against a Planfile instance...
+  planfile/api/server.py:
+    e: TicketCreate,TicketUpdate,SprintCreate,DSLRequest,DSLResponse,YAMLPatchRequest,TicketClaimRequest,TicketCompleteRequest,TicketFailRequest,TicketInputRequest,TestEventRequest,ManagementEventRequest,RuntimeContextConfigRequest,ConnectionManager,lifespan,list_tickets,create_ticket,next_ticket,get_ticket,update_ticket,delete_ticket,move_ticket,done_ticket,start_ticket,claim_ticket,complete_ticket,fail_ticket,wait_for_input,ready_ticket,list_sprints,create_sprint,get_yaml,patch_yaml,dsl_command,dsl_help,_event_queue,_event_ticket_id,_remember_event,_ticket_signature,_current_ticket_snapshot,_watch_planfile_changes,_start_planfile_watcher,_stop_planfile_watcher,list_events,create_test_event,ingest_management_event,_runtime_context_project,get_runtime_context,get_runtime_context_config,update_runtime_context_config,runtime_context_page,_runtime_context_html,_dashboard_html,_broadcast_ticket_event,websocket_dsl,health,root,favicon
+    TicketCreate(BaseModel):
+    TicketUpdate(BaseModel):
+    SprintCreate(BaseModel):
+    DSLRequest(BaseModel):
+    DSLResponse(BaseModel):
+    YAMLPatchRequest(BaseModel):
+    TicketClaimRequest(BaseModel):
+    TicketCompleteRequest(BaseModel):
+    TicketFailRequest(BaseModel):
+    TicketInputRequest(BaseModel):
+    TestEventRequest(BaseModel):
+    ManagementEventRequest(BaseModel):
+    RuntimeContextConfigRequest(BaseModel):
+    ConnectionManager: __init__(0),connect(1),disconnect(1),broadcast(1)
+    lifespan(_)
+    list_tickets(response;sprint;status;priority;source)
+    create_ticket(body)
+    next_ticket(sprint;queue)
+    get_ticket(ticket_id)
+    update_ticket(ticket_id;body)
+    delete_ticket(ticket_id)
+    move_ticket(ticket_id;to_sprint)
+    done_ticket(ticket_id)
+    start_ticket(ticket_id;body)
+    claim_ticket(ticket_id;body)
+    complete_ticket(ticket_id;body)
+    fail_ticket(ticket_id;body)
+    wait_for_input(ticket_id;body)
+    ready_ticket(ticket_id)
+    list_sprints()
+    create_sprint(body)
+    get_yaml()
+    patch_yaml(body)
+    dsl_command(body)
+    dsl_help()
+    _event_queue(event)
+    _event_ticket_id(event)
+    _remember_event(event)
+    _ticket_signature(ticket)
+    _current_ticket_snapshot()
+    _watch_planfile_changes(interval_seconds)
+    _start_planfile_watcher()
+    _stop_planfile_watcher()
+    list_events(response;limit;queue;ticket_id)
+    create_test_event(body)
+    ingest_management_event(body)
+    _runtime_context_project()
+    get_runtime_context()
+    get_runtime_context_config()
+    update_runtime_context_config(body)
+    runtime_context_page()
+    _runtime_context_html()
+    _dashboard_html()
+    _broadcast_ticket_event(event_type;action;ticket;ticket_id)
+    websocket_dsl(websocket;project_path)
+    health()
+    root()
+    favicon()
+  planfile/importers/common.py:
+    e: normalize_ticket_dict,load_structured_tickets
+    normalize_ticket_dict(item)
+    load_structured_tickets(path;loader)
+  planfile/cli/groups/sync/commands.py:
+    e: github_cmd,gitlab_cmd,jira_cmd,markdown_cmd,handle_no_integrations,sync_all_integrations,all_cmd,_resolve_watch_integrations,_get_planfile_dir_states,_detect_changes,_run_sync_once,watch_cmd
+    github_cmd(directory;dry_run;direction)
+    gitlab_cmd(directory;dry_run;direction)
+    jira_cmd(directory;dry_run;direction)
+    markdown_cmd(directory;dry_run;direction)
+    handle_no_integrations(directory;dry_run;direction)
+    sync_all_integrations(integrations;directory;dry_run;direction)
+    all_cmd(directory;dry_run;direction)
+    _resolve_watch_integrations(config;integrations)
+    _get_planfile_dir_states(planfile_dir)
+    _detect_changes(last;current)
+    _run_sync_once(to_sync;directory;direction)
+    watch_cmd(directory;interval;integrations;direction;once)
+  planfile/cli/groups/apply/commands.py:
+    e: execute_apply_strategy,display_apply_results,save_results,apply_strategy_cli
+    execute_apply_strategy(strategy;project_path;backend;dry_run;sprint_ids)
+    display_apply_results(results)
+    save_results(results;output)
+    apply_strategy_cli(strategy_path;project_path;backend;config_file;dry_run;sprint_filter;output;verbose)
+  planfile/sync/generic.py:
+    e: GenericBackend
+    GenericBackend(BasePMBackend): __init__(3),_validate_config(0),_make_request(4),_create_ticket(6),_update_ticket(7),_build_update_data(6),_get_ticket(1),_list_tickets(4),_search_tickets(1),_ticket_data_to_status(1)  # Generic HTTP API backend for PM systems...
+  examples/rest-api/04_javascript_client.js:
+    e: PlanfileClient,BASE_URL
+    PlanfileClient: request(-1),url(-1),response(-1),health(-1),listTickets(-1),createTicket(-1),getTicket(-1),updateTicket(-1),moveTicket(-1),deleteTicket(-1),url(-1),response(-1),examples(-1),client(-1),health(-1),ticket(-1),fetched(-1),updated(-1),tickets(-1),moved(-1),examples(-1)
+    BASE_URL()
+  planfile/analysis/parsers/yaml_parser.py:
+    e: _is_issue_content,_create_issue_from_value,_process_yaml_value,_process_yaml_dict,_process_yaml_list,extract_from_yaml_structure,analyze_yaml
+    _is_issue_content(value)
+    _create_issue_from_value(value;full_key;path)
+    _process_yaml_value(value;full_key;path;visited)
+    _process_yaml_dict(data;path;parent_key;visited)
+    _process_yaml_list(data;path;parent_key;visited)
+    extract_from_yaml_structure(data;path;parent_key;visited)
+    analyze_yaml(file_path)
+  planfile/llm/prompts.py:
+    e: build_strategy_prompt
+    build_strategy_prompt(metrics;sprints;focus)
+  planfile/sync/markdown_backend/backend.py:
+    e: MarkdownFileBackend
+    MarkdownFileBackend(MarkdownFileManager,MarkdownTicketHelpers,BasePMBackend): __init__(2),_create_ticket(6),_update_ticket(7),_get_ticket(1),_list_tickets(4),_search_tickets(1),_find_ticket_file(1),_scan_ticket_ids(0)  # Backend for managing tickets in CHANGELOG.md and TODO.md fil...
+  examples/python-api/03_integration.py:
+    e: example_cli_tool_integration,example_monitoring_integration,example_ci_pipeline_integration,example_custom_decorator,main
+    example_cli_tool_integration()
+    example_monitoring_integration()
+    example_ci_pipeline_integration()
+    example_custom_decorator()
+    main()
+  examples/python-api/05_dsl_usage.py:
+    e: example_basic_dsl,example_parser_only,example_batch_operations,example_sprint_management,example_validation_sync,example_query_and_export
+    example_basic_dsl()
+    example_parser_only()
+    example_batch_operations()
+    example_sprint_management()
+    example_validation_sync()
+    example_query_and_export()
+  examples/rest-api/03_python_client.py:
+    e: PlanfileClient,example_basic_operations,example_bulk_operations,example_workflow,example_error_handling,main
+    PlanfileClient: __init__(1),_request(2),health(0),list_tickets(3),create_ticket(5),get_ticket(1),update_ticket(1),move_ticket(2),delete_ticket(1)  # Python client for planfile REST API...
+    example_basic_operations(client)
+    example_bulk_operations(client)
+    example_workflow(client;ticket_id)
+    example_error_handling(client)
+    main()
+  examples/llx_validator.py:
+    e: LLXValidator,create_validation_script
+    LLXValidator: __init__(1),validate_strategy(1),analyze_generated_code(1),_is_llx_available(0),_parse_llx_analysis(1),_basic_code_analysis(1)  # Use LLX to validate generated code and strategies...
+    create_validation_script()
+  planfile/importers/vallm_importer.py:
+    e: VallmParser,import_vallm,_auto_labels
+    VallmParser: __init__(1),parse(1),_process_line(1),_is_file_entry(1),_is_issue_entry(1),_parse_file_entry(1),_parse_issue_entry(1),_determine_priority(1)  # Parser for vallm validation.toon files...
+    import_vallm(toon_path;auto_priority)
+    _auto_labels(rule)
+  planfile/cli/project_detector/git.py:
+    e: _detect_git_authors
+    _detect_git_authors(project_path)
+  planfile/llm/client.py:
+    e: call_llm
+    call_llm(prompt;model;temperature)
   planfile/utils/priorities.py:
     e: calculate_task_priority,map_priority_to_system,get_priority_color
     calculate_task_priority(base_priority;task_type;sprint_id;weight_factors)
     map_priority_to_system(priority;system)
     get_priority_color(priority)
-  tests/llm_adapters/__init__.py:
-  tests/llm_adapters/adapters/__init__.py:
-  tests/llm_adapters/adapters/lite_llm.py:
-    e: LiteLLMAdapter
-    LiteLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for LiteLLM providers.
-  tests/llm_adapters/adapters/local_llm.py:
-    e: LocalLLMAdapter
-    LocalLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for local LLM servers (Ollama, LM Studio, etc.).
-  tests/llm_adapters/adapters/open_router.py:
-    e: OpenRouterAdapter
-    OpenRouterAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for OpenRouter API.
-  tests/llm_adapters/base.py:
-    e: BaseLLMAdapter
-    BaseLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Base class for LLM adapters.
-  tests/llm_adapters/constants.py:
-  tests/llm_adapters/models.py:
-    e: LLMTestResult
-    LLMTestResult:  # Result of LLM test.
-  tests/llm_adapters.py:
+  planfile/sync/base.py:
+    e: TicketRef,TicketState,PMBackend,BasePMBackend
+    TicketRef(BaseModel):  # Reference to a created/updated ticket...
+    TicketState(BaseModel):  # State snapshot of a ticket...
+    PMBackend(Protocol): create_ticket(1),update_ticket(0),get_ticket(1),list_tickets(0),search_tickets(1)  # Protocol for PM system backends...
+    BasePMBackend(ABC): __init__(1),_validate_config(0),map_priority(1),prepare_metadata(1),create_ticket(1),_create_ticket(6),update_ticket(7),_update_ticket(7),get_ticket(1),_get_ticket(1),list_tickets(4),_list_tickets(4),search_tickets(1),_search_tickets(1),build_ticket_ref(0),build_ticket_state(0)  # Base class for PM backends with common functionality...
+  planfile/builder.py:
+    e: LLXStrategyBuilder,create_strategy_command
+    LLXStrategyBuilder: __init__(3),_call_llx(1),ask_llm_questions(0),_parse_bullet_list(1),answers_to_strategy(1),build_strategy(1)  # Interactive strategy builder using LLX...
+    create_strategy_command(output;model;local)
+  examples/python-api/02_ticket_management.py:
+    e: example_create_tickets,example_read_tickets,example_update_tickets,example_bulk_operations,example_delete_and_move,main
+    example_create_tickets()
+    example_read_tickets(ticket_ids)
+    example_update_tickets(ticket_ids)
+    example_bulk_operations()
+    example_delete_and_move(ticket_ids)
+    main()
+  examples/python-api/01_basic_usage.py:
+    e: example_1_basic_initialization,example_2_create_ticket,example_3_quick_ticket,example_4_list_tickets,main
+    example_1_basic_initialization()
+    example_2_create_ticket()
+    example_3_quick_ticket()
+    example_4_list_tickets()
+    main()
+  examples/python-api/03_integration_simple.py:
+    e: main
+    main()
+  examples/rest-api/06_websocket.py:
+    e: example_websocket_basic,example_websocket_interactive,example_websocket_error_handling,example_websocket_raw_text,example_websocket_batch,main
+    example_websocket_basic()
+    example_websocket_interactive()
+    example_websocket_error_handling()
+    example_websocket_raw_text()
+    example_websocket_batch()
+    main()
+  planfile/sync/state.py:
+    e: SyncState
+    SyncState: __init__(2),get_last_sync(0),save_sync(1),get_remote_id(1),get_local_id(1)  # Persist mapping between local ticket IDs and remote IDs...
+  planfile/sync/markdown_backend/files.py:
+    e: MarkdownFileManager
+    MarkdownFileManager: _ensure_files_exist(0)  # File existence and bootstrap helpers for markdown ticket fil...
+  planfile/cli/groups/serve/commands.py:
+    e: serve_cli
+    serve_cli(host;port;reload;workers)
+  planfile/extensions/__init__.py:
+    e: TicketLogger
+    TicketLogger: __init__(2),error(4),warning(2),metric_alert(4),catch_errors(1)  # Logger that creates tickets for errors, warnings, and alerts...
+  planfile/server_common.py:
+    e: get_planfile
+    get_planfile(start_path)
+  planfile/examples.py:
+    e: example_create_strategy,example_validate_strategy,example_run_strategy,example_verify_strategy,example_programmatic_strategy
+    example_create_strategy()
+    example_validate_strategy()
+    example_run_strategy()
+    example_verify_strategy()
+    example_programmatic_strategy()
+  planfile/analysis/parsers/json_parser.py:
+    e: analyze_json
+    analyze_json(file_path)
+  planfile/cli/commands.py:
+    e: version_callback,main_callback,main
+    version_callback(value)
+    main_callback(ctx;version)
+    main()
+  planfile/cli/core/errors.py:
+    e: exit_with_error,exit_with_warning,handle_exception
+    exit_with_error(message;code)
+    exit_with_warning(message;code)
+    handle_exception(e;context)
+  planfile/cli/core/registry.py:
+    e: CommandRegistry,register_simple_command,register_typer_group
+    CommandRegistry: __init__(0),register(1),apply_all(1)  # Registry for CLI command groups...
+    register_simple_command(app;name;command;help_text)
+    register_typer_group(app;name;factory;help_text)
+  examples/python-api/04_analytics_simple.py:
+    e: main
+    main()
+  examples/rest-api/04_dsl_usage.py:
+    e: example_dsl_command,example_dsl_create_ticket,example_dsl_update_ticket,example_dsl_sprint,example_dsl_validate_sync,example_dsl_help,example_yaml_operations
+    example_dsl_command()
+    example_dsl_create_ticket()
+    example_dsl_update_ticket()
+    example_dsl_sprint()
+    example_dsl_validate_sync()
+    example_dsl_help()
+    example_yaml_operations()
+  planfile/sync/utils.py:
+    e: save_v1_format
+    save_v1_format(file_path;data)
+  examples/ecosystem/mcp-server-example.py:
+    e: planfile_generate,planfile_apply,planfile_review,main
+    planfile_generate(arguments)
+    planfile_apply(arguments)
+    planfile_review(arguments)
+    main()
+  planfile/importers/yaml_importer.py:
+    e: import_yaml
+    import_yaml(path)
+  planfile/importers/json_importer.py:
+    e: import_json
+    import_json(path)
+  planfile/cli/auto_loop.py:
+    e: create_auto_app
+    create_auto_app()
+  planfile/cli/extra_commands.py:
+    e: add_extra_commands
+    add_extra_commands(app)
+  planfile/cli/groups/serve/__init__.py:
+    e: register_serve_commands
+    register_serve_commands(app)
+  planfile/cli/groups/sync/__init__.py:
+    e: register_sync_commands
+    register_sync_commands(app)
+  planfile/cli/groups/review/__init__.py:
+    e: register_review_commands
+    register_review_commands(app)
+  planfile/cli/groups/backlog/__init__.py:
+    e: register_backlog_commands
+    register_backlog_commands(app)
+  planfile/cli/groups/health/__init__.py:
+    e: register_health_commands
+    register_health_commands(app)
+  planfile/cli/groups/examples/__init__.py:
+    e: register_examples_commands
+    register_examples_commands(app)
+  planfile/cli/groups/health/commands.py:
+    e: create_health_app
+    create_health_app()
+  planfile/cli/groups/apply/__init__.py:
+    e: register_apply_commands
+    register_apply_commands(app)
+  planfile/cli/groups/query/__init__.py:
+    e: register_query_commands
+    register_query_commands(app)
+  planfile/cli/groups/init/__init__.py:
+    e: register_init_commands
+    register_init_commands(app)
+  planfile/cli/groups/auto/__init__.py:
+    e: register_auto_commands
+    register_auto_commands(app)
+  planfile/cli/groups/generate/__init__.py:
+    e: register_generate_commands
+    register_generate_commands(app)
+  planfile/cli/groups/ticket/__init__.py:
+    e: register_ticket_commands
+    register_ticket_commands(app)
+  planfile/cli/groups/validate/__init__.py:
+    e: register_validate_commands
+    register_validate_commands(app)
+  planfile/cli/core/progress.py:
+    e: with_spinner,create_progress
+    with_spinner(description;fn)
+    create_progress()
+  planfile/cli/core/console.py:
+    e: print_success,print_error,print_warning,print_info,print_dim
+    print_success(message)
+    print_error(message)
+    print_warning(message)
+    print_info(message)
+    print_dim(message)
+  planfile/llm/adapters.py:
     e: LLMTestResult,BaseLLMAdapter,LiteLLMAdapter,OpenRouterAdapter,LocalLLMAdapter,LLMTestRunner
-    LLMTestResult:  # Result of LLM test.
-    BaseLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Base class for LLM adapters.
-    LiteLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for LiteLLM providers.
-    OpenRouterAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)  # Adapter for OpenRouter API.
-    LocalLLMAdapter: __init__(1),test_strategy_generation(2),_test_ollama(2),_test_openai_compatible(2),get_available_models(0)  # Adapter for local LLM servers (Ollama, LM Studio, etc.).
-    LLMTestRunner: __init__(0),register_adapter(2),test_strategy_with_all_adapters(2),generate_report(1),_generate_header(0),_generate_summary_table(1),_generate_detailed_results(1),_generate_successful_tests_section(1),_generate_failed_tests_section(1)  # Run tests across multiple LLM adapters.
-  tests/test_backlog.py:
-    e: test_backlog_list_no_items,test_matches_files
-    test_backlog_list_no_items()
-    test_matches_files()
-  tests/test_chars.py:
-  tests/test_ci_runner.py:
-    e: _make_runner,test_generate_bug_report_accepts_title_key,test_generate_bug_report_parses_markdown_json,test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend,test_auto_fix_bugs_returns_false_without_target_file
-    _make_runner(auto_fix)
-    test_generate_bug_report_accepts_title_key(monkeypatch)
-    test_generate_bug_report_parses_markdown_json(monkeypatch)
-    test_auto_fix_bugs_uses_llx_plan_run_with_edit_backend(monkeypatch;tmp_path)
-    test_auto_fix_bugs_returns_false_without_target_file(monkeypatch;tmp_path)
-  tests/test_dsl.py:
-    e: _make_mock_ticket,TestDSLParser,TestDSLExecutor
-    TestDSLParser: setup_method(0),test_parse_empty(0),test_parse_help(0),test_parse_unknown_verb(0),test_parse_list_tickets(0),test_parse_list_tickets_with_filters(0),test_parse_list_sprints(0),test_parse_create_ticket_quoted(0),test_parse_create_ticket_sprint(0),test_parse_create_aliases(0),test_parse_show_ticket(0),test_parse_ticket_id_uppercase(0),test_parse_update_ticket(0),test_parse_set_alias(0),test_parse_set_labels(0),test_parse_move_ticket(0),test_parse_move_ticket_to_value(0),test_parse_done(0),test_parse_done_aliases(0),test_parse_start(0),test_parse_block(0),test_parse_delete(0),test_parse_delete_aliases(0),test_parse_validate(0),test_parse_sync(0),test_parse_sync_all(0),test_parse_query_where(0),test_parse_export(0),test_coerce_bool_true(0),test_coerce_bool_false(0),test_coerce_int(0),test_to_dict(0),test_is_valid(0)
-    TestDSLExecutor: _executor_with_mock(0),test_help(0),test_unknown_verb(0),test_list_tickets(0),test_list_tickets_empty(0),test_create_ticket(0),test_create_ticket_missing_name(0),test_show_ticket(0),test_show_ticket_not_found(0),test_show_ticket_missing_id(0),test_update_ticket(0),test_update_ticket_no_params(0),test_update_ticket_not_found(0),test_done_ticket(0),test_start_ticket(0),test_block_ticket(0),test_block_ticket_with_reason(0),test_delete_ticket(0),test_delete_ticket_not_found(0),test_move_ticket(0),test_move_ticket_missing_sprint(0),test_dsl_result_to_dict(0),test_query_delegates_to_list(0),test_executor_handles_exception(0)
-    _make_mock_ticket(ticket_id;name;status;priority)
-  tests/test_e2e_backlog.py:
-    e: test_e2e_backlog_list_empty,test_e2e_backlog_list_with_items,test_e2e_backlog_list_with_files_filter,test_e2e_backlog_delete_dry_run,test_e2e_backlog_delete_force,test_e2e_backlog_delete_targets
-    test_e2e_backlog_list_empty()
-    test_e2e_backlog_list_with_items()
-    test_e2e_backlog_list_with_files_filter()
-    test_e2e_backlog_delete_dry_run()
-    test_e2e_backlog_delete_force()
-    test_e2e_backlog_delete_targets()
-  tests/test_e2e_schema.py:
-    e: test_e2e_validate_schema_valid_planfile,test_e2e_validate_schema_missing_required_field,test_e2e_validate_schema_version_mismatch,test_e2e_validate_schema_invalid_yaml,test_e2e_validate_schema_sprint_yaml,test_e2e_validate_schema_verbose
-    test_e2e_validate_schema_valid_planfile()
-    test_e2e_validate_schema_missing_required_field()
-    test_e2e_validate_schema_version_mismatch()
-    test_e2e_validate_schema_invalid_yaml()
-    test_e2e_validate_schema_sprint_yaml()
-    test_e2e_validate_schema_verbose()
-  tests/test_e2e_ticket_files.py:
-    e: test_e2e_ticket_create_with_files,test_e2e_ticket_list_with_files_filter,test_e2e_ticket_delete_with_files_filter,test_e2e_ticket_bulk_update_with_files_filter,test_e2e_ticket_with_single_file_field
-    test_e2e_ticket_create_with_files()
-    test_e2e_ticket_list_with_files_filter()
-    test_e2e_ticket_delete_with_files_filter()
-    test_e2e_ticket_bulk_update_with_files_filter()
-    test_e2e_ticket_with_single_file_field()
-  tests/test_integration.py:
-    e: test_integration
-    test_integration()
-  tests/test_regex.py:
-  tests/test_regex2.py:
-  tests/test_schema.py:
-    e: test_validate_planfile_valid,test_validate_planfile_missing_required_field,test_validate_planfile_schema_version_mismatch,test_validate_planfile_wrong_type,test_validate_sprint_valid,test_validate_sprint_missing_required_field,test_validate_sprint_missing_sprint_id,test_validate_yaml_file_planfile,test_validate_yaml_file_invalid_yaml,test_validate_yaml_file_not_found,test_get_current_schema_version
-    test_validate_planfile_valid()
-    test_validate_planfile_missing_required_field()
-    test_validate_planfile_schema_version_mismatch()
-    test_validate_planfile_wrong_type()
-    test_validate_sprint_valid()
-    test_validate_sprint_missing_required_field()
-    test_validate_sprint_missing_sprint_id()
-    test_validate_yaml_file_planfile()
-    test_validate_yaml_file_invalid_yaml()
-    test_validate_yaml_file_not_found()
-    test_get_current_schema_version()
-  tests/test_strategy.py:
-    e: test_basic_models,test_yaml_loading
-    test_basic_models()
-    test_yaml_loading()
-  tests/test_testql_integration.py:
-    e: _write,test_build_testql_tickets_from_failed_report,test_build_testql_tickets_handles_compact_report_steps_count,test_upsert_testql_tickets_updates_tasks_and_sprint_patterns,test_upsert_testql_tickets_deduplicates_by_external_url,test_sync_testql_tickets_runs_markdown_first,test_sync_testql_tickets_updates_by_external_id,test_sync_testql_tickets_updates_by_url_search,test_resolve_testql_executable_falls_back_to_local_repo,_FakeBackend,_UpdateAwareBackend
-    _FakeBackend: __init__(2),create_ticket(1)
-    _UpdateAwareBackend: __init__(1),create_ticket(1),update_ticket(1),search_tickets(1)
-    _write(path;content)
-    test_build_testql_tickets_from_failed_report()
-    test_build_testql_tickets_handles_compact_report_steps_count()
-    test_upsert_testql_tickets_updates_tasks_and_sprint_patterns(tmp_path)
-    test_upsert_testql_tickets_deduplicates_by_external_url(tmp_path)
-    test_sync_testql_tickets_runs_markdown_first(tmp_path;monkeypatch)
-    test_sync_testql_tickets_updates_by_external_id(tmp_path;monkeypatch)
-    test_sync_testql_tickets_updates_by_url_search(tmp_path;monkeypatch)
-    test_resolve_testql_executable_falls_back_to_local_repo(tmp_path;monkeypatch)
-  tests/test_ticket_files.py:
-    e: test_ticket_model_with_files,test_ticket_model_with_file,test_ticket_model_default_files,test_store_filter_by_files,test_store_filter_by_file,test_store_filter_by_files_and_file,test_store_filter_by_files_glob_pattern,test_store_filter_no_files,test_store_filter_multiple_patterns,test_store_matches_files,test_ticket_create_with_files
-    test_ticket_model_with_files()
-    test_ticket_model_with_file()
-    test_ticket_model_default_files()
-    test_store_filter_by_files()
-    test_store_filter_by_file()
-    test_store_filter_by_files_and_file()
-    test_store_filter_by_files_glob_pattern()
-    test_store_filter_no_files()
-    test_store_filter_multiple_patterns()
-    test_store_matches_files()
-    test_ticket_create_with_files()
-  tests/test_ticket_validation.py:
-    e: _write,test_validate_planfile_tickets_rule_based_current_and_stale,test_validate_planfile_tickets_line_based_without_scan,test_validate_planfile_tickets_collects_backlog_and_sprint_sections,test_validate_planfile_tickets_filters_specific_ticket_ids,test_validate_planfile_tickets_empty_ticket_ids_returns_all,test_validate_planfile_tickets_nonexistent_ids_returns_empty
-    _write(path;content)
-    test_validate_planfile_tickets_rule_based_current_and_stale(tmp_path)
-    test_validate_planfile_tickets_line_based_without_scan(tmp_path)
-    test_validate_planfile_tickets_collects_backlog_and_sprint_sections(tmp_path)
-    test_validate_planfile_tickets_filters_specific_ticket_ids(tmp_path)
-    test_validate_planfile_tickets_empty_ticket_ids_returns_all(tmp_path)
-    test_validate_planfile_tickets_nonexistent_ids_returns_empty(tmp_path)
-  tests/test_todo_sync.py:
-    e: _write,test_sync_todo_checkboxes_from_planfile_uses_strategy_statuses,test_sync_todo_checkboxes_from_planfile_uses_results_markers,test_sync_todo_checkboxes_from_planfile_respects_disabled_setting
-    _write(path;content)
-    test_sync_todo_checkboxes_from_planfile_uses_strategy_statuses(tmp_path)
-    test_sync_todo_checkboxes_from_planfile_uses_results_markers(tmp_path)
-    test_sync_todo_checkboxes_from_planfile_respects_disabled_setting(tmp_path)
+    LLMTestResult:
+    BaseLLMAdapter: __init__(1),test_strategy_generation(2),get_available_models(0)
+    LiteLLMAdapter(BaseLLMAdapter):
+    OpenRouterAdapter(BaseLLMAdapter):
+    LocalLLMAdapter(BaseLLMAdapter):
+    LLMTestRunner: __init__(0),register_adapter(2)
+  planfile/core/models/ticket.py:
+    e: TicketSource,TicketExecutor,TicketExecution,TicketInputs,TicketOutputs,Ticket,_utcnow
+    TicketSource(BaseModel):  # Who/what created the ticket...
+    TicketExecutor(BaseModel):  # Who should execute this task and by what mechanism...
+    TicketExecution(BaseModel):  # Runtime execution state for queue-oriented workflows...
+    TicketInputs(BaseModel):  # Inputs required before or during execution...
+    TicketOutputs(BaseModel):  # Artifacts and result data produced by execution...
+    Ticket(BaseModel):  # Atomic unit of work in planfile...
+    _utcnow()
+  redsl_refactor_report.toon.yaml:
+  .gitlab-ci.yml:
+  goal.yaml:
+  redsl.yaml:
+  docker-compose.yml:
+  pyproject.toml:
+  test-integrated.yaml:
+  redsl_refactor_plan.toon.yaml:
+  tree.sh:
+  examples/web-template.yaml:
+  examples/run_all_tests.sh:
+    e: run_test,run_python_test
+    run_test()
+    run_python_test()
+  examples/strategy_simple_v2.yaml:
+  examples/strategy_free_test.yaml:
+  Taskfile.yml:
+  Makefile:
+  examples/test-strategy.yaml:
+  examples/validate_with_llx.sh:
+    e: validate_file
+    validate_file()
+  project.sh:
+  prefact.yaml:
+  examples/quick-start.yaml:
+  Dockerfile:
+  examples/run.sh:
+  examples/gitlab/gitlab.planfile.yaml:
+  examples/gitlab/run.sh:
+    e: print,print,print,print,print,print,print
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+  examples/gitlab/tickets.planfile.yaml:
+  examples/demo-without-keys/run.sh:
+  examples/rest-api/01_start_server.sh:
+  examples/interactive-tests/test_interactive_expect.sh:
+  examples/rest-api/run_all.sh:
+    e: cleanup
+    cleanup()
+  examples/rest-api/02_curl_examples.sh:
+    e: print_step,print
+    print_step()
+    print()
+  examples/jira/jira.planfile.yaml:
+  examples/jira/run.sh:
+    e: print,print,print,print,print,print,print,print,print
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+  examples/integrated-functionality/merged.yaml:
+  examples/integrated-functionality/run.sh:
+  examples/integrated-functionality/mobile-healthcare.yaml:
+  examples/integrated-functionality/strategy-export.yaml:
+  examples/integrated-functionality/template-mobile-healthcare.yaml:
+  examples/integrated-functionality/strategy-export-dict.txt:
+  examples/integrated-functionality/template-ml-finance.yaml:
+  examples/integrated-functionality/web.json:
+  examples/integrated-functionality/ml-finance.yaml:
+  examples/integrated-functionality/merged-strategy.yaml:
+  examples/integrated-functionality/web-ecommerce.yaml:
+  examples/vallm/run.sh:
+  examples/multi-ticket/jira.planfile.yaml:
+  examples/multi-ticket/run.sh:
+    e: print,print,print,print,print,print,print,print
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+  examples/multi-ticket/gitlab.planfile.yaml:
+  examples/integrated-functionality/template-web-ecommerce.yaml:
+  examples/multi-ticket/tickets.planfile.yaml:
+  examples/multi-ticket/github.planfile.yaml:
+  examples/llm-integration/llm-config.yaml:
+  examples/strategies/microservices-migration.yaml:
+  examples/vallm/planfile.yaml:
+  examples/strategies/ml-pipeline-optimization.yaml:
+  examples/strategies/onboarding.yaml:
+  examples/checkbox-tickets/run.sh:
+  examples/llm-integration/run.sh:
+  examples/jira/tickets.planfile.yaml:
+  examples/tasks/common-tasks.yaml:
+  examples/redup/run.sh:
+  examples/advanced-usage/run.sh:
+  examples/advanced-usage/ci-workflow.sh:
+  examples/external-tools/run.sh:
+  examples/strategies/security-hardening.yaml:
+  examples/advanced-usage/ci-strategy.yaml:
+  examples/strategies/ecommerce-mvp.yaml:
+  examples/ecosystem/01_full_workflow.sh:
+    e: UserType,User,UserService,User,UserController,UserService,__init__,_load_config,create_user,get_user,update_user,setattr,delete_user,get_users_by_type,authenticate,export_to_json,import_from_json,get_statistics,__init__,create_user,__init__,create_user,get_user
+    UserType:
+    User:
+    UserService:
+    User:
+    UserController:
+    UserService:
+    __init__()
+    _load_config()
+    create_user()
+    get_user()
+    update_user()
+    setattr()
+    delete_user()
+    get_users_by_type()
+    authenticate()
+    export_to_json()
+    import_from_json()
+    get_statistics()
+    __init__()
+    create_user()
+    __init__()
+    create_user()
+    get_user()
+  examples/advanced-usage/security-baseline.yaml:
+  examples/advanced-usage/final-strategy.yaml:
+  examples/redup/planfile.yaml:
+  examples/python-api/run_all.sh:
+  examples/c2004-healing/planfile.yaml:
+  examples/cli/01_dsl_usage.py:
+  examples/github/run.sh:
+    e: print,print,print,print,print,print,print
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+  examples/github/planfile-sync.sh:
+  examples/github/tickets.planfile.yaml:
+  examples/github/planfile.yaml:
+  examples/github/github.planfile.yaml:
+  examples/quick-start/web-template.json:
+  examples/quick-start/run.sh:
+  examples/quick-start/run_fixed.sh:
+  examples/comprehensive-example/run.sh:
+  examples/cli-commands/run.sh:
+  examples/cli-commands/test-strategy.yaml:
+  examples/cli-commands/run_fixed.sh:
+  examples/readme-tests/test_readme_examples.sh:
+    e: TestClass,hello_world,__init__,greet
+    TestClass:
+    hello_world()
+    __init__()
+    greet()
+  examples/bash-generation/test_planfile_generation.sh:
+    e: User,UserController,Config,UserService,test_planfile_generation,__init__,to_dict,render_user,create_user,health_check,to_dict,__init__,create_user,get_user
+    User:
+    UserController:
+    Config:
+    UserService:
+    test_planfile_generation()
+    __init__()
+    to_dict()
+    render_user()
+    create_user()
+    health_check()
+    to_dict()
+    __init__()
+    create_user()
+    get_user()
+  examples/bash-generation/verify_planfile.sh:
+    e: validate_planfile,print,print,print
+    validate_planfile()
+    print()
+    print()
+    print()
+  examples/code2llm/run.sh:
+  web/web-template.yaml:
+  examples/code2llm/planfile.yaml:
+  web/web-template-v3.yaml:
+  analyses/refactoring_summary.json:
+  web/web-template-v2.yaml:
+  analyses/SUMR.json:
+  analyses/enhanced-analysis.yaml:
+  analyses/llx-driven-strategy.yaml:
+  analyses/sumd.json:
+  analyses/analysis-generated.yaml:
+  analyses/final-planfile.yaml:
+  analyses/integrated-planfile.yaml:
+  scripts/docker-entrypoint.sh:
+    e: check_env,validate_config,setup_workspace,run_command,main
+    check_env()
+    validate_config()
+    setup_workspace()
+    run_command()
+    main()
+  scripts/cleanup_redundant.sh:
+  scripts/auto_generate_planfile.sh:
+  analyses/llx-config-for-planfile.yaml:
+  scripts/project.sh:
+  scripts/run_examples.sh:
+    e: print_header,print_step,print_success,print_error,print_info,run_example,check_prerequisites,setup_environment,run_all_examples,run_specific_example,show_usage,list_examples,main
+    print_header()
+    print_step()
+    print_success()
+    print_error()
+    print_info()
+    run_example()
+    check_prerequisites()
+    setup_environment()
+    run_all_examples()
+    run_specific_example()
+    show_usage()
+    list_examples()
+    main()
+  planfile/execution.py:
+  planfile/models.py:
+  planfile/sync/__init__.py:
+  analyses/test-integrated.yaml:
+  planfile/sync/markdown_backend/__init__.py:
+  planfile/sync/markdown_backend/constants.py:
+  planfile/loaders/__init__.py:
+  planfile/analysis/__init__.py:
+  planfile/analysis/generators/__init__.py:
+  planfile/analysis/parsers/__init__.py:
+  planfile/core/__init__.py:
+  planfile/core/models/__init__.py:
+  planfile/analysis/models.py:
+    e: ExtractedIssue,ExtractedMetric,ExtractedTask
+    ExtractedIssue:  # Represents an issue extracted from a file...
+    ExtractedMetric:  # Represents a metric extracted from a file...
+    ExtractedTask:  # Represents a task extracted from a file...
+  planfile/cli/project_detector/__init__.py:
+  planfile/cli/__init__.py:
+  planfile/cli/__main__.py:
+  planfile/core/models/base.py:
+    e: TaskType,ModelTier,TicketStatus
+    TaskType(str,Enum):  # Type of task in the planfile...
+    ModelTier(str,Enum):  # Model tier for different phases of work...
+    TicketStatus(str,Enum):  # Status of a ticket...
+  planfile/cli/groups/dsl/__init__.py:
+  planfile/cli/core/__init__.py:
+  planfile/llm/__init__.py:
+  planfile/utils/__init__.py:
+  planfile/mcp/__init__.py:
+  planfile/integrations/__init__.py:
+  planfile/cli/project_detector/base.py:
+    e: DetectedQualityGate,DetectedProject
+    DetectedQualityGate:  # Detected quality gate from project files...
+    DetectedProject:  # Container for detected project information...
+  planfile/integrations/gitlab.py:
+  planfile/api/__init__.py:
+  planfile/dsl/__init__.py:
+  testql-scenarios/generated-from-pytests.testql.toon.yaml:
+  testql-scenarios/generated-unit-tests.testql.toon.yaml:
+  config/mcp-tools.json:
+  config/goal.yaml:
+  config/pyqual.yaml:
+  config/planfile-auto.yaml:
+  config/prefact.yaml:
+  planfile/integrations/jira.py:
+  planfile/integrations/base.py:
+  planfile/integrations/generic.py:
+  planfile/integrations/github.py:

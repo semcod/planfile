@@ -14,7 +14,7 @@ console = Console()
 
 def sync_to_external(backend, tickets, dry_run: bool, store, integration_name: str, v1_source_file=None, v1_data=None) -> None:
     """Sync planfile tickets to external system."""
-    sync_state = SyncState(Path(store.planfile_dir), integration_name)
+    sync_state = SyncState(Path(store.base_dir), integration_name)
     ticket_map = {}
 
     for ticket_id, ticket in tickets:
@@ -151,7 +151,7 @@ def _process_external_ticket(ext_ticket, sprint: dict, backlog: dict, sync_state
 
 def sync_from_external(backend, store, dry_run: bool, integration_name: str, v1_source_file=None, v1_data=None) -> None:
     """Sync tickets from external system to planfile."""
-    sync_state = SyncState(Path(store.planfile_dir), integration_name)
+    sync_state = SyncState(Path(store.base_dir), integration_name)
     imported_count = 0
     updated_count = 0
 

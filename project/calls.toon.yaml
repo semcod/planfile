@@ -1,10 +1,11 @@
 # code2llm call graph | /home/tom/github/semcod/planfile
-# nodes: 428 | edges: 455 | modules: 92
-# CC̄=2.2
+# generated in 0.56s
+# nodes: 456 | edges: 500 | modules: 95
+# CC̄=3.7
 
 HUBS[20]:
-  Taskfile.print
-    CC=0  in:361  out:0  total:361
+  examples.gitlab.run.print
+    CC=0  in:394  out:0  total:394
   planfile.testql_integration._collect_ticket_identity_keys
     CC=14  in:2  out:57  total:59
   examples.ecosystem.04_llx_integration.example_metric_driven_planning
@@ -13,6 +14,8 @@ HUBS[20]:
     CC=8  in:0  out:56  total:56
   planfile.cli.groups.examples.commands.create_examples_app
     CC=1  in:1  out:46  total:47
+  planfile.builder.LLXStrategyBuilder.ask_llm_questions
+    CC=4  in:0  out:46  total:46
   planfile.mcp.server.handle_tool_call
     CC=27  in:1  out:42  total:43
   planfile.cli.groups.review.commands.review_strategy_cli
@@ -23,30 +26,26 @@ HUBS[20]:
     CC=13  in:4  out:30  total:34
   planfile.testql_integration.upsert_testql_tickets
     CC=15  in:1  out:31  total:32
+  planfile.runtime_context.build_runtime_context
+    CC=12  in:1  out:30  total:31
   planfile.todo_sync.sync_todo_checkboxes_from_planfile
     CC=14  in:0  out:30  total:30
+  planfile.runtime_context._compose_services
+    CC=17  in:1  out:29  total:30
   planfile.testql_integration._collect_external_ref_candidates
     CC=9  in:1  out:29  total:30
   planfile.cli.project_detector.package._detect_from_package_json
     CC=7  in:1  out:28  total:29
-  planfile.cli.groups.sync.commands.watch_cmd
-    CC=6  in:0  out:29  total:29
   planfile.cli.groups.init.commands.init_strategy_cli
     CC=8  in:0  out:29  total:29
   planfile.cli.groups.health.commands.create_health_app
     CC=1  in:1  out:28  total:29
-  planfile.cli.project_detector.fallback._detect_from_structure
-    CC=9  in:1  out:27  total:28
+  planfile.cli.groups.sync.commands.watch_cmd
+    CC=6  in:0  out:29  total:29
   planfile.cli.groups.ticket.commands.ticket_validate
     CC=10  in:0  out:28  total:28
-  planfile.cli.groups.backlog.commands.backlog_delete
-    CC=11  in:0  out:27  total:27
-  planfile.importers.redup_importer._parse_duplicates
-    CC=9  in:1  out:26  total:27
 
 MODULES:
-  Taskfile  [1 funcs]
-    print  CC=0  out:0
   examples.ecosystem.02_mcp_integration  [6 funcs]
     create_mcp_tool_definitions  CC=1  out:7
     example_mcp_session  CC=1  out:26
@@ -63,6 +62,8 @@ MODULES:
     select_model  CC=5  out:2
     create_llx_config_example  CC=1  out:3
     example_metric_driven_planning  CC=9  out:57
+  examples.gitlab.run  [1 funcs]
+    print  CC=0  out:0
   examples.llx_validator  [1 funcs]
     create_validation_script  CC=1  out:4
   examples.python-api.01_basic_usage  [5 funcs]
@@ -166,6 +167,15 @@ MODULES:
     _extract_duplication_metrics  CC=6  out:3
     _extract_validation_metrics  CC=9  out:6
     extract_key_metrics  CC=2  out:6
+  planfile.analysis.generators.strategy_builder  [8 funcs]
+    generate_goal  CC=4  out:2
+    generate_goals  CC=13  out:23
+    generate_quality_gates  CC=3  out:6
+    generate_risks  CC=5  out:5
+    generate_success_criteria  CC=3  out:7
+    generate_target_metrics  CC=1  out:5
+    generate_tasks  CC=7  out:6
+    parse_effort  CC=4  out:4
   planfile.analysis.parsers.json_parser  [1 funcs]
     analyze_json  CC=2  out:9
   planfile.analysis.parsers.text_parser  [1 funcs]
@@ -182,17 +192,22 @@ MODULES:
     _process_yaml_value  CC=4  out:7
     analyze_yaml  CC=4  out:20
     extract_from_yaml_structure  CC=5  out:8
-  planfile.api.server  [12 funcs]
-    create_sprint  CC=4  out:13
-    create_ticket  CC=1  out:5
-    delete_ticket  CC=2  out:4
-    done_ticket  CC=2  out:5
+  planfile.api.server  [18 funcs]
+    _broadcast_ticket_event  CC=3  out:6
+    _start_planfile_watcher  CC=4  out:8
+    _stop_planfile_watcher  CC=3  out:1
+    claim_ticket  CC=2  out:6
+    complete_ticket  CC=2  out:6
+    create_ticket  CC=1  out:6
+    delete_ticket  CC=2  out:5
+    done_ticket  CC=2  out:6
+    fail_ticket  CC=2  out:6
     get_ticket  CC=2  out:5
-    get_yaml  CC=3  out:7
-    list_sprints  CC=3  out:7
-    list_tickets  CC=5  out:8
-    move_ticket  CC=2  out:5
-    patch_yaml  CC=6  out:11
+  planfile.builder  [4 funcs]
+    _call_llx  CC=3  out:6
+    ask_llm_questions  CC=4  out:46
+    build_strategy  CC=2  out:7
+    create_strategy_command  CC=1  out:11
   planfile.ci  [2 funcs]
     __init__  CC=4  out:5
     check_strategy_completion  CC=3  out:9
@@ -214,7 +229,7 @@ MODULES:
   planfile.cli.groups.apply.utils  [5 funcs]
     get_backend  CC=7  out:16
     load_and_validate_strategy  CC=2  out:4
-    load_backend_config  CC=5  out:11
+    load_backend_config  CC=6  out:13
     parse_sprint_filter  CC=4  out:5
     select_backend  CC=2  out:3
   planfile.cli.groups.auto.commands  [2 funcs]
@@ -271,6 +286,8 @@ MODULES:
   planfile.cli.groups.review.utils  [2 funcs]
     _load_and_validate_strategy  CC=2  out:3
     _load_backend_config  CC=6  out:13
+  planfile.cli.groups.serve  [1 funcs]
+    register_serve_commands  CC=1  out:1
   planfile.cli.groups.sync.commands  [10 funcs]
     _resolve_watch_integrations  CC=4  out:5
     _run_sync_once  CC=3  out:2
@@ -293,7 +310,8 @@ MODULES:
     _process_planfile_v1  CC=9  out:11
     _ticket_matches_integration  CC=3  out:2
     _ticket_matches_integration_v1  CC=2  out:2
-  planfile.cli.groups.ticket.commands  [10 funcs]
+  planfile.cli.groups.ticket.commands  [13 funcs]
+    _annotate_blockers  CC=8  out:5
     _apply_label_changes  CC=6  out:5
     _auto_sync  CC=6  out:11
     _display_tickets  CC=6  out:9
@@ -303,7 +321,6 @@ MODULES:
     load_import_tickets  CC=5  out:6
     ticket_import  CC=1  out:8
     ticket_list  CC=6  out:10
-    ticket_validate  CC=10  out:28
   planfile.cli.groups.validate.commands  [2 funcs]
     validate_schema_cli  CC=9  out:16
     validate_strategy_cli  CC=9  out:22
@@ -377,7 +394,7 @@ MODULES:
     example_validate_strategy  CC=2  out:5
     example_verify_strategy  CC=2  out:4
   planfile.importers  [1 funcs]
-    import_from_source  CC=8  out:11
+    import_from_source  CC=9  out:13
   planfile.importers.code2llm_importer  [6 funcs]
     _handle_in_next  CC=13  out:14
     parse  CC=3  out:4
@@ -446,6 +463,17 @@ MODULES:
     review_strategy  CC=14  out:9
     run_strategy  CC=8  out:23
     verify_strategy_post_execution  CC=12  out:12
+  planfile.runtime_context  [15 funcs]
+    _compose_paths  CC=2  out:0
+    _compose_services  CC=17  out:29
+    _now  CC=1  out:2
+    _package_summary  CC=4  out:8
+    _pyproject_summary  CC=5  out:8
+    _read_json  CC=3  out:5
+    _read_toml  CC=3  out:3
+    _read_yaml  CC=3  out:3
+    _task_pipelines  CC=7  out:11
+    _topology_summary  CC=8  out:17
   planfile.server_common  [1 funcs]
     get_planfile  CC=2  out:1
   planfile.sync.mock  [4 funcs]
@@ -504,21 +532,10 @@ MODULES:
     _collect_git_metrics  CC=8  out:15
     _count_files_by_language  CC=6  out:11
     analyze_project_metrics  CC=3  out:10
-  project.map.toon  [9 funcs]
-    create_strategy_command  CC=0  out:0
-    generate_goal  CC=0  out:0
-    generate_goals  CC=0  out:0
-    generate_quality_gates  CC=0  out:0
-    generate_risks  CC=0  out:0
-    generate_success_criteria  CC=0  out:0
-    generate_target_metrics  CC=0  out:0
-    generate_tasks  CC=0  out:0
-    parse_effort  CC=0  out:0
   scripts.run_examples  [1 funcs]
     print_error  CC=0  out:0
 
 EDGES:
-  examples.llx_validator.create_validation_script → Taskfile.print
   examples.rest-api.04_javascript_client.BASE_URL → examples.rest-api.04_javascript_client.PlanfileClient.request
   examples.rest-api.04_javascript_client.PlanfileClient.health → examples.rest-api.04_javascript_client.PlanfileClient.createTicket
   examples.rest-api.04_javascript_client.PlanfileClient.listTickets → examples.rest-api.04_javascript_client.PlanfileClient.request
@@ -536,35 +553,36 @@ EDGES:
   examples.rest-api.04_javascript_client.PlanfileClient.fetched → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.updated → examples.rest-api.04_javascript_client.PlanfileClient.updateTicket
   examples.rest-api.04_javascript_client.PlanfileClient.tickets → examples.rest-api.04_javascript_client.PlanfileClient.listTickets
-  examples.rest-api.03_python_client.example_basic_operations → Taskfile.print
-  examples.rest-api.03_python_client.example_bulk_operations → Taskfile.print
-  examples.rest-api.03_python_client.example_workflow → Taskfile.print
-  examples.rest-api.03_python_client.example_error_handling → Taskfile.print
-  examples.rest-api.03_python_client.main → Taskfile.print
-  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_basic_operations
-  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_bulk_operations
-  examples.rest-api.03_python_client.main → examples.rest-api.03_python_client.example_workflow
-  examples.ecosystem.02_mcp_integration.run_mcp_tool → Taskfile.print
-  examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_generate
-  examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_apply
-  examples.ecosystem.02_mcp_integration.run_mcp_tool → examples.ecosystem.02_mcp_integration.simulate_planfile_review
-  examples.ecosystem.02_mcp_integration.simulate_planfile_generate → Taskfile.print
-  examples.ecosystem.02_mcp_integration.simulate_planfile_apply → Taskfile.print
-  examples.ecosystem.02_mcp_integration.example_mcp_session → Taskfile.print
-  examples.ecosystem.02_mcp_integration.example_mcp_session → examples.ecosystem.02_mcp_integration.run_mcp_tool
-  examples.ecosystem.02_mcp_integration.create_mcp_tool_definitions → Taskfile.print
-  examples.ecosystem.04_llx_integration.LLXIntegration.analyze_project → Taskfile.print
-  examples.ecosystem.04_llx_integration.example_metric_driven_planning → Taskfile.print
-  examples.ecosystem.04_llx_integration.create_llx_config_example → Taskfile.print
-  examples.ecosystem.03_proxy_routing.example_strategy_generation_with_proxy → Taskfile.print
-  examples.ecosystem.03_proxy_routing.create_proxy_config_example → Taskfile.print
-  examples.ecosystem.03_proxy_routing.example_budget_tracking → Taskfile.print
-  examples.python-api.04_advanced_filtering.example_basic_filtering → Taskfile.print
-  examples.python-api.04_advanced_filtering.example_combined_filters → Taskfile.print
-  examples.python-api.04_advanced_filtering.example_search_by_labels → Taskfile.print
-  examples.python-api.04_advanced_filtering.example_export_filtered → Taskfile.print
-  examples.python-api.04_advanced_filtering.example_statistics → Taskfile.print
-  examples.python-api.04_advanced_filtering.main → Taskfile.print
-  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_basic_filtering
-  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_combined_filters
-  examples.python-api.04_advanced_filtering.main → examples.python-api.04_advanced_filtering.example_search_by_labels
+  examples.python-api.02_ticket_management.example_create_tickets → examples.gitlab.run.print
+  examples.python-api.02_ticket_management.example_read_tickets → examples.gitlab.run.print
+  examples.python-api.02_ticket_management.example_update_tickets → examples.gitlab.run.print
+  examples.python-api.02_ticket_management.example_bulk_operations → examples.gitlab.run.print
+  examples.python-api.02_ticket_management.example_delete_and_move → examples.gitlab.run.print
+  examples.python-api.02_ticket_management.main → examples.gitlab.run.print
+  examples.python-api.02_ticket_management.main → examples.python-api.02_ticket_management.example_create_tickets
+  examples.python-api.02_ticket_management.main → examples.python-api.02_ticket_management.example_read_tickets
+  examples.python-api.02_ticket_management.main → examples.python-api.02_ticket_management.example_update_tickets
+  examples.python-api.02_ticket_management.main → examples.python-api.02_ticket_management.example_bulk_operations
+  examples.python-api.02_ticket_management.main → examples.python-api.02_ticket_management.example_delete_and_move
+  examples.python-api.01_basic_usage.example_1_basic_initialization → examples.gitlab.run.print
+  examples.python-api.01_basic_usage.example_2_create_ticket → examples.gitlab.run.print
+  examples.python-api.01_basic_usage.example_3_quick_ticket → examples.gitlab.run.print
+  examples.python-api.01_basic_usage.example_3_quick_ticket → planfile.quick_ticket
+  examples.python-api.01_basic_usage.example_4_list_tickets → examples.gitlab.run.print
+  examples.python-api.01_basic_usage.main → examples.gitlab.run.print
+  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_1_basic_initialization
+  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_2_create_ticket
+  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_3_quick_ticket
+  examples.python-api.01_basic_usage.main → examples.python-api.01_basic_usage.example_4_list_tickets
+  examples.python-api.03_integration.example_cli_tool_integration → examples.gitlab.run.print
+  examples.python-api.03_integration.example_monitoring_integration → examples.gitlab.run.print
+  examples.python-api.03_integration.example_ci_pipeline_integration → examples.gitlab.run.print
+  examples.python-api.03_integration.example_custom_decorator → examples.gitlab.run.print
+  examples.python-api.03_integration.main → examples.gitlab.run.print
+  examples.python-api.03_integration.main → examples.python-api.03_integration.example_cli_tool_integration
+  examples.python-api.03_integration.main → examples.python-api.03_integration.example_monitoring_integration
+  examples.python-api.03_integration.main → examples.python-api.03_integration.example_ci_pipeline_integration
+  examples.python-api.03_integration.main → examples.python-api.03_integration.example_custom_decorator
+  examples.python-api.04_advanced_filtering.example_basic_filtering → examples.gitlab.run.print
+  examples.python-api.04_advanced_filtering.example_combined_filters → examples.gitlab.run.print
+  examples.python-api.04_advanced_filtering.example_search_by_labels → examples.gitlab.run.print

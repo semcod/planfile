@@ -1,14 +1,18 @@
 flowchart TD
+%% generated in 0.07s
 
     %% Entry points (blue)
     classDef entry fill:#4dabf7,stroke:#1971c2,color:#fff
 
     subgraph CLI
         planfile__cli__auto_loop__create_auto_app["create_auto_app"]
+        planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
         planfile__cli__commands__version_callback["version_callback"]
         planfile__cli__commands__main_callback["main_callback"]
         planfile__cli__commands__main["main"]
-        planfile__cli__extra_commands__add_extra_commands["add_extra_commands"]
+        planfile__cli__groups__serve__commands__serve_cli["serve_cli"]
+        planfile__cli__groups__serve__register_serve_commands["register_serve_commands"]
+        planfile__cli__groups__sync__register_sync_commands["register_sync_commands"]
         planfile__cli__groups__sync__commands__github_cmd["github_cmd"]
         planfile__cli__groups__sync__commands__gitlab_cmd["gitlab_cmd"]
         planfile__cli__groups__sync__commands__jira_cmd["jira_cmd"]
@@ -16,17 +20,10 @@ flowchart TD
         planfile__cli__groups__sync__commands__handle_no_integrations["handle_no_integrations"]
         planfile__cli__groups__sync__commands__sync_all_integrations["sync_all_integrations"]
         planfile__cli__groups__sync__commands__all_cmd["all_cmd"]
-        planfile__cli__groups__sync__commands___resolve_watch_integrations["_resolve_watch_integrations"]
-        planfile__cli__groups__sync__commands___get_planfile_dir_states["_get_planfile_dir_states"]
-        planfile__cli__groups__sync__commands___detect_changes["_detect_changes"]
-        ...["+175 more"]
+        ...["+184 more"]
     end
 
     subgraph Core
-        mcp_server_example__planfile_generate["planfile_generate"]
-        mcp_server_example__planfile_apply["planfile_apply"]
-        mcp_server_example__planfile_review["planfile_review"]
-        mcp_server_example__main["main"]
         planfile__executor_standalone__LLMClient__chat["chat"]
         planfile__executor_standalone__StrategyExecutor___default_config["_default_config"]
         planfile__executor_standalone__StrategyExecutor__execute_strategy["execute_strategy"]
@@ -37,20 +34,18 @@ flowchart TD
         planfile__executor_standalone__create_openai_client["create_openai_client"]
         planfile__executor_standalone__create_litellm_client["create_litellm_client"]
         planfile__executor_standalone__execute_strategy["execute_strategy"]
-        planfile__testql_integration__upsert_testql_tickets{{upsert_testql_tickets CC=15}}
-        ...["+807 more"]
+        planfile__runtime_context___compose_services{{_compose_services CC=17}}
+        planfile__todo_sync__sync_todo_checkboxes_from_planfile["sync_todo_checkboxes_from_plan"]
+        planfile__sync__state__SyncState__get_last_sync["get_last_sync"]
+        planfile__sync__state__SyncState__save_sync["save_sync"]
+        planfile__sync__state__SyncState__get_remote_id["get_remote_id"]
+        ...["+335 more"]
     end
 
     subgraph Exporters
         planfile__loaders__cli_loader__export_results_to_markdown["export_results_to_markdown"]
-        planfile__core__models__strategy__Strategy__export["export"]
         planfile__dsl__executor__DSLExecutor___exec_export["_exec_export"]
-        project__map__toon__example_export_filtered["example_export_filtered"]
-        project__map__toon__example_query_and_export["example_query_and_export"]
-        project__map__toon__export_cmd["export_cmd"]
-        project__map__toon___export_to_csv["_export_to_csv"]
-        project__map__toon___export_to_html["_export_to_html"]
-        project__map__toon__export_results_to_markdown["export_results_to_markdown"]
+        planfile__core__models__strategy__Strategy__export["export"]
     end
 
-    class mcp_server_example__planfile_generate,mcp_server_example__planfile_apply,mcp_server_example__planfile_review,mcp_server_example__main,planfile__executor_standalone__LLMClient__chat,planfile__executor_standalone__StrategyExecutor___default_config,planfile__executor_standalone__StrategyExecutor__execute_strategy,planfile__executor_standalone__StrategyExecutor___execute_task,planfile__executor_standalone__StrategyExecutor___select_model,planfile__executor_standalone__StrategyExecutor___build_prompt entry
+    class planfile__executor_standalone__LLMClient__chat,planfile__executor_standalone__StrategyExecutor___default_config,planfile__executor_standalone__StrategyExecutor__execute_strategy,planfile__executor_standalone__StrategyExecutor___execute_task,planfile__executor_standalone__StrategyExecutor___select_model,planfile__executor_standalone__StrategyExecutor___build_prompt,planfile__executor_standalone__StrategyExecutor___get_project_metrics,planfile__executor_standalone__create_openai_client,planfile__executor_standalone__create_litellm_client,planfile__executor_standalone__execute_strategy entry
