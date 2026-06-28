@@ -190,6 +190,53 @@ planfile strategy validate --strategy strategy.yaml --schema lenient
 planfile strategy validate --strategy strategy.yaml --fix
 ```
 
+#### validate schema
+Validate root `planfile.yaml` files and `.planfile/sprints/*.yaml` files against
+their schema.
+
+```bash
+planfile validate schema [FILE_PATH] [OPTIONS]
+
+Options:
+  --file-type TEXT     File type: auto, planfile, sprint [default: auto]
+  --verbose            Show verbose validation output
+```
+
+Examples:
+```bash
+# Validate the root strategy file
+planfile validate schema planfile.yaml --file-type planfile
+
+# Validate sprint files explicitly
+planfile validate schema .planfile/sprints/current.yaml --file-type sprint
+planfile validate schema .planfile/sprints/backlog.yaml --file-type sprint
+```
+
+Use `--file-type sprint` for sprint YAML files in automation. It avoids
+ambiguous auto-detection when a sprint file contains ticket-oriented fields
+instead of a root strategy document.
+
+#### health check
+Analyze a project and print generated improvement tickets.
+
+```bash
+planfile health check [PROJECT_PATH]
+```
+
+Examples:
+```bash
+# Check the current project
+planfile health check .
+
+# Check another project
+planfile health check ../get
+```
+
+The health command accepts parser issues with the canonical `name` field and
+renders generated tickets whether they are returned as a flat list or as
+priority buckets. On large repositories, this command performs a full project
+scan and can take noticeably longer than schema validation.
+
 #### strategy export
 Export strategy to different formats.
 

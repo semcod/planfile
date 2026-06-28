@@ -22,7 +22,7 @@ def _parse_toon_header(line: str, file_path: Path, metrics: list[ExtractedMetric
 
             if cc_value > 3.5:
                 issues.append(ExtractedIssue(
-                    title=f"Reduce average CC from {cc_value} to ≤ 3.5",
+                    name=f"Reduce average CC from {cc_value} to ≤ 3.5",
                     description="Project has high average cyclomatic complexity",
                     priority="high" if cc_value > 4.5 else "medium",
                     category="refactor",
@@ -45,7 +45,7 @@ def _parse_toon_header(line: str, file_path: Path, metrics: list[ExtractedMetric
 
             if critical_count > 0:
                 issues.append(ExtractedIssue(
-                    title=f"Refactor {critical_count} critical functions",
+                    name=f"Refactor {critical_count} critical functions",
                     description="Functions with CC > 15 need refactoring",
                     priority="critical",
                     category="refactor",
@@ -104,7 +104,7 @@ def _parse_health_section(line: str, line_num: int, file_path: Path, metrics: li
             func_name = func_match.group(1)
             cc_value = int(func_match.group(2))
             issues.append(ExtractedIssue(
-                title=f"Refactor {func_name} (CC={cc_value})",
+                name=f"Refactor {func_name} (CC={cc_value})",
                 description=f"Function has cyclomatic complexity {cc_value} (>15)",
                 priority="critical" if cc_value > 20 else "high",
                 category="refactor",
@@ -144,7 +144,7 @@ def _parse_summary_section(line: str, line_num: int, file_path: Path, metrics: l
             ))
 
             issues.append(ExtractedIssue(
-                title=f"Remove {dup_count} code duplication groups",
+                name=f"Remove {dup_count} code duplication groups",
                 description="Extract duplicated code into reusable functions",
                 priority="medium",
                 category="refactor",
@@ -179,7 +179,7 @@ def analyze_toon(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
 
     except Exception as e:
         issues.append(ExtractedIssue(
-            title=f"Failed to analyze {file_path.name}",
+            name=f"Failed to analyze {file_path.name}",
             description=f"Analysis error: {str(e)}",
             priority="medium",
             category="bug",

@@ -113,6 +113,7 @@ strict_equality = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+pythonpath = ["."]
 
 [tool.black]
 line-length = 100

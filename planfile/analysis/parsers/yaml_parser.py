@@ -21,7 +21,7 @@ def _is_issue_content(value: str) -> bool:
 def _create_issue_from_value(value: str, full_key: str, path: str) -> ExtractedIssue:
     """Create an ExtractedIssue from a string value."""
     return ExtractedIssue(
-        title=f"Issue in {full_key}",
+        name=f"Issue in {full_key}",
         description=value[:200],  # Limit description length
         priority="medium",
         category="bug",
@@ -97,7 +97,7 @@ def analyze_yaml(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
                 return analyze_toon(file_path)
 
             issues.append(ExtractedIssue(
-                title=f"Fix YAML syntax in {file_path.name}",
+                name=f"Fix YAML syntax in {file_path.name}",
                 description=f"YAML parsing error: {str(e)}",
                 priority="high",
                 category="bug",
@@ -113,7 +113,7 @@ def analyze_yaml(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
 
     except Exception as e:
         issues.append(ExtractedIssue(
-            title=f"Failed to parse {file_path.name}",
+            name=f"Failed to parse {file_path.name}",
             description=f"File error: {str(e)}",
             priority="high",
             category="bug",

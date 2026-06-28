@@ -1,5 +1,41 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- Fixed `planfile health check` so generated parser issues use the canonical
+  `name` field and priority-bucketed ticket output is flattened before
+  rendering.
+- Documented explicit sprint validation with
+  `planfile validate schema .planfile/sprints/current.yaml --file-type sprint`
+  for roadmap-driven projects such as IFURI.
+- Added pytest `pythonpath` configuration so local checkout tests import the
+  editable package consistently.
+
+### Changed
+- chore(repo): move root guides to docs/guides (MIGRATION_GUIDE, PERFORMANCE, README_EXAMPLES, README_STANDALONE)
+- chore(repo): move REFACTOR_CLI to docs/summaries
+- chore(repo): move mcp-server-example to examples/ecosystem and planfile_gen to scripts/
+- docs: add docs/NAVIGATION.md and refresh README documentation links
+- chore(todo): review TODO.md state (0 active, 0 completed) — no completed TODO items to migrate into changelog
+- feat(goal): configuration management system
+- feat(examples): configuration management system
+- feat(docs): configuration management system
+- feat(docs): code analysis engine
+- refactor(docs): code analysis engine
+- refactor(examples): code analysis engine
+- feat(tests): added tests to improve coverage
+- feat(tests): deep code analysis engine with 4 supporting modules
+- fix(docs): add markdown output
+- fix(planfile): code quality metrics with 3 supporting modules
+- fix: remove large generated files from repository
+- chore: pyqual auto-commit [skip ci]
+- feat: added configuration management system with CLI interface
+- feat: implemented backlog, sync, ticket, and validate command groups
+- feat: added configuration management tests
+- refactor: reorganized goal and config modules
+- docs: updated documentation for configuration management system
+
 ## [0.1.10] - 2026-05-03
 
 ### Fixed
@@ -103,35 +139,6 @@
 - Fix duplicate-imports issues (ticket-61b79902)
 - Fix unused-imports issues (ticket-843a36c1)
 - Fix magic-numbers issues (ticket-f06d9698)
-
-## [Unreleased]
-
-
-- chore(repo): move root guides to docs/guides (MIGRATION_GUIDE, PERFORMANCE, README_EXAMPLES, README_STANDALONE)
-- chore(repo): move REFACTOR_CLI to docs/summaries
-- chore(repo): move mcp-server-example to examples/ecosystem and planfile_gen to scripts/
-- docs: add docs/NAVIGATION.md and refresh README documentation links
-- chore(todo): review TODO.md state (0 active, 0 completed) — no completed TODO items to migrate into changelog
-
-
-- feat(goal): configuration management system
-- feat(examples): configuration management system
-- feat(docs): configuration management system
-- feat(docs): code analysis engine
-- refactor(docs): code analysis engine
-- refactor(examples): code analysis engine
-- feat(tests): added tests to improve coverage
-- feat(tests): deep code analysis engine with 4 supporting modules
-- fix(docs): add markdown output
-- fix(planfile): code quality metrics with 3 supporting modules
-- fix: remove large generated files from repository
-- chore: pyqual auto-commit [skip ci]
-
-- feat: added configuration management system with CLI interface
-- feat: implemented backlog, sync, ticket, and validate command groups
-- feat: added configuration management tests
-- refactor: reorganized goal and config modules
-- docs: updated documentation for configuration management system
 
 ## [0.1.103] - 2026-06-05
 
@@ -1811,4 +1818,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update strategy/integrations/base.py
 - Update strategy/integrations/generic.py
 - ... and 11 more files
-

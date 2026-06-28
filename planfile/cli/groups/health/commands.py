@@ -59,11 +59,16 @@ def create_health_app() -> typer.Typer:
 
             # Show top issues
             issues = strategy.get('tickets', [])
+            if isinstance(issues, dict):
+                ordered = []
+                for bucket in ("critical", "high", "medium", "low"):
+                    ordered.extend(issues.get(bucket, []))
+                issues = ordered
             if issues:
                 console.print("\n[bold]Top Issues:[/bold]")
                 for issue in issues[:5]:
                     priority = issue.get('priority', 'normal')
-                    title = issue.get('title', 'Unknown')
+                    title = issue.get('name') or issue.get('title') or 'Unknown'
                     if priority == 'critical':
                         console.print(f"  [red]✗[/red] {title}")
                     elif priority == 'high':

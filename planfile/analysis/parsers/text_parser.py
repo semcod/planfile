@@ -67,7 +67,7 @@ def analyze_text(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
                 }
 
                 issues.append(ExtractedIssue(
-                    title=f"{pattern_name.title()}: {description[:50]}...",
+                    name=f"{pattern_name.title()}: {description[:50]}...",
                     description=description,
                     priority=priority_map.get(pattern_name, 'medium'),
                     category=category_map.get(pattern_name, 'task'),
@@ -93,7 +93,7 @@ def analyze_text(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
 
                     if value < 80:
                         issues.append(ExtractedIssue(
-                            title=f"Increase test coverage from {value}% to 80%",
+                            name=f"Increase test coverage from {value}% to 80%",
                             description="Test coverage is below threshold",
                             priority="high" if value < 60 else "medium",
                             category="test",

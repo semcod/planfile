@@ -19,7 +19,7 @@ def analyze_json(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
 
     except Exception as e:
         issues.append(ExtractedIssue(
-            title=f"Fix JSON syntax in {file_path.name}",
+            name=f"Fix JSON syntax in {file_path.name}",
             description=f"JSON parsing error: {str(e)}",
             priority="high",
             category="bug",

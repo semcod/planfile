@@ -75,6 +75,9 @@ Generated on 2026-06-05 using [openrouter/qwen/qwen3-coder-next](https://openrou
 - 🗣️ **DSL (Domain Specific Language)**: Natural language-like commands for planfile operations
 - 🐛 **Bug-First Priority**: Automatic bug prioritization over features for quality assurance
 
+## Quick Install
+
+```bash
 # Basic installation
 pip install planfile
 
@@ -283,8 +286,55 @@ planfile ticket delete --status done --force
 planfile ticket delete --sprint old-sprint --label archive
 
 # Preview deletions without executing
+planfile ticket delete --label old --dry-run
 
-### 6. Queue-Oriented Execution Metadata
+# Bulk update tickets by filters
+planfile ticket bulk-update --status-filter open --new-status in_progress
+planfile ticket bulk-update --label todo --new-status done --force
+
+# Change priority for all open bugs
+planfile ticket bulk-update --status-filter open --label bug --new-priority high
+
+# Add/remove labels in bulk
+planfile ticket bulk-update --label old --add-label archived --remove-label old
+
+# Move tickets between sprints
+planfile ticket bulk-update --sprint current --status-filter done --move-to-sprint completed
+
+# Combine multiple updates
+planfile ticket bulk-update \
+  --sprint sprint-1 \
+  --status-filter open \
+  --new-status in_progress \
+  --new-priority high \
+  --add-label urgent
+```
+
+### 6. Project Validation and Health
+
+Use `validate schema` for machine-checkable plan files and sprint files. Sprint
+YAML files should be validated explicitly with `--file-type sprint`; otherwise
+auto-detection can treat them like root strategy files.
+
+```bash
+# Validate IFURI-style sprint files
+planfile validate schema .planfile/sprints/current.yaml --file-type sprint
+planfile validate schema .planfile/sprints/backlog.yaml --file-type sprint
+
+# Validate the root strategy file
+planfile validate schema planfile.yaml --file-type planfile
+
+# Analyze a project and produce improvement tickets
+planfile health check .
+```
+
+`health check` accepts parser issues with the canonical `name` field and
+normalizes generated ticket buckets before rendering, so project analysis works
+for both list-based and priority-bucketed issue output. On large repositories,
+`planfile health check .` performs a full scan and can take noticeably longer
+than schema validation.
+
+### 7. Queue-Oriented Execution Metadata
 
 `planfile` tickets can also carry lightweight execution metadata for queue-like
 workflows, which makes them a good control plane for tools like `koru`.
@@ -355,29 +405,6 @@ Example event:
     }
   }
 }
-```
-planfile ticket delete --label old --dry-run
-
-# Bulk update tickets by filters
-planfile ticket bulk-update --status-filter open --new-status in_progress
-planfile ticket bulk-update --label todo --new-status done --force
-
-# Change priority for all open bugs
-planfile ticket bulk-update --status-filter open --label bug --new-priority high
-
-# Add/remove labels in bulk
-planfile ticket bulk-update --label old --add-label archived --remove-label old
-
-# Move tickets between sprints
-planfile ticket bulk-update --sprint current --status-filter done --move-to-sprint completed
-
-# Combine multiple updates
-planfile ticket bulk-update \
-  --sprint sprint-1 \
-  --status-filter open \
-  --new-status in_progress \
-  --new-priority high \
-  --add-label urgent
 ```
 
 **Auto-sync after changes:**

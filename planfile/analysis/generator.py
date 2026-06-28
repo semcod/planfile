@@ -104,7 +104,7 @@ class PlanfileGenerator:
 
         if results.validation_warnings > 0:
             issues.append({
-                'title': f"Address {results.validation_warnings} validation warnings",
+                'name': f"Address {results.validation_warnings} validation warnings",
                 'description': "Fix all validation warnings",
                 'priority': 'medium',
                 'category': 'refactor',
@@ -114,7 +114,7 @@ class PlanfileGenerator:
 
         if results.duplication_groups > 0:
             issues.append({
-                'title': f"Remove {results.duplication_groups} code duplication groups",
+                'name': f"Remove {results.duplication_groups} code duplication groups",
                 'description': "Extract duplicated code into reusable functions",
                 'priority': 'medium',
                 'category': 'refactor',
