@@ -1,6 +1,13 @@
 from pathlib import Path
 
 from .base import DetectedProject
+from .gates import _detect_quality_gates
+from .git import _detect_git_authors
+from .inference import _infer_domain, _infer_python_project_type
+from .license import _detect_license
+from .model_tier import _detect_model_tier
+from .readme import _find_readme_description, _find_readme_goal
+from .structure import _analyze_directory_structure
 
 
 def _import_toml_loader() -> object | None:
