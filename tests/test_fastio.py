@@ -1,0 +1,79 @@
+"""Tests for the sprint-YAML fast read layer (mirror + C loader)."""
+
+from __future__ import annotations
+
+import json
+
+from planfile.core import fastio
+
+
+def _write_yaml(path, text):
+    path.write_text(text, encoding="utf-8")
+
+
+class TestMirrorRoundtrip:
+    def test_first_read_parses_and_heals_mirror(self, tmp_path):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets:\n    PLF-1:\n      name: a\n")
+        data = fastio.read_yaml_fast(y)
+        assert data["sprint"]["tickets"]["PLF-1"]["name"] == "a"
+        assert fastio.mirror_path(y).exists()
+
+    def test_second_read_uses_mirror(self, tmp_path, monkeypatch):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets: {}\n")
+        fastio.read_yaml_fast(y)  # heal mirror
+
+        def boom(_text):
+            raise AssertionError("YAML must not be parsed when mirror is fresh")
+
+        monkeypatch.setattr(fastio, "load_yaml_text", boom)
+        data = fastio.read_yaml_fast(y)
+        assert data == {"sprint": {"tickets": {}}}
+
+    def test_external_yaml_edit_invalidates_mirror(self, tmp_path):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets: {}\n")
+        fastio.read_yaml_fast(y)
+        import os
+        _write_yaml(y, "sprint:\n  tickets:\n    PLF-9:\n      name: new\n")
+        os.utime(y, ns=(y.stat().st_atime_ns, y.stat().st_mtime_ns + 1_000_000))
+        data = fastio.read_yaml_fast(y)
+        assert "PLF-9" in data["sprint"]["tickets"]
+
+    def test_corrupt_mirror_falls_back_to_yaml(self, tmp_path):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets: {}\n")
+        fastio.mirror_path(y).write_text("{not json", encoding="utf-8")
+        assert fastio.read_yaml_fast(y) == {"sprint": {"tickets": {}}}
+
+    def test_missing_yaml_returns_none(self, tmp_path):
+        assert fastio.read_yaml_fast(tmp_path / "nope.yaml") is None
+
+    def test_write_mirror_records_current_mtime(self, tmp_path):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "a: 1\n")
+        fastio.write_mirror(y, {"a": 1})
+        payload = json.loads(fastio.mirror_path(y).read_text())
+        assert payload["yaml_mtime_ns"] == y.stat().st_mtime_ns
+        assert payload["data"] == {"a": 1}
+
+
+class TestStoreIntegration:
+    def test_update_ticket_refreshes_mirror(self, tmp_path):
+        from planfile.core.store import Store
+
+        store = Store(tmp_path)
+        store.initialize() if hasattr(store, "initialize") else None
+        from planfile.models import Ticket
+
+        t = Ticket(id="PLF-001", name="test ticket")
+        store.create_ticket(t)
+        sprint_file = tmp_path / ".planfile" / "sprints" / "current.yaml"
+        mirror = fastio.mirror_path(sprint_file)
+        assert mirror.exists(), "create must write the mirror"
+        first = mirror.read_text()
+        store.update_ticket("PLF-001", status="done")
+        assert mirror.read_text() != first, "update must refresh the mirror"
+        got = store.get_ticket("PLF-001")
+        assert str(getattr(got, "status", "")).endswith("done")

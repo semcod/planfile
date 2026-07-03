@@ -44,7 +44,9 @@ def load_yaml(file_path: str | Path) -> dict[str, Any]:
 
     with open(path, encoding="utf-8") as f:
         try:
-            content = yaml.safe_load(f)
+            from planfile.core.fastio import FastLoader
+
+            content = yaml.load(f, Loader=FastLoader)
             return content or {}
         except yaml.YAMLError as e:
             raise yaml.YAMLError(f"Invalid YAML in {path}: {e}")

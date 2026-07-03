@@ -35,10 +35,8 @@ class StoreFileMixin:
         entry = cached.get(key)
         if entry is not None and entry[0] == mtime_ns:
             return entry[1]
-        try:
-            import yaml
-            data = yaml.safe_load(path.read_text()) or {}
-        except Exception:
-            data = None
+        from planfile.core.fastio import read_yaml_fast
+
+        data = read_yaml_fast(path)
         cached[key] = (mtime_ns, data)
         return data

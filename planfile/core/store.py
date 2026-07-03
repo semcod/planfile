@@ -52,8 +52,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
             lock_file.close()
 
     def _write_yaml_atomic(self, path: Path, data: dict, *, allow_unicode: bool = False) -> None:
+        from planfile.core.fastio import dump_yaml, write_mirror
+
         path.parent.mkdir(parents=True, exist_ok=True)
-        content = yaml.dump(data, default_flow_style=False, allow_unicode=allow_unicode, Dumper=Dumper)
+        content = dump_yaml(data, allow_unicode=allow_unicode)
         fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
         tmp_path = Path(tmp_name)
         try:
@@ -65,6 +67,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         finally:
             if tmp_path.exists():
                 tmp_path.unlink()
+        write_mirror(path, data)
 
     def is_initialized(self) -> bool:
         return self._config_path.exists()
@@ -152,7 +155,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
         sprint_file = self._sprint_file(sprint)
 
         if sprint_file.exists():
-            data = yaml.safe_load(sprint_file.read_text()) or {}
+            from planfile.core.fastio import read_yaml_fast
+
+            data = read_yaml_fast(sprint_file) or {}
         else:
             data = {"sprint": {"id": sprint, "name": sprint.title(), "status": "active", "tickets": {}}}
 
@@ -227,8 +232,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return entry
 
     def update_ticket(self, ticket_id: str, **updates) -> Ticket | None:
+        from planfile.core.fastio import read_yaml_fast
+
         for sprint_file in self._all_sprint_files():
-            data = yaml.load(sprint_file.read_text(), Loader=SafeLoader) or {}
+            data = read_yaml_fast(sprint_file) or {}
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
@@ -248,9 +255,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     history = list(tickets[ticket_id].get("history") or [])
                     history.append(self._build_history_entry(previous, tickets[ticket_id], changed_keys))
                     tickets[ticket_id]["history"] = history[-200:]
-                sprint_file.write_text(
-                    yaml.dump(data, default_flow_style=False, allow_unicode=True, Dumper=Dumper), encoding="utf-8"
-                )
+                self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
                 return self._ticket_from_data(tickets[ticket_id])
@@ -258,15 +263,15 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def delete_ticket(self, ticket_id: str) -> bool:
         """Delete a ticket by ID. Returns True if deleted, False if not found."""
+        from planfile.core.fastio import read_yaml_fast
+
         for sprint_file in self._all_sprint_files():
-            data = yaml.load(sprint_file.read_text(), Loader=SafeLoader) or {}
+            data = read_yaml_fast(sprint_file) or {}
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
                 del tickets[ticket_id]
-                sprint_file.write_text(
-                    yaml.dump(data, default_flow_style=False, allow_unicode=True, Dumper=Dumper), encoding="utf-8"
-                )
+                self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
                 return True
@@ -278,13 +283,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
         not_found = []
 
         # Load all sprint files into memory
+        from planfile.core.fastio import read_yaml_fast
+
         sprint_contents = {}
         for sprint_file in self._all_sprint_files():
-            try:
-                data = yaml.load(sprint_file.read_text(encoding="utf-8"), Loader=SafeLoader) or {}
-            except Exception:
-                data = {}
-            sprint_contents[sprint_file] = data
+            sprint_contents[sprint_file] = read_yaml_fast(sprint_file) or {}
 
         modified_files = set()
 

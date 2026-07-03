@@ -102,7 +102,9 @@ def validate_yaml_file(file_path: Path, file_type: str = "planfile") -> tuple[bo
     
     with open(file_path) as f:
         try:
-            data = yaml.safe_load(f)
+            from planfile.core.fastio import FastLoader
+
+            data = yaml.load(f, Loader=FastLoader)
         except yaml.YAMLError as e:
             return False, [f"Invalid YAML: {e}"]
     

@@ -1,5 +1,6 @@
 """Ticket management CLI commands."""
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,18 @@ import yaml
 from rich.table import Table
 
 from planfile.cli.core import console
+
+# Unfilled documentation-template placeholders, e.g. "<finding_key>",
+# "<gate>", "<exact line + command + next step>". Automated callers
+# sometimes copy example commands verbatim; such tickets are garbage.
+_TEMPLATE_PLACEHOLDER_RE = re.compile(r"<[a-z][a-z0-9_+-]*(?:\s+[a-z0-9_+-]+)*>")
+
+
+def _find_template_placeholders(*texts: str | None) -> list[str]:
+    found: list[str] = []
+    for text in texts:
+        found.extend(_TEMPLATE_PLACEHOLDER_RE.findall(text or ""))
+    return found
 
 
 def _auto_sync(directory: str, integrations: list[str] | None = None, dry_run: bool = False) -> None:
@@ -174,9 +187,14 @@ def create_ticket_table(tickets) -> Table:
         table.add_row(t.id, f'[{sc}]{status_val}[/{sc}]', f'[{pc}]{t.priority}[/{pc}]', t.name, ', '.join(t.labels) if t.labels else '', source_str)
     return table
 
-def ticket_create(name: str=typer.Argument(..., help='Ticket name'), priority: str=typer.Option('normal', '-p', '--priority', help='critical | high | normal | low'), sprint: str=typer.Option('current', '-s', '--sprint'), source: str=typer.Option('human', help='Source tool name'), label: list[str] | None=typer.Option(None, '-l', '--label'), description: str=typer.Option('', '-d', '--description'), files: list[str] | None=typer.Option(None, '--files', help='File(s) associated with this ticket'), integration: list[str] | None=typer.Option(None, '-i', '--integration', help='Integration(s) to sync with (e.g., github, gitlab)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after creation'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
+def ticket_create(name: str=typer.Argument(..., help='Ticket name'), priority: str=typer.Option('normal', '-p', '--priority', help='critical | high | normal | low'), sprint: str=typer.Option('current', '-s', '--sprint'), source: str=typer.Option('human', help='Source tool name'), label: list[str] | None=typer.Option(None, '-l', '--label'), description: str=typer.Option('', '-d', '--description'), files: list[str] | None=typer.Option(None, '--files', help='File(s) associated with this ticket'), integration: list[str] | None=typer.Option(None, '-i', '--integration', help='Integration(s) to sync with (e.g., github, gitlab)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after creation'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes'), force: bool=typer.Option(False, '--force', help='Create even if name/description contain unfilled <placeholder> tokens')) -> None:
     """Create a new ticket."""
     from planfile import Planfile, TicketSource
+    placeholders = _find_template_placeholders(name, description)
+    if placeholders and not force:
+        console.print(f"[red]✗[/red] Refusing to create ticket with unfilled template placeholders: {', '.join(sorted(set(placeholders)))}")
+        console.print('[dim]Fill in real values (finding key, failing line, command) or pass --force to override.[/dim]')
+        raise typer.Exit(2)
     pf = Planfile.auto_discover()
     ticket_data = {'name': name, 'priority': priority, 'sprint': sprint, 'source': TicketSource(tool=source), 'labels': list(label) if label else [], 'description': description}
     if files:
