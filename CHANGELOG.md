@@ -36,6 +36,11 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.106] - 2026-07-03
+
+### Docs
+- Update README.md
+
 ## [0.1.105] - 2026-07-03
 
 ### Docs
