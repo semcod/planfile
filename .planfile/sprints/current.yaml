@@ -495,10 +495,10 @@ sprint:
           environment: production
           exception: Failed to connect to production database
           server: prod-01
-          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration.py\"\
-            , line 83, in example_cli_tool_integration\n    raise RuntimeError(\"\
-            Failed to connect to production database\")\nRuntimeError: Failed to connect\
-            \ to production database\n"
+          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration.py\",
+            line 83, in example_cli_tool_integration\n    raise RuntimeError(\"Failed
+            to connect to production database\")\nRuntimeError: Failed to connect
+            to production database\n"
           version: 2.1.0
         timestamp: '2026-04-04T06:14:01.940519'
         tool: deploy-tool
@@ -528,7 +528,7 @@ sprint:
       sprint: current
       status: open
       sync: {}
-      title: '🚨 CPU Usage: 95 exceeds 90'
+      title: "\U0001F6A8 CPU Usage: 95 exceeds 90"
       updated_at: '2026-04-04T06:14:02.028649'
     PLF-053:
       acceptance_criteria: []
@@ -551,7 +551,7 @@ sprint:
       sprint: current
       status: open
       sync: {}
-      title: '🚨 Memory Usage: 88 exceeds 85'
+      title: "\U0001F6A8 Memory Usage: 88 exceeds 85"
       updated_at: '2026-04-04T06:14:02.117873'
     PLF-054:
       acceptance_criteria: []
@@ -574,7 +574,7 @@ sprint:
       sprint: current
       status: open
       sync: {}
-      title: '🚨 Disk Usage: 92 exceeds 90'
+      title: "\U0001F6A8 Disk Usage: 92 exceeds 90"
       updated_at: '2026-04-04T06:14:02.205425'
     PLF-055:
       acceptance_criteria: []
@@ -641,9 +641,9 @@ sprint:
           db: prod
           exception: Database connection failed
           exception_type: RuntimeError
-          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration_simple.py\"\
-            , line 24, in main\n    raise RuntimeError(\"Database connection failed\"\
-            )\nRuntimeError: Database connection failed\n"
+          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration_simple.py\",
+            line 24, in main\n    raise RuntimeError(\"Database connection failed\")\nRuntimeError:
+            Database connection failed\n"
         timestamp: '2026-04-04T06:22:30.892272'
         tool: my-service
       sprint: current
@@ -676,7 +676,7 @@ sprint:
       sprint: current
       status: open
       sync: {}
-      title: '🚨 CPU: 95 exceeds 90'
+      title: "\U0001F6A8 CPU: 95 exceeds 90"
       updated_at: '2026-04-04T06:22:31.008848'
     PLF-059:
       acceptance_criteria: []
@@ -697,10 +697,10 @@ sprint:
           exception_type: ValueError
           function: risky_operation
           kwargs: '{}'
-          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/planfile/extensions/__init__.py\"\
-            , line 96, in wrapper\n    return func(*args, **kwargs)\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration_simple.py\"\
-            , line 39, in risky_operation\n    raise ValueError(\"Something went wrong\"\
-            )\nValueError: Something went wrong\n"
+          traceback: "Traceback (most recent call last):\n  File \"/home/tom/github/semcod/planfile/planfile/extensions/__init__.py\",
+            line 96, in wrapper\n    return func(*args, **kwargs)\n  File \"/home/tom/github/semcod/planfile/examples/python-api/03_integration_simple.py\",
+            line 39, in risky_operation\n    raise ValueError(\"Something went wrong\")\nValueError:
+            Something went wrong\n"
         timestamp: '2026-04-04T06:22:31.120689'
         tool: my-service
       sprint: current
@@ -708,3 +708,113 @@ sprint:
       sync: {}
       title: '[my-service] risky_operation failed: Something went wrong'
       updated_at: '2026-04-04T06:22:31.121763'
+    PLF-062:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-07-03T20:22:53.803408Z'
+      description: 'current.yaml in active projects reaches ~27k lines for ~13 open
+        tickets because full per-ticket history lives inline and every mutation rewrites
+        the whole file (lock contention: config.yaml.lock, race risk with parallel
+        loops). Move history to append-only JSONL (per ticket or shared); keep YAML
+        as current-state only. Evidence: semcod/koru sprint file 2026-07-03.'
+      files: []
+      history: []
+      id: PLF-062
+      labels:
+      - storage
+      - performance
+      name: Split ticket history out of sprint YAML (append-only JSONL)
+      priority: high
+      source:
+        context: {}
+        timestamp: '2026-07-03T20:22:53.791387Z'
+        tool: claude-session
+      sprint: current
+      status: open
+      sync: {}
+      updated_at: '2026-07-03T20:22:53.803413Z'
+    PLF-063:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-07-03T20:22:54.705444Z'
+      description: Enforce ticket shape (executor kinds, priority enum, required fields)
+        at create/import across all clients, not only CLI-side guards. Complements
+        the 2026-07-03 placeholder guard; would also catch malformed automation-generated
+        tickets.
+      files: []
+      history: []
+      id: PLF-063
+      labels:
+      - api
+      - quality
+      name: JSON Schema validation for tickets
+      priority: normal
+      source:
+        context: {}
+        timestamp: '2026-07-03T20:22:54.691625Z'
+        tool: claude-session
+      sprint: current
+      status: open
+      sync: {}
+      updated_at: '2026-07-03T20:22:54.705449Z'
+    PLF-064:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-07-03T20:23:29.722312Z'
+      description: 'koru-gate-capture dedupes by gate-finding:KEY markers client-side
+        by listing and parsing all tickets. Add: ticket create --dedupe-key KEY with
+        atomic create-or-append-note semantics keyed on an external stable key.'
+      files: []
+      history: []
+      id: PLF-064
+      labels:
+      - api
+      name: Native dedupe-key on ticket create
+      priority: normal
+      source:
+        context: {}
+        timestamp: '2026-07-03T20:23:29.708971Z'
+        tool: claude-session
+      sprint: current
+      status: open
+      sync: {}
+      updated_at: '2026-07-03T20:23:29.722317Z'
+    PLF-065:
+      acceptance_criteria: []
+      blocked_by: []
+      blocks: []
+      created_at: '2026-07-03T20:24:30.536751Z'
+      description: 'Reproduced 2026-07-03 in semcod/regix: planfile init raises NameError:
+        name ''_infer_python_project_type'' is not defined (ticket creation via auto-discover
+        still works). Missing import/def in the init path.'
+      files: []
+      history:
+      - action: update
+        changes:
+        - outputs
+        source: planfile.store
+        timestamp: '2026-07-03T20:43:55.666005+00:00'
+      id: PLF-065
+      labels:
+      - bug
+      name: 'planfile init crashes: NameError _infer_python_project_type'
+      outputs:
+        artifacts: []
+        notes:
+        - 'Fixed in repo (commit above): eight imports restored in project_detector/pyproject.py
+          + regression test tests/test_project_detector_init.py; full planfile suite
+          green. Root cause of the confusing repro: koru/.venv/bin/planfile (published
+          wheel without the fix) shadows the editable install on PATH — resolves itself
+          on next publish.'
+      priority: high
+      source:
+        context: {}
+        timestamp: '2026-07-03T20:24:30.525468Z'
+        tool: claude-session
+      sprint: current
+      status: open
+      sync: {}
+      updated_at: '2026-07-03T20:43:55.665977+00:00'

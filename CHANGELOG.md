@@ -36,6 +36,20 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.107] - 2026-07-06
+
+### Docs
+- Update README.md
+
+### Other
+- Update .planfile/.store.lock
+- Update .planfile/config.yaml
+- Update .planfile/config.yaml.fast.json
+- Update .planfile/sprints/backlog.yaml.fast.json
+- Update .planfile/sprints/current.yaml
+- Update .planfile/sprints/current.yaml.fast.json
+- Update local.dev.txt
+
 ## [0.1.106] - 2026-07-03
 
 ### Docs

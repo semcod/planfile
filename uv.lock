@@ -2442,7 +2442,7 @@ wheels = [
 
 [[package]]
 name = "planfile"
-version = "0.1.106"
+version = "0.1.107"
 source = { editable = "." }
 dependencies = [
     { name = "filelock" },
