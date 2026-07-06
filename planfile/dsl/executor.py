@@ -242,11 +242,8 @@ class DSLExecutor:
         ticket_id = cmd.target
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
-        updates: dict = {"status": "blocked"}
         reason = cmd.params.get("reason")
-        if reason:
-            updates["description"] = f"BLOCKED: {reason}"
-        ticket = self.pf.update_ticket(ticket_id, **updates)
+        ticket = self.pf.block_ticket(ticket_id, reason=reason)
         if not ticket:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
         return DSLResult(

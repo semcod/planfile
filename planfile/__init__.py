@@ -253,6 +253,32 @@ class Planfile:
         )
         return self.update_ticket(ticket_id, execution=execution)
 
+    def block_ticket(self, ticket_id: str, reason: str | None = None, note: str | None = None) -> Ticket | None:
+        """Mark a ticket blocked and terminate any active execution claim.
+
+        ``update_ticket(status="blocked")`` only changes the board status. For a ticket that was
+        already started, that leaves ``execution.state="running"`` behind, which watchdogs read as
+        an active but idle claim. Blocking is a lifecycle transition, so it must clear the running
+        execution state too.
+        """
+        ticket = self.get_ticket(ticket_id)
+        if not ticket:
+            return None
+
+        data = ticket.execution.model_dump(mode="python", exclude_none=False) if ticket.execution else {}
+        data.update({
+            "state": "blocked",
+            "assigned_to": None,
+            "finished_at": self._utcnow(),
+            "lease_expires_at": None,
+        })
+        updates: dict = {"status": "blocked", "execution": TicketExecution(**data)}
+        if reason:
+            updates["description"] = f"BLOCKED: {reason}"
+        if note:
+            updates["outputs"] = self._append_note(ticket, note)
+        return self.update_ticket(ticket_id, **updates)
+
     def _append_note(self, ticket: Ticket, note: str) -> TicketOutputs:
         """Build an updated TicketOutputs with `note` appended to existing notes.
 

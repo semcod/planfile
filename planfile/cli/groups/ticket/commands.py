@@ -457,13 +457,10 @@ def ticket_complete(
     console.print(f'[green]✓[/green] Completed {ticket.id}')
 
 def ticket_block(ticket_id: str=typer.Argument(..., help='Ticket ID to block'), reason: str=typer.Option(None, '-r', '--reason', help='Block reason')) -> None:
-    """Mark ticket as blocked (shortcut for update --status blocked)."""
+    """Mark ticket as blocked and clear any running execution claim."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
-    updates = {'status': 'blocked'}
-    if reason:
-        updates['description'] = f'BLOCKED: {reason}'
-    ticket = pf.update_ticket(ticket_id, **updates)
+    ticket = pf.block_ticket(ticket_id, reason=reason)
     if not ticket:
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)

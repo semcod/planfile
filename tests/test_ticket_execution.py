@@ -196,6 +196,28 @@ def test_ticket_execution_waiting_input_ready_and_fail(tmp_path):
     assert failed.execution.attempt == 1
 
 
+def test_block_ticket_clears_running_execution_claim(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Run external task",
+        source=TicketSource(tool="shell"),
+        execution=TicketExecution(state="pending"),
+    )
+
+    started = pf.start_ticket(ticket.id, assigned_to="worker-1")
+    assert started.execution.state == "running"
+
+    blocked = pf.block_ticket(ticket.id, reason="external precondition missing")
+    assert blocked is not None
+    assert blocked.status == "blocked"
+    assert blocked.description == "BLOCKED: external precondition missing"
+    assert blocked.execution is not None
+    assert blocked.execution.state == "blocked"
+    assert blocked.execution.assigned_to is None
+    assert blocked.execution.lease_expires_at is None
+    assert blocked.execution.finished_at is not None
+
+
 def test_wait_for_input_appends_note_to_outputs_notes(tmp_path):
     """`pf.wait_for_input(..., note=...)` should append to outputs.notes
     so an agent can record *why* it is escalating to a human (PLF-koru #7).

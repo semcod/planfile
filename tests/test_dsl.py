@@ -308,20 +308,18 @@ class TestDSLExecutor:
     def test_block_ticket(self):
         ex = self._executor_with_mock()
         ticket = _make_mock_ticket(status="blocked")
-        ex._pf.update_ticket.return_value = ticket
+        ex._pf.block_ticket.return_value = ticket
         result = ex.run("block ticket PLF-001")
         assert result.ok
-        call_kwargs = ex._pf.update_ticket.call_args[1]
-        assert call_kwargs.get("status") == "blocked"
+        ex._pf.block_ticket.assert_called_with("PLF-001", reason=None)
 
     def test_block_ticket_with_reason(self):
         ex = self._executor_with_mock()
         ticket = _make_mock_ticket(status="blocked")
-        ex._pf.update_ticket.return_value = ticket
+        ex._pf.block_ticket.return_value = ticket
         result = ex.run('block ticket PLF-001 reason="API down"')
         assert result.ok
-        call_kwargs = ex._pf.update_ticket.call_args[1]
-        assert "BLOCKED" in call_kwargs.get("description", "")
+        ex._pf.block_ticket.assert_called_with("PLF-001", reason="API down")
 
     def test_delete_ticket(self):
         ex = self._executor_with_mock()

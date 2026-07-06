@@ -232,6 +232,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return entry
 
     def update_ticket(self, ticket_id: str, **updates) -> Ticket | None:
+        with self.mutation_lock():
+            return self._update_ticket_unlocked(ticket_id, **updates)
+
+    def _update_ticket_unlocked(self, ticket_id: str, **updates) -> Ticket | None:
         from planfile.core.fastio import read_yaml_fast
 
         for sprint_file in self._all_sprint_files():
@@ -265,16 +269,17 @@ class Store(StoreFileMixin, TicketStoreMixin):
         """Delete a ticket by ID. Returns True if deleted, False if not found."""
         from planfile.core.fastio import read_yaml_fast
 
-        for sprint_file in self._all_sprint_files():
-            data = read_yaml_fast(sprint_file) or {}
-            sprint_data = data.get("sprint", data)
-            tickets = sprint_data.get("tickets", {})
-            if ticket_id in tickets:
-                del tickets[ticket_id]
-                self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
-                if hasattr(self, "_yaml_cache"):
-                    self._yaml_cache.pop(str(sprint_file), None)
-                return True
+        with self.mutation_lock():
+            for sprint_file in self._all_sprint_files():
+                data = read_yaml_fast(sprint_file) or {}
+                sprint_data = data.get("sprint", data)
+                tickets = sprint_data.get("tickets", {})
+                if ticket_id in tickets:
+                    del tickets[ticket_id]
+                    self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
+                    if hasattr(self, "_yaml_cache"):
+                        self._yaml_cache.pop(str(sprint_file), None)
+                    return True
         return False
 
     def delete_tickets_bulk(self, ticket_ids: list[str]) -> tuple[list[str], list[str]]:
@@ -282,37 +287,36 @@ class Store(StoreFileMixin, TicketStoreMixin):
         deleted = []
         not_found = []
 
-        # Load all sprint files into memory
-        from planfile.core.fastio import read_yaml_fast
+        with self.mutation_lock():
+            # Load all sprint files into memory
+            from planfile.core.fastio import read_yaml_fast
 
-        sprint_contents = {}
-        for sprint_file in self._all_sprint_files():
-            sprint_contents[sprint_file] = read_yaml_fast(sprint_file) or {}
+            sprint_contents = {}
+            for sprint_file in self._all_sprint_files():
+                sprint_contents[sprint_file] = read_yaml_fast(sprint_file) or {}
 
-        modified_files = set()
+            modified_files = set()
 
-        for ticket_id in ticket_ids:
-            found = False
-            for sprint_file, data in sprint_contents.items():
-                sprint_data = data.get("sprint", data)
-                tickets = sprint_data.get("tickets", {})
-                if isinstance(tickets, dict) and ticket_id in tickets:
-                    del tickets[ticket_id]
-                    modified_files.add(sprint_file)
-                    deleted.append(ticket_id)
-                    found = True
-                    break
-            if not found:
-                not_found.append(ticket_id)
+            for ticket_id in ticket_ids:
+                found = False
+                for sprint_file, data in sprint_contents.items():
+                    sprint_data = data.get("sprint", data)
+                    tickets = sprint_data.get("tickets", {})
+                    if isinstance(tickets, dict) and ticket_id in tickets:
+                        del tickets[ticket_id]
+                        modified_files.add(sprint_file)
+                        deleted.append(ticket_id)
+                        found = True
+                        break
+                if not found:
+                    not_found.append(ticket_id)
 
-        # Write only the modified sprint files back to disk, exactly once!
-        for sprint_file in modified_files:
-            data = sprint_contents[sprint_file]
-            sprint_file.write_text(
-                yaml.dump(data, default_flow_style=False, allow_unicode=True, Dumper=Dumper), encoding="utf-8"
-            )
-            if hasattr(self, "_yaml_cache"):
-                self._yaml_cache.pop(str(sprint_file), None)
+            # Write only the modified sprint files back to disk, exactly once!
+            for sprint_file in modified_files:
+                data = sprint_contents[sprint_file]
+                self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
+                if hasattr(self, "_yaml_cache"):
+                    self._yaml_cache.pop(str(sprint_file), None)
 
         return deleted, not_found
 
