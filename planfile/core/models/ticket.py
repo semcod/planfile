@@ -84,6 +84,12 @@ class Ticket(BaseModel):
     blocked_by: list[str] = Field(default_factory=list)
     blocks: list[str] = Field(default_factory=list)
 
+    # Git-like decomposition: a ticket can be split into smaller subtasks (children) that
+    # roll up to a parent, and related tickets can be gathered under a named group (epic).
+    parent: str | None = None                          # this ticket is a subtask of `parent`
+    children: list[str] = Field(default_factory=list)  # decomposed subtask ticket IDs
+    group: str | None = None                           # epic/group name for related tickets
+
     file: str | None = None  # Single file path (for backward compatibility)
     files: list[str] = Field(default_factory=list)  # Files associated with this ticket
 

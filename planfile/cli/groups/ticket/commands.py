@@ -673,3 +673,137 @@ def ticket_bulk_update(
 
     if sync and updated:
         _auto_sync(str(pf.store.project_dir), None, sync_dry_run)
+
+
+# ── Git-like decomposition: split / tree / group / merge ──────────────────────
+
+def _parse_subtask_spec(spec: str) -> dict:
+    """Parse a subtask CLI token. ``'name @ path/a.py, path/b.py'`` → file-scoped subtask
+    (git-like: disjoint files never conflict); bare ``'name'`` → unscoped subtask."""
+    if '@' in spec:
+        name, _, files = spec.partition('@')
+        flist = [f.strip() for f in files.split(',') if f.strip()]
+        return {'name': name.strip(), 'files': flist}
+    return {'name': spec.strip()}
+
+
+def ticket_split(
+    ticket_id: str=typer.Argument(..., help='Parent ticket ID to decompose'),
+    subtasks: list[str]=typer.Argument(..., help="Subtask names; use 'name @ file1,file2' to scope files (conflict-free)"),
+    agent: str | None=typer.Option(None, '--agent', help='Assign every subtask to ONE agent — single-owner, orchestrated without conflicts'),
+    priority: str | None=typer.Option(None, '-p', '--priority', help='Override child priority (default: inherit parent)'),
+    sprint: str | None=typer.Option(None, '-s', '--sprint', help='Override child sprint (default: inherit parent)'),
+    no_block: bool=typer.Option(False, '--no-block', help='Do NOT block parent on children (default: parent is an epic blocked_by all subtasks)'),
+    sequential: bool=typer.Option(False, '--sequential', '--seq', help='Stack subtasks in order (each blocked_by the previous) — one runnable front, conflict-free pipeline'),
+    fmt: str=typer.Option('table', '--format', help='table | json'),
+) -> None:
+    """Split a ticket into smaller subtasks (git-like commit split). Children roll up to the
+    parent, which becomes an epic blocked_by them unless --no-block. Use --sequential to run
+    them strictly in order (git-stacked)."""
+    from planfile import Planfile
+    from planfile.core.decompose import DecomposeError, split_ticket
+    pf = Planfile.auto_discover()
+    specs = [_parse_subtask_spec(s) for s in subtasks]
+    try:
+        created = split_ticket(pf, ticket_id, specs, assignee=agent, priority=priority,
+                               sprint=sprint, block_parent=not no_block, sequential=sequential)
+    except DecomposeError as exc:
+        console.print(f'[red]✗[/red] {exc}')
+        raise typer.Exit(1)
+    if fmt == 'json':
+        console.print(json.dumps({'parent': ticket_id, 'children': [c.id for c in created]}))
+        return
+    owner = f' → agent [cyan]{agent}[/cyan]' if agent else ''
+    console.print(f'[green]✓[/green] Split {ticket_id} into {len(created)} subtask(s){owner}')
+    for child in created:
+        scope = f'  [dim]{", ".join(child.files)}[/dim]' if child.files else ''
+        console.print(f'   [cyan]{child.id}[/cyan] {child.name}{scope}')
+
+
+def _render_tree(node: dict, prefix: str='') -> None:
+    mark = {'done': '[green]✓[/green]', 'canceled': '[dim]∅[/dim]',
+            'blocked': '[red]⛔[/red]', 'in_progress': '[yellow]▶[/yellow]'}.get(node['status'], '[dim]○[/dim]')
+    console.print(f"{prefix}{mark} [cyan]{node['id']}[/cyan] {node['name']} [dim]({node['status']})[/dim]")
+    for child in node['children']:
+        _render_tree(child, prefix + '   ')
+
+
+def ticket_tree(
+    ticket_id: str=typer.Argument(..., help='Root ticket ID of the decomposition'),
+    fmt: str=typer.Option('table', '--format', help='table | json'),
+) -> None:
+    """Show a ticket's decomposition tree (parent → children) with roll-up progress."""
+    from planfile import Planfile
+    from planfile.core.decompose import DecomposeError, tree_progress
+    pf = Planfile.auto_discover()
+    try:
+        prog = tree_progress(pf, ticket_id)
+    except DecomposeError as exc:
+        console.print(f'[red]✗[/red] {exc}')
+        raise typer.Exit(1)
+    if fmt == 'json':
+        console.print(json.dumps(prog))
+        return
+    _render_tree(prog['tree'])
+    if prog['subtasks']:
+        state = '[green]complete[/green]' if prog['complete'] else 'in progress'
+        console.print(f"[dim]subtasks: {prog['done']}/{prog['subtasks']} done — {state}[/dim]")
+
+
+def ticket_group(
+    group_name: str=typer.Argument(..., help='Group/epic name'),
+    ticket_ids: list[str]=typer.Argument(..., help='Ticket IDs to gather under the group'),
+) -> None:
+    """Gather related tickets under a named group (epic). Tags each with group:<name>."""
+    from planfile import Planfile
+    from planfile.core.decompose import DecomposeError, group_tickets
+    pf = Planfile.auto_discover()
+    try:
+        updated = group_tickets(pf, group_name, list(ticket_ids))
+    except DecomposeError as exc:
+        console.print(f'[red]✗[/red] {exc}')
+        raise typer.Exit(1)
+    console.print(f'[green]✓[/green] Grouped {len(updated)} ticket(s) under [cyan]{group_name}[/cyan]: {", ".join(updated)}')
+
+
+def ticket_merge(
+    child_id: str=typer.Argument(..., help='Subtask ticket to fold back'),
+    into_id: str=typer.Argument(..., help='Target ticket to merge it into'),
+) -> None:
+    """Refactor: fold a subtask back into another ticket (git squash-like). Moves notes/files,
+    cancels the child, and detaches it from its parent's children/blocked_by."""
+    from planfile import Planfile
+    from planfile.core.decompose import DecomposeError, merge_ticket
+    pf = Planfile.auto_discover()
+    try:
+        result = merge_ticket(pf, child_id, into_id)
+    except DecomposeError as exc:
+        console.print(f'[red]✗[/red] {exc}')
+        raise typer.Exit(1)
+    console.print(f"[green]✓[/green] Merged [cyan]{child_id}[/cyan] into [cyan]{into_id}[/cyan] "
+                  f"({result['files']} file(s), {result['notes']} note(s)); child canceled")
+
+
+def ticket_depend(
+    ticket_id: str=typer.Argument(..., help='Ticket that gains the dependency'),
+    after: list[str] | None=typer.Option(None, '--after', help='This ticket runs AFTER these (blocked_by them)'),
+    before: list[str] | None=typer.Option(None, '--before', help='These run AFTER this ticket (they become blocked_by it)'),
+) -> None:
+    """Declare ordering between existing tickets (git-like sequencing): --after / --before."""
+    from planfile import Planfile
+    from planfile.core.decompose import DecomposeError, add_dependency
+    pf = Planfile.auto_discover()
+    if not after and not before:
+        console.print('[red]✗[/red] give --after and/or --before')
+        raise typer.Exit(1)
+    try:
+        result = add_dependency(pf, ticket_id, after=list(after or []), before=list(before or []))
+    except DecomposeError as exc:
+        console.print(f'[red]✗[/red] {exc}')
+        raise typer.Exit(1)
+    parts = []
+    if result['after']:
+        parts.append(f"after {', '.join(result['after'])}")
+    if result['before']:
+        parts.append(f"before {', '.join(result['before'])}")
+    console.print(f"[green]✓[/green] [cyan]{ticket_id}[/cyan] sequenced: {'; '.join(parts)}")

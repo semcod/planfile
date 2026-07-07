@@ -10,16 +10,21 @@ from planfile.cli.groups.ticket.commands import (
     ticket_complete,
     ticket_create,
     ticket_delete,
+    ticket_depend,
     ticket_done,
     ticket_fail,
+    ticket_group,
     ticket_import,
     ticket_input,
     ticket_list,
+    ticket_merge,
     ticket_move,
     ticket_next,
     ticket_ready,
     ticket_show,
+    ticket_split,
     ticket_start,
+    ticket_tree,
     ticket_update,
     ticket_validate,
 )
@@ -54,5 +59,11 @@ def register_ticket_commands(app: typer.Typer) -> None:
     ticket_app.command("start")(ticket_start)
     ticket_app.command("block")(ticket_block)
     ticket_app.command("validate")(ticket_validate)
+    # Git-like decomposition: split into subtasks, inspect the tree, group, and refactor-merge.
+    ticket_app.command("split")(ticket_split)
+    ticket_app.command("tree")(ticket_tree)
+    ticket_app.command("group")(ticket_group)
+    ticket_app.command("merge")(ticket_merge)
+    ticket_app.command("depend")(ticket_depend)
 
     app.add_typer(ticket_app, name="ticket")

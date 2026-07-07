@@ -36,6 +36,20 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.108] - 2026-07-07
+
+### Docs
+- Update README.md
+
+### Test
+- Update tests/test_decompose.py
+
+### Other
+- Update planfile/cli/groups/ticket/__init__.py
+- Update planfile/cli/groups/ticket/commands.py
+- Update planfile/core/decompose.py
+- Update planfile/core/models/ticket.py
+
 ## [0.1.107] - 2026-07-06
 
 ### Docs
