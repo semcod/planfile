@@ -10,6 +10,7 @@ from planfile.core.decompose import (
     build_tree,
     group_tickets,
     merge_ticket,
+    prune_dangling_dependencies,
     split_ticket,
     tree_progress,
 )
@@ -73,6 +74,69 @@ def test_split_requires_subtasks(tmp_path):
     parent = pf.create_ticket(name="Empty")
     with pytest.raises(DecomposeError):
         split_ticket(pf, parent.id, [])
+
+
+def test_sequential_split_stacks_subtasks_in_order(tmp_path):
+    pf = _pf(tmp_path)
+    parent = pf.create_ticket(name="Pipeline")
+    kids = split_ticket(pf, parent.id, ["a", "b", "c"], sequential=True)
+    a, b, c = kids
+    # git-stacked: b waits on a, c waits on b; a is the single runnable front
+    assert pf.get_ticket(a.id).blocked_by == []
+    assert pf.get_ticket(b.id).blocked_by == [a.id]
+    assert pf.get_ticket(c.id).blocked_by == [b.id]
+
+
+def test_parallel_split_has_no_inter_child_deps(tmp_path):
+    pf = _pf(tmp_path)
+    parent = pf.create_ticket(name="Fanout")
+    kids = split_ticket(pf, parent.id, ["a", "b"])  # sequential=False default
+    for k in kids:
+        assert pf.get_ticket(k.id).blocked_by == []  # siblings independent
+
+
+def test_add_dependency_after_and_before(tmp_path):
+    pf = _pf(tmp_path)
+    a = pf.create_ticket(name="a")
+    b = pf.create_ticket(name="b")
+    c = pf.create_ticket(name="c")
+    # b runs after a; c runs after b
+    add_dependency(pf, b.id, after=[a.id])
+    add_dependency(pf, b.id, before=[c.id])
+    assert pf.get_ticket(b.id).blocked_by == [a.id]
+    assert pf.get_ticket(c.id).blocked_by == [b.id]
+
+
+def test_add_dependency_rejects_self_and_missing(tmp_path):
+    pf = _pf(tmp_path)
+    a = pf.create_ticket(name="a")
+    with pytest.raises(DecomposeError):
+        add_dependency(pf, a.id, after=[a.id])
+    with pytest.raises(DecomposeError):
+        add_dependency(pf, a.id, after=["GHOST-9"])
+
+
+def test_prune_dangling_dependencies_unblocks(tmp_path):
+    pf = _pf(tmp_path)
+    real = pf.create_ticket(name="real blocker")
+    t = pf.create_ticket(name="held")
+    # one real blocker + two ghosts that never existed
+    add_dependency(pf, t.id, after=[real.id])
+    pf.update_ticket(t.id, blocked_by=[real.id, "GHOST-1", "GHOST-2"])
+    rep = prune_dangling_dependencies(pf)
+    assert t.id in [c["ticket"] for c in rep["cleaned"]]
+    reloaded = pf.get_ticket(t.id)
+    assert reloaded.blocked_by == [real.id]  # ghosts gone, real kept
+    assert t.id not in rep["unblocked"]  # still has a real blocker
+
+
+def test_prune_fully_unblocks_when_all_ghosts(tmp_path):
+    pf = _pf(tmp_path)
+    t = pf.create_ticket(name="held by ghosts only")
+    pf.update_ticket(t.id, blocked_by=["GONE-7", "GONE-8"])
+    rep = prune_dangling_dependencies(pf)
+    assert t.id in rep["unblocked"]
+    assert pf.get_ticket(t.id).blocked_by == []
 
 
 def test_group_tags_related_tickets(tmp_path):

@@ -9,9 +9,12 @@ from planfile.cli.groups.ticket.commands import (
     ticket_bulk_update,
     ticket_complete,
     ticket_create,
+    ticket_coverage,
+    ticket_decompose,
     ticket_delete,
     ticket_depend,
     ticket_done,
+    ticket_duplicates,
     ticket_fail,
     ticket_group,
     ticket_import,
@@ -19,6 +22,7 @@ from planfile.cli.groups.ticket.commands import (
     ticket_list,
     ticket_merge,
     ticket_move,
+    ticket_prune_deps,
     ticket_next,
     ticket_ready,
     ticket_show,
@@ -65,5 +69,10 @@ def register_ticket_commands(app: typer.Typer) -> None:
     ticket_app.command("group")(ticket_group)
     ticket_app.command("merge")(ticket_merge)
     ticket_app.command("depend")(ticket_depend)
+    # Semantic layer: duplicate detection, LLM/heuristic decomposition, objective coverage.
+    ticket_app.command("duplicates")(ticket_duplicates)
+    ticket_app.command("decompose")(ticket_decompose)
+    ticket_app.command("coverage")(ticket_coverage)
+    ticket_app.command("prune-deps")(ticket_prune_deps)
 
     app.add_typer(ticket_app, name="ticket")

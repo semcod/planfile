@@ -34,11 +34,11 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.108-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$2.71-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-61.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.109-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$2.73-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-62.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $2.7072 (126 commits)
-- 👤 **Human dev:** ~$6108 (61.1h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $2.7337 (127 commits)
+- 👤 **Human dev:** ~$6208 (62.1h @ $100/h, 30min dedup)
 
 Generated on 2026-07-07 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
@@ -211,6 +211,49 @@ next_ticket = pf.next_ticket()
 # Returns highest priority ticket, bugs first
 # Critical bugs > Critical features > High bugs > High features > ...
 ```
+
+## 🚦 Runnability Contract
+
+`next_ticket()` returns the next **runnable** ticket, not merely the next *open* one. For an
+autonomous queue (e.g. koru), "runnable" is the single source of truth for what may be handed to a
+worker. A ticket is runnable only when **all** hold:
+
+| Axis | Runnable when… |
+|------|----------------|
+| `status` | `open` |
+| `execution.state` | `pending` / `ready` / unset |
+| `blocked_by` | every dependency ticket is `done` / `canceled` |
+| autonomy boundary | **no** `autonomy-frontier` label |
+| human / resource wait | **no** `actor:human`, `needs-human:*`, or `waiting:*` label |
+| goal focus | on the active `CURRENT_GOAL` (if the env var is set) |
+
+**Why this exists:** `blocked_by` models a *ticket→ticket dependency*, but a human/resource wait
+is a **label** (`waiting:node`, `actor:human`, …) — a distinct axis that must not be forced into
+`blocked_by`. Without the runnability filter, `next_ticket()` kept re-serving the same un-doable
+ticket (worker picks → can't execute → ticket reopened → picked again), so an autonomous loop
+would churn on tickets it can never complete. The filter stops that at the source.
+
+Inspect it with the debug view:
+
+```bash
+planfile ticket next --debug            # servable list + why each open ticket is skipped
+planfile ticket next --debug --format json
+```
+```text
+selected: IFURI-219
+servable (3): IFURI-219, IFURI-220, IFURI-221
+  IFURI-033 skipped: waiting:node
+  IFURI-043 skipped: needs-human:pypi-token
+  IFURI-199 skipped: blocked_by:IFURI-202
+```
+
+Programmatic access: `pf.runnability_skip_reason(ticket)` (→ `""` if runnable, else the reason) and
+`pf.runnable_report()` (→ `{selected, servable, skipped:[{id, reason}]}`).
+
+**Emergency bypass:** `PLANFILE_NO_AUTONOMY_FILTER=1` disables the autonomy/wait filter (frontier
+and human tickets become servable again). Use only to diagnose; `--debug` surfaces a warning while
+it is active. `CURRENT_GOAL` freeze is env-only by design — planfile never reads a runtime state
+file, so the generic task store stays decoupled from any specific runtime.
 
 ### 4. Using Python Library
 

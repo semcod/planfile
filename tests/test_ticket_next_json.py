@@ -19,7 +19,7 @@ def test_ticket_next_json_prints_null_when_no_runnable(monkeypatch, capsys) -> N
     from planfile.cli.groups.ticket.commands import ticket_next
 
     with pytest.raises(typer.Exit) as excinfo:
-        ticket_next(sprint="current", queue=None, fmt="json")
+        ticket_next(sprint="current", queue=None, fmt="json", debug=False)
     assert excinfo.value.exit_code == 0
     out = capsys.readouterr().out.strip()
     assert json.loads(out) is None

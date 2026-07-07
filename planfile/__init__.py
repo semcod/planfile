@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.108"
+__version__ = "0.1.109"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -101,62 +101,103 @@ class Planfile:
     def list_tickets(self, **filters):
         return self.store.list_tickets(**filters)
 
-    def next_ticket(self, sprint: str = "current", queue: str | None = None) -> Ticket | None:
-        """Return the next runnable ticket for queue-like workflows.
-        
-        Uses bug-first priority: bugs are always preferred over features
-        when they have the same priority level.
-        """
+    # ── Planfile runnability contract ─────────────────────────────────────────
+    # A ticket may be handed to an autonomous queue only when ALL hold:
+    #   status == open · execution.state ∈ {pending, ready, ""} · every blocked_by is done/canceled
+    #   · not autonomy-frontier · not waiting on a human/resource (actor:human / needs-human / waiting:*)
+    #   · on the active CURRENT_GOAL (if any).
+    # `blocked_by` models a ticket→ticket DEPENDENCY; `waiting:*` / `autonomy-frontier` model a
+    # RESOURCE / autonomy-boundary wait — a distinct axis (never forced into blocked_by). Without
+    # this, next_ticket kept re-serving the same un-doable ticket (pick→fail→reopen→pick), which is
+    # why koru looped on frontier tickets regardless of the work:// control plane.
+    _RUNNABLE_EXEC_STATES = {"pending", "ready", ""}
+    _DEP_SATISFIED_STATES = {"done", "canceled"}
+
+    @staticmethod
+    def _autonomy_skip(ticket: "Ticket") -> str:
+        """Autonomy-boundary / resource-wait reason this ticket is not agent-runnable, or ""."""
+        import os
+        if os.environ.get("PLANFILE_NO_AUTONOMY_FILTER") == "1":
+            return ""
+        labels = [str(l).lower() for l in (ticket.labels or [])]
+        if "autonomy-frontier" in labels:
+            return "autonomy-frontier"
+        if "actor:human" in labels:
+            return "actor:human"
+        for l in labels:
+            if l.startswith("waiting:") or l.startswith("needs-human"):
+                return l
+        return ""
+
+    @staticmethod
+    def _autonomy_blocked(ticket: "Ticket") -> bool:
+        """Boolean form of :meth:`_autonomy_skip` (frozen frontier / human / resource wait)."""
+        return bool(Planfile._autonomy_skip(ticket))
+
+    @staticmethod
+    def _goal_frozen(ticket: "Ticket") -> bool:
+        """Goal-delivery mode: when a delivery goal is active (env ``CURRENT_GOAL``), only
+        goal-related tickets are runnable — the rest is frozen so the queue can't escape the goal
+        into unrelated code. No-op when ``CURRENT_GOAL`` is unset. Env-only (payload-only) by design
+        so planfile core stays decoupled from any runtime state file."""
+        import os
+        goal = os.environ.get("CURRENT_GOAL") or ""
+        if not goal:
+            return False
+        domain = goal.split(".")[0]
+        labels = [str(l).lower() for l in (ticket.labels or [])]
+        if f"goal:{goal}" in labels or f"goal:{domain}" in labels:
+            return False
+        blob = f"{ticket.name} {ticket.description or ''} {' '.join(labels)}".lower()
+        return domain not in blob
+
+    def runnability_skip_reason(self, ticket: "Ticket", queue: str | None = None) -> str:
+        """"" if the ticket satisfies the runnability contract (may be served to a queue), else a
+        short machine-readable reason (``exec_state:<s>`` / ``autonomy-frontier`` / ``actor:human`` /
+        ``waiting:<x>`` / ``goal-frozen`` / ``blocked_by:<ID>`` / ``queue:<q>``). Assumes the ticket
+        is already status=open (the caller filters status)."""
+        exec_state = (ticket.execution.state if ticket.execution else "") or ""
+        if exec_state not in self._RUNNABLE_EXEC_STATES:
+            return f"exec_state:{exec_state}"
+        autonomy = self._autonomy_skip(ticket)
+        if autonomy:
+            return autonomy
+        if self._goal_frozen(ticket):
+            return "goal-frozen"
+        if queue and ((ticket.execution.queue if ticket.execution else "default") != queue):
+            return f"queue:{queue}"
+        for blocked_id in (ticket.blocked_by or []):
+            dep = self.get_ticket(blocked_id)
+            dep_status = (dep.status.value if dep and hasattr(dep.status, "value") else str(dep.status)) if dep else None
+            if not dep or dep_status not in self._DEP_SATISFIED_STATES:
+                return f"blocked_by:{blocked_id}"
+        return ""
+
+    @staticmethod
+    def _ticket_sort_key(ticket: "Ticket"):
+        """Bug-first ordering: priority, then bugs before features, then age, then id."""
         priority_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
-        runnable_states = {"pending", "ready", ""}
-        blocked_statuses = {"done", "canceled"}
+        is_bug = 0 if ticket.labels and "bug" in ticket.labels else 1
+        return (priority_order.get(str(ticket.priority), 99), is_bug, str(ticket.created_at), ticket.id)
 
-        tickets = self.list_tickets(sprint=sprint, status="open")
-        runnable: list[Ticket] = []
+    def runnable_report(self, sprint: str = "current", queue: str | None = None) -> dict:
+        """Explain runnability for every open ticket — for ``planfile ticket next --debug`` and
+        dashboards: ``{selected, servable: [ids], skipped: [{id, reason}]}`` (servable in serve order)."""
+        servable, skipped = [], []
+        for ticket in self.list_tickets(sprint=sprint, status="open"):
+            reason = self.runnability_skip_reason(ticket, queue=queue)
+            (skipped.append({"id": ticket.id, "reason": reason}) if reason else servable.append(ticket))
+        servable.sort(key=self._ticket_sort_key)
+        return {"selected": servable[0].id if servable else None,
+                "servable": [t.id for t in servable], "skipped": skipped}
 
-        for ticket in tickets:
-            execution_state = (ticket.execution.state if ticket.execution else "") or ""
-            if execution_state not in runnable_states:
-                continue
-            if queue and ((ticket.execution.queue if ticket.execution else "default") != queue):
-                continue
-
-            is_blocked = False
-            for blocked_id in ticket.blocked_by:
-                blocked_ticket = self.get_ticket(blocked_id)
-                if not blocked_ticket:
-                    is_blocked = True
-                    break
-                blocked_status = (
-                    blocked_ticket.status.value
-                    if hasattr(blocked_ticket.status, "value")
-                    else str(blocked_ticket.status)
-                )
-                if blocked_status not in blocked_statuses:
-                    is_blocked = True
-                    break
-
-            if not is_blocked:
-                runnable.append(ticket)
-
-        if not runnable:
-            return None
-
-        def _ticket_sort_key(ticket: Ticket):
-            """Bug-first sorting key: priority, bug flag, created_at, id."""
-            priority_score = priority_order.get(str(ticket.priority), 99)
-            
-            # Bug flag: bugs get 0, features get 1 (so bugs sort first)
-            is_bug = 0 if ticket.labels and "bug" in ticket.labels else 1
-            
-            return (
-                priority_score,
-                is_bug,
-                str(ticket.created_at),
-                ticket.id,
-            )
-
-        return sorted(runnable, key=_ticket_sort_key)[0]
+    def next_ticket(self, sprint: str = "current", queue: str | None = None) -> Ticket | None:
+        """Return the next RUNNABLE ticket (Planfile runnability contract) for queue-like workflows,
+        bug-first within priority. Skips frozen-frontier / human-waiting / resource-waiting / off-goal
+        / dependency-blocked tickets so an autonomous queue never loops on un-doable work."""
+        runnable = [t for t in self.list_tickets(sprint=sprint, status="open")
+                    if not self.runnability_skip_reason(t, queue=queue)]
+        return sorted(runnable, key=self._ticket_sort_key)[0] if runnable else None
 
     def update_ticket(self, ticket_id: str, **updates):
         return self.store.update_ticket(ticket_id, **updates)

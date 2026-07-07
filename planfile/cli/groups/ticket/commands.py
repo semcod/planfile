@@ -278,11 +278,28 @@ def ticket_next(
     sprint: str = typer.Option('current', '-s', '--sprint'),
     queue: str | None = typer.Option(None, '--queue', help='Only consider tickets in this execution queue'),
     fmt: str = typer.Option('yaml', '--format', help='yaml | json'),
+    debug: bool = typer.Option(False, '--debug', help='Explain runnability: which tickets are servable vs why each is skipped'),
 ) -> None:
     """Show the next runnable ticket for queue-like workflows."""
+    import os
+
     from planfile import Planfile
 
     pf = Planfile.auto_discover()
+    if debug:
+        report = pf.runnable_report(sprint=sprint, queue=queue)
+        if os.environ.get('PLANFILE_NO_AUTONOMY_FILTER') == '1':
+            report['warning'] = 'PLANFILE_NO_AUTONOMY_FILTER=1 — frontier/human tickets may be served as runnable'
+        if fmt == 'json':
+            print(json.dumps(report, indent=2, default=str))
+        else:
+            console.print(f"[bold]selected:[/bold] {report['selected']}")
+            console.print(f"[green]servable ({len(report['servable'])}):[/green] {', '.join(report['servable']) or '—'}")
+            for row in report['skipped']:
+                console.print(f"  [dim]{row['id']} skipped:[/dim] {row['reason']}")
+            if report.get('warning'):
+                console.print(f"[yellow]WARNING: {report['warning']}[/yellow]")
+        raise typer.Exit(0)
     ticket = pf.next_ticket(sprint=sprint, queue=queue)
     if not ticket:
         if fmt == "json":
@@ -807,3 +824,105 @@ def ticket_depend(
     if result['before']:
         parts.append(f"before {', '.join(result['before'])}")
     console.print(f"[green]✓[/green] [cyan]{ticket_id}[/cyan] sequenced: {'; '.join(parts)}")
+
+
+# ── Semantic layer: duplicates / decompose / coverage ─────────────────────────
+
+def ticket_duplicates(
+    sprint: str=typer.Option('current', '-s', '--sprint'),
+    threshold: float=typer.Option(0.85, '--threshold', '-t', help='Similarity cutoff 0..1 (embed default 0.85; lower for lexical)'),
+    status: str | None=typer.Option(None, help='Only compare tickets of this status'),
+    fmt: str=typer.Option('table', '--format', help='table | json'),
+) -> None:
+    """Detect semantically-duplicate tickets (embedding cosine, or lexical fallback offline)."""
+    from planfile import Planfile
+    from planfile.core.semantic import detect_duplicates
+    pf = Planfile.auto_discover()
+    rep = detect_duplicates(pf, threshold=threshold, sprint=sprint, status=status)
+    if fmt == 'json':
+        console.print(json.dumps(rep))
+        return
+    if not rep['duplicates']:
+        console.print(f"[green]✓[/green] No duplicates ≥ {threshold} [dim]({rep['method']}, {rep['checked']} tickets)[/dim]")
+        return
+    console.print(f"[yellow]{len(rep['duplicates'])} possible duplicate pair(s)[/yellow] [dim]({rep['method']})[/dim]:")
+    for d in rep['duplicates']:
+        console.print(f"   [bold]{d['score']:.2f}[/bold]  [cyan]{d['a']}[/cyan] {d['a_name']}  ≈  [cyan]{d['b']}[/cyan] {d['b_name']}")
+
+
+def ticket_decompose(
+    ticket_id: str=typer.Argument(..., help='Ticket to decompose'),
+    apply: bool=typer.Option(False, '--apply', help='Actually create the subtasks (via split); default is suggest-only'),
+    agent: str | None=typer.Option(None, '--agent', help='Assign created subtasks to one agent'),
+    sequential: bool=typer.Option(False, '--sequential', '--seq', help='Stack created subtasks in order'),
+    max_subtasks: int=typer.Option(6, '--max', help='Maximum number of subtasks'),
+    fmt: str=typer.Option('table', '--format', help='table | json'),
+) -> None:
+    """Suggest a subtask breakdown (LLM when a model is set, else heuristic). With --apply it
+    creates them via split (file-scoped, single-owner)."""
+    from planfile import Planfile
+    from planfile.core.semantic import suggest_decomposition
+    pf = Planfile.auto_discover()
+    out = suggest_decomposition(pf, ticket_id, max_subtasks=max_subtasks)
+    if out['atomic']:
+        console.print(f"[dim]{ticket_id} looks atomic — nothing to split.[/dim]")
+        raise typer.Exit(0)
+    if fmt == 'json' and not apply:
+        console.print(json.dumps(out))
+        return
+    console.print(f"[bold]{ticket_id}[/bold] → {len(out['subtasks'])} subtask(s) [dim]({out['method']})[/dim]:")
+    for sub in out['subtasks']:
+        scope = f"  [dim]{', '.join(sub['files'])}[/dim]" if sub.get('files') else ''
+        console.print(f"   • {sub['name']}{scope}")
+    if apply:
+        from planfile.core.decompose import split_ticket
+        created = split_ticket(pf, ticket_id, out['subtasks'], assignee=agent, sequential=sequential)
+        console.print(f"[green]✓[/green] Applied: created {', '.join(c.id for c in created)}")
+
+
+def ticket_coverage(
+    sprint: str=typer.Option('current', '-s', '--sprint'),
+    threshold: float=typer.Option(0.5, '--threshold', '-t', help='Objective↔ticket match cutoff 0..1'),
+    fmt: str=typer.Option('table', '--format', help='table | json'),
+) -> None:
+    """Validate that a sprint's tickets semantically cover its objectives (milestones).
+    Reports covered objectives and, crucially, the UNCOVERED ones — the gap in the plan."""
+    from planfile import Planfile
+    from planfile.core.semantic import coverage_report
+    pf = Planfile.auto_discover()
+    rep = coverage_report(pf, sprint=sprint, threshold=threshold)
+    if fmt == 'json':
+        console.print(json.dumps(rep))
+        return
+    if not rep['objectives']:
+        console.print('[dim]No objectives declared on this sprint — nothing to cover.[/dim]')
+        return
+    console.print(f"[bold]Coverage[/bold] {sprint}: {rep['coverage']:.0%} "
+                  f"({len(rep['covered'])}/{rep['objectives']}) [dim]({rep['method']})[/dim]")
+    for c in rep['covered']:
+        ids = ', '.join(f"{h['id']}" for h in c['tickets'][:3])
+        console.print(f"   [green]✓[/green] {c['objective']} [dim]← {ids}[/dim]")
+    for obj in rep['uncovered']:
+        console.print(f"   [red]✗ UNCOVERED[/red] {obj}")
+
+
+def ticket_prune_deps(
+    sprint: str=typer.Option('current', '-s', '--sprint'),
+    fmt: str=typer.Option('table', '--format', help='table | json'),
+) -> None:
+    """Remove blocked_by entries pointing at tickets that no longer exist (ghost deps that
+    keep a ticket falsely blocked forever). High-value backlog-hygiene step."""
+    from planfile import Planfile
+    from planfile.core.decompose import prune_dangling_dependencies
+    pf = Planfile.auto_discover()
+    rep = prune_dangling_dependencies(pf, sprint=sprint)
+    if fmt == 'json':
+        console.print(json.dumps(rep))
+        return
+    if not rep['cleaned']:
+        console.print(f"[green]\u2713[/green] No dangling dependencies [dim]({rep['scanned']} scanned)[/dim]")
+        return
+    for c in rep['cleaned']:
+        tag = ' [green]\u2192 now runnable[/green]' if c['unblocked'] else ''
+        console.print(f"   [cyan]{c['ticket']}[/cyan] dropped {', '.join(c['removed'])}{tag}")
+    console.print(f"[green]\u2713[/green] Pruned {len(rep['cleaned'])} ticket(s); unblocked {len(rep['unblocked'])}")

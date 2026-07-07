@@ -112,6 +112,15 @@ def split_ticket(
     return created
 
 
+def _validate_dep_targets(pf: Any, ticket_id: str, deps: list[str]) -> None:
+    """Every dependency must exist and not be the ticket itself (no self / dangling deps)."""
+    for dep in deps:
+        if dep == ticket_id:
+            raise DecomposeError("a ticket cannot depend on itself")
+        if not pf.get_ticket(dep):
+            raise DecomposeError(f"dependency ticket {dep} not found")
+
+
 def add_dependency(pf: Any, ticket_id: str, *, after: list[str] | None = None,
                    before: list[str] | None = None) -> dict:
     """Declare ordering between EXISTING tickets (git-like sequencing primitive).
@@ -123,17 +132,34 @@ def add_dependency(pf: Any, ticket_id: str, *, after: list[str] | None = None,
         raise DecomposeError(f"ticket {ticket_id} not found")
     after = [a for a in (after or []) if a]
     before = [b for b in (before or []) if b]
-    for dep in [*after, *before]:
-        if dep == ticket_id:
-            raise DecomposeError("a ticket cannot depend on itself")
-        if not pf.get_ticket(dep):
-            raise DecomposeError(f"dependency ticket {dep} not found")
+    _validate_dep_targets(pf, ticket_id, [*after, *before])
     if after:
         pf.update_ticket(ticket_id, blocked_by=_dedup([*(t.blocked_by or []), *after]))
     for b in before:
         bt = pf.get_ticket(b)
         pf.update_ticket(b, blocked_by=_dedup([*(bt.blocked_by or []), ticket_id]))
     return {"ticket": ticket_id, "after": after, "before": before}
+
+
+def prune_dangling_dependencies(pf: Any, sprint: str = "current") -> dict:
+    """Remove ``blocked_by`` entries that point at tickets which no longer exist.
+
+    A deleted/canceled blocker leaves a DANGLING reference, and the queue treats an unknown
+    blocker as unsatisfied — so the ticket is falsely blocked FOREVER. Pruning those ghosts is
+    the single highest-value step toward actually closing a backlog. Returns what was cleaned."""
+    tickets = list(pf.list_tickets(sprint=sprint))
+    existing = {t.id for t in tickets}
+    cleaned = []
+    for t in tickets:
+        deps = t.blocked_by or []
+        ghosts = [d for d in deps if d not in existing and not pf.get_ticket(d)]
+        if ghosts:
+            kept = [d for d in deps if d not in ghosts]
+            pf.update_ticket(t.id, blocked_by=kept)
+            cleaned.append({"ticket": t.id, "removed": ghosts, "remaining": kept,
+                            "unblocked": not kept})
+    return {"sprint": sprint, "scanned": len(tickets), "cleaned": cleaned,
+            "unblocked": [c["ticket"] for c in cleaned if c["unblocked"]]}
 
 
 def group_tickets(pf: Any, group_name: str, ticket_ids: list[str]) -> list[str]:
