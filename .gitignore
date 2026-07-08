@@ -242,3 +242,7 @@ examples/*/full-analysis.yaml
 examples/quick-start/quick-start.yaml
 .redsl/
 *.bak
+.github/
+.goal/
+.planfile/
+.taskill/
