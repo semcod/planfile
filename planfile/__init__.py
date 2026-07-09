@@ -199,8 +199,9 @@ class Planfile:
                     if not self.runnability_skip_reason(t, queue=queue)]
         return sorted(runnable, key=self._ticket_sort_key)[0] if runnable else None
 
-    def update_ticket(self, ticket_id: str, **updates):
-        return self.store.update_ticket(ticket_id, **updates)
+    def update_ticket(self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates):
+        """Delegate with optional reason (why status/etc changed) and actor (who/by)."""
+        return self.store.update_ticket(ticket_id, reason=reason, actor=actor, **updates)
 
     @staticmethod
     def _merge_model(current, model_cls, **changes):
@@ -233,7 +234,7 @@ class Planfile:
         )
         return self.update_ticket(ticket_id, execution=execution)
 
-    def start_ticket(self, ticket_id: str, assigned_to: str | None = None) -> Ticket | None:
+    def start_ticket(self, ticket_id: str, assigned_to: str | None = None, *, reason: str | None = None, actor: str | None = None) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
             return None
@@ -245,7 +246,7 @@ class Planfile:
             assigned_to=assigned_to or (ticket.execution.assigned_to if ticket.execution else None),
             started_at=ticket.execution.started_at if ticket.execution and ticket.execution.started_at else self._utcnow(),
         )
-        return self.update_ticket(ticket_id, status="in_progress", execution=execution)
+        return self.update_ticket(ticket_id, status="in_progress", execution=execution, reason=reason, actor=actor)
 
     def complete_ticket(
         self,
@@ -253,6 +254,9 @@ class Planfile:
         note: str | None = None,
         result=None,
         artifacts: list[str] | None = None,
+        *,
+        reason: str | None = None,
+        actor: str | None = None,
     ) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
@@ -275,9 +279,9 @@ class Planfile:
             lease_expires_at=None,
             last_error=None,
         )
-        return self.update_ticket(ticket_id, status="done", execution=execution, outputs=outputs)
+        return self.update_ticket(ticket_id, status="done", execution=execution, outputs=outputs, reason=reason, actor=actor)
 
-    def fail_ticket(self, ticket_id: str, error: str) -> Ticket | None:
+    def fail_ticket(self, ticket_id: str, error: str, *, reason: str | None = None, actor: str | None = None) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
             return None
@@ -292,15 +296,17 @@ class Planfile:
             attempt=current_attempt + 1,
             last_error=error,
         )
-        return self.update_ticket(ticket_id, execution=execution)
+        return self.update_ticket(ticket_id, execution=execution, reason=reason, actor=actor)
 
-    def block_ticket(self, ticket_id: str, reason: str | None = None, note: str | None = None) -> Ticket | None:
+    def block_ticket(self, ticket_id: str, reason: str | None = None, note: str | None = None, *, actor: str | None = None) -> Ticket | None:
         """Mark a ticket blocked and terminate any active execution claim.
 
         ``update_ticket(status="blocked")`` only changes the board status. For a ticket that was
         already started, that leaves ``execution.state="running"`` behind, which watchdogs read as
         an active but idle claim. Blocking is a lifecycle transition, so it must clear the running
         execution state too.
+        The `reason` here is the block reason (used for description + history "reason").
+        `actor` records who performed the block.
         """
         ticket = self.get_ticket(ticket_id)
         if not ticket:
@@ -316,8 +322,11 @@ class Planfile:
         updates: dict = {"status": "blocked", "execution": TicketExecution(**data)}
         if reason:
             updates["description"] = f"BLOCKED: {reason}"
+            updates["reason"] = reason  # for history
         if note:
             updates["outputs"] = self._append_note(ticket, note)
+        if actor:
+            updates["actor"] = actor
         return self.update_ticket(ticket_id, **updates)
 
     def _append_note(self, ticket: Ticket, note: str) -> TicketOutputs:
@@ -366,7 +375,7 @@ class Planfile:
             updates["outputs"] = self._append_note(ticket, note)
         return self.update_ticket(ticket_id, **updates)
 
-    def ready_ticket(self, ticket_id: str, note: str | None = None) -> Ticket | None:
+    def ready_ticket(self, ticket_id: str, note: str | None = None, *, reason: str | None = None, actor: str | None = None) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
             return None
@@ -380,6 +389,10 @@ class Planfile:
         updates: dict = {"execution": execution}
         if note:
             updates["outputs"] = self._append_note(ticket, note)
+        if reason:
+            updates["reason"] = reason
+        if actor:
+            updates["actor"] = actor
         return self.update_ticket(ticket_id, **updates)
 
     def delete_ticket(self, ticket_id: str) -> bool:

@@ -212,6 +212,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
         previous: dict,
         current: dict,
         changed_keys: list[str],
+        reason: str | None = None,
+        actor: str | None = None,
     ) -> dict:
         previous_status = previous.get("status")
         current_status = current.get("status")
@@ -224,18 +226,28 @@ class Store(StoreFileMixin, TicketStoreMixin):
             "changes": changed_keys,
         }
         if previous_status != current_status:
+            entry["action"] = "status_change"
             entry["status"] = current_status
             entry["previous_status"] = previous_status
         if previous_state != current_state:
             entry["execution_state"] = current_state
             entry["previous_execution_state"] = previous_state
+        if reason:
+            entry["reason"] = reason
+        if actor:
+            entry["actor"] = actor
+            entry["by"] = actor  # alias for "by whom"
         return entry
 
-    def update_ticket(self, ticket_id: str, **updates) -> Ticket | None:
+    def update_ticket(self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates) -> Ticket | None:
+        """Update a ticket. If status (or execution state) changes, a structured history entry
+        is appended automatically, including optional `reason` (why) and `actor` (who / by whom).
+        Use reason/actor (or _reason/_actor in **updates) for rich audit on status transitions.
+        """
         with self.mutation_lock():
-            return self._update_ticket_unlocked(ticket_id, **updates)
+            return self._update_ticket_unlocked(ticket_id, reason=reason, actor=actor, **updates)
 
-    def _update_ticket_unlocked(self, ticket_id: str, **updates) -> Ticket | None:
+    def _update_ticket_unlocked(self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates) -> Ticket | None:
         from planfile.core.fastio import read_yaml_fast
 
         for sprint_file in self._all_sprint_files():
@@ -244,6 +256,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
                 previous = dict(tickets[ticket_id])
+                # Extract history metadata (reason=why the change, actor/by=who performed it)
+                # Support both named params (from high-level methods) and _-prefixed or bare in updates
+                history_reason = reason or updates.pop("reason", None) or updates.pop("_reason", None)
+                history_actor = actor or updates.pop("actor", None) or updates.pop("_actor", None)
+
                 serialized_updates = {
                     key: self._serialize_update_value(value)
                     for key, value in updates.items()
@@ -257,7 +274,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 )
                 if changed_keys and "history" not in serialized_updates:
                     history = list(tickets[ticket_id].get("history") or [])
-                    history.append(self._build_history_entry(previous, tickets[ticket_id], changed_keys))
+                    entry = self._build_history_entry(
+                        previous, tickets[ticket_id], changed_keys,
+                        reason=history_reason, actor=history_actor
+                    )
+                    history.append(entry)
                     tickets[ticket_id]["history"] = history[-200:]
                 self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
                 if hasattr(self, "_yaml_cache"):
