@@ -58,6 +58,82 @@ class TestMirrorRoundtrip:
         assert payload["yaml_mtime_ns"] == y.stat().st_mtime_ns
         assert payload["data"] == {"a": 1}
 
+    def test_write_mirror_uses_explicit_mtime_without_restat(self, tmp_path, monkeypatch):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "a: 1\n")
+
+        def boom(_path):
+            raise AssertionError("must not re-stat when the caller already provided mtime_ns")
+
+        monkeypatch.setattr(fastio, "_stat_mtime_ns", boom)
+        fastio.write_mirror(y, {"a": 1}, mtime_ns=12345)
+        payload = json.loads(fastio.mirror_path(y).read_text())
+        assert payload["yaml_mtime_ns"] == 12345
+
+    def test_read_does_not_cache_when_a_writer_races_mid_read(self, tmp_path, monkeypatch):
+        """Reproduces the exact bug this module guards against: a reader takes no
+        lock, so a concurrent writer's atomic replace can land between the reader's
+        initial stat and its content read. Without the post-read mtime recheck, the
+        reader would cache its (possibly stale/inconsistent) parse under whatever
+        mtime a LATER independent stat happened to return — a mismatched pair every
+        subsequent reader then trusts forever."""
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets:\n    PLF-1:\n      name: a\n")
+        real_stat = fastio._stat_mtime_ns
+        calls = {"n": 0}
+
+        def racy_stat(path):
+            calls["n"] += 1
+            base = real_stat(path)
+            return base + 1 if calls["n"] == 2 else base
+
+        monkeypatch.setattr(fastio, "_stat_mtime_ns", racy_stat)
+        data = fastio.read_yaml_fast(y)
+        assert data["sprint"]["tickets"]["PLF-1"]["name"] == "a"
+        assert not fastio.mirror_path(y).exists(), \
+            "must not cache a read that raced a concurrent writer"
+
+
+class TestMirrorAudit:
+    def test_detects_and_heals_a_stale_mirror(self, tmp_path):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets:\n    PLF-1:\n      name: a\n")
+        # The exact shape of the bug this guards against: a mirror stamped with the
+        # file's CURRENT (correct) mtime but holding stale/empty data — as if an
+        # earlier reader's snapshot got tagged with a later writer's mtime.
+        bad_payload = {"version": 1, "yaml_mtime_ns": y.stat().st_mtime_ns, "data": {}}
+        fastio.mirror_path(y).write_text(json.dumps(bad_payload), encoding="utf-8")
+
+        result = fastio.audit_mirror(y)
+        assert result["ok"] is False
+        assert result["healed"] is True
+
+        healed = json.loads(fastio.mirror_path(y).read_text())
+        assert healed["data"]["sprint"]["tickets"]["PLF-1"]["name"] == "a"
+        assert fastio.read_yaml_fast(y)["sprint"]["tickets"]["PLF-1"]["name"] == "a"
+
+    def test_clean_mirror_reports_ok(self, tmp_path):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets: {}\n")
+        fastio.read_yaml_fast(y)  # creates a correct mirror
+        assert fastio.audit_mirror(y) == {
+            "path": str(y), "ok": True, "healed": False, "reason": None,
+        }
+
+    def test_project_audit_walks_every_yaml(self, tmp_path):
+        base = tmp_path / ".planfile"
+        (base / "sprints").mkdir(parents=True)
+        y1 = base / "sprints" / "current.yaml"
+        y2 = base / "config.yaml"
+        _write_yaml(y1, "sprint:\n  tickets: {}\n")
+        _write_yaml(y2, "project: x\n")
+        fastio.read_yaml_fast(y1)
+        fastio.read_yaml_fast(y2)
+
+        results = fastio.audit_project_mirrors(base)
+        assert {r["path"] for r in results} == {str(y1), str(y2)}
+        assert all(r["ok"] for r in results)
+
 
 class TestStoreIntegration:
     def test_update_ticket_refreshes_mirror(self, tmp_path):

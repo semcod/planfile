@@ -76,9 +76,21 @@ def _atomic_write_text(path: Path, content: str) -> None:
             tmp_path.unlink()
 
 
-def write_mirror(yaml_path: Path, data: Any) -> None:
-    """Persist the JSON mirror for ``yaml_path`` (best-effort, never raises)."""
-    mtime_ns = _stat_mtime_ns(yaml_path)
+def write_mirror(yaml_path: Path, data: Any, *, mtime_ns: int | None = None) -> None:
+    """Persist the JSON mirror for ``yaml_path`` (best-effort, never raises).
+
+    Pass ``mtime_ns`` when the caller already knows, by construction, the
+    exact mtime ``data`` corresponds to (a writer stat'ing right after its
+    own ``os.replace()``, or a reader that just verified the file didn't
+    change under it) — DON'T let this function re-stat independently in
+    that case. An independent re-stat here reopens the same TOCTOU gap
+    ``read_yaml_fast`` guards against: a concurrent writer could replace the
+    file between the caller's checks and this call, and re-stating now would
+    stamp ``data`` (a snapshot from before that replace) with the mtime of
+    the file AFTER it — a mismatched pair every later reader would trust.
+    """
+    if mtime_ns is None:
+        mtime_ns = _stat_mtime_ns(yaml_path)
     if mtime_ns is None:
         return
     payload = {"version": _MIRROR_VERSION, "yaml_mtime_ns": mtime_ns, "data": data}
@@ -108,6 +120,22 @@ def read_yaml_fast(path: Path) -> Any | None:
     """Read a sprint YAML via mirror when fresh; parse + heal mirror otherwise.
 
     Returns None when the file is missing or unparsable.
+
+    No reader-side lock is taken here (``Store.mutation_lock()`` only
+    serializes writers against each other), so a writer's atomic
+    ``os.replace()`` can land at any point during this function. That is
+    safe for the raw content read below — ``os.replace`` guarantees a
+    reader never observes a torn file, only the fully-old or fully-new
+    version — but it is NOT safe to then cache whatever we parsed under a
+    mtime fetched independently afterward: if a writer replaced the file
+    while we were between our own initial stat and our read, our `data`
+    reflects one point in time while a later, fresh stat reflects another,
+    and the two can be stamped together as if consistent. A subsequent
+    reader would then trust a stale (or, worse, a from a since-superseded)
+    snapshot forever, because its mtime matches the file that replaced it.
+    Guard: re-stat immediately after reading and refuse to cache (though
+    still return the data — it is a valid parse of *some* real snapshot)
+    when the mtime moved under us.
     """
     mtime_ns = _stat_mtime_ns(path)
     if mtime_ns is None:
@@ -119,5 +147,54 @@ def read_yaml_fast(path: Path) -> Any | None:
         data = load_yaml_text(path.read_text(encoding="utf-8")) or {}
     except Exception:
         return None
-    write_mirror(path, data)
+    if _stat_mtime_ns(path) != mtime_ns:
+        return data  # raced with a concurrent writer — do not cache a mismatched pair
+    write_mirror(path, data, mtime_ns=mtime_ns)
     return data
+
+
+def audit_mirror(path: Path) -> dict[str, Any]:
+    """Compare ``path``'s on-disk ``.fast.json`` mirror against a fresh, authoritative
+    YAML parse. Self-heals (rewrites the mirror) when they disagree. Never raises.
+
+    This is the monitoring counterpart to the race ``read_yaml_fast``/``write_mirror``
+    guard against: it catches a bad mirror that was already written (e.g. by a version
+    of this code before the guard existed, or by any other future bug) rather than
+    relying solely on prevention. Returns
+    ``{"path", "ok", "healed", "reason"}`` — ``ok`` is False when drift was found
+    (whether or not it could be healed), so callers can treat that as the failure
+    signal regardless of whether repair succeeded.
+    """
+    result: dict[str, Any] = {"path": str(path), "ok": True, "healed": False, "reason": None}
+    if not path.exists():
+        return result
+    try:
+        fresh = load_yaml_text(path.read_text(encoding="utf-8")) or {}
+    except Exception as exc:  # noqa: BLE001
+        result.update(ok=False, reason=f"YAML unparsable: {exc}")
+        return result
+    mirror_file = mirror_path(path)
+    if not mirror_file.exists():
+        return result  # nothing cached yet — nothing to audit
+    reason: str | None = None
+    cached: Any = None
+    try:
+        payload = json.loads(mirror_file.read_text(encoding="utf-8"))
+        cached = payload.get("data") if isinstance(payload, dict) else None
+    except Exception as exc:  # noqa: BLE001
+        reason = f"mirror unreadable: {exc}"
+    if reason is None and cached != fresh:
+        reason = "cached mirror disagrees with a fresh YAML parse"
+    if reason is not None:
+        result.update(ok=False, reason=reason)
+        mtime_ns = _stat_mtime_ns(path)
+        if mtime_ns is not None:
+            write_mirror(path, fresh, mtime_ns=mtime_ns)
+            result["healed"] = True
+    return result
+
+
+def audit_project_mirrors(base_dir: Path) -> list[dict[str, Any]]:
+    """Audit every ``*.yaml`` file (and its ``.fast.json`` mirror, if any) under a
+    ``.planfile/`` directory. See ``audit_mirror``."""
+    return [audit_mirror(p) for p in sorted(base_dir.rglob("*.yaml"))]

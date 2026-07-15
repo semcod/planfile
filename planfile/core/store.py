@@ -64,10 +64,14 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(tmp_path, path)
+            # Stat immediately after our own replace, under mutation_lock() (no other
+            # writer can be interleaved here) — pass it through instead of letting
+            # write_mirror() re-stat independently later (see its docstring).
+            mtime_ns = path.stat().st_mtime_ns
         finally:
             if tmp_path.exists():
                 tmp_path.unlink()
-        write_mirror(path, data)
+        write_mirror(path, data, mtime_ns=mtime_ns)
 
     def is_initialized(self) -> bool:
         return self._config_path.exists()

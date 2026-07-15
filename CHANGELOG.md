@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Fixed
+- Fixed `planfile serve` install hint: Rich no longer swallows `[api]` as
+  console markup, so the error now prints the correct
+  `pip install 'planfile[api]'` instead of an extras-less command.
+- Silenced the `PytestCollectionWarning` for `TestResult` by marking the
+  dataclass with `__test__ = False`; removed a dead `sys` import in the serve
+  command.
 - Fixed `planfile health check` so generated parser issues use the canonical
   `name` field and priority-bucketed ticket output is flattened before
   rendering.
@@ -35,6 +41,24 @@
 - feat: added configuration management tests
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
+
+## [0.1.110] - 2026-07-15
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+
+### Test
+- Update tests/test_fastio.py
+- Update tests/test_health_analysis.py
+
+### Other
+- Update planfile/ci.py
+- Update planfile/cli/groups/health/commands.py
+- Update planfile/cli/groups/serve/commands.py
+- Update planfile/core/fastio.py
+- Update planfile/core/store.py
+- Update planfile/core/store_tickets.py
 
 ## [0.1.109] - 2026-07-07
 

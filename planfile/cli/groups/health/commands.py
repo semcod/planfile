@@ -80,4 +80,37 @@ def create_health_app() -> typer.Typer:
             console.print(f"[red]✗[/red] Error analyzing project: {e}")
             raise typer.Exit(1)
 
+    @app.command("cache")
+    def cache_cmd(
+        project_path: str = typer.Argument(".", help="Project path to check"),
+    ) -> None:
+        """Audit .fast.json read caches against their source YAML and self-heal drift.
+
+        Catches the class of bug where a concurrent writer races a cache write and a
+        later reader trusts a stale (or empty) snapshot forever because it carries a
+        matching mtime — see planfile.core.fastio.read_yaml_fast for the mechanism.
+        Exits 1 if any drift was found, even when it was healed, so this can be run
+        periodically (e.g. by koru) or wired into CI as an early-warning check.
+        """
+        from pathlib import Path
+
+        from planfile.core.fastio import audit_project_mirrors
+
+        base_dir = Path(project_path).resolve() / ".planfile"
+        if not base_dir.exists():
+            console.print(f"[yellow]No .planfile/ at {base_dir}[/yellow]")
+            raise typer.Exit(0)
+
+        results = audit_project_mirrors(base_dir)
+        drift = [r for r in results if not r["ok"]]
+        if not drift:
+            console.print(f"[green]✓ cache OK[/green] ({len(results)} mirror file(s) checked)")
+            raise typer.Exit(0)
+
+        console.print(f"[red]✗ {len(drift)}/{len(results)} cache mirror(s) drifted[/red]")
+        for r in drift:
+            status = "healed" if r["healed"] else "NOT healed"
+            console.print(f"  [yellow]{status}[/yellow] {r['path']}: {r['reason']}")
+        raise typer.Exit(1)
+
     return app

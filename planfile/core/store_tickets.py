@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import fnmatch
+import logging
 from typing import Any
 
 from .models import Ticket
+
+logger = logging.getLogger("planfile.store")
 
 
 class TicketStoreMixin:
@@ -21,7 +24,15 @@ class TicketStoreMixin:
             if 'integration' in t_data and isinstance(t_data['integration'], str):
                 t_data['labels'] = [t_data.pop('integration')]
             return Ticket(**t_data)
-        except Exception:
+        except Exception as exc:
+            # A malformed ticket is skipped so one bad row does not break the
+            # whole sprint, but stay loud about it: a silent drop previously
+            # masked writers persisting tickets the model could not re-parse.
+            logger.warning(
+                "skipping unparseable ticket %s: %s",
+                t_data.get('id', '<no-id>') if isinstance(t_data, dict) else '<invalid>',
+                exc,
+            )
             return None
 
     def _tickets_from_sprint_data(self, sprint_data: dict[str, Any]) -> list[Ticket]:

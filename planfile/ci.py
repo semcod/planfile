@@ -23,6 +23,11 @@ from planfile.runner import review_strategy
 @dataclass
 class TestResult:
     """Result of running tests."""
+
+    # Not a pytest test class despite the ``Test`` prefix — tell the collector
+    # so it stops emitting a PytestCollectionWarning for the ``__init__``.
+    __test__ = False
+
     passed: bool
     failed_tests: list[str]
     coverage: float

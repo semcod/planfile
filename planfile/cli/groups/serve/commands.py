@@ -1,8 +1,7 @@
 """Serve command for planfile CLI."""
 
-import sys
-
 import typer
+from rich.markup import escape
 
 from planfile.cli.core import console
 
@@ -17,10 +16,13 @@ def serve_cli(
     try:
         import uvicorn
     except ImportError:
+        # Escape the literal install command so Rich does not swallow ``[api]``
+        # as console markup and print a wrong (extras-less) install hint.
         console.print(
-            "[red]uvicorn is required. Install with:[/red] pip install 'planfile[api]'"
+            "[red]uvicorn is required. Install with:[/red] "
+            + escape("pip install 'planfile[api]'")
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     console.print(f"[green]Starting planfile server at[/green] http://{host}:{port}")
     uvicorn.run(
