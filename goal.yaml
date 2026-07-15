@@ -237,8 +237,12 @@ publishing:
       asset_glob: dist/*
 strategies:
   python:
-    test: bash -c 'pytest --help | grep -q -- "-n" && pytest tests/ -v -n auto ||
-      pytest tests/ -v'
+    # Use ``python3 -m pytest`` (not bare ``pytest``) so that ``sys.executable``
+    # inside subprocess-based e2e tests points at the same interpreter that has
+    # planfile installed. A bare ``pytest`` console script may be pinned to a
+    # different interpreter (e.g. /usr/bin/python3) where the package is absent.
+    test: bash -c 'python3 -m pytest --help | grep -q -- "-n" && python3 -m pytest
+      tests/ -v -n auto || python3 -m pytest tests/ -v'
     build: python -m build
     publish: twine upload dist/planfile-{version}*
     publish_enabled: true
