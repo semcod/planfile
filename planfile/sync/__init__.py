@@ -7,6 +7,7 @@ Canonical location for all PM backend integrations.
 from planfile.sync.base import PMBackend, TicketRef, TicketState
 from planfile.sync.generic import GenericBackend
 from planfile.sync.github import GitHubBackend
+from planfile.sync.github_projects import GitHubProjectsBackend, GitHubProjectsError
 from planfile.sync.gitlab import GitLabBackend
 
 # Platform-specific implementations
@@ -19,6 +20,8 @@ __all__ = [
     "PMBackend",
     "GenericBackend",
     "GitHubBackend",
+    "GitHubProjectsBackend",
+    "GitHubProjectsError",
     "MockBackend",
     "JiraBackend",
     "GitLabBackend",
