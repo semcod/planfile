@@ -101,6 +101,35 @@ def test_ticket_lifecycle_api_persists_history_for_detail_panel(tmp_path, monkey
     assert loaded["history"][1]["previous_execution_state"] == "ready"
 
 
+def test_ticket_response_api_defaults_to_ready_and_broadcasts(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Human response",
+        source=TicketSource(tool="human"),
+        executor=TicketExecutor(kind="human", mode="interactive", handler="founder"),
+        execution=TicketExecution(queue="founder", state="waiting_input"),
+    )
+    server._manager.active.clear()
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    with client.websocket_connect("/ws") as ws:
+        assert ws.receive_json()["ok"] is True
+        response = client.post(
+            f"/tickets/{ticket.id}/respond",
+            json={"note": "Proceed with the requested access.", "actor": "founder"},
+        )
+        event = ws.receive_json()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "open"
+    assert payload["execution"]["state"] == "ready"
+    assert payload["outputs"]["notes"] == ["Proceed with the requested access."]
+    assert event["action"] == "respond"
+    assert event["ticket"]["execution"]["state"] == "ready"
+
+
 def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     pf.create_ticket(
@@ -132,6 +161,13 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert 'params.set("status", state.statusFilter)' in response.text
     assert 'params.set("tab", state.detailTab)' in response.text
     assert "Copy JSON to clipboard" in response.text
+    assert "Respond to this ticket" in response.text
+    assert "data-ticket-response-form" in response.text
+    assert 'value="ready" selected' in response.text
+    assert 'value="in_progress"' in response.text
+    assert "/respond" in response.text
+    assert "beginTicketWork" in response.text
+    assert "/start" in response.text
     assert "copyTicketDetailJson" in response.text
     assert "ticketDetailExportPayload" in response.text
     assert "/events?limit=100" in response.text

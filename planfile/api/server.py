@@ -12,7 +12,7 @@ from collections import deque
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 
@@ -127,6 +127,12 @@ class TicketFailRequest(BaseModel):
 class TicketInputRequest(BaseModel):
     prompt: str
     env_keys: list[str] = []
+
+
+class TicketResponseRequest(BaseModel):
+    note: str
+    next_state: Literal["ready", "in_progress"] = "ready"
+    actor: str = "founder"
 
 
 class TestEventRequest(BaseModel):
@@ -320,6 +326,24 @@ async def ready_ticket(ticket_id: str):
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "ready", ticket)
+    return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/respond", tags=["tickets"])
+async def respond_ticket(ticket_id: str, body: TicketResponseRequest):
+    pf = get_planfile()
+    try:
+        ticket = pf.respond_ticket(
+            ticket_id,
+            note=body.note,
+            next_state=body.next_state,
+            actor=body.actor.strip() or "dashboard-user",
+        )
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    if not ticket:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    await _broadcast_ticket_event("ticket.execution.changed", "respond", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
@@ -1035,6 +1059,44 @@ def _dashboard_html() -> str:
     .detail-actions .copy-feedback.err {
       color: var(--err);
     }
+    .ticket-response {
+      margin: 0 0 14px;
+      padding: 12px;
+      border: 1px solid #31516f;
+      border-radius: 8px;
+      background: #182230;
+    }
+    .ticket-response h4 {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+    .ticket-response textarea {
+      min-height: 110px;
+      width: 100%;
+      resize: vertical;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      font: inherit;
+    }
+    .ticket-response .response-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .ticket-response .response-controls label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .ticket-response .response-controls button { margin-left: auto; }
+    .ticket-response .form-msg { flex-basis: 100%; }
     pre {
       margin: 8px 0 0;
       color: var(--muted);
@@ -1148,6 +1210,9 @@ def _dashboard_html() -> str:
       selectedTicket: null,
       ticketEvents: [],
       detailTab: "overview",
+      activeViewTicketId: null,
+      responseFeedback: null,
+      responseSubmitting: false,
       seenTicketStates: new Map(),
       lastTickets: [],
     };
@@ -1581,6 +1646,30 @@ def _dashboard_html() -> str:
       </div>`;
     }
 
+    function renderTicketResponseForm(ticket) {
+      if (!ticket) return "";
+      const terminal = ["done", "canceled", "blocked"].includes(String(ticket.status || ""))
+        || ticket?.execution?.state === "done";
+      if (terminal) return "";
+      const feedback = state.responseFeedback?.ticketId === ticket.id ? state.responseFeedback : null;
+      const disabled = state.responseSubmitting ? "disabled" : "";
+      return `<form class="ticket-response" data-ticket-response-form data-ticket-id="${escapeHtml(ticket.id)}">
+        <h4>Respond to this ticket</h4>
+        <label class="field-block" for="ticket-response-note">Response</label>
+        <textarea id="ticket-response-note" name="note" required placeholder="Write the decision, answer, or information needed to continue..." ${disabled}></textarea>
+        <div class="response-controls">
+          <label for="ticket-response-state">Status after response
+            <select id="ticket-response-state" name="next_state" ${disabled}>
+              <option value="ready" selected>READY — response complete</option>
+              <option value="in_progress">IN PROGRESS — continue working</option>
+            </select>
+          </label>
+          <button type="submit" ${disabled}>${state.responseSubmitting ? "Sending..." : "Send response"}</button>
+          <div class="form-msg ${feedback?.kind === "error" ? "err" : feedback ? "ok" : ""}" data-response-feedback aria-live="polite">${escapeHtml(feedback?.text || "")}</div>
+        </div>
+      </form>`;
+    }
+
     function renderTicketEventLog(events) {
       if (!events.length) return '<div class="empty">No management or tool events linked to this ticket yet.</div>';
       return `<div class="timeline">${events.map((event) => {
@@ -1666,8 +1755,28 @@ def _dashboard_html() -> str:
         </div>
         ${renderDetailTabs()}
         ${renderDetailActions()}
+        ${renderTicketResponseForm(ticket)}
         ${tabHtml}
       `;
+    }
+
+    async function beginTicketWork(ticket) {
+      if (!ticket || state.activeViewTicketId === ticket.id) return ticket;
+      state.activeViewTicketId = ticket.id;
+      const execution = ticket.execution || {};
+      const executor = ticket.executor || {};
+      const terminal = ["done", "canceled", "blocked"].includes(String(ticket.status || ""))
+        || ["done", "running"].includes(String(execution.state || ""));
+      const interactiveHuman = executor.kind === "human" && executor.mode === "interactive";
+      if (!interactiveHuman || terminal || ticket.status === "in_progress") return ticket;
+      const assignedTo = executor.handler || execution.assigned_to || ticketQueue(ticket) || "dashboard-human";
+      const response = await fetch(`/tickets/${encodeURIComponent(ticket.id)}/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assigned_to: assignedTo }),
+      });
+      if (!response.ok) throw new Error(`Starting ${ticket.id} returned HTTP ${response.status}`);
+      return response.json();
     }
 
     async function selectTicket(ticketId, options = {}) {
@@ -1686,6 +1795,11 @@ def _dashboard_html() -> str:
       ]);
       if (!ticketResponse.ok) throw new Error(`Ticket ${ticketId} returned HTTP ${ticketResponse.status}`);
       state.selectedTicket = await ticketResponse.json();
+      try {
+        state.selectedTicket = await beginTicketWork(state.selectedTicket);
+      } catch (error) {
+        state.responseFeedback = { ticketId, kind: "error", text: String(error) };
+      }
       state.ticketEvents = eventsResponse.ok ? await eventsResponse.json() : [];
       renderTicketDetail(state.selectedTicket, state.ticketEvents);
       renderTickets(selectedTickets(state.lastTickets));
@@ -1842,6 +1956,57 @@ def _dashboard_html() -> str:
       if (node) selectTicket(node.dataset.relatedTicketId).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: node.dataset.relatedTicketId, ticket: { execution: { state: "failed", last_error: String(error) } } }));
     });
 
+    detailEl.addEventListener("submit", async (event) => {
+      const form = event.target.closest("[data-ticket-response-form]");
+      if (!form) return;
+      event.preventDefault();
+      const ticketId = form.dataset.ticketId;
+      const data = new FormData(form);
+      const note = String(data.get("note") || "").trim();
+      const nextState = String(data.get("next_state") || "ready");
+      const feedback = form.querySelector("[data-response-feedback]");
+      if (!note) {
+        if (feedback) {
+          feedback.className = "form-msg err";
+          feedback.textContent = "Response is required.";
+        }
+        return;
+      }
+      state.responseSubmitting = true;
+      for (const control of form.querySelectorAll("button, textarea, select")) control.disabled = true;
+      if (feedback) {
+        feedback.className = "form-msg";
+        feedback.textContent = "Sending response...";
+      }
+      try {
+        const actor = state.selectedTicket?.executor?.handler
+          || state.selectedTicket?.execution?.assigned_to
+          || ticketQueue(state.selectedTicket)
+          || "dashboard-user";
+        const response = await fetch(`/tickets/${encodeURIComponent(ticketId)}/respond`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note, next_state: nextState, actor }),
+        });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.detail || `Response failed with HTTP ${response.status}`);
+        }
+        state.selectedTicket = await response.json();
+        state.responseFeedback = {
+          ticketId,
+          kind: "success",
+          text: `Response saved. Ticket is ${nextState === "ready" ? "READY" : "IN PROGRESS"}.`,
+        };
+        await refreshTickets({ notifyChanges: false });
+      } catch (error) {
+        state.responseFeedback = { ticketId, kind: "error", text: String(error) };
+      } finally {
+        state.responseSubmitting = false;
+        renderTicketDetail(state.selectedTicket, state.ticketEvents);
+      }
+    });
+
     $("notify").onclick = async () => {
       if (!("Notification" in window)) {
         alert("Browser notifications are not supported here.");
@@ -1973,6 +2138,7 @@ def _dashboard_html() -> str:
         .then(() => loadEventHistory())
         .then(() => {
           if (state.selectedTicketId) return selectTicket(state.selectedTicketId, { silent: true, updateUrl: false });
+          state.activeViewTicketId = null;
           renderTicketDetail(null);
           return null;
         })

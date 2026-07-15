@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.112"
+__version__ = "0.1.113"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -394,6 +394,57 @@ class Planfile:
         if actor:
             updates["actor"] = actor
         return self.update_ticket(ticket_id, **updates)
+
+    def respond_ticket(
+        self,
+        ticket_id: str,
+        note: str,
+        next_state: str = "ready",
+        *,
+        actor: str | None = None,
+    ) -> Ticket | None:
+        """Persist a human response and atomically move the ticket to its next work state."""
+        ticket = self.get_ticket(ticket_id)
+        if not ticket:
+            return None
+        response = note.strip()
+        if not response:
+            raise ValueError("ticket_response_required")
+        if next_state not in {"ready", "in_progress"}:
+            raise ValueError("ticket_response_state_invalid")
+
+        execution_data = (
+            ticket.execution.model_dump(mode="python", exclude_none=False)
+            if ticket.execution
+            else {}
+        )
+        if next_state == "ready":
+            execution_data.update({
+                "state": "ready",
+                "assigned_to": None,
+                "lease_expires_at": None,
+                "last_error": None,
+            })
+            status = "open"
+        else:
+            execution_data.update({
+                "state": "running",
+                "assigned_to": actor or execution_data.get("assigned_to"),
+                "started_at": execution_data.get("started_at") or self._utcnow(),
+                "finished_at": None,
+                "lease_expires_at": None,
+                "last_error": None,
+            })
+            status = "in_progress"
+
+        return self.update_ticket(
+            ticket_id,
+            status=status,
+            execution=TicketExecution(**execution_data),
+            outputs=self._append_note(ticket, response),
+            reason="human_response",
+            actor=actor,
+        )
 
     def delete_ticket(self, ticket_id: str) -> bool:
         """Delete a single ticket by ID. Returns True if deleted, False if not found."""

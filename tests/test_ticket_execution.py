@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from planfile import (
     Planfile,
     TicketExecution,
@@ -194,6 +196,50 @@ def test_ticket_execution_waiting_input_ready_and_fail(tmp_path):
     assert failed.execution.state == "failed"
     assert failed.execution.last_error == "Remote API returned HTTP 502"
     assert failed.execution.attempt == 1
+
+
+def test_human_response_is_persisted_and_moves_ticket_atomically(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Founder decision",
+        source=TicketSource(tool="human"),
+        executor=TicketExecutor(kind="human", mode="interactive", handler="founder"),
+        execution=TicketExecution(queue="founder", state="waiting_input"),
+    )
+
+    ready = pf.respond_ticket(
+        ticket.id,
+        note="Access approved for the employee.",
+        actor="founder",
+    )
+    assert ready is not None
+    assert ready.status == "open"
+    assert ready.execution is not None
+    assert ready.execution.state == "ready"
+    assert ready.outputs is not None
+    assert ready.outputs.notes == ["Access approved for the employee."]
+    assert ready.history[-1]["reason"] == "human_response"
+    assert ready.history[-1]["actor"] == "founder"
+
+    working = pf.respond_ticket(
+        ticket.id,
+        note="I am still preparing the access details.",
+        next_state="in_progress",
+        actor="founder",
+    )
+    assert working is not None
+    assert working.status == "in_progress"
+    assert working.execution is not None
+    assert working.execution.state == "running"
+    assert working.execution.assigned_to == "founder"
+    assert working.outputs is not None
+    assert working.outputs.notes == [
+        "Access approved for the employee.",
+        "I am still preparing the access details.",
+    ]
+
+    with pytest.raises(ValueError, match="ticket_response_required"):
+        pf.respond_ticket(ticket.id, note="   ")
 
 
 def test_block_ticket_clears_running_execution_claim(tmp_path):
