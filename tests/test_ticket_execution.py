@@ -242,6 +242,40 @@ def test_human_response_is_persisted_and_moves_ticket_atomically(tmp_path):
         pf.respond_ticket(ticket.id, note="   ")
 
 
+def test_response_can_atomically_delegate_with_an_instruction(tmp_path, monkeypatch):
+    catalogue = tmp_path / "delegation-actors.json"
+    catalogue.write_text('{"actors":[{"id":"marketing-lead","label":"Marketing lead","kind":"human"}]}')
+    monkeypatch.setenv("PLANFILE_DELEGATION_ACTORS_FILE", str(catalogue))
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Delegate me",
+        source=TicketSource(tool="human"),
+        executor=TicketExecutor(kind="human", mode="interactive", handler="founder"),
+        execution=TicketExecution(queue="founder", state="waiting_input"),
+    )
+
+    delegated = pf.respond_ticket(
+        ticket.id,
+        note="Use the company YouTube channel and report moderation actions.",
+        delegate_to="marketing-lead",
+        delegate_kind="human",
+    )
+
+    assert delegated.execution.queue == "marketing-lead"
+    assert delegated.execution.state == "ready"
+    assert delegated.execution.assigned_to is None
+    assert delegated.executor.handler == "marketing-lead"
+    assert delegated.outputs.notes[-1].startswith("Use the company YouTube")
+
+
+def test_response_rejects_actor_outside_delegation_catalogue(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Do not delegate me", source=TicketSource(tool="human"))
+
+    with pytest.raises(ValueError, match="ticket_delegate_not_allowed:unknown-bot"):
+        pf.respond_ticket(ticket.id, note="Try invalid target", delegate_to="unknown-bot")
+
+
 def test_block_ticket_clears_running_execution_claim(tmp_path):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(

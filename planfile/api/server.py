@@ -133,6 +133,8 @@ class TicketResponseRequest(BaseModel):
     note: str
     next_state: Literal["ready", "in_progress"] = "ready"
     actor: str = "founder"
+    delegate_to: str | None = None
+    delegate_kind: Literal["human", "bot"] | None = None
 
 
 class TestEventRequest(BaseModel):
@@ -338,6 +340,8 @@ async def respond_ticket(ticket_id: str, body: TicketResponseRequest):
             note=body.note,
             next_state=body.next_state,
             actor=body.actor.strip() or "dashboard-user",
+            delegate_to=body.delegate_to,
+            delegate_kind=body.delegate_kind,
         )
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
@@ -345,6 +349,13 @@ async def respond_ticket(ticket_id: str, body: TicketResponseRequest):
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "respond", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.get("/delegation/actors", tags=["tickets"])
+def list_delegation_actors(response: Response):
+    """Return the only actors/queues accepted by ticket delegation."""
+    response.headers.update(NO_STORE_HEADERS)
+    return [actor.model_dump() for actor in get_planfile().delegation_actors()]
 
 
 # ── Sprints ────────────────────────────────────────────────────────────────────
@@ -1213,6 +1224,7 @@ def _dashboard_html() -> str:
       activeViewTicketId: null,
       responseFeedback: null,
       responseSubmitting: false,
+      delegationActors: [],
       seenTicketStates: new Map(),
       lastTickets: [],
     };
@@ -1653,11 +1665,24 @@ def _dashboard_html() -> str:
       if (terminal) return "";
       const feedback = state.responseFeedback?.ticketId === ticket.id ? state.responseFeedback : null;
       const disabled = state.responseSubmitting ? "disabled" : "";
+      const groupedActors = ["human", "bot"].map((kind) => ({
+        kind,
+        actors: state.delegationActors.filter((actor) => actor.kind === kind),
+      })).filter((group) => group.actors.length);
+      const delegationOptions = groupedActors.length
+        ? `<option value="">Keep current actor / queue</option>${groupedActors.map((group) => `
+            <optgroup label="${group.kind === "human" ? "People" : "Bots"}">
+              ${group.actors.map((actor) => `<option value="${escapeHtml(actor.id)}">${escapeHtml(actor.label)} — ${escapeHtml(actor.queue)}</option>`).join("")}
+            </optgroup>`).join("")}`
+        : '<option value="" disabled selected>No delegation actors configured</option>';
       return `<form class="ticket-response" data-ticket-response-form data-ticket-id="${escapeHtml(ticket.id)}">
         <h4>Respond to this ticket</h4>
         <label class="field-block" for="ticket-response-note">Response</label>
         <textarea id="ticket-response-note" name="note" required placeholder="Write the decision, answer, or information needed to continue..." ${disabled}></textarea>
         <div class="response-controls">
+          <label for="ticket-delegate-to">Delegate to actor / queue
+            <select id="ticket-delegate-to" name="delegate_to" ${disabled}>${delegationOptions}</select>
+          </label>
           <label for="ticket-response-state">Status after response
             <select id="ticket-response-state" name="next_state" ${disabled}>
               <option value="ready" selected>READY — response complete</option>
@@ -1702,6 +1727,7 @@ def _dashboard_html() -> str:
       const executor = ticket.executor || {};
       const inputs = ticket.inputs || {};
       const outputs = ticket.outputs || {};
+      const uriProcesses = inputs.uri_processes || [];
       const source = ticket.source || {};
       const stateName = ticketState(ticket);
       const related = relatedTicketIds(ticket, events);
@@ -1731,6 +1757,13 @@ def _dashboard_html() -> str:
           ["mcp_tool", inputs.mcp_tool],
           ["llm_model", inputs.llm_model],
         ]))}
+        ${detailBlock("URI Process plan", uriProcesses.length
+          ? `<div class="timeline">${uriProcesses.map((process) => `<div class="timeline-item">
+              <strong>${escapeHtml(process.id)} · ${escapeHtml(process.name || process.id)}</strong>
+              <div><code>${escapeHtml(process.uri)}</code></div>
+              <small>${escapeHtml(process.actor || "system")} · ${escapeHtml(process.status || "pending")}${process.human_approval ? " · human approval" : ""}</small>
+            </div>`).join("")}</div>`
+          : '<div class="empty">No URI Process plan provided.</div>')}
         ${detailBlock("Outputs", keyValues([
           ["artifacts", (outputs.artifacts || []).join(", ")],
           ["notes", (outputs.notes || []).join(" | ")],
@@ -1964,6 +1997,7 @@ def _dashboard_html() -> str:
       const data = new FormData(form);
       const note = String(data.get("note") || "").trim();
       const nextState = String(data.get("next_state") || "ready");
+      const delegateTo = String(data.get("delegate_to") || "").trim();
       const feedback = form.querySelector("[data-response-feedback]");
       if (!note) {
         if (feedback) {
@@ -1986,7 +2020,10 @@ def _dashboard_html() -> str:
         const response = await fetch(`/tickets/${encodeURIComponent(ticketId)}/respond`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ note, next_state: nextState, actor }),
+          body: JSON.stringify({
+            note, next_state: nextState, actor,
+            delegate_to: delegateTo || null,
+          }),
         });
         if (!response.ok) {
           const payload = await response.json().catch(() => ({}));
@@ -1996,7 +2033,7 @@ def _dashboard_html() -> str:
         state.responseFeedback = {
           ticketId,
           kind: "success",
-          text: `Response saved. Ticket is ${nextState === "ready" ? "READY" : "IN PROGRESS"}.`,
+          text: `Response saved. Ticket is ${nextState === "ready" ? "READY" : "IN PROGRESS"}${delegateTo ? ` and delegated to ${delegateTo}` : ""}.`,
         };
         await refreshTickets({ notifyChanges: false });
       } catch (error) {
@@ -2125,6 +2162,9 @@ def _dashboard_html() -> str:
     async function initializeDashboard() {
       applyUrlState();
       syncUrlState({ replace: true });
+      const actorsResponse = await fetch("/delegation/actors", { cache: "no-store" });
+      if (!actorsResponse.ok) throw new Error(`Delegation actor catalogue failed: ${actorsResponse.status}`);
+      state.delegationActors = await actorsResponse.json();
       await refreshTickets();
       await loadEventHistory();
       if (state.selectedTicketId) {

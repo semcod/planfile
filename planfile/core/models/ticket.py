@@ -45,6 +45,19 @@ class TicketExecution(BaseModel):
     last_error: str | None = None
 
 
+class TicketUriProcess(BaseModel):
+    """One named URI-addressed process expected while completing a ticket."""
+
+    id: str
+    name: str
+    uri: str
+    actor: str = "system"
+    payload: dict[str, Any] = Field(default_factory=dict)
+    depends_on: list[str] = Field(default_factory=list)
+    human_approval: bool = False
+    status: str = "pending"
+
+
 class TicketInputs(BaseModel):
     """Inputs required before or during execution."""
 
@@ -58,6 +71,7 @@ class TicketInputs(BaseModel):
     api_timeout_seconds: float = 30.0
     mcp_tool: str | None = None
     llm_model: str | None = None
+    uri_processes: list[TicketUriProcess] = Field(default_factory=list)
 
 
 class TicketOutputs(BaseModel):

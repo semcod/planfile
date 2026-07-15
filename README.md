@@ -34,11 +34,11 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.113-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$2.73-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-66.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.114-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.23-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-66.6h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $2.7295 (132 commits)
-- 👤 **Human dev:** ~$6608 (66.1h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $3.2311 (133 commits)
+- 👤 **Human dev:** ~$6658 (66.6h @ $100/h, 30min dedup)
 
 Generated on 2026-07-15 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
@@ -431,6 +431,27 @@ dependencies in `blocked_by` are already `done` or `canceled`.
 Execution changes are also broadcast to WebSocket clients connected to `/ws`.
 This lets tools such as `koru` or a small dashboard watch the queue without
 polling every endpoint.
+
+### Closed delegation catalogue
+
+The dashboard's **Delegate to actor / queue** control is populated from a JSON
+catalogue, not from ticket history or free text. Set
+`PLANFILE_DELEGATION_ACTORS_FILE` to a file with this shape:
+
+```json
+{
+  "actors": [
+    {"id": "operations-lead", "label": "Operations lead", "kind": "human"},
+    {"id": "project-operator-bot", "label": "Project operator", "kind": "bot"}
+  ]
+}
+```
+
+`queue` defaults to `id`. Optional `principal` must equal `<kind>:<id>`.
+Without a catalogue, delegation is disabled. `POST /tickets/{id}/respond`
+returns HTTP 422 for an unknown actor or a mismatched actor kind, so bypassing
+the browser select does not bypass the policy. `GET /delegation/actors`
+returns the active catalogue.
 
 Example event:
 

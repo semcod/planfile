@@ -36,6 +36,7 @@ from .ticket import (
     TicketInputs,
     TicketOutputs,
     TicketSource,
+    TicketUriProcess,
 )
 
 __all__ = [
@@ -68,6 +69,7 @@ __all__ = [
     "TicketInputs",
     "TicketOutputs",
     "TicketSource",
+    "TicketUriProcess",
 ]
 
 # Resolve forward references now that TicketStatus is available

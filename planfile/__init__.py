@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.113"
+__version__ = "0.1.114"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -34,8 +34,10 @@ from planfile.core.models import (
     TicketOutputs,
     TicketSource,
     TicketStatus,
+    TicketUriProcess,
 )
 from planfile.core.store import PlanfileStore
+from planfile.delegation import DelegationActor, load_delegation_actors
 from planfile.dsl import DSLExecutor, DSLParser, DSLResult
 from planfile.testql_integration import (
     build_testql_tickets,
@@ -78,6 +80,13 @@ class Planfile:
         self.store = PlanfileStore(project_path)
         if not self.store.is_initialized():
             self.store.init()
+
+    def delegation_actors(self) -> tuple[DelegationActor, ...]:
+        """Return the configured closed set of valid delegation targets."""
+        return load_delegation_actors(self.store.project_dir)
+
+    def resolve_delegation_actor(self, actor_id: str) -> DelegationActor | None:
+        return next((actor for actor in self.delegation_actors() if actor.id == actor_id), None)
 
     @classmethod
     def auto_discover(cls, start_path: str = ".") -> "Planfile":
@@ -402,6 +411,8 @@ class Planfile:
         next_state: str = "ready",
         *,
         actor: str | None = None,
+        delegate_to: str | None = None,
+        delegate_kind: str | None = None,
     ) -> Ticket | None:
         """Persist a human response and atomically move the ticket to its next work state."""
         ticket = self.get_ticket(ticket_id)
@@ -412,6 +423,9 @@ class Planfile:
             raise ValueError("ticket_response_required")
         if next_state not in {"ready", "in_progress"}:
             raise ValueError("ticket_response_state_invalid")
+        delegate = delegate_to.strip() if delegate_to else None
+        if delegate_kind is not None and delegate_kind not in {"human", "bot"}:
+            raise ValueError("ticket_delegate_kind_invalid")
 
         execution_data = (
             ticket.execution.model_dump(mode="python", exclude_none=False)
@@ -437,10 +451,27 @@ class Planfile:
             })
             status = "in_progress"
 
+        executor = ticket.executor
+        if delegate:
+            delegation_actor = self.resolve_delegation_actor(delegate)
+            if delegation_actor is None:
+                raise ValueError(f"ticket_delegate_not_allowed:{delegate}")
+            if delegate_kind is not None and delegate_kind != delegation_actor.kind:
+                raise ValueError(f"ticket_delegate_kind_mismatch:{delegate}")
+            execution_data["queue"] = delegation_actor.queue
+            if next_state == "in_progress":
+                execution_data["assigned_to"] = delegation_actor.id
+            executor = TicketExecutor(
+                kind=delegation_actor.kind,
+                mode="interactive" if delegation_actor.kind == "human" else "automatic",
+                handler=delegation_actor.id,
+            )
+
         return self.update_ticket(
             ticket_id,
             status=status,
             execution=TicketExecution(**execution_data),
+            executor=executor,
             outputs=self._append_note(ticket, response),
             reason="human_response",
             actor=actor,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 pytest.importorskip("fastapi")
@@ -163,6 +165,12 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "Copy JSON to clipboard" in response.text
     assert "Respond to this ticket" in response.text
     assert "data-ticket-response-form" in response.text
+    assert "Delegate to actor / queue" in response.text
+    assert 'name="delegate_to"' in response.text
+    assert '<select id="ticket-delegate-to" name="delegate_to"' in response.text
+    assert 'name="delegate_kind"' not in response.text
+    assert 'fetch("/delegation/actors"' in response.text
+    assert "URI Process plan" in response.text
     assert 'value="ready" selected' in response.text
     assert 'value="in_progress"' in response.text
     assert "/respond" in response.text
@@ -193,6 +201,37 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "if (isWaitingTicket(ticket) || isFailedTicket(ticket) || stateName === \"done\") return false;" in response.text
     assert "const running = visibleTickets.filter(isRunningTicket).length;" in response.text
     assert "/runtime-context" in response.text
+
+
+def test_delegation_actor_catalog_api_and_validation(tmp_path, monkeypatch):
+    catalogue = tmp_path / "delegation-actors.json"
+    catalogue.write_text(json.dumps({"actors": [
+        {"id": "founder", "label": "Founder", "kind": "human"},
+        {"id": "project-operator-bot", "label": "Project operator", "kind": "bot"},
+    ]}))
+    monkeypatch.setenv("PLANFILE_DELEGATION_ACTORS_FILE", str(catalogue))
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Delegate through API", source=TicketSource(tool="human"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    actors = client.get("/delegation/actors")
+    assert actors.status_code == 200
+    assert [actor["id"] for actor in actors.json()] == ["founder", "project-operator-bot"]
+
+    rejected = client.post(f"/tickets/{ticket.id}/respond", json={
+        "note": "Invalid delegation", "delegate_to": "invented-person",
+    })
+    assert rejected.status_code == 422
+    assert rejected.json()["detail"] == "ticket_delegate_not_allowed:invented-person"
+
+    delegated = client.post(f"/tickets/{ticket.id}/respond", json={
+        "note": "Run the project", "delegate_to": "project-operator-bot",
+    })
+    assert delegated.status_code == 200
+    assert delegated.json()["executor"] == {
+        "kind": "bot", "mode": "automatic", "handler": "project-operator-bot"
+    }
 
 
 def test_runtime_context_api_and_page(tmp_path, monkeypatch):
