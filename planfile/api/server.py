@@ -13,11 +13,12 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import yaml
 
 try:
-    from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+    from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import HTMLResponse, Response
     from pydantic import BaseModel
@@ -356,6 +357,33 @@ def list_delegation_actors(response: Response):
     """Return the only actors/queues accepted by ticket delegation."""
     response.headers.update(NO_STORE_HEADERS)
     return [actor.model_dump() for actor in get_planfile().delegation_actors()]
+
+
+@app.get("/access-panel", tags=["tickets"])
+def open_access_panel(
+    request: Request,
+    actor: str | None = Query(default=None),
+    view: Literal["access", "delegation"] = Query(default="access"),
+):
+    """Redirect from a ticket to the external AQL actor/contract editor."""
+    configured = os.environ.get("PLANFILE_ACCESS_PANEL_URL", "auto").strip()
+    if configured in {"", "auto"}:
+        host = request.url.hostname or "127.0.0.1"
+        port = os.environ.get("PLANFILE_ACCESS_PANEL_PORT", "8091").strip()
+        if not port.isdigit():
+            raise HTTPException(status_code=503, detail="access_panel_port_invalid")
+        configured = f"{request.url.scheme}://{host}:{port}/"
+    parsed = urlsplit(configured)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise HTTPException(status_code=503, detail="access_panel_url_invalid")
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    query.update({"tab": view, "action": "edit" if actor and view == "access" else "view"})
+    if actor:
+        if get_planfile().resolve_delegation_actor(actor) is None:
+            raise HTTPException(status_code=422, detail="unknown_delegation_actor")
+        query["actor"] = actor
+    location = urlunsplit((parsed.scheme, parsed.netloc, parsed.path or "/", urlencode(query), ""))
+    return Response(status_code=307, headers={"Location": location, **NO_STORE_HEADERS})
 
 
 # ── Sprints ────────────────────────────────────────────────────────────────────
@@ -1070,6 +1098,16 @@ def _dashboard_html() -> str:
     .detail-actions .copy-feedback.err {
       color: var(--err);
     }
+    .detail-actions a {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--text);
+      background: var(--panel-2);
+      text-decoration: none;
+    }
     .ticket-response {
       margin: 0 0 14px;
       padding: 12px;
@@ -1652,8 +1690,15 @@ def _dashboard_html() -> str:
 
     function renderDetailActions() {
       if (!state.selectedTicket) return "";
+      const execution = state.selectedTicket.execution || {};
+      const executor = state.selectedTicket.executor || {};
+      const actorId = executor.handler || execution.assigned_to || "";
+      const actor = state.delegationActors.find((item) => item.id === actorId);
+      const accessHref = actor ? `/access-panel?actor=${encodeURIComponent(actor.id)}` : "/access-panel";
       return `<div class="detail-actions">
         <button type="button" data-copy-ticket-json title="Copy ticket payload for the active tab as JSON">Copy JSON to clipboard</button>
+        <a href="${escapeHtml(accessHref)}" target="_blank" rel="noopener noreferrer" title="Edit the actor position and AQL contract">Manage actor permissions ↗</a>
+        <a href="/access-panel?view=delegation" target="_blank" rel="noopener noreferrer" title="Open role-based manual and automatic routing">Delegation manager ↗</a>
         <span class="copy-feedback" id="copy-json-feedback" hidden aria-live="polite"></span>
       </div>`;
     }

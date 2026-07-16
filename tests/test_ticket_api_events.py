@@ -163,6 +163,9 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert 'params.set("status", state.statusFilter)' in response.text
     assert 'params.set("tab", state.detailTab)' in response.text
     assert "Copy JSON to clipboard" in response.text
+    assert "Manage actor permissions" in response.text
+    assert "Delegation manager" in response.text
+    assert 'href="${escapeHtml(accessHref)}"' in response.text
     assert "Respond to this ticket" in response.text
     assert "data-ticket-response-form" in response.text
     assert "Delegate to actor / queue" in response.text
@@ -201,6 +204,31 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "if (isWaitingTicket(ticket) || isFailedTicket(ticket) || stateName === \"done\") return false;" in response.text
     assert "const running = visibleTickets.filter(isRunningTicket).length;" in response.text
     assert "/runtime-context" in response.text
+
+
+def test_access_panel_redirects_to_configured_aql_actor_editor(tmp_path, monkeypatch):
+    monkeypatch.setenv("PLANFILE_ACCESS_PANEL_URL", "https://control.example.test/panel?source=planfile")
+    catalogue = tmp_path / "actors.json"
+    catalogue.write_text(
+        json.dumps({"actors": [{"id": "administrator-bot", "label": "Administrator", "kind": "bot"}]}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("PLANFILE_DELEGATION_ACTORS_FILE", str(catalogue))
+    pf = Planfile(str(tmp_path))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.get("/access-panel?actor=administrator-bot", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"] == (
+        "https://control.example.test/panel?source=planfile&tab=access&action=edit&actor=administrator-bot"
+    )
+    assert response.headers["cache-control"] == "no-store, max-age=0"
+    assert client.get("/access-panel?actor=unknown", follow_redirects=False).status_code == 422
+    manager = client.get("/access-panel?view=delegation", follow_redirects=False)
+    assert manager.status_code == 307
+    assert "tab=delegation&action=view" in manager.headers["location"]
 
 
 def test_delegation_actor_catalog_api_and_validation(tmp_path, monkeypatch):

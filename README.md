@@ -34,13 +34,13 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.114-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.23-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-66.6h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.115-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.26-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-67.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $3.2311 (133 commits)
-- 👤 **Human dev:** ~$6658 (66.6h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $3.2645 (134 commits)
+- 👤 **Human dev:** ~$6708 (67.1h @ $100/h, 30min dedup)
 
-Generated on 2026-07-15 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-07-16 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
@@ -452,6 +452,12 @@ Without a catalogue, delegation is disabled. `POST /tickets/{id}/respond`
 returns HTTP 422 for an unknown actor or a mismatched actor kind, so bypassing
 the browser select does not bypass the policy. `GET /delegation/actors`
 returns the active catalogue.
+
+Set `PLANFILE_ACCESS_PANEL_URL` to the public control-panel URL (or `auto`) and
+`PLANFILE_ACCESS_PANEL_PORT` when the editor runs on a different port. Ticket
+detail then shows **Manage actor permissions**, which opens the actor's AQL
+contract editor, and **Delegation manager**, which opens role-based manual or
+automatic routing. Delegating a ticket never expands the actor's contract.
 
 Example event:
 
