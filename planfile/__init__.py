@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.115"
+__version__ = "0.1.116"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -354,6 +354,27 @@ class Planfile:
             result=ticket.outputs.result if ticket.outputs else None,
         )
 
+    def add_ticket_note(
+        self,
+        ticket_id: str,
+        note: str,
+        *,
+        actor: str | None = None,
+    ) -> Ticket | None:
+        """Append a note without changing ticket or execution state."""
+
+        ticket = self.get_ticket(ticket_id)
+        if not ticket:
+            return None
+        normalized = note.strip()
+        if not normalized:
+            raise ValueError("ticket_note_required")
+        return self.update_ticket(
+            ticket_id,
+            outputs=self._append_note(ticket, normalized),
+            actor=actor,
+        )
+
     def wait_for_input(
         self,
         ticket_id: str,
@@ -408,7 +429,7 @@ class Planfile:
         self,
         ticket_id: str,
         note: str,
-        next_state: str = "ready",
+        next_state: str | None = "ready",
         *,
         actor: str | None = None,
         delegate_to: str | None = None,
@@ -421,7 +442,7 @@ class Planfile:
         response = note.strip()
         if not response:
             raise ValueError("ticket_response_required")
-        if next_state not in {"ready", "in_progress"}:
+        if next_state not in {None, "ready", "in_progress"}:
             raise ValueError("ticket_response_state_invalid")
         delegate = delegate_to.strip() if delegate_to else None
         if delegate_kind is not None and delegate_kind not in {"human", "bot"}:
@@ -432,7 +453,10 @@ class Planfile:
             if ticket.execution
             else {}
         )
-        if next_state == "ready":
+        status = ticket.status
+        if next_state is None:
+            pass
+        elif next_state == "ready":
             execution_data.update({
                 "state": "ready",
                 "assigned_to": None,

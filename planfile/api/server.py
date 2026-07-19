@@ -132,7 +132,9 @@ class TicketInputRequest(BaseModel):
 
 class TicketResponseRequest(BaseModel):
     note: str
-    next_state: Literal["ready", "in_progress"] = "ready"
+    # Omitted keeps the API's backwards-compatible READY transition. The GUI
+    # sends null explicitly when the operator chooses "keep current status".
+    next_state: Literal["ready", "in_progress"] | None = "ready"
     actor: str = "founder"
     delegate_to: str | None = None
     delegate_kind: Literal["human", "bot"] | None = None
@@ -753,6 +755,10 @@ def _runtime_context_html() -> str:
     .pill { display: inline-block; margin: 2px; padding: 3px 8px; border-radius: 999px; background: #1e293b; color: #bfdbfe; font-size: 12px; }
     pre { overflow: auto; max-height: 520px; padding: 12px; border-radius: 10px; background: #020617; border: 1px solid #1e293b; }
     code { color: #bae6fd; }
+    .copyable-code { position: relative; margin: 8px 0; }
+    .copyable-code pre { margin: 0; padding-top: 46px; }
+    .copy-control { position: absolute; top: 8px; right: 8px; z-index: 2; padding: 5px 9px; font-size: 11px; }
+    .copy-control.copied { border-color: #16a34a; color: #bbf7d0; }
     .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
     .summary span { padding: 6px 10px; border-radius: 999px; background: #172554; color: #bfdbfe; }
     a { color: #7dd3fc; text-decoration: none; }
@@ -835,6 +841,16 @@ function renderContent() {
 function section(title, html) { return `<h2>${escapeHtml(title)}</h2><div class="grid">${html}</div>`; }
 function card(title, lines, pills) { return `<div class="card"><h3>${escapeHtml(title || '-')}</h3>${(lines || []).filter(Boolean).map(line => `<div class="muted">${escapeHtml(String(line))}</div>`).join('')}<div>${(pills || []).slice(0, 30).map(p => `<span class="pill">${escapeHtml(String(p))}</span>`).join('')}</div></div>`; }
 function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+  const field=document.createElement('textarea');field.value=text;field.style.position='fixed';field.style.opacity='0';document.body.append(field);field.select();document.execCommand('copy');field.remove();
+}
+function enhanceCopyBlocks(root=document) {
+  const blocks=[...(root.matches?.('pre:not([data-copy-enhanced])')?[root]:[]),...(root.querySelectorAll?.('pre:not([data-copy-enhanced])')||[])];
+  for(const pre of blocks){pre.dataset.copyEnhanced='';const wrap=document.createElement('div');wrap.className='copyable-code';const button=document.createElement('button');button.type='button';button.className='copy-control';button.textContent='Kopiuj';pre.before(wrap);wrap.append(pre,button);}
+}
+function installCopyBlocks(){enhanceCopyBlocks();new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{if(node.nodeType===1)enhanceCopyBlocks(node)}))).observe(document.body,{childList:true,subtree:true});document.addEventListener('click',async event=>{const button=event.target.closest('.copy-control');if(!button)return;const pre=button.closest('.copyable-code')?.querySelector('pre');if(!pre)return;await copyText(pre.textContent);button.textContent='Skopiowano';button.classList.add('copied');setTimeout(()=>{button.textContent='Kopiuj';button.classList.remove('copied')},1600);});}
+installCopyBlocks();
 loadContext();
 </script>
 </body>
@@ -1153,6 +1169,12 @@ def _dashboard_html() -> str:
       word-break: break-word;
       font-size: 12px;
     }
+    .copyable-code { position: relative; margin: 8px 0; }
+    .copyable-code > pre { margin: 0; padding: 42px 10px 10px; }
+    .copy-control { padding: 5px 9px; font-size: 11px; line-height: 1.2; }
+    .copyable-code > .copy-control { position: absolute; top: 7px; right: 7px; z-index: 2; }
+    .copy-inline-control { margin-left: 5px; vertical-align: middle; }
+    .copy-control.copied { border-color: var(--ok); color: var(--ok); }
     @media (max-width: 820px) {
       header { align-items: flex-start; flex-direction: column; }
       main { grid-template-columns: 1fr; }
@@ -1319,6 +1341,47 @@ def _dashboard_html() -> str:
       return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
       }[ch]));
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
+      const field = document.createElement("textarea");
+      field.value = text; field.style.position = "fixed"; field.style.opacity = "0";
+      document.body.append(field); field.select(); document.execCommand("copy"); field.remove();
+    }
+
+    function copyCandidates(root, selector) {
+      return [...(root.matches?.(selector) ? [root] : []), ...(root.querySelectorAll?.(selector) || [])];
+    }
+
+    function enhanceCopyControls(root = document) {
+      for (const pre of copyCandidates(root, "pre:not([data-copy-enhanced])")) {
+        pre.dataset.copyEnhanced = "";
+        const wrapper = document.createElement("div"); wrapper.className = "copyable-code";
+        const button = document.createElement("button"); button.type = "button"; button.className = "copy-control"; button.textContent = "Copy";
+        pre.before(wrapper); wrapper.append(pre, button);
+      }
+      for (const code of copyCandidates(root, "code:not([data-copy-enhanced])")) {
+        code.dataset.copyEnhanced = "";
+        if (code.closest("pre")) continue;
+        const value = code.textContent.trim();
+        if (!(/[a-z][a-z0-9+.-]*:\/\/\S+/i.test(value) || /\.aql\b/i.test(value) || /^[\[{].*[\]}]$/.test(value))) continue;
+        const button = document.createElement("button"); button.type = "button"; button.className = "copy-control copy-inline-control"; button.textContent = "Copy";
+        code.after(button);
+      }
+    }
+
+    function installCopyControls() {
+      enhanceCopyControls();
+      new MutationObserver((records) => records.forEach((record) => record.addedNodes.forEach((node) => { if (node.nodeType === 1) enhanceCopyControls(node); }))).observe(document.body, {childList: true, subtree: true});
+      document.addEventListener("click", async (event) => {
+        const button = event.target.closest(".copy-control"); if (!button) return;
+        const source = button.closest(".copyable-code")?.querySelector("pre") || button.previousElementSibling;
+        if (!source) return;
+        await copyText(source.textContent || "");
+        button.textContent = "Copied"; button.classList.add("copied");
+        setTimeout(() => { button.textContent = "Copy"; button.classList.remove("copied"); }, 1600);
+      });
     }
 
     function stringifyDetail(value) {
@@ -1730,7 +1793,8 @@ def _dashboard_html() -> str:
           </label>
           <label for="ticket-response-state">Status after response
             <select id="ticket-response-state" name="next_state" ${disabled}>
-              <option value="ready" selected>READY — response complete</option>
+              <option value="" selected>Keep current status</option>
+              <option value="ready">READY — response complete</option>
               <option value="in_progress">IN PROGRESS — continue working</option>
             </select>
           </label>
@@ -2041,13 +2105,20 @@ def _dashboard_html() -> str:
       const ticketId = form.dataset.ticketId;
       const data = new FormData(form);
       const note = String(data.get("note") || "").trim();
-      const nextState = String(data.get("next_state") || "ready");
+      const nextState = String(data.get("next_state") || "").trim();
       const delegateTo = String(data.get("delegate_to") || "").trim();
       const feedback = form.querySelector("[data-response-feedback]");
       if (!note) {
         if (feedback) {
           feedback.className = "form-msg err";
           feedback.textContent = "Response is required.";
+        }
+        return;
+      }
+      if (delegateTo && !nextState) {
+        if (feedback) {
+          feedback.className = "form-msg err";
+          feedback.textContent = "Choose READY or IN PROGRESS when delegating a ticket.";
         }
         return;
       }
@@ -2066,7 +2137,7 @@ def _dashboard_html() -> str:
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            note, next_state: nextState, actor,
+            note, next_state: nextState || null, actor,
             delegate_to: delegateTo || null,
           }),
         });
@@ -2078,7 +2149,9 @@ def _dashboard_html() -> str:
         state.responseFeedback = {
           ticketId,
           kind: "success",
-          text: `Response saved. Ticket is ${nextState === "ready" ? "READY" : "IN PROGRESS"}${delegateTo ? ` and delegated to ${delegateTo}` : ""}.`,
+          text: nextState
+            ? `Response saved. Ticket is ${nextState === "ready" ? "READY" : "IN PROGRESS"}${delegateTo ? ` and delegated to ${delegateTo}` : ""}.`
+            : "Response saved. Ticket status was not changed.",
         };
         await refreshTickets({ notifyChanges: false });
       } catch (error) {
@@ -2230,6 +2303,7 @@ def _dashboard_html() -> str:
         .catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
     });
 
+    installCopyControls();
     initializeDashboard().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
     setInterval(() => {
       refreshTickets({ notifyChanges: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));

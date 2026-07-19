@@ -42,6 +42,23 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.116] - 2026-07-19
+
+### Docs
+- Update README.md
+- Update docs/PUBLIC_CONTRACTS.md
+
+### Test
+- Update tests/test_public_contracts.py
+- Update tests/test_ticket_api_events.py
+- Update tests/test_ticket_execution.py
+
+### Other
+- Update planfile/__init__.py
+- Update planfile/api/server.py
+- Update planfile/client.py
+- Update planfile/contracts.py
+
 ## [0.1.115] - 2026-07-16
 
 ### Docs

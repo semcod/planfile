@@ -132,6 +132,31 @@ def test_ticket_response_api_defaults_to_ready_and_broadcasts(tmp_path, monkeypa
     assert event["ticket"]["execution"]["state"] == "ready"
 
 
+def test_ticket_response_api_null_state_preserves_current_status(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Add context without changing status",
+        source=TicketSource(tool="human"),
+        executor=TicketExecutor(kind="human", mode="interactive", handler="founder"),
+        execution=TicketExecution(queue="founder", state="running", assigned_to="founder"),
+        status="in_progress",
+    )
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.post(
+        f"/tickets/{ticket.id}/respond",
+        json={"note": "Additional context only.", "next_state": None, "actor": "founder"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "in_progress"
+    assert payload["execution"]["state"] == "running"
+    assert payload["execution"]["assigned_to"] == "founder"
+    assert payload["outputs"]["notes"] == ["Additional context only."]
+
+
 def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     pf.create_ticket(
@@ -163,6 +188,9 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert 'params.set("status", state.statusFilter)' in response.text
     assert 'params.set("tab", state.detailTab)' in response.text
     assert "Copy JSON to clipboard" in response.text
+    assert "function installCopyControls" in response.text
+    assert 'pre:not([data-copy-enhanced])' in response.text
+    assert "copy-inline-control" in response.text
     assert "Manage actor permissions" in response.text
     assert "Delegation manager" in response.text
     assert 'href="${escapeHtml(accessHref)}"' in response.text
@@ -174,7 +202,8 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert 'name="delegate_kind"' not in response.text
     assert 'fetch("/delegation/actors"' in response.text
     assert "URI Process plan" in response.text
-    assert 'value="ready" selected' in response.text
+    assert '<option value="" selected>Keep current status</option>' in response.text
+    assert '<option value="ready">READY' in response.text
     assert 'value="in_progress"' in response.text
     assert "/respond" in response.text
     assert "beginTicketWork" in response.text
@@ -271,6 +300,8 @@ def test_runtime_context_api_and_page(tmp_path, monkeypatch):
     assert page.status_code == 200
     assert "Topology / Runtime Context" in page.text
     assert "/api/runtime-context" in page.text
+    assert "function installCopyBlocks" in page.text
+    assert "copyable-code" in page.text
 
     response = client.get("/api/runtime-context")
     assert response.status_code == 200

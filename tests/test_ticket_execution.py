@@ -242,6 +242,31 @@ def test_human_response_is_persisted_and_moves_ticket_atomically(tmp_path):
         pf.respond_ticket(ticket.id, note="   ")
 
 
+def test_human_response_can_preserve_current_status(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Founder adds context without changing work state",
+        source=TicketSource(tool="human"),
+        executor=TicketExecutor(kind="human", mode="interactive", handler="founder"),
+        execution=TicketExecution(queue="founder", state="running", assigned_to="founder"),
+        status="in_progress",
+    )
+
+    updated = pf.respond_ticket(
+        ticket.id,
+        note="Additional context only.",
+        next_state=None,
+        actor="founder",
+    )
+
+    assert updated is not None
+    assert updated.status == "in_progress"
+    assert updated.execution is not None
+    assert updated.execution.state == "running"
+    assert updated.execution.assigned_to == "founder"
+    assert updated.outputs.notes == ["Additional context only."]
+
+
 def test_response_can_atomically_delegate_with_an_instruction(tmp_path, monkeypatch):
     catalogue = tmp_path / "delegation-actors.json"
     catalogue.write_text('{"actors":[{"id":"marketing-lead","label":"Marketing lead","kind":"human"}]}')
