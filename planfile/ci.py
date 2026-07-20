@@ -56,6 +56,7 @@ class CIRunner:
         llx_command: str = "llx",
         max_iterations: int = 10,
         auto_fix: bool = False,
+        dry_run: bool = False,
         planfile_instance=None,
     ):
         self.strategy_path = Path(strategy_path)
@@ -64,6 +65,7 @@ class CIRunner:
         self.llx_command = llx_command
         self.max_iterations = max_iterations
         self.auto_fix = auto_fix
+        self.dry_run = dry_run
         self.strategy = load_strategy_yaml(strategy_path)
         self.iteration = 0
 
@@ -115,7 +117,7 @@ class CIRunner:
         """Run tests and return results."""
         cmd = [
             "python", "-m", "pytest",
-            "--cov=src",
+            "--cov=planfile",
             "--cov-report=json",
             "--cov-report=term-missing",
             "--junit-xml=test-results.xml",
@@ -231,6 +233,9 @@ Respond in JSON format:
 
     def create_bug_tickets(self, bug_report: BugReport) -> list[str]:
         """Create bug tickets in configured backends AND local planfile."""
+        if self.dry_run:
+            return []
+
         ticket_urls = []
 
         # Create local planfile ticket
@@ -252,7 +257,7 @@ Respond in JSON format:
                 pass
 
         # Create in external backends
-        for name, backend in self.backends.items():
+        for _name, backend in self.backends.items():
             try:
                 ticket = backend.create_ticket(
                     name=bug_report.name,
@@ -398,10 +403,15 @@ Respond in JSON format:
 
     def check_strategy_completion(self) -> tuple[bool, list[str]]:
         """Check if strategy goals are met."""
+        if not self.backends:
+            return True, []
+
+        backend_name = next(iter(self.backends))
         review = review_strategy(
             strategy=self.strategy,
             project_path=str(self.project_path),
-            backends=self.backends
+            backends=self.backends,
+            backend_name=backend_name,
         )
 
         issues = []
@@ -425,7 +435,9 @@ Respond in JSON format:
             "final_status": "failed"
         }
 
-        for self.iteration in range(1, self.max_iterations + 1):
+        for iteration in range(1, self.max_iterations + 1):
+            self.iteration = iteration
+            results["total_iterations"] = self.iteration
             iteration_result = {
                 "iteration": self.iteration,
                 "tests_passed": False,
@@ -460,8 +472,6 @@ Respond in JSON format:
                 iteration_result["status"] = "failed"
 
             results["iterations"].append(iteration_result)
-            results["total_iterations"] = self.iteration
-
             if self.iteration < self.max_iterations:
                 time.sleep(2)
 

@@ -63,7 +63,7 @@ jobs:
           fi
 
           planfile auto loop \
-            ./strategy.yaml \
+            ./.github/strategy.yaml \
             . \
             --backend github \
             --max-iterations 5 \

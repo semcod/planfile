@@ -1,0 +1,6 @@
+name: Planfile CI
+version: 1.0.0
+project_type: python
+domain: software
+goal: Keep the Planfile test suite healthy
+sprints: []

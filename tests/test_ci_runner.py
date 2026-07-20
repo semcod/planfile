@@ -11,7 +11,95 @@ def _make_runner(auto_fix: bool = False) -> CIRunner:
     runner.llx_command = "llx"
     runner.project_path = Path(".")
     runner.auto_fix = auto_fix
+    runner.dry_run = False
     return runner
+
+
+def test_run_tests_collects_coverage_for_planfile_package(monkeypatch, tmp_path):
+    """CI runner measures the installed package, not a non-existent src directory."""
+    runner = _make_runner()
+    runner.project_path = tmp_path
+    captured = {}
+
+    def fake_run(cmd, **kwargs):
+        captured["cmd"] = cmd
+        (tmp_path / "coverage.json").write_text(
+            '{"totals":{"percent_covered":87.5}}',
+            encoding="utf-8",
+        )
+        return SimpleNamespace(returncode=0, stdout="passed", stderr="")
+
+    monkeypatch.setattr("planfile.ci.subprocess.run", fake_run)
+
+    result = runner.run_tests()
+
+    assert "--cov=planfile" in captured["cmd"]
+    assert "--cov=src" not in captured["cmd"]
+    assert result.passed is True
+    assert result.coverage == 87.5
+
+
+def test_check_strategy_completion_without_backend_is_successful():
+    """The documented no-backend dry-run path must not require a default backend."""
+    runner = _make_runner()
+    runner.backends = {}
+
+    assert runner.check_strategy_completion() == (True, [])
+
+
+def test_check_strategy_completion_uses_configured_backend(monkeypatch):
+    """A single named backend is selected instead of looking for a 'default' key."""
+    runner = _make_runner()
+    runner.backends = {"github": object()}
+    runner.strategy = object()
+    captured = {}
+
+    def fake_review_strategy(**kwargs):
+        captured.update(kwargs)
+        return {"summary": {"total_tickets": 0, "completed": 0, "blocked": 0}}
+
+    monkeypatch.setattr("planfile.ci.review_strategy", fake_review_strategy)
+
+    assert runner.check_strategy_completion() == (True, [])
+    assert captured["backend_name"] == "github"
+
+
+def test_run_loop_counts_successful_first_iteration(monkeypatch):
+    """Successful first iteration is reported as one iteration, not zero."""
+    runner = _make_runner()
+    runner.max_iterations = 3
+    runner.backends = {}
+    monkeypatch.setattr(
+        runner,
+        "run_tests",
+        lambda: TestResult(True, [], 90.0, {}, "passed"),
+    )
+
+    results = runner.run_loop()
+
+    assert results["success"] is True
+    assert results["total_iterations"] == 1
+
+
+def test_create_bug_tickets_dry_run_has_no_side_effects():
+    """Dry-run mode must not create local or remote tickets."""
+    runner = _make_runner()
+    runner.dry_run = True
+    runner.pf = SimpleNamespace(create_ticket=lambda **kwargs: (_ for _ in ()).throw(AssertionError))
+    runner.backends = {
+        "github": SimpleNamespace(
+            create_ticket=lambda **kwargs: (_ for _ in ()).throw(AssertionError)
+        )
+    }
+    bug = BugReport(
+        name="Dry-run bug",
+        description="Must not be persisted",
+        files=[],
+        test_names=["tests/test_dry_run.py::test_case"],
+        severity="medium",
+    )
+
+    assert runner.create_bug_tickets(bug) == []
 
 
 def test_generate_bug_report_accepts_title_key(monkeypatch):

@@ -58,7 +58,7 @@ def _initialize_backends(backend: list[str]) -> dict:
             console.print(f"✓ Initialized {b} backend")
         except Exception as e:
             console.print(f"[red]✗ Failed to initialize {b} backend: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from e
     return backends
 
 
@@ -159,7 +159,8 @@ def auto_loop_cmd(
         backends=backends,
         llx_command=llx_command,
         max_iterations=max_iterations,
-        auto_fix=auto_fix
+        auto_fix=auto_fix,
+        dry_run=dry_run,
     )
 
     # Run loop with progress
