@@ -27,3 +27,17 @@ def test_python_dash_m_planfile_runs_cli() -> None:
 
     assert result.returncode == 0, result.stderr
     assert "version" in result.stdout.lower()
+
+
+def test_auto_loop_command_matches_documented_cli() -> None:
+    result = CliRunner().invoke(app, ["auto", "loop", "--help"])
+
+    assert result.exit_code == 0
+    assert "Run automated CI/CD loop" in result.output
+
+
+def test_legacy_auto_loop_alias_remains_available() -> None:
+    result = CliRunner().invoke(app, ["auto", "auto-loop", "--help"])
+
+    assert result.exit_code == 0
+    assert "Run automated CI/CD loop" in result.output

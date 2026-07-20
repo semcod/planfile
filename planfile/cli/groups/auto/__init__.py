@@ -12,7 +12,8 @@ def register_auto_commands(app: typer.Typer) -> None:
     """Register auto subcommands on the typer app."""
     auto_app = typer.Typer(help="Automated CI/CD commands")
 
-    auto_app.command("auto-loop")(auto_loop_cmd)
+    auto_app.command("loop")(auto_loop_cmd)
+    auto_app.command("auto-loop", hidden=True)(auto_loop_cmd)
     auto_app.command("ci-status")(ci_status_cmd)
 
     app.add_typer(auto_app, name="auto")
