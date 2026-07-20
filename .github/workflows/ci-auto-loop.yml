@@ -15,7 +15,7 @@ jobs:
   ci-loop:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       issues: write
       pull-requests: write
     
@@ -140,10 +140,10 @@ jobs:
             htmlcov/
       
       - name: Coverage badge
-        uses: tj-actions/coverage-badge-py@v2
         if: github.ref == 'refs/heads/main'
-        with:
-          output: coverage.svg
+        run: |
+          pip install 'setuptools<81' coverage-badge
+          coverage-badge -f -o coverage.svg
       
       - name: Deploy coverage reports
         if: github.ref == 'refs/heads/main'
