@@ -42,6 +42,19 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.117] - 2026-07-20
+
+### Added
+- Added bounded automatic ticket archiving. Oversized `current.yaml` files move
+  their oldest terminal tickets into monthly archive sprint files while keeping
+  active and recently completed work in the current sprint.
+- Added per-project archive limits for ticket count, file size, retained terminal
+  tickets, terminal statuses, and disabling the feature.
+
+### Changed
+- Archive writes are atomic, lock-protected, retry-safe, and refresh the fast JSON
+  mirrors used by long-running API processes.
+
 ## [0.1.116] - 2026-07-19
 
 ### Docs

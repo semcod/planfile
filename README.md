@@ -34,7 +34,7 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.116-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.117-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 ![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.27-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-68.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
 - 🤖 **LLM usage:** $3.2690 (135 commits)
@@ -356,6 +356,30 @@ planfile ticket bulk-update \
   --new-priority high \
   --add-label urgent
 ```
+
+#### Bounded ticket storage
+
+Planfile automatically keeps `.planfile/sprints/current.yaml` bounded. When the
+file exceeds 500 tickets or 1 MB, the oldest `done` and `canceled` tickets are
+moved into monthly `.planfile/sprints/archive-YYYY-MM.yaml` files. The 100 most
+recent terminal tickets stay in the current sprint, and active tickets are
+never archived. Ticket IDs and history are preserved; use `sprint=all` when a
+listing must include archives.
+
+The defaults apply to existing projects without a configuration change. They
+can be adjusted or disabled in `.planfile/config.yaml`:
+
+```yaml
+archive:
+  enabled: true
+  max_current_tickets: 500
+  max_current_bytes: 1000000
+  retain_terminal_tickets: 100
+  terminal_statuses: [done, canceled]
+```
+
+Set either limit to `0` to disable that limit, or set `enabled: false` to turn
+automatic archiving off entirely.
 
 ### 6. Project Validation and Health
 

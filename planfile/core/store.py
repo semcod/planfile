@@ -8,10 +8,6 @@ from enum import Enum
 from pathlib import Path
 
 import yaml
-try:
-    from yaml import CSafeLoader as SafeLoader, CDumper as Dumper
-except ImportError:
-    from yaml import SafeLoader, Dumper
 from pydantic import BaseModel
 
 from .models import Ticket
@@ -21,6 +17,14 @@ from .store_tickets import TicketStoreMixin
 
 class Store(StoreFileMixin, TicketStoreMixin):
     """File-based ticket store using .planfile/ directory."""
+
+    DEFAULT_ARCHIVE_CONFIG = {
+        "enabled": True,
+        "max_current_tickets": 500,
+        "max_current_bytes": 1_000_000,
+        "retain_terminal_tickets": 100,
+        "terminal_statuses": ["done", "canceled"],
+    }
 
     def __init__(self, directory: str | Path):
         self.project_dir = Path(directory).resolve()
@@ -97,6 +101,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
             self._write_yaml_atomic(path, wrapped, allow_unicode=True)
         if hasattr(self, "_yaml_cache"):
             self._yaml_cache.pop(str(path), None)
+        if sprint == "current":
+            self.archive_completed()
 
     def init(self) -> None:
         """Create the .planfile/ structure from scratch."""
@@ -104,7 +110,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._sprints_dir.mkdir(exist_ok=True)
         if not self._config_path.exists():
             self._config_path.write_text(
-                yaml.dump({"project": self.project_dir.name, "prefix": "PLF", "next_id": 1}),
+                yaml.dump({
+                    "project": self.project_dir.name,
+                    "prefix": "PLF",
+                    "next_id": 1,
+                    "archive": dict(self.DEFAULT_ARCHIVE_CONFIG),
+                }),
                 encoding="utf-8",
             )
         current = self._sprints_dir / "current.yaml"
@@ -136,6 +147,148 @@ class Store(StoreFileMixin, TicketStoreMixin):
         config["next_id"] = nid + 1
         self._write_config(config)
         return ticket_id
+
+    def _archive_config(self) -> dict:
+        """Return validated automatic-archive settings with safe defaults."""
+        configured = self._read_config().get("archive") or {}
+        if not isinstance(configured, dict):
+            configured = {}
+        result = dict(self.DEFAULT_ARCHIVE_CONFIG)
+        result.update(configured)
+        for key in ("max_current_tickets", "max_current_bytes", "retain_terminal_tickets"):
+            try:
+                result[key] = max(0, int(result[key]))
+            except (TypeError, ValueError):
+                result[key] = self.DEFAULT_ARCHIVE_CONFIG[key]
+        statuses = result.get("terminal_statuses")
+        if not isinstance(statuses, list) or not statuses:
+            statuses = self.DEFAULT_ARCHIVE_CONFIG["terminal_statuses"]
+        result["terminal_statuses"] = {str(status).lower() for status in statuses}
+        result["enabled"] = bool(result.get("enabled", True))
+        return result
+
+    @staticmethod
+    def _ticket_archive_timestamp(ticket: dict) -> datetime:
+        """Choose the best stable timestamp for ordering and archive naming."""
+        execution = ticket.get("execution")
+        values = []
+        if isinstance(execution, dict):
+            values.append(execution.get("finished_at"))
+        values.extend((ticket.get("updated_at"), ticket.get("created_at")))
+        for value in values:
+            if isinstance(value, datetime):
+                parsed = value
+            elif isinstance(value, str) and value:
+                try:
+                    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                except ValueError:
+                    continue
+            else:
+                continue
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=UTC)
+            return parsed.astimezone(UTC)
+        return datetime.now(UTC)
+
+    def archive_completed(self) -> dict:
+        """Archive old terminal tickets when ``current.yaml`` exceeds its limits.
+
+        Archive files are partitioned by month. The operation is serialized with all
+        other store mutations and is idempotent after an interrupted multi-file write.
+        """
+        with self.mutation_lock():
+            return self._archive_completed_unlocked()
+
+    def _archive_completed_unlocked(self) -> dict:
+        from planfile.core.fastio import read_yaml_fast
+
+        config = self._archive_config()
+        current_file = self._sprint_file("current")
+        report = {
+            "triggered": False,
+            "archived": 0,
+            "remaining": 0,
+            "archive_files": [],
+        }
+        if not config["enabled"] or not current_file.exists():
+            return report
+
+        data = read_yaml_fast(current_file) or {}
+        sprint_data = data.get("sprint", data)
+        tickets = sprint_data.get("tickets") or {}
+        if not isinstance(tickets, dict):
+            return report
+        report["remaining"] = len(tickets)
+
+        over_count = (
+            config["max_current_tickets"] > 0
+            and len(tickets) > config["max_current_tickets"]
+        )
+        try:
+            current_size = current_file.stat().st_size
+        except OSError:
+            current_size = 0
+        over_size = (
+            config["max_current_bytes"] > 0
+            and current_size > config["max_current_bytes"]
+        )
+        if not (over_count or over_size):
+            return report
+        report["triggered"] = True
+
+        terminal = [
+            (self._ticket_archive_timestamp(ticket), ticket_id, ticket)
+            for ticket_id, ticket in tickets.items()
+            if isinstance(ticket, dict)
+            and str(ticket.get("status", "")).lower() in config["terminal_statuses"]
+        ]
+        terminal.sort(key=lambda item: (item[0], item[1]))
+        move_count = max(0, len(terminal) - config["retain_terminal_tickets"])
+        if move_count == 0:
+            return report
+
+        archive_data: dict[Path, dict] = {}
+        moved_ids: list[str] = []
+        for timestamp, ticket_id, ticket in terminal[:move_count]:
+            archive_name = f"archive-{timestamp:%Y-%m}"
+            archive_file = self._sprint_file(archive_name)
+            archive = archive_data.get(archive_file)
+            if archive is None:
+                archive = read_yaml_fast(archive_file) if archive_file.exists() else None
+                archive = archive or {
+                    "sprint": {
+                        "id": archive_name,
+                        "name": f"Archive {timestamp:%Y-%m}",
+                        "status": "archived",
+                        "tickets": {},
+                    }
+                }
+                archive_data[archive_file] = archive
+            archive_sprint = archive.get("sprint", archive)
+            archive_tickets = archive_sprint.setdefault("tickets", {})
+            archived_ticket = dict(ticket)
+            archived_ticket["sprint"] = archive_name
+            # Overwrite makes a retry safe if a process stopped after writing the
+            # archive but before removing the same ticket from current.yaml.
+            archive_tickets[ticket_id] = archived_ticket
+            moved_ids.append(ticket_id)
+
+        # Write destinations first: interruption can temporarily duplicate data,
+        # but can never lose a ticket. A later run removes any duplicates safely.
+        for archive_file, archive in archive_data.items():
+            self._write_yaml_atomic(archive_file, archive, allow_unicode=True)
+            if hasattr(self, "_yaml_cache"):
+                self._yaml_cache.pop(str(archive_file), None)
+        for ticket_id in moved_ids:
+            tickets.pop(ticket_id, None)
+        self._write_yaml_atomic(current_file, data, allow_unicode=True)
+        if hasattr(self, "_yaml_cache"):
+            self._yaml_cache.pop(str(current_file), None)
+
+        report["archived"] = len(moved_ids)
+        report["remaining"] = len(tickets)
+        report["archive_files"] = [path.stem for path in sorted(archive_data)]
+        return report
 
     def next_id(self) -> str:
         with self.mutation_lock():
@@ -177,6 +330,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
         # Invalidate yaml cache
         if hasattr(self, "_yaml_cache"):
             self._yaml_cache.pop(str(sprint_file), None)
+
+        if sprint == "current":
+            self._archive_completed_unlocked()
 
         return ticket
 
@@ -287,6 +443,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
+                if sprint_file == self._sprint_file("current"):
+                    self._archive_completed_unlocked()
                 return self._ticket_from_data(tickets[ticket_id])
         return None
 
