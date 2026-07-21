@@ -72,6 +72,9 @@ class TicketInputs(BaseModel):
     mcp_tool: str | None = None
     llm_model: str | None = None
     uri_processes: list[TicketUriProcess] = Field(default_factory=list)
+    # Structured process contract. Legacy clients may still embed v1 in the
+    # description; governed v2 tickets use this field as the authority.
+    process_manifest: dict[str, Any] | None = None
 
 
 class TicketOutputs(BaseModel):
@@ -80,6 +83,7 @@ class TicketOutputs(BaseModel):
     artifacts: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
     result: Any = None
+    completion_receipt: dict[str, Any] | None = None
 
 
 class Ticket(BaseModel):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import tempfile
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -23,8 +24,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
         "max_current_tickets": 500,
         "max_current_bytes": 1_000_000,
         "retain_terminal_tickets": 100,
-        "terminal_statuses": ["done", "canceled"],
+        "terminal_statuses": ["done", "canceled", "failed"],
     }
+    SPRINT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
 
     def __init__(self, directory: str | Path):
         self.project_dir = Path(directory).resolve()
@@ -60,7 +62,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
         path.parent.mkdir(parents=True, exist_ok=True)
         content = dump_yaml(data, allow_unicode=allow_unicode)
-        fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
+        fd, tmp_name = tempfile.mkstemp(
+            prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent)
+        )
         tmp_path = Path(tmp_name)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
@@ -93,16 +97,80 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return data.get("sprint") or data
 
     def save_sprint(self, sprint: str, data: dict) -> None:
-        """Save sprint data back to YAML."""
+        """Merge sprint data back to YAML without dropping concurrent mutations.
+
+        Callers such as external-system sync intentionally hold an in-memory
+        snapshot while doing network work.  Replacing the whole sprint with
+        that snapshot can erase tickets created after ``load_sprint()``.  The
+        mutation lock serializes writers, but it cannot make a stale snapshot
+        current, so merge it with a fresh read taken inside the lock.
+
+        Tickets absent from ``data`` are preserved.  Explicit deletion must go
+        through ``delete_ticket(s)``.  When the same ticket changed on both
+        sides, the record with the newer ``updated_at`` wins; a stale bulk
+        save therefore fails closed instead of reverting a newer lifecycle
+        transition.
+        """
         path = self._sprint_file(sprint)
-        # Ensure format matches expected nesting
-        wrapped = {"sprint": data} if "sprint" not in data else data
         with self.mutation_lock():
-            self._write_yaml_atomic(path, wrapped, allow_unicode=True)
+            from planfile.core.fastio import read_yaml_fast
+
+            current = read_yaml_fast(path) or {}
+            merged = self._merge_sprint_snapshots(current, data)
+            self._write_yaml_atomic(path, merged, allow_unicode=True)
         if hasattr(self, "_yaml_cache"):
             self._yaml_cache.pop(str(path), None)
         if sprint == "current":
             self.archive_completed()
+
+    @staticmethod
+    def _ticket_timestamp(ticket: dict) -> datetime:
+        for key in ("updated_at", "created_at"):
+            value = ticket.get(key) if isinstance(ticket, dict) else None
+            if isinstance(value, datetime):
+                parsed = value
+            elif isinstance(value, str) and value:
+                try:
+                    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                except ValueError:
+                    continue
+            else:
+                continue
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=UTC)
+            return parsed.astimezone(UTC)
+        return datetime.min.replace(tzinfo=UTC)
+
+    @classmethod
+    def _merge_sprint_snapshots(cls, current: dict, incoming: dict) -> dict:
+        """Return a wrapped sprint snapshot that preserves newer disk state."""
+        current_root = current.get("sprint", current) if isinstance(current, dict) else {}
+        incoming_root = incoming.get("sprint", incoming) if isinstance(incoming, dict) else {}
+        current_root = current_root if isinstance(current_root, dict) else {}
+        incoming_root = incoming_root if isinstance(incoming_root, dict) else {}
+
+        merged_root = {**current_root, **incoming_root}
+        current_tickets = current_root.get("tickets") or {}
+        incoming_tickets = incoming_root.get("tickets") or {}
+        current_tickets = current_tickets if isinstance(current_tickets, dict) else {}
+        incoming_tickets = incoming_tickets if isinstance(incoming_tickets, dict) else {}
+
+        merged_tickets = dict(current_tickets)
+        for ticket_id, incoming_ticket in incoming_tickets.items():
+            current_ticket = current_tickets.get(ticket_id)
+            if (
+                isinstance(current_ticket, dict)
+                and isinstance(incoming_ticket, dict)
+                and cls._ticket_timestamp(current_ticket) > cls._ticket_timestamp(incoming_ticket)
+            ):
+                continue
+            merged_tickets[ticket_id] = incoming_ticket
+        merged_root["tickets"] = merged_tickets
+        return {"sprint": merged_root}
+
+    def save_backlog(self, data: dict) -> None:
+        """Merge backlog data with the same concurrency guarantees as a sprint."""
+        self.save_sprint("backlog", data)
 
     def init(self) -> None:
         """Create the .planfile/ structure from scratch."""
@@ -110,24 +178,44 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._sprints_dir.mkdir(exist_ok=True)
         if not self._config_path.exists():
             self._config_path.write_text(
-                yaml.dump({
-                    "project": self.project_dir.name,
-                    "prefix": "PLF",
-                    "next_id": 1,
-                    "archive": dict(self.DEFAULT_ARCHIVE_CONFIG),
-                }),
+                yaml.dump(
+                    {
+                        "project": self.project_dir.name,
+                        "prefix": "PLF",
+                        "next_id": 1,
+                        "archive": dict(self.DEFAULT_ARCHIVE_CONFIG),
+                    }
+                ),
                 encoding="utf-8",
             )
         current = self._sprints_dir / "current.yaml"
         if not current.exists():
             current.write_text(
-                yaml.dump({"sprint": {"id": "sprint-001", "name": "Sprint 1", "status": "active", "tickets": {}}}),
+                yaml.dump(
+                    {
+                        "sprint": {
+                            "id": "sprint-001",
+                            "name": "Sprint 1",
+                            "status": "active",
+                            "tickets": {},
+                        }
+                    }
+                ),
                 encoding="utf-8",
             )
         backlog = self._sprints_dir / "backlog.yaml"
         if not backlog.exists():
             backlog.write_text(
-                yaml.dump({"sprint": {"id": "backlog", "name": "Backlog", "status": "active", "tickets": {}}}),
+                yaml.dump(
+                    {
+                        "sprint": {
+                            "id": "backlog",
+                            "name": "Backlog",
+                            "status": "active",
+                            "tickets": {},
+                        }
+                    }
+                ),
                 encoding="utf-8",
             )
 
@@ -221,17 +309,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
         report["remaining"] = len(tickets)
 
         over_count = (
-            config["max_current_tickets"] > 0
-            and len(tickets) > config["max_current_tickets"]
+            config["max_current_tickets"] > 0 and len(tickets) > config["max_current_tickets"]
         )
         try:
             current_size = current_file.stat().st_size
         except OSError:
             current_size = 0
-        over_size = (
-            config["max_current_bytes"] > 0
-            and current_size > config["max_current_bytes"]
-        )
+        over_size = config["max_current_bytes"] > 0 and current_size > config["max_current_bytes"]
         if not (over_count or over_size):
             return report
         report["triggered"] = True
@@ -296,6 +380,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     # --- Override base_dir for StoreFileMixin ---
     def _sprint_file(self, sprint: str) -> Path:
+        if not self.SPRINT_ID_PATTERN.fullmatch(str(sprint)):
+            raise ValueError(f"invalid_sprint_id:{sprint}")
         return self._sprints_dir / f"{sprint}.yaml"
 
     def _all_sprint_files(self) -> list[Path]:
@@ -316,7 +402,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
             data = read_yaml_fast(sprint_file) or {}
         else:
-            data = {"sprint": {"id": sprint, "name": sprint.title(), "status": "active", "tickets": {}}}
+            data = {
+                "sprint": {"id": sprint, "name": sprint.title(), "status": "active", "tickets": {}}
+            }
 
         sprint_data = data.get("sprint", data)
         if "tickets" not in sprint_data:
@@ -399,7 +487,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
             entry["by"] = actor  # alias for "by whom"
         return entry
 
-    def update_ticket(self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates) -> Ticket | None:
+    def update_ticket(
+        self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates
+    ) -> Ticket | None:
         """Update a ticket. If status (or execution state) changes, a structured history entry
         is appended automatically, including optional `reason` (why) and `actor` (who / by whom).
         Use reason/actor (or _reason/_actor in **updates) for rich audit on status transitions.
@@ -407,7 +497,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
         with self.mutation_lock():
             return self._update_ticket_unlocked(ticket_id, reason=reason, actor=actor, **updates)
 
-    def _update_ticket_unlocked(self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates) -> Ticket | None:
+    def _update_ticket_unlocked(
+        self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates
+    ) -> Ticket | None:
         from planfile.core.fastio import read_yaml_fast
 
         for sprint_file in self._all_sprint_files():
@@ -418,13 +510,26 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 previous = dict(tickets[ticket_id])
                 # Extract history metadata (reason=why the change, actor/by=who performed it)
                 # Support both named params (from high-level methods) and _-prefixed or bare in updates
-                history_reason = reason or updates.pop("reason", None) or updates.pop("_reason", None)
+                history_reason = (
+                    reason or updates.pop("reason", None) or updates.pop("_reason", None)
+                )
                 history_actor = actor or updates.pop("actor", None) or updates.pop("_actor", None)
 
                 serialized_updates = {
-                    key: self._serialize_update_value(value)
-                    for key, value in updates.items()
+                    key: self._serialize_update_value(value) for key, value in updates.items()
                 }
+                terminal_status = serialized_updates.get("status")
+                if terminal_status in {"done", "canceled", "blocked", "failed"}:
+                    execution_update = serialized_updates.get("execution")
+                    if not isinstance(execution_update, dict):
+                        execution_update = dict(previous.get("execution") or {})
+                    else:
+                        execution_update = dict(execution_update)
+                    execution_update["state"] = terminal_status
+                    execution_update["assigned_to"] = None
+                    execution_update["lease_expires_at"] = None
+                    execution_update["finished_at"] = datetime.now(UTC).isoformat()
+                    serialized_updates["execution"] = execution_update
                 tickets[ticket_id].update(serialized_updates)
                 tickets[ticket_id]["updated_at"] = datetime.now(UTC).isoformat()
                 changed_keys = sorted(
@@ -435,8 +540,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 if changed_keys and "history" not in serialized_updates:
                     history = list(tickets[ticket_id].get("history") or [])
                     entry = self._build_history_entry(
-                        previous, tickets[ticket_id], changed_keys,
-                        reason=history_reason, actor=history_actor
+                        previous,
+                        tickets[ticket_id],
+                        changed_keys,
+                        reason=history_reason,
+                        actor=history_actor,
                     )
                     history.append(entry)
                     tickets[ticket_id]["history"] = history[-200:]
@@ -463,6 +571,69 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     if hasattr(self, "_yaml_cache"):
                         self._yaml_cache.pop(str(sprint_file), None)
                     return True
+        return False
+
+    def move_ticket(self, ticket_id: str, to_sprint: str) -> bool:
+        """Move a ticket under one lock, rolling back if source removal fails."""
+        from planfile.core.fastio import read_yaml_fast
+
+        destination_file = self._sprint_file(to_sprint)
+        with self.mutation_lock():
+            for source_file in self._all_sprint_files():
+                source_data = read_yaml_fast(source_file) or {}
+                source_root = source_data.get("sprint", source_data)
+                source_tickets = source_root.get("tickets", {})
+                if ticket_id not in source_tickets:
+                    continue
+                if source_file == destination_file:
+                    return True
+
+                previous_ticket = dict(source_tickets[ticket_id])
+                moved_ticket = dict(previous_ticket)
+                moved_ticket["sprint"] = to_sprint
+                moved_ticket["updated_at"] = datetime.now(UTC).isoformat()
+                history = list(moved_ticket.get("history") or [])
+                history.append(
+                    self._build_history_entry(
+                        previous_ticket,
+                        moved_ticket,
+                        ["sprint"],
+                        reason="move_ticket",
+                    )
+                )
+                moved_ticket["history"] = history[-200:]
+
+                destination_existed = destination_file.exists()
+                destination_before = read_yaml_fast(destination_file) if destination_existed else None
+                destination_data = destination_before or {
+                    "sprint": {
+                        "id": to_sprint,
+                        "name": to_sprint.replace("-", " ").title(),
+                        "status": "active",
+                        "tickets": {},
+                    }
+                }
+                destination_root = destination_data.get("sprint", destination_data)
+                destination_tickets = destination_root.setdefault("tickets", {})
+                if ticket_id in destination_tickets:
+                    raise ValueError(f"ticket_exists_in_target_sprint:{ticket_id}:{to_sprint}")
+                destination_tickets[ticket_id] = moved_ticket
+                destination_data["sprint"] = destination_root
+
+                self._write_yaml_atomic(destination_file, destination_data, allow_unicode=True)
+                try:
+                    del source_tickets[ticket_id]
+                    self._write_yaml_atomic(source_file, source_data, allow_unicode=True)
+                except Exception:
+                    if destination_existed and destination_before is not None:
+                        self._write_yaml_atomic(destination_file, destination_before, allow_unicode=True)
+                    else:
+                        destination_file.unlink(missing_ok=True)
+                    raise
+                if hasattr(self, "_yaml_cache"):
+                    self._yaml_cache.pop(str(source_file), None)
+                    self._yaml_cache.pop(str(destination_file), None)
+                return True
         return False
 
     def delete_tickets_bulk(self, ticket_ids: list[str]) -> tuple[list[str], list[str]]:

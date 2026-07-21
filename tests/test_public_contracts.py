@@ -90,6 +90,25 @@ def test_planfile_client_returns_typed_transition_results(tmp_path) -> None:
     )
 
 
+def test_planfile_client_exposes_failure_and_explicit_retry(tmp_path) -> None:
+    backend = Planfile(str(tmp_path))
+    ticket = backend.create_ticket(name="Retryable lifecycle")
+    client = PlanfileClient(backend=backend)
+
+    assert client.start(ticket.id, assigned_to="koru").code == "ok"
+    failed = client.fail(ticket.id, error="temporary failure", actor="koru")
+    ready = client.ready(ticket.id, note="Retry 2/3 scheduled", actor="koru")
+
+    assert failed.code == "ok"
+    assert failed.ticket["execution"]["state"] == "failed"
+    assert failed.ticket["execution"]["attempt"] == 1
+    assert ready.code == "ok"
+    assert ready.ticket["status"] == "open"
+    assert ready.ticket["execution"]["state"] == "ready"
+    assert ready.ticket["execution"]["attempt"] == 1
+    assert ready.ticket["outputs"]["notes"] == ["Retry 2/3 scheduled"]
+
+
 class _LockingBackend:
     calls = 0
 

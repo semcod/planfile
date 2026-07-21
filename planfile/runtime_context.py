@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -54,7 +55,17 @@ def _read_toml(path: Path) -> Any:
 
 def _write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    payload = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, path)
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
 
 def runtime_context_config_path(project: Path) -> Path:
@@ -65,7 +76,10 @@ def load_runtime_context_config(project: Path | str = ".") -> dict[str, Any]:
     project_path = Path(project).resolve()
     path = runtime_context_config_path(project_path)
     if not path.exists():
-        return save_runtime_context_config(project_path, DEFAULT_CONFIG)
+        return {
+            "enabled": dict(DEFAULT_CONFIG["enabled"]),
+            "overrides": {},
+        }
     data = _read_json(path)
     if not isinstance(data, dict):
         return dict(DEFAULT_CONFIG)
@@ -90,13 +104,26 @@ def save_runtime_context_config(project: Path | str = ".", data: dict[str, Any] 
 
 def _package_summary(project: Path) -> dict[str, Any]:
     package = _read_json(project / "package.json") or {}
+    discovered_packages: list[dict[str, Any]] = []
+    if not package:
+        for manifest in sorted(project.glob("*/package.json")):
+            child = _read_json(manifest)
+            if isinstance(child, dict):
+                discovered_packages.append(
+                    {
+                        "path": str(manifest.parent.relative_to(project)),
+                        "name": child.get("name", manifest.parent.name),
+                        "version": child.get("version"),
+                    }
+                )
     dependencies = package.get("dependencies", {}) or {}
     dev_dependencies = package.get("devDependencies", {}) or {}
     return {
-        "name": package.get("name", project.name),
+        "name": package.get("name", os.environ.get("PLANFILE_RUNTIME_CONTEXT_PROJECT_NAME", project.name)),
         "version": package.get("version"),
         "description": package.get("description"),
-        "workspaces": package.get("workspaces", []),
+        "workspaces": package.get("workspaces", []) or [item["path"] for item in discovered_packages],
+        "packages": discovered_packages,
         "scripts": package.get("scripts", {}),
         "dependencies": dependencies,
         "devDependencies": dev_dependencies,
@@ -124,7 +151,10 @@ def _compose_paths(project: Path) -> list[Path]:
         "docker-compose.quality.yml",
         "docker-compose.prod.yml",
     ]
-    return [project / name for name in names]
+    paths = [project / name for name in names]
+    for directory in sorted(path for path in project.iterdir() if path.is_dir()):
+        paths.extend(directory / name for name in names)
+    return paths
 
 
 def _compose_services(project: Path) -> list[dict[str, Any]]:
@@ -153,11 +183,11 @@ def _compose_services(project: Path) -> list[dict[str, Any]]:
             env = spec.get("environment", {}) or {}
             if isinstance(env, list):
                 for entry in env:
-                    if isinstance(entry, str) and "=" in entry:
-                        key, value = entry.split("=", 1)
-                        item["environment"][key] = value
+                    if isinstance(entry, str):
+                        key = entry.split("=", 1)[0]
+                        item["environment"][key] = "<redacted>"
             elif isinstance(env, dict):
-                item["environment"].update(env)
+                item["environment"].update({str(key): "<redacted>" for key in env})
             depends = spec.get("depends_on", []) or []
             if isinstance(depends, dict):
                 depends = list(depends.keys())
@@ -198,9 +228,14 @@ def _topology_summary(project: Path) -> dict[str, Any]:
     }
 
 
-def build_runtime_context(project: Path | str = ".") -> dict[str, Any]:
-    project_path = Path(os.environ.get("PLANFILE_PROJECT_ROOT", str(project))).resolve()
-    config = load_runtime_context_config(project_path)
+def build_runtime_context(
+    project: Path | str = ".",
+    *,
+    config_project: Path | str | None = None,
+) -> dict[str, Any]:
+    project_path = Path(project).resolve()
+    config_path = Path(config_project).resolve() if config_project is not None else project_path
+    config = load_runtime_context_config(config_path)
     package = _package_summary(project_path)
     pyproject = _pyproject_summary(project_path)
     services = _compose_services(project_path)

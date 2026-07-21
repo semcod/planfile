@@ -10,6 +10,11 @@ This file is the curated entrypoint for project documentation.
 - [CI/CD Integration](CI_CD_INTEGRATION.md)
 - [Examples Reference](EXAMPLES.md)
 
+## Architecture and lifecycle
+
+- [Architecture Proposal](ARCHITECTURE_PROPOSAL.md)
+- [Typed lifecycle and retry ownership](PUBLIC_CONTRACTS.md)
+
 ## Guides
 
 - [Migration Guide](guides/MIGRATION_GUIDE.md)
@@ -26,4 +31,9 @@ This file is the curated entrypoint for project documentation.
 ## Project Tracking
 
 - [Changelog](../CHANGELOG.md)
-- [TODO](../TODO.md)
+- [Active TODO](../TODO.md)
+
+## Generated reference
+
+- [Generated source-analysis snapshot](README.md) — generated content; use this
+  navigation page as the curated documentation entrypoint.

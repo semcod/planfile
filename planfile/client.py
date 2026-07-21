@@ -21,7 +21,15 @@ TransitionCode = Literal[
     "lock_timeout",
     "store_error",
 ]
-TransitionOperation = Literal["claim", "start", "complete", "block", "note"]
+TransitionOperation = Literal[
+    "claim",
+    "start",
+    "complete",
+    "fail",
+    "ready",
+    "block",
+    "note",
+]
 
 
 class TicketTransitionResult(BaseModel):
@@ -126,6 +134,7 @@ class PlanfileClient:
         note: str | None = None,
         result: Any = None,
         artifacts: list[str] | None = None,
+        completion_receipt: dict[str, Any] | None = None,
         reason: str | None = None,
         actor: str | None = None,
     ) -> TicketTransitionResult:
@@ -136,6 +145,47 @@ class PlanfileClient:
                 note=note,
                 result=result,
                 artifacts=artifacts,
+                completion_receipt=completion_receipt,
+                reason=reason,
+                actor=actor,
+            ),
+        )
+
+    def fail(
+        self,
+        ticket_id: str,
+        *,
+        error: str,
+        reason: str | None = None,
+        actor: str | None = None,
+    ) -> TicketTransitionResult:
+        """Record one failed execution attempt without deciding its retry policy."""
+
+        return self._apply(
+            "fail",
+            lambda: self._backend.fail_ticket(
+                ticket_id,
+                error=error,
+                reason=reason,
+                actor=actor,
+            ),
+        )
+
+    def ready(
+        self,
+        ticket_id: str,
+        *,
+        note: str | None = None,
+        reason: str | None = None,
+        actor: str | None = None,
+    ) -> TicketTransitionResult:
+        """Make a failed or waiting ticket runnable again for an explicit retry."""
+
+        return self._apply(
+            "ready",
+            lambda: self._backend.ready_ticket(
+                ticket_id,
+                note=note,
                 reason=reason,
                 actor=actor,
             ),

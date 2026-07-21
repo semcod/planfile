@@ -45,3 +45,4 @@ class TicketStatus(str, Enum):
     done = "done"
     blocked = "blocked"
     canceled = "canceled"
+    failed = "failed"

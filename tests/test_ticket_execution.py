@@ -196,6 +196,75 @@ def test_ticket_execution_waiting_input_ready_and_fail(tmp_path):
     assert failed.execution.state == "failed"
     assert failed.execution.last_error == "Remote API returned HTTP 502"
     assert failed.execution.attempt == 1
+    assert failed.status == "failed"
+
+
+def test_failed_attempt_requeues_until_retry_budget_is_exhausted(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Retry bounded work",
+        execution=TicketExecution(state="running", max_attempts=2),
+    )
+
+    retryable = pf.fail_ticket(ticket.id, error="temporary", actor="bot:test")
+    assert retryable is not None
+    assert retryable.status == "open"
+    assert retryable.execution.state == "ready"
+    assert retryable.execution.attempt == 1
+    assert pf.next_ticket().id == ticket.id
+
+    exhausted = pf.fail_ticket(ticket.id, error="permanent", actor="bot:test")
+    assert exhausted is not None
+    assert exhausted.status == "failed"
+    assert exhausted.execution.state == "failed"
+    assert exhausted.execution.attempt == 2
+
+
+@pytest.mark.parametrize("terminal_status", ["done", "canceled", "blocked"])
+def test_terminal_status_normalizes_execution_state(tmp_path, terminal_status):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Terminal lifecycle consistency",
+        execution=TicketExecution(
+            state="waiting_input",
+            assigned_to="founder",
+            lease_expires_at="2026-07-20T18:00:00Z",
+        ),
+    )
+
+    terminal = pf.update_ticket(ticket.id, status=terminal_status)
+
+    assert terminal is not None
+    assert terminal.status == terminal_status
+    assert terminal.execution is not None
+    assert terminal.execution.state == terminal_status
+    assert terminal.execution.assigned_to is None
+    assert terminal.execution.lease_expires_at is None
+    assert terminal.execution.finished_at is not None
+
+
+def test_ready_ticket_reopens_started_ticket_and_clears_stale_execution_claim(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Retry explicit work",
+        source=TicketSource(tool="human"),
+        executor=TicketExecutor(kind="human", mode="interactive", handler="founder"),
+        execution=TicketExecution(state="ready", queue="founder"),
+    )
+    started = pf.start_ticket(ticket.id, assigned_to="founder")
+    assert started is not None
+    assert started.status == "in_progress"
+
+    ready = pf.ready_ticket(ticket.id)
+
+    assert ready is not None
+    assert ready.status == "open"
+    assert ready.execution is not None
+    assert ready.execution.state == "ready"
+    assert ready.execution.assigned_to is None
+    assert ready.execution.started_at is None
+    assert ready.execution.finished_at is None
+    assert ready.execution.lease_expires_at is None
 
 
 def test_human_response_is_persisted_and_moves_ticket_atomically(tmp_path):

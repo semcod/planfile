@@ -11,8 +11,160 @@ pytest.importorskip("fastapi.testclient")
 
 from fastapi.testclient import TestClient
 
-from planfile import Planfile, TicketExecution, TicketExecutor, TicketSource
+from planfile import Planfile, TicketExecution, TicketExecutor, TicketInputs, TicketSource
 from planfile.api import server
+
+
+def _completion_receipt(ticket_id: str) -> dict:
+    return {
+        "schema": "subactor.completion-receipt.v1",
+        "ticket_id": ticket_id,
+        "outcome": "succeeded",
+        "actor": "bot:test",
+        "reason": "Expected state was observed.",
+        "completed_at": "2026-07-20T21:00:00Z",
+        "eql": [{"id": "expected-state", "passed": True, "expected": True, "actual": True}],
+        "artifacts": ["audit:test"],
+    }
+
+
+def test_governed_ticket_requires_completion_receipt(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Governed process",
+        labels=["process-envelope:v2"],
+        execution=TicketExecution(state="running"),
+        inputs=TicketInputs(
+            process_manifest={
+                "schema": "subactor.process-envelope.v2",
+                "reason": "Governed test",
+                "requested_by": "bot:test",
+                "definitions": {"aql": [{}], "eql": [{}], "oql": [{}], "uri": [{}]},
+            }
+        ),
+    )
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    assert client.post(f"/tickets/{ticket.id}/done").status_code == 409
+    assert client.post(f"/tickets/{ticket.id}/complete", json={"result": {"ok": True}}).status_code == 409
+
+    receipt = _completion_receipt(ticket.id)
+    response = client.post(
+        f"/tickets/{ticket.id}/complete",
+        json={"note": "Verified", "result": {"ok": True}, "artifacts": ["audit:test"], "completion_receipt": receipt},
+    )
+    assert response.status_code == 200
+    completed = response.json()
+    assert completed["outputs"]["completion_receipt"] == receipt
+    assert completed["history"][-1]["actor"] == "bot:test"
+    assert completed["history"][-1]["reason"] == "Expected state was observed."
+
+
+def test_governed_ticket_mutations_require_attributed_history(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    uri = {"id": "read-time", "name": "Read time", "uri": "time://clock/query/now"}
+    ticket = pf.create_ticket(
+        name="Governed history",
+        labels=["process-envelope:v2"],
+        execution=TicketExecution(state="running", max_attempts=2),
+        inputs=TicketInputs(
+            uri_processes=[uri],
+            process_manifest={
+                "schema": "subactor.process-envelope.v2",
+                "reason": "Governed history test",
+                "requested_by": "bot:test",
+                "definitions": {"aql": [{}], "eql": [{}], "oql": [{}], "uri": [uri]},
+            },
+        ),
+    )
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    assert client.patch(f"/tickets/{ticket.id}", json={"priority": "high"}).status_code == 422
+    assert client.post(f"/tickets/{ticket.id}/fail", json={"error": "temporary"}).status_code == 422
+    updated = client.patch(
+        f"/tickets/{ticket.id}",
+        json={"priority": "high", "actor": "bot:test", "reason": "Escalated priority after preflight."},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["history"][-1]["actor"] == "bot:test"
+    assert updated.json()["history"][-1]["reason"] == "Escalated priority after preflight."
+
+
+def test_governed_ticket_creation_requires_structured_four_part_envelope(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+    invalid = client.post(
+        "/tickets",
+        json={
+            "name": "Incomplete governed process",
+            "labels": ["process-envelope:v2"],
+            "inputs": {
+                "process_manifest": {
+                    "schema": "subactor.process-envelope.v2",
+                    "reason": "test",
+                    "requested_by": "bot:test",
+                    "definitions": {"aql": [{}], "eql": [], "oql": [{}], "uri": [{}]},
+                }
+            },
+        },
+    )
+    assert invalid.status_code == 422
+    assert "process_definitions_incomplete:eql" in invalid.json()["detail"]
+
+    uri = {"id": "read-time", "name": "Read time", "uri": "time://clock/query/now"}
+    valid = client.post(
+        "/tickets",
+        json={
+            "name": "Complete governed process",
+            "labels": ["process-envelope:v2"],
+            "inputs": {
+                "uri_processes": [uri],
+                "process_manifest": {
+                    "schema": "subactor.process-envelope.v2",
+                    "reason": "test",
+                    "requested_by": "bot:test",
+                    "definitions": {"aql": [{}], "eql": [{}], "oql": [{}], "uri": [uri]},
+                },
+            },
+        },
+    )
+    assert valid.status_code == 201
+
+
+def test_production_gate_rejects_every_legacy_ticket_creation(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setenv("PLANFILE_REQUIRE_PROCESS_ENVELOPE", "1")
+    client = TestClient(server.app)
+
+    response = client.post("/tickets", json={"name": "Legacy ticket"})
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "process_envelope_required"
+
+
+def test_production_gate_does_not_freeze_existing_legacy_ticket(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Existing legacy ticket")
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setenv("PLANFILE_REQUIRE_PROCESS_ENVELOPE", "1")
+    client = TestClient(server.app)
+
+    response = client.patch(
+        f"/tickets/{ticket.id}",
+        json={
+            "status": "failed",
+            "actor": "automation:legacy-migration",
+            "reason": "Normalize an exhausted legacy execution.",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "failed"
+    assert response.json()["execution"]["state"] == "failed"
 
 
 def test_lifecycle_api_broadcasts_ticket_execution_event(tmp_path, monkeypatch):
@@ -206,8 +358,12 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert '<option value="ready">READY' in response.text
     assert 'value="in_progress"' in response.text
     assert "/respond" in response.text
-    assert "beginTicketWork" in response.text
+    assert "beginTicketWork" not in response.text
+    assert "data-start-ticket" in response.text
+    assert "async function startSelectedTicket" in response.text
     assert "/start" in response.text
+    assert ".slice(0, 80)" not in response.text
+    assert "tickets-count" in response.text
     assert "copyTicketDetailJson" in response.text
     assert "ticketDetailExportPayload" in response.text
     assert "/events?limit=100" in response.text
@@ -323,6 +479,101 @@ def test_runtime_context_api_and_page(tmp_path, monkeypatch):
     refreshed = client.get("/api/runtime-context").json()
     assert refreshed["config"]["enabled"]["systems"] is False
     assert refreshed["systems"] == []
+
+
+def test_runtime_context_get_does_not_create_config(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    config_path = tmp_path / ".koru" / "runtime-context.json"
+    assert client.get("/api/runtime-context/config").status_code == 200
+    assert not config_path.exists()
+
+
+def test_runtime_context_discovers_monorepo_and_redacts_compose_environment(tmp_path, monkeypatch):
+    (tmp_path / "service").mkdir()
+    (tmp_path / "service" / "package.json").write_text(
+        json.dumps({"name": "child-service", "version": "1.2.3"}),
+        encoding="utf-8",
+    )
+    (tmp_path / "platform").mkdir()
+    (tmp_path / "platform" / "docker-compose.yml").write_text(
+        "services:\n  api:\n    environment:\n      API_TOKEN: super-secret\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("PLANFILE_RUNTIME_CONTEXT_PROJECT_NAME", "example-monorepo")
+
+    context = server.build_runtime_context(tmp_path)
+
+    assert context["summary"]["project"] == "example-monorepo"
+    assert context["summary"]["workspaces"] == 1
+    assert context["systems"][0]["compose_files"] == ["platform/docker-compose.yml"]
+    assert context["systems"][0]["environment"] == {"API_TOKEN": "<redacted>"}
+
+
+def test_openapi_and_health_publish_same_version():
+    client = TestClient(server.app)
+
+    assert client.get("/openapi.json").json()["info"]["version"] == client.get("/health").json()["version"]
+
+
+def test_ticket_list_pagination_headers(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    for index in range(3):
+        pf.create_ticket(name=f"Ticket {index}", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.get("/tickets?sprint=all&offset=1&limit=1")
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.headers["x-total-count"] == "3"
+    assert response.headers["x-result-count"] == "1"
+
+
+def test_move_ticket_api_and_sprint_validation(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Move through API", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    moved = client.post(f"/tickets/{ticket.id}/move?to_sprint=audit-sprint")
+
+    assert moved.status_code == 200
+    assert pf.get_ticket(ticket.id).sprint == "audit-sprint"
+    assert client.post(f"/tickets/{ticket.id}/move?to_sprint=../../escape").status_code == 422
+    assert client.post(
+        "/tickets",
+        json={"name": "Escape", "sprint": "../../escape"},
+    ).status_code == 422
+
+
+def test_sprint_api_uses_canonical_sprint_store(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    pf.create_ticket(name="Current work", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    listed = client.get("/sprints")
+    created = client.post(
+        "/sprints",
+        json={"id": "release-1", "name": "Release 1", "objectives": ["Ship"]},
+    )
+
+    assert listed.status_code == 200
+    assert {item["id"] for item in listed.json()} == {"backlog", "current"}
+    assert next(item for item in listed.json() if item["id"] == "current")["ticket_count"] == 1
+    assert created.status_code == 201
+    assert created.json()["id"] == "release-1"
+    assert client.post(
+        "/sprints",
+        json={"id": "release-1", "name": "Duplicate"},
+    ).status_code == 409
+    assert {item["id"] for item in client.get("/sprints").json()} == {
+        "backlog", "current", "release-1"
+    }
 
 
 def test_favicon_returns_no_content():

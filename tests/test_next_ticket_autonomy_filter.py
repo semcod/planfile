@@ -32,6 +32,33 @@ def test_autonomy_filter_can_be_disabled(monkeypatch):
     assert Planfile._autonomy_blocked(_mk(labels=["autonomy-frontier"])) is False
 
 
+def test_production_autonomy_filter_requires_complete_structured_envelope(monkeypatch):
+    monkeypatch.setenv("PLANFILE_REQUIRE_PROCESS_ENVELOPE", "1")
+    legacy = _mk(labels=["code"])
+    description_only = _mk(labels=["process-envelope:v2"])
+    incomplete = _mk(inputs={
+        "process_manifest": {
+            "schema": "subactor.process-envelope.v2",
+            "reason": "test",
+            "requested_by": "bot:test",
+            "definitions": {"aql": [{}], "eql": [], "oql": [{}], "uri": [{}]},
+        }
+    })
+    complete = _mk(inputs={
+        "process_manifest": {
+            "schema": "subactor.process-envelope.v2",
+            "reason": "test",
+            "requested_by": "bot:test",
+            "definitions": {"aql": [{}], "eql": [{}], "oql": [{}], "uri": [{}]},
+        }
+    })
+
+    assert Planfile._autonomy_skip(legacy) == "process-envelope-required"
+    assert Planfile._autonomy_skip(description_only) == "process-envelope-required"
+    assert Planfile._autonomy_skip(incomplete) == "process-envelope-invalid"
+    assert Planfile._autonomy_skip(complete) == ""
+
+
 def test_goal_freeze_freezes_off_goal_only(monkeypatch):
     monkeypatch.setenv("CURRENT_GOAL", "signal.message.send")
     assert Planfile._goal_frozen(_mk(name="refactor dashboard", labels=["refactor"])) is True

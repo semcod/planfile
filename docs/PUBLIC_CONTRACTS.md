@@ -63,6 +63,37 @@ elif result.retryable:
     schedule_retry(result.code)
 ```
 
+Lifecycle methods are:
+
+- `claim` and `start` for ownership and execution start;
+- `complete` for verified success;
+- `fail` for recording one failed attempt and its error;
+- `ready` for an explicit scheduler decision to reopen work;
+- `block` for a human or external-state boundary;
+- `note` for additive evidence.
+
+`fail` and `ready` are deliberately separate. Planfile persists state; it does
+not assume that every error is retryable:
+
+```python
+failed = client.fail("PLF-42", error="temporary upstream failure", actor="koru")
+ticket = failed.ticket or {}
+execution = ticket.get("execution") or {}
+
+if failed.code == "ok" and execution.get("attempt", 0) < execution.get("max_attempts", 1):
+    reopened = client.ready(
+        "PLF-42",
+        note="Retry scheduled by koru",
+        actor="koru",
+    )
+else:
+    blocked = client.block("PLF-42", reason="attempt budget exhausted", actor="koru")
+```
+
+`ready` preserves the failure count but clears stale execution ownership,
+timestamps, lease, and last error. Its returned ticket is runnable again with
+`status: open` and `execution.state: ready`.
+
 The client owns the bounded storage-lock retry. The caller owns the decision to
 perform a transition, its capability/grant checks and its retry budget outside
 the storage transport.

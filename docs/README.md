@@ -1,4 +1,11 @@
-<!-- code2docs:start --># planfile
+# Generated Planfile reference
+
+For maintained documentation navigation, start with
+[`NAVIGATION.md`](NAVIGATION.md). The content below is a generated
+source-analysis snapshot and may be refreshed by code2docs.
+
+<!-- code2docs:start -->
+# planfile
 
 ![version](https://img.shields.io/badge/version-0.1.0-blue) ![python](https://img.shields.io/badge/python-%3E%3D3.10-blue) ![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey) ![functions](https://img.shields.io/badge/functions-644-green)
 > **644** functions | **75** classes | **177** files | CC̄ = 3.8

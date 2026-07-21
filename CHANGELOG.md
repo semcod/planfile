@@ -23,7 +23,12 @@
 - chore(repo): move REFACTOR_CLI to docs/summaries
 - chore(repo): move mcp-server-example to examples/ecosystem and planfile_gen to scripts/
 - docs: add docs/NAVIGATION.md and refresh README documentation links
-- chore(todo): review TODO.md state (0 active, 0 completed) — no completed TODO items to migrate into changelog
+- chore(todo): keep `TODO.md` limited to active work from the 2026-05-03
+  prefact snapshot (487 reported, 178 unresolved entries retained from the
+  displayed slice); migrate its 22 resolved findings into release history
+  instead of retaining completed checkboxes or duplicate open entries
+- docs(todo): move the four completed manual-maintenance items into the
+  `Fixed` section above and document the active-only tracking policy
 - feat(goal): configuration management system
 - feat(examples): configuration management system
 - feat(docs): configuration management system
@@ -41,6 +46,45 @@
 - feat: added configuration management tests
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
+
+## [0.1.119] - 2026-07-21
+
+### Docs
+- Update CHANGELOG.md
+- Update README.md
+- Update TODO.md
+- Update docs/NAVIGATION.md
+- Update docs/PUBLIC_CONTRACTS.md
+- Update docs/README.md
+
+### Test
+- Update tests/test_next_ticket_autonomy_filter.py
+- Update tests/test_public_contracts.py
+- Update tests/test_store_concurrency.py
+- Update tests/test_ticket_api_events.py
+- Update tests/test_ticket_execution.py
+
+### Other
+- Update VERSION
+- Update planfile/__init__.py
+- Update planfile/api/server.py
+- Update planfile/client.py
+- Update planfile/core/models/base.py
+- Update planfile/core/models/ticket.py
+- Update planfile/core/store.py
+- Update planfile/runtime_context.py
+- Update uv.lock
+
+## [0.1.118] - 2026-07-20
+
+### Added
+- `PlanfileClient` now exposes typed `fail` and `ready` lifecycle operations,
+  allowing queue schedulers to record an attempt and explicitly reopen it
+  without falling back to subprocess-only lifecycle mutations.
+
+### Fixed
+- `ready_ticket()` now reopens an explicitly retried ticket and clears its
+  stale execution claim while preserving the recorded attempt count.
 
 ## [0.1.117] - 2026-07-20
 

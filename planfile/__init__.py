@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.117"
+__version__ = "0.1.119"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -128,6 +128,23 @@ class Planfile:
         import os
         if os.environ.get("PLANFILE_NO_AUTONOMY_FILTER") == "1":
             return ""
+        require_envelope = os.environ.get("PLANFILE_REQUIRE_PROCESS_ENVELOPE", "").strip().lower() in {
+            "1", "true", "yes", "on",
+        }
+        if require_envelope:
+            manifest = ticket.inputs.process_manifest if ticket.inputs else None
+            if not isinstance(manifest, dict) or manifest.get("schema") != "subactor.process-envelope.v2":
+                return "process-envelope-required"
+            definitions = manifest.get("definitions")
+            valid = (
+                bool(str(manifest.get("reason") or "").strip())
+                and bool(str(manifest.get("requested_by") or "").strip())
+                and isinstance(definitions, dict)
+                and all(isinstance(definitions.get(kind), list) and definitions[kind]
+                        for kind in ("aql", "eql", "oql", "uri"))
+            )
+            if not valid:
+                return "process-envelope-invalid"
         labels = [str(l).lower() for l in (ticket.labels or [])]
         if "autonomy-frontier" in labels:
             return "autonomy-frontier"
@@ -225,6 +242,9 @@ class Planfile:
         ticket_id: str,
         assigned_to: str | None = None,
         lease_seconds: int | None = None,
+        *,
+        reason: str | None = None,
+        actor: str | None = None,
     ) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
@@ -241,7 +261,7 @@ class Planfile:
             lease_expires_at=lease_expires_at,
             state="ready" if (ticket.execution.state if ticket.execution else "pending") == "pending" else None,
         )
-        return self.update_ticket(ticket_id, execution=execution)
+        return self.update_ticket(ticket_id, execution=execution, reason=reason, actor=actor)
 
     def start_ticket(self, ticket_id: str, assigned_to: str | None = None, *, reason: str | None = None, actor: str | None = None) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
@@ -263,6 +283,7 @@ class Planfile:
         note: str | None = None,
         result=None,
         artifacts: list[str] | None = None,
+        completion_receipt: dict | None = None,
         *,
         reason: str | None = None,
         actor: str | None = None,
@@ -279,6 +300,11 @@ class Planfile:
             notes=existing_notes + ([note] if note else []),
             artifacts=existing_artifacts + list(artifacts or []),
             result=result if result is not None else (ticket.outputs.result if ticket.outputs else None),
+            completion_receipt=(
+                completion_receipt
+                if completion_receipt is not None
+                else (ticket.outputs.completion_receipt if ticket.outputs else None)
+            ),
         )
         execution = self._merge_model(
             ticket.execution,
@@ -296,16 +322,26 @@ class Planfile:
             return None
 
         current_attempt = ticket.execution.attempt if ticket.execution else 0
-        execution = self._merge_model(
-            ticket.execution,
-            TicketExecution,
-            state="failed",
-            finished_at=self._utcnow(),
+        next_attempt = current_attempt + 1
+        max_attempts = ticket.execution.max_attempts if ticket.execution else 1
+        exhausted = next_attempt >= max_attempts
+        execution_data = ticket.execution.model_dump(mode="python", exclude_none=False) if ticket.execution else {}
+        execution_data.update(
+            state="failed" if exhausted else "ready",
+            finished_at=self._utcnow() if exhausted else None,
             lease_expires_at=None,
-            attempt=current_attempt + 1,
+            assigned_to=None,
+            attempt=next_attempt,
             last_error=error,
         )
-        return self.update_ticket(ticket_id, execution=execution, reason=reason, actor=actor)
+        execution = TicketExecution(**execution_data)
+        return self.update_ticket(
+            ticket_id,
+            status="failed" if exhausted else "open",
+            execution=execution,
+            reason=reason or error,
+            actor=actor,
+        )
 
     def block_ticket(self, ticket_id: str, reason: str | None = None, note: str | None = None, *, actor: str | None = None) -> Ticket | None:
         """Mark a ticket blocked and terminate any active execution claim.
@@ -381,6 +417,9 @@ class Planfile:
         prompt: str,
         env_keys: list[str] | None = None,
         note: str | None = None,
+        *,
+        reason: str | None = None,
+        actor: str | None = None,
     ) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
@@ -403,20 +442,32 @@ class Planfile:
         updates: dict = {"execution": execution, "inputs": inputs}
         if note:
             updates["outputs"] = self._append_note(ticket, note)
-        return self.update_ticket(ticket_id, **updates)
+        return self.update_ticket(ticket_id, reason=reason, actor=actor, **updates)
 
     def ready_ticket(self, ticket_id: str, note: str | None = None, *, reason: str | None = None, actor: str | None = None) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
             return None
 
-        execution = self._merge_model(
-            ticket.execution,
-            TicketExecution,
-            state="ready",
-            last_error=None,
+        execution_data = (
+            ticket.execution.model_dump(mode="python", exclude_none=False)
+            if ticket.execution
+            else {}
         )
-        updates: dict = {"execution": execution}
+        execution_data.update(
+            {
+                "state": "ready",
+                "assigned_to": None,
+                "started_at": None,
+                "finished_at": None,
+                "lease_expires_at": None,
+                "last_error": None,
+            }
+        )
+        updates: dict = {
+            "status": "open",
+            "execution": TicketExecution(**execution_data),
+        }
         if note:
             updates["outputs"] = self._append_note(ticket, note)
         if reason:
@@ -432,6 +483,7 @@ class Planfile:
         next_state: str | None = "ready",
         *,
         actor: str | None = None,
+        reason: str | None = None,
         delegate_to: str | None = None,
         delegate_kind: str | None = None,
     ) -> Ticket | None:
@@ -497,7 +549,7 @@ class Planfile:
             execution=TicketExecution(**execution_data),
             executor=executor,
             outputs=self._append_note(ticket, response),
-            reason="human_response",
+            reason=reason or "human_response",
             actor=actor,
         )
 

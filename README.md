@@ -1,10 +1,10 @@
 now:
 
-![img_1.png](img_1.png)
+![Current Planfile web view](web/img_1.png)
 
 before:
 
-![img.png](img.png)
+![Previous Planfile web view](web/img.png)
 
 # Planfile
 
@@ -34,13 +34,13 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.117-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.27-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-68.1h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.119-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.32-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-70.2h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $3.2690 (135 commits)
-- 👤 **Human dev:** ~$6808 (68.1h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $3.3217 (138 commits)
+- 👤 **Human dev:** ~$7017 (70.2h @ $100/h, 30min dedup)
 
-Generated on 2026-07-19 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-07-21 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
@@ -399,6 +399,27 @@ planfile validate schema planfile.yaml --file-type planfile
 planfile health check .
 ```
 
+`ticket fail` records one failed execution by incrementing
+`execution.attempt`, setting `execution.state: failed`, clearing the lease, and
+persisting `execution.last_error`. It does not decide whether the work should
+run again. The scheduler owns that policy: compare the new attempt count with
+`execution.max_attempts`, then call `ticket ready` only when another run is
+allowed. `ticket ready` reopens the ticket (`status: open`,
+`execution.state: ready`) and clears stale assignment/timing fields while
+preserving the attempt count.
+
+Example retry sequence for a ticket with `max_attempts: 3`:
+
+```bash
+planfile ticket start PLF-001 --assigned-to worker-1
+planfile ticket fail PLF-001 --error "HTTP 502 from upstream"  # attempt = 1
+planfile ticket ready PLF-001 --note "Retry 2/3 scheduled"
+```
+
+Blocking is different from failure: use `ticket block` when progress requires
+human input, approval, credentials, or another external state change. Do not
+automatically reopen such operational boundaries.
+
 `health check` accepts parser issues with the canonical `name` field and
 normalizes generated ticket buckets before rendering, so project analysis works
 for both list-based and priority-bucketed issue output. On large repositories,
@@ -416,6 +437,8 @@ Common fields:
 - `executor.mode` — `interactive` or `automatic`
 - `executor.handler` — script, tool, or adapter name
 - `execution.state` — `pending | ready | running | waiting_input | done | failed | skipped`
+- `execution.attempt` — number of persisted failed executions
+- `execution.max_attempts` — scheduler-owned ceiling for complete executor runs
 - `inputs.*` — prompt, env keys, script path, API request, MCP tool, model hint
 - `outputs.*` — artifacts, notes, structured result payload
 

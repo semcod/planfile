@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 from collections import deque
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -21,10 +22,11 @@ try:
     from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import HTMLResponse, Response
-    from pydantic import BaseModel
+    from pydantic import BaseModel, Field
 except ImportError as exc:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
 
+from planfile import __version__
 from planfile.core.models import TicketExecution, TicketExecutor, TicketInputs, TicketOutputs
 from planfile.runtime_context import (
     build_runtime_context,
@@ -46,16 +48,23 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title="planfile",
     description="Universal ticket standard — REST + WebSocket + DSL API",
-    version="0.3.0",
+    version=__version__,
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+_cors_origins = [
+    origin.strip()
+    for origin in os.environ.get("PLANFILE_CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
+        expose_headers=["X-Result-Count", "X-Total-Count"],
+    )
 
 NO_STORE_HEADERS = {"Cache-Control": "no-store, max-age=0"}
 
@@ -65,9 +74,9 @@ NO_STORE_HEADERS = {"Cache-Control": "no-store, max-age=0"}
 class TicketCreate(BaseModel):
     name: str
     priority: str = "normal"
-    sprint: str = "current"
+    sprint: str = Field("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
     description: str = ""
-    labels: list[str] = []
+    labels: list[str] = Field(default_factory=list)
     executor: TicketExecutor | None = None
     execution: TicketExecution | None = None
     inputs: TicketInputs | None = None
@@ -84,12 +93,15 @@ class TicketUpdate(BaseModel):
     execution: TicketExecution | None = None
     inputs: TicketInputs | None = None
     outputs: TicketOutputs | None = None
+    reason: str | None = None
+    actor: str | None = None
 
 
 class SprintCreate(BaseModel):
+    id: str | None = Field(None, pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
     name: str
     length_days: int = 14
-    objectives: list[str] = []
+    objectives: list[str] = Field(default_factory=list)
 
 
 class DSLRequest(BaseModel):
@@ -113,21 +125,30 @@ class YAMLPatchRequest(BaseModel):
 class TicketClaimRequest(BaseModel):
     assigned_to: str | None = None
     lease_seconds: int | None = None
+    reason: str | None = None
+    actor: str | None = None
 
 
 class TicketCompleteRequest(BaseModel):
     note: str | None = None
     result: Any = None
-    artifacts: list[str] = []
+    artifacts: list[str] = Field(default_factory=list)
+    completion_receipt: dict[str, Any] | None = None
+    reason: str | None = None
+    actor: str | None = None
 
 
 class TicketFailRequest(BaseModel):
     error: str
+    reason: str | None = None
+    actor: str | None = None
 
 
 class TicketInputRequest(BaseModel):
     prompt: str
-    env_keys: list[str] = []
+    env_keys: list[str] = Field(default_factory=list)
+    reason: str | None = None
+    actor: str | None = None
 
 
 class TicketResponseRequest(BaseModel):
@@ -136,6 +157,7 @@ class TicketResponseRequest(BaseModel):
     # sends null explicitly when the operator chooses "keep current status".
     next_state: Literal["ready", "in_progress"] | None = "ready"
     actor: str = "founder"
+    reason: str | None = None
     delegate_to: str | None = None
     delegate_kind: Literal["human", "bot"] | None = None
 
@@ -155,12 +177,87 @@ class ManagementEventRequest(BaseModel):
     message: str = ""
     queue: str = "default"
     level: str = "info"
-    details: dict[str, Any] = {}
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class RuntimeContextConfigRequest(BaseModel):
-    enabled: dict[str, bool] = {}
-    overrides: dict[str, Any] = {}
+    enabled: dict[str, bool] = Field(default_factory=dict)
+    overrides: dict[str, Any] = Field(default_factory=dict)
+
+
+COMPLETION_RECEIPT_SCHEMA = "subactor.completion-receipt.v1"
+PROCESS_ENVELOPE_SCHEMA = "subactor.process-envelope.v2"
+
+
+def _requires_completion_receipt(ticket) -> bool:
+    labels = set(ticket.labels or [])
+    manifest = ticket.inputs.process_manifest if ticket.inputs else None
+    return (
+        "process-envelope:v2" in labels
+        or (isinstance(manifest, dict) and manifest.get("schema") == PROCESS_ENVELOPE_SCHEMA)
+    )
+
+
+def _require_governed_history_metadata(ticket, actor: str | None, reason: str | None) -> None:
+    if not _requires_completion_receipt(ticket):
+        return
+    if not str(actor or "").strip():
+        raise HTTPException(422, "history_actor_required")
+    if not str(reason or "").strip():
+        raise HTTPException(422, "history_reason_required")
+
+
+def _validate_process_envelope(
+    labels: list[str] | None,
+    inputs: TicketInputs | None,
+    *,
+    require_for_legacy: bool = True,
+) -> None:
+    label_set = set(labels or [])
+    manifest = inputs.process_manifest if inputs else None
+    governed = "process-envelope:v2" in label_set or (
+        isinstance(manifest, dict) and manifest.get("schema") == PROCESS_ENVELOPE_SCHEMA
+    )
+    if not governed:
+        if require_for_legacy and os.environ.get("PLANFILE_REQUIRE_PROCESS_ENVELOPE", "").strip().lower() in {"1", "true", "yes", "on"}:
+            raise HTTPException(422, "process_envelope_required")
+        return
+    if not isinstance(manifest, dict) or manifest.get("schema") != PROCESS_ENVELOPE_SCHEMA:
+        raise HTTPException(422, "process_envelope_required")
+    if not str(manifest.get("reason") or "").strip():
+        raise HTTPException(422, "process_reason_required")
+    if not str(manifest.get("requested_by") or "").strip():
+        raise HTTPException(422, "process_requested_by_required")
+    definitions = manifest.get("definitions")
+    if not isinstance(definitions, dict):
+        raise HTTPException(422, "process_definitions_required")
+    missing = [kind for kind in ("aql", "eql", "oql", "uri") if not isinstance(definitions.get(kind), list) or not definitions[kind]]
+    if missing:
+        raise HTTPException(422, f"process_definitions_incomplete:{','.join(missing)}")
+    declared = {str(item.get("uri")) for item in definitions["uri"] if isinstance(item, dict) and item.get("uri")}
+    supplied = {str(item.uri) for item in (inputs.uri_processes if inputs else [])}
+    if not declared or declared != supplied:
+        raise HTTPException(422, "process_uri_inputs_mismatch")
+
+
+def _validate_completion_receipt(receipt: dict[str, Any] | None, ticket_id: str) -> None:
+    if not isinstance(receipt, dict):
+        raise HTTPException(409, "completion_receipt_required")
+    if receipt.get("schema") != COMPLETION_RECEIPT_SCHEMA:
+        raise HTTPException(422, "completion_receipt_schema_invalid")
+    if str(receipt.get("ticket_id") or "") != ticket_id:
+        raise HTTPException(422, "completion_receipt_ticket_mismatch")
+    if receipt.get("outcome") != "succeeded":
+        raise HTTPException(422, "completion_outcome_invalid")
+    if not str(receipt.get("actor") or "").strip():
+        raise HTTPException(422, "completion_actor_required")
+    if not str(receipt.get("reason") or "").strip():
+        raise HTTPException(422, "completion_reason_required")
+    assertions = receipt.get("eql")
+    if not isinstance(assertions, list) or not assertions:
+        raise HTTPException(422, "completion_eql_required")
+    if any(not isinstance(item, dict) or item.get("passed") is not True for item in assertions):
+        raise HTTPException(409, "completion_eql_failed")
 
 
 # ── Tickets ────────────────────────────────────────────────────────────────────
@@ -168,10 +265,12 @@ class RuntimeContextConfigRequest(BaseModel):
 @app.get("/tickets", tags=["tickets"])
 def list_tickets(
     response: Response,
-    sprint: str = Query("current"),
+    sprint: str = Query("current", pattern=r"^(?:all|[A-Za-z0-9][A-Za-z0-9_-]{0,127})$"),
     status: str | None = Query(None),
     priority: str | None = Query(None),
     source: str | None = Query(None),
+    offset: int = Query(0, ge=0),
+    limit: int | None = Query(None, ge=1, le=5000),
 ):
     response.headers.update(NO_STORE_HEADERS)
     pf = get_planfile()
@@ -183,12 +282,16 @@ def list_tickets(
     if source:
         filters["source"] = source
     tickets = pf.list_tickets(sprint=sprint, **filters)
+    response.headers["X-Total-Count"] = str(len(tickets))
+    tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
+    response.headers["X-Result-Count"] = str(len(tickets))
     return [t.model_dump(mode="json", exclude_none=True) for t in tickets]
 
 
 @app.post("/tickets", status_code=201, tags=["tickets"])
 async def create_ticket(body: TicketCreate):
     pf = get_planfile()
+    _validate_process_envelope(body.labels, body.inputs)
     from planfile import TicketSource
     ticket = pf.create_ticket(
         name=body.name,
@@ -207,7 +310,10 @@ async def create_ticket(body: TicketCreate):
 
 
 @app.get("/tickets/next", tags=["tickets"])
-def next_ticket(sprint: str = Query("current"), queue: str | None = Query(None)):
+def next_ticket(
+    sprint: str = Query("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"),
+    queue: str | None = Query(None),
+):
     pf = get_planfile()
     ticket = pf.next_ticket(sprint=sprint, queue=queue)
     if not ticket:
@@ -227,7 +333,22 @@ def get_ticket(ticket_id: str):
 @app.patch("/tickets/{ticket_id}", tags=["tickets"])
 async def update_ticket(ticket_id: str, body: TicketUpdate):
     pf = get_planfile()
+    current = pf.get_ticket(ticket_id)
+    if not current:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    _require_governed_history_metadata(current, body.actor, body.reason)
+    # The production creation gate must not freeze pre-v2 tickets. Existing
+    # legacy records may be updated or migrated incrementally; as soon as an
+    # update declares v2, the full envelope is still validated above.
+    _validate_process_envelope(
+        body.labels if body.labels is not None else current.labels,
+        body.inputs if body.inputs is not None else current.inputs,
+        require_for_legacy=False,
+    )
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    if body.status is not None and str(body.status) != str(current.status.value):
+        updates["actor"] = body.actor or "unknown:api"
+        updates["reason"] = body.reason or f"status_transition:{current.status.value}->{body.status}"
     ticket = pf.update_ticket(ticket_id, **updates)
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
@@ -245,9 +366,15 @@ async def delete_ticket(ticket_id: str):
 
 
 @app.post("/tickets/{ticket_id}/move", tags=["tickets"])
-async def move_ticket(ticket_id: str, to_sprint: str = Query(...)):
+async def move_ticket(
+    ticket_id: str,
+    to_sprint: str = Query(..., pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"),
+):
     pf = get_planfile()
-    ok = pf.store.move_ticket(ticket_id, to_sprint)
+    try:
+        ok = pf.store.move_ticket(ticket_id, to_sprint)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
     if not ok:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.changed", "move", ticket_id=ticket_id)
@@ -257,7 +384,12 @@ async def move_ticket(ticket_id: str, to_sprint: str = Query(...)):
 @app.post("/tickets/{ticket_id}/done", tags=["tickets"])
 async def done_ticket(ticket_id: str):
     pf = get_planfile()
-    ticket = pf.complete_ticket(ticket_id)
+    current = pf.get_ticket(ticket_id)
+    if not current:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    if _requires_completion_receipt(current):
+        raise HTTPException(409, "completion_receipt_required")
+    ticket = pf.complete_ticket(ticket_id, reason="legacy_done_endpoint", actor="legacy:api")
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "done", ticket)
@@ -268,7 +400,12 @@ async def done_ticket(ticket_id: str):
 async def start_ticket(ticket_id: str, body: TicketClaimRequest | None = None):
     pf = get_planfile()
     assigned_to = body.assigned_to if body else None
-    ticket = pf.start_ticket(ticket_id, assigned_to=assigned_to)
+    ticket = pf.start_ticket(
+        ticket_id,
+        assigned_to=assigned_to,
+        reason=(body.reason if body else None) or "execution_started",
+        actor=(body.actor if body else None) or assigned_to or "automation:planfile-api",
+    )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "start", ticket)
@@ -282,6 +419,8 @@ async def claim_ticket(ticket_id: str, body: TicketClaimRequest):
         ticket_id,
         assigned_to=body.assigned_to,
         lease_seconds=body.lease_seconds,
+        reason=body.reason or "execution_claimed",
+        actor=body.actor or body.assigned_to or "automation:planfile-api",
     )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
@@ -292,11 +431,19 @@ async def claim_ticket(ticket_id: str, body: TicketClaimRequest):
 @app.post("/tickets/{ticket_id}/complete", tags=["tickets"])
 async def complete_ticket(ticket_id: str, body: TicketCompleteRequest):
     pf = get_planfile()
+    current = pf.get_ticket(ticket_id)
+    if not current:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    if _requires_completion_receipt(current):
+        _validate_completion_receipt(body.completion_receipt, ticket_id)
     ticket = pf.complete_ticket(
         ticket_id,
         note=body.note,
         result=body.result,
         artifacts=body.artifacts,
+        completion_receipt=body.completion_receipt,
+        reason=body.reason or (body.completion_receipt or {}).get("reason") or body.note or "ticket_completed_via_api",
+        actor=body.actor or (body.completion_receipt or {}).get("actor") or "unknown:api",
     )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
@@ -307,7 +454,16 @@ async def complete_ticket(ticket_id: str, body: TicketCompleteRequest):
 @app.post("/tickets/{ticket_id}/fail", tags=["tickets"])
 async def fail_ticket(ticket_id: str, body: TicketFailRequest):
     pf = get_planfile()
-    ticket = pf.fail_ticket(ticket_id, error=body.error)
+    current = pf.get_ticket(ticket_id)
+    if not current:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    _require_governed_history_metadata(current, body.actor, body.reason)
+    ticket = pf.fail_ticket(
+        ticket_id,
+        error=body.error,
+        reason=body.reason or body.error,
+        actor=body.actor or "unknown:api",
+    )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "fail", ticket)
@@ -317,7 +473,11 @@ async def fail_ticket(ticket_id: str, body: TicketFailRequest):
 @app.post("/tickets/{ticket_id}/input-required", tags=["tickets"])
 async def wait_for_input(ticket_id: str, body: TicketInputRequest):
     pf = get_planfile()
-    ticket = pf.wait_for_input(ticket_id, prompt=body.prompt, env_keys=body.env_keys)
+    current = pf.get_ticket(ticket_id)
+    if not current:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    _require_governed_history_metadata(current, body.actor, body.reason)
+    ticket = pf.wait_for_input(ticket_id, prompt=body.prompt, env_keys=body.env_keys, reason=body.reason or "input_required", actor=body.actor or "unknown:api")
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "input_required", ticket)
@@ -327,7 +487,7 @@ async def wait_for_input(ticket_id: str, body: TicketInputRequest):
 @app.post("/tickets/{ticket_id}/ready", tags=["tickets"])
 async def ready_ticket(ticket_id: str):
     pf = get_planfile()
-    ticket = pf.ready_ticket(ticket_id)
+    ticket = pf.ready_ticket(ticket_id, reason="execution_ready", actor="automation:planfile-api")
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "ready", ticket)
@@ -343,6 +503,7 @@ async def respond_ticket(ticket_id: str, body: TicketResponseRequest):
             note=body.note,
             next_state=body.next_state,
             actor=body.actor.strip() or "dashboard-user",
+            reason=body.reason or body.note,
             delegate_to=body.delegate_to,
             delegate_kind=body.delegate_kind,
         )
@@ -391,32 +552,54 @@ def open_access_panel(
 # ── Sprints ────────────────────────────────────────────────────────────────────
 
 @app.get("/sprints", tags=["sprints"])
-def list_sprints():
+def list_sprints(response: Response):
+    """List canonical sprint files from `.planfile/sprints`."""
+    from planfile.core.fastio import read_yaml_fast
+
+    response.headers.update(NO_STORE_HEADERS)
     pf = get_planfile()
-    pf_path = Path(pf.store.project_dir) / "planfile.yaml"
-    if not pf_path.exists():
-        return []
-    with open(pf_path) as f:
-        data = yaml.safe_load(f) or {}
-    return data.get("sprints", [])
+    result = []
+    for sprint_file in pf.store._all_sprint_files():
+        data = read_yaml_fast(sprint_file) or {}
+        sprint = data.get("sprint", data)
+        tickets = sprint.get("tickets", {}) if isinstance(sprint, dict) else {}
+        declared_id = sprint.get("id")
+        metadata = {
+            key: value
+            for key, value in sprint.items()
+            if key not in {"id", "tickets"}
+        }
+        if declared_id and declared_id != sprint_file.stem:
+            metadata["declared_id"] = declared_id
+        result.append(
+            metadata | {"id": sprint_file.stem, "ticket_count": len(tickets)}
+        )
+    return result
 
 
 @app.post("/sprints", status_code=201, tags=["sprints"])
 def create_sprint(body: SprintCreate):
+    """Create one canonical sprint file without touching legacy `planfile.yaml`."""
     pf = get_planfile()
-    pf_path = Path(pf.store.project_dir) / "planfile.yaml"
-    if not pf_path.exists():
-        raise HTTPException(404, "planfile.yaml not found")
-    with open(pf_path) as f:
-        data = yaml.safe_load(f) or {}
-    sprints = data.get("sprints", [])
-    new_id = max((s.get("id", 0) for s in sprints), default=0) + 1
-    sprint = {"id": new_id, "name": body.name, "length_days": body.length_days, "objectives": body.objectives}
-    sprints.append(sprint)
-    data["sprints"] = sprints
-    with open(pf_path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
-    return sprint
+    sprint_id = body.id or re.sub(r"[^A-Za-z0-9_-]+", "-", body.name.strip()).strip("-").lower()
+    if not sprint_id or not pf.store.SPRINT_ID_PATTERN.fullmatch(sprint_id):
+        raise HTTPException(422, "invalid_sprint_id")
+    sprint_file = pf.store._sprint_file(sprint_id)
+    sprint = {
+        "id": sprint_id,
+        "name": body.name,
+        "status": "active",
+        "length_days": body.length_days,
+        "objectives": body.objectives,
+        "tickets": {},
+    }
+    with pf.store.mutation_lock():
+        if sprint_file.exists():
+            raise HTTPException(409, f"sprint_exists:{sprint_id}")
+        pf.store._write_yaml_atomic(sprint_file, {"sprint": sprint}, allow_unicode=True)
+        if hasattr(pf.store, "_yaml_cache"):
+            pf.store._yaml_cache.pop(str(sprint_file), None)
+    return {key: value for key, value in sprint.items() if key != "tickets"} | {"ticket_count": 0}
 
 
 # ── YAML direct operations ─────────────────────────────────────────────────────
@@ -708,9 +891,17 @@ def _runtime_context_project() -> Path:
     return get_planfile().store.project_dir
 
 
+def _runtime_context_source_project() -> Path:
+    configured = os.environ.get("PLANFILE_RUNTIME_CONTEXT_ROOT", "").strip()
+    return Path(configured).resolve() if configured else _runtime_context_project()
+
+
 @app.get("/api/runtime-context", tags=["runtime-context"])
 def get_runtime_context():
-    return build_runtime_context(_runtime_context_project())
+    return build_runtime_context(
+        _runtime_context_source_project(),
+        config_project=_runtime_context_project(),
+    )
 
 
 @app.get("/api/runtime-context/config", tags=["runtime-context"])
@@ -794,10 +985,24 @@ const labels = {
 };
 let ctx = null;
 let cfg = null;
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    let detail = '';
+    try { detail = (await response.json()).detail || ''; } catch { /* response was not JSON */ }
+    throw new Error(detail || `${url} returned HTTP ${response.status}`);
+  }
+  return response.json();
+}
+function showError(error) {
+  document.getElementById('content').innerHTML = `<pre>${escapeHtml(String(error))}</pre>`;
+}
 async function loadContext() {
-  ctx = await fetch('/api/runtime-context', {cache: 'no-store'}).then(r => r.json());
-  cfg = ctx.config;
-  renderChecks(); renderSummary(); renderContent();
+  try {
+    ctx = await fetchJson('/api/runtime-context', {cache: 'no-store'});
+    cfg = ctx.config;
+    renderChecks(); renderSummary(); renderContent();
+  } catch (error) { showError(error); }
 }
 function renderChecks() {
   document.getElementById('checks').innerHTML = Object.entries(labels).map(([key, label]) =>
@@ -814,9 +1019,9 @@ function renderSummary() {
 async function saveConfig() {
   const enabled = {};
   document.querySelectorAll('input[type="checkbox"]').forEach(input => enabled[input.dataset.key] = input.checked);
-  cfg = await fetch('/api/runtime-context/config', {
+  cfg = await fetchJson('/api/runtime-context/config', {
     method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...cfg, enabled})
-  }).then(r => r.json());
+  });
   await loadContext();
 }
 function showRaw() { document.getElementById('content').innerHTML = `<pre>${escapeHtml(JSON.stringify(ctx, null, 2))}</pre>`; }
@@ -1260,6 +1465,7 @@ def _dashboard_html() -> str:
           <div id="nt-msg" class="form-msg" aria-live="polite"></div>
         </form>
       </div>
+      <div id="tickets-count" class="status" aria-live="polite"></div>
       <div id="tickets" class="list"></div>
     </section>
     <section>
@@ -1281,7 +1487,6 @@ def _dashboard_html() -> str:
       selectedTicket: null,
       ticketEvents: [],
       detailTab: "overview",
-      activeViewTicketId: null,
       responseFeedback: null,
       responseSubmitting: false,
       delegationActors: [],
@@ -1558,8 +1763,8 @@ def _dashboard_html() -> str:
     }
 
     function renderTickets(tickets) {
+      $("tickets-count").textContent = `${tickets.length} ticket${tickets.length === 1 ? "" : "s"} shown`;
       ticketsEl.innerHTML = tickets
-        .slice(0, 80)
         .map((t) => {
           const stateName = ticketState(t);
           const queue = ticketQueue(t);
@@ -1758,7 +1963,12 @@ def _dashboard_html() -> str:
       const actorId = executor.handler || execution.assigned_to || "";
       const actor = state.delegationActors.find((item) => item.id === actorId);
       const accessHref = actor ? `/access-panel?actor=${encodeURIComponent(actor.id)}` : "/access-panel";
+      const canStart = executor.kind === "human"
+        && executor.mode === "interactive"
+        && !["running", "done"].includes(String(execution.state || ""))
+        && !["done", "canceled", "blocked", "in_progress"].includes(String(state.selectedTicket.status || ""));
       return `<div class="detail-actions">
+        ${canStart ? '<button type="button" data-start-ticket>Start work</button>' : ""}
         <button type="button" data-copy-ticket-json title="Copy ticket payload for the active tab as JSON">Copy JSON to clipboard</button>
         <a href="${escapeHtml(accessHref)}" target="_blank" rel="noopener noreferrer" title="Edit the actor position and AQL contract">Manage actor permissions ↗</a>
         <a href="/access-panel?view=delegation" target="_blank" rel="noopener noreferrer" title="Open role-based manual and automatic routing">Delegation manager ↗</a>
@@ -1902,15 +2112,11 @@ def _dashboard_html() -> str:
       `;
     }
 
-    async function beginTicketWork(ticket) {
-      if (!ticket || state.activeViewTicketId === ticket.id) return ticket;
-      state.activeViewTicketId = ticket.id;
-      const execution = ticket.execution || {};
+    async function startSelectedTicket() {
+      const ticket = state.selectedTicket;
+      if (!ticket) throw new Error("Select a ticket first");
       const executor = ticket.executor || {};
-      const terminal = ["done", "canceled", "blocked"].includes(String(ticket.status || ""))
-        || ["done", "running"].includes(String(execution.state || ""));
-      const interactiveHuman = executor.kind === "human" && executor.mode === "interactive";
-      if (!interactiveHuman || terminal || ticket.status === "in_progress") return ticket;
+      const execution = ticket.execution || {};
       const assignedTo = executor.handler || execution.assigned_to || ticketQueue(ticket) || "dashboard-human";
       const response = await fetch(`/tickets/${encodeURIComponent(ticket.id)}/start`, {
         method: "POST",
@@ -1918,7 +2124,9 @@ def _dashboard_html() -> str:
         body: JSON.stringify({ assigned_to: assignedTo }),
       });
       if (!response.ok) throw new Error(`Starting ${ticket.id} returned HTTP ${response.status}`);
-      return response.json();
+      state.selectedTicket = await response.json();
+      await refreshTickets({ notifyChanges: false });
+      renderTicketDetail(state.selectedTicket, state.ticketEvents);
     }
 
     async function selectTicket(ticketId, options = {}) {
@@ -1937,11 +2145,6 @@ def _dashboard_html() -> str:
       ]);
       if (!ticketResponse.ok) throw new Error(`Ticket ${ticketId} returned HTTP ${ticketResponse.status}`);
       state.selectedTicket = await ticketResponse.json();
-      try {
-        state.selectedTicket = await beginTicketWork(state.selectedTicket);
-      } catch (error) {
-        state.responseFeedback = { ticketId, kind: "error", text: String(error) };
-      }
       state.ticketEvents = eventsResponse.ok ? await eventsResponse.json() : [];
       renderTicketDetail(state.selectedTicket, state.ticketEvents);
       renderTickets(selectedTickets(state.lastTickets));
@@ -1993,6 +2196,7 @@ def _dashboard_html() -> str:
     async function loadEventHistory() {
       const queueParam = state.queue === "all" ? "" : `&queue=${encodeURIComponent(state.queue)}`;
       const response = await fetch(`/events?limit=100${queueParam}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Event history returned HTTP ${response.status}`);
       const events = await response.json();
       resetEvents();
       for (const event of events) {
@@ -2002,7 +2206,9 @@ def _dashboard_html() -> str:
 
     async function refreshTickets(options = {}) {
       const response = await fetch("/tickets?sprint=all", { cache: "no-store" });
+      if (!response.ok) throw new Error(`Ticket list returned HTTP ${response.status}`);
       const tickets = await response.json();
+      if (!Array.isArray(tickets)) throw new Error("Ticket list returned an invalid payload");
       state.lastTickets = tickets;
       updateQueueOptions(tickets);
       updateStatusOptions(tickets);
@@ -2057,6 +2263,15 @@ def _dashboard_html() -> str:
       selectTicket(node.dataset.ticketId).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: node.dataset.ticketId, ticket: { execution: { state: "failed", last_error: String(error) } } }));
     });
     detailEl.addEventListener("click", (event) => {
+      const startBtn = event.target.closest("[data-start-ticket]");
+      if (startBtn) {
+        startBtn.disabled = true;
+        startSelectedTicket().catch((error) => {
+          state.responseFeedback = { ticketId: state.selectedTicketId, kind: "error", text: String(error) };
+          renderTicketDetail(state.selectedTicket, state.ticketEvents);
+        });
+        return;
+      }
       const copyBtn = event.target.closest("[data-copy-ticket-json]");
       if (copyBtn) {
         event.preventDefault();
@@ -2188,7 +2403,7 @@ def _dashboard_html() -> str:
       }
     };
     $("refresh").onclick = () => {
-      refreshTickets({ notifyChanges: true });
+      refreshTickets({ notifyChanges: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
       refreshSelectedTicket();
     };
 
@@ -2264,14 +2479,14 @@ def _dashboard_html() -> str:
       state.queue = event.target.value;
       localStorage.setItem("planfile.queue", state.queue);
       syncUrlState();
-      refreshTickets({ notifyChanges: false, resetSeen: true });
+      refreshTickets({ notifyChanges: false, resetSeen: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
       loadEventHistory().catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
     };
     $("status-filter").onchange = (event) => {
       state.statusFilter = event.target.value;
       localStorage.setItem("planfile.statusFilter", state.statusFilter);
       syncUrlState();
-      refreshTickets({ notifyChanges: false, resetSeen: true });
+      refreshTickets({ notifyChanges: false, resetSeen: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
     };
     $("docs").onclick = () => location.href = "/docs";
 
@@ -2296,7 +2511,6 @@ def _dashboard_html() -> str:
         .then(() => loadEventHistory())
         .then(() => {
           if (state.selectedTicketId) return selectTicket(state.selectedTicketId, { silent: true, updateUrl: false });
-          state.activeViewTicketId = null;
           renderTicketDetail(null);
           return null;
         })
