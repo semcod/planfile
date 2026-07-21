@@ -13,6 +13,7 @@ from planfile.sync.gitlab import GitLabBackend
 # Platform-specific implementations
 from planfile.sync.jira import JiraBackend
 from planfile.sync.mock import MockBackend
+from planfile.sync.onedev import OneDevBackend, OneDevError
 
 __all__ = [
     "TicketRef",
@@ -25,4 +26,6 @@ __all__ = [
     "MockBackend",
     "JiraBackend",
     "GitLabBackend",
+    "OneDevBackend",
+    "OneDevError",
 ]

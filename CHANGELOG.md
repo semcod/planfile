@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added
+- Added a first-class OneDev Issues backend with CRUD, state transitions,
+  fingerprint deduplication and full evidence import.
+- Added `planfile sync onedev` and `planfile sync publish SOURCE TARGET...` for
+  local-first ticket queues with Planfile-owned GitHub publication.
+
+### Changed
+- Sync references are backend-scoped, preventing a OneDev issue ID from being
+  reused accidentally as a GitHub issue number.
+- Imported tickets preserve title, description, URL, metadata and configured
+  `publish_to` routes.
+- GitHub publication reuses both Planfile and legacy Doctor fingerprint markers.
+
 ### Fixed
 - Fixed `planfile serve` install hint: Rich no longer swallows `[api]` as
   console markup, so the error now prints the correct

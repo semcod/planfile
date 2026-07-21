@@ -545,7 +545,7 @@ planfile ticket update PLF-001 --status done --sync --sync-dry-run
 
 ### 6. Sync with External Systems
 
-Synchronize tickets with TODO.md, GitHub, Jira, and GitLab:
+Synchronize tickets with TODO.md, OneDev, GitHub, Jira, and GitLab:
 
 ```bash
 # Sync with markdown files (TODO.md, CHANGELOG.md)
@@ -562,6 +562,12 @@ planfile sync markdown --direction from
 
 # Sync with GitHub Issues (requires github.planfile.yaml config)
 planfile sync github
+
+# Use OneDev as the local queue
+planfile sync onedev
+
+# Import from OneDev and publish through Planfile to GitHub
+planfile sync publish onedev github
 
 # Sync with all configured integrations
 planfile sync all
@@ -595,6 +601,27 @@ integrations:
     repo: "owner/repo"
     token: "${GITHUB_TOKEN}"  # or auto-detected from `gh auth token`
 ```
+
+For a local-first queue, create `onedev.planfile.yaml`:
+
+```yaml
+integrations:
+  onedev:
+    url: http://127.0.0.1:6610
+    project: if-uri/doctor-agent
+    username: ${ONEDEV_USER}
+    password_file: ${ONEDEV_PASSWORD_FILE}
+    publish_to: [github]
+  github:
+    repo: if-uri/doctor-agent
+    token: ${GITHUB_TOKEN}
+```
+
+`publish_to` is routing metadata. OneDev and worker tools such as Koru do not
+need GitHub Issue credentials: they write/read the OneDev queue, while
+`planfile sync publish onedev github` owns publication. Backend-scoped IDs and
+fingerprint markers prevent a OneDev Issue ID from being mistaken for a GitHub
+Issue number and prevent duplicate publication after local state loss.
 
 Markdown sync works out-of-the-box with `TODO.md` and `CHANGELOG.md` files.
 

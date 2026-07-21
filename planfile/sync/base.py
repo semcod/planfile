@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class TicketRef(BaseModel):
     """Reference to a created/updated ticket."""
+
     id: str
     url: str | None = None
     key: str | None = None  # For systems like Jira that have ticket keys
@@ -15,12 +16,17 @@ class TicketRef(BaseModel):
 
 class TicketState(BaseModel):
     """State snapshot of a ticket."""
+
     id: str
     key: str | None = None
+    name: str | None = None
+    description: str = ""
+    url: str | None = None
     status: str
     assignee: str | None = None
     labels: list[str] = []
     updated_at: str | None = None
+    metadata: dict[str, Any] = {}
 
 
 class PMBackend(Protocol):
@@ -61,20 +67,23 @@ class BasePMBackend(ABC):
 
     def _validate_config(self) -> None:
         """Validate backend configuration."""
-        pass
+        return None
 
     def map_priority(self, priority: str | None) -> str:
         """Map generic priority to backend-specific priority."""
         if not priority:
             return "medium"
 
-        priority_map = self.config.get("priority_map", {
-            "lowest": "lowest",
-            "low": "low",
-            "medium": "medium",
-            "high": "high",
-            "highest": "highest",
-        })
+        priority_map = self.config.get(
+            "priority_map",
+            {
+                "lowest": "lowest",
+                "low": "low",
+                "medium": "medium",
+                "high": "high",
+                "highest": "highest",
+            },
+        )
 
         return priority_map.get(priority.lower(), "medium")
 
@@ -84,8 +93,7 @@ class BasePMBackend(ABC):
             return {}
 
         # Filter out any backend-specific metadata that shouldn't be public
-        public_metadata = {k: v for k, v in metadata.items()
-                          if not k.startswith("_")}
+        public_metadata = {k: v for k, v in metadata.items() if not k.startswith("_")}
 
         return public_metadata
 
@@ -102,7 +110,7 @@ class BasePMBackend(ABC):
             priority=ticket.get("priority"),
             assignee=ticket.get("assignee"),
             metadata=ticket.get("metadata"),
-            **kwargs
+            **kwargs,
         )
 
     @abstractmethod
@@ -143,7 +151,7 @@ class BasePMBackend(ABC):
     def _update_ticket(
         self,
         ticket_id: str,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list[str] | None = None,
@@ -220,17 +228,25 @@ class BasePMBackend(ABC):
         *,
         id: str,
         key: str | None = None,
+        name: str | None = None,
+        description: str = "",
+        url: str | None = None,
         status: str,
         assignee: str | None = None,
         labels: list[str] | None = None,
         updated_at: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> TicketState:
         """Build a TicketState with consistent defaults."""
         return TicketState(
             id=id,
             key=key,
+            name=name,
+            description=description,
+            url=url,
             status=status,
             assignee=assignee,
             labels=labels or [],
             updated_at=updated_at,
+            metadata=self.prepare_metadata(metadata),
         )

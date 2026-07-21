@@ -373,6 +373,34 @@ github.create_project_card(
 )
 ```
 
+#### OneDev Backend
+
+```python
+from planfile.sync import OneDevBackend
+
+onedev = OneDevBackend(
+    url="http://127.0.0.1:6610",
+    project="if-uri/doctor-agent",
+    username="onedev-admin",
+    password_file="/run/secrets/onedev-password",
+    publish_to=["github"],
+)
+
+# Fingerprints make creation idempotent across Doctor, Koru and Planfile runs.
+issue = onedev.create_ticket({
+    "name": "Doctor finding",
+    "description": "Reproduction evidence",
+    "metadata": {"fingerprint": "doctor:abc123"},
+})
+
+open_tickets = onedev.list_tickets(status="open")
+onedev.update_ticket(issue.id, status="in_progress")
+```
+
+OneDev remains the operational queue. To expose selected tickets on GitHub,
+run `planfile sync publish onedev github`; Planfile preserves the title,
+description, fingerprint, status and backend-specific references.
+
 #### Jira Backend
 ```python
 from planfile.integrations.jira import JiraBackend

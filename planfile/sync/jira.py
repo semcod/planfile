@@ -20,11 +20,11 @@ class JiraBackend(BasePMBackend):
         email: str | None = None,
         token: str | None = None,
         project: str | None = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize Jira backend.
-        
+
         Args:
             base_url: Jira instance URL (e.g., "https://company.atlassian.net")
             email: Email for authentication (defaults to JIRA_EMAIL env var)
@@ -39,13 +39,12 @@ class JiraBackend(BasePMBackend):
             "email": email or os.environ.get("JIRA_EMAIL"),
             "token": token or os.environ.get("JIRA_TOKEN"),
             "project": project or os.environ.get("JIRA_PROJECT"),
-            **kwargs
+            **kwargs,
         }
         super().__init__(config)
 
         self.jira = JIRA(
-            server=self.config["base_url"],
-            basic_auth=(self.config["email"], self.config["token"])
+            server=self.config["base_url"], basic_auth=(self.config["email"], self.config["token"])
         )
 
     def _validate_config(self) -> None:
@@ -67,25 +66,31 @@ class JiraBackend(BasePMBackend):
         if not priority:
             return "Medium"
 
-        priority_map = self.config.get("priority_map", {
-            "lowest": "Lowest",
-            "low": "Low",
-            "medium": "Medium",
-            "high": "High",
-            "highest": "Highest",
-        })
+        priority_map = self.config.get(
+            "priority_map",
+            {
+                "lowest": "Lowest",
+                "low": "Low",
+                "medium": "Medium",
+                "high": "High",
+                "highest": "Highest",
+            },
+        )
 
         return priority_map.get(priority.lower(), "Medium")
 
     def _map_task_type_to_jira(self, task_type: str) -> str:
         """Map task type to Jira issue type."""
-        type_map = self.config.get("type_map", {
-            "feature": "Story",
-            "tech_debt": "Task",
-            "bug": "Bug",
-            "chore": "Task",
-            "documentation": "Task",
-        })
+        type_map = self.config.get(
+            "type_map",
+            {
+                "feature": "Story",
+                "tech_debt": "Task",
+                "bug": "Bug",
+                "chore": "Task",
+                "documentation": "Task",
+            },
+        )
 
         return type_map.get(task_type.lower(), "Task")
 
@@ -147,7 +152,7 @@ class JiraBackend(BasePMBackend):
                 metadata=metadata,
             )
         except JIRAError as e:
-            raise RuntimeError(f"Failed to create Jira issue: {e}")
+            raise RuntimeError(f"Failed to create Jira issue: {e}") from e
 
     def _build_update_fields(
         self,
@@ -179,7 +184,7 @@ class JiraBackend(BasePMBackend):
     def _update_ticket(
         self,
         ticket_id: str,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list[str] | None = None,
@@ -192,7 +197,7 @@ class JiraBackend(BasePMBackend):
         try:
             issue = self.jira.issue(ticket_id)
 
-            fields = self._build_update_fields(title, body, priority, labels)
+            fields = self._build_update_fields(name, body, priority, labels)
             if fields:
                 issue.update(fields=fields)
 
@@ -203,7 +208,7 @@ class JiraBackend(BasePMBackend):
                 self.jira.assign_issue(issue, assignee)
 
         except JIRAError as e:
-            raise RuntimeError(f"Failed to update Jira issue {ticket_id}: {e}")
+            raise RuntimeError(f"Failed to update Jira issue {ticket_id}: {e}") from e
 
     def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get Jira issue status."""
@@ -212,7 +217,7 @@ class JiraBackend(BasePMBackend):
 
             return self._issue_to_ticket_status(issue)
         except JIRAError as e:
-            raise RuntimeError(f"Failed to get Jira issue {ticket_id}: {e}")
+            raise RuntimeError(f"Failed to get Jira issue {ticket_id}: {e}") from e
 
     def _issue_to_ticket_status(self, issue) -> TicketState:
         """Convert a Jira issue into a TicketState."""
@@ -235,7 +240,7 @@ class JiraBackend(BasePMBackend):
         backend_tag: str = "jira",
     ) -> list[TicketState]:
         """List Jira issues with filters."""
-        jql = f'project = {self.config["project"]}'
+        jql = f"project = {self.config['project']}"
 
         if status:
             jql += f' AND status = "{status}"'
@@ -253,7 +258,7 @@ class JiraBackend(BasePMBackend):
             issues = self.jira.search_issues(
                 jql,
                 maxResults=limit or 50,
-                fields=["summary", "status", "assignee", "labels", "updated"]
+                fields=["summary", "status", "assignee", "labels", "updated"],
             )
 
             tickets = []
@@ -262,7 +267,7 @@ class JiraBackend(BasePMBackend):
 
             return tickets
         except JIRAError as e:
-            raise RuntimeError(f"Failed to list Jira issues: {e}")
+            raise RuntimeError(f"Failed to list Jira issues: {e}") from e
 
     def _search_tickets(self, query: str, *, backend_tag: str = "jira") -> list[TicketState]:
         """Search Jira issues."""
@@ -270,9 +275,7 @@ class JiraBackend(BasePMBackend):
 
         try:
             issues = self.jira.search_issues(
-                jql,
-                maxResults=50,
-                fields=["summary", "status", "assignee", "labels", "updated"]
+                jql, maxResults=50, fields=["summary", "status", "assignee", "labels", "updated"]
             )
 
             tickets = []
@@ -281,4 +284,4 @@ class JiraBackend(BasePMBackend):
 
             return tickets
         except JIRAError as e:
-            raise RuntimeError(f"Failed to search Jira issues: {e}")
+            raise RuntimeError(f"Failed to search Jira issues: {e}") from e

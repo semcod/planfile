@@ -50,7 +50,7 @@ class MarkdownFileBackend(MarkdownFileManager, MarkdownTicketHelpers, BasePMBack
     def _update_ticket(
         self,
         ticket_id: str,
-        title: str | None = None,
+        name: str | None = None,
         body: str | None = None,
         status: str | None = None,
         labels: list[str] | None = None,
@@ -61,7 +61,7 @@ class MarkdownFileBackend(MarkdownFileManager, MarkdownTicketHelpers, BasePMBack
 
         For markdown backend we currently support existence check and no-op update.
         """
-        _ = (title, body, status, labels, priority, assignee)
+        _ = (name, body, status, labels, priority, assignee)
         location = self._find_ticket_file(ticket_id)
         if location is None:
             raise ValueError(f"Ticket not found: {ticket_id}")

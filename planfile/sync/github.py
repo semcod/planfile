@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any
 
 try:
@@ -19,7 +20,7 @@ class GitHubBackend(BasePMBackend):
     def __init__(self, repo: str, token: str | None = None, **kwargs):
         """
         Initialize GitHub backend.
-        
+
         Args:
             repo: Repository in format "owner/repo"
             token: GitHub token (defaults to GITHUB_TOKEN env var)
@@ -27,11 +28,7 @@ class GitHubBackend(BasePMBackend):
         if Github is None:
             raise ImportError("PyGithub is required. Install with: pip install PyGithub")
 
-        config = {
-            "repo": repo,
-            "token": token or os.environ.get("GITHUB_TOKEN"),
-            **kwargs
-        }
+        config = {"repo": repo, "token": token or os.environ.get("GITHUB_TOKEN"), **kwargs}
         super().__init__(config)
 
         self.github = Github(self.config["token"])
@@ -59,7 +56,7 @@ class GitHubBackend(BasePMBackend):
                     self.repo.create_label(
                         name=label,
                         color="0366d6",  # Default blue color
-                        description=f"Auto-created label for {label}"
+                        description=f"Auto-created label for {label}",
                     )
                 except Exception:
                     # If label creation fails, skip this label
@@ -90,6 +87,19 @@ class GitHubBackend(BasePMBackend):
         """Append strategy metadata section to body."""
         if not metadata:
             return body
+        deduplication_key = next(
+            (
+                str(metadata[key]).strip()
+                for key in ("deduplication_key", "dedupe_key", "fingerprint", "planfile_id")
+                if metadata.get(key)
+            ),
+            None,
+        )
+        if deduplication_key:
+            safe_key = deduplication_key.replace("-->", "").replace("\n", " ")
+            marker = f"<!-- planfile:deduplication-key={safe_key} -->"
+            if marker not in body:
+                body = f"{marker}\n{body}"
         metadata_section = "\n\n---\n\n**Strategy Metadata:**\n"
         for key, value in metadata.items():
             if key != "model_hints":
@@ -100,6 +110,27 @@ class GitHubBackend(BasePMBackend):
                 if tier:
                     metadata_section += f"- {phase}: {tier}\n"
         return body + metadata_section
+
+    @staticmethod
+    def _deduplication_markers(body: str | None) -> list[str]:
+        patterns = (
+            r"<!--\s*planfile:deduplication-key=[^>]+?\s*-->",
+            r"<!--\s*ifuri-doctor:deduplication_key=[^>]+?\s*-->",
+            r"<!--\s*ifuri-doctor:fingerprint=[^>]+?\s*-->",
+        )
+        return [match.group(0) for pattern in patterns if (match := re.search(pattern, body or ""))]
+
+    def _find_issue_by_markers(self, markers: list[str]):
+        if not markers:
+            return None
+        return next(
+            (
+                issue
+                for issue in self.repo.get_issues(state="all")
+                if any(marker in (issue.body or "") for marker in markers)
+            ),
+            None,
+        )
 
     def _create_ticket(
         self,
@@ -114,6 +145,15 @@ class GitHubBackend(BasePMBackend):
         """Create a new GitHub issue."""
         issue_labels = self._prepare_labels(labels, priority)
         body = self._build_metadata_body(body, metadata)
+        existing = self._find_issue_by_markers(self._deduplication_markers(body))
+        if existing is not None:
+            return self.build_ticket_ref(
+                id=str(existing.number),
+                url=existing.html_url,
+                key=f"{self.repo.full_name}#{existing.number}",
+                status=existing.state,
+                metadata=metadata,
+            )
 
         create_kwargs = {
             "title": name,
@@ -141,7 +181,7 @@ class GitHubBackend(BasePMBackend):
     ) -> None:
         """Update issue labels, replacing priority labels."""
         current_labels = [label.name for label in issue.labels]
-        current_labels = [l for l in current_labels if not l.startswith("priority: ")]
+        current_labels = [label for label in current_labels if not label.startswith("priority: ")]
         new_labels = labels or []
         if priority:
             new_labels.append(f"priority: {priority}")
@@ -172,6 +212,11 @@ class GitHubBackend(BasePMBackend):
         if name:
             issue.edit(title=name)
         if body:
+            markers = self._deduplication_markers(issue.body)
+            missing_markers = [marker for marker in markers if marker not in body]
+            if missing_markers:
+                marker_prefix = "\n".join(missing_markers)
+                body = f"{marker_prefix}\n{body}"
             issue.edit(body=body)
         if labels is not None or priority:
             self._update_labels(issue, labels, priority)
@@ -190,10 +235,17 @@ class GitHubBackend(BasePMBackend):
         """Convert a GitHub issue object into a TicketState."""
         return self.build_ticket_state(
             id=str(issue.number),
+            key=f"{self.repo.full_name}#{issue.number}",
+            name=issue.title,
+            description=issue.body or "",
+            url=issue.html_url,
             status=issue.state,
             assignee=issue.assignee.login if issue.assignee else None,
             labels=[label.name for label in issue.labels],
             updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
+            metadata={"deduplication_key": markers[0].split("=", 1)[1].rsplit("-->", 1)[0].strip()}
+            if (markers := self._deduplication_markers(issue.body))
+            else {},
         )
 
     def _list_tickets(

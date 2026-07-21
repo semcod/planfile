@@ -15,11 +15,7 @@ from planfile.integrations.config import IntegrationConfig
 from planfile.sync.operations import sync_from_external, sync_to_external
 
 
-def _initialize_backend(
-    integration_name: str,
-    config: IntegrationConfig,
-    show_header: bool
-) -> Any:
+def _initialize_backend(integration_name: str, config: IntegrationConfig, show_header: bool) -> Any:
     """Initialize and validate backend for sync operation."""
     # Special handling for markdown backend (default when no integrations configured)
     if integration_name == "markdown":
@@ -40,7 +36,7 @@ def _initialize_backend(
             console.print(f"✅ Connected to {integration_name}")
     except Exception as e:
         print_error(f"Failed to connect to {integration_name}: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
     return backend
 
@@ -56,8 +52,7 @@ def _ticket_matches_integration(ticket: dict, integration_name: str) -> bool:
 
 
 def _collect_tickets_from_sprint(
-    sprint: dict | None,
-    integration_name: str
+    sprint: dict | None, integration_name: str
 ) -> list[tuple[str, dict]]:
     """Collect tickets from sprint matching integration."""
     if not sprint:
@@ -70,8 +65,7 @@ def _collect_tickets_from_sprint(
 
 
 def _collect_tickets_from_backlog(
-    backlog: dict | None,
-    integration_name: str
+    backlog: dict | None, integration_name: str
 ) -> list[tuple[str, dict]]:
     """Collect tickets from backlog matching integration."""
     if not backlog:
@@ -91,7 +85,9 @@ def _ticket_matches_integration_v1(ticket: dict, integration_name: str) -> bool:
     return ticket_integration == integration_name
 
 
-def _collect_tickets_from_section(data: dict, section: str, integration_name: str) -> list[tuple[str, dict]]:
+def _collect_tickets_from_section(
+    data: dict, section: str, integration_name: str
+) -> list[tuple[str, dict]]:
     """Collect tickets from a specific section (sprint or backlog)."""
     tickets = []
     section_data = data.get(section, {})
@@ -101,8 +97,14 @@ def _collect_tickets_from_section(data: dict, section: str, integration_name: st
     return tickets
 
 
-def _process_planfile_v1(planfile_path: str, integration_name: str, all_tickets: list,
-                         tickets_source: str | None, v1_source_file: str | None, v1_data: dict | None) -> tuple:
+def _process_planfile_v1(
+    planfile_path: str,
+    integration_name: str,
+    all_tickets: list,
+    tickets_source: str | None,
+    v1_source_file: str | None,
+    v1_data: dict | None,
+) -> tuple:
     """Process a single v1 planfile and extract tickets. Returns updated (tickets_source, v1_source_file, v1_data)."""
     try:
         with open(planfile_path) as f:
@@ -134,8 +136,7 @@ def _process_planfile_v1(planfile_path: str, integration_name: str, all_tickets:
 
 
 def _load_tickets_v1_format(
-    directory: str,
-    integration_name: str
+    directory: str, integration_name: str
 ) -> tuple[list[tuple[str, dict]], str | None, str | None, dict | None]:
     """Load tickets from v1 format (*.planfile.yaml files)."""
     all_tickets = []
@@ -146,17 +147,14 @@ def _load_tickets_v1_format(
     planfile_pattern = Path(directory) / "*.planfile.yaml"
     for planfile_path in glob.glob(str(planfile_pattern)):
         tickets_source, v1_source_file, v1_data = _process_planfile_v1(
-            planfile_path, integration_name, all_tickets,
-            tickets_source, v1_source_file, v1_data
+            planfile_path, integration_name, all_tickets, tickets_source, v1_source_file, v1_data
         )
 
     return all_tickets, tickets_source, v1_source_file, v1_data
 
 
 def _load_tickets_for_sync(
-    store: Any,
-    directory: str,
-    integration_name: str
+    store: Any, directory: str, integration_name: str
 ) -> tuple[list[tuple[str, dict]], str | None, str | None, dict | None]:
     """Load tickets from all sources for sync operation."""
     tickets_source = None
@@ -190,22 +188,31 @@ def _execute_sync_with_progress(
     integration_name: str,
     v1_source_file: str | None,
     v1_data: dict | None,
-    direction: str
+    direction: str,
+    publish_to: list[str] | None = None,
 ) -> None:
     """Execute sync with progress bar."""
     with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console
+        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
     ) as progress:
         if direction in ["to", "both"]:
             task = progress.add_task("Syncing to external system...", total=None)
-            sync_to_external(backend, all_tickets, dry_run, store, integration_name, v1_source_file, v1_data)
+            sync_to_external(
+                backend, all_tickets, dry_run, store, integration_name, v1_source_file, v1_data
+            )
             progress.update(task, description="[green]✓ Synced to external system[/green]")
 
         if direction in ["from", "both"]:
             task = progress.add_task("Syncing from external system...", total=None)
-            sync_from_external(backend, store, dry_run, integration_name, v1_source_file, v1_data)
+            sync_from_external(
+                backend,
+                store,
+                dry_run,
+                integration_name,
+                v1_source_file,
+                v1_data,
+                publish_to=publish_to,
+            )
             progress.update(task, description="[green]✓ Synced from external system[/green]")
 
 
@@ -214,7 +221,8 @@ def sync_integration(
     directory: str,
     dry_run: bool,
     direction: str,
-    show_header: bool = True
+    show_header: bool = True,
+    publish_to: list[str] | None = None,
 ) -> None:
     """Sync with a specific integration."""
     if show_header:
@@ -226,9 +234,19 @@ def sync_integration(
 
     # Initialize backend
     backend = _initialize_backend(integration_name, config, show_header)
+    if publish_to is None:
+        configured_targets = config.get_integration_config(integration_name).get("publish_to", [])
+        publish_to = (
+            [str(item) for item in configured_targets]
+            if isinstance(configured_targets, list)
+            else [str(configured_targets)]
+            if configured_targets
+            else []
+        )
 
     # Load tickets from all sources
     from planfile.core.store import PlanfileStore
+
     store = PlanfileStore(directory)
     all_tickets, tickets_source, v1_source_file, v1_data = _load_tickets_for_sync(
         store, directory, integration_name
@@ -240,17 +258,28 @@ def sync_integration(
         return
 
     if all_tickets:
-        console.print(f"📊 Found {len(all_tickets)} tickets for {integration_name} (source: {tickets_source})")
+        console.print(
+            f"📊 Found {len(all_tickets)} tickets for {integration_name} (source: {tickets_source})"
+        )
     else:
-        console.print(f"📊 Found 0 local tickets for {integration_name} (scanning external system next)")
+        console.print(
+            f"📊 Found 0 local tickets for {integration_name} (scanning external system next)"
+        )
 
     if dry_run:
         console.print("\n[cyan]🔍 DRY RUN - No changes will be made[/cyan]")
 
     # Execute sync with progress
     _execute_sync_with_progress(
-        backend, all_tickets, dry_run, store, integration_name,
-        v1_source_file, v1_data, direction
+        backend,
+        all_tickets,
+        dry_run,
+        store,
+        integration_name,
+        v1_source_file,
+        v1_data,
+        direction,
+        publish_to,
     )
 
     if not dry_run:

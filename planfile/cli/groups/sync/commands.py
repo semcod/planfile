@@ -2,29 +2,58 @@
 
 from __future__ import annotations
 
-import os
 import time
 from pathlib import Path
 from typing import Any
 
 import typer
 
-from planfile.cli.core import console, print_success
+from planfile.cli.core import console
 from planfile.cli.groups.sync.core import sync_integration
+
 
 def github_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
-    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be synced without doing it"
+    ),
+    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
 ) -> None:
     """Sync tickets with GitHub Issues."""
     sync_integration("github", directory, dry_run, direction)
 
 
+def onedev_cmd(
+    directory: str = typer.Argument(".", help="Directory containing planfile configs"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be synced without doing it"
+    ),
+    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+) -> None:
+    """Sync tickets with a local OneDev Issue queue."""
+    sync_integration("onedev", directory, dry_run, direction)
+
+
+def publish_cmd(
+    source: str = typer.Argument("onedev", help="Source integration to import from"),
+    targets: list[str] = typer.Argument(..., help="Target integration(s), for example github"),
+    directory: str = typer.Option(
+        ".", "--directory", "-d", help="Directory containing Planfile configs"
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show changes without writing"),
+) -> None:
+    """Import from one backend and publish the same Planfile tickets to target backends."""
+    sync_integration(source, directory, dry_run, "from", publish_to=targets)
+    for target in targets:
+        sync_integration(target, directory, dry_run, "to")
+
+
 def gitlab_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
-    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be synced without doing it"
+    ),
+    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
 ) -> None:
     """Sync tickets with GitLab Issues."""
     sync_integration("gitlab", directory, dry_run, direction)
@@ -32,8 +61,10 @@ def gitlab_cmd(
 
 def jira_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
-    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be synced without doing it"
+    ),
+    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
 ) -> None:
     """Sync tickets with Jira."""
     sync_integration("jira", directory, dry_run, direction)
@@ -41,28 +72,23 @@ def jira_cmd(
 
 def markdown_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
-    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be synced without doing it"
+    ),
+    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
 ) -> None:
     """Sync tickets with markdown files (CHANGELOG.md, TODO.md)."""
     sync_integration("markdown", directory, dry_run, direction)
 
 
-def handle_no_integrations(
-    directory: str,
-    dry_run: bool,
-    direction: str
-) -> None:
+def handle_no_integrations(directory: str, dry_run: bool, direction: str) -> None:
     """Handle syncing when no integrations are configured by falling back to markdown."""
     console.print("[yellow]⚠️ No integrations configured, using default markdown backend[/yellow]")
     sync_integration("markdown", directory, dry_run, direction)
 
 
 def sync_all_integrations(
-    integrations: list[str],
-    directory: str,
-    dry_run: bool,
-    direction: str
+    integrations: list[str], directory: str, dry_run: bool, direction: str
 ) -> None:
     """Sync with all configured integrations, handling errors per integration."""
     console.print(f"🔄 Syncing with integrations: {', '.join(integrations)}")
@@ -77,8 +103,10 @@ def sync_all_integrations(
 
 def all_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be synced without doing it"),
-    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both")
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be synced without doing it"
+    ),
+    direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
 ) -> None:
     """Sync tickets with all configured integrations."""
     from planfile.integrations.config import IntegrationConfig
@@ -133,7 +161,9 @@ def _run_sync_once(to_sync: list[str], directory: str, direction: str) -> None:
 def watch_cmd(
     directory: str = typer.Argument(".", help="Directory to watch"),
     interval: int = typer.Option(5, "--interval", "-i", help="Polling interval in seconds"),
-    integrations: list[str] = typer.Option(None, "--integration", help="Specific integrations to watch (default: all configured)"),
+    integrations: list[str] = typer.Option(
+        None, "--integration", help="Specific integrations to watch (default: all configured)"
+    ),
     direction: str = typer.Option("to", "--direction", help="Sync direction: to, from, or both"),
     once: bool = typer.Option(False, "--once", help="Run sync once and exit (no watch loop)"),
 ) -> None:

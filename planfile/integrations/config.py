@@ -36,7 +36,7 @@ class IntegrationConfig:
                 return os.environ.get(var_name, match.group(0))
 
             # Match both ${VAR} and $VAR patterns
-            pattern = r'\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)'
+            pattern = r"\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)"
             return re.sub(pattern, replace_env_var, config)
         else:
             return config
@@ -125,6 +125,19 @@ class IntegrationConfig:
         # Check for required fields based on integration type
         if integration_name == "github":
             return "repo" in config
+        elif integration_name == "onedev":
+            has_password = bool(
+                config.get("password")
+                or config.get("password_file")
+                or os.environ.get("ONEDEV_PASSWORD")
+                or os.environ.get("ONEDEV_PASSWORD_FILE")
+            )
+            return bool(
+                config.get("url")
+                and config.get("project")
+                and (config.get("username") or os.environ.get("ONEDEV_USER"))
+                and has_password
+            )
         elif integration_name == "gitlab":
             return "url" in config and "project_id" in config
         elif integration_name == "jira":
@@ -158,13 +171,16 @@ class IntegrationConfig:
         from planfile.sync.markdown_backend import MarkdownFileBackend
 
         # Use default file paths or get from config if specified
-        changelog_file = self.config.get("integrations", {}).get("markdown", {}).get("changelog_file", "CHANGELOG.md")
-        todo_file = self.config.get("integrations", {}).get("markdown", {}).get("todo_file", "TODO.md")
-
-        return MarkdownFileBackend(
-            changelog_file=changelog_file,
-            todo_file=todo_file
+        changelog_file = (
+            self.config.get("integrations", {})
+            .get("markdown", {})
+            .get("changelog_file", "CHANGELOG.md")
         )
+        todo_file = (
+            self.config.get("integrations", {}).get("markdown", {}).get("todo_file", "TODO.md")
+        )
+
+        return MarkdownFileBackend(changelog_file=changelog_file, todo_file=todo_file)
 
     def get_integration_backend(self, integration_name: str):
         """Get initialized backend instance for an integration."""
@@ -180,27 +196,32 @@ class IntegrationConfig:
         # Import and initialize the appropriate backend
         if integration_name == "github":
             from planfile.integrations.github import GitHubBackend
+
             # Auto-fetch token from gh CLI if not provided or is unexpanded env var
             token = config.get("token", "")
             if not token or "${" in token:
                 import subprocess
+
                 try:
                     result = subprocess.run(
-                        ["gh", "auth", "token"],
-                        capture_output=True,
-                        text=True,
-                        timeout=5
+                        ["gh", "auth", "token"], capture_output=True, text=True, timeout=5
                     )
                     if result.returncode == 0:
                         config = {**config, "token": result.stdout.strip()}
                 except (subprocess.SubprocessError, FileNotFoundError):
                     pass  # gh not installed or not authenticated
             return GitHubBackend(**config)
+        elif integration_name == "onedev":
+            from planfile.sync.onedev import OneDevBackend
+
+            return OneDevBackend(**config)
         elif integration_name == "gitlab":
             from planfile.integrations.gitlab import GitLabBackend
+
             return GitLabBackend(**config)
         elif integration_name == "jira":
             from planfile.integrations.jira import JiraBackend
+
             return JiraBackend(**config)
 
         raise ValueError(f"Unknown integration: {integration_name}")
