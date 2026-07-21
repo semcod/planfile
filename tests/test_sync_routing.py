@@ -25,12 +25,12 @@ def test_onedev_import_routes_ticket_to_github_without_losing_evidence():
     state = FakeSyncState()
     external = TicketState(
         id="11",
-        key="if-uri/doctor-agent#2",
+        key="subactor/doctor-agent#2",
         name="Doctor finding",
         description="full evidence",
-        url="http://onedev/if-uri/doctor-agent/~issues/2",
+        url="http://onedev/subactor/doctor-agent/~issues/2",
         status="open",
-        labels=["onedev:if-uri/doctor-agent"],
+        labels=["onedev:subactor/doctor-agent"],
         metadata={"deduplication_key": "doctor:abc"},
     )
 
@@ -77,12 +77,12 @@ def test_onedev_refresh_updates_content_and_preserves_other_backend_reference():
     }
     external = TicketState(
         id="11",
-        key="if-uri/doctor-agent#2",
+        key="subactor/doctor-agent#2",
         name="Current title",
         description="current evidence",
-        url="http://onedev/if-uri/doctor-agent/~issues/2",
+        url="http://onedev/subactor/doctor-agent/~issues/2",
         status="in_progress",
-        labels=["onedev:if-uri/doctor-agent"],
+        labels=["onedev:subactor/doctor-agent"],
         metadata={"deduplication_key": "doctor:abc"},
     )
 

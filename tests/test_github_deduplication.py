@@ -6,7 +6,7 @@ from planfile.sync.github import GitHubBackend
 
 
 class FakeRepo:
-    full_name = "if-uri/doctor-agent"
+    full_name = "subactor/doctor-agent"
 
     def __init__(self, issues):
         self.issues = issues
@@ -34,7 +34,7 @@ def test_github_reuses_legacy_doctor_fingerprint_instead_of_creating_duplicate()
         body="<!-- ifuri-doctor:fingerprint=doctor:abc -->\nold evidence",
     )
     backend = GitHubBackend.__new__(GitHubBackend)
-    backend.config = {"repo": "if-uri/doctor-agent"}
+    backend.config = {"repo": "subactor/doctor-agent"}
     backend.repo = FakeRepo([issue])
 
     result = backend._create_ticket(

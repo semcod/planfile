@@ -1,11 +1,11 @@
 integrations:
   onedev:
     url: http://127.0.0.1:6610
-    project: if-uri/doctor-agent
+    project: subactor/doctor-agent
     username: ${ONEDEV_USER}
     password_file: ${ONEDEV_PASSWORD_FILE}
     publish_to:
       - github
   github:
-    repo: if-uri/doctor-agent
+    repo: subactor/doctor-agent
     token: ${GITHUB_TOKEN}

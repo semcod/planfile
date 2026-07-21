@@ -28,7 +28,7 @@ class FakeSession:
         if url.endswith("/~api/projects"):
             return FakeResponse(
                 [
-                    {"id": 1, "name": "if-uri", "parentId": None},
+                    {"id": 1, "name": "subactor", "parentId": None},
                     {"id": 10, "name": "doctor-agent", "parentId": 1},
                 ]
             )
@@ -75,7 +75,7 @@ def issue(description="<!-- ifuri-doctor:fingerprint=doctor:abc -->\nevidence"):
 def backend(session):
     return OneDevBackend(
         url="http://onedev:6610",
-        project="if-uri/doctor-agent",
+        project="subactor/doctor-agent",
         username="agent",
         password="secret",
         session=session,

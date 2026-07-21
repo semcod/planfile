@@ -380,7 +380,7 @@ from planfile.sync import OneDevBackend
 
 onedev = OneDevBackend(
     url="http://127.0.0.1:6610",
-    project="if-uri/doctor-agent",
+    project="subactor/doctor-agent",
     username="onedev-admin",
     password_file="/run/secrets/onedev-password",
     publish_to=["github"],
