@@ -120,6 +120,25 @@ def test_create_is_idempotent_by_fingerprint_marker():
     assert "<!-- planfile:deduplication-key=doctor:new -->" in create_calls[0][2]["description"]
 
 
+def test_public_ensure_contract_reports_created_and_reused():
+    session = FakeSession([issue()])
+    client = backend(session)
+
+    project = client.ensure_project()
+    reused, reused_created = client.ensure_ticket(
+        {"name": "same", "description": "evidence", "metadata": {"fingerprint": "doctor:abc"}}
+    )
+    created, was_created = client.ensure_ticket(
+        {"name": "new", "description": "evidence", "metadata": {"fingerprint": "doctor:new"}}
+    )
+
+    assert project["id"] == 10
+    assert reused.id == "11"
+    assert reused_created is False
+    assert created.id == "12"
+    assert was_created is True
+
+
 def test_update_uses_onedev_state_transition_endpoint():
     session = FakeSession([issue()])
     client = backend(session)

@@ -170,6 +170,10 @@ class OneDevBackend(BasePMBackend):
         self._project_cache = project
         return project
 
+    def ensure_project(self) -> dict[str, Any]:
+        """Return the configured project, creating its owner/project hierarchy if needed."""
+        return dict(self._project())
+
     def _issues(self) -> list[dict[str, Any]]:
         project_id = int(self._project()["id"])
         rows: list[dict[str, Any]] = []
@@ -224,6 +228,25 @@ class OneDevBackend(BasePMBackend):
             metadata={"number": number, **(metadata or {})},
         )
 
+    def _find_issue_by_deduplication_key(self, key: str) -> dict[str, Any] | None:
+        return next(
+            (
+                row
+                for row in self._issues()
+                if self._extract_deduplication_key(str(row.get("description", ""))) == key
+            ),
+            None,
+        )
+
+    def ensure_ticket(self, ticket: dict[str, Any]) -> tuple[TicketRef, bool]:
+        """Create a ticket once and report whether this call created it."""
+        deduplication_key = self._deduplication_key(ticket.get("metadata"))
+        if deduplication_key:
+            existing = self._find_issue_by_deduplication_key(deduplication_key)
+            if existing is not None:
+                return self._issue_ref(existing, ticket.get("metadata")), False
+        return self.create_ticket(ticket), True
+
     def _create_ticket(
         self,
         name: str,
@@ -236,15 +259,7 @@ class OneDevBackend(BasePMBackend):
         deduplication_key = self._deduplication_key(metadata)
         marker = self._marker(deduplication_key) if deduplication_key else None
         if marker:
-            existing = next(
-                (
-                    row
-                    for row in self._issues()
-                    if self._extract_deduplication_key(str(row.get("description", "")))
-                    == deduplication_key
-                ),
-                None,
-            )
+            existing = self._find_issue_by_deduplication_key(deduplication_key)
             if existing is not None:
                 return self._issue_ref(existing, metadata)
             if marker not in body:

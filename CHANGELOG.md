@@ -5,6 +5,8 @@
 ### Added
 - Added a first-class OneDev Issues backend with CRUD, state transitions,
   fingerprint deduplication and full evidence import.
+- Added public `OneDevBackend.ensure_project()` and `ensure_ticket()` contracts
+  so local agents can reuse Planfile instead of maintaining another REST client.
 - Added `planfile sync onedev` and `planfile sync publish SOURCE TARGET...` for
   local-first ticket queues with Planfile-owned GitHub publication.
 
