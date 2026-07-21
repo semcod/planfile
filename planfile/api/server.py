@@ -330,6 +330,15 @@ def get_ticket(ticket_id: str):
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
+@app.get("/operations", tags=["observability"])
+def list_operational_events(
+    ticket_id: str | None = Query(None),
+    limit: int = Query(200, ge=1, le=5000),
+):
+    """Canonical SODL/1 task lifecycle journal, newest first."""
+    return {"ok": True, "ticket_id": ticket_id, "operations": get_planfile().store.operational_events(limit=limit, ticket_id=ticket_id)}
+
+
 @app.patch("/tickets/{ticket_id}", tags=["tickets"])
 async def update_ticket(ticket_id: str, body: TicketUpdate):
     pf = get_planfile()

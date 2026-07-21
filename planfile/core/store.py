@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 import tempfile
@@ -34,6 +35,29 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._config_path = self.base_dir / "config.yaml"
         self._sprints_dir = self.base_dir / "sprints"
         self._lock_path = self.base_dir / ".store.lock"
+        self._operations_path = self.base_dir / "events" / "operations.jsonl"
+
+    def _append_operational_line(self, line: str) -> None:
+        """Append one verified SODL event while the caller holds mutation_lock."""
+        from planfile.core.operational_dsl import parse
+
+        event = parse(line)
+        self._operations_path.parent.mkdir(parents=True, exist_ok=True)
+        row = json.dumps({"schema": event["schema"], "event": event, "dsl": line}, ensure_ascii=False, separators=(",", ":"))
+        with self._operations_path.open("a", encoding="utf-8") as handle:
+            handle.write(f"{row}\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+
+    def operational_events(self, *, limit: int = 200, ticket_id: str | None = None) -> list[dict]:
+        """Read the append-only operational journal, newest first."""
+        try:
+            rows = [json.loads(line) for line in self._operations_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        except FileNotFoundError:
+            return []
+        if ticket_id:
+            rows = [row for row in rows if str((row.get("event") or {}).get("ticket_id") or "") == str(ticket_id)]
+        return list(reversed(rows[-max(1, min(int(limit), 5000)) :]))
 
     @contextmanager
     def mutation_lock(self):
@@ -394,6 +418,23 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def _create_ticket_unlocked(self, ticket: Ticket) -> Ticket:
         """Persist a ticket while the caller holds ``mutation_lock``."""
+        from planfile.core.operational_dsl import line as operational_line
+
+        if not ticket.dsl:
+            payload = ticket.model_dump(mode="json", exclude_none=True, exclude={"dsl", "history"})
+            ticket.dsl = operational_line(
+                timestamp=ticket.created_at,
+                kind="task",
+                source="planfile.ticket",
+                ticket_id=ticket.id,
+                actor=(ticket.source.tool if ticket.source else None) or (ticket.executor.handler if ticket.executor else None) or "system",
+                oql="ticket.create",
+                uri=f"planfile://tickets/{ticket.id}/command/create",
+                mode="apply",
+                status=str(ticket.status.value),
+                correlation_id=ticket.id,
+                data={"payload": payload},
+            )
         sprint = ticket.sprint or "current"
         sprint_file = self._sprint_file(sprint)
 
@@ -414,6 +455,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         data["sprint"] = sprint_data
 
         self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
+        self._append_operational_line(ticket.dsl)
 
         # Invalidate yaml cache
         if hasattr(self, "_yaml_cache"):
@@ -485,6 +527,29 @@ class Store(StoreFileMixin, TicketStoreMixin):
         if actor:
             entry["actor"] = actor
             entry["by"] = actor  # alias for "by whom"
+        from planfile.core.operational_dsl import line as operational_line
+
+        ticket_id = str(current.get("id") or previous.get("id") or "-")
+        entry["dsl"] = operational_line(
+            timestamp=entry["timestamp"],
+            kind="task",
+            source="planfile.history",
+            ticket_id=ticket_id,
+            actor=actor or "system",
+            oql=f"ticket.{entry['action']}",
+            uri=f"planfile://tickets/{ticket_id}/command/{entry['action']}",
+            mode="apply",
+            status=str(current_status or current_state or "recorded"),
+            correlation_id=ticket_id,
+            data={"payload": {
+                "changes": changed_keys,
+                "reason": reason or "",
+                "previous_status": previous_status,
+                "status": current_status,
+                "previous_execution_state": previous_state,
+                "execution_state": current_state,
+            }},
+        )
         return entry
 
     def update_ticket(
@@ -549,6 +614,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     history.append(entry)
                     tickets[ticket_id]["history"] = history[-200:]
                 self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
+                if changed_keys and "history" not in serialized_updates:
+                    self._append_operational_line(tickets[ticket_id]["history"][-1]["dsl"])
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
                 if sprint_file == self._sprint_file("current"):
@@ -566,8 +633,18 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 sprint_data = data.get("sprint", data)
                 tickets = sprint_data.get("tickets", {})
                 if ticket_id in tickets:
+                    from planfile.core.operational_dsl import line as operational_line
+
+                    deleted_ticket = dict(tickets[ticket_id])
                     del tickets[ticket_id]
                     self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
+                    self._append_operational_line(operational_line(
+                        kind="task", source="planfile.store", ticket_id=ticket_id,
+                        actor="planfile.store", oql="ticket.delete",
+                        uri=f"planfile://tickets/{ticket_id}/command/delete", mode="apply",
+                        status="deleted", replayable=False, correlation_id=ticket_id,
+                        data={"payload": {"name": deleted_ticket.get("name"), "status": deleted_ticket.get("status")}},
+                    ))
                     if hasattr(self, "_yaml_cache"):
                         self._yaml_cache.pop(str(sprint_file), None)
                     return True
@@ -633,6 +710,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(source_file), None)
                     self._yaml_cache.pop(str(destination_file), None)
+                self._append_operational_line(moved_ticket["history"][-1]["dsl"])
                 return True
         return False
 
@@ -650,6 +728,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 sprint_contents[sprint_file] = read_yaml_fast(sprint_file) or {}
 
             modified_files = set()
+            deleted_tickets: dict[str, dict] = {}
 
             for ticket_id in ticket_ids:
                 found = False
@@ -657,6 +736,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     sprint_data = data.get("sprint", data)
                     tickets = sprint_data.get("tickets", {})
                     if isinstance(tickets, dict) and ticket_id in tickets:
+                        deleted_tickets[ticket_id] = dict(tickets[ticket_id])
                         del tickets[ticket_id]
                         modified_files.add(sprint_file)
                         deleted.append(ticket_id)
@@ -671,6 +751,17 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
+
+            from planfile.core.operational_dsl import line as operational_line
+            for ticket_id in deleted:
+                deleted_ticket = deleted_tickets[ticket_id]
+                self._append_operational_line(operational_line(
+                    kind="task", source="planfile.store", ticket_id=ticket_id,
+                    actor="planfile.store", oql="ticket.delete",
+                    uri=f"planfile://tickets/{ticket_id}/command/delete", mode="apply",
+                    status="deleted", replayable=False, correlation_id=ticket_id,
+                    data={"payload": {"name": deleted_ticket.get("name"), "status": deleted_ticket.get("status")}},
+                ))
 
         return deleted, not_found
 
