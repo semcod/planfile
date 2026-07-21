@@ -95,14 +95,16 @@ class OneDevBackend(BasePMBackend):
         path: str,
         *,
         payload: Any = None,
+        raw_payload: str | None = None,
         params: dict[str, Any] | None = None,
     ) -> Any:
+        body = {"data": raw_payload.encode("utf-8")} if raw_payload is not None else {"json": payload}
         response = self.session.request(
             method,
             f"{self.config['url']}{path}",
-            json=payload,
             params=params,
             timeout=float(self.config.get("timeout", 30)),
+            **body,
         )
         try:
             response.raise_for_status()
@@ -298,9 +300,20 @@ class OneDevBackend(BasePMBackend):
         issue = self._request("GET", f"/~api/issues/{int(ticket_id)}")
         resolved_title = name or title
         if resolved_title is not None and resolved_title != issue.get("title"):
-            self._request("POST", f"/~api/issues/{int(ticket_id)}/title", payload=resolved_title)
+            # OneDev documents these endpoints as JSON scalar bodies, but its
+            # String entity provider consumes the bytes verbatim. ``json=``
+            # therefore persists surrounding quotes and escaped newlines.
+            self._request(
+                "POST",
+                f"/~api/issues/{int(ticket_id)}/title",
+                raw_payload=resolved_title,
+            )
         if body is not None and body != issue.get("description"):
-            self._request("POST", f"/~api/issues/{int(ticket_id)}/description", payload=body)
+            self._request(
+                "POST",
+                f"/~api/issues/{int(ticket_id)}/description",
+                raw_payload=body,
+            )
         if status:
             target_state = self._onedev_state(status)
             if target_state != issue.get("state"):

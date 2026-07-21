@@ -23,8 +23,8 @@ class FakeSession:
         self.issues = list(issues)
         self.calls = []
 
-    def request(self, method, url, json=None, params=None, timeout=None):
-        self.calls.append((method, url, json, params))
+    def request(self, method, url, json=None, params=None, timeout=None, data=None):
+        self.calls.append((method, url, json, params, data))
         if url.endswith("/~api/projects"):
             return FakeResponse(
                 [
@@ -51,6 +51,12 @@ class FakeSession:
             issue_id = int(url.rsplit("/", 1)[1])
             return FakeResponse(next(issue for issue in self.issues if issue["id"] == issue_id))
         if "/~api/issues/" in url and method == "POST":
+            issue_id = int(url.split("/~api/issues/", 1)[1].split("/", 1)[0])
+            selected = next(issue for issue in self.issues if issue["id"] == issue_id)
+            if url.endswith("/title"):
+                selected["title"] = data.decode("utf-8")
+            elif url.endswith("/description"):
+                selected["description"] = data.decode("utf-8")
             return FakeResponse()
         raise AssertionError((method, url, json, params, timeout))
 
@@ -147,3 +153,20 @@ def test_update_uses_onedev_state_transition_endpoint():
 
     transition = next(call for call in session.calls if call[1].endswith("/11/state-transitions"))
     assert transition[2]["state"] == "Closed"
+
+
+def test_update_sends_title_and_description_without_json_string_quoting():
+    session = FakeSession([issue()])
+    client = backend(session)
+
+    client.update_ticket("11", name="[Done] finding", body="stage: done\nowner: validator")
+
+    title = next(call for call in session.calls if call[1].endswith("/11/title"))
+    description = next(call for call in session.calls if call[1].endswith("/11/description"))
+    assert title[2] is None
+    assert title[4] == b"[Done] finding"
+    assert description[2] is None
+    assert description[4] == b"stage: done\nowner: validator"
+    refreshed = client.get_ticket("11")
+    assert refreshed.name == "[Done] finding"
+    assert refreshed.description == "stage: done\nowner: validator"
