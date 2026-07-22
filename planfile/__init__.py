@@ -229,6 +229,31 @@ class Planfile:
         """Delegate with optional reason (why status/etc changed) and actor (who/by)."""
         return self.store.update_ticket(ticket_id, reason=reason, actor=actor, **updates)
 
+    def append_ticket_evidence(
+        self,
+        ticket_id: str,
+        *,
+        idempotency_key: str,
+        collection: str,
+        evidence: dict,
+        notes: list[str] | None = None,
+        artifacts: list[str] | None = None,
+        reason: str,
+        actor: str,
+    ):
+        """Atomically append an idempotent external-effect receipt."""
+
+        return self.store.append_ticket_evidence(
+            ticket_id,
+            idempotency_key=idempotency_key,
+            collection=collection,
+            evidence=evidence,
+            notes=notes,
+            artifacts=artifacts,
+            reason=reason,
+            actor=actor,
+        )
+
     @staticmethod
     def _merge_model(current, model_cls, **changes):
         data = current.model_dump(mode="python", exclude_none=True) if current else {}
