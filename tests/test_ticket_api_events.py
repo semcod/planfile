@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 import pytest
@@ -13,6 +14,34 @@ from fastapi.testclient import TestClient
 
 from planfile import Planfile, TicketExecution, TicketExecutor, TicketInputs, TicketSource
 from planfile.api import server
+
+
+def test_websocket_broadcast_is_bounded_and_disconnects_stalled_clients(monkeypatch):
+    delivered: list[dict] = []
+
+    class StalledWebSocket:
+        async def send_json(self, message):
+            await asyncio.Event().wait()
+
+    class HealthyWebSocket:
+        async def send_json(self, message):
+            delivered.append(message)
+
+    stalled = StalledWebSocket()
+    healthy = HealthyWebSocket()
+    manager = server.ConnectionManager()
+    manager.active.extend([stalled, healthy])
+
+    real_wait_for = asyncio.wait_for
+
+    async def fast_wait_for(awaitable, timeout):
+        return await real_wait_for(awaitable, timeout=0.01)
+
+    monkeypatch.setattr(server.asyncio, "wait_for", fast_wait_for)
+    asyncio.run(manager.broadcast({"type": "ticket.changed"}))
+
+    assert delivered == [{"type": "ticket.changed"}]
+    assert manager.active == [healthy]
 
 
 def _completion_receipt(ticket_id: str) -> dict:

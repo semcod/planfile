@@ -811,11 +811,17 @@ class ConnectionManager:
             self.active.remove(ws)
 
     async def broadcast(self, message: dict):
-        for ws in list(self.active):
+        async def send(ws: WebSocket) -> None:
             try:
-                await ws.send_json(message)
+                await asyncio.wait_for(ws.send_json(message), timeout=1.0)
             except Exception:
                 self.disconnect(ws)
+
+        # A persisted ticket mutation must not look like a failed request just
+        # because one dashboard tab stopped consuming its WebSocket. Deliver
+        # to clients concurrently and bound the whole broadcast by the
+        # per-client timeout; unreachable clients are removed from the set.
+        await asyncio.gather(*(send(ws) for ws in list(self.active)))
 
 
 _manager = ConnectionManager()
