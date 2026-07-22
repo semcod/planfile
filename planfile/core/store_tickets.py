@@ -23,6 +23,8 @@ class TicketStoreMixin:
                 t_data['status'] = 'canceled'
             if 'integration' in t_data and isinstance(t_data['integration'], str):
                 t_data['labels'] = [t_data.pop('integration')]
+            if hasattr(self, '_project_ticket_evidence'):
+                t_data = self._project_ticket_evidence(t_data)
             return Ticket(**t_data)
         except Exception as exc:
             # A malformed ticket is skipped so one bad row does not break the
@@ -42,6 +44,34 @@ class TicketStoreMixin:
             ticket = self._ticket_from_data(t_data)
             if ticket is not None:
                 tickets.append(ticket)
+        return tickets
+
+    def _tickets_from_sprint_file(self, sprint_file) -> list[Ticket]:
+        """Return validated ticket models, reusing an unchanged YAML snapshot.
+
+        ``_read_yaml_cached`` already tracks the file mtime and returns the same
+        parsed snapshot while it is current. Model validation used to be
+        repeated for every list request, which made the API CPU-bound when a
+        dashboard and autonomous controllers inspected a large queue together.
+        Cache entries retain the snapshot object as an identity guard, so an
+        id reused by Python cannot return models belonging to old data.
+        """
+        data = self._read_yaml_cached(sprint_file)
+        if not data:
+            return []
+        sprint_data = data.get('sprint') or data
+        cache = getattr(self, '_ticket_model_cache', None)
+        if cache is None:
+            cache = {}
+            self._ticket_model_cache = cache
+        key = str(sprint_file)
+        evidence_revision = self._evidence_revision() if hasattr(self, '_evidence_revision') else ()
+        entry = cache.get(key)
+        if entry is not None and entry[0] is sprint_data and entry[2] == evidence_revision:
+            return list(entry[1])
+
+        tickets = self._tickets_from_sprint_data(sprint_data)
+        cache[key] = (sprint_data, tuple(tickets), evidence_revision)
         return tickets
 
     def _filter_by_files(self, tickets: list[Ticket], value: Any) -> list[Ticket]:
@@ -91,16 +121,8 @@ class TicketStoreMixin:
         tickets: list[Ticket] = []
         if sprint == 'all':
             for sprint_file in self._all_sprint_files():
-                data = self._read_yaml_cached(sprint_file)
-                if not data:
-                    continue
-                sprint_data = data.get('sprint') or data
-                tickets.extend(self._tickets_from_sprint_data(sprint_data))
+                tickets.extend(self._tickets_from_sprint_file(sprint_file))
         else:
             sprint_file = self._sprint_file(sprint)
-            data = self._read_yaml_cached(sprint_file)
-            if not data:
-                return []
-            sprint_data = data.get('sprint') or data
-            tickets = self._tickets_from_sprint_data(sprint_data)
+            tickets = self._tickets_from_sprint_file(sprint_file)
         return self._apply_filters(tickets, **filters)

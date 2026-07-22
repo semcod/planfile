@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Added
+- Added atomic `POST /tickets/{ticket_id}/evidence` for idempotent external-effect
+  receipts. Retries after an ambiguous HTTP timeout now deduplicate under the
+  store lock instead of requiring callers to replace the complete ticket output.
+  Receipts are durably appended to a per-ticket event journal and projected into
+  every ticket read, so recording evidence no longer rewrites a multi-megabyte
+  sprint snapshot or times out late in a long process.
 - Added a first-class OneDev Issues backend with CRUD, state transitions,
   fingerprint deduplication and full evidence import.
 - Added public `OneDevBackend.ensure_project()` and `ensure_ticket()` contracts

@@ -483,6 +483,38 @@ Execution changes are also broadcast to WebSocket clients connected to `/ws`.
 This lets tools such as `koru` or a small dashboard watch the queue without
 polling every endpoint.
 
+External executors should record an already-committed side effect through the
+atomic evidence endpoint instead of performing a client-side `GET` followed by
+replacement of the complete `outputs` object:
+
+```http
+POST /tickets/PLF-001/evidence
+Content-Type: application/json
+
+{
+  "idempotency_key": "smtp:message-123",
+  "collection": "process_executions",
+  "evidence": {"execution_id": "smtp:message-123", "status": "succeeded"},
+  "artifacts": ["bridge-audit.jsonl#execution_id=smtp:message-123"],
+  "actor": "mail-bridge",
+  "reason": "Persist committed SMTP delivery evidence."
+}
+```
+
+The idempotency key identifies the external effect, not the HTTP request. A
+retry after a response timeout returns `deduplicated: true` and never appends a
+second receipt. The response is a small acknowledgement; dashboard broadcast
+is performed after it. Reusing a key with different evidence returns HTTP 409
+`evidence_idempotency_conflict`.
+
+Accepted receipts are stored as append-only events in
+`.planfile/evidence/<ticket-id>.jsonl` and projected into `outputs` on every
+single-ticket and list read. The sprint YAML remains the ticket snapshot, while
+the evidence journal is the durable source for incremental external-effect
+receipts. Backups must therefore include the complete `.planfile` directory.
+This separation keeps each receipt write bounded even when `current.yaml` and a
+long-running process ticket have grown to several megabytes.
+
 ### Closed delegation catalogue
 
 The dashboard's **Delegate to actor / queue** control is populated from a JSON

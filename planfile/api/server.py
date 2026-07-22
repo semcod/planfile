@@ -9,17 +9,27 @@ import asyncio
 import json
 import os
 import re
+import time
 from collections import deque
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import RLock
 from typing import Any, Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import yaml
 
 try:
-    from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+    from fastapi import (
+        BackgroundTasks,
+        FastAPI,
+        HTTPException,
+        Query,
+        Request,
+        WebSocket,
+        WebSocketDisconnect,
+    )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import HTMLResponse, Response
     from pydantic import BaseModel, Field
@@ -95,6 +105,23 @@ class TicketUpdate(BaseModel):
     outputs: TicketOutputs | None = None
     reason: str | None = None
     actor: str | None = None
+
+
+class TicketEvidenceAppendRequest(BaseModel):
+    """Atomic, retry-safe evidence append.
+
+    ``idempotency_key`` identifies the external effect, not the HTTP attempt.
+    Retrying the same request after a client timeout therefore cannot duplicate
+    evidence, notes or artifact references.
+    """
+
+    idempotency_key: str = Field(..., min_length=1, max_length=240)
+    collection: str = Field("evidence", pattern=r"^[A-Za-z][A-Za-z0-9_]{0,63}$")
+    evidence: dict[str, Any]
+    notes: list[str] = Field(default_factory=list)
+    artifacts: list[str] = Field(default_factory=list)
+    actor: str = Field(..., min_length=1, max_length=240)
+    reason: str = Field(..., min_length=1, max_length=2000)
 
 
 class SprintCreate(BaseModel):
@@ -262,8 +289,69 @@ def _validate_completion_receipt(receipt: dict[str, Any] | None, ticket_id: str)
 
 # ── Tickets ────────────────────────────────────────────────────────────────────
 
+_TICKET_LIST_RESPONSE_CACHE: dict[tuple, tuple[bytes, int, int]] = {}
+_TICKET_LIST_RESPONSE_CACHE_LIMIT = 4
+_TICKET_LIST_RESPONSE_CACHE_LOCK = RLock()
+_TICKET_LIST_LATEST: dict[tuple, tuple[float, bytes, int, int]] = {}
+_DASHBOARD_STALE_WINDOW_SECONDS = 5.0
+
+
+def _ticket_snapshot_signature(pf, sprint: str) -> tuple:
+    store = pf.store
+    files = store._all_sprint_files() if sprint == "all" else [store._sprint_file(sprint)]
+    signature = []
+    for path in files:
+        try:
+            stat = path.stat()
+            signature.append((str(path), stat.st_mtime_ns, stat.st_size))
+        except FileNotFoundError:
+            signature.append((str(path), -1, -1))
+    return tuple(signature), pf.store._evidence_revision()
+
+
+def _ticket_list_response(pf, *, sprint: str, filters: dict, offset: int, limit: int | None, allow_stale: bool = False) -> Response:
+    # FastAPI runs this sync endpoint in a worker pool. Serialize cache misses so
+    # a burst of websocket-driven dashboard refreshes builds one 5+ MB response,
+    # not one copy per browser tab.
+    with _TICKET_LIST_RESPONSE_CACHE_LOCK:
+        query_key = (str(pf.store.project_dir), sprint, tuple(sorted(filters.items())), offset, limit)
+        latest = _TICKET_LIST_LATEST.get(query_key)
+        if allow_stale and latest is not None and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS:
+            _, body, total, count = latest
+            return Response(
+                content=body,
+                media_type="application/json",
+                headers={**NO_STORE_HEADERS, "X-Total-Count": str(total), "X-Result-Count": str(count)},
+            )
+        signature = _ticket_snapshot_signature(pf, sprint)
+        key = (sprint, tuple(sorted(filters.items())), offset, limit, signature)
+        cached = _TICKET_LIST_RESPONSE_CACHE.get(key)
+        if cached is not None:
+            body, total, count = cached
+        else:
+            tickets = pf.list_tickets(sprint=sprint, **filters)
+            total = len(tickets)
+            tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
+            count = len(tickets)
+            payload = [ticket.model_dump(mode="json", exclude_none=True) for ticket in tickets]
+            body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            # Do not retain a response assembled across a concurrent file change.
+            if signature == _ticket_snapshot_signature(pf, sprint):
+                if len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT:
+                    _TICKET_LIST_RESPONSE_CACHE.clear()
+                _TICKET_LIST_RESPONSE_CACHE[key] = (body, total, count)
+                if len(_TICKET_LIST_LATEST) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT and query_key not in _TICKET_LIST_LATEST:
+                    _TICKET_LIST_LATEST.clear()
+                _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
+    return Response(
+        content=body,
+        media_type="application/json",
+        headers={**NO_STORE_HEADERS, "X-Total-Count": str(total), "X-Result-Count": str(count)},
+    )
+
 @app.get("/tickets", tags=["tickets"])
 def list_tickets(
+    request: Request,
     response: Response,
     sprint: str = Query("current", pattern=r"^(?:all|[A-Za-z0-9][A-Za-z0-9_-]{0,127})$"),
     status: str | None = Query(None),
@@ -281,11 +369,8 @@ def list_tickets(
         filters["priority"] = priority
     if source:
         filters["source"] = source
-    tickets = pf.list_tickets(sprint=sprint, **filters)
-    response.headers["X-Total-Count"] = str(len(tickets))
-    tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
-    response.headers["X-Result-Count"] = str(len(tickets))
-    return [t.model_dump(mode="json", exclude_none=True) for t in tickets]
+    browser_client = "mozilla/" in request.headers.get("user-agent", "").lower()
+    return _ticket_list_response(pf, sprint=sprint, filters=filters, offset=offset, limit=limit, allow_stale=browser_client)
 
 
 @app.post("/tickets", status_code=201, tags=["tickets"])
@@ -363,6 +448,53 @@ async def update_ticket(ticket_id: str, body: TicketUpdate):
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.changed", "update", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/evidence", tags=["tickets"])
+def append_ticket_evidence(
+    ticket_id: str,
+    body: TicketEvidenceAppendRequest,
+    background_tasks: BackgroundTasks,
+):
+    """Append one external-effect receipt atomically and idempotently.
+
+    The response is intentionally a small acknowledgement. Full ticket
+    serialization and WebSocket delivery happen after it, so a slow dashboard
+    cannot make a committed evidence write look like a failed operation.
+    """
+
+    pf = get_planfile()
+    try:
+        ticket, recorded = pf.append_ticket_evidence(
+            ticket_id,
+            idempotency_key=body.idempotency_key,
+            collection=body.collection,
+            evidence=body.evidence,
+            notes=body.notes,
+            artifacts=body.artifacts,
+            actor=body.actor,
+            reason=body.reason,
+        )
+    except ValueError as exc:
+        status_code = 409 if str(exc) == "evidence_idempotency_conflict" else 422
+        raise HTTPException(status_code, str(exc)) from exc
+    if ticket is None:
+        raise HTTPException(404, f"Ticket {ticket_id} not found")
+    if recorded:
+        background_tasks.add_task(
+            _broadcast_ticket_event,
+            "ticket.evidence.changed",
+            "evidence_append",
+            ticket,
+        )
+    return {
+        "ok": True,
+        "ticket_id": ticket.id,
+        "idempotency_key": body.idempotency_key,
+        "recorded": recorded,
+        "deduplicated": not recorded,
+        "updated_at": ticket.updated_at,
+    }
 
 
 @app.delete("/tickets/{ticket_id}", status_code=204, tags=["tickets"])
@@ -2168,6 +2300,20 @@ def _dashboard_html() -> str:
       });
     }
 
+    let ticketRefreshTimer = null;
+    function scheduleTicketRefresh() {
+      if (ticketRefreshTimer !== null) return;
+      ticketRefreshTimer = setTimeout(() => {
+        ticketRefreshTimer = null;
+        refreshTickets({ notifyChanges: false }).catch((error) => addEvent({
+          type: "dashboard",
+          action: "error",
+          ticket_id: "-",
+          ticket: { execution: { state: "failed", last_error: String(error) } },
+        }, { refresh: false }));
+      }, 2000);
+    }
+
     function addEvent(event, options = {}) {
       if (!eventMatchesQueue(event)) return;
       const notifyEvent = options.notifyEvent !== false;
@@ -2199,7 +2345,7 @@ def _dashboard_html() -> str:
         refreshSelectedTicket();
       }
       if (notifyEvent) notify(event);
-      if (refresh) refreshTickets({ notifyChanges: false });
+      if (refresh) scheduleTicketRefresh();
     }
 
     async function loadEventHistory() {
@@ -2531,7 +2677,7 @@ def _dashboard_html() -> str:
     setInterval(() => {
       refreshTickets({ notifyChanges: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
       refreshSelectedTicket();
-    }, 15000);
+    }, 60000);
     connect();
   </script>
 </body>

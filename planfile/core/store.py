@@ -36,6 +36,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._sprints_dir = self.base_dir / "sprints"
         self._lock_path = self.base_dir / ".store.lock"
         self._operations_path = self.base_dir / "events" / "operations.jsonl"
+        self._evidence_dir = self.base_dir / "evidence"
 
     def _append_operational_line(self, line: str) -> None:
         """Append one verified SODL event while the caller holds mutation_lock."""
@@ -45,6 +46,104 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._operations_path.parent.mkdir(parents=True, exist_ok=True)
         row = json.dumps({"schema": event["schema"], "event": event, "dsl": line}, ensure_ascii=False, separators=(",", ":"))
         with self._operations_path.open("a", encoding="utf-8") as handle:
+            handle.write(f"{row}\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+
+    def _ticket_evidence_path(self, ticket_id: str) -> Path:
+        value = str(ticket_id or "").strip()
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", value):
+            raise ValueError("evidence_ticket_id_invalid")
+        return self._evidence_dir / f"{value}.jsonl"
+
+    def _ticket_evidence_events(self, ticket_id: str) -> list[dict]:
+        path = self._ticket_evidence_path(ticket_id)
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except FileNotFoundError:
+            return []
+        events = []
+        for line in lines:
+            if not line.strip():
+                continue
+            try:
+                event = json.loads(line)
+            except (TypeError, ValueError):
+                logger = __import__("logging").getLogger("planfile.store")
+                logger.warning("skipping invalid evidence event for %s", ticket_id)
+                continue
+            if isinstance(event, dict):
+                events.append(event)
+        return events
+
+    @staticmethod
+    def _evidence_item_key(item) -> str:
+        if not isinstance(item, dict):
+            return ""
+        return str(
+            item.get("idempotency_key")
+            or item.get("evidence_id")
+            or item.get("execution_id")
+            or ""
+        )
+
+    def _apply_ticket_evidence_events(self, ticket_data: dict, events: list[dict]) -> dict:
+        projected = dict(ticket_data)
+        outputs = dict(projected.get("outputs") or {})
+        result = dict(outputs.get("result") or {})
+        notes = list(outputs.get("notes") or [])
+        artifacts = list(outputs.get("artifacts") or [])
+        latest = str(projected.get("updated_at") or "")
+        for event in events:
+            collection = str(event.get("collection") or "")
+            evidence = event.get("evidence")
+            if not collection or not isinstance(evidence, dict):
+                continue
+            values = list(result.get(collection) or [])
+            key = str(event.get("idempotency_key") or self._evidence_item_key(evidence))
+            if key and any(self._evidence_item_key(item) == key for item in values):
+                pass
+            else:
+                values.append(evidence)
+                result[collection] = values
+            notes = list(dict.fromkeys([*notes, *(str(item) for item in event.get("notes") or [] if str(item))]))
+            artifacts = list(dict.fromkeys([*artifacts, *(str(item) for item in event.get("artifacts") or [] if str(item))]))
+            latest = max(latest, str(event.get("timestamp") or ""))
+        if events:
+            outputs["result"] = result
+            outputs["notes"] = notes
+            outputs["artifacts"] = artifacts
+            projected["outputs"] = outputs
+            if latest:
+                projected["updated_at"] = latest
+        return projected
+
+    def _project_ticket_evidence(self, ticket_data: dict) -> dict:
+        ticket_id = str(ticket_data.get("id") or "")
+        return self._apply_ticket_evidence_events(
+            ticket_data,
+            self._ticket_evidence_events(ticket_id),
+        )
+
+    def _evidence_revision(self) -> tuple:
+        try:
+            paths = sorted(self._evidence_dir.glob("*.jsonl"))
+        except OSError:
+            return ()
+        revision = []
+        for path in paths:
+            try:
+                stat = path.stat()
+            except OSError:
+                continue
+            revision.append((path.name, stat.st_mtime_ns, stat.st_size))
+        return tuple(revision)
+
+    def _append_ticket_evidence_event(self, ticket_id: str, event: dict) -> None:
+        path = self._ticket_evidence_path(ticket_id)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        row = json.dumps(event, ensure_ascii=False, separators=(",", ":"))
+        with path.open("a", encoding="utf-8") as handle:
             handle.write(f"{row}\n")
             handle.flush()
             os.fsync(handle.fileno())
@@ -561,6 +660,89 @@ class Store(StoreFileMixin, TicketStoreMixin):
         """
         with self.mutation_lock():
             return self._update_ticket_unlocked(ticket_id, reason=reason, actor=actor, **updates)
+
+    def append_ticket_evidence(
+        self,
+        ticket_id: str,
+        *,
+        idempotency_key: str,
+        collection: str,
+        evidence: dict,
+        notes: list[str] | None = None,
+        artifacts: list[str] | None = None,
+        reason: str,
+        actor: str,
+    ) -> tuple[Ticket | None, bool]:
+        """Append evidence without a client-side read/modify/write race.
+
+        Returns ``(ticket, recorded)``. A repeated idempotency key returns the
+        current ticket with ``recorded=False`` and performs no write. The check
+        and mutation share one store lock, so concurrent writers cannot append
+        the same external-effect receipt twice.
+        """
+
+        key = str(idempotency_key or "").strip()
+        if not key:
+            raise ValueError("evidence_idempotency_key_required")
+        if len(key) > 240:
+            raise ValueError("evidence_idempotency_key_too_long")
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,63}", str(collection or "")):
+            raise ValueError("evidence_collection_invalid")
+        if not isinstance(evidence, dict) or not evidence:
+            raise ValueError("evidence_payload_required")
+        if not str(actor or "").strip():
+            raise ValueError("evidence_actor_required")
+        if not str(reason or "").strip():
+            raise ValueError("evidence_reason_required")
+
+        with self.mutation_lock():
+            current = self.get_ticket(ticket_id)
+            if current is None:
+                return None, False
+            outputs = (
+                current.outputs.model_dump(mode="python", exclude_none=True)
+                if current.outputs
+                else {}
+            )
+            result = outputs.get("result")
+            if result is None:
+                result = {}
+            if not isinstance(result, dict):
+                raise ValueError("ticket_output_result_not_object")
+            existing = result.get(collection) or []
+            if not isinstance(existing, list):
+                raise ValueError("evidence_collection_not_list")
+
+            serialized_evidence = self._serialize_update_value(evidence)
+            serialized_evidence.setdefault("idempotency_key", key)
+            for item in existing:
+                if self._evidence_item_key(item) != key:
+                    continue
+                normalized_existing = self._serialize_update_value(item)
+                normalized_existing.setdefault("idempotency_key", key)
+                if normalized_existing != serialized_evidence:
+                    raise ValueError("evidence_idempotency_conflict")
+                return current, False
+
+            timestamp = datetime.now(UTC).isoformat()
+            event = {
+                "schema": "planfile.ticket-evidence-event/v1",
+                "timestamp": timestamp,
+                "ticket_id": ticket_id,
+                "idempotency_key": key,
+                "collection": collection,
+                "evidence": serialized_evidence,
+                "notes": list(dict.fromkeys(str(item) for item in notes or [] if str(item))),
+                "artifacts": list(dict.fromkeys(str(item) for item in artifacts or [] if str(item))),
+                "actor": str(actor),
+                "reason": str(reason),
+            }
+            self._append_ticket_evidence_event(ticket_id, event)
+            projected = self._apply_ticket_evidence_events(
+                current.model_dump(mode="json", exclude_none=True),
+                [event],
+            )
+            return self._ticket_from_data(projected), True
 
     def _update_ticket_unlocked(
         self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates

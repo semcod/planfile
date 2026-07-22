@@ -332,6 +332,8 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "status-filter" in response.text
     assert "Test notification" in response.text
     assert "setInterval" in response.text
+    assert "scheduleTicketRefresh" in response.text
+    assert "}, 60000);" in response.text
     assert "loadEventHistory" in response.text
     assert "applyUrlState" in response.text
     assert "syncUrlState" in response.text
@@ -769,6 +771,49 @@ def test_tickets_api_reads_updated_store_and_disables_cache(tmp_path, monkeypatc
     assert next(item for item in second.json() if item["id"] == ticket.id)["status"] == "done"
 
 
+def test_tickets_api_reuses_serialized_unchanged_snapshot(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Cached list", source=TicketSource(tool="test"))
+    calls = 0
+    original = pf.list_tickets
+
+    def counted(**filters):
+        nonlocal calls
+        calls += 1
+        return original(**filters)
+
+    monkeypatch.setattr(pf, "list_tickets", counted)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    assert client.get("/tickets?sprint=all").status_code == 200
+    assert client.get("/tickets?sprint=all").status_code == 200
+    assert calls == 1
+
+    pf.update_ticket(ticket.id, name="Changed snapshot")
+
+    assert client.get("/tickets?sprint=all").json()[0]["name"] == "Changed snapshot"
+    assert calls == 2
+
+
+def test_dashboard_gets_bounded_stale_snapshot_during_mutation_burst(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Before burst", source=TicketSource(tool="test"))
+    now = 100.0
+    monkeypatch.setattr(server.time, "monotonic", lambda: now)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+    headers = {"user-agent": "Mozilla/5.0"}
+
+    assert client.get("/tickets?sprint=all", headers=headers).json()[0]["name"] == "Before burst"
+    pf.update_ticket(ticket.id, name="During burst")
+    assert client.get("/tickets?sprint=all", headers=headers).json()[0]["name"] == "Before burst"
+
+    now += server._DASHBOARD_STALE_WINDOW_SECONDS + 0.1
+
+    assert client.get("/tickets?sprint=all", headers=headers).json()[0]["name"] == "During burst"
+
+
 def test_post_tickets_creates_ticket_via_json_api(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
@@ -794,3 +839,129 @@ def test_post_tickets_creates_ticket_via_json_api(tmp_path, monkeypatch):
 
     listed = client.get("/tickets?sprint=all").json()
     assert any(t["id"] == data["id"] for t in listed)
+
+
+def test_evidence_api_atomically_appends_and_deduplicates_external_receipt(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="External effect", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+    payload = {
+        "idempotency_key": "execution:send-123",
+        "collection": "process_executions",
+        "evidence": {
+            "schema": "subactor.process-result.v1",
+            "execution_id": "execution:send-123",
+            "status": "succeeded",
+        },
+        "notes": ["SUBACTOR_PROCESS_RESULT_V1 send-123"],
+        "artifacts": ["bridge-audit.jsonl#execution_id=send-123"],
+        "actor": "hr-bridge",
+        "reason": "Persist SMTP delivery evidence.",
+    }
+
+    sprint_file = pf.store._sprint_file("current")
+    sprint_mtime = sprint_file.stat().st_mtime_ns
+    first = client.post(f"/tickets/{ticket.id}/evidence", json=payload)
+    second = client.post(f"/tickets/{ticket.id}/evidence", json=payload)
+
+    assert first.status_code == 200
+    assert first.json()["recorded"] is True
+    assert first.json()["deduplicated"] is False
+    assert second.status_code == 200
+    assert second.json()["recorded"] is False
+    assert second.json()["deduplicated"] is True
+
+    updated = pf.get_ticket(ticket.id)
+    assert updated is not None
+    assert updated.outputs.notes == ["SUBACTOR_PROCESS_RESULT_V1 send-123"]
+    assert updated.outputs.artifacts == ["bridge-audit.jsonl#execution_id=send-123"]
+    executions = updated.outputs.result["process_executions"]
+    assert len(executions) == 1
+    assert executions[0]["execution_id"] == "execution:send-123"
+    assert executions[0]["idempotency_key"] == "execution:send-123"
+    assert sprint_file.stat().st_mtime_ns == sprint_mtime
+    assert pf.store._ticket_evidence_path(ticket.id).exists()
+
+    # The append-only journal is durable source data, not an in-process cache.
+    reopened = Planfile(str(tmp_path)).get_ticket(ticket.id)
+    assert reopened.outputs.result["process_executions"][0]["execution_id"] == "execution:send-123"
+
+
+def test_evidence_append_invalidates_the_serialized_ticket_list_projection(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="List projection", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    assert client.get("/tickets?sprint=all").json()[0].get("outputs") is None
+    response = client.post(
+        f"/tickets/{ticket.id}/evidence",
+        json={
+            "idempotency_key": "projection-1",
+            "collection": "process_executions",
+            "evidence": {"execution_id": "projection-1", "status": "succeeded"},
+            "actor": "hr-bridge",
+            "reason": "Persist projected receipt.",
+        },
+    )
+
+    assert response.status_code == 200
+    listed = client.get("/tickets?sprint=all").json()[0]
+    assert listed["outputs"]["result"]["process_executions"][0]["execution_id"] == "projection-1"
+
+
+def test_evidence_api_preserves_receipts_from_independent_writers(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Concurrent receipts", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    for execution_id in ("send-1", "send-2"):
+        response = client.post(
+            f"/tickets/{ticket.id}/evidence",
+            json={
+                "idempotency_key": execution_id,
+                "collection": "process_executions",
+                "evidence": {"execution_id": execution_id, "status": "succeeded"},
+                "actor": "hr-bridge",
+                "reason": f"Persist {execution_id}.",
+            },
+        )
+        assert response.status_code == 200
+
+    updated = pf.get_ticket(ticket.id)
+    execution_ids = {
+        item["execution_id"] for item in updated.outputs.result["process_executions"]
+    }
+    assert execution_ids == {"send-1", "send-2"}
+
+
+def test_evidence_api_rejects_reusing_a_key_for_different_evidence(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Immutable receipt", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+    common = {
+        "idempotency_key": "send-1",
+        "collection": "process_executions",
+        "actor": "hr-bridge",
+        "reason": "Persist delivery receipt.",
+    }
+
+    first = client.post(
+        f"/tickets/{ticket.id}/evidence",
+        json={**common, "evidence": {"execution_id": "send-1", "status": "succeeded"}},
+    )
+    conflict = client.post(
+        f"/tickets/{ticket.id}/evidence",
+        json={**common, "evidence": {"execution_id": "send-1", "status": "failed"}},
+    )
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["detail"] == "evidence_idempotency_conflict"

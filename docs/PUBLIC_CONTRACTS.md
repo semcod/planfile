@@ -100,3 +100,26 @@ the storage transport.
 
 Compatibility policy: add a new version instead of weakening strict validation
 or changing the meaning of an existing result code.
+
+## Atomic external evidence append
+
+`POST /tickets/{ticket_id}/evidence` is the retry-safe write contract for an
+external effect that has already happened. It atomically appends one evidence
+event, notes and artifact references under the ticket store lock. The event is
+durable in `.planfile/evidence/<ticket-id>.jsonl` and is projected into the
+ticket's `outputs` on every read; the endpoint does not rewrite the complete
+sprint snapshot. The required `idempotency_key` is persisted with the evidence
+and suppresses duplicates when a caller retries after an ambiguous transport
+timeout.
+
+The same key and the same evidence is a successful deduplicated retry. The same
+key with different evidence is rejected with HTTP 409
+`evidence_idempotency_conflict`; accepted receipts are immutable.
+
+Callers must not use generic `PATCH /tickets/{ticket_id}` with a previously read
+`outputs` object for this purpose: that read/modify/write sequence can overwrite
+evidence written concurrently by another executor.
+
+The evidence journal and sprint YAML are complementary durable sources and must
+be backed up together as the `.planfile` directory. A projection cache or JSON
+mirror may be deleted and rebuilt; an evidence journal must not be discarded.
