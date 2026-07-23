@@ -12,7 +12,14 @@ pytest.importorskip("fastapi.testclient")
 
 from fastapi.testclient import TestClient
 
-from planfile import Planfile, TicketExecution, TicketExecutor, TicketInputs, TicketSource
+from planfile import (
+    Planfile,
+    TicketExecution,
+    TicketExecutor,
+    TicketInputs,
+    TicketOutputs,
+    TicketSource,
+)
 from planfile.api import server
 
 
@@ -562,6 +569,80 @@ def test_ticket_list_pagination_headers(tmp_path, monkeypatch):
     assert len(response.json()) == 1
     assert response.headers["x-total-count"] == "3"
     assert response.headers["x-result-count"] == "1"
+    assert response.headers["x-planfile-view"] == "full"
+
+
+def test_ticket_list_operational_view_keeps_execution_contract_without_unbounded_journal(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Operational projection",
+        description="The controller may still need a legacy fallback description.",
+        labels=["process-envelope:v2"],
+        source=TicketSource(tool="test", context={"large": "context"}),
+        executor=TicketExecutor(kind="api", mode="automatic", handler="uri-process"),
+        execution=TicketExecution(queue="project-bot", state="ready"),
+        inputs=TicketInputs(
+            prompt="Execute",
+            uri_processes=[
+                {
+                    "id": "inspect",
+                    "name": "Inspect",
+                    "uri": "test://resource/command/inspect",
+                }
+            ],
+            process_manifest={
+                "schema": server.PROCESS_ENVELOPE_SCHEMA,
+                "reason": "test",
+                "requested_by": "human:test",
+                "definitions": {
+                    "aql": [{"id": "aql:test"}],
+                    "eql": [{"id": "eql:test"}],
+                    "oql": [{"id": "oql:test"}],
+                    "uri": [{"id": "inspect", "uri": "test://resource/command/inspect"}],
+                },
+            },
+        ),
+        outputs=TicketOutputs(
+            artifacts=["artifact://large"],
+            notes=["large journal entry"],
+            result={"blocker": "waiting_for_input"},
+            completion_receipt={"schema": server.COMPLETION_RECEIPT_SCHEMA},
+        ),
+    )
+    pf.update_ticket(
+        ticket.id,
+        status="in_progress",
+        actor="test",
+        reason="create history",
+    )
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.get("/tickets?sprint=all&view=operational")
+
+    assert response.status_code == 200
+    assert response.headers["x-planfile-view"] == "operational"
+    payload = response.json()[0]
+    assert payload["id"] == ticket.id
+    assert payload["description"].startswith("The controller")
+    assert payload["executor"]["handler"] == "uri-process"
+    assert payload["execution"]["queue"] == "project-bot"
+    assert payload["inputs"]["process_manifest"]["schema"] == server.PROCESS_ENVELOPE_SCHEMA
+    assert payload["inputs"]["uri_processes"][0]["uri"] == "test://resource/command/inspect"
+    assert payload["outputs"]["result"] == {"blocker": "waiting_for_input"}
+    assert payload["outputs"]["completion_receipt"]["schema"] == server.COMPLETION_RECEIPT_SCHEMA
+    assert "notes" not in payload["outputs"]
+    assert "artifacts" not in payload["outputs"]
+    assert "history" not in payload
+    assert "dsl" not in payload
+    assert "context" not in payload["source"]
+
+    full = client.get("/tickets?sprint=all&view=full").json()[0]
+    assert full["outputs"]["notes"] == ["large journal entry"]
+    assert full["outputs"]["artifacts"] == ["artifact://large"]
+    assert full["history"]
 
 
 def test_move_ticket_api_and_sprint_validation(tmp_path, monkeypatch):

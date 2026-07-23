@@ -79,7 +79,7 @@ if _cors_origins:
         allow_origins=_cors_origins,
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
-        expose_headers=["X-Result-Count", "X-Total-Count"],
+        expose_headers=["X-Planfile-View", "X-Result-Count", "X-Total-Count"],
     )
 
 NO_STORE_HEADERS = {"Cache-Control": "no-store, max-age=0"}
@@ -316,22 +316,61 @@ def _ticket_snapshot_signature(pf, sprint: str) -> tuple:
     return tuple(signature), pf.store._evidence_revision()
 
 
-def _ticket_list_response(pf, *, sprint: str, filters: dict, offset: int, limit: int | None, allow_stale: bool = False) -> Response:
+def _ticket_operational_payload(ticket) -> dict[str, Any]:
+    """Return the bounded ticket contract required by queue controllers.
+
+    The full ticket remains available through the default list view and the
+    single-ticket endpoint. Operational consumers need lifecycle state,
+    dependencies and the executable process contract, but not an ever-growing
+    journal of history, human notes or artifact references on every poll.
+    """
+    payload = ticket.model_dump(mode="json", exclude_none=True)
+    for field in ("history", "dsl", "file", "files", "integration", "llm_hints", "sync"):
+        payload.pop(field, None)
+    source = payload.get("source")
+    if isinstance(source, dict):
+        source.pop("context", None)
+        if not source:
+            payload.pop("source", None)
+    outputs = payload.get("outputs")
+    if isinstance(outputs, dict):
+        outputs.pop("notes", None)
+        outputs.pop("artifacts", None)
+        if not outputs:
+            payload.pop("outputs", None)
+    return payload
+
+
+def _ticket_list_response(
+    pf,
+    *,
+    sprint: str,
+    filters: dict,
+    offset: int,
+    limit: int | None,
+    view: Literal["full", "operational"] = "full",
+    allow_stale: bool = False,
+) -> Response:
     # FastAPI runs this sync endpoint in a worker pool. Serialize cache misses so
     # a burst of websocket-driven dashboard refreshes builds one 5+ MB response,
     # not one copy per browser tab.
     with _TICKET_LIST_RESPONSE_CACHE_LOCK:
-        query_key = (str(pf.store.project_dir), sprint, tuple(sorted(filters.items())), offset, limit)
+        query_key = (str(pf.store.project_dir), sprint, tuple(sorted(filters.items())), offset, limit, view)
         latest = _TICKET_LIST_LATEST.get(query_key)
         if allow_stale and latest is not None and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS:
             _, body, total, count = latest
             return Response(
                 content=body,
                 media_type="application/json",
-                headers={**NO_STORE_HEADERS, "X-Total-Count": str(total), "X-Result-Count": str(count)},
+                headers={
+                    **NO_STORE_HEADERS,
+                    "X-Planfile-View": view,
+                    "X-Total-Count": str(total),
+                    "X-Result-Count": str(count),
+                },
             )
         signature = _ticket_snapshot_signature(pf, sprint)
-        key = (sprint, tuple(sorted(filters.items())), offset, limit, signature)
+        key = (sprint, tuple(sorted(filters.items())), offset, limit, view, signature)
         cached = _TICKET_LIST_RESPONSE_CACHE.get(key)
         if cached is not None:
             body, total, count = cached
@@ -340,7 +379,12 @@ def _ticket_list_response(pf, *, sprint: str, filters: dict, offset: int, limit:
             total = len(tickets)
             tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
             count = len(tickets)
-            payload = [ticket.model_dump(mode="json", exclude_none=True) for ticket in tickets]
+            payload = [
+                _ticket_operational_payload(ticket)
+                if view == "operational"
+                else ticket.model_dump(mode="json", exclude_none=True)
+                for ticket in tickets
+            ]
             body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
             # Do not retain a response assembled across a concurrent file change.
             if signature == _ticket_snapshot_signature(pf, sprint):
@@ -353,7 +397,12 @@ def _ticket_list_response(pf, *, sprint: str, filters: dict, offset: int, limit:
     return Response(
         content=body,
         media_type="application/json",
-        headers={**NO_STORE_HEADERS, "X-Total-Count": str(total), "X-Result-Count": str(count)},
+        headers={
+            **NO_STORE_HEADERS,
+            "X-Planfile-View": view,
+            "X-Total-Count": str(total),
+            "X-Result-Count": str(count),
+        },
     )
 
 @app.get("/tickets", tags=["tickets"])
@@ -366,6 +415,7 @@ def list_tickets(
     source: str | None = Query(None),
     offset: int = Query(0, ge=0),
     limit: int | None = Query(None, ge=1, le=5000),
+    view: Literal["full", "operational"] = Query("full"),
 ):
     response.headers.update(NO_STORE_HEADERS)
     pf = get_planfile()
@@ -377,7 +427,15 @@ def list_tickets(
     if source:
         filters["source"] = source
     browser_client = "mozilla/" in request.headers.get("user-agent", "").lower()
-    return _ticket_list_response(pf, sprint=sprint, filters=filters, offset=offset, limit=limit, allow_stale=browser_client)
+    return _ticket_list_response(
+        pf,
+        sprint=sprint,
+        filters=filters,
+        offset=offset,
+        limit=limit,
+        view=view,
+        allow_stale=browser_client,
+    )
 
 
 @app.post("/tickets", status_code=201, tags=["tickets"])
