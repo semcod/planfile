@@ -68,6 +68,33 @@
 - refactor: reorganized goal and config modules
 - docs: updated documentation for configuration management system
 
+## [0.1.123] - 2026-07-24
+
+### Docs
+- Update README.md
+- Update docs/CLI.md
+- Update docs/guides/OQL_CONFIGURATION.md
+- Update docs/guides/TICKET_STORAGE_SCALING_PLAN.md
+
+### Test
+- Update tests/test_next_ticket_autonomy_filter.py
+- Update tests/test_oql_configuration.py
+- Update tests/test_sharded_yaml_storage.py
+- Update tests/test_sqlite_ticket_index.py
+
+### Other
+- Update planfile/__init__.py
+- Update planfile/api/server.py
+- Update planfile/cli/commands.py
+- Update planfile/cli/groups/config/__init__.py
+- Update planfile/cli/groups/config/commands.py
+- Update planfile/cli/groups/storage/__init__.py
+- Update planfile/cli/groups/storage/commands.py
+- Update planfile/core/configuration.py
+- Update planfile/core/sharded_yaml.py
+- Update planfile/core/sqlite_index.py
+- ... and 8 more files
+
 ## [0.1.119] - 2026-07-21
 
 ### Docs

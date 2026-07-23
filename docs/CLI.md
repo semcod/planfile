@@ -263,90 +263,36 @@ planfile strategy export --strategy strategy.yaml --format markdown --output str
 planfile strategy export --strategy strategy.yaml --format json --include-metrics
 ```
 
-#### backend test
-Test backend connection and permissions.
+#### Integration backend configuration
+
+Integration settings are loaded from `*.planfile.yaml` and
+`.planfile/*.planfile.yaml`. They can be inspected through `planfile config
+list`, with secrets redacted. Allowlisted non-secret fields can be changed
+through OQL and are written to `.planfile/integrations.oql.planfile.yaml`,
+which is loaded last without rewriting legacy source files:
 
 ```bash
-planfile backend test [OPTIONS] BACKEND
-
-Options:
-  --verbose           Show detailed test results
-  --permissions       Check permissions
-  --timeout INT       Connection timeout [default: 30]
+planfile config set integrations.github.repo owner/project
+planfile config set integrations.github.sync.create_issues false
+planfile config set integrations.markdown.todo_file WORK.md
 ```
 
-Examples:
-```bash
-# Test GitHub connection
-planfile backend test github
+Provider credentials remain read-only and belong in environment variables or a
+secret manager, not CLI arguments.
 
-# Test with permissions check
-planfile backend test jira --permissions --verbose
-
-# Test with custom timeout
-planfile backend test gitlab --timeout 60
-```
-
-#### backend list
-List available backends and their status.
-
-```bash
-planfile backend list [OPTIONS]
-
-Options:
-  --status         Show connection status
-  --configured     Show only configured backends
-  --format TEXT    Output format [table|json]
-```
-
-Examples:
-```bash
-# List all backends
-planfile backend list
-
-# Show connection status
-planfile backend list --status
-
-# Show only configured backends
-planfile backend list --configured --format json
-```
-
-#### backend configure
-Configure backend settings.
-
-```bash
-planfile backend configure [OPTIONS] BACKEND
-
-Options:
-  --interactive     Interactive configuration
-  --token TEXT      Set authentication token
-  --url TEXT        Set API URL
-  --project TEXT    Set project name/ID
-  --save           Save configuration to file
-```
-
-Examples:
-```bash
-# Interactive configuration
-planfile backend configure github --interactive
-
-# Set token directly
-planfile backend configure jira --token ATATT3xFfGF0
-
-# Configure and save
-planfile backend configure gitlab --url https://gitlab.com --save
-```
+Use `planfile sync --help` to inspect the available synchronization commands.
+Writable integration configuration requires the source-ownership schema
+described in `docs/guides/OQL_CONFIGURATION.md`.
 
 #### config show
-Show current configuration.
+Show effective, redacted configuration through the shared OQL contract.
 
 ```bash
-planfile config show [OPTIONS]
+planfile config show [PATH] [OPTIONS]
 
 Options:
-  --section TEXT     Show specific section
-  --format TEXT      Output format [table|json|yaml]
-  --mask-secrets     Mask sensitive values [default: True]
+  --project, -p PATH Project root [default: .]
+  --json             Emit JSON instead of YAML
 ```
 
 Examples:
@@ -354,61 +300,48 @@ Examples:
 # Show all configuration
 planfile config show
 
-# Show specific section
-planfile config show --section backends
-
-# Show without masking secrets
-planfile config show --mask-secrets false
+# Show one value
+planfile config show store.storage.backend --json
 ```
 
 #### config set
-Set configuration value.
+Validate and set one allowlisted configuration value.
 
 ```bash
-planfile config set [OPTIONS] KEY VALUE
+planfile config set PATH VALUE [OPTIONS]
 
 Options:
-  --global          Set global configuration
-  --local           Set local configuration
-  --type TEXT       Value type [string|int|bool|list]
+  --project, -p PATH Project root [default: .]
+  --dry-run          Validate without writing
+  --if-revision TEXT Apply only to the listed cfg_... revision
+  --reason TEXT      Audit reason
+  --json             Emit JSON instead of YAML
 ```
 
 Examples:
 ```bash
-# Set default backend
-planfile config set default_backend github
+# Tune automatic archiving
+planfile config set store.archive.max_current_tickets 500
 
-# Set global configuration
-planfile config set --global auto_fix true
+# Preview runtime configuration
+planfile config set runtime.enabled.topology false --dry-run
 
-# Set list value
-planfile config set backends github,jira --type list
+# Enable the SQLite projection (builds it, rather than only changing YAML)
+planfile config set store.storage.index sqlite
+
+# Protect a deployment change from concurrent writers
+planfile config set store.archive.enabled false --if-revision cfg_...
 ```
 
-#### config reset
-Reset configuration to defaults.
+#### config list
 
 ```bash
-planfile config reset [OPTIONS]
-
-Options:
-  --section TEXT     Reset specific section
-  --global          Reset global configuration
-  --local           Reset local configuration
-  --force           Force reset without confirmation
+planfile config list [--project PATH] [--json]
 ```
 
-Examples:
-```bash
-# Reset all configuration
-planfile config reset --force
-
-# Reset specific section
-planfile config reset --section backends
-
-# Reset global configuration
-planfile config reset --global
-```
+Lists effective values, writable paths and the reasons some state is read-only
+or excluded. Integration secrets are always redacted. See
+`docs/guides/OQL_CONFIGURATION.md` for the complete matrix.
 
 #### ai test
 Test AI service connection.
@@ -579,8 +512,9 @@ planfile init strategy my-strategy --interactive
 # 3. Validate strategy
 planfile strategy validate --strategy my-strategy.yaml
 
-# 4. Test backend connection
-planfile backend test github --permissions
+# 4. Inspect synchronization commands and integration configuration
+planfile sync --help
+planfile config list --json
 
 # 5. Apply strategy (dry run)
 planfile strategy apply --strategy my-strategy.yaml --backend github --dry-run
@@ -605,14 +539,9 @@ planfile auto loop \
   --output results.json
 
 # Custom configuration
-planfile config set default_backend github --global
-planfile config set auto_fix true --global
-planfile config set max_iterations 5 --global
-
-# Batch operations
-for backend in github jira gitlab; do
-  planfile backend test $backend --permissions
-done
+planfile config set store.archive.max_current_tickets 500
+planfile config set store.storage.index sqlite
+planfile config set runtime.enabled.pipelines true
 
 # Scheduled execution
 echo "0 9 * * 1 cd /app && planfile auto loop --strategy strategy.yaml --backend github" | crontab -

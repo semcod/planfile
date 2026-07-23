@@ -68,6 +68,9 @@ class DSLExecutor:
             "  create ticket \"NAME\" [priority=P] [sprint=S] [labels=a,b]\n"
             "  list tickets [sprint=S] [status=ST]\n"
             "  list sprints\n"
+            "  list config\n"
+            "  show config [PATH]\n"
+            "  set config PATH=VALUE [PATH=VALUE] [mode=dry-run] [if_revision=cfg_...]\n"
             "  show ticket ID\n"
             "  update ticket ID status=done\n"
             "  set ticket ID priority=high labels=backend,auth\n"
@@ -141,6 +144,14 @@ class DSLExecutor:
 
     def _exec_list(self, cmd: DSLCommand) -> DSLResult:
         obj = cmd.object_type or "ticket"
+        if obj == "config":
+            data = self._configuration().list()
+            return DSLResult(
+                ok=True,
+                command=cmd.to_dict(),
+                data=data,
+                message=f"Found {len(data['writable'])} writable configuration path(s)",
+            )
         if obj == "ticket":
             sprint = cmd.params.get("sprint", "current")
             filters = {k: v for k, v in cmd.params.items() if k != "sprint"}
@@ -170,6 +181,12 @@ class DSLExecutor:
         )
 
     def _exec_show(self, cmd: DSLCommand) -> DSLResult:
+        if cmd.object_type == "config":
+            return DSLResult(
+                ok=True,
+                command=cmd.to_dict(),
+                data=self._configuration().show(cmd.target),
+            )
         ticket_id = cmd.target
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
@@ -182,6 +199,8 @@ class DSLExecutor:
         )
 
     def _exec_update(self, cmd: DSLCommand) -> DSLResult:
+        if cmd.object_type == "config":
+            return self._exec_update_config(cmd)
         ticket_id = cmd.target
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
@@ -194,6 +213,47 @@ class DSLExecutor:
             ok=True, command=cmd.to_dict(),
             data=ticket.model_dump(mode="json", exclude_none=True),
             message=f"Updated {ticket.id}",
+        )
+
+    def _configuration(self):
+        return self.pf.configuration
+
+    def _exec_update_config(self, cmd: DSLCommand) -> DSLResult:
+        if cmd.target:
+            return DSLResult(
+                ok=False,
+                command=cmd.to_dict(),
+                error="Use PATH=VALUE syntax: set config store.archive.enabled=false",
+            )
+        params = dict(cmd.params)
+        mode = str(params.pop("mode", "apply"))
+        actor = str(params.pop("actor", "dsl"))
+        reason = str(params.pop("reason", ""))
+        expected_revision = params.pop("if_revision", None)
+        if not params:
+            return DSLResult(
+                ok=False,
+                command=cmd.to_dict(),
+                error="No configuration values to update.",
+            )
+        data = self._configuration().set_many(
+            params,
+            mode=mode,
+            actor=actor,
+            reason=reason,
+            expected_revision=(
+                str(expected_revision) if expected_revision is not None else None
+            ),
+        )
+        return DSLResult(
+            ok=True,
+            command=cmd.to_dict(),
+            data=data,
+            message=(
+                f"Validated {len(data['changed'])} configuration change(s)"
+                if mode == "dry-run"
+                else f"Applied {len(data['changed'])} configuration change(s)"
+            ),
         )
 
     def _exec_move(self, cmd: DSLCommand) -> DSLResult:

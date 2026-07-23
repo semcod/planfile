@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import tempfile
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -27,6 +28,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
         "retain_terminal_tickets": 20,
         "terminal_statuses": ["done", "canceled", "failed", "blocked"],
     }
+    DEFAULT_STORAGE_CONFIG = {
+        "backend": "single-yaml",
+        "shard_size": 100,
+        "custom_shards": 16,
+        "index": "none",
+    }
     SPRINT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
 
     def __init__(self, directory: str | Path):
@@ -37,16 +44,67 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._lock_path = self.base_dir / ".store.lock"
         self._operations_path = self.base_dir / "events" / "operations.jsonl"
         self._evidence_dir = self.base_dir / "evidence"
+        self._ticket_index_path = self.base_dir / "index" / "tickets.sqlite3"
+
+    def _storage_config(self) -> dict:
+        configured = self._read_config().get("storage") or {}
+        if not isinstance(configured, dict):
+            configured = {}
+        result = dict(self.DEFAULT_STORAGE_CONFIG)
+        result.update(configured)
+        if result.get("backend") not in {"single-yaml", "sharded-yaml"}:
+            result["backend"] = "single-yaml"
+        if result.get("index") not in {"none", "sqlite"}:
+            result["index"] = "none"
+        for key in ("shard_size", "custom_shards"):
+            try:
+                result[key] = max(1, int(result[key]))
+            except (TypeError, ValueError):
+                result[key] = self.DEFAULT_STORAGE_CONFIG[key]
+        result["custom_shards"] = min(result["custom_shards"], 256)
+        return result
+
+    def storage_backend(self) -> str:
+        """Return the configured physical ticket backend."""
+        return str(self._storage_config()["backend"])
+
+    def _uses_sharded_storage(self) -> bool:
+        return self.storage_backend() == "sharded-yaml"
+
+    def _sharded_storage(self):
+        from planfile.core.sharded_yaml import ShardedYamlStorage
+
+        config = self._storage_config()
+        return ShardedYamlStorage(
+            self._sprints_dir,
+            self._write_yaml_atomic,
+            shard_size=config["shard_size"],
+            custom_shards=config["custom_shards"],
+        )
 
     def _append_operational_line(self, line: str) -> None:
         """Append one verified SODL event while the caller holds mutation_lock."""
+        self._append_operational_lines([line])
+
+    def _append_operational_lines(self, lines: list[str]) -> None:
+        """Append verified SODL events with one durable journal flush."""
         from planfile.core.operational_dsl import parse
 
-        event = parse(line)
+        rows = []
+        for line in lines:
+            event = parse(line)
+            rows.append(
+                json.dumps(
+                    {"schema": event["schema"], "event": event, "dsl": line},
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                )
+            )
+        if not rows:
+            return
         self._operations_path.parent.mkdir(parents=True, exist_ok=True)
-        row = json.dumps({"schema": event["schema"], "event": event, "dsl": line}, ensure_ascii=False, separators=(",", ":"))
         with self._operations_path.open("a", encoding="utf-8") as handle:
-            handle.write(f"{row}\n")
+            handle.write("".join(f"{row}\n" for row in rows))
             handle.flush()
             os.fsync(handle.fileno())
 
@@ -228,12 +286,18 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def load_sprint(self, sprint: str) -> dict:
         """Load sprint data from YAML."""
+        if self._uses_sharded_storage():
+            data = self._sharded_storage().load_sprint(sprint)
+            return data.get("sprint") or data
         path = self._sprint_file(sprint)
         data = self._read_yaml_cached(path) or {}
         return data.get("sprint") or data
 
     def load_backlog(self) -> dict:
         """Load backlog data from YAML."""
+        if self._uses_sharded_storage():
+            data = self._sharded_storage().load_sprint("backlog")
+            return data.get("sprint") or data
         path = self._sprint_file("backlog")
         data = self._read_yaml_cached(path) or {}
         return data.get("sprint") or data
@@ -253,6 +317,18 @@ class Store(StoreFileMixin, TicketStoreMixin):
         save therefore fails closed instead of reverting a newer lifecycle
         transition.
         """
+        self._sprint_file(sprint)  # validate before acquiring the mutation lock
+        if self._uses_sharded_storage():
+            with self.mutation_lock():
+                storage = self._sharded_storage()
+                current = storage.load_sprint(sprint)
+                merged = self._merge_sprint_snapshots(current, data)
+                storage.write_sprint(sprint, merged)
+                self._invalidate_sharded_cache(sprint)
+            if sprint == "current":
+                self.archive_completed()
+            return
+
         path = self._sprint_file(sprint)
         with self.mutation_lock():
             from planfile.core.fastio import read_yaml_fast
@@ -326,10 +402,22 @@ class Store(StoreFileMixin, TicketStoreMixin):
                         "prefix": "PLF",
                         "next_id": 1,
                         "archive": dict(self.DEFAULT_ARCHIVE_CONFIG),
+                        "storage": dict(self.DEFAULT_STORAGE_CONFIG),
                     }
                 ),
                 encoding="utf-8",
             )
+        if self._uses_sharded_storage():
+            storage = self._sharded_storage()
+            storage.ensure_sprint(
+                "current",
+                {"id": "sprint-001", "name": "Sprint 1", "status": "active"},
+            )
+            storage.ensure_sprint(
+                "backlog",
+                {"id": "backlog", "name": "Backlog", "status": "active"},
+            )
+            return
         current = self._sprints_dir / "current.yaml"
         if not current.exists():
             current.write_text(
@@ -370,13 +458,19 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._write_yaml_atomic(self._config_path, config)
 
     def _next_id_unlocked(self) -> str:
+        return self._reserve_ids_unlocked(1)[0]
+
+    def _reserve_ids_unlocked(self, count: int) -> list[str]:
+        count = max(0, int(count))
+        if count == 0:
+            return []
         config = self._read_config()
         prefix = config.get("prefix", "PLF")
-        nid = config.get("next_id", 1)
-        ticket_id = f"{prefix}-{nid:03d}"
-        config["next_id"] = nid + 1
+        first = int(config.get("next_id", 1))
+        ticket_ids = [f"{prefix}-{number:03d}" for number in range(first, first + count)]
+        config["next_id"] = first + count
         self._write_config(config)
-        return ticket_id
+        return ticket_ids
 
     def _archive_config(self) -> dict:
         """Return validated automatic-archive settings with safe defaults."""
@@ -432,6 +526,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return self._archive_completed_unlocked(force=force)
 
     def _archive_completed_unlocked(self, *, force: bool = False) -> dict:
+        if self._uses_sharded_storage():
+            return self._archive_completed_sharded_unlocked(force=force)
+
         from planfile.core.fastio import read_yaml_fast
 
         config = self._archive_config()
@@ -518,6 +615,84 @@ class Store(StoreFileMixin, TicketStoreMixin):
         report["archive_files"] = [path.stem for path in sorted(archive_data)]
         return report
 
+    def _archive_completed_sharded_unlocked(self, *, force: bool = False) -> dict:
+        storage = self._sharded_storage()
+        config = self._archive_config()
+        report = {
+            "triggered": False,
+            "archived": 0,
+            "remaining": 0,
+            "archive_files": [],
+        }
+        if not config["enabled"] or "current" not in storage.sprint_ids():
+            return report
+
+        data = storage.load_sprint("current")
+        sprint_data = data.get("sprint", data)
+        tickets = sprint_data.get("tickets") or {}
+        if not isinstance(tickets, dict):
+            return report
+        report["remaining"] = len(tickets)
+        over_count = (
+            config["max_current_tickets"] > 0
+            and len(tickets) > config["max_current_tickets"]
+        )
+        over_size = (
+            config["max_current_bytes"] > 0
+            and storage.sprint_size("current") > config["max_current_bytes"]
+        )
+        if not (force or over_count or over_size):
+            return report
+        report["triggered"] = True
+
+        terminal = [
+            (self._ticket_archive_timestamp(ticket), ticket_id, ticket)
+            for ticket_id, ticket in tickets.items()
+            if isinstance(ticket, dict)
+            and str(ticket.get("status", "")).lower() in config["terminal_statuses"]
+        ]
+        terminal.sort(key=lambda item: (item[0], item[1]))
+        move_count = max(0, len(terminal) - config["retain_terminal_tickets"])
+        if move_count == 0:
+            return report
+
+        archives: dict[str, dict] = {}
+        moved_ids = []
+        for timestamp, ticket_id, ticket in terminal[:move_count]:
+            archive_name = f"archive-{timestamp:%Y-%m}"
+            archive = archives.get(archive_name)
+            if archive is None:
+                if archive_name in storage.sprint_ids():
+                    archive = storage.load_sprint(archive_name)
+                else:
+                    archive = {
+                        "sprint": {
+                            "id": archive_name,
+                            "name": f"Archive {timestamp:%Y-%m}",
+                            "status": "archived",
+                            "tickets": {},
+                        }
+                    }
+                archives[archive_name] = archive
+            archive_root = archive.get("sprint", archive)
+            archived_ticket = dict(ticket)
+            archived_ticket["sprint"] = archive_name
+            archive_root.setdefault("tickets", {})[ticket_id] = archived_ticket
+            moved_ids.append(ticket_id)
+
+        for archive_name, archive in archives.items():
+            storage.write_sprint(archive_name, archive)
+            self._invalidate_sharded_cache(archive_name)
+        for ticket_id in moved_ids:
+            tickets.pop(ticket_id, None)
+        storage.write_sprint("current", data)
+        self._invalidate_sharded_cache("current")
+
+        report["archived"] = len(moved_ids)
+        report["remaining"] = len(tickets)
+        report["archive_files"] = sorted(archives)
+        return report
+
     def next_id(self) -> str:
         with self.mutation_lock():
             return self._next_id_unlocked()
@@ -531,13 +706,474 @@ class Store(StoreFileMixin, TicketStoreMixin):
     def _all_sprint_files(self) -> list[Path]:
         return sorted(self._sprints_dir.glob("*.yaml"))
 
+    def _all_sprint_ids(self) -> list[str]:
+        if self._uses_sharded_storage():
+            return self._sharded_storage().sprint_ids()
+        return [path.stem for path in self._all_sprint_files()]
+
+    def _sprint_storage_files(self, sprint: str) -> list[Path]:
+        self._sprint_file(sprint)  # validate
+        if self._uses_sharded_storage():
+            return self._sharded_storage().storage_files(sprint)
+        path = self._sprint_file(sprint)
+        return [path] if path.exists() else []
+
+    def sprint_signature(self, sprint: str) -> tuple:
+        """Return a cache signature for one logical sprint or all sprints."""
+        sprint_ids = self._all_sprint_ids() if sprint == "all" else [sprint]
+        signature = []
+        for sprint_id in sprint_ids:
+            files = self._sprint_storage_files(sprint_id)
+            if not files:
+                signature.append((sprint_id, "<missing>", -1, -1))
+                continue
+            for path in files:
+                try:
+                    stat = path.stat()
+                    signature.append((sprint_id, str(path), stat.st_mtime_ns, stat.st_size))
+                except FileNotFoundError:
+                    signature.append((sprint_id, str(path), -1, -1))
+        return tuple(signature)
+
+    def list_sprint_summaries(self) -> list[dict]:
+        if self._uses_sharded_storage():
+            storage = self._sharded_storage()
+            return [storage.summary(sprint) for sprint in storage.sprint_ids()]
+        result = []
+        from planfile.core.fastio import read_yaml_fast
+
+        for sprint_file in self._all_sprint_files():
+            data = read_yaml_fast(sprint_file) or {}
+            sprint = data.get("sprint", data)
+            tickets = sprint.get("tickets", {}) if isinstance(sprint, dict) else {}
+            declared_id = sprint.get("id") if isinstance(sprint, dict) else None
+            metadata = {
+                key: value
+                for key, value in sprint.items()
+                if key not in {"id", "tickets"}
+            } if isinstance(sprint, dict) else {}
+            if declared_id and declared_id != sprint_file.stem:
+                metadata["declared_id"] = declared_id
+            result.append(metadata | {"id": sprint_file.stem, "ticket_count": len(tickets)})
+        return result
+
+    def create_sprint(self, sprint: str, metadata: dict) -> dict:
+        """Create an empty logical sprint in the configured backend."""
+        self._sprint_file(sprint)  # validate
+        with self.mutation_lock():
+            if sprint in self._all_sprint_ids():
+                raise ValueError(f"sprint_exists:{sprint}")
+            root = {"id": sprint, **metadata, "tickets": {}}
+            if self._uses_sharded_storage():
+                self._sharded_storage().ensure_sprint(sprint, root)
+            else:
+                self._write_yaml_atomic(
+                    self._sprint_file(sprint),
+                    {"sprint": root},
+                    allow_unicode=True,
+                )
+        return {key: value for key, value in root.items() if key != "tickets"} | {
+            "ticket_count": 0
+        }
+
+    def _invalidate_sharded_cache(self, sprint: str) -> None:
+        cache = getattr(self, "_ticket_model_cache", None)
+        if cache is not None:
+            cache.pop(f"sharded:{sprint}", None)
+
+    def ticket_index_enabled(self) -> bool:
+        return self._storage_config().get("index") == "sqlite"
+
+    def _sqlite_ticket_index(self):
+        from planfile.core.sqlite_index import SQLiteTicketIndex
+
+        return SQLiteTicketIndex(self._ticket_index_path)
+
+    def _ticket_index_signature(self) -> tuple:
+        return self.sprint_signature("all"), self._evidence_revision()
+
+    def _ticket_index_records(self) -> list[dict]:
+        from planfile.core.fastio import read_yaml_fast
+
+        storage = self._sharded_storage() if self._uses_sharded_storage() else None
+        records = []
+        position = 0
+        for sprint_id in self._all_sprint_ids():
+            if storage is not None:
+                snapshot = storage.load_sprint(sprint_id)
+            else:
+                snapshot = read_yaml_fast(self._sprint_file(sprint_id)) or {}
+            root = snapshot.get("sprint", snapshot)
+            raw_tickets = root.get("tickets") or {} if isinstance(root, dict) else {}
+            for raw in raw_tickets.values():
+                ticket = self._ticket_from_data(raw)
+                if ticket is None:
+                    continue
+                records.append(self._ticket_index_record(ticket, sprint_id, position))
+                position += 1
+        return records
+
+    @staticmethod
+    def _ticket_index_record(ticket: Ticket, sprint: str, position: int = 0) -> dict:
+        summary_fields = {
+            "id",
+            "name",
+            "contract_version",
+            "status",
+            "priority",
+            "sprint",
+            "labels",
+            "blocked_by",
+            "blocks",
+            "parent",
+            "children",
+            "group",
+            "executor",
+            "execution",
+            "created_at",
+            "updated_at",
+        }
+        full = ticket.model_dump(mode="json", exclude_none=True)
+        summary = ticket.model_dump(
+            mode="json",
+            exclude_none=True,
+            include=summary_fields,
+        )
+        execution = full.get("execution") or {}
+        source = full.get("source") or {}
+        return {
+            "id": ticket.id,
+            "sprint": sprint,
+            "status": str(full.get("status") or ""),
+            "priority": str(full.get("priority") or "normal"),
+            "source": source.get("tool") if isinstance(source, dict) else None,
+            "queue": (
+                str(execution.get("queue") or "default")
+                if isinstance(execution, dict)
+                else "default"
+            ),
+            "created_at": str(full.get("created_at") or ""),
+            "updated_at": str(full.get("updated_at") or ""),
+            "position": position,
+            "ticket_json": json.dumps(
+                full,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            "summary_json": json.dumps(
+                summary,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            "blocked_by": list(full.get("blocked_by") or []),
+        }
+
+    def _begin_index_mutation(self) -> bool:
+        if not self.ticket_index_enabled():
+            return False
+        signature = self._ticket_index_signature()
+        return self._sqlite_ticket_index().is_current(signature)
+
+    def _finish_index_mutation(
+        self,
+        was_current: bool,
+        *,
+        upserts: list[tuple[Ticket, str]] | None = None,
+        deletes: list[str] | None = None,
+    ) -> None:
+        if not was_current:
+            return
+        records = [
+            self._ticket_index_record(ticket, sprint)
+            for ticket, sprint in (upserts or [])
+        ]
+        self._sqlite_ticket_index().apply(
+            upserts=records,
+            deletes=deletes or [],
+            signature=self._ticket_index_signature(),
+        )
+
+    def ensure_ticket_index(self, *, force: bool = False) -> dict:
+        """Ensure the disposable SQLite projection matches durable sources."""
+        index = self._sqlite_ticket_index()
+        if not (force or self.ticket_index_enabled()):
+            return index.status()
+        for _attempt in range(2):
+            signature_before = self._ticket_index_signature()
+            if not force and index.is_current(signature_before):
+                return index.status(signature_before) | {"rebuilt": False}
+            records = self._ticket_index_records()
+            signature_after = self._ticket_index_signature()
+            if signature_before != signature_after:
+                force = True
+                continue
+            try:
+                count = index.rebuild(records, signature_after)
+            except Exception as exc:
+                import sqlite3
+
+                if not isinstance(exc, sqlite3.DatabaseError):
+                    raise
+                index.reset()
+                count = index.rebuild(records, signature_after)
+            return index.status(signature_after) | {
+                "rebuilt": True,
+                "tickets": count,
+            }
+        raise RuntimeError("ticket_index_sources_changed_during_rebuild")
+
+    def configure_ticket_index(self, enabled: bool, *, before_mutation=None) -> dict:
+        """Enable/disable SQLite indexing without deleting its rebuildable data."""
+        with self.mutation_lock():
+            if before_mutation is not None:
+                before_mutation()
+            config = self._read_config()
+            storage = config.get("storage") or {}
+            storage = dict(storage) if isinstance(storage, dict) else {}
+            storage["index"] = "sqlite" if enabled else "none"
+            config["storage"] = storage
+            self._write_config(config)
+        if enabled:
+            return self.ensure_ticket_index(force=True) | {"enabled": True}
+        return self.ticket_index_status()
+
+    def ticket_index_status(self) -> dict:
+        index = self._sqlite_ticket_index()
+        signature = self._ticket_index_signature() if index.path.exists() else None
+        return index.status(signature) | {"enabled": self.ticket_index_enabled()}
+
+    def indexed_ticket(self, ticket_id: str) -> Ticket | None:
+        self.ensure_ticket_index()
+        data = self._sqlite_ticket_index().get_ticket(ticket_id)
+        return self._ticket_from_data(data) if data is not None else None
+
+    def indexed_ticket_summaries(
+        self,
+        *,
+        sprint: str,
+        filters: dict,
+        offset: int,
+        limit: int | None,
+    ) -> tuple[list[dict], int]:
+        self.ensure_ticket_index()
+        return self._sqlite_ticket_index().list_summaries(
+            sprint=sprint,
+            filters=filters,
+            offset=offset,
+            limit=limit,
+        )
+
+    def migrate_to_sharded_yaml(
+        self,
+        *,
+        shard_size: int = 100,
+        custom_shards: int = 16,
+        before_mutation=None,
+    ) -> dict:
+        """Convert legacy sprint YAML files to the opt-in sharded layout.
+
+        The backend switch happens only after every shard has been read back and
+        compared. Legacy files are then moved to a timestamped recovery directory.
+        """
+        shard_size = max(1, int(shard_size))
+        custom_shards = max(1, min(int(custom_shards), 256))
+        with self.mutation_lock():
+            if before_mutation is not None:
+                before_mutation()
+            if self._uses_sharded_storage():
+                raise ValueError("storage_already_sharded")
+            legacy_files = self._all_sprint_files()
+            if not legacy_files:
+                raise ValueError("storage_has_no_legacy_sprints")
+
+            from planfile.core.fastio import read_yaml_fast
+            from planfile.core.sharded_yaml import ShardedYamlStorage
+
+            snapshots = {
+                path.stem: read_yaml_fast(path) or {}
+                for path in legacy_files
+            }
+            target_dirs = [
+                self._sprints_dir / f"{sprint}.shards"
+                for sprint in snapshots
+            ]
+            occupied = [path for path in target_dirs if path.exists() and any(path.iterdir())]
+            if occupied:
+                raise ValueError(f"sharded_target_not_empty:{occupied[0]}")
+
+            storage = ShardedYamlStorage(
+                self._sprints_dir,
+                self._write_yaml_atomic,
+                shard_size=shard_size,
+                custom_shards=custom_shards,
+            )
+            created_dirs: list[Path] = []
+            try:
+                for sprint, snapshot in snapshots.items():
+                    directory = storage.sprint_dir(sprint)
+                    if not directory.exists():
+                        created_dirs.append(directory)
+                    storage.write_sprint(sprint, snapshot)
+                    root = snapshot.get("sprint", snapshot)
+                    expected = root.get("tickets") or {} if isinstance(root, dict) else {}
+                    actual = storage.load_sprint(sprint)["sprint"]["tickets"]
+                    if expected != actual:
+                        raise RuntimeError(f"sharded_migration_verification_failed:{sprint}")
+            except Exception:
+                for directory in created_dirs:
+                    if directory.exists():
+                        shutil.rmtree(directory)
+                raise
+
+            config = self._read_config()
+            previous_storage = config.get("storage") or {}
+            config["storage"] = {
+                "backend": "sharded-yaml",
+                "shard_size": shard_size,
+                "custom_shards": custom_shards,
+                "index": (
+                    previous_storage.get("index", "none")
+                    if isinstance(previous_storage, dict)
+                    else "none"
+                ),
+            }
+            self._write_config(config)
+
+            stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S.%fZ")
+            backup_dir = self.base_dir / "storage-backups" / stamp / "sprints"
+            backup_dir.mkdir(parents=True, exist_ok=False)
+            moved = []
+            for path in legacy_files:
+                destination = backup_dir / path.name
+                shutil.move(str(path), str(destination))
+                moved.append(str(destination))
+                mirror = path.with_name(path.name + ".fast.json")
+                if mirror.exists():
+                    shutil.move(str(mirror), str(backup_dir / mirror.name))
+
+            if hasattr(self, "_yaml_cache"):
+                self._yaml_cache.clear()
+            if hasattr(self, "_ticket_model_cache"):
+                self._ticket_model_cache.clear()
+            return {
+                "backend": "sharded-yaml",
+                "shard_size": shard_size,
+                "custom_shards": custom_shards,
+                "sprints": len(snapshots),
+                "tickets": sum(
+                    len((snapshot.get("sprint", snapshot).get("tickets") or {}))
+                    for snapshot in snapshots.values()
+                ),
+                "backup_dir": str(backup_dir),
+                "moved_files": moved,
+            }
+
     def create_ticket(self, ticket: Ticket) -> Ticket:
         """Persist a ticket into the current sprint file."""
         with self.mutation_lock():
             return self._create_ticket_unlocked(ticket)
 
-    def _create_ticket_unlocked(self, ticket: Ticket) -> Ticket:
-        """Persist a ticket while the caller holds ``mutation_lock``."""
+    def create_tickets_bulk(self, tickets: list[Ticket]) -> list[Ticket]:
+        """Persist validated tickets with one write per affected sprint/shard."""
+        if not tickets:
+            return []
+        with self.mutation_lock():
+            return self._create_tickets_bulk_unlocked(tickets)
+
+    def _create_tickets_bulk_unlocked(self, tickets: list[Ticket]) -> list[Ticket]:
+        index_was_current = self._begin_index_mutation()
+        for ticket in tickets:
+            self._prepare_ticket_for_persistence(ticket)
+        grouped: dict[str, list[Ticket]] = {}
+        for ticket in tickets:
+            grouped.setdefault(ticket.sprint or "current", []).append(ticket)
+
+        if self._uses_sharded_storage():
+            storage = self._sharded_storage()
+            for sprint, sprint_tickets in grouped.items():
+                storage.upsert_tickets(
+                    sprint,
+                    {
+                        ticket.id: ticket.model_dump(mode="json", exclude_none=True)
+                        for ticket in sprint_tickets
+                    },
+                )
+                self._invalidate_sharded_cache(sprint)
+        else:
+            from planfile.core.fastio import read_yaml_fast
+
+            for sprint, sprint_tickets in grouped.items():
+                sprint_file = self._sprint_file(sprint)
+                data = read_yaml_fast(sprint_file) or {
+                    "sprint": {
+                        "id": sprint,
+                        "name": sprint.title(),
+                        "status": "active",
+                        "tickets": {},
+                    }
+                }
+                root = data.get("sprint", data)
+                stored = root.setdefault("tickets", {})
+                for ticket in sprint_tickets:
+                    stored[ticket.id] = ticket.model_dump(mode="json", exclude_none=True)
+                data["sprint"] = root
+                self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
+                if hasattr(self, "_yaml_cache"):
+                    self._yaml_cache.pop(str(sprint_file), None)
+
+        self._append_operational_lines(
+            [str(ticket.dsl) for ticket in tickets if ticket.dsl]
+        )
+        archive_report = (
+            self._archive_completed_unlocked()
+            if "current" in grouped
+            else {"archived": 0}
+        )
+        if not archive_report.get("archived"):
+            self._finish_index_mutation(
+                index_was_current,
+                upserts=[
+                    (ticket, ticket.sprint or "current")
+                    for ticket in tickets
+                ],
+            )
+        return tickets
+
+    def list_tickets(self, sprint: str = "current", **filters) -> list[Ticket]:
+        """List tickets from the configured physical backend."""
+        if not self._uses_sharded_storage():
+            return TicketStoreMixin.list_tickets(self, sprint=sprint, **filters)
+
+        storage = self._sharded_storage()
+        sprint_ids = storage.sprint_ids() if sprint == "all" else [sprint]
+        tickets: list[Ticket] = []
+        cache = getattr(self, "_ticket_model_cache", None)
+        if cache is None:
+            cache = {}
+            self._ticket_model_cache = cache
+        for sprint_id in sprint_ids:
+            signature = storage.signature(sprint_id)
+            key = f"sharded:{sprint_id}"
+            entry = cache.get(key)
+            cached_ids = (ticket.id for ticket in entry[1]) if entry is not None else ()
+            evidence_revision = self._ticket_evidence_revision(cached_ids)
+            if (
+                entry is not None
+                and entry[0] == signature
+                and entry[2] == evidence_revision
+            ):
+                tickets.extend(entry[1])
+                continue
+            snapshot = storage.load_sprint(sprint_id)
+            root = snapshot.get("sprint", snapshot)
+            ticket_data = root.get("tickets") or {}
+            evidence_revision = self._ticket_evidence_revision(ticket_data.keys())
+            models = tuple(self._tickets_from_sprint_data(root))
+            cache[key] = (signature, models, evidence_revision)
+            tickets.extend(models)
+        return self._apply_filters(tickets, **filters)
+
+    def _prepare_ticket_for_persistence(self, ticket: Ticket) -> None:
         from planfile.core.operational_dsl import line as operational_line
 
         if ticket.contract_version is None:
@@ -557,7 +1193,31 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 correlation_id=ticket.id,
                 data={"payload": payload},
             )
+
+    def _create_ticket_unlocked(self, ticket: Ticket) -> Ticket:
+        """Persist a ticket while the caller holds ``mutation_lock``."""
+        index_was_current = self._begin_index_mutation()
+        self._prepare_ticket_for_persistence(ticket)
         sprint = ticket.sprint or "current"
+        if self._uses_sharded_storage():
+            storage = self._sharded_storage()
+            storage.upsert_ticket(
+                sprint,
+                ticket.id,
+                ticket.model_dump(mode="json", exclude_none=True),
+            )
+            self._append_operational_line(ticket.dsl)
+            self._invalidate_sharded_cache(sprint)
+            archive_report = {"archived": 0}
+            if sprint == "current":
+                archive_report = self._archive_completed_unlocked()
+            if not archive_report.get("archived"):
+                self._finish_index_mutation(
+                    index_was_current,
+                    upserts=[(ticket, sprint)],
+                )
+            return ticket
+
         sprint_file = self._sprint_file(sprint)
 
         if sprint_file.exists():
@@ -583,12 +1243,25 @@ class Store(StoreFileMixin, TicketStoreMixin):
         if hasattr(self, "_yaml_cache"):
             self._yaml_cache.pop(str(sprint_file), None)
 
-        if sprint == "current":
+        archive_report = (
             self._archive_completed_unlocked()
+            if sprint == "current"
+            else {"archived": 0}
+        )
+        if not archive_report.get("archived"):
+            self._finish_index_mutation(
+                index_was_current,
+                upserts=[(ticket, sprint)],
+            )
 
         return ticket
 
     def get_ticket(self, ticket_id: str) -> Ticket | None:
+        if self.ticket_index_enabled():
+            return self.indexed_ticket(ticket_id)
+        if self._uses_sharded_storage():
+            located = self._sharded_storage().locate_ticket(ticket_id)
+            return self._ticket_from_data(located[1]) if located is not None else None
         for sprint_file in self._all_sprint_files():
             data = self._read_yaml_cached(sprint_file)
             if not data:
@@ -719,6 +1392,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
             raise ValueError("evidence_reason_required")
 
         with self.mutation_lock():
+            index_was_current = self._begin_index_mutation()
             current = self.get_ticket(ticket_id)
             if current is None:
                 return None, False
@@ -765,11 +1439,27 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 current.model_dump(mode="json", exclude_none=True),
                 [event],
             )
-            return self._ticket_from_data(projected), True
+            model = self._ticket_from_data(projected)
+            if model is not None:
+                self._finish_index_mutation(
+                    index_was_current,
+                    upserts=[(model, model.sprint or "current")],
+                )
+            return model, True
 
     def _update_ticket_unlocked(
         self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates
     ) -> Ticket | None:
+        index_was_current = self._begin_index_mutation()
+        if self._uses_sharded_storage():
+            return self._update_ticket_sharded_unlocked(
+                ticket_id,
+                reason=reason,
+                actor=actor,
+                _index_was_current=index_was_current,
+                **updates,
+            )
+
         from planfile.core.fastio import read_yaml_fast
 
         for sprint_file in self._all_sprint_files():
@@ -823,16 +1513,124 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     self._append_operational_line(tickets[ticket_id]["history"][-1]["dsl"])
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
-                if sprint_file == self._sprint_file("current"):
+                archive_report = (
                     self._archive_completed_unlocked()
-                return self._ticket_from_data(tickets[ticket_id])
+                    if sprint_file == self._sprint_file("current")
+                    else {"archived": 0}
+                )
+                model = self._ticket_from_data(tickets[ticket_id])
+                if model is not None and not archive_report.get("archived"):
+                    self._finish_index_mutation(
+                        index_was_current,
+                        upserts=[(model, sprint_file.stem)],
+                    )
+                return model
         return None
+
+    def _update_ticket_sharded_unlocked(
+        self,
+        ticket_id: str,
+        reason: str | None = None,
+        actor: str | None = None,
+        _index_was_current: bool = False,
+        **updates,
+    ) -> Ticket | None:
+        storage = self._sharded_storage()
+        located = storage.locate_ticket(ticket_id)
+        if located is None:
+            return None
+        sprint, ticket_data = located
+        previous = dict(ticket_data)
+        history_reason = reason or updates.pop("reason", None) or updates.pop("_reason", None)
+        history_actor = actor or updates.pop("actor", None) or updates.pop("_actor", None)
+        serialized_updates = {
+            key: self._serialize_update_value(value) for key, value in updates.items()
+        }
+        terminal_status = serialized_updates.get("status")
+        if terminal_status in {"done", "canceled", "blocked", "failed"}:
+            execution_update = serialized_updates.get("execution")
+            if not isinstance(execution_update, dict):
+                execution_update = dict(previous.get("execution") or {})
+            else:
+                execution_update = dict(execution_update)
+            execution_update["state"] = terminal_status
+            execution_update["assigned_to"] = None
+            execution_update["lease_expires_at"] = None
+            execution_update["finished_at"] = datetime.now(UTC).isoformat()
+            serialized_updates["execution"] = execution_update
+
+        current = dict(previous)
+        current.update(serialized_updates)
+        current["updated_at"] = datetime.now(UTC).isoformat()
+        changed_keys = sorted(
+            key
+            for key, value in serialized_updates.items()
+            if key != "history" and previous.get(key) != value
+        )
+        if changed_keys and "history" not in serialized_updates:
+            history = list(current.get("history") or [])
+            history.append(
+                self._build_history_entry(
+                    previous,
+                    current,
+                    changed_keys,
+                    reason=history_reason,
+                    actor=history_actor,
+                )
+            )
+            current["history"] = history[-200:]
+
+        storage.upsert_ticket(sprint, ticket_id, current)
+        if changed_keys and "history" not in serialized_updates:
+            self._append_operational_line(current["history"][-1]["dsl"])
+        self._invalidate_sharded_cache(sprint)
+        archive_report = (
+            self._archive_completed_unlocked()
+            if sprint == "current"
+            else {"archived": 0}
+        )
+        model = self._ticket_from_data(current)
+        if model is not None and not archive_report.get("archived"):
+            self._finish_index_mutation(
+                _index_was_current,
+                upserts=[(model, sprint)],
+            )
+        return model
 
     def delete_ticket(self, ticket_id: str) -> bool:
         """Delete a ticket by ID. Returns True if deleted, False if not found."""
+        if self._uses_sharded_storage():
+            with self.mutation_lock():
+                index_was_current = self._begin_index_mutation()
+                storage = self._sharded_storage()
+                located = storage.locate_ticket(ticket_id)
+                if located is None:
+                    return False
+                sprint, deleted_ticket = located
+                storage.delete_ticket(sprint, ticket_id)
+                from planfile.core.operational_dsl import line as operational_line
+
+                self._append_operational_line(operational_line(
+                    kind="task", source="planfile.store", ticket_id=ticket_id,
+                    actor="planfile.store", oql="ticket.delete",
+                    uri=f"planfile://tickets/{ticket_id}/command/delete", mode="apply",
+                    status="deleted", replayable=False, correlation_id=ticket_id,
+                    data={"payload": {
+                        "name": deleted_ticket.get("name"),
+                        "status": deleted_ticket.get("status"),
+                    }},
+                ))
+                self._invalidate_sharded_cache(sprint)
+                self._finish_index_mutation(
+                    index_was_current,
+                    deletes=[ticket_id],
+                )
+                return True
+
         from planfile.core.fastio import read_yaml_fast
 
         with self.mutation_lock():
+            index_was_current = self._begin_index_mutation()
             for sprint_file in self._all_sprint_files():
                 data = read_yaml_fast(sprint_file) or {}
                 sprint_data = data.get("sprint", data)
@@ -852,15 +1650,67 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     ))
                     if hasattr(self, "_yaml_cache"):
                         self._yaml_cache.pop(str(sprint_file), None)
+                    self._finish_index_mutation(
+                        index_was_current,
+                        deletes=[ticket_id],
+                    )
                     return True
         return False
 
     def move_ticket(self, ticket_id: str, to_sprint: str) -> bool:
         """Move a ticket under one lock, rolling back if source removal fails."""
+        self._sprint_file(to_sprint)  # validate
+        if self._uses_sharded_storage():
+            with self.mutation_lock():
+                index_was_current = self._begin_index_mutation()
+                storage = self._sharded_storage()
+                located = storage.locate_ticket(ticket_id)
+                if located is None:
+                    return False
+                source_sprint, previous_ticket = located
+                if source_sprint == to_sprint:
+                    return True
+                if storage.get_ticket(to_sprint, ticket_id) is not None:
+                    raise ValueError(f"ticket_exists_in_target_sprint:{ticket_id}:{to_sprint}")
+
+                moved_ticket = dict(previous_ticket)
+                moved_ticket["sprint"] = to_sprint
+                moved_ticket["updated_at"] = datetime.now(UTC).isoformat()
+                history = list(moved_ticket.get("history") or [])
+                history.append(
+                    self._build_history_entry(
+                        previous_ticket,
+                        moved_ticket,
+                        ["sprint"],
+                        reason="move_ticket",
+                    )
+                )
+                moved_ticket["history"] = history[-200:]
+
+                storage.upsert_ticket(to_sprint, ticket_id, moved_ticket)
+                try:
+                    removed = storage.delete_ticket(source_sprint, ticket_id)
+                    if removed is None:
+                        raise RuntimeError(f"ticket_disappeared_during_move:{ticket_id}")
+                except Exception:
+                    storage.delete_ticket(to_sprint, ticket_id)
+                    raise
+                self._invalidate_sharded_cache(source_sprint)
+                self._invalidate_sharded_cache(to_sprint)
+                self._append_operational_line(moved_ticket["history"][-1]["dsl"])
+                model = self._ticket_from_data(moved_ticket)
+                if model is not None:
+                    self._finish_index_mutation(
+                        index_was_current,
+                        upserts=[(model, to_sprint)],
+                    )
+                return True
+
         from planfile.core.fastio import read_yaml_fast
 
         destination_file = self._sprint_file(to_sprint)
         with self.mutation_lock():
+            index_was_current = self._begin_index_mutation()
             for source_file in self._all_sprint_files():
                 source_data = read_yaml_fast(source_file) or {}
                 source_root = source_data.get("sprint", source_data)
@@ -916,15 +1766,65 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     self._yaml_cache.pop(str(source_file), None)
                     self._yaml_cache.pop(str(destination_file), None)
                 self._append_operational_line(moved_ticket["history"][-1]["dsl"])
+                model = self._ticket_from_data(moved_ticket)
+                if model is not None:
+                    self._finish_index_mutation(
+                        index_was_current,
+                        upserts=[(model, to_sprint)],
+                    )
                 return True
         return False
 
     def delete_tickets_bulk(self, ticket_ids: list[str]) -> tuple[list[str], list[str]]:
         """Delete multiple tickets by ID. Returns (deleted_ids, not_found_ids)."""
+        if self._uses_sharded_storage():
+            deleted: list[str] = []
+            not_found: list[str] = []
+            deleted_tickets: dict[str, dict] = {}
+            changed_sprints: set[str] = set()
+            with self.mutation_lock():
+                index_was_current = self._begin_index_mutation()
+                storage = self._sharded_storage()
+                for ticket_id in ticket_ids:
+                    located = storage.locate_ticket(ticket_id)
+                    if located is None:
+                        not_found.append(ticket_id)
+                        continue
+                    sprint, ticket = located
+                    removed = storage.delete_ticket(sprint, ticket_id)
+                    if removed is None:
+                        not_found.append(ticket_id)
+                        continue
+                    deleted.append(ticket_id)
+                    deleted_tickets[ticket_id] = ticket
+                    changed_sprints.add(sprint)
+                from planfile.core.operational_dsl import line as operational_line
+
+                for ticket_id in deleted:
+                    deleted_ticket = deleted_tickets[ticket_id]
+                    self._append_operational_line(operational_line(
+                        kind="task", source="planfile.store", ticket_id=ticket_id,
+                        actor="planfile.store", oql="ticket.delete",
+                        uri=f"planfile://tickets/{ticket_id}/command/delete", mode="apply",
+                        status="deleted", replayable=False, correlation_id=ticket_id,
+                        data={"payload": {
+                            "name": deleted_ticket.get("name"),
+                            "status": deleted_ticket.get("status"),
+                        }},
+                    ))
+                for sprint in changed_sprints:
+                    self._invalidate_sharded_cache(sprint)
+                self._finish_index_mutation(
+                    index_was_current,
+                    deletes=deleted,
+                )
+            return deleted, not_found
+
         deleted = []
         not_found = []
 
         with self.mutation_lock():
+            index_was_current = self._begin_index_mutation()
             # Load all sprint files into memory
             from planfile.core.fastio import read_yaml_fast
 
@@ -967,6 +1867,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     status="deleted", replayable=False, correlation_id=ticket_id,
                     data={"payload": {"name": deleted_ticket.get("name"), "status": deleted_ticket.get("status")}},
                 ))
+            self._finish_index_mutation(
+                index_was_current,
+                deletes=deleted,
+            )
 
         return deleted, not_found
 

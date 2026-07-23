@@ -117,3 +117,19 @@ def test_runnable_report_splits_servable_and_skipped(monkeypatch):
     assert rep["selected"] == "C1" and rep["servable"] == ["C1"]
     reasons = {r["id"]: r["reason"] for r in rep["skipped"]}
     assert reasons == {"H1": "actor:human", "W1": "waiting:node"}
+
+
+def test_next_ticket_resolves_dependencies_from_one_loaded_snapshot(monkeypatch):
+    monkeypatch.delenv("CURRENT_GOAL", raising=False)
+    completed = _mk(id="DONE", status="done")
+    runnable = _mk(id="RUN", blocked_by=["DONE"], priority="high")
+    blocked = _mk(id="WAIT", blocked_by=["MISSING"], priority="critical")
+    pf = Planfile.__new__(Planfile)
+    monkeypatch.setattr(pf, "list_tickets", lambda **kwargs: [completed, runnable, blocked])
+
+    def unexpected_lookup(_ticket_id):
+        raise AssertionError("next_ticket must not rescan storage for every dependency")
+
+    monkeypatch.setattr(pf, "get_ticket", unexpected_lookup)
+
+    assert pf.next_ticket().id == "RUN"

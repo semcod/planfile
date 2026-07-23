@@ -19,11 +19,13 @@ TOOLS = [
         "description": (
             "Execute a natural language / DSL command against planfile. "
             "Supports: create/list/show/update/move/done/start/block/delete ticket(s), "
-            "list/add sprint, validate, sync, query, export. "
+            "list/add sprint, safe list/show/set configuration, validate, sync, query, export. "
             "Examples: 'create ticket \"Fix login\" priority=high', "
             "'list tickets sprint=current status=open', "
             "'update ticket PLF-001 status=done', "
             "'move ticket PLF-001 to sprint=2', "
+            "'set config store.storage.index=sqlite', "
+            "'set config integrations.github.repo=owner/repo if_revision=cfg_...', "
             "'done ticket PLF-001', 'validate', 'sync github', 'help'."
         ),
         "inputSchema": {
@@ -319,4 +321,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -1,0 +1,303 @@
+"""Disposable SQLite materialized index for Planfile ticket snapshots."""
+
+from __future__ import annotations
+
+import json
+import sqlite3
+from pathlib import Path
+from typing import Any, Iterable
+
+SQLITE_INDEX_SCHEMA = "planfile.sqlite-ticket-index/v1"
+_SCHEMA_VERSION = 1
+
+
+class SQLiteTicketIndex:
+    """Indexed projection of YAML/JSONL sources.
+
+    The database is never the only copy of a ticket. A corrupt, missing or stale
+    index can be deleted and rebuilt from the durable Planfile files.
+    """
+
+    def __init__(self, path: Path) -> None:
+        self.path = Path(path)
+
+    @staticmethod
+    def serialize_signature(signature: tuple) -> str:
+        return json.dumps(signature, ensure_ascii=False, separators=(",", ":"))
+
+    def _connect(self) -> sqlite3.Connection:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        connection = sqlite3.connect(self.path, timeout=10)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("PRAGMA synchronous=NORMAL")
+        connection.execute("PRAGMA foreign_keys=ON")
+        self._initialize(connection)
+        return connection
+
+    @staticmethod
+    def _initialize(connection: sqlite3.Connection) -> None:
+        connection.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS meta (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS tickets (
+                id TEXT PRIMARY KEY,
+                sprint TEXT NOT NULL,
+                status TEXT NOT NULL,
+                priority TEXT NOT NULL,
+                source TEXT,
+                queue TEXT NOT NULL,
+                created_at TEXT,
+                updated_at TEXT,
+                position INTEGER NOT NULL,
+                ticket_json TEXT NOT NULL,
+                summary_json TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS tickets_sprint_position
+                ON tickets(sprint, position);
+            CREATE INDEX IF NOT EXISTS tickets_sprint_status_priority
+                ON tickets(sprint, status, priority, position);
+            CREATE INDEX IF NOT EXISTS tickets_source
+                ON tickets(source, position);
+            CREATE TABLE IF NOT EXISTS dependencies (
+                ticket_id TEXT NOT NULL,
+                blocked_by TEXT NOT NULL,
+                PRIMARY KEY(ticket_id, blocked_by),
+                FOREIGN KEY(ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS dependencies_blocked_by
+                ON dependencies(blocked_by);
+            """
+        )
+        connection.execute(
+            "INSERT OR IGNORE INTO meta(key, value) VALUES('schema', ?)",
+            (SQLITE_INDEX_SCHEMA,),
+        )
+        connection.execute(
+            "INSERT OR IGNORE INTO meta(key, value) VALUES('schema_version', ?)",
+            (str(_SCHEMA_VERSION),),
+        )
+        connection.commit()
+
+    def is_current(self, signature: tuple) -> bool:
+        if not self.path.exists():
+            return False
+        expected = self.serialize_signature(signature)
+        try:
+            with self._connect() as connection:
+                row = connection.execute(
+                    "SELECT value FROM meta WHERE key='source_signature'"
+                ).fetchone()
+                return row is not None and row["value"] == expected
+        except sqlite3.DatabaseError:
+            return False
+
+    def rebuild(self, records: Iterable[dict[str, Any]], signature: tuple) -> int:
+        rows = list(records)
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute("DELETE FROM dependencies")
+            connection.execute("DELETE FROM tickets")
+            connection.executemany(
+                """
+                INSERT INTO tickets(
+                    id, sprint, status, priority, source, queue,
+                    created_at, updated_at, position, ticket_json, summary_json
+                ) VALUES(
+                    :id, :sprint, :status, :priority, :source, :queue,
+                    :created_at, :updated_at, :position, :ticket_json, :summary_json
+                )
+                """,
+                rows,
+            )
+            dependencies = [
+                (row["id"], dependency)
+                for row in rows
+                for dependency in row.get("blocked_by", [])
+            ]
+            connection.executemany(
+                "INSERT INTO dependencies(ticket_id, blocked_by) VALUES(?, ?)",
+                dependencies,
+            )
+            connection.execute(
+                """
+                INSERT INTO meta(key, value) VALUES('source_signature', ?)
+                ON CONFLICT(key) DO UPDATE SET value=excluded.value
+                """,
+                (self.serialize_signature(signature),),
+            )
+            connection.commit()
+        return len(rows)
+
+    def get_ticket(self, ticket_id: str) -> dict[str, Any] | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT ticket_json FROM tickets WHERE id=?",
+                (ticket_id,),
+            ).fetchone()
+        return json.loads(row["ticket_json"]) if row is not None else None
+
+    def apply(
+        self,
+        *,
+        upserts: Iterable[dict[str, Any]] = (),
+        deletes: Iterable[str] = (),
+        signature: tuple,
+    ) -> None:
+        """Apply a known-complete store mutation and advance its source signature."""
+        rows = list(upserts)
+        deleted_ids = list(deletes)
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            if deleted_ids:
+                connection.executemany(
+                    "DELETE FROM tickets WHERE id=?",
+                    [(ticket_id,) for ticket_id in deleted_ids],
+                )
+            next_position = int(
+                connection.execute(
+                    "SELECT COALESCE(MAX(position), -1) + 1 AS value FROM tickets"
+                ).fetchone()["value"]
+            )
+            for row in rows:
+                existing = connection.execute(
+                    "SELECT position FROM tickets WHERE id=?",
+                    (row["id"],),
+                ).fetchone()
+                position = existing["position"] if existing is not None else next_position
+                if existing is None:
+                    next_position += 1
+                values = dict(row)
+                values["position"] = position
+                connection.execute(
+                    """
+                    INSERT INTO tickets(
+                        id, sprint, status, priority, source, queue,
+                        created_at, updated_at, position, ticket_json, summary_json
+                    ) VALUES(
+                        :id, :sprint, :status, :priority, :source, :queue,
+                        :created_at, :updated_at, :position, :ticket_json, :summary_json
+                    )
+                    ON CONFLICT(id) DO UPDATE SET
+                        sprint=excluded.sprint,
+                        status=excluded.status,
+                        priority=excluded.priority,
+                        source=excluded.source,
+                        queue=excluded.queue,
+                        created_at=excluded.created_at,
+                        updated_at=excluded.updated_at,
+                        ticket_json=excluded.ticket_json,
+                        summary_json=excluded.summary_json
+                    """,
+                    values,
+                )
+                connection.execute(
+                    "DELETE FROM dependencies WHERE ticket_id=?",
+                    (row["id"],),
+                )
+                connection.executemany(
+                    "INSERT INTO dependencies(ticket_id, blocked_by) VALUES(?, ?)",
+                    [(row["id"], dependency) for dependency in row.get("blocked_by", [])],
+                )
+            connection.execute(
+                """
+                INSERT INTO meta(key, value) VALUES('source_signature', ?)
+                ON CONFLICT(key) DO UPDATE SET value=excluded.value
+                """,
+                (self.serialize_signature(signature),),
+            )
+            connection.commit()
+
+    def list_summaries(
+        self,
+        *,
+        sprint: str,
+        filters: dict[str, Any],
+        offset: int,
+        limit: int | None,
+    ) -> tuple[list[dict[str, Any]], int]:
+        conditions = []
+        parameters: list[Any] = []
+        if sprint != "all":
+            conditions.append("sprint=?")
+            parameters.append(sprint)
+        for key in ("status", "priority", "source"):
+            value = filters.get(key)
+            if value is None:
+                continue
+            conditions.append(f"{key}=?")
+            parameters.append(str(getattr(value, "value", value)))
+        where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+        with self._connect() as connection:
+            total = int(
+                connection.execute(
+                    f"SELECT COUNT(*) AS count FROM tickets{where}",
+                    parameters,
+                ).fetchone()["count"]
+            )
+            sql = f"SELECT summary_json FROM tickets{where} ORDER BY position"
+            page_parameters = list(parameters)
+            if limit is not None:
+                sql += " LIMIT ? OFFSET ?"
+                page_parameters.extend((limit, offset))
+            elif offset:
+                sql += " LIMIT -1 OFFSET ?"
+                page_parameters.append(offset)
+            rows = connection.execute(sql, page_parameters).fetchall()
+        return [json.loads(row["summary_json"]) for row in rows], total
+
+    def status(self, signature: tuple | None = None) -> dict[str, Any]:
+        if not self.path.exists():
+            return {
+                "schema": SQLITE_INDEX_SCHEMA,
+                "exists": False,
+                "current": False,
+                "tickets": 0,
+                "bytes": 0,
+                "path": str(self.path),
+            }
+        try:
+            with self._connect() as connection:
+                count = int(
+                    connection.execute("SELECT COUNT(*) AS count FROM tickets").fetchone()[
+                        "count"
+                    ]
+                )
+                row = connection.execute(
+                    "SELECT value FROM meta WHERE key='source_signature'"
+                ).fetchone()
+            current = (
+                signature is not None
+                and row is not None
+                and row["value"] == self.serialize_signature(signature)
+            )
+            return {
+                "schema": SQLITE_INDEX_SCHEMA,
+                "exists": True,
+                "current": current,
+                "tickets": count,
+                "bytes": self.path.stat().st_size,
+                "path": str(self.path),
+            }
+        except (OSError, sqlite3.DatabaseError) as exc:
+            return {
+                "schema": SQLITE_INDEX_SCHEMA,
+                "exists": True,
+                "current": False,
+                "tickets": 0,
+                "bytes": 0,
+                "path": str(self.path),
+                "error": str(exc),
+            }
+
+    def reset(self) -> None:
+        """Delete only disposable SQLite index files."""
+        for path in (
+            self.path,
+            self.path.with_name(self.path.name + "-wal"),
+            self.path.with_name(self.path.name + "-shm"),
+        ):
+            path.unlink(missing_ok=True)

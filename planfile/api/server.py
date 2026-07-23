@@ -45,9 +45,9 @@ from planfile.core.models import (
     TicketSource,
 )
 from planfile.runtime_context import (
+    DEFAULT_CONFIG as DEFAULT_RUNTIME_CONFIG,
     build_runtime_context,
     load_runtime_context_config,
-    save_runtime_context_config,
 )
 from planfile.server_common import get_planfile
 
@@ -219,6 +219,14 @@ class RuntimeContextConfigRequest(BaseModel):
     overrides: dict[str, Any] = Field(default_factory=dict)
 
 
+class ConfigurationUpdateRequest(BaseModel):
+    changes: dict[str, Any]
+    mode: Literal["apply", "dry-run"] = "apply"
+    actor: str = "rest"
+    reason: str = ""
+    expected_revision: str | None = None
+
+
 COMPLETION_RECEIPT_SCHEMA = "subactor.completion-receipt.v1"
 PROCESS_ENVELOPE_SCHEMA = "subactor.process-envelope.v2"
 
@@ -306,16 +314,7 @@ _SPRINT_SUMMARY_CACHE_LOCK = RLock()
 
 
 def _ticket_snapshot_signature(pf, sprint: str) -> tuple:
-    store = pf.store
-    files = store._all_sprint_files() if sprint == "all" else [store._sprint_file(sprint)]
-    signature = []
-    for path in files:
-        try:
-            stat = path.stat()
-            signature.append((str(path), stat.st_mtime_ns, stat.st_size))
-        except FileNotFoundError:
-            signature.append((str(path), -1, -1))
-    return tuple(signature), pf.store._evidence_revision()
+    return pf.store.sprint_signature(sprint), pf.store._evidence_revision()
 
 
 def _ticket_operational_payload(ticket) -> dict[str, Any]:
@@ -403,16 +402,25 @@ def _ticket_list_response(
         if cached is not None:
             body, total, count = cached
         else:
-            tickets = pf.list_tickets(sprint=sprint, **filters)
-            total = len(tickets)
-            tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
-            count = len(tickets)
-            payload = [
-                _ticket_operational_payload(ticket) if view == "operational"
-                else _ticket_summary_payload(ticket) if view == "summary"
-                else ticket.model_dump(mode="json", exclude_none=True)
-                for ticket in tickets
-            ]
+            if view == "summary" and pf.store.ticket_index_enabled():
+                payload, total = pf.store.indexed_ticket_summaries(
+                    sprint=sprint,
+                    filters=filters,
+                    offset=offset,
+                    limit=limit,
+                )
+                count = len(payload)
+            else:
+                tickets = pf.list_tickets(sprint=sprint, **filters)
+                total = len(tickets)
+                tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
+                count = len(tickets)
+                payload = [
+                    _ticket_operational_payload(ticket) if view == "operational"
+                    else _ticket_summary_payload(ticket) if view == "summary"
+                    else ticket.model_dump(mode="json", exclude_none=True)
+                    for ticket in tickets
+                ]
             body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
             # Do not retain a response assembled across a concurrent file change.
             if signature == _ticket_snapshot_signature(pf, sprint):
@@ -805,6 +813,8 @@ def list_sprints(response: Response):
 
     response.headers.update(NO_STORE_HEADERS)
     pf = get_planfile()
+    if pf.store.storage_backend() == "sharded-yaml":
+        return pf.store.list_sprint_summaries()
     result = []
     sprint_files = pf.store._all_sprint_files()
     with _SPRINT_SUMMARY_CACHE_LOCK:
@@ -846,22 +856,18 @@ def create_sprint(body: SprintCreate):
     sprint_id = body.id or re.sub(r"[^A-Za-z0-9_-]+", "-", body.name.strip()).strip("-").lower()
     if not sprint_id or not pf.store.SPRINT_ID_PATTERN.fullmatch(sprint_id):
         raise HTTPException(422, "invalid_sprint_id")
-    sprint_file = pf.store._sprint_file(sprint_id)
-    sprint = {
-        "id": sprint_id,
+    metadata = {
         "name": body.name,
         "status": "active",
         "length_days": body.length_days,
         "objectives": body.objectives,
-        "tickets": {},
     }
-    with pf.store.mutation_lock():
-        if sprint_file.exists():
-            raise HTTPException(409, f"sprint_exists:{sprint_id}")
-        pf.store._write_yaml_atomic(sprint_file, {"sprint": sprint}, allow_unicode=True)
-        if hasattr(pf.store, "_yaml_cache"):
-            pf.store._yaml_cache.pop(str(sprint_file), None)
-    return {key: value for key, value in sprint.items() if key != "tickets"} | {"ticket_count": 0}
+    try:
+        return pf.store.create_sprint(sprint_id, metadata)
+    except ValueError as exc:
+        if str(exc).startswith("sprint_exists:"):
+            raise HTTPException(409, str(exc)) from exc
+        raise
 
 
 # ── YAML direct operations ─────────────────────────────────────────────────────
@@ -898,6 +904,58 @@ def patch_yaml(body: YAMLPatchRequest):
 
 
 # ── DSL endpoint ───────────────────────────────────────────────────────────────
+
+@app.get("/api/config", tags=["configuration"])
+def list_configuration(response: Response):
+    """Return effective redacted values and the writable OQL contract."""
+    result = get_planfile().configuration.list()
+    response.headers["ETag"] = f'"{result["revision"]}"'
+    return result
+
+
+@app.get("/api/config/value/{path:path}", tags=["configuration"])
+def show_configuration(path: str, response: Response):
+    """Return one effective, redacted configuration value."""
+    try:
+        result = get_planfile().configuration.show(path)
+        response.headers["ETag"] = f'"{result["revision"]}"'
+        return result
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@app.patch("/api/config", tags=["configuration"])
+def update_configuration(
+    body: ConfigurationUpdateRequest,
+    request: Request,
+    response: Response,
+):
+    """Apply a validated configuration batch and record a config.set OQL event."""
+    header_revision = request.headers.get("if-match", "").strip()
+    if header_revision.startswith("W/"):
+        header_revision = header_revision[2:].strip()
+    header_revision = header_revision.strip('"') or None
+    if (
+        body.expected_revision
+        and header_revision
+        and body.expected_revision != header_revision
+    ):
+        raise HTTPException(400, "config_revision_preconditions_disagree")
+    expected_revision = body.expected_revision or header_revision
+    try:
+        result = get_planfile().configuration.set_many(
+            body.changes,
+            mode=body.mode,
+            actor=body.actor,
+            reason=body.reason,
+            expected_revision=expected_revision,
+        )
+    except ValueError as exc:
+        status = 409 if str(exc).startswith("config_revision_conflict:") else 400
+        raise HTTPException(status, str(exc)) from exc
+    response.headers["ETag"] = f'"{result["revision"]}"'
+    return result
+
 
 @app.post("/dsl", response_model=DSLResponse, tags=["dsl"])
 def dsl_command(body: DSLRequest) -> DSLResponse:
@@ -1193,7 +1251,25 @@ def get_runtime_context_config():
 
 @app.put("/api/runtime-context/config", tags=["runtime-context"])
 def update_runtime_context_config(body: RuntimeContextConfigRequest):
-    return save_runtime_context_config(_runtime_context_project(), body.model_dump())
+    unknown = sorted(set(body.enabled) - set(DEFAULT_RUNTIME_CONFIG["enabled"]))
+    if unknown:
+        raise HTTPException(400, f"config_path_not_writable:runtime.enabled.{unknown[0]}")
+    changes = {
+        **{
+            f"runtime.enabled.{name}": body.enabled.get(name, default)
+            for name, default in DEFAULT_RUNTIME_CONFIG["enabled"].items()
+        },
+        "runtime.overrides": body.overrides,
+    }
+    try:
+        get_planfile().configuration.set_many(
+            changes,
+            actor="runtime-context-api",
+            reason="replace runtime context configuration",
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return load_runtime_context_config(_runtime_context_project())
 
 
 @app.get("/runtime-context", response_class=HTMLResponse, tags=["runtime-context"])

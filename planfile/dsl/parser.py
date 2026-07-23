@@ -6,6 +6,7 @@ Grammar (simplified EBNF):
                  |'delete'|'remove'|'done'|'start'|'block'|'validate'|'sync'
                  |'query'|'export'
   object      := 'ticket'|'tickets'|'sprint'|'sprints'|'backlog'|'strategy'
+                 |'config'|'configuration'|'settings'
   target      := TICKET_ID | QUOTED_STRING | WORD
   modifiers   := KEY=VALUE | 'to' VALUE | 'where' FILTER_EXPR
   FILTER_EXPR := KEY=VALUE ('and' KEY=VALUE)*
@@ -69,6 +70,9 @@ OBJECTS = {
     "strategy": "strategy",
     "plan": "strategy",
     "planfile": "strategy",
+    "config": "config",
+    "configuration": "config",
+    "settings": "config",
 }
 
 TICKET_ID_RE = re.compile(r"^[A-Z]+-\d+$|^#\d+$")

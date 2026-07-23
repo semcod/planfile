@@ -34,13 +34,13 @@ before:
 
 ## AI Cost Tracking
 
-![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.119-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.32-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-70.2h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
+![PyPI](https://img.shields.io/badge/pypi-costs-blue) ![Version](https://img.shields.io/badge/version-0.1.123-blue) ![Python](https://img.shields.io/badge/python-3.9+-blue) ![License](https://img.shields.io/badge/license-Apache--2.0-green)
+![AI Cost](https://img.shields.io/badge/AI%20Cost-$3.39-orange) ![Human Time](https://img.shields.io/badge/Human%20Time-77.0h-blue) ![Model](https://img.shields.io/badge/Model-openrouter%2Fqwen%2Fqwen3--coder--next-lightgrey)
 
-- 🤖 **LLM usage:** $3.3217 (138 commits)
-- 👤 **Human dev:** ~$7017 (70.2h @ $100/h, 30min dedup)
+- 🤖 **LLM usage:** $3.3933 (145 commits)
+- 👤 **Human dev:** ~$7703 (77.0h @ $100/h, 30min dedup)
 
-Generated on 2026-07-21 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
+Generated on 2026-07-24 using [openrouter/qwen/qwen3-coder-next](https://openrouter.ai/qwen/qwen3-coder-next)
 
 ---
 
@@ -367,7 +367,14 @@ never archived. Ticket IDs and history are preserved; use `sprint=all` when a
 listing must include archives.
 
 The defaults apply to existing projects without a configuration change. They
-can be adjusted or disabled in `.planfile/config.yaml`:
+can be adjusted or disabled through the validated configuration interface (or
+reviewed directly in `.planfile/config.yaml`):
+
+```bash
+planfile config set store.archive.max_current_tickets 500
+planfile config set store.archive.enabled false --dry-run
+planfile config set integrations.github.repo owner/project
+```
 
 ```yaml
 archive:
@@ -377,6 +384,34 @@ archive:
   retain_terminal_tickets: 20
   terminal_statuses: [done, canceled, failed, blocked]
 ```
+
+For large or frequently mutated queues, Planfile also provides an opt-in
+sharded YAML backend. It keeps the public ticket/API contract unchanged while
+limiting a point update to one fixed ID-range file:
+
+```bash
+# Inspect the current backend and physical file count
+planfile storage status
+
+# Verified migration; legacy sprint files are retained in a recovery backup
+planfile storage migrate --backend sharded-yaml --shard-size 100
+
+# Build an optional, disposable SQLite index for fast summary pages and filters
+planfile storage index-enable
+planfile storage index-status
+
+# The same transitions are available through portable DSL/OQL commands
+planfile dsl run "set config store.storage.index=sqlite"
+```
+
+The resulting layout uses `.planfile/sprints/current.shards/metadata.yaml`,
+`manifest.json`, and `tickets-000000-000099.yaml`-style files. IDs without a
+numeric suffix use stable hash shards. See
+[`docs/guides/TICKET_STORAGE_SCALING_PLAN.md`](docs/guides/TICKET_STORAGE_SCALING_PLAN.md)
+for format choices, database options, consistency rules and benchmark targets.
+SQLite stores a materialized projection only: YAML and JSONL remain authoritative,
+and `planfile storage index-rebuild` recreates the database after manual edits or
+cache corruption.
 
 Set either limit to `0` to disable that limit, or set `enabled: false` to turn
 automatic archiving off entirely.
@@ -673,24 +708,26 @@ Planfile includes a natural language-like DSL for quick operations:
 
 ```bash
 # CLI DSL - single command
-planfile dsl "list tickets sprint=current status=open"
-planfile dsl 'create ticket "Fix login bug" priority=high'
-planfile dsl "update ticket PLF-001 status=done"
-planfile dsl "move ticket PLF-001 to sprint=2"
-planfile dsl "done ticket PLF-001"
-planfile dsl "validate"
-planfile dsl "sync github"
+planfile dsl run "list tickets sprint=current status=open"
+planfile dsl run 'create ticket "Fix login bug" priority=high'
+planfile dsl run "update ticket PLF-001 status=done"
+planfile dsl run "move ticket PLF-001 to sprint=2"
+planfile dsl run "done ticket PLF-001"
+planfile dsl run "list config"
+planfile dsl run "set config store.archive.max_current_tickets=500"
+planfile dsl run "validate"
+planfile dsl run "sync github"
 
 # CLI DSL - interactive shell
-planfile dsl
+planfile dsl run
 # Then type commands like:
 # > list tickets sprint=current
 # > create ticket "New task" priority=high
 # > exit
 
 # Format options
-planfile dsl "list tickets" --format json
-planfile dsl "list tickets" --format yaml
+planfile dsl run "list tickets" --format json
+planfile dsl run "list tickets" --format yaml
 ```
 
 **Python API DSL:**
@@ -757,11 +794,21 @@ python -m planfile.mcp.server
 - `delete ticket` — delete ticket
 - `list sprints` — list all sprints
 - `add sprint` — add new sprint
+- `list config` / `show config PATH` — inspect effective redacted configuration
+- `set config PATH=VALUE` — validate and apply an allowlisted configuration change
 - `validate` — validate tickets
 - `sync` — sync to integrations (github, jira, gitlab, all)
 - `query` — query tickets with where clause
 - `export` — export to formats (json, yaml, html)
 - `help` — show command reference
+
+Configuration commands share one typed contract across CLI, Python, REST,
+WebSocket and MCP. Storage backend and index changes invoke their real
+migration/build operations. Non-secret integration settings use a deterministic
+OQL overlay; allocator state and secrets are not writable. Configuration
+revisions and REST ETags protect against concurrent lost updates. See
+[`docs/guides/OQL_CONFIGURATION.md`](docs/guides/OQL_CONFIGURATION.md) for the
+coverage matrix, safety rules and examples for every entry point.
 
 **Aliases:** add/new → create, ls → list, get/show → show, set/edit/patch → update, mv → move, finish/complete → done, begin → start
 

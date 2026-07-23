@@ -50,29 +50,27 @@ class IntegrationConfig:
             configs.extend((self.directory / ".planfile").glob(pattern))
         return sorted(set(configs))
 
+    def _ordered_configs(self) -> list[Path]:
+        """Load the dedicated OQL overlay last so its ownership is deterministic."""
+        paths = self.discover_configs()
+        canonical = self.directory / ".planfile" / "integrations.oql.planfile.yaml"
+        ordinary = [
+            path
+            for path in paths
+            if path != canonical and not path.name.startswith("tickets.")
+        ]
+        tickets = [path for path in paths if path.name.startswith("tickets.")]
+        return [*ordinary, *tickets, *([canonical] if canonical in paths else [])]
+
     def load_configs(self) -> dict[str, Any]:
         """Load and merge all configuration files."""
         self.config = {}
 
-        # Load integration configs first (e.g., github.planfile.yaml)
-        for config_file in self.discover_configs():
-            if config_file.name.startswith("tickets."):
-                continue  # Skip ticket files for now
-
+        for config_file in self._ordered_configs():
             with open(config_file) as f:
                 file_config = yaml.safe_load(f) or {}
-                # Expand environment variables in the loaded config
                 file_config = self._expand_env_vars(file_config)
                 self._deep_merge(self.config, file_config)
-
-        # Load ticket configs last
-        for config_file in self.discover_configs():
-            if config_file.name.startswith("tickets."):
-                with open(config_file) as f:
-                    file_config = yaml.safe_load(f) or {}
-                    # Expand environment variables in the loaded config
-                    file_config = self._expand_env_vars(file_config)
-                    self._deep_merge(self.config, file_config)
 
         return self.config
 

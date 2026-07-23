@@ -8,7 +8,7 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.122"
+__version__ = "0.1.123"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -80,6 +80,13 @@ class Planfile:
         self.store = PlanfileStore(project_path)
         if not self.store.is_initialized():
             self.store.init()
+
+    @property
+    def configuration(self):
+        """Return the safe, typed project-configuration facade."""
+        from planfile.core.configuration import ConfigurationManager
+
+        return ConfigurationManager(self)
 
     def delegation_actors(self) -> tuple[DelegationActor, ...]:
         """Return the configured closed set of valid delegation targets."""
@@ -177,7 +184,13 @@ class Planfile:
         blob = f"{ticket.name} {ticket.description or ''} {' '.join(labels)}".lower()
         return domain not in blob
 
-    def runnability_skip_reason(self, ticket: "Ticket", queue: str | None = None) -> str:
+    def runnability_skip_reason(
+        self,
+        ticket: "Ticket",
+        queue: str | None = None,
+        *,
+        ticket_by_id: dict[str, "Ticket"] | None = None,
+    ) -> str:
         """"" if the ticket satisfies the runnability contract (may be served to a queue), else a
         short machine-readable reason (``exec_state:<s>`` / ``autonomy-frontier`` / ``actor:human`` /
         ``waiting:<x>`` / ``goal-frozen`` / ``blocked_by:<ID>`` / ``queue:<q>``). Assumes the ticket
@@ -193,7 +206,11 @@ class Planfile:
         if queue and ((ticket.execution.queue if ticket.execution else "default") != queue):
             return f"queue:{queue}"
         for blocked_id in (ticket.blocked_by or []):
-            dep = self.get_ticket(blocked_id)
+            dep = (
+                ticket_by_id.get(blocked_id)
+                if ticket_by_id is not None
+                else self.get_ticket(blocked_id)
+            )
             dep_status = (dep.status.value if dep and hasattr(dep.status, "value") else str(dep.status)) if dep else None
             if not dep or dep_status not in self._DEP_SATISFIED_STATES:
                 return f"blocked_by:{blocked_id}"
@@ -210,8 +227,17 @@ class Planfile:
         """Explain runnability for every open ticket — for ``planfile ticket next --debug`` and
         dashboards: ``{selected, servable: [ids], skipped: [{id, reason}]}`` (servable in serve order)."""
         servable, skipped = [], []
-        for ticket in self.list_tickets(sprint=sprint, status="open"):
-            reason = self.runnability_skip_reason(ticket, queue=queue)
+        tickets = self.list_tickets(sprint=sprint)
+        ticket_by_id = {ticket.id: ticket for ticket in tickets}
+        for ticket in tickets:
+            status = ticket.status.value if hasattr(ticket.status, "value") else str(ticket.status)
+            if status != "open":
+                continue
+            reason = self.runnability_skip_reason(
+                ticket,
+                queue=queue,
+                ticket_by_id=ticket_by_id,
+            )
             (skipped.append({"id": ticket.id, "reason": reason}) if reason else servable.append(ticket))
         servable.sort(key=self._ticket_sort_key)
         return {"selected": servable[0].id if servable else None,
@@ -221,9 +247,20 @@ class Planfile:
         """Return the next RUNNABLE ticket (Planfile runnability contract) for queue-like workflows,
         bug-first within priority. Skips frozen-frontier / human-waiting / resource-waiting / off-goal
         / dependency-blocked tickets so an autonomous queue never loops on un-doable work."""
-        runnable = [t for t in self.list_tickets(sprint=sprint, status="open")
-                    if not self.runnability_skip_reason(t, queue=queue)]
-        return sorted(runnable, key=self._ticket_sort_key)[0] if runnable else None
+        tickets = self.list_tickets(sprint=sprint)
+        ticket_by_id = {ticket.id: ticket for ticket in tickets}
+        runnable = (
+            ticket
+            for ticket in tickets
+            if (ticket.status.value if hasattr(ticket.status, "value") else str(ticket.status))
+            == "open"
+            and not self.runnability_skip_reason(
+                ticket,
+                queue=queue,
+                ticket_by_id=ticket_by_id,
+            )
+        )
+        return min(runnable, key=self._ticket_sort_key, default=None)
 
     def update_ticket(self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates):
         """Delegate with optional reason (why status/etc changed) and actor (who/by)."""
@@ -586,19 +623,30 @@ class Planfile:
         """Delete multiple tickets by ID. Returns (deleted_ids, not_found_ids)."""
         return self.store.delete_tickets_bulk(ticket_ids)
 
-    def create_tickets_bulk(self, tickets_data: list[dict],
-                            source: str = None, sprint: str = "current"):
-        created = []
-        for data in tickets_data[:self.MAX_BULK_TICKETS]:
-            if source and "source" not in data:
-                data["source"] = {"tool": source}
-            data.setdefault("sprint", sprint)
-            ticket = self.create_ticket(**data)
-            created.append(ticket)
+    def create_tickets_bulk(
+        self,
+        tickets_data: list[dict],
+        source: str | None = None,
+        sprint: str = "current",
+    ) -> list[Ticket]:
+        """Validate and persist a bounded batch with one write per sprint/shard."""
         if len(tickets_data) > self.MAX_BULK_TICKETS:
-            # Keep the limit explicit so callers can surface it in UX/logs.
-            pass
-        return created
+            raise ValueError(
+                f"bulk_ticket_limit_exceeded:{len(tickets_data)}:{self.MAX_BULK_TICKETS}"
+            )
+        if not tickets_data:
+            return []
+        with self.store.mutation_lock():
+            ticket_ids = self.store._reserve_ids_unlocked(len(tickets_data))
+            tickets = []
+            for ticket_id, original in zip(ticket_ids, tickets_data):
+                data = dict(original)
+                data.pop("id", None)
+                if source and "source" not in data:
+                    data["source"] = {"tool": source}
+                data.setdefault("sprint", sprint)
+                tickets.append(Ticket(id=ticket_id, **data))
+            return self.store._create_tickets_bulk_unlocked(tickets)
 
 
 def quick_ticket(name: str, tool: str = "unknown", **kwargs) -> Ticket:
