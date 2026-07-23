@@ -65,7 +65,12 @@ class TicketStoreMixin:
             cache = {}
             self._ticket_model_cache = cache
         key = str(sprint_file)
-        evidence_revision = self._evidence_revision() if hasattr(self, '_evidence_revision') else ()
+        ticket_ids = (sprint_data.get('tickets') or {}).keys()
+        evidence_revision = (
+            self._ticket_evidence_revision(ticket_ids)
+            if hasattr(self, '_ticket_evidence_revision')
+            else ()
+        )
         entry = cache.get(key)
         if entry is not None and entry[0] is sprint_data and entry[2] == evidence_revision:
             return list(entry[1])

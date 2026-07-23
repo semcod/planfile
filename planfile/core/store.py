@@ -139,6 +139,25 @@ class Store(StoreFileMixin, TicketStoreMixin):
             revision.append((path.name, stat.st_mtime_ns, stat.st_size))
         return tuple(revision)
 
+    def _ticket_evidence_revision(self, ticket_ids) -> tuple:
+        """Return evidence revisions only for tickets in one sprint.
+
+        A receipt appended to one active ticket must not invalidate validated
+        ticket models for every archived sprint. The global revision remains
+        the correct signature for cross-sprint API response caches, while this
+        scoped variant keeps model-cache invalidation proportional to the
+        sprint that actually changed.
+        """
+        revision = []
+        for ticket_id in ticket_ids:
+            try:
+                path = self._ticket_evidence_path(str(ticket_id))
+                stat = path.stat()
+            except (FileNotFoundError, ValueError):
+                continue
+            revision.append((path.name, stat.st_mtime_ns, stat.st_size))
+        return tuple(revision)
+
     def _append_ticket_evidence_event(self, ticket_id: str, event: dict) -> None:
         path = self._ticket_evidence_path(ticket_id)
         path.parent.mkdir(parents=True, exist_ok=True)

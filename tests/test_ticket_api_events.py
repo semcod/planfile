@@ -23,6 +23,34 @@ from planfile import (
 from planfile.api import server
 
 
+def test_watcher_skips_full_ticket_projection_when_source_files_are_unchanged(monkeypatch):
+    class StopWatch(Exception):
+        pass
+
+    snapshot_calls = 0
+    sleep_calls = 0
+
+    def snapshot():
+        nonlocal snapshot_calls
+        snapshot_calls += 1
+        return (("same",), {"PLF-1": "state"}, {})
+
+    async def sleep(_seconds):
+        nonlocal sleep_calls
+        sleep_calls += 1
+        if sleep_calls > 1:
+            raise StopWatch
+
+    monkeypatch.setattr(server, "_current_ticket_snapshot", snapshot)
+    monkeypatch.setattr(server, "_ticket_snapshot_signature", lambda *_args: (("same",)))
+    monkeypatch.setattr(server.asyncio, "sleep", sleep)
+
+    with pytest.raises(StopWatch):
+        asyncio.run(server._watch_planfile_changes(interval_seconds=0))
+
+    assert snapshot_calls == 1
+
+
 def test_websocket_broadcast_is_bounded_and_disconnects_stalled_clients(monkeypatch):
     delivered: list[dict] = []
 
@@ -369,6 +397,9 @@ def test_root_serves_queue_dashboard(tmp_path, monkeypatch):
     assert "Test notification" in response.text
     assert "setInterval" in response.text
     assert "scheduleTicketRefresh" in response.text
+    assert 'fetch("/tickets?limit=1000&view=summary"' in response.text
+    assert "let ticketRefreshPromise = null" in response.text
+    assert "ticketRefreshQueued = true" in response.text
     assert "}, 60000);" in response.text
     assert "loadEventHistory" in response.text
     assert "applyUrlState" in response.text
@@ -645,6 +676,75 @@ def test_ticket_list_operational_view_keeps_execution_contract_without_unbounded
     assert full["history"]
 
 
+def test_ticket_summary_view_keeps_queue_fields_and_omits_execution_contract(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Queue summary",
+        description="Large detail loaded only after selection.",
+        labels=["queue"],
+        source=TicketSource(tool="test", context={"large": "context"}),
+        executor=TicketExecutor(kind="api", mode="automatic", handler="worker"),
+        execution=TicketExecution(queue="project-bot", state="ready"),
+        inputs=TicketInputs(prompt="Large governed input"),
+        outputs=TicketOutputs(result={"large": "result"}, notes=["journal"]),
+    )
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.get("/tickets?view=summary")
+
+    assert response.status_code == 200
+    assert response.headers["x-planfile-view"] == "summary"
+    payload = response.json()[0]
+    assert payload["id"] == ticket.id
+    assert payload["name"] == "Queue summary"
+    assert payload["labels"] == ["queue"]
+    assert payload["executor"]["handler"] == "worker"
+    assert payload["execution"]["queue"] == "project-bot"
+    assert "description" not in payload
+    assert "source" not in payload
+    assert "inputs" not in payload
+    assert "outputs" not in payload
+    assert "history" not in payload
+
+
+def test_browser_without_explicit_view_gets_lightweight_summary(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    current = pf.create_ticket(
+        name="Browser queue",
+        description="Must not be copied into every dashboard refresh.",
+        source=TicketSource(tool="test"),
+    )
+    pf.create_ticket(
+        name="Archived ticket",
+        sprint="archive",
+        source=TicketSource(tool="test"),
+    )
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.get(
+        "/tickets?sprint=all",
+        headers={"user-agent": "Mozilla/5.0"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["x-planfile-view"] == "summary"
+    assert [ticket["id"] for ticket in response.json()] == [current.id]
+    assert "description" not in response.json()[0]
+
+    explicit_archive = client.get(
+        "/tickets?sprint=all&view=summary",
+        headers={"user-agent": "Mozilla/5.0"},
+    )
+    assert {ticket["name"] for ticket in explicit_archive.json()} == {
+        "Browser queue",
+        "Archived ticket",
+    }
+
+
 def test_move_ticket_api_and_sprint_validation(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(name="Move through API", source=TicketSource(tool="test"))
@@ -686,6 +786,38 @@ def test_sprint_api_uses_canonical_sprint_store(tmp_path, monkeypatch):
     assert {item["id"] for item in client.get("/sprints").json()} == {
         "backlog", "current", "release-1"
     }
+
+
+def test_sprint_summary_cache_reparses_only_the_changed_sprint(tmp_path, monkeypatch):
+    from planfile.core import fastio
+
+    pf = Planfile(str(tmp_path))
+    pf.create_ticket(name="Initial", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    server._SPRINT_SUMMARY_CACHE.clear()
+    reads: list[str] = []
+    original = fastio.read_yaml_fast
+
+    def counted(path):
+        reads.append(str(path))
+        return original(path)
+
+    monkeypatch.setattr(fastio, "read_yaml_fast", counted)
+    client = TestClient(server.app)
+
+    assert client.get("/sprints").status_code == 200
+    initial_reads = len(reads)
+    assert initial_reads == 2
+    assert client.get("/sprints").status_code == 200
+    assert len(reads) == initial_reads
+
+    pf.create_ticket(name="Changed current", source=TicketSource(tool="test"))
+    reads_before_refresh = len(reads)
+    listed = client.get("/sprints")
+
+    assert listed.status_code == 200
+    assert len(reads) == reads_before_refresh + 1
+    assert next(item for item in listed.json() if item["id"] == "current")["ticket_count"] == 2
 
 
 def test_favicon_returns_no_content():
@@ -1023,6 +1155,34 @@ def test_evidence_append_invalidates_the_serialized_ticket_list_projection(
     assert response.status_code == 200
     listed = client.get("/tickets?sprint=all").json()[0]
     assert listed["outputs"]["result"]["process_executions"][0]["execution_id"] == "projection-1"
+
+
+def test_evidence_append_does_not_invalidate_unrelated_sprint_models(tmp_path):
+    pf = Planfile(str(tmp_path))
+    active = pf.create_ticket(name="Active evidence", source=TicketSource(tool="test"))
+    pf.create_ticket(
+        name="Archived model",
+        sprint="archive-test",
+        source=TicketSource(tool="test"),
+    )
+    pf.list_tickets(sprint="all")
+    archive_key = str(pf.store._sprint_file("archive-test"))
+    current_key = str(pf.store._sprint_file("current"))
+    archive_before = pf.store._ticket_model_cache[archive_key]
+    current_before = pf.store._ticket_model_cache[current_key]
+
+    pf.append_ticket_evidence(
+        active.id,
+        idempotency_key="scoped-model-cache",
+        collection="process_executions",
+        evidence={"execution_id": "scoped-model-cache", "status": "succeeded"},
+        actor="test",
+        reason="Verify scoped evidence invalidation.",
+    )
+    pf.list_tickets(sprint="all")
+
+    assert pf.store._ticket_model_cache[archive_key] is archive_before
+    assert pf.store._ticket_model_cache[current_key] is not current_before
 
 
 def test_evidence_api_preserves_receipts_from_independent_writers(tmp_path, monkeypatch):

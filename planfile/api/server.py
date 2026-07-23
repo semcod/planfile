@@ -300,7 +300,9 @@ _TICKET_LIST_RESPONSE_CACHE: dict[tuple, tuple[bytes, int, int]] = {}
 _TICKET_LIST_RESPONSE_CACHE_LIMIT = 4
 _TICKET_LIST_RESPONSE_CACHE_LOCK = RLock()
 _TICKET_LIST_LATEST: dict[tuple, tuple[float, bytes, int, int]] = {}
-_DASHBOARD_STALE_WINDOW_SECONDS = 5.0
+_DASHBOARD_STALE_WINDOW_SECONDS = 30.0
+_SPRINT_SUMMARY_CACHE: dict[str, tuple[tuple[int, int], dict[str, Any]]] = {}
+_SPRINT_SUMMARY_CACHE_LOCK = RLock()
 
 
 def _ticket_snapshot_signature(pf, sprint: str) -> tuple:
@@ -341,6 +343,32 @@ def _ticket_operational_payload(ticket) -> dict[str, Any]:
     return payload
 
 
+def _ticket_summary_payload(ticket) -> dict[str, Any]:
+    """Return only fields needed to render and filter a ticket queue."""
+    return ticket.model_dump(
+        mode="json",
+        exclude_none=True,
+        include={
+            "id",
+            "name",
+            "contract_version",
+            "status",
+            "priority",
+            "sprint",
+            "labels",
+            "blocked_by",
+            "blocks",
+            "parent",
+            "children",
+            "group",
+            "executor",
+            "execution",
+            "created_at",
+            "updated_at",
+        },
+    )
+
+
 def _ticket_list_response(
     pf,
     *,
@@ -348,7 +376,7 @@ def _ticket_list_response(
     filters: dict,
     offset: int,
     limit: int | None,
-    view: Literal["full", "operational"] = "full",
+    view: Literal["full", "operational", "summary"] = "full",
     allow_stale: bool = False,
 ) -> Response:
     # FastAPI runs this sync endpoint in a worker pool. Serialize cache misses so
@@ -380,8 +408,8 @@ def _ticket_list_response(
             tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
             count = len(tickets)
             payload = [
-                _ticket_operational_payload(ticket)
-                if view == "operational"
+                _ticket_operational_payload(ticket) if view == "operational"
+                else _ticket_summary_payload(ticket) if view == "summary"
                 else ticket.model_dump(mode="json", exclude_none=True)
                 for ticket in tickets
             ]
@@ -415,7 +443,7 @@ def list_tickets(
     source: str | None = Query(None),
     offset: int = Query(0, ge=0),
     limit: int | None = Query(None, ge=1, le=5000),
-    view: Literal["full", "operational"] = Query("full"),
+    view: Literal["full", "operational", "summary"] = Query("full"),
 ):
     response.headers.update(NO_STORE_HEADERS)
     pf = get_planfile()
@@ -427,13 +455,27 @@ def list_tickets(
     if source:
         filters["source"] = source
     browser_client = "mozilla/" in request.headers.get("user-agent", "").lower()
+    effective_view = (
+        "summary"
+        if browser_client and "view" not in request.query_params
+        else view
+    )
+    # Dashboards shipped before the bounded queue view requested `sprint=all`
+    # after every WebSocket event.  Keep those already-open tabs useful without
+    # forcing the server to materialize every archived sprint.  A caller that
+    # intentionally needs the archive can opt in with an explicit `view`.
+    effective_sprint = (
+        "current"
+        if browser_client and "view" not in request.query_params and sprint == "all"
+        else sprint
+    )
     return _ticket_list_response(
         pf,
-        sprint=sprint,
+        sprint=effective_sprint,
         filters=filters,
         offset=offset,
         limit=limit,
-        view=view,
+        view=effective_view,
         allow_stale=browser_client,
     )
 
@@ -764,21 +806,36 @@ def list_sprints(response: Response):
     response.headers.update(NO_STORE_HEADERS)
     pf = get_planfile()
     result = []
-    for sprint_file in pf.store._all_sprint_files():
-        data = read_yaml_fast(sprint_file) or {}
-        sprint = data.get("sprint", data)
-        tickets = sprint.get("tickets", {}) if isinstance(sprint, dict) else {}
-        declared_id = sprint.get("id")
-        metadata = {
-            key: value
-            for key, value in sprint.items()
-            if key not in {"id", "tickets"}
-        }
-        if declared_id and declared_id != sprint_file.stem:
-            metadata["declared_id"] = declared_id
-        result.append(
-            metadata | {"id": sprint_file.stem, "ticket_count": len(tickets)}
-        )
+    sprint_files = pf.store._all_sprint_files()
+    with _SPRINT_SUMMARY_CACHE_LOCK:
+        live_paths = {str(path) for path in sprint_files}
+        for stale_path in set(_SPRINT_SUMMARY_CACHE) - live_paths:
+            _SPRINT_SUMMARY_CACHE.pop(stale_path, None)
+        for sprint_file in sprint_files:
+            path_key = str(sprint_file)
+            try:
+                stat = sprint_file.stat()
+                signature = (stat.st_mtime_ns, stat.st_size)
+            except FileNotFoundError:
+                continue
+            cached = _SPRINT_SUMMARY_CACHE.get(path_key)
+            if cached is not None and cached[0] == signature:
+                result.append(dict(cached[1]))
+                continue
+            data = read_yaml_fast(sprint_file) or {}
+            sprint = data.get("sprint", data)
+            tickets = sprint.get("tickets", {}) if isinstance(sprint, dict) else {}
+            declared_id = sprint.get("id")
+            metadata = {
+                key: value
+                for key, value in sprint.items()
+                if key not in {"id", "tickets"}
+            }
+            if declared_id and declared_id != sprint_file.stem:
+                metadata["declared_id"] = declared_id
+            summary = metadata | {"id": sprint_file.stem, "ticket_count": len(tickets)}
+            _SPRINT_SUMMARY_CACHE[path_key] = (signature, summary)
+            result.append(dict(summary))
     return result
 
 
@@ -893,6 +950,7 @@ _EVENT_HISTORY_LIMIT = 200
 _event_history: deque[dict[str, Any]] = deque(maxlen=_EVENT_HISTORY_LIMIT)
 _watch_task: asyncio.Task | None = None
 _watch_snapshot: dict[str, str] = {}
+_watch_source_signature: tuple = ()
 
 
 def _event_queue(event: dict[str, Any]) -> str:
@@ -946,20 +1004,24 @@ def _ticket_signature(ticket) -> str:
     )
 
 
-def _current_ticket_snapshot() -> tuple[dict[str, str], dict[str, Any]]:
-    tickets = get_planfile().list_tickets(sprint="all")
+def _current_ticket_snapshot() -> tuple[tuple, dict[str, str], dict[str, Any]]:
+    pf = get_planfile()
+    tickets = pf.list_tickets(sprint="current")
     snapshot = {ticket.id: _ticket_signature(ticket) for ticket in tickets}
     by_id = {ticket.id: ticket for ticket in tickets}
-    return snapshot, by_id
+    return _ticket_snapshot_signature(pf, "current"), snapshot, by_id
 
 
 async def _watch_planfile_changes(interval_seconds: float = 3.0) -> None:
     """Broadcast status changes made outside this API, such as CLI updates."""
-    global _watch_snapshot
+    global _watch_snapshot, _watch_source_signature
     try:
-        _watch_snapshot, _ = _current_ticket_snapshot()
+        _watch_source_signature, _watch_snapshot, _ = await asyncio.to_thread(
+            _current_ticket_snapshot
+        )
     except Exception as exc:  # pragma: no cover - defensive runtime telemetry
         _watch_snapshot = {}
+        _watch_source_signature = ()
         _remember_event(
             {
                 "type": "dashboard",
@@ -973,7 +1035,15 @@ async def _watch_planfile_changes(interval_seconds: float = 3.0) -> None:
     while True:
         await asyncio.sleep(interval_seconds)
         try:
-            current, by_id = _current_ticket_snapshot()
+            pf = get_planfile()
+            source_signature = await asyncio.to_thread(
+                _ticket_snapshot_signature, pf, "current"
+            )
+            if source_signature == _watch_source_signature:
+                continue
+            source_signature, current, by_id = await asyncio.to_thread(
+                _current_ticket_snapshot
+            )
         except Exception as exc:  # pragma: no cover - defensive runtime telemetry
             payload = {
                 "type": "dashboard",
@@ -994,6 +1064,7 @@ async def _watch_planfile_changes(interval_seconds: float = 3.0) -> None:
             elif old_signature != signature:
                 await _broadcast_ticket_event("ticket.external.changed", "external-update", by_id[ticket_id])
         _watch_snapshot = current
+        _watch_source_signature = source_signature
 
 
 async def _start_planfile_watcher() -> None:
@@ -2429,32 +2500,42 @@ def _dashboard_html() -> str:
       }
     }
 
+    let ticketRefreshPromise = null;
+    let ticketRefreshQueued = false;
     async function refreshTickets(options = {}) {
-      const response = await fetch("/tickets?sprint=all", { cache: "no-store" });
-      if (!response.ok) throw new Error(`Ticket list returned HTTP ${response.status}`);
-      const tickets = await response.json();
-      if (!Array.isArray(tickets)) throw new Error("Ticket list returned an invalid payload");
-      state.lastTickets = tickets;
-      updateQueueOptions(tickets);
-      updateStatusOptions(tickets);
-      const visibleTickets = selectedTickets(tickets);
-      scanTicketStatuses(visibleTickets, options);
-      const open = visibleTickets.filter((t) => t.status === "open").length;
-      const running = visibleTickets.filter(isRunningTicket).length;
-      const waiting = visibleTickets.filter(isWaitingTicket).length;
-      const failed = visibleTickets.filter(isFailedTicket).length;
-      $("m-open").textContent = open;
-      $("m-running").textContent = running;
-      $("m-waiting").textContent = waiting;
-      $("m-failed").textContent = failed;
-      $("updated").textContent = new Date().toLocaleTimeString();
-      renderTickets(visibleTickets);
-      if (state.selectedTicketId && !tickets.some((ticket) => ticket.id === state.selectedTicketId)) {
-        state.selectedTicketId = null;
-        state.selectedTicket = null;
-        state.ticketEvents = [];
-        syncUrlState({ replace: true });
-        renderTicketDetail(null);
+      if (ticketRefreshPromise) {
+        ticketRefreshQueued = true;
+        return ticketRefreshPromise;
+      }
+      ticketRefreshPromise = (async () => {
+        const response = await fetch("/tickets?limit=1000&view=summary", { cache: "no-store" });
+        if (!response.ok) throw new Error(`Ticket list returned HTTP ${response.status}`);
+        const tickets = await response.json();
+        if (!Array.isArray(tickets)) throw new Error("Ticket list returned an invalid payload");
+        state.lastTickets = tickets;
+        updateQueueOptions(tickets);
+        updateStatusOptions(tickets);
+        const visibleTickets = selectedTickets(tickets);
+        scanTicketStatuses(visibleTickets, options);
+        const open = visibleTickets.filter((t) => t.status === "open").length;
+        const running = visibleTickets.filter(isRunningTicket).length;
+        const waiting = visibleTickets.filter(isWaitingTicket).length;
+        const failed = visibleTickets.filter(isFailedTicket).length;
+        $("m-open").textContent = open;
+        $("m-running").textContent = running;
+        $("m-waiting").textContent = waiting;
+        $("m-failed").textContent = failed;
+        $("updated").textContent = new Date().toLocaleTimeString();
+        renderTickets(visibleTickets);
+      })();
+      try {
+        return await ticketRefreshPromise;
+      } finally {
+        ticketRefreshPromise = null;
+        if (ticketRefreshQueued) {
+          ticketRefreshQueued = false;
+          scheduleTicketRefresh();
+        }
       }
     }
 
