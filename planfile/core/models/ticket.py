@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field
 from .base import TicketStatus
 from .strategy import ModelHints
 
+TICKET_CONTRACT_VERSION = "planfile.ticket/v1"
+
 
 def _utcnow() -> datetime:
     return datetime.now(UTC)
@@ -90,6 +92,10 @@ class Ticket(BaseModel):
     """Atomic unit of work in planfile."""
     id: str                            # "PLF-042"
     name: str
+    # Missing means the record predates explicit ticket-contract versioning.
+    # The store stamps this field only for newly created tickets; merely reading
+    # a legacy record must not silently rewrite its provenance.
+    contract_version: str | None = None
     status: TicketStatus = TicketStatus.open  # Default to open status
     priority: str = "normal"           # critical | high | normal | low
     sprint: str = "current"            # current | backlog | sprint-XXX

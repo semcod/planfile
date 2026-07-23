@@ -37,7 +37,13 @@ except ImportError as exc:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
 
 from planfile import __version__
-from planfile.core.models import TicketExecution, TicketExecutor, TicketInputs, TicketOutputs
+from planfile.core.models import (
+    TicketExecution,
+    TicketExecutor,
+    TicketInputs,
+    TicketOutputs,
+    TicketSource,
+)
 from planfile.runtime_context import (
     build_runtime_context,
     load_runtime_context_config,
@@ -91,6 +97,7 @@ class TicketCreate(BaseModel):
     execution: TicketExecution | None = None
     inputs: TicketInputs | None = None
     outputs: TicketOutputs | None = None
+    source: TicketSource | None = None
 
 
 class TicketUpdate(BaseModel):
@@ -377,7 +384,6 @@ def list_tickets(
 async def create_ticket(body: TicketCreate):
     pf = get_planfile()
     _validate_process_envelope(body.labels, body.inputs)
-    from planfile import TicketSource
     ticket = pf.create_ticket(
         name=body.name,
         priority=body.priority,
@@ -388,7 +394,7 @@ async def create_ticket(body: TicketCreate):
         execution=body.execution,
         inputs=body.inputs,
         outputs=body.outputs,
-        source=TicketSource(tool="api"),
+        source=body.source or TicketSource(tool="planfile-api", version=__version__),
     )
     await _broadcast_ticket_event("ticket.changed", "create", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)

@@ -30,6 +30,7 @@ from .strategy import (
 
 # Ticket models
 from .ticket import (
+    TICKET_CONTRACT_VERSION,
     Ticket,
     TicketExecution,
     TicketExecutor,
@@ -63,6 +64,7 @@ __all__ = [
     "Strategy",
     "Task",
     "TaskPattern",
+    "TICKET_CONTRACT_VERSION",
     "Ticket",
     "TicketExecution",
     "TicketExecutor",

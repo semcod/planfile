@@ -360,8 +360,8 @@ planfile ticket bulk-update \
 #### Bounded ticket storage
 
 Planfile automatically keeps `.planfile/sprints/current.yaml` bounded. When the
-file exceeds 500 tickets or 1 MB, the oldest `done` and `canceled` tickets are
-moved into monthly `.planfile/sprints/archive-YYYY-MM.yaml` files. The 100 most
+file exceeds 100 tickets or 1 MB, the oldest `done`, `canceled`, `failed`, and `blocked` tickets are
+moved into monthly `.planfile/sprints/archive-YYYY-MM.yaml` files. The 20 most
 recent terminal tickets stay in the current sprint, and active tickets are
 never archived. Ticket IDs and history are preserved; use `sprint=all` when a
 listing must include archives.
@@ -372,10 +372,10 @@ can be adjusted or disabled in `.planfile/config.yaml`:
 ```yaml
 archive:
   enabled: true
-  max_current_tickets: 500
+  max_current_tickets: 100
   max_current_bytes: 1000000
-  retain_terminal_tickets: 100
-  terminal_statuses: [done, canceled]
+  retain_terminal_tickets: 20
+  terminal_statuses: [done, canceled, failed, blocked]
 ```
 
 Set either limit to `0` to disable that limit, or set `enabled: false` to turn

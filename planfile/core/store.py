@@ -12,7 +12,7 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel
 
-from .models import Ticket
+from .models import TICKET_CONTRACT_VERSION, Ticket
 from .store_files import StoreFileMixin
 from .store_tickets import TicketStoreMixin
 
@@ -22,10 +22,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     DEFAULT_ARCHIVE_CONFIG = {
         "enabled": True,
-        "max_current_tickets": 500,
+        "max_current_tickets": 100,
         "max_current_bytes": 1_000_000,
-        "retain_terminal_tickets": 100,
-        "terminal_statuses": ["done", "canceled", "failed"],
+        "retain_terminal_tickets": 20,
+        "terminal_statuses": ["done", "canceled", "failed", "blocked"],
     }
     SPRINT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
 
@@ -401,16 +401,18 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return parsed.astimezone(UTC)
         return datetime.now(UTC)
 
-    def archive_completed(self) -> dict:
+    def archive_completed(self, *, force: bool = False) -> dict:
         """Archive old terminal tickets when ``current.yaml`` exceeds its limits.
 
         Archive files are partitioned by month. The operation is serialized with all
         other store mutations and is idempotent after an interrupted multi-file write.
+        ``force`` applies the configured retention immediately without weakening the
+        terminal-status guard.
         """
         with self.mutation_lock():
-            return self._archive_completed_unlocked()
+            return self._archive_completed_unlocked(force=force)
 
-    def _archive_completed_unlocked(self) -> dict:
+    def _archive_completed_unlocked(self, *, force: bool = False) -> dict:
         from planfile.core.fastio import read_yaml_fast
 
         config = self._archive_config()
@@ -439,7 +441,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         except OSError:
             current_size = 0
         over_size = config["max_current_bytes"] > 0 and current_size > config["max_current_bytes"]
-        if not (over_count or over_size):
+        if not (force or over_count or over_size):
             return report
         report["triggered"] = True
 
@@ -519,6 +521,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
         """Persist a ticket while the caller holds ``mutation_lock``."""
         from planfile.core.operational_dsl import line as operational_line
 
+        if ticket.contract_version is None:
+            ticket.contract_version = TICKET_CONTRACT_VERSION
         if not ticket.dsl:
             payload = ticket.model_dump(mode="json", exclude_none=True, exclude={"dsl", "history"})
             ticket.dsl = operational_line(

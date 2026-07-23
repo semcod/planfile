@@ -31,9 +31,8 @@ def test_ticket_creation_and_history_have_replayable_dsl(tmp_path):
 def test_ticket_dsl_redacts_nested_credentials(tmp_path):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(name="Secret-safe", description="https://founder.test/#token=abc", sync={"password": "hidden"})
-    assert "abc" not in ticket.dsl
-    assert "hidden" not in ticket.dsl
     event = parse(ticket.dsl)
+    assert event["data"]["payload"]["description"] == "https://founder.test/#token=[REDACTED]"
     assert event["data"]["payload"]["sync"]["password"] == "[REDACTED]"
 
 

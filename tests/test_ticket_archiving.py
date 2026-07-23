@@ -87,6 +87,32 @@ def test_archiving_can_be_disabled_per_project(tmp_path):
     assert not list(store._sprints_dir.glob("archive-*.yaml"))
 
 
+def test_list_tickets_reuses_models_until_snapshot_changes(tmp_path, monkeypatch):
+    store = _store(tmp_path, enabled=False)
+    store.create_ticket(_ticket("PLF-001", "open"))
+    store.create_ticket(_ticket("PLF-002", "open"))
+    calls = 0
+    original = store._ticket_from_data
+
+    def counted(ticket_data):
+        nonlocal calls
+        calls += 1
+        return original(ticket_data)
+
+    monkeypatch.setattr(store, "_ticket_from_data", counted)
+
+    assert len(store.list_tickets(sprint="all")) == 2
+    first_pass_calls = calls
+    assert first_pass_calls == 2
+    assert len(store.list_tickets(sprint="all")) == 2
+    assert calls == first_pass_calls
+
+    store.update_ticket("PLF-001", name="updated")
+
+    assert [ticket.name for ticket in store.list_tickets(sprint="all") if ticket.id == "PLF-001"] == ["updated"]
+    assert calls > first_pass_calls
+
+
 def test_update_triggers_archiving_and_keeps_fresh_completion_current(tmp_path):
     store = _store(tmp_path, max_current_tickets=3, retain_terminal_tickets=1)
     store.create_ticket(_ticket("PLF-001", "done", age_days=3))
