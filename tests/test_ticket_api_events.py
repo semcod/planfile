@@ -97,7 +97,7 @@ def test_governed_ticket_requires_completion_receipt(tmp_path, monkeypatch):
     ticket = pf.create_ticket(
         name="Governed process",
         labels=["process-envelope:v2"],
-        execution=TicketExecution(state="running"),
+        execution=TicketExecution(state="running", last_error="stale_readiness_failure"),
         inputs=TicketInputs(
             process_manifest={
                 "schema": "subactor.process-envelope.v2",
@@ -121,6 +121,7 @@ def test_governed_ticket_requires_completion_receipt(tmp_path, monkeypatch):
     assert response.status_code == 200
     completed = response.json()
     assert completed["outputs"]["completion_receipt"] == receipt
+    assert completed["execution"].get("last_error") is None
     assert completed["history"][-1]["actor"] == "bot:test"
     assert completed["history"][-1]["reason"] == "Expected state was observed."
 

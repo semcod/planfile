@@ -30,6 +30,6 @@ def test_forced_archive_applies_retention_but_never_moves_active_ticket(tmp_path
 
     assert report["triggered"] is True
     assert report["archived"] == 1
-    assert store.get_ticket("PLF-001").sprint == "archive-2026-07"
+    assert store.get_ticket("PLF-001").sprint == f"archive-{old:%Y-%m}"
     assert store.get_ticket("PLF-002").sprint == "current"
     assert store.get_ticket("PLF-003").sprint == "current"

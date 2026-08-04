@@ -368,14 +368,14 @@ class Planfile:
                 else (ticket.outputs.completion_receipt if ticket.outputs else None)
             ),
         )
-        execution = self._merge_model(
-            ticket.execution,
-            TicketExecution,
+        execution_data = ticket.execution.model_dump(mode="python", exclude_none=False) if ticket.execution else {}
+        execution_data.update(
             state="done",
             finished_at=self._utcnow(),
             lease_expires_at=None,
             last_error=None,
         )
+        execution = TicketExecution(**execution_data)
         return self.update_ticket(ticket_id, status="done", execution=execution, outputs=outputs, reason=reason, actor=actor)
 
     def fail_ticket(self, ticket_id: str, error: str, *, reason: str | None = None, actor: str | None = None) -> Ticket | None:
