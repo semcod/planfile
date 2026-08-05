@@ -65,6 +65,9 @@ class TicketStoreMixin:
             cache = {}
             self._ticket_model_cache = cache
         key = str(sprint_file)
+        if not self._yaml_file_cacheable(sprint_file):
+            cache.pop(key, None)
+            return self._tickets_from_sprint_data(sprint_data)
         ticket_ids = (sprint_data.get('tickets') or {}).keys()
         evidence_revision = (
             self._ticket_evidence_revision(ticket_ids)

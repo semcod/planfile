@@ -45,6 +45,30 @@ def test_init_enables_bounded_automatic_archiving(tmp_path):
     assert config["archive"] == Store.DEFAULT_ARCHIVE_CONFIG
 
 
+def test_large_legacy_archive_models_are_not_retained(tmp_path, monkeypatch):
+    store = _store(tmp_path)
+    archived = _ticket("PLF-ARCHIVED", "done")
+    archived.sprint = "archive-legacy"
+    store.create_ticket(archived)
+    archive_file = store._sprint_file("archive-legacy")
+    store.MAX_CACHEABLE_YAML_BYTES = 1
+
+    validation_calls = {"n": 0}
+    original = store._ticket_from_data
+
+    def counting_validation(ticket_data):
+        validation_calls["n"] += 1
+        return original(ticket_data)
+
+    monkeypatch.setattr(store, "_ticket_from_data", counting_validation)
+
+    assert store._tickets_from_sprint_file(archive_file)[0].id == archived.id
+    assert store._tickets_from_sprint_file(archive_file)[0].id == archived.id
+    assert str(archive_file) not in store._yaml_cache
+    assert str(archive_file) not in store._ticket_model_cache
+    assert validation_calls["n"] == 2
+
+
 def test_archives_oldest_terminal_tickets_after_current_limit(tmp_path):
     store = _store(tmp_path)
     for number in range(1, 7):

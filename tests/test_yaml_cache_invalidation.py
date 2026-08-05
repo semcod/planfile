@@ -122,3 +122,28 @@ def test_missing_file_returns_none_without_caching(tmp_path: Path) -> None:
 
     assert store._read_yaml_cached(missing) is None
     assert store._read_yaml_cached(missing) is None
+
+
+def test_large_yaml_is_readable_but_not_retained_in_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sprint = tmp_path / "archive-legacy.yaml"
+    _write_sprint(sprint, {"sprint": {"id": "legacy", "tickets": {}}})
+    store = _Store(tmp_path)
+    store.MAX_CACHEABLE_YAML_BYTES = 1
+
+    from planfile.core import fastio
+
+    read_calls = {"n": 0}
+    real_read = fastio.read_yaml_fast
+
+    def counting_read(path: Path):
+        read_calls["n"] += 1
+        return real_read(path)
+
+    monkeypatch.setattr(fastio, "read_yaml_fast", counting_read)
+
+    assert store._read_yaml_cached(sprint)["sprint"]["id"] == "legacy"
+    assert store._read_yaml_cached(sprint)["sprint"]["id"] == "legacy"
+    assert str(sprint) not in store._yaml_cache
+    assert read_calls["n"] == 2
