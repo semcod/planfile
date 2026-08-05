@@ -627,7 +627,7 @@ def test_ticket_list_pagination_headers(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
     client = TestClient(server.app)
 
-    response = client.get("/tickets?sprint=all&offset=1&limit=1")
+    response = client.get("/tickets?sprint=all&view=full&offset=1&limit=1")
 
     assert response.status_code == 200
     assert len(response.json()) == 1
@@ -743,7 +743,7 @@ def test_ticket_summary_view_keeps_queue_fields_and_omits_execution_contract(
     assert "history" not in payload
 
 
-def test_browser_without_explicit_view_gets_lightweight_summary(tmp_path, monkeypatch):
+def test_all_without_explicit_view_gets_bounded_current_summary(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     current = pf.create_ticket(
         name="Browser queue",
@@ -776,6 +776,13 @@ def test_browser_without_explicit_view_gets_lightweight_summary(tmp_path, monkey
         "Browser queue",
         "Archived ticket",
     }
+
+    service_client = client.get(
+        "/tickets?sprint=all",
+        headers={"user-agent": "undici"},
+    )
+    assert service_client.headers["x-planfile-view"] == "summary"
+    assert [ticket["id"] for ticket in service_client.json()] == [current.id]
 
 
 def test_move_ticket_api_and_sprint_validation(tmp_path, monkeypatch):
@@ -1036,9 +1043,9 @@ def test_tickets_api_reads_updated_store_and_disables_cache(tmp_path, monkeypatc
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
     client = TestClient(server.app)
 
-    first = client.get("/tickets?sprint=all")
+    first = client.get("/tickets?sprint=all&view=full")
     pf.complete_ticket(ticket.id, note="done outside API")
-    second = client.get("/tickets?sprint=all")
+    second = client.get("/tickets?sprint=all&view=full")
 
     assert first.headers["cache-control"] == "no-store, max-age=0"
     assert second.headers["cache-control"] == "no-store, max-age=0"
@@ -1173,7 +1180,7 @@ def test_evidence_append_invalidates_the_serialized_ticket_list_projection(
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
     client = TestClient(server.app)
 
-    assert client.get("/tickets?sprint=all").json()[0].get("outputs") is None
+    assert client.get("/tickets?sprint=all&view=full").json()[0].get("outputs") is None
     response = client.post(
         f"/tickets/{ticket.id}/evidence",
         json={
@@ -1186,7 +1193,7 @@ def test_evidence_append_invalidates_the_serialized_ticket_list_projection(
     )
 
     assert response.status_code == 200
-    listed = client.get("/tickets?sprint=all").json()[0]
+    listed = client.get("/tickets?sprint=all&view=full").json()[0]
     assert listed["outputs"]["result"]["process_executions"][0]["execution_id"] == "projection-1"
 
 
