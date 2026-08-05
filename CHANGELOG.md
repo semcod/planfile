@@ -28,6 +28,9 @@
   into `history-YYYY-MM-DD` files immediately by default. Added startup/daily
   maintenance, a lightweight history locator for bounded lookups, and stale
   snapshot protection so archived tickets cannot be resurrected by bulk sync.
+- Bounded worker memory by excluding YAML snapshots larger than 5 MB, including
+  legacy monthly archives, from parsed-data and ticket-model caches while
+  keeping those files readable on demand.
 - Fixed `planfile serve` install hint: Rich no longer swallows `[api]` as
   console markup, so the error now prints the correct
   `pip install 'planfile[api]'` instead of an extras-less command.
