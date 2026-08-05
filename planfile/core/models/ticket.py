@@ -127,7 +127,8 @@ class Ticket(BaseModel):
 
     sync: dict = Field(default_factory=dict)  # {"github": {"issue": 142}}
     history: list[dict] = Field(default_factory=list)
-    # Canonical, reversible creation event. Subsequent events live in history[*].dsl.
+    # Canonical, reversible creation event. Subsequent replay events live in
+    # events/operations.jsonl; history retains compact audit metadata.
     dsl: str | None = None
 
     created_at: datetime = Field(default_factory=_utcnow)

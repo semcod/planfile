@@ -1304,6 +1304,17 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return None
         return execution.get("state")
 
+    @staticmethod
+    def _detach_history_dsl(entry: dict) -> str:
+        """Move the replayable line to the operational journal only.
+
+        The same line is appended to ``events/operations.jsonl``. Keeping a
+        second copy in every history entry makes sprint rewrites and snapshots
+        grow with duplicated payload while history still has all audit fields
+        needed for display and triage.
+        """
+        return str(entry.pop("dsl", "") or "")
+
     @classmethod
     def _build_history_entry(
         cls,
@@ -1519,11 +1530,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
                         reason=history_reason,
                         actor=history_actor,
                     )
+                    operational_dsl = self._detach_history_dsl(entry)
                     history.append(entry)
                     tickets[ticket_id]["history"] = history[-200:]
                 self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
                 if changed_keys and "history" not in serialized_updates:
-                    self._append_operational_line(tickets[ticket_id]["history"][-1]["dsl"])
+                    self._append_operational_line(operational_dsl)
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
                 archive_report = (
@@ -1580,22 +1592,23 @@ class Store(StoreFileMixin, TicketStoreMixin):
             for key, value in serialized_updates.items()
             if key != "history" and previous.get(key) != value
         )
+        operational_dsl = ""
         if changed_keys and "history" not in serialized_updates:
             history = list(current.get("history") or [])
-            history.append(
-                self._build_history_entry(
-                    previous,
-                    current,
-                    changed_keys,
-                    reason=history_reason,
-                    actor=history_actor,
-                )
+            entry = self._build_history_entry(
+                previous,
+                current,
+                changed_keys,
+                reason=history_reason,
+                actor=history_actor,
             )
+            operational_dsl = self._detach_history_dsl(entry)
+            history.append(entry)
             current["history"] = history[-200:]
 
         storage.upsert_ticket(sprint, ticket_id, current)
         if changed_keys and "history" not in serialized_updates:
-            self._append_operational_line(current["history"][-1]["dsl"])
+            self._append_operational_line(operational_dsl)
         self._invalidate_sharded_cache(sprint)
         archive_report = (
             self._archive_completed_unlocked()
@@ -1690,14 +1703,14 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 moved_ticket["sprint"] = to_sprint
                 moved_ticket["updated_at"] = datetime.now(UTC).isoformat()
                 history = list(moved_ticket.get("history") or [])
-                history.append(
-                    self._build_history_entry(
-                        previous_ticket,
-                        moved_ticket,
-                        ["sprint"],
-                        reason="move_ticket",
-                    )
+                entry = self._build_history_entry(
+                    previous_ticket,
+                    moved_ticket,
+                    ["sprint"],
+                    reason="move_ticket",
                 )
+                operational_dsl = self._detach_history_dsl(entry)
+                history.append(entry)
                 moved_ticket["history"] = history[-200:]
 
                 storage.upsert_ticket(to_sprint, ticket_id, moved_ticket)
@@ -1710,7 +1723,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     raise
                 self._invalidate_sharded_cache(source_sprint)
                 self._invalidate_sharded_cache(to_sprint)
-                self._append_operational_line(moved_ticket["history"][-1]["dsl"])
+                self._append_operational_line(operational_dsl)
                 model = self._ticket_from_data(moved_ticket)
                 if model is not None:
                     self._finish_index_mutation(
@@ -1738,14 +1751,14 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 moved_ticket["sprint"] = to_sprint
                 moved_ticket["updated_at"] = datetime.now(UTC).isoformat()
                 history = list(moved_ticket.get("history") or [])
-                history.append(
-                    self._build_history_entry(
-                        previous_ticket,
-                        moved_ticket,
-                        ["sprint"],
-                        reason="move_ticket",
-                    )
+                entry = self._build_history_entry(
+                    previous_ticket,
+                    moved_ticket,
+                    ["sprint"],
+                    reason="move_ticket",
                 )
+                operational_dsl = self._detach_history_dsl(entry)
+                history.append(entry)
                 moved_ticket["history"] = history[-200:]
 
                 destination_existed = destination_file.exists()
@@ -1778,7 +1791,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(source_file), None)
                     self._yaml_cache.pop(str(destination_file), None)
-                self._append_operational_line(moved_ticket["history"][-1]["dsl"])
+                self._append_operational_line(operational_dsl)
                 model = self._ticket_from_data(moved_ticket)
                 if model is not None:
                     self._finish_index_mutation(
