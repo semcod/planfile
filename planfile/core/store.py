@@ -18,6 +18,10 @@ from .store_files import StoreFileMixin
 from .store_tickets import TicketStoreMixin
 
 
+class ImmutableTerminalReopenError(RuntimeError):
+    """Raised when an ordinary mutation tries to reactivate done/canceled work."""
+
+
 class Store(StoreFileMixin, TicketStoreMixin):
     """File-based ticket store using .planfile/ directory."""
 
@@ -35,6 +39,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
         "index": "none",
     }
     SPRINT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
+    IMMUTABLE_TERMINAL_STATUSES = {"done", "canceled"}
+    TERMINAL_STATUSES = {"done", "canceled", "failed", "blocked"}
 
     def __init__(self, directory: str | Path):
         self.project_dir = Path(directory).resolve()
@@ -1381,6 +1387,34 @@ class Store(StoreFileMixin, TicketStoreMixin):
         with self.mutation_lock():
             return self._update_ticket_unlocked(ticket_id, reason=reason, actor=actor, **updates)
 
+    def _guard_immutable_terminal_reopen(
+        self,
+        previous: dict,
+        serialized_updates: dict,
+    ) -> None:
+        """Keep ordinary updates monotonic after done/canceled.
+
+        Terminal-to-terminal corrections remain possible, and append-only
+        evidence uses its dedicated API. What is forbidden is projecting an
+        active status or execution state onto work that was already completed
+        or canceled.
+        """
+
+        previous_status = str(previous.get("status") or "")
+        if previous_status not in self.IMMUTABLE_TERMINAL_STATUSES:
+            return
+
+        requested_status = str(serialized_updates.get("status") or previous_status)
+        if requested_status not in self.TERMINAL_STATUSES:
+            raise ImmutableTerminalReopenError("immutable_terminal_reopen")
+
+        execution_update = serialized_updates.get("execution")
+        if not isinstance(execution_update, dict) or "state" not in execution_update:
+            return
+        requested_state = str(execution_update.get("state") or "")
+        if requested_state != requested_status:
+            raise ImmutableTerminalReopenError("immutable_terminal_reopen")
+
     def append_ticket_evidence(
         self,
         ticket_id: str,
@@ -1502,6 +1536,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 serialized_updates = {
                     key: self._serialize_update_value(value) for key, value in updates.items()
                 }
+                self._guard_immutable_terminal_reopen(previous, serialized_updates)
                 terminal_status = serialized_updates.get("status")
                 if terminal_status in {"done", "canceled", "blocked", "failed"}:
                     execution_update = serialized_updates.get("execution")
@@ -1571,6 +1606,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         serialized_updates = {
             key: self._serialize_update_value(value) for key, value in updates.items()
         }
+        self._guard_immutable_terminal_reopen(previous, serialized_updates)
         terminal_status = serialized_updates.get("status")
         if terminal_status in {"done", "canceled", "blocked", "failed"}:
             execution_update = serialized_updates.get("execution")

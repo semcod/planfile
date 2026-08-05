@@ -126,6 +126,38 @@ def test_governed_ticket_requires_completion_receipt(tmp_path, monkeypatch):
     assert completed["history"][-1]["reason"] == "Expected state was observed."
 
 
+@pytest.mark.parametrize("terminal_status", ["done", "canceled"])
+def test_api_rejects_stale_worker_reopen_of_immutable_terminal(
+    tmp_path,
+    monkeypatch,
+    terminal_status,
+):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Immutable API lifecycle",
+        execution=TicketExecution(state="running", assigned_to="bot:worker"),
+    )
+    pf.update_ticket(ticket.id, status=terminal_status)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.patch(
+        f"/tickets/{ticket.id}",
+        json={
+            "execution": {"state": "running", "assigned_to": "bot:late"},
+            "actor": "bot:late",
+            "reason": "stale_worker_update",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "immutable_terminal_reopen"}
+    current = pf.get_ticket(ticket.id)
+    assert current is not None
+    assert current.status == terminal_status
+    assert current.execution.state == terminal_status
+
+
 def test_governed_ticket_mutations_require_attributed_history(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     uri = {"id": "read-time", "name": "Read time", "uri": "time://clock/query/now"}

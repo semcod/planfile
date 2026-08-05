@@ -31,7 +31,7 @@ try:
         WebSocketDisconnect,
     )
     from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import HTMLResponse, Response
+    from fastapi.responses import HTMLResponse, JSONResponse, Response
     from pydantic import BaseModel, Field
 except ImportError as exc:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
@@ -44,6 +44,7 @@ from planfile.core.models import (
     TicketOutputs,
     TicketSource,
 )
+from planfile.core.store import ImmutableTerminalReopenError
 from planfile.runtime_context import (
     DEFAULT_CONFIG as DEFAULT_RUNTIME_CONFIG,
     build_runtime_context,
@@ -67,6 +68,14 @@ app = FastAPI(
     version=__version__,
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(ImmutableTerminalReopenError)
+async def immutable_terminal_reopen_handler(
+    _: Request,
+    __: ImmutableTerminalReopenError,
+):
+    return JSONResponse(status_code=409, content={"detail": "immutable_terminal_reopen"})
 
 _cors_origins = [
     origin.strip()
