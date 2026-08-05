@@ -16,6 +16,9 @@ def _store(tmp_path, **archive_config) -> Store:
         "max_current_tickets": 5,
         "max_current_bytes": 0,
         "retain_terminal_tickets": 2,
+        # Capacity-focused tests use one synthetic historical date. Daily-age
+        # rotation is covered separately below.
+        "retain_terminal_days": 10_000,
         **archive_config,
     })
     store._write_config(config)
@@ -23,7 +26,7 @@ def _store(tmp_path, **archive_config) -> Store:
 
 
 def _ticket(ticket_id: str, status: str, age_days: int = 0) -> Ticket:
-    timestamp = datetime(2026, 7, 20, tzinfo=UTC) - timedelta(days=age_days)
+    timestamp = datetime(2026, 7, 20, 12, tzinfo=UTC) - timedelta(minutes=age_days)
     return Ticket(
         id=ticket_id,
         name=ticket_id,
@@ -48,7 +51,7 @@ def test_archives_oldest_terminal_tickets_after_current_limit(tmp_path):
         store.create_ticket(_ticket(f"PLF-{number:03d}", "done", age_days=10 - number))
 
     current = store.list_tickets(sprint="current")
-    archived = store.list_tickets(sprint="archive-2026-07")
+    archived = store.list_tickets(sprint="history-2026-07-20")
 
     assert [ticket.id for ticket in current] == ["PLF-005", "PLF-006"]
     assert [ticket.id for ticket in archived] == [
@@ -57,7 +60,7 @@ def test_archives_oldest_terminal_tickets_after_current_limit(tmp_path):
         "PLF-003",
         "PLF-004",
     ]
-    assert all(ticket.sprint == "archive-2026-07" for ticket in archived)
+    assert all(ticket.sprint == "history-2026-07-20" for ticket in archived)
     assert len(store.list_tickets(sprint="all")) == 6
 
 
@@ -73,7 +76,7 @@ def test_active_tickets_are_never_archived(tmp_path):
         "PLF-003",
         "PLF-004",
     }
-    assert [ticket.id for ticket in store.list_tickets(sprint="archive-2026-07")] == [
+    assert [ticket.id for ticket in store.list_tickets(sprint="history-2026-07-20")] == [
         "PLF-001"
     ]
 
@@ -84,7 +87,7 @@ def test_archiving_can_be_disabled_per_project(tmp_path):
         store.create_ticket(_ticket(f"PLF-{number:03d}", "done", age_days=number))
 
     assert len(store.list_tickets(sprint="current")) == 3
-    assert not list(store._sprints_dir.glob("archive-*.yaml"))
+    assert not list(store._sprints_dir.glob("history-*.yaml"))
 
 
 def test_list_tickets_reuses_models_until_snapshot_changes(tmp_path, monkeypatch):
@@ -130,7 +133,7 @@ def test_update_triggers_archiving_and_keeps_fresh_completion_current(tmp_path):
 
     assert updated is not None and str(updated.status.value) == "done"
     assert store.get_ticket("PLF-004").sprint == "current"
-    assert store.get_ticket("PLF-001").sprint == "archive-2026-07"
+    assert store.get_ticket("PLF-001").sprint == "history-2026-07-20"
 
 
 def test_size_limit_can_trigger_archiving_below_count_limit(tmp_path):
@@ -144,4 +147,109 @@ def test_size_limit_can_trigger_archiving_below_count_limit(tmp_path):
     store.create_ticket(_ticket("PLF-002", "done", age_days=1))
 
     assert [ticket.id for ticket in store.list_tickets(sprint="current")] == ["PLF-002"]
-    assert store.get_ticket("PLF-001").sprint == "archive-2026-07"
+    assert store.get_ticket("PLF-001").sprint == "history-2026-07-20"
+
+
+def test_stale_terminal_tickets_move_below_capacity_limits(tmp_path):
+    store = _store(
+        tmp_path,
+        max_current_tickets=100,
+        max_current_bytes=10_000_000,
+        retain_terminal_days=1,
+    )
+    yesterday = datetime.now(UTC) - timedelta(days=1)
+    today = datetime.now(UTC)
+
+    store.create_ticket(
+        Ticket(
+            id="PLF-001",
+            name="Yesterday",
+            status="done",
+            created_at=yesterday,
+            updated_at=yesterday,
+        )
+    )
+    store.create_ticket(
+        Ticket(
+            id="PLF-002",
+            name="Today",
+            status="done",
+            created_at=today,
+            updated_at=today,
+        )
+    )
+
+    assert [ticket.id for ticket in store.list_tickets(sprint="current")] == [
+        "PLF-002"
+    ]
+    history_name = f"history-{yesterday:%Y-%m-%d}"
+    assert [ticket.id for ticket in store.list_tickets(sprint=history_name)] == [
+        "PLF-001"
+    ]
+
+
+def test_history_is_partitioned_by_terminal_completion_day(tmp_path):
+    store = _store(tmp_path, retain_terminal_days=0)
+    two_days_ago = datetime.now(UTC) - timedelta(days=2)
+    yesterday = datetime.now(UTC) - timedelta(days=1)
+
+    for ticket_id, timestamp in (
+        ("PLF-001", two_days_ago),
+        ("PLF-002", yesterday),
+    ):
+        store.create_ticket(
+            Ticket(
+                id=ticket_id,
+                name=ticket_id,
+                status="done",
+                created_at=timestamp,
+                updated_at=timestamp,
+            )
+        )
+
+    assert store.get_ticket("PLF-001").sprint == f"history-{two_days_ago:%Y-%m-%d}"
+    assert store.get_ticket("PLF-002").sprint == f"history-{yesterday:%Y-%m-%d}"
+    assert len(store.list_tickets(sprint="all")) == 2
+
+
+def test_zero_day_retention_moves_fresh_terminal_ticket_immediately(tmp_path):
+    store = _store(tmp_path, retain_terminal_days=0)
+    now = datetime.now(UTC)
+
+    store.create_ticket(
+        Ticket(
+            id="PLF-001",
+            name="Freshly done",
+            status="done",
+            created_at=now,
+            updated_at=now,
+        )
+    )
+
+    assert store.list_tickets(sprint="current") == []
+    assert store.get_ticket("PLF-001").sprint == f"history-{now:%Y-%m-%d}"
+
+
+def test_active_lookup_does_not_parse_history_first(tmp_path, monkeypatch):
+    store = _store(tmp_path, retain_terminal_days=0)
+    yesterday = datetime.now(UTC) - timedelta(days=1)
+    store.create_ticket(
+        Ticket(
+            id="PLF-001",
+            name="Archived",
+            status="done",
+            created_at=yesterday,
+            updated_at=yesterday,
+        )
+    )
+    store.create_ticket(_ticket("PLF-002", "open"))
+    original = store._read_yaml_cached
+
+    def reject_history(path):
+        if path.stem.startswith("history-"):
+            raise AssertionError("active lookup parsed history before current")
+        return original(path)
+
+    monkeypatch.setattr(store, "_read_yaml_cached", reject_history)
+
+    assert store.get_ticket("PLF-002").sprint == "current"

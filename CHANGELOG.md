@@ -24,6 +24,10 @@
 - GitHub publication reuses both Planfile and legacy Doctor fingerprint markers.
 
 ### Fixed
+- Kept the operational `current` sprint active-only by moving terminal tickets
+  into `history-YYYY-MM-DD` files immediately by default. Added startup/daily
+  maintenance, a lightweight history locator for bounded lookups, and stale
+  snapshot protection so archived tickets cannot be resurrected by bulk sync.
 - Fixed `planfile serve` install hint: Rich no longer swallows `[api]` as
   console markup, so the error now prints the correct
   `pip install 'planfile[api]'` instead of an extras-less command.

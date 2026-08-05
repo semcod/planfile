@@ -152,6 +152,7 @@ def test_sharded_archiving_keeps_active_tickets(tmp_path):
         max_current_tickets=3,
         max_current_bytes=0,
         retain_terminal_tickets=1,
+        retain_terminal_days=1,
     )
     pf.store._write_config(config)
     pf.store.migrate_to_sharded_yaml(shard_size=2)
@@ -163,7 +164,7 @@ def test_sharded_archiving_keeps_active_tickets(tmp_path):
     active_a = pf.create_ticket(name="active a")
     active_b = pf.create_ticket(name="active b")
 
-    assert pf.get_ticket(first.id).sprint.startswith("archive-")
+    assert pf.get_ticket(first.id).sprint.startswith("history-")
     assert pf.get_ticket(second.id).sprint == "current"
     assert {ticket.id for ticket in pf.list_tickets(sprint="current")} == {
         second.id,

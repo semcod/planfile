@@ -359,12 +359,20 @@ planfile ticket bulk-update \
 
 #### Bounded ticket storage
 
-Planfile automatically keeps `.planfile/sprints/current.yaml` bounded. When the
-file exceeds 100 tickets or 1 MB, the oldest `done`, `canceled`, `failed`, and `blocked` tickets are
-moved into monthly `.planfile/sprints/archive-YYYY-MM.yaml` files. The 20 most
-recent terminal tickets stay in the current sprint, and active tickets are
-never archived. Ticket IDs and history are preserved; use `sprint=all` when a
-listing must include archives.
+Planfile automatically separates operational work from history. Terminal
+`done`, `canceled`, `failed`, and `blocked` tickets move into daily
+`.planfile/sprints/history-YYYY-MM-DD.yaml` files as soon as they become
+terminal. The sweep also runs when the API starts and once per UTC day to catch
+external file edits. If `current` exceeds 100
+tickets or 1 MB, Planfile may also rotate older terminal work while keeping the
+20 most recent terminal tickets. Active tickets are never archived. Ticket IDs
+and history are preserved; use `sprint=all` only when a listing intentionally
+needs history. Existing monthly `archive-YYYY-MM.yaml` files remain readable.
+Planfile keeps a small locator in
+`.planfile/index/history-locations.yaml`, so normal ticket lookups and stale
+snapshot protection do not need to parse every history file.
+See [Daily terminal history](docs/guides/DAILY_TERMINAL_HISTORY.md) for the
+ordering and compatibility contract.
 
 The defaults apply to existing projects without a configuration change. They
 can be adjusted or disabled through the validated configuration interface (or
@@ -382,8 +390,13 @@ archive:
   max_current_tickets: 100
   max_current_bytes: 1000000
   retain_terminal_tickets: 20
+  retain_terminal_days: 0
   terminal_statuses: [done, canceled, failed, blocked]
 ```
+
+`retain_terminal_days: 0` keeps `current` active-only. Set it to `1` to keep
+terminal tickets from the current UTC date, or a larger number for a longer
+operational review window.
 
 For large or frequently mutated queues, Planfile also provides an opt-in
 sharded YAML backend. It keeps the public ticket/API contract unchanged while

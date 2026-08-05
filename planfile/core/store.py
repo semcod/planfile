@@ -6,7 +6,7 @@ import re
 import shutil
 import tempfile
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 
@@ -30,6 +30,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         "max_current_tickets": 100,
         "max_current_bytes": 1_000_000,
         "retain_terminal_tickets": 20,
+        "retain_terminal_days": 0,
         "terminal_statuses": ["done", "canceled", "failed", "blocked"],
     }
     DEFAULT_STORAGE_CONFIG = {
@@ -51,6 +52,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._operations_path = self.base_dir / "events" / "operations.jsonl"
         self._evidence_dir = self.base_dir / "evidence"
         self._ticket_index_path = self.base_dir / "index" / "tickets.sqlite3"
+        self._history_locations_path = self.base_dir / "index" / "history-locations.yaml"
 
     def _storage_config(self) -> dict:
         configured = self._read_config().get("storage") or {}
@@ -328,7 +330,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
             with self.mutation_lock():
                 storage = self._sharded_storage()
                 current = storage.load_sprint(sprint)
-                merged = self._merge_sprint_snapshots(current, data)
+                incoming = self._exclude_tickets_owned_by_history(sprint, data)
+                merged = self._merge_sprint_snapshots(current, incoming)
                 storage.write_sprint(sprint, merged)
                 self._invalidate_sharded_cache(sprint)
             if sprint == "current":
@@ -340,7 +343,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
             from planfile.core.fastio import read_yaml_fast
 
             current = read_yaml_fast(path) or {}
-            merged = self._merge_sprint_snapshots(current, data)
+            incoming = self._exclude_tickets_owned_by_history(sprint, data)
+            merged = self._merge_sprint_snapshots(current, incoming)
             self._write_yaml_atomic(path, merged, allow_unicode=True)
         if hasattr(self, "_yaml_cache"):
             self._yaml_cache.pop(str(path), None)
@@ -463,6 +467,60 @@ class Store(StoreFileMixin, TicketStoreMixin):
     def _write_config(self, config: dict) -> None:
         self._write_yaml_atomic(self._config_path, config)
 
+    def _history_locations(self) -> dict[str, str]:
+        """Return the small durable ticket-to-history locator projection."""
+        if not self._history_locations_path.exists():
+            return {}
+        data = self._read_yaml_cached(self._history_locations_path) or {}
+        locations = data.get("tickets", {}) if isinstance(data, dict) else {}
+        if not isinstance(locations, dict):
+            return {}
+        return {
+            str(ticket_id): str(sprint)
+            for ticket_id, sprint in locations.items()
+            if self.SPRINT_ID_PATTERN.fullmatch(str(sprint))
+        }
+
+    def _record_history_locations_unlocked(self, locations: dict[str, str]) -> None:
+        if not locations:
+            return
+        current = self._history_locations()
+        current.update(locations)
+        self._write_yaml_atomic(
+            self._history_locations_path,
+            {
+                "schema": "planfile.history-locations/v1",
+                "tickets": current,
+            },
+            allow_unicode=True,
+        )
+
+    def _exclude_tickets_owned_by_history(self, sprint: str, data: dict) -> dict:
+        """Prevent a stale bulk snapshot from resurrecting archived tickets."""
+        if sprint.startswith(("history-", "archive-")):
+            return data
+        locations = self._history_locations()
+        if not locations or not isinstance(data, dict):
+            return data
+        root = data.get("sprint", data)
+        if not isinstance(root, dict) or not isinstance(root.get("tickets"), dict):
+            return data
+        filtered = {
+            ticket_id: ticket
+            for ticket_id, ticket in root["tickets"].items()
+            if locations.get(str(ticket_id)) in {None, sprint}
+        }
+        if len(filtered) == len(root["tickets"]):
+            return data
+        result = dict(data)
+        result_root = dict(root)
+        result_root["tickets"] = filtered
+        if "sprint" in data:
+            result["sprint"] = result_root
+        else:
+            result = result_root
+        return result
+
     def _next_id_unlocked(self) -> str:
         return self._reserve_ids_unlocked(1)[0]
 
@@ -485,7 +543,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
             configured = {}
         result = dict(self.DEFAULT_ARCHIVE_CONFIG)
         result.update(configured)
-        for key in ("max_current_tickets", "max_current_bytes", "retain_terminal_tickets"):
+        for key in (
+            "max_current_tickets",
+            "max_current_bytes",
+            "retain_terminal_tickets",
+            "retain_terminal_days",
+        ):
             try:
                 result[key] = max(0, int(result[key]))
             except (TypeError, ValueError):
@@ -496,6 +559,41 @@ class Store(StoreFileMixin, TicketStoreMixin):
         result["terminal_statuses"] = {str(status).lower() for status in statuses}
         result["enabled"] = bool(result.get("enabled", True))
         return result
+
+    @staticmethod
+    def _terminal_archive_candidates(
+        terminal: list[tuple[datetime, str, dict]],
+        config: dict,
+        *,
+        capacity_triggered: bool,
+        now: datetime | None = None,
+    ) -> list[tuple[datetime, str, dict]]:
+        """Select stale terminal tickets plus any required by the size limits.
+
+        ``retain_terminal_days=0`` moves terminal tickets immediately. Larger
+        values retain that many UTC calendar dates including today. Count
+        retention only applies to capacity-driven rotation and never keeps stale
+        work in the operational sprint indefinitely.
+        """
+        current = now or datetime.now(UTC)
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=UTC)
+        retention_days = config["retain_terminal_days"]
+        if retention_days == 0:
+            selected_ids = {ticket_id for _, ticket_id, _ in terminal}
+        else:
+            cutoff_date = current.astimezone(UTC).date() - timedelta(
+                days=retention_days - 1
+            )
+            selected_ids = {
+                ticket_id
+                for timestamp, ticket_id, _ in terminal
+                if timestamp.date() < cutoff_date
+            }
+        if capacity_triggered:
+            move_count = max(0, len(terminal) - config["retain_terminal_tickets"])
+            selected_ids.update(ticket_id for _, ticket_id, _ in terminal[:move_count])
+        return [item for item in terminal if item[1] in selected_ids]
 
     @staticmethod
     def _ticket_archive_timestamp(ticket: dict) -> datetime:
@@ -521,12 +619,14 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return datetime.now(UTC)
 
     def archive_completed(self, *, force: bool = False) -> dict:
-        """Archive old terminal tickets when ``current.yaml`` exceeds its limits.
+        """Move stale terminal tickets into daily history files.
 
-        Archive files are partitioned by month. The operation is serialized with all
-        other store mutations and is idempotent after an interrupted multi-file write.
-        ``force`` applies the configured retention immediately without weakening the
-        terminal-status guard.
+        Terminal tickets from prior UTC dates are rotated even below the current
+        sprint limits. Size and count limits can rotate additional terminal work
+        while retaining the configured number of recent entries. The operation is
+        serialized with all other store mutations and is idempotent after an
+        interrupted multi-file write. ``force`` applies count retention immediately
+        without weakening the terminal-status guard.
         """
         with self.mutation_lock():
             return self._archive_completed_unlocked(force=force)
@@ -563,10 +663,6 @@ class Store(StoreFileMixin, TicketStoreMixin):
         except OSError:
             current_size = 0
         over_size = config["max_current_bytes"] > 0 and current_size > config["max_current_bytes"]
-        if not (force or over_count or over_size):
-            return report
-        report["triggered"] = True
-
         terminal = [
             (self._ticket_archive_timestamp(ticket), ticket_id, ticket)
             for ticket_id, ticket in tickets.items()
@@ -574,14 +670,19 @@ class Store(StoreFileMixin, TicketStoreMixin):
             and str(ticket.get("status", "")).lower() in config["terminal_statuses"]
         ]
         terminal.sort(key=lambda item: (item[0], item[1]))
-        move_count = max(0, len(terminal) - config["retain_terminal_tickets"])
-        if move_count == 0:
+        selected = self._terminal_archive_candidates(
+            terminal,
+            config,
+            capacity_triggered=force or over_count or over_size,
+        )
+        if not selected:
             return report
+        report["triggered"] = True
 
         archive_data: dict[Path, dict] = {}
         moved_ids: list[str] = []
-        for timestamp, ticket_id, ticket in terminal[:move_count]:
-            archive_name = f"archive-{timestamp:%Y-%m}"
+        for timestamp, ticket_id, ticket in selected:
+            archive_name = f"history-{timestamp:%Y-%m-%d}"
             archive_file = self._sprint_file(archive_name)
             archive = archive_data.get(archive_file)
             if archive is None:
@@ -589,7 +690,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 archive = archive or {
                     "sprint": {
                         "id": archive_name,
-                        "name": f"Archive {timestamp:%Y-%m}",
+                        "name": f"History {timestamp:%Y-%m-%d}",
                         "status": "archived",
                         "tickets": {},
                     }
@@ -610,6 +711,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
             self._write_yaml_atomic(archive_file, archive, allow_unicode=True)
             if hasattr(self, "_yaml_cache"):
                 self._yaml_cache.pop(str(archive_file), None)
+        self._record_history_locations_unlocked(
+            {
+                ticket_id: f"history-{timestamp:%Y-%m-%d}"
+                for timestamp, ticket_id, _ in selected
+            }
+        )
         for ticket_id in moved_ids:
             tickets.pop(ticket_id, None)
         self._write_yaml_atomic(current_file, data, allow_unicode=True)
@@ -647,10 +754,6 @@ class Store(StoreFileMixin, TicketStoreMixin):
             config["max_current_bytes"] > 0
             and storage.sprint_size("current") > config["max_current_bytes"]
         )
-        if not (force or over_count or over_size):
-            return report
-        report["triggered"] = True
-
         terminal = [
             (self._ticket_archive_timestamp(ticket), ticket_id, ticket)
             for ticket_id, ticket in tickets.items()
@@ -658,14 +761,19 @@ class Store(StoreFileMixin, TicketStoreMixin):
             and str(ticket.get("status", "")).lower() in config["terminal_statuses"]
         ]
         terminal.sort(key=lambda item: (item[0], item[1]))
-        move_count = max(0, len(terminal) - config["retain_terminal_tickets"])
-        if move_count == 0:
+        selected = self._terminal_archive_candidates(
+            terminal,
+            config,
+            capacity_triggered=force or over_count or over_size,
+        )
+        if not selected:
             return report
+        report["triggered"] = True
 
         archives: dict[str, dict] = {}
         moved_ids = []
-        for timestamp, ticket_id, ticket in terminal[:move_count]:
-            archive_name = f"archive-{timestamp:%Y-%m}"
+        for timestamp, ticket_id, ticket in selected:
+            archive_name = f"history-{timestamp:%Y-%m-%d}"
             archive = archives.get(archive_name)
             if archive is None:
                 if archive_name in storage.sprint_ids():
@@ -674,7 +782,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     archive = {
                         "sprint": {
                             "id": archive_name,
-                            "name": f"Archive {timestamp:%Y-%m}",
+                            "name": f"History {timestamp:%Y-%m-%d}",
                             "status": "archived",
                             "tickets": {},
                         }
@@ -689,6 +797,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
         for archive_name, archive in archives.items():
             storage.write_sprint(archive_name, archive)
             self._invalidate_sharded_cache(archive_name)
+        self._record_history_locations_unlocked(
+            {
+                ticket_id: f"history-{timestamp:%Y-%m-%d}"
+                for timestamp, ticket_id, _ in selected
+            }
+        )
         for ticket_id in moved_ids:
             tickets.pop(ticket_id, None)
         storage.write_sprint("current", data)
@@ -709,12 +823,29 @@ class Store(StoreFileMixin, TicketStoreMixin):
             raise ValueError(f"invalid_sprint_id:{sprint}")
         return self._sprints_dir / f"{sprint}.yaml"
 
+    @staticmethod
+    def _sprint_sort_key(sprint: str) -> tuple[int, str]:
+        """Keep operational data ahead of potentially large history scans."""
+        if sprint == "current":
+            return 0, sprint
+        if sprint == "backlog":
+            return 1, sprint
+        if sprint.startswith(("history-", "archive-")):
+            return 3, sprint
+        return 2, sprint
+
     def _all_sprint_files(self) -> list[Path]:
-        return sorted(self._sprints_dir.glob("*.yaml"))
+        return sorted(
+            self._sprints_dir.glob("*.yaml"),
+            key=lambda path: self._sprint_sort_key(path.stem),
+        )
 
     def _all_sprint_ids(self) -> list[str]:
         if self._uses_sharded_storage():
-            return self._sharded_storage().sprint_ids()
+            return sorted(
+                self._sharded_storage().sprint_ids(),
+                key=self._sprint_sort_key,
+            )
         return [path.stem for path in self._all_sprint_files()]
 
     def ticket_records(self, sprint: str = "all"):
@@ -1080,7 +1211,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 "custom_shards": custom_shards,
                 "sprints": len(snapshots),
                 "tickets": sum(
-                    len((snapshot.get("sprint", snapshot).get("tickets") or {}))
+                    len(snapshot.get("sprint", snapshot).get("tickets") or {})
                     for snapshot in snapshots.values()
                 ),
                 "backup_dir": str(backup_dir),
@@ -1279,9 +1410,37 @@ class Store(StoreFileMixin, TicketStoreMixin):
         if self.ticket_index_enabled():
             return self.indexed_ticket(ticket_id)
         if self._uses_sharded_storage():
-            located = self._sharded_storage().locate_ticket(ticket_id)
+            storage = self._sharded_storage()
+            active = storage.get_ticket("current", ticket_id)
+            if active is not None:
+                return self._ticket_from_data(active)
+            history_sprint = self._history_locations().get(ticket_id)
+            if history_sprint:
+                archived = storage.get_ticket(history_sprint, ticket_id)
+                if archived is not None:
+                    return self._ticket_from_data(archived)
+            located = storage.locate_ticket(ticket_id)
             return self._ticket_from_data(located[1]) if located is not None else None
+        checked_files = set()
+        current_file = self._sprint_file("current")
+        current_data = self._read_yaml_cached(current_file) or {}
+        checked_files.add(current_file)
+        current_root = current_data.get("sprint", current_data)
+        active = (current_root.get("tickets") or {}).get(ticket_id)
+        if active is not None:
+            return self._ticket_from_data(active)
+        history_sprint = self._history_locations().get(ticket_id)
+        if history_sprint:
+            history_file = self._sprint_file(history_sprint)
+            history_data = self._read_yaml_cached(history_file) or {}
+            checked_files.add(history_file)
+            history_root = history_data.get("sprint", history_data)
+            archived = (history_root.get("tickets") or {}).get(ticket_id)
+            if archived is not None:
+                return self._ticket_from_data(archived)
         for sprint_file in self._all_sprint_files():
+            if sprint_file in checked_files:
+                continue
             data = self._read_yaml_cached(sprint_file)
             if not data:
                 continue
@@ -1573,12 +1732,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     self._append_operational_line(operational_dsl)
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
+                updated_ticket = dict(tickets[ticket_id])
                 archive_report = (
                     self._archive_completed_unlocked()
                     if sprint_file == self._sprint_file("current")
                     else {"archived": 0}
                 )
-                model = self._ticket_from_data(tickets[ticket_id])
+                model = self._ticket_from_data(updated_ticket)
                 if model is not None and not archive_report.get("archived"):
                     self._finish_index_mutation(
                         index_was_current,
