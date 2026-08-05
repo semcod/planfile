@@ -51,8 +51,19 @@ jobs:
           ollama serve &
           sleep 5
           ollama pull qwen2.5:3b
+
+      - name: Run deterministic test gate
+        run: |
+          pytest -q \
+            --junitxml=test-results.xml \
+            --cov=planfile \
+            --cov-report=json:coverage.json \
+            --cov-report=html
       
       - name: Run CI Auto-Loop
+        # The loop may create issues and requires a configured strategy. Keep
+        # it opt-in; deterministic tests above are the required PR gate.
+        if: env.AUTO_FIX == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
