@@ -21,11 +21,19 @@ def test_ticket_creation_and_history_have_replayable_dsl(tmp_path):
     assert created["oql"] == "ticket.create"
     assert created["ticket_id"] == ticket.id
     updated = pf.update_ticket(ticket.id, priority="high", actor="bot:test", reason="triage")
-    history = parse(updated.history[-1]["dsl"])
-    assert history["oql"] == "ticket.update"
-    assert history["data"]["payload"]["reason"] == "triage"
     journal = pf.store.operational_events(ticket_id=ticket.id)
     assert [row["event"]["oql"] for row in journal] == ["ticket.update", "ticket.create"]
+
+    # The replayable line lives in the journal only. Storing a second copy on
+    # the ticket made history 75% of subactor's sprint file, and every write
+    # re-serialises the whole file. History keeps the audit metadata.
+    replayed = parse(journal[0]["dsl"])
+    assert replayed["oql"] == "ticket.update"
+    assert replayed["data"]["payload"]["reason"] == "triage"
+    entry = updated.history[-1]
+    assert "dsl" not in entry
+    assert entry["changes"] == ["priority"]
+    assert (entry["reason"], entry["actor"]) == ("triage", "bot:test")
 
 
 def test_ticket_dsl_redacts_nested_credentials(tmp_path):
