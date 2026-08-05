@@ -80,6 +80,7 @@ class Planfile:
         self.store = PlanfileStore(project_path)
         if not self.store.is_initialized():
             self.store.init()
+        self.store.ensure_forensic_log_projection()
 
     @property
     def configuration(self):

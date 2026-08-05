@@ -374,6 +374,19 @@ snapshot protection do not need to parse every history file.
 See [Daily terminal history](docs/guides/DAILY_TERMINAL_HISTORY.md) for the
 ordering and compatibility contract.
 
+#### Public forensic event log
+
+Every ticket mutation, evidence append, configuration decision, and persisted
+management observation has a compact `PLOG/1` projection in
+`.planfile/events/logs.dsl.txt`. Previous UTC days live in daily history files.
+Applications and LLM tools can use the bounded public endpoints
+`GET /logs.dsl.txt`, `GET /logs`, and `GET /logs/days`, with optional
+`ticket_id`, `event_type`, `day`, and `limit` filters. PLOG keeps reasons,
+actors, state transitions, decisions, correlation IDs, and SODL event hashes
+readable while excluding large payloads. See
+[Public forensic log DSL](docs/guides/FORENSIC_LOG_DSL.md) for the grammar,
+retention layout, redaction, and API examples.
+
 The defaults apply to existing projects without a configuration change. They
 can be adjusted or disabled through the validated configuration interface (or
 reviewed directly in `.planfile/config.yaml`):

@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Added
+- Added a public, append-only `PLOG/1` forensic timeline in
+  `.planfile/events/logs.dsl.txt`, daily history partitions, bounded text/JSON
+  APIs, streaming backfill from SODL, and durable coverage for evidence and
+  management decisions. The compact projection keeps time, type, actor,
+  reason, lifecycle logic and correlation data directly readable by LLMs.
 - Added atomic `POST /tickets/{ticket_id}/evidence` for idempotent external-effect
   receipts. Retries after an ambiguous HTTP timeout now deduplicate under the
   store lock instead of requiring callers to replace the complete ticket output.
