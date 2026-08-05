@@ -31,6 +31,9 @@
 - Bounded worker memory by excluding YAML snapshots larger than 5 MB, including
   legacy monthly archives, from parsed-data and ticket-model caches while
   keeping those files readable on demand.
+- Made full-history list reads explicit: `sprint=all` without a declared `view`
+  now returns the bounded current summary, preventing legacy service clients
+  from repeatedly materializing the complete archive.
 - Fixed `planfile serve` install hint: Rich no longer swallows `[api]` as
   console markup, so the error now prints the correct
   `pip install 'planfile[api]'` instead of an extras-less command.

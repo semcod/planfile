@@ -27,7 +27,10 @@ daily file instead of parsing all history.
 The API runs an idempotent sweep on startup and once per UTC date, in addition
 to mutation-time rotation. Normal dashboard and watcher reads use
 `sprint=current`; callers use `sprint=all` only for an intentional full-history
-query. Existing `archive-YYYY-MM.yaml` files remain readable. YAML snapshots up
+query and MUST also choose an explicit `view=summary`, `view=operational`, or
+`view=full`. For compatibility, an unqualified `sprint=all` is treated as a
+bounded current-summary request. Existing `archive-YYYY-MM.yaml` files remain
+readable. YAML snapshots up
 to 5 MB are cached for repeated reads; larger legacy snapshots are parsed on
 demand but not retained by long-running workers, preventing history scans from
 permanently increasing API memory usage.

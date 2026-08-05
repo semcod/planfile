@@ -477,9 +477,11 @@ def list_tickets(
     if source:
         filters["source"] = source
     browser_client = "mozilla/" in request.headers.get("user-agent", "").lower()
+    explicit_view = "view" in request.query_params
+    legacy_unbounded_request = sprint == "all" and not explicit_view
     effective_view = (
         "summary"
-        if browser_client and "view" not in request.query_params
+        if (browser_client and not explicit_view) or legacy_unbounded_request
         else view
     )
     # Dashboards shipped before the bounded queue view requested `sprint=all`
@@ -488,7 +490,7 @@ def list_tickets(
     # intentionally needs the archive can opt in with an explicit `view`.
     effective_sprint = (
         "current"
-        if browser_client and "view" not in request.query_params and sprint == "all"
+        if legacy_unbounded_request
         else sprint
     )
     return _ticket_list_response(
