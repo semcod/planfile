@@ -1078,6 +1078,31 @@ def test_tickets_api_reuses_serialized_unchanged_snapshot(tmp_path, monkeypatch)
     assert calls == 2
 
 
+def test_ticket_list_cache_evicts_superseded_versions_of_the_same_query(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Cache version 0", source=TicketSource(tool="test"))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+    path = "/tickets?sprint=all&limit=5000&view=full"
+
+    for version in range(6):
+        if version:
+            pf.update_ticket(ticket.id, name=f"Cache version {version}")
+        assert client.get(path).status_code == 200
+
+    project_keys = [
+        key
+        for key in server._TICKET_LIST_RESPONSE_CACHE
+        if key[0] == str(pf.store.project_dir)
+    ]
+    assert len(project_keys) == 1
+    assert client.get(path).json()[0]["name"] == "Cache version 5"
+
+
 def test_dashboard_gets_bounded_stale_snapshot_during_mutation_burst(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(name="Before burst", source=TicketSource(tool="test"))
