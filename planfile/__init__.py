@@ -253,12 +253,30 @@ class Planfile:
         is_bug = 0 if ticket.labels and "bug" in ticket.labels else 1
         return (priority_order.get(str(ticket.priority), 99), is_bug, str(ticket.created_at), ticket.id)
 
+    def _ticket_snapshot_with_dependencies(self, tickets: list["Ticket"]) -> dict[str, "Ticket"]:
+        """Extend one current snapshot with directly located archived dependencies."""
+        ticket_by_id = {ticket.id: ticket for ticket in tickets}
+        if not hasattr(self, "store"):
+            return ticket_by_id
+        locations = self.store._history_locations()
+        dependency_ids = {
+            dependency
+            for ticket in tickets
+            for dependency in (ticket.blocked_by or [])
+            if dependency not in ticket_by_id and dependency in locations
+        }
+        for dependency in dependency_ids:
+            archived = self.get_ticket(dependency)
+            if archived is not None:
+                ticket_by_id[dependency] = archived
+        return ticket_by_id
+
     def runnable_report(self, sprint: str = "current", queue: str | None = None) -> dict:
         """Explain runnability for every open ticket — for ``planfile ticket next --debug`` and
         dashboards: ``{selected, servable: [ids], skipped: [{id, reason}]}`` (servable in serve order)."""
         servable, skipped = [], []
         tickets = self.list_tickets(sprint=sprint)
-        ticket_by_id = {ticket.id: ticket for ticket in tickets}
+        ticket_by_id = self._ticket_snapshot_with_dependencies(tickets)
         for ticket in tickets:
             status = ticket.status.value if hasattr(ticket.status, "value") else str(ticket.status)
             if status != "open":
@@ -278,7 +296,7 @@ class Planfile:
         bug-first within priority. Skips frozen-frontier / human-waiting / resource-waiting / off-goal
         / dependency-blocked tickets so an autonomous queue never loops on un-doable work."""
         tickets = self.list_tickets(sprint=sprint)
-        ticket_by_id = {ticket.id: ticket for ticket in tickets}
+        ticket_by_id = self._ticket_snapshot_with_dependencies(tickets)
         runnable = (
             ticket
             for ticket in tickets

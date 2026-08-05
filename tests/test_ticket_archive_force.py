@@ -17,6 +17,7 @@ def test_forced_archive_applies_retention_but_never_moves_active_ticket(tmp_path
         "max_current_tickets": 100,
         "max_current_bytes": 10_000_000,
         "retain_terminal_tickets": 1,
+        "retain_terminal_days": 10_000,
         "terminal_statuses": ["done", "blocked"],
     }
     store._config_path.write_text(yaml.safe_dump(config, sort_keys=False))
@@ -30,6 +31,6 @@ def test_forced_archive_applies_retention_but_never_moves_active_ticket(tmp_path
 
     assert report["triggered"] is True
     assert report["archived"] == 1
-    assert store.get_ticket("PLF-001").sprint == f"archive-{old:%Y-%m}"
+    assert store.get_ticket("PLF-001").sprint == f"history-{old:%Y-%m-%d}"
     assert store.get_ticket("PLF-002").sprint == "current"
     assert store.get_ticket("PLF-003").sprint == "current"

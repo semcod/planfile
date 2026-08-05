@@ -111,6 +111,13 @@ Migration is refused when target shard directories are non-empty. The current
 implementation retains recovery backups but deliberately rejects reverse
 migration until a verified reconstruction operation is implemented.
 
+## Daily terminal history
+
+Terminal-ticket rotation is implemented as an active-only operational view with
+daily history files and a bounded lookup locator. See
+[Daily terminal history](DAILY_TERMINAL_HISTORY.md) for the normative contract,
+crash-ordering rules, configuration, and acceptance invariants.
+
 ## SQLite options
 
 Two SQLite modes should be evaluated after sharded YAML:

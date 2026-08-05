@@ -8,17 +8,19 @@ import json
 import os
 import re
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from planfile.core.operational_dsl import canonical_json, redact
 from planfile.core.operational_dsl import line as operational_line
-from planfile.core.operational_dsl import canonical_json
-from planfile.core.operational_dsl import redact
 from planfile.runtime_context import (
     DEFAULT_CONFIG as DEFAULT_RUNTIME_CONFIG,
+)
+from planfile.runtime_context import (
     load_runtime_context_config,
     save_runtime_context_config,
 )
@@ -201,6 +203,11 @@ STORE_SETTINGS: dict[str, Setting] = {
     ),
     "store.archive.retain_terminal_tickets": Setting(
         _nonnegative_integer, ".planfile/config.yaml", "Terminal tickets retained in current sprint"
+    ),
+    "store.archive.retain_terminal_days": Setting(
+        _nonnegative_integer,
+        ".planfile/config.yaml",
+        "UTC calendar dates retained before terminal tickets move to daily history",
     ),
     "store.archive.terminal_statuses": Setting(
         _terminal_statuses, ".planfile/config.yaml", "Statuses eligible for archiving"

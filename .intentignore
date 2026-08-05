@@ -1,0 +1,4 @@
+.intent/**
+.intent-*/**
+.intent-validation/**
+.intent-validation-*/**

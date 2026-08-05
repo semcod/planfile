@@ -47,6 +47,8 @@ from planfile.core.models import (
 from planfile.core.store import ImmutableTerminalReopenError
 from planfile.runtime_context import (
     DEFAULT_CONFIG as DEFAULT_RUNTIME_CONFIG,
+)
+from planfile.runtime_context import (
     build_runtime_context,
     load_runtime_context_config,
 )
@@ -55,11 +57,13 @@ from planfile.server_common import get_planfile
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    await _start_archive_maintenance()
     await _start_planfile_watcher()
     try:
         yield
     finally:
         await _stop_planfile_watcher()
+        await _stop_archive_maintenance()
 
 
 app = FastAPI(
@@ -1021,6 +1025,7 @@ _manager = ConnectionManager()
 _EVENT_HISTORY_LIMIT = 200
 _event_history: deque[dict[str, Any]] = deque(maxlen=_EVENT_HISTORY_LIMIT)
 _watch_task: asyncio.Task | None = None
+_archive_maintenance_task: asyncio.Task | None = None
 _watch_snapshot: dict[str, str] = {}
 _watch_source_signature: tuple = ()
 
@@ -1137,6 +1142,71 @@ async def _watch_planfile_changes(interval_seconds: float = 3.0) -> None:
                 await _broadcast_ticket_event("ticket.external.changed", "external-update", by_id[ticket_id])
         _watch_snapshot = current
         _watch_source_signature = source_signature
+
+
+async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
+    """Run the idempotent history sweep once on startup and per UTC date."""
+    last_run_date = None
+    while True:
+        today = datetime.now(UTC).date()
+        if today != last_run_date:
+            try:
+                report = await asyncio.to_thread(
+                    get_planfile().store.archive_completed
+                )
+            except Exception as exc:  # pragma: no cover - defensive runtime telemetry
+                _remember_event(
+                    {
+                        "type": "management.event",
+                        "action": "daily-history-error",
+                        "ticket_id": "-",
+                        "created_at": datetime.now(UTC).isoformat(),
+                        "source": "planfile",
+                        "tool": "planfile.api",
+                        "level": "error",
+                        "status": "failed",
+                        "message": "daily terminal-ticket history sweep failed",
+                        "details": {"error": str(exc)},
+                    }
+                )
+            else:
+                last_run_date = today
+                if report.get("archived"):
+                    _remember_event(
+                        {
+                            "type": "management.event",
+                            "action": "daily-history",
+                            "ticket_id": "-",
+                            "created_at": datetime.now(UTC).isoformat(),
+                            "source": "planfile",
+                            "tool": "planfile.api",
+                            "level": "info",
+                            "status": "done",
+                            "message": "terminal tickets moved to daily history",
+                            "details": report,
+                        }
+                    )
+        await asyncio.sleep(interval_seconds)
+
+
+async def _start_archive_maintenance() -> None:
+    global _archive_maintenance_task
+    if os.environ.get("PLANFILE_DISABLE_ARCHIVE_MAINTENANCE") == "1":
+        return
+    if _archive_maintenance_task is None or _archive_maintenance_task.done():
+        _archive_maintenance_task = asyncio.create_task(_archive_history_daily())
+
+
+async def _stop_archive_maintenance() -> None:
+    global _archive_maintenance_task
+    if _archive_maintenance_task is None:
+        return
+    _archive_maintenance_task.cancel()
+    try:
+        await _archive_maintenance_task
+    except asyncio.CancelledError:
+        pass
+    _archive_maintenance_task = None
 
 
 async def _start_planfile_watcher() -> None:
