@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 SQLITE_INDEX_SCHEMA = "planfile.sqlite-ticket-index/v1"
 _SCHEMA_VERSION = 1
@@ -248,6 +249,92 @@ class SQLiteTicketIndex:
                 page_parameters.append(offset)
             rows = connection.execute(sql, page_parameters).fetchall()
         return [json.loads(row["summary_json"]) for row in rows], total
+
+    def list_payloads(
+        self,
+        *,
+        sprint: str,
+        filters: dict[str, Any],
+        offset: int,
+        limit: int | None,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """Return full ticket payloads without materializing Pydantic models."""
+        conditions = []
+        parameters: list[Any] = []
+        if sprint != "all":
+            conditions.append("sprint=?")
+            parameters.append(sprint)
+        for key in ("status", "priority", "source"):
+            value = filters.get(key)
+            if value is None:
+                continue
+            conditions.append(f"{key}=?")
+            parameters.append(str(getattr(value, "value", value)))
+        where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+        with self._connect() as connection:
+            total = int(
+                connection.execute(
+                    f"SELECT COUNT(*) AS count FROM tickets{where}",
+                    parameters,
+                ).fetchone()["count"]
+            )
+            sql = f"SELECT ticket_json FROM tickets{where} ORDER BY position"
+            page_parameters = list(parameters)
+            if limit is not None:
+                sql += " LIMIT ? OFFSET ?"
+                page_parameters.extend((limit, offset))
+            elif offset:
+                sql += " LIMIT -1 OFFSET ?"
+                page_parameters.append(offset)
+            rows = connection.execute(sql, page_parameters).fetchall()
+        return [json.loads(row["ticket_json"]) for row in rows], total
+
+    def render_payloads(
+        self,
+        *,
+        sprint: str,
+        filters: dict[str, Any],
+        offset: int,
+        limit: int | None,
+    ) -> tuple[bytes, int, int]:
+        """Render a full JSON array directly from stored canonical ticket JSON."""
+        conditions = []
+        parameters: list[Any] = []
+        if sprint != "all":
+            conditions.append("sprint=?")
+            parameters.append(sprint)
+        for key in ("status", "priority", "source"):
+            value = filters.get(key)
+            if value is None:
+                continue
+            conditions.append(f"{key}=?")
+            parameters.append(str(getattr(value, "value", value)))
+        where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+        with self._connect() as connection:
+            total = int(
+                connection.execute(
+                    f"SELECT COUNT(*) AS count FROM tickets{where}",
+                    parameters,
+                ).fetchone()["count"]
+            )
+            sql = f"SELECT ticket_json FROM tickets{where} ORDER BY position"
+            page_parameters = list(parameters)
+            if limit is not None:
+                sql += " LIMIT ? OFFSET ?"
+                page_parameters.extend((limit, offset))
+            elif offset:
+                sql += " LIMIT -1 OFFSET ?"
+                page_parameters.append(offset)
+            cursor = connection.execute(sql, page_parameters)
+            body = bytearray(b"[")
+            count = 0
+            for row in cursor:
+                if count:
+                    body.extend(b",")
+                body.extend(row["ticket_json"].encode("utf-8"))
+                count += 1
+            body.extend(b"]")
+        return bytes(body), total, count
 
     def status(self, signature: tuple | None = None) -> dict[str, Any]:
         if not self.path.exists():

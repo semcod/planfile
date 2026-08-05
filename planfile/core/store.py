@@ -56,6 +56,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._forensic_log_receipt_path = self.base_dir / "events" / ".logs.dsl.v1"
         self._evidence_dir = self.base_dir / "evidence"
         self._ticket_index_path = self.base_dir / "index" / "tickets.sqlite3"
+        self._ticket_index_rebuild_lock_path = self.base_dir / "index" / ".rebuild.lock"
         self._history_locations_path = self.base_dir / "index" / "history-locations.yaml"
 
     def _storage_config(self) -> dict:
@@ -1263,6 +1264,17 @@ class Store(StoreFileMixin, TicketStoreMixin):
         index = self._sqlite_ticket_index()
         if not (force or self.ticket_index_enabled()):
             return index.status()
+        signature = self._ticket_index_signature()
+        if not force and index.is_current(signature):
+            return index.status(signature) | {"rebuilt": False}
+        with self.ticket_index_rebuild_lock():
+            signature = self._ticket_index_signature()
+            if not force and index.is_current(signature):
+                return index.status(signature) | {"rebuilt": False}
+            return self._rebuild_ticket_index_unlocked(index, force=force)
+
+    def _rebuild_ticket_index_unlocked(self, index, *, force: bool) -> dict:
+        """Rebuild while the caller holds the cross-process index lock."""
         for _attempt in range(2):
             signature_before = self._ticket_index_signature()
             if not force and index.is_current(signature_before):
@@ -1286,6 +1298,28 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 "tickets": count,
             }
         raise RuntimeError("ticket_index_sources_changed_during_rebuild")
+
+    @contextmanager
+    def ticket_index_rebuild_lock(self):
+        """Prevent concurrent readers from materializing duplicate full rebuilds."""
+        self._ticket_index_rebuild_lock_path.parent.mkdir(parents=True, exist_ok=True)
+        lock_file = self._ticket_index_rebuild_lock_path.open("a+", encoding="utf-8")
+        try:
+            try:
+                import fcntl
+
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            except ImportError:
+                pass
+            yield
+        finally:
+            try:
+                import fcntl
+
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            except ImportError:
+                pass
+            lock_file.close()
 
     def configure_ticket_index(self, enabled: bool, *, before_mutation=None) -> dict:
         """Enable/disable SQLite indexing without deleting its rebuildable data."""
@@ -1322,6 +1356,40 @@ class Store(StoreFileMixin, TicketStoreMixin):
     ) -> tuple[list[dict], int]:
         self.ensure_ticket_index()
         return self._sqlite_ticket_index().list_summaries(
+            sprint=sprint,
+            filters=filters,
+            offset=offset,
+            limit=limit,
+        )
+
+    def indexed_ticket_payloads(
+        self,
+        *,
+        sprint: str,
+        filters: dict,
+        offset: int,
+        limit: int | None,
+    ) -> tuple[list[dict], int]:
+        """Read full ticket JSON directly from the disposable SQLite projection."""
+        self.ensure_ticket_index()
+        return self._sqlite_ticket_index().list_payloads(
+            sprint=sprint,
+            filters=filters,
+            offset=offset,
+            limit=limit,
+        )
+
+    def indexed_ticket_json_response(
+        self,
+        *,
+        sprint: str,
+        filters: dict,
+        offset: int,
+        limit: int | None,
+    ) -> tuple[bytes, int, int]:
+        """Render full ticket JSON from SQLite without a Python object graph."""
+        self.ensure_ticket_index()
+        return self._sqlite_ticket_index().render_payloads(
             sprint=sprint,
             filters=filters,
             offset=offset,

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 import yaml
 from fastapi.testclient import TestClient
@@ -75,6 +78,66 @@ def test_summary_api_pages_and_filters_in_sqlite_without_full_list(tmp_path, mon
     assert [ticket["name"] for ticket in response.json()] == ["Ticket 3", "Ticket 5"]
     assert response.headers["X-Total-Count"] == "5"
     assert response.headers["X-Result-Count"] == "2"
+
+
+def test_full_and_operational_api_views_use_sqlite_without_model_cache(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Indexed full payload", description="details")
+    pf.store.configure_ticket_index(True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(
+        pf,
+        "list_tickets",
+        lambda **_filters: (_ for _ in ()).throw(
+            AssertionError("indexed list must not materialize ticket models")
+        ),
+    )
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    full = client.get("/tickets?sprint=all&limit=5000&view=full")
+    operational = client.get("/tickets?sprint=all&limit=5000&view=operational")
+
+    assert full.status_code == 200
+    assert full.json()[0]["id"] == ticket.id
+    assert full.json()[0]["description"] == "details"
+    assert operational.status_code == 200
+    assert operational.json()[0]["id"] == ticket.id
+    assert "history" not in operational.json()[0]
+
+
+def test_concurrent_stale_index_reads_perform_one_rebuild(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Before concurrent rebuild")
+    pf.store.configure_ticket_index(True)
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "After concurrent rebuild"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+    original_records = pf.store._ticket_index_records
+    calls = 0
+    calls_lock = threading.Lock()
+
+    def counted_records():
+        nonlocal calls
+        with calls_lock:
+            calls += 1
+        time.sleep(0.05)
+        return original_records()
+
+    monkeypatch.setattr(pf.store, "_ticket_index_records", counted_records)
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        loaded = list(pool.map(lambda _number: pf.get_ticket(ticket.id), range(8)))
+
+    assert calls == 1
+    assert {item.name for item in loaded if item is not None} == {
+        "After concurrent rebuild"
+    }
 
 
 def test_external_yaml_edit_marks_index_stale_and_self_heals(tmp_path):
