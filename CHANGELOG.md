@@ -8,6 +8,8 @@
   canonical SODL and the bounded public PLOG/1 projection.
 - Stopped CI from publishing an unused `gh-pages` branch; GitHub Pages already
   serves the configured `main:/` source, so successful runs retain one branch.
+- Pinned checkout, Python setup, cache and artifact upload to immutable official
+  Node 24 Action revisions, removing runner deprecation compatibility mode.
 - Serialized stale SQLite index rebuilds across readers and serve full and
   operational ticket lists directly from the index, avoiding concurrent archive
   materialization, SQLite reset races, and multi-gigabyte model caches.
