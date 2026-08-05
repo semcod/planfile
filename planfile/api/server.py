@@ -415,7 +415,7 @@ def _ticket_list_response(
                 },
             )
         signature = _ticket_snapshot_signature(pf, sprint)
-        key = (sprint, tuple(sorted(filters.items())), offset, limit, view, signature)
+        key = query_key + (signature,)
         cached = _TICKET_LIST_RESPONSE_CACHE.get(key)
         if cached is not None:
             body, total, count = cached
@@ -462,6 +462,10 @@ def _ticket_list_response(
                 body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
             # Do not retain a response assembled across a concurrent file change.
             if signature == _ticket_snapshot_signature(pf, sprint):
+                logical_query = key[:-1]
+                for existing_key in tuple(_TICKET_LIST_RESPONSE_CACHE):
+                    if existing_key[:-1] == logical_query:
+                        _TICKET_LIST_RESPONSE_CACHE.pop(existing_key, None)
                 if len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT:
                     _TICKET_LIST_RESPONSE_CACHE.clear()
                 _TICKET_LIST_RESPONSE_CACHE[key] = (body, total, count)

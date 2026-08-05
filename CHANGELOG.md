@@ -6,6 +6,8 @@
 - Serialized stale SQLite index rebuilds across readers and serve full and
   operational ticket lists directly from the index, avoiding concurrent archive
   materialization, SQLite reset races, and multi-gigabyte model caches.
+- Evict superseded signature versions of the same ticket-list response so a
+  frequently changing full-history query retains one serialized body, not four.
 
 ### Added
 - Added a public, append-only `PLOG/1` forensic timeline in
