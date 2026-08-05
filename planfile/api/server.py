@@ -339,7 +339,11 @@ def _ticket_operational_payload(ticket) -> dict[str, Any]:
     dependencies and the executable process contract, but not an ever-growing
     journal of history, human notes or artifact references on every poll.
     """
-    payload = ticket.model_dump(mode="json", exclude_none=True)
+    payload = (
+        ticket.model_dump(mode="json", exclude_none=True)
+        if hasattr(ticket, "model_dump")
+        else dict(ticket)
+    )
     for field in ("history", "dsl", "file", "files", "integration", "llm_hints", "sync"):
         payload.pop(field, None)
     source = payload.get("source")
@@ -416,14 +420,33 @@ def _ticket_list_response(
         if cached is not None:
             body, total, count = cached
         else:
-            if view == "summary" and pf.store.ticket_index_enabled():
-                payload, total = pf.store.indexed_ticket_summaries(
-                    sprint=sprint,
-                    filters=filters,
-                    offset=offset,
-                    limit=limit,
-                )
-                count = len(payload)
+            body = None
+            if pf.store.ticket_index_enabled():
+                if view == "summary":
+                    payload, total = pf.store.indexed_ticket_summaries(
+                        sprint=sprint,
+                        filters=filters,
+                        offset=offset,
+                        limit=limit,
+                    )
+                    count = len(payload)
+                elif view == "full":
+                    body, total, count = pf.store.indexed_ticket_json_response(
+                        sprint=sprint,
+                        filters=filters,
+                        offset=offset,
+                        limit=limit,
+                    )
+                else:
+                    payload, total = pf.store.indexed_ticket_payloads(
+                        sprint=sprint,
+                        filters=filters,
+                        offset=offset,
+                        limit=limit,
+                    )
+                    if view == "operational":
+                        payload = [_ticket_operational_payload(ticket) for ticket in payload]
+                    count = len(payload)
             else:
                 tickets = pf.list_tickets(sprint=sprint, **filters)
                 total = len(tickets)
@@ -435,7 +458,8 @@ def _ticket_list_response(
                     else ticket.model_dump(mode="json", exclude_none=True)
                     for ticket in tickets
                 ]
-            body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            if body is None:
+                body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
             # Do not retain a response assembled across a concurrent file change.
             if signature == _ticket_snapshot_signature(pf, sprint):
                 if len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT:
