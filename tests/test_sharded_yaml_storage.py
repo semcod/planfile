@@ -12,6 +12,8 @@ from planfile import Planfile
 from planfile.api import server
 from planfile.cli.commands import app
 from planfile.core.fastio import mirror_path
+from planfile.core.models import TicketExecution
+from planfile.core.store import ImmutableTerminalReopenError
 
 
 def _disable_archive(pf: Planfile) -> None:
@@ -58,6 +60,30 @@ def test_migration_partitions_tickets_and_preserves_contract(tmp_path):
     }
     assert after == before
     assert pf.get_ticket(ids[-1]).name == "Ticket 205"
+
+
+def test_sharded_storage_rejects_execution_reopen_after_cancellation(tmp_path):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.store.migrate_to_sharded_yaml(shard_size=100)
+    ticket = pf.create_ticket(
+        name="Immutable sharded lifecycle",
+        execution=TicketExecution(state="running", assigned_to="bot:worker"),
+    )
+    pf.update_ticket(ticket.id, status="canceled")
+
+    with pytest.raises(ImmutableTerminalReopenError, match="immutable_terminal_reopen"):
+        pf.update_ticket(
+            ticket.id,
+            execution=TicketExecution(state="running", assigned_to="bot:late"),
+            actor="bot:late",
+            reason="stale_worker_update",
+        )
+
+    current = pf.get_ticket(ticket.id)
+    assert current is not None
+    assert current.status == "canceled"
+    assert current.execution.state == "canceled"
 
 
 def test_sharded_crud_move_and_sprint_save(tmp_path):

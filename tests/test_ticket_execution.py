@@ -12,6 +12,7 @@ from planfile import (
     TicketOutputs,
     TicketSource,
 )
+from planfile.core.store import ImmutableTerminalReopenError
 
 
 def test_ticket_round_trip_with_execution_fields(tmp_path):
@@ -241,6 +242,54 @@ def test_terminal_status_normalizes_execution_state(tmp_path, terminal_status):
     assert terminal.execution.assigned_to is None
     assert terminal.execution.lease_expires_at is None
     assert terminal.execution.finished_at is not None
+
+
+@pytest.mark.parametrize("terminal_status", ["done", "canceled"])
+def test_immutable_terminal_ticket_rejects_ordinary_reopen(tmp_path, terminal_status):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Immutable terminal lifecycle",
+        execution=TicketExecution(state="running", assigned_to="bot:test"),
+    )
+    terminal = pf.update_ticket(ticket.id, status=terminal_status)
+
+    with pytest.raises(ImmutableTerminalReopenError, match="immutable_terminal_reopen"):
+        pf.update_ticket(
+            ticket.id,
+            execution=TicketExecution(state="running", assigned_to="bot:late"),
+            actor="bot:late",
+            reason="stale_worker_update",
+        )
+    with pytest.raises(ImmutableTerminalReopenError, match="immutable_terminal_reopen"):
+        pf.ready_ticket(ticket.id, actor="bot:late", reason="stale_retry")
+
+    current = pf.get_ticket(ticket.id)
+    assert current is not None
+    assert current.status == terminal_status
+    assert current.execution is not None
+    assert current.execution.state == terminal_status
+    assert current.execution.assigned_to is None
+
+
+def test_immutable_terminal_ticket_accepts_append_only_evidence(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Completed work")
+    pf.update_ticket(ticket.id, status="done")
+
+    updated, recorded = pf.append_ticket_evidence(
+        ticket.id,
+        idempotency_key="late-verifier:v1",
+        collection="evidence",
+        evidence={"schema": "test.evidence/v1", "passed": True},
+        reason="late_verification",
+        actor="bot:verifier",
+    )
+
+    assert recorded is True
+    assert updated is not None
+    assert updated.status == "done"
+    assert updated.execution is not None
+    assert updated.execution.state == "done"
 
 
 def test_ready_ticket_reopens_started_ticket_and_clears_stale_execution_claim(tmp_path):
