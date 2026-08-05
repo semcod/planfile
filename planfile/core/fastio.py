@@ -21,6 +21,8 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import warnings
+from datetime import date, datetime, time
 from pathlib import Path
 from typing import Any
 
@@ -41,8 +43,26 @@ def mirror_path(path: Path) -> Path:
     return path.with_name(path.name + _MIRROR_SUFFIX)
 
 
+def _json_safe(value: Any) -> Any:
+    """Return the YAML value in the exact JSON-mirror representation.
+
+    PyYAML resolves unquoted timestamps to ``date``/``datetime`` instances.
+    They are valid YAML but not JSON serializable, so one timestamp in a large
+    archive used to disable its mirror permanently and force every read to
+    parse the whole YAML again. Normalising at the YAML boundary also keeps a
+    cache miss and a mirror hit type-compatible.
+    """
+    if isinstance(value, dict):
+        return {_json_safe(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    return value
+
+
 def load_yaml_text(text: str) -> Any:
-    return yaml.load(text, Loader=FastLoader)
+    return _json_safe(yaml.load(text, Loader=FastLoader))
 
 
 def dump_yaml(data: Any, *, allow_unicode: bool = False) -> str:
@@ -96,10 +116,16 @@ def write_mirror(yaml_path: Path, data: Any, *, mtime_ns: int | None = None) -> 
     payload = {"version": _MIRROR_VERSION, "yaml_mtime_ns": mtime_ns, "data": data}
     try:
         _atomic_write_text(mirror_path(yaml_path), json.dumps(payload, ensure_ascii=False))
-    except Exception:
-        # The mirror is an optimization only; a failed write must never
-        # break a ticket mutation. Readers fall back to parsing the YAML.
-        pass
+    except Exception as exc:
+        # The mirror is an optimization only; a failed write must never break
+        # a ticket mutation. It must remain observable, otherwise a permanent
+        # full-YAML fallback looks like unexplained API latency.
+        warnings.warn(
+            f"planfile: JSON mirror for {yaml_path.name} not written "
+            f"({type(exc).__name__}: {exc}); reads fall back to full YAML parsing",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
 
 def read_mirror(yaml_path: Path, yaml_mtime_ns: int) -> Any | None:

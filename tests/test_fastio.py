@@ -70,6 +70,23 @@ class TestMirrorRoundtrip:
         payload = json.loads(fastio.mirror_path(y).read_text())
         assert payload["yaml_mtime_ns"] == 12345
 
+    def test_yaml_timestamps_are_json_safe_and_mirrored(self, tmp_path):
+        y = tmp_path / "archive.yaml"
+        _write_yaml(
+            y,
+            "created_at: 2026-08-05 07:11:31.523310+00:00\n"
+            "review_on: 2026-08-12\n",
+        )
+
+        first = fastio.read_yaml_fast(y)
+
+        assert first == {
+            "created_at": "2026-08-05T07:11:31.523310+00:00",
+            "review_on": "2026-08-12",
+        }
+        assert fastio.mirror_path(y).exists()
+        assert fastio.read_yaml_fast(y) == first
+
     def test_read_does_not_cache_when_a_writer_races_mid_read(self, tmp_path, monkeypatch):
         """Reproduces the exact bug this module guards against: a reader takes no
         lock, so a concurrent writer's atomic replace can land between the reader's
