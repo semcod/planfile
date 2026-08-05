@@ -711,6 +711,19 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return self._sharded_storage().sprint_ids()
         return [path.stem for path in self._all_sprint_files()]
 
+    def ticket_records(self, sprint: str = "all"):
+        """Yield raw ticket dictionaries for bounded identity checks.
+
+        Create-time deduplication only needs status and labels. Avoid building
+        thousands of Pydantic models while holding the cross-process mutation
+        lock.
+        """
+        for sprint_id in (self._all_sprint_ids() if sprint == "all" else [sprint]):
+            root = self.load_sprint(sprint_id)
+            for record in (root.get("tickets") or {}).values():
+                if isinstance(record, dict):
+                    yield record
+
     def _sprint_storage_files(self, sprint: str) -> list[Path]:
         self._sprint_file(sprint)  # validate
         if self._uses_sharded_storage():
