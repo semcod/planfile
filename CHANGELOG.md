@@ -6,6 +6,8 @@
 - Preserved management-event actor, correlation, causation, receipt, reason,
   decision, outcome, error, and idempotency context across `/events/ingest`,
   canonical SODL and the bounded public PLOG/1 projection.
+- Stopped CI from publishing an unused `gh-pages` branch; GitHub Pages already
+  serves the configured `main:/` source, so successful runs retain one branch.
 - Serialized stale SQLite index rebuilds across readers and serve full and
   operational ticket lists directly from the index, avoiding concurrent archive
   materialization, SQLite reset races, and multi-gigabyte model caches.

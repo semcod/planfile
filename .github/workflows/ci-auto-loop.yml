@@ -156,14 +156,6 @@ jobs:
           pip install 'setuptools<81' coverage-badge
           coverage-badge -f -o coverage.svg
       
-      - name: Deploy coverage reports
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./htmlcov
-          destination_dir: coverage
-
   notify:
     runs-on: ubuntu-latest
     needs: ci-loop
