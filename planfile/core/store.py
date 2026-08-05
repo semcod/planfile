@@ -50,6 +50,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._sprints_dir = self.base_dir / "sprints"
         self._lock_path = self.base_dir / ".store.lock"
         self._operations_path = self.base_dir / "events" / "operations.jsonl"
+        self._forensic_log_path = self.base_dir / "events" / "logs.dsl.txt"
+        self._forensic_log_history_dir = self.base_dir / "events" / "history"
+        self._forensic_log_date_path = self.base_dir / "events" / ".logs.dsl.date"
+        self._forensic_log_receipt_path = self.base_dir / "events" / ".logs.dsl.v1"
         self._evidence_dir = self.base_dir / "evidence"
         self._ticket_index_path = self.base_dir / "index" / "tickets.sqlite3"
         self._history_locations_path = self.base_dir / "index" / "history-locations.yaml"
@@ -99,8 +103,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         from planfile.core.operational_dsl import parse
 
         rows = []
+        events = []
         for line in lines:
             event = parse(line)
+            events.append(event)
             rows.append(
                 json.dumps(
                     {"schema": event["schema"], "event": event, "dsl": line},
@@ -110,11 +116,208 @@ class Store(StoreFileMixin, TicketStoreMixin):
             )
         if not rows:
             return
+        self._ensure_forensic_log_projection_unlocked()
+        self._append_forensic_events_unlocked(events)
         self._operations_path.parent.mkdir(parents=True, exist_ok=True)
         with self._operations_path.open("a", encoding="utf-8") as handle:
             handle.write("".join(f"{row}\n" for row in rows))
             handle.flush()
             os.fsync(handle.fileno())
+
+    @staticmethod
+    def _forensic_event_date(event: dict) -> str:
+        value = str(event.get("timestamp") or "")[:10]
+        try:
+            return datetime.fromisoformat(value).date().isoformat()
+        except ValueError:
+            return datetime.now(UTC).date().isoformat()
+
+    def _forensic_path_for_date(self, value: str) -> Path:
+        today = datetime.now(UTC).date().isoformat()
+        if value == today:
+            return self._forensic_log_path
+        return self._forensic_log_history_dir / f"logs-{value}.dsl.txt"
+
+    def _rotate_forensic_log_unlocked(self) -> None:
+        today = datetime.now(UTC).date().isoformat()
+        try:
+            recorded_date = self._forensic_log_date_path.read_text(encoding="utf-8").strip()
+        except FileNotFoundError:
+            recorded_date = ""
+        if recorded_date and recorded_date != today and self._forensic_log_path.exists():
+            destination = self._forensic_log_history_dir / f"logs-{recorded_date}.dsl.txt"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            with destination.open("a", encoding="utf-8") as output:
+                with self._forensic_log_path.open("r", encoding="utf-8") as source:
+                    shutil.copyfileobj(source, output)
+                output.flush()
+                os.fsync(output.fileno())
+            self._forensic_log_path.unlink()
+        self._forensic_log_path.parent.mkdir(parents=True, exist_ok=True)
+        self._forensic_log_path.touch(exist_ok=True)
+        from planfile.core.fastio import _atomic_write_text
+
+        _atomic_write_text(self._forensic_log_date_path, f"{today}\n")
+
+    def _append_forensic_events_unlocked(self, events: list[dict]) -> None:
+        from planfile.core.forensic_log_dsl import serialize as forensic_line
+
+        self._rotate_forensic_log_unlocked()
+        grouped: dict[Path, list[str]] = {}
+        for event in events:
+            path = self._forensic_path_for_date(self._forensic_event_date(event))
+            grouped.setdefault(path, []).append(forensic_line(event))
+        for path, projected in grouped.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write("".join(f"{line}\n" for line in projected))
+                handle.flush()
+                os.fsync(handle.fileno())
+
+    def _ensure_forensic_log_projection_unlocked(self) -> None:
+        if self._forensic_log_receipt_path.exists():
+            self._rotate_forensic_log_unlocked()
+            return
+        self._rotate_forensic_log_unlocked()
+        if self._operations_path.exists():
+            batch = []
+            with self._operations_path.open("r", encoding="utf-8") as source:
+                for raw in source:
+                    if not raw.strip():
+                        continue
+                    try:
+                        row = json.loads(raw)
+                    except ValueError:
+                        continue
+                    event = row.get("event") if isinstance(row, dict) else None
+                    if isinstance(event, dict):
+                        batch.append(event)
+                    if len(batch) >= 250:
+                        self._append_forensic_events_unlocked(batch)
+                        batch.clear()
+            if batch:
+                self._append_forensic_events_unlocked(batch)
+        from planfile.core.fastio import _atomic_write_text
+
+        _atomic_write_text(
+            self._forensic_log_receipt_path,
+            "schema=planfile.forensic-log-projection/v1\n",
+        )
+
+    def ensure_forensic_log_projection(self) -> None:
+        """Backfill the compact public log once, then keep it append-only."""
+        if self._forensic_log_receipt_path.exists():
+            try:
+                recorded_date = self._forensic_log_date_path.read_text(
+                    encoding="utf-8"
+                ).strip()
+            except FileNotFoundError:
+                recorded_date = ""
+            if recorded_date == datetime.now(UTC).date().isoformat():
+                return
+        with self.mutation_lock():
+            self._ensure_forensic_log_projection_unlocked()
+
+    def forensic_log_lines(
+        self,
+        *,
+        date: str | None = None,
+        ticket_id: str | None = None,
+        event_type: str | None = None,
+        limit: int = 500,
+    ) -> list[str]:
+        """Return a bounded oldest-to-newest slice of the readable log."""
+        from collections import deque
+
+        from planfile.core.forensic_log_dsl import parse
+
+        self.ensure_forensic_log_projection()
+        selected_date = date or datetime.now(UTC).date().isoformat()
+        path = self._forensic_path_for_date(selected_date)
+        result: deque[str] = deque(maxlen=max(1, min(int(limit), 5000)))
+        try:
+            source = path.open("r", encoding="utf-8")
+        except FileNotFoundError:
+            return []
+        with source:
+            for raw in source:
+                line = raw.rstrip("\r\n")
+                if not line:
+                    continue
+                if ticket_id or event_type:
+                    try:
+                        record = parse(line)
+                    except ValueError:
+                        continue
+                    if ticket_id and record["ticket_id"] != ticket_id:
+                        continue
+                    if event_type and record["type"] != event_type:
+                        continue
+                result.append(line)
+        return list(result)
+
+    def forensic_log_days(self) -> list[dict]:
+        """Describe every public daily PLOG partition, newest first."""
+        self.ensure_forensic_log_projection()
+        today = datetime.now(UTC).date().isoformat()
+        paths = [(today, self._forensic_log_path)]
+        for path in self._forensic_log_history_dir.glob("logs-*.dsl.txt"):
+            paths.append((path.name.removeprefix("logs-").removesuffix(".dsl.txt"), path))
+        result = []
+        for value, path in sorted(paths, reverse=True):
+            try:
+                stat = path.stat()
+            except FileNotFoundError:
+                continue
+            result.append({"date": value, "bytes": stat.st_size, "file": path.name})
+        return result
+
+    def append_management_event(self, event: dict) -> None:
+        """Persist a compact management observation in the same audit stream."""
+        from planfile.core.operational_dsl import line as operational_line
+
+        ticket_id = str(event.get("ticket_id") or "-")
+        action = str(event.get("action") or event.get("type") or "observe")
+        source = str(event.get("source") or event.get("tool") or "planfile.api")
+        actor = str(event.get("actor") or event.get("tool") or source)
+        ticket = event.get("ticket") if isinstance(event.get("ticket"), dict) else {}
+        execution = ticket.get("execution") if isinstance(ticket.get("execution"), dict) else {}
+        details = event.get("details") if isinstance(event.get("details"), dict) else {}
+        message = str(
+            event.get("message")
+            or execution.get("last_error")
+            or details.get("error")
+            or ""
+        )
+        data = {
+            "payload": {
+                "action": action,
+                "name": str(ticket.get("name") or ""),
+                "message": message,
+                "level": str(event.get("level") or "info"),
+                "queue": str(event.get("queue") or execution.get("queue") or "default"),
+                "reason": str(event.get("reason") or message),
+                "status": str(ticket.get("status") or event.get("status") or "recorded"),
+                "execution_state": str(execution.get("state") or ""),
+            }
+        }
+        with self.mutation_lock():
+            self._append_operational_line(
+                operational_line(
+                    timestamp=event.get("created_at"),
+                    kind="management",
+                    source=source,
+                    ticket_id=ticket_id,
+                    actor=actor,
+                    oql=f"event.{action}",
+                    uri=f"planfile://events/{action}/observe",
+                    mode="observe",
+                    status=str(ticket.get("status") or event.get("status") or "recorded"),
+                    correlation_id=str(event.get("correlation_id") or ticket_id),
+                    replayable=False,
+                    data=data,
+                )
+            )
 
     def _ticket_evidence_path(self, ticket_id: str) -> Path:
         value = str(ticket_id or "").strip()
@@ -235,13 +438,25 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def operational_events(self, *, limit: int = 200, ticket_id: str | None = None) -> list[dict]:
         """Read the append-only operational journal, newest first."""
+        from collections import deque
+
+        bounded: deque[dict] = deque(maxlen=max(1, min(int(limit), 5000)))
         try:
-            rows = [json.loads(line) for line in self._operations_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            source = self._operations_path.open("r", encoding="utf-8")
         except FileNotFoundError:
             return []
-        if ticket_id:
-            rows = [row for row in rows if str((row.get("event") or {}).get("ticket_id") or "") == str(ticket_id)]
-        return list(reversed(rows[-max(1, min(int(limit), 5000)) :]))
+        with source:
+            for line in source:
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    continue
+                if ticket_id and str((row.get("event") or {}).get("ticket_id") or "") != str(ticket_id):
+                    continue
+                bounded.append(row)
+        return list(reversed(bounded))
 
     @contextmanager
     def mutation_lock(self):
@@ -1652,6 +1867,32 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 "reason": str(reason),
             }
             self._append_ticket_evidence_event(ticket_id, event)
+            from planfile.core.operational_dsl import line as operational_line
+
+            self._append_operational_line(
+                operational_line(
+                    timestamp=timestamp,
+                    kind="evidence",
+                    source="planfile.evidence",
+                    ticket_id=ticket_id,
+                    actor=str(actor),
+                    oql="ticket.evidence.append",
+                    uri=f"planfile://tickets/{ticket_id}/evidence/{collection}/append",
+                    mode="apply",
+                    status="recorded",
+                    correlation_id=ticket_id,
+                    receipt_ref=f"evidence://{ticket_id}/{key}",
+                    replayable=False,
+                    data={
+                        "payload": {
+                            "collection": collection,
+                            "idempotency_key": key,
+                            "reason": str(reason),
+                            "evidence_keys": sorted(serialized_evidence),
+                        }
+                    },
+                )
+            )
             projected = self._apply_ticket_evidence_events(
                 current.model_dump(mode="json", exclude_none=True),
                 [event],

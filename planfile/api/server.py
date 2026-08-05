@@ -31,7 +31,7 @@ try:
         WebSocketDisconnect,
     )
     from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import HTMLResponse, JSONResponse, Response
+    from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
     from pydantic import BaseModel, Field
 except ImportError as exc:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
@@ -558,6 +558,68 @@ def list_operational_events(
     return {"ok": True, "ticket_id": ticket_id, "operations": get_planfile().store.operational_events(limit=limit, ticket_id=ticket_id)}
 
 
+@app.get("/logs.dsl.txt", response_class=PlainTextResponse, tags=["observability"])
+def public_forensic_log(
+    ticket_id: str | None = Query(None),
+    event_type: str | None = Query(None),
+    day: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    limit: int = Query(500, ge=1, le=5000),
+):
+    """Bounded PLOG/1 text projection for applications, operators and LLMs."""
+    selected_day = day or datetime.now(UTC).date().isoformat()
+    lines = get_planfile().store.forensic_log_lines(
+        date=selected_day,
+        ticket_id=ticket_id,
+        event_type=event_type,
+        limit=limit,
+    )
+    return PlainTextResponse(
+        "".join(f"{line}\n" for line in lines),
+        headers={
+            **NO_STORE_HEADERS,
+            "X-Planfile-Log-Format": "PLOG/1",
+            "X-Planfile-Log-Date": selected_day,
+            "X-Result-Count": str(len(lines)),
+        },
+    )
+
+
+@app.get("/logs", tags=["observability"])
+def public_forensic_log_json(
+    ticket_id: str | None = Query(None),
+    event_type: str | None = Query(None),
+    day: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    limit: int = Query(500, ge=1, le=5000),
+):
+    """Parsed PLOG/1 records with the same bounded filters as the text file."""
+    from planfile.core.forensic_log_dsl import parse
+
+    selected_day = day or datetime.now(UTC).date().isoformat()
+    lines = get_planfile().store.forensic_log_lines(
+        date=selected_day,
+        ticket_id=ticket_id,
+        event_type=event_type,
+        limit=limit,
+    )
+    return {
+        "schema": "planfile.forensic-log-response/v1",
+        "format": "PLOG/1",
+        "date": selected_day,
+        "count": len(lines),
+        "events": [parse(line) for line in lines],
+    }
+
+
+@app.get("/logs/days", tags=["observability"])
+def public_forensic_log_days():
+    """List available daily PLOG partitions without exposing storage paths."""
+    return {
+        "schema": "planfile.forensic-log-days/v1",
+        "format": "PLOG/1",
+        "days": get_planfile().store.forensic_log_days(),
+    }
+
+
 @app.patch("/tickets/{ticket_id}", tags=["tickets"])
 async def update_ticket(ticket_id: str, body: TicketUpdate):
     pf = get_planfile()
@@ -1064,6 +1126,20 @@ def _remember_event(event: dict[str, Any]) -> None:
     _event_history.append(event)
 
 
+def _remember_durable_event(event: dict[str, Any]) -> None:
+    """Keep the dashboard event and its compact durable forensic projection."""
+    _remember_event(event)
+    append = getattr(get_planfile().store, "append_management_event", None)
+    if not callable(append):
+        return
+    try:
+        append(event)
+    except Exception as exc:  # pragma: no cover - logging must not mask the event
+        __import__("logging").getLogger("planfile.api").warning(
+            "forensic management event was not persisted: %s", exc
+        )
+
+
 def _ticket_signature(ticket) -> str:
     data = ticket.model_dump(mode="json", exclude_none=True)
     execution = data.get("execution") or {}
@@ -1157,7 +1233,7 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
                     get_planfile().store.archive_completed
                 )
             except Exception as exc:  # pragma: no cover - defensive runtime telemetry
-                _remember_event(
+                _remember_durable_event(
                     {
                         "type": "management.event",
                         "action": "daily-history-error",
@@ -1174,7 +1250,7 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
             else:
                 last_run_date = today
                 if report.get("archived"):
-                    _remember_event(
+                    _remember_durable_event(
                         {
                             "type": "management.event",
                             "action": "daily-history",
@@ -1213,7 +1289,7 @@ async def _stop_archive_maintenance() -> None:
 
 async def _start_planfile_watcher() -> None:
     global _watch_task
-    _remember_event(
+    _remember_durable_event(
         {
             "type": "management.event",
             "action": "started",
@@ -1283,7 +1359,7 @@ async def create_test_event(body: TestEventRequest):
             },
         },
     }
-    _remember_event(payload)
+    _remember_durable_event(payload)
     await _manager.broadcast(payload)
     return payload
 
@@ -1308,7 +1384,7 @@ async def ingest_management_event(body: ManagementEventRequest):
         "message": body.message,
         "details": details,
     }
-    _remember_event(payload)
+    _remember_durable_event(payload)
     await _manager.broadcast(payload)
     return payload
 
@@ -3013,7 +3089,10 @@ async def _broadcast_ticket_event(
     if ticket is not None:
         payload["ticket"] = ticket.model_dump(mode="json", exclude_none=True)
         _watch_snapshot[ticket.id] = _ticket_signature(ticket)
-    _remember_event(payload)
+    if event_type.startswith("ticket.external."):
+        _remember_durable_event(payload)
+    else:
+        _remember_event(payload)
     await _manager.broadcast(payload)
 
 
