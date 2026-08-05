@@ -10,11 +10,6 @@ generated findings are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
-## Current operational tasks
-
-- [ ] Preserve correlation, causation, receipt, decision, outcome and error
-  context across `/events/ingest` into SODL and public PLOG/1 records.
-
 ## 📋 Current Issues (178 unresolved entries from the generated snapshot)
 
 - [ ] planfile/analysis/__init__.py:18 - Duplicate import: planfile.analysis.generator.generator

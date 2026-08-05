@@ -52,6 +52,11 @@ the PLOG projection is created. Large descriptions, raw tool output, and full
 evidence payloads are deliberately excluded so one noisy event cannot make LLM
 context unbounded.
 
+Management producers may send `actor`, `correlation_id`, `causation_id`,
+`receipt_ref`, `reason`, `decision`, `outcome`, `error`, and `idempotency_key`
+to `/events/ingest`. These trace fields survive the API → SODL → PLOG path;
+secret-like values are still redacted before persistence.
+
 ## Relationship to SODL and OQL
 
 PLOG does not replace the existing audit contract:

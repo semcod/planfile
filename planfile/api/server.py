@@ -225,6 +225,15 @@ class ManagementEventRequest(BaseModel):
     message: str = ""
     queue: str = "default"
     level: str = "info"
+    actor: str | None = None
+    correlation_id: str | None = None
+    causation_id: str | None = None
+    receipt_ref: str | None = None
+    reason: str | None = None
+    decision: str | None = None
+    outcome: str | None = None
+    error: str | None = None
+    idempotency_key: str | None = None
     details: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -1410,6 +1419,15 @@ async def ingest_management_event(body: ManagementEventRequest):
         "level": body.level,
         "status": body.status,
         "message": body.message,
+        "actor": body.actor,
+        "correlation_id": body.correlation_id,
+        "causation_id": body.causation_id,
+        "receipt_ref": body.receipt_ref,
+        "reason": body.reason,
+        "decision": body.decision,
+        "outcome": body.outcome,
+        "error": body.error,
+        "idempotency_key": body.idempotency_key,
         "details": details,
     }
     _remember_durable_event(payload)

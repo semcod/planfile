@@ -290,6 +290,16 @@ class Store(StoreFileMixin, TicketStoreMixin):
             or details.get("error")
             or ""
         )
+        traced_logic = {
+            key: event.get(key, details.get(key))
+            for key in (
+                "decision",
+                "outcome",
+                "error",
+                "idempotency_key",
+            )
+            if event.get(key, details.get(key)) not in (None, "", [], {})
+        }
         data = {
             "payload": {
                 "action": action,
@@ -300,6 +310,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 "reason": str(event.get("reason") or message),
                 "status": str(ticket.get("status") or event.get("status") or "recorded"),
                 "execution_state": str(execution.get("state") or ""),
+                **traced_logic,
             }
         }
         with self.mutation_lock():
@@ -315,6 +326,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     mode="observe",
                     status=str(ticket.get("status") or event.get("status") or "recorded"),
                     correlation_id=str(event.get("correlation_id") or ticket_id),
+                    causation_id=str(event.get("causation_id") or "-"),
+                    receipt_ref=str(event.get("receipt_ref") or "-"),
                     replayable=False,
                     data=data,
                 )

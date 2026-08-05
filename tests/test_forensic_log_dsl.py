@@ -173,6 +173,15 @@ def test_public_text_and_json_log_endpoints_and_management_ingest(tmp_path, monk
             "tool": "validator-agent",
             "status": "accepted",
             "message": "Autonomous review accepted the change.",
+            "actor": "validator-agent[bot]",
+            "correlation_id": "doctor-run-70",
+            "causation_id": "repair-run-31011601205",
+            "receipt_ref": "github-actions://31012632795",
+            "reason": "Exact-head validation passed.",
+            "decision": "approve",
+            "outcome": "ready-to-merge",
+            "error": "none",
+            "idempotency_key": "validator-70-d4631e8",
         },
     )
 
@@ -191,3 +200,13 @@ def test_public_text_and_json_log_endpoints_and_management_ingest(tmp_path, monk
     assert durable["events"][0]["logic"]["message"] == (
         "Autonomous review accepted the change."
     )
+    event = durable["events"][0]
+    assert event["actor"] == "validator-agent[bot]"
+    assert event["correlation_id"] == "doctor-run-70"
+    assert event["causation_id"] == "repair-run-31011601205"
+    assert event["receipt_ref"] == "github-actions://31012632795"
+    assert event["logic"]["reason"] == "Exact-head validation passed."
+    assert event["logic"]["decision"] == "approve"
+    assert event["logic"]["outcome"] == "ready-to-merge"
+    assert event["logic"]["error"] == "none"
+    assert event["logic"]["idempotency_key"] == "validator-70-d4631e8"
