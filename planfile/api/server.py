@@ -98,6 +98,7 @@ class TicketCreate(BaseModel):
     inputs: TicketInputs | None = None
     outputs: TicketOutputs | None = None
     source: TicketSource | None = None
+    dedupe_key: str | None = None
 
 
 class TicketUpdate(BaseModel):
@@ -489,10 +490,10 @@ def list_tickets(
 
 
 @app.post("/tickets", status_code=201, tags=["tickets"])
-async def create_ticket(body: TicketCreate):
+async def create_ticket(body: TicketCreate, response: Response):
     pf = get_planfile()
     _validate_process_envelope(body.labels, body.inputs)
-    ticket = pf.create_ticket(
+    ticket, created = pf.create_ticket_deduplicated(
         name=body.name,
         priority=body.priority,
         sprint=body.sprint,
@@ -503,7 +504,11 @@ async def create_ticket(body: TicketCreate):
         inputs=body.inputs,
         outputs=body.outputs,
         source=body.source or TicketSource(tool="planfile-api", version=__version__),
+        dedupe_key=body.dedupe_key,
     )
+    if not created:
+        response.status_code = 200
+        return ticket.model_dump(mode="json", exclude_none=True)
     await _broadcast_ticket_event("ticket.changed", "create", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 

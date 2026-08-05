@@ -106,10 +106,40 @@ class Planfile:
         return cls(start_path)  # init in CWD
 
     def create_ticket(self, name: str, **kwargs) -> Ticket:
+        return self.create_ticket_deduplicated(name, **kwargs)[0]
+
+    @staticmethod
+    def _ticket_dedupe_label(dedupe_key: str | None, labels: list[str]) -> str | None:
+        if str(dedupe_key or "").strip():
+            return f"dedupe:{str(dedupe_key).strip()}"
+        # A stable dedupe label must win over occurrence labels such as
+        # incident:<operation_id>. Producers intentionally keep both.
+        return next((label for label in labels if str(label).startswith("dedupe:") and str(label)[7:]), None)
+
+    def create_ticket_deduplicated(self, name: str, **kwargs) -> tuple[Ticket, bool]:
+        """Atomically create a ticket or return its live dedupe-key owner."""
+        dedupe_key = kwargs.pop("dedupe_key", None)
+        labels = list(kwargs.pop("labels", None) or [])
+        dedupe_label = self._ticket_dedupe_label(dedupe_key, labels)
+        if dedupe_label and dedupe_label not in labels:
+            labels.append(dedupe_label)
+        if labels:
+            kwargs["labels"] = labels
         with self.store.mutation_lock():
+            if dedupe_label:
+                live = [
+                    record for record in self.store.ticket_records(sprint="all")
+                    if dedupe_label in (record.get("labels") or [])
+                    and str(record.get("status") or "") not in {"done", "canceled"}
+                ]
+                if live:
+                    oldest = min(live, key=lambda record: str(record.get("created_at") or ""))
+                    existing = self.store.get_ticket(str(oldest.get("id") or ""))
+                    if existing:
+                        return existing, False
             ticket_id = self.store._next_id_unlocked()
             ticket = Ticket(id=ticket_id, name=name, **kwargs)
-            return self.store._create_ticket_unlocked(ticket)
+            return self.store._create_ticket_unlocked(ticket), True
 
     def get_ticket(self, ticket_id: str):
         return self.store.get_ticket(ticket_id)
