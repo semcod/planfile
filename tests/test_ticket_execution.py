@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+import yaml
 
 from planfile import (
     Planfile,
@@ -13,6 +14,30 @@ from planfile import (
     TicketSource,
 )
 from planfile.core.store import ImmutableTerminalReopenError
+
+
+def test_legacy_completed_terminal_is_projected_as_done_without_rewriting_yaml(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Historical completed terminal",
+        execution=TicketExecution(state="running"),
+    )
+    sprint_path = tmp_path / ".planfile" / "sprints" / "current.yaml"
+    stored = yaml.safe_load(sprint_path.read_text(encoding="utf-8"))
+    raw_ticket = stored["sprint"]["tickets"][ticket.id]
+    raw_ticket["status"] = "completed"
+    raw_ticket["execution"]["state"] = "completed"
+    sprint_path.write_text(yaml.safe_dump(stored, sort_keys=False), encoding="utf-8")
+
+    loaded = pf.get_ticket(ticket.id)
+
+    assert loaded is not None
+    assert loaded.status == "done"
+    assert loaded.execution is not None
+    assert loaded.execution.state == "done"
+    authoritative = yaml.safe_load(sprint_path.read_text(encoding="utf-8"))
+    assert authoritative["sprint"]["tickets"][ticket.id]["status"] == "completed"
+    assert authoritative["sprint"]["tickets"][ticket.id]["execution"]["state"] == "completed"
 
 
 def test_ticket_round_trip_with_execution_fields(tmp_path):
