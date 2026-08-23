@@ -206,6 +206,10 @@ class TicketFailRequest(BaseModel):
     expected_updated_at: str | None = None
 
 
+class TicketFailIfCurrentRequest(TicketFailRequest):
+    expected_updated_at: str
+
+
 class TicketInputRequest(BaseModel):
     prompt: str
     env_keys: list[str] = Field(default_factory=list)
@@ -839,8 +843,7 @@ async def complete_ticket(ticket_id: str, body: TicketCompleteRequest):
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
-@app.post("/tickets/{ticket_id}/fail", tags=["tickets"])
-async def fail_ticket(ticket_id: str, body: TicketFailRequest):
+async def _fail_ticket(ticket_id: str, body: TicketFailRequest):
     pf = get_planfile()
     current = pf.get_ticket(ticket_id)
     if not current:
@@ -857,6 +860,18 @@ async def fail_ticket(ticket_id: str, body: TicketFailRequest):
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "fail", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/fail", tags=["tickets"])
+async def fail_ticket(ticket_id: str, body: TicketFailRequest):
+    return await _fail_ticket(ticket_id, body)
+
+
+@app.post("/tickets/{ticket_id}/fail-if-current", tags=["tickets"])
+async def fail_ticket_if_current(ticket_id: str, body: TicketFailIfCurrentRequest):
+    """Fail a ticket only when it is still the exact observed revision."""
+
+    return await _fail_ticket(ticket_id, body)
 
 
 @app.post("/tickets/{ticket_id}/input-required", tags=["tickets"])

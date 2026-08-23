@@ -202,7 +202,7 @@ def test_fail_api_returns_conflict_for_stale_updated_at_precondition(tmp_path, m
     client = TestClient(server.app)
 
     conflict = client.post(
-        f"/tickets/{ticket.id}/fail",
+        f"/tickets/{ticket.id}/fail-if-current",
         json={
             "error": "stale_execution_timeout",
             "expected_updated_at": observed_updated_at,
@@ -239,6 +239,28 @@ def test_fail_api_accepts_current_updated_at_in_json_timestamp_form(tmp_path, mo
     assert response.status_code == 200
     assert response.json()["execution"]["state"] == "ready"
     assert response.json()["execution"]["attempt"] == 1
+
+
+def test_fail_if_current_api_requires_updated_at_precondition(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Fail-closed watchdog candidate",
+        execution=TicketExecution(state="running", assigned_to="bot:worker"),
+    )
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.post(
+        f"/tickets/{ticket.id}/fail-if-current",
+        json={"error": "stale_execution_timeout"},
+    )
+
+    assert response.status_code == 422
+    current = pf.get_ticket(ticket.id)
+    assert current is not None
+    assert current.status == "open"
+    assert current.execution is not None
+    assert current.execution.attempt == 0
 
 
 def test_governed_ticket_creation_requires_structured_four_part_envelope(tmp_path, monkeypatch):
