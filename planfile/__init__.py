@@ -311,9 +311,22 @@ class Planfile:
         )
         return min(runnable, key=self._ticket_sort_key, default=None)
 
-    def update_ticket(self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates):
+    def update_ticket(
+        self,
+        ticket_id: str,
+        reason: str | None = None,
+        actor: str | None = None,
+        expected_updated_at: str | None = None,
+        **updates,
+    ):
         """Delegate with optional reason (why status/etc changed) and actor (who/by)."""
-        return self.store.update_ticket(ticket_id, reason=reason, actor=actor, **updates)
+        return self.store.update_ticket(
+            ticket_id,
+            reason=reason,
+            actor=actor,
+            expected_updated_at=expected_updated_at,
+            **updates,
+        )
 
     def append_ticket_evidence(
         self,
@@ -427,7 +440,15 @@ class Planfile:
         execution = TicketExecution(**execution_data)
         return self.update_ticket(ticket_id, status="done", execution=execution, outputs=outputs, reason=reason, actor=actor)
 
-    def fail_ticket(self, ticket_id: str, error: str, *, reason: str | None = None, actor: str | None = None) -> Ticket | None:
+    def fail_ticket(
+        self,
+        ticket_id: str,
+        error: str,
+        *,
+        reason: str | None = None,
+        actor: str | None = None,
+        expected_updated_at: str | None = None,
+    ) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
             return None
@@ -452,6 +473,7 @@ class Planfile:
             execution=execution,
             reason=reason or error,
             actor=actor,
+            expected_updated_at=expected_updated_at,
         )
 
     def block_ticket(self, ticket_id: str, reason: str | None = None, note: str | None = None, *, actor: str | None = None) -> Ticket | None:

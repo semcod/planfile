@@ -44,7 +44,7 @@ from planfile.core.models import (
     TicketOutputs,
     TicketSource,
 )
-from planfile.core.store import ImmutableTerminalReopenError
+from planfile.core.store import ImmutableTerminalReopenError, TicketUpdatedAtConflictError
 from planfile.runtime_context import (
     DEFAULT_CONFIG as DEFAULT_RUNTIME_CONFIG,
 )
@@ -80,6 +80,17 @@ async def immutable_terminal_reopen_handler(
     __: ImmutableTerminalReopenError,
 ):
     return JSONResponse(status_code=409, content={"detail": "immutable_terminal_reopen"})
+
+
+@app.exception_handler(TicketUpdatedAtConflictError)
+async def ticket_updated_at_conflict_handler(
+    _: Request,
+    __: TicketUpdatedAtConflictError,
+):
+    return JSONResponse(
+        status_code=409,
+        content={"detail": "ticket_updated_at_precondition_failed"},
+    )
 
 _cors_origins = [
     origin.strip()
@@ -190,6 +201,7 @@ class TicketFailRequest(BaseModel):
     error: str
     reason: str | None = None
     actor: str | None = None
+    expected_updated_at: str | None = None
 
 
 class TicketInputRequest(BaseModel):
@@ -837,6 +849,7 @@ async def fail_ticket(ticket_id: str, body: TicketFailRequest):
         error=body.error,
         reason=body.reason or body.error,
         actor=body.actor or "unknown:api",
+        expected_updated_at=body.expected_updated_at,
     )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")

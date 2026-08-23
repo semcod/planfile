@@ -189,6 +189,58 @@ def test_governed_ticket_mutations_require_attributed_history(tmp_path, monkeypa
     assert updated.json()["history"][-1]["reason"] == "Escalated priority after preflight."
 
 
+def test_fail_api_returns_conflict_for_stale_updated_at_precondition(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Watchdog candidate",
+        execution=TicketExecution(state="running", assigned_to="bot:worker", max_attempts=2),
+    )
+    observed_updated_at = ticket.model_dump(mode="json")["updated_at"]
+    changed = pf.update_ticket(ticket.id, priority="high")
+    assert changed is not None
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    conflict = client.post(
+        f"/tickets/{ticket.id}/fail",
+        json={
+            "error": "stale_execution_timeout",
+            "expected_updated_at": observed_updated_at,
+        },
+    )
+
+    assert conflict.status_code == 409
+    assert conflict.json() == {"detail": "ticket_updated_at_precondition_failed"}
+    current = pf.get_ticket(ticket.id)
+    assert current is not None
+    assert current.priority == "high"
+    assert current.execution.state == "running"
+    assert current.execution.attempt == 0
+
+
+def test_fail_api_accepts_current_updated_at_in_json_timestamp_form(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Current watchdog candidate",
+        execution=TicketExecution(state="running", assigned_to="bot:worker", max_attempts=2),
+    )
+    expected_updated_at = ticket.model_dump(mode="json")["updated_at"]
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    response = client.post(
+        f"/tickets/{ticket.id}/fail",
+        json={
+            "error": "stale_execution_timeout",
+            "expected_updated_at": expected_updated_at,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["execution"]["state"] == "ready"
+    assert response.json()["execution"]["attempt"] == 1
+
+
 def test_governed_ticket_creation_requires_structured_four_part_envelope(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
