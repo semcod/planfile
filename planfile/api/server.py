@@ -73,6 +73,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+API_CAPABILITIES = ["ticket.fail.expected_updated_at"]
+
 
 @app.exception_handler(ImmutableTerminalReopenError)
 async def immutable_terminal_reopen_handler(
@@ -3190,7 +3192,11 @@ async def websocket_dsl(websocket: WebSocket, project_path: str = "."):
 @app.get("/health", tags=["system"])
 def health():
     import planfile
-    return {"status": "ok", "version": planfile.__version__}
+    return {
+        "status": "ok",
+        "version": planfile.__version__,
+        "capabilities": API_CAPABILITIES,
+    }
 
 
 @app.get("/", response_class=HTMLResponse, tags=["system"])

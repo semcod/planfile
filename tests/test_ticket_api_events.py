@@ -670,6 +670,7 @@ def test_openapi_and_health_publish_same_version():
     client = TestClient(server.app)
 
     assert client.get("/openapi.json").json()["info"]["version"] == client.get("/health").json()["version"]
+    assert "ticket.fail.expected_updated_at" in client.get("/health").json()["capabilities"]
 
 
 def test_ticket_list_pagination_headers(tmp_path, monkeypatch):
