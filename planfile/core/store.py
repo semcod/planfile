@@ -22,6 +22,10 @@ class ImmutableTerminalReopenError(RuntimeError):
     """Raised when an ordinary mutation tries to reactivate done/canceled work."""
 
 
+class TicketUpdatedAtConflictError(RuntimeError):
+    """Raised when a ticket changed after the caller observed it."""
+
+
 class Store(StoreFileMixin, TicketStoreMixin):
     """File-based ticket store using .planfile/ directory."""
 
@@ -1833,14 +1837,61 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return entry
 
     def update_ticket(
-        self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates
+        self,
+        ticket_id: str,
+        reason: str | None = None,
+        actor: str | None = None,
+        expected_updated_at: str | None = None,
+        **updates,
     ) -> Ticket | None:
         """Update a ticket. If status (or execution state) changes, a structured history entry
         is appended automatically, including optional `reason` (why) and `actor` (who / by whom).
         Use reason/actor (or _reason/_actor in **updates) for rich audit on status transitions.
         """
         with self.mutation_lock():
-            return self._update_ticket_unlocked(ticket_id, reason=reason, actor=actor, **updates)
+            return self._update_ticket_unlocked(
+                ticket_id,
+                reason=reason,
+                actor=actor,
+                expected_updated_at=expected_updated_at,
+                **updates,
+            )
+
+    @staticmethod
+    def _updated_at_instant(value: object) -> datetime | None:
+        if isinstance(value, datetime):
+            parsed = value
+        elif isinstance(value, str) and value:
+            try:
+                parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                return None
+        else:
+            return None
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        return parsed.astimezone(UTC)
+
+    def _guard_expected_updated_at(
+        self,
+        previous: dict,
+        expected_updated_at: str | None,
+    ) -> None:
+        if expected_updated_at is None:
+            return
+        projected = self._project_ticket_evidence(previous)
+        actual_updated_at = projected.get("updated_at")
+        actual_instant = self._updated_at_instant(actual_updated_at)
+        expected_instant = self._updated_at_instant(expected_updated_at)
+        if (
+            actual_instant is not None
+            and expected_instant is not None
+            and actual_instant == expected_instant
+        ):
+            return
+        if str(actual_updated_at or "") == str(expected_updated_at):
+            return
+        raise TicketUpdatedAtConflictError("ticket_updated_at_precondition_failed")
 
     def _guard_immutable_terminal_reopen(
         self,
@@ -1987,7 +2038,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return model, True
 
     def _update_ticket_unlocked(
-        self, ticket_id: str, reason: str | None = None, actor: str | None = None, **updates
+        self,
+        ticket_id: str,
+        reason: str | None = None,
+        actor: str | None = None,
+        expected_updated_at: str | None = None,
+        **updates,
     ) -> Ticket | None:
         index_was_current = self._begin_index_mutation()
         if self._uses_sharded_storage():
@@ -1995,6 +2051,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 ticket_id,
                 reason=reason,
                 actor=actor,
+                expected_updated_at=expected_updated_at,
                 _index_was_current=index_was_current,
                 **updates,
             )
@@ -2007,6 +2064,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
                 previous = dict(tickets[ticket_id])
+                self._guard_expected_updated_at(previous, expected_updated_at)
                 # Extract history metadata (reason=why the change, actor/by=who performed it)
                 # Support both named params (from high-level methods) and _-prefixed or bare in updates
                 history_reason = (
@@ -2074,6 +2132,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         ticket_id: str,
         reason: str | None = None,
         actor: str | None = None,
+        expected_updated_at: str | None = None,
         _index_was_current: bool = False,
         **updates,
     ) -> Ticket | None:
@@ -2083,6 +2142,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return None
         sprint, ticket_data = located
         previous = dict(ticket_data)
+        self._guard_expected_updated_at(previous, expected_updated_at)
         history_reason = reason or updates.pop("reason", None) or updates.pop("_reason", None)
         history_actor = actor or updates.pop("actor", None) or updates.pop("_actor", None)
         serialized_updates = {

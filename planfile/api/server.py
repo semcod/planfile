@@ -44,7 +44,7 @@ from planfile.core.models import (
     TicketOutputs,
     TicketSource,
 )
-from planfile.core.store import ImmutableTerminalReopenError
+from planfile.core.store import ImmutableTerminalReopenError, TicketUpdatedAtConflictError
 from planfile.runtime_context import (
     DEFAULT_CONFIG as DEFAULT_RUNTIME_CONFIG,
 )
@@ -73,6 +73,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+API_CAPABILITIES = ["ticket.fail.expected_updated_at"]
+
 
 @app.exception_handler(ImmutableTerminalReopenError)
 async def immutable_terminal_reopen_handler(
@@ -80,6 +82,17 @@ async def immutable_terminal_reopen_handler(
     __: ImmutableTerminalReopenError,
 ):
     return JSONResponse(status_code=409, content={"detail": "immutable_terminal_reopen"})
+
+
+@app.exception_handler(TicketUpdatedAtConflictError)
+async def ticket_updated_at_conflict_handler(
+    _: Request,
+    __: TicketUpdatedAtConflictError,
+):
+    return JSONResponse(
+        status_code=409,
+        content={"detail": "ticket_updated_at_precondition_failed"},
+    )
 
 _cors_origins = [
     origin.strip()
@@ -190,6 +203,11 @@ class TicketFailRequest(BaseModel):
     error: str
     reason: str | None = None
     actor: str | None = None
+    expected_updated_at: str | None = None
+
+
+class TicketFailIfCurrentRequest(TicketFailRequest):
+    expected_updated_at: str
 
 
 class TicketInputRequest(BaseModel):
@@ -825,8 +843,7 @@ async def complete_ticket(ticket_id: str, body: TicketCompleteRequest):
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
-@app.post("/tickets/{ticket_id}/fail", tags=["tickets"])
-async def fail_ticket(ticket_id: str, body: TicketFailRequest):
+async def _fail_ticket(ticket_id: str, body: TicketFailRequest):
     pf = get_planfile()
     current = pf.get_ticket(ticket_id)
     if not current:
@@ -837,11 +854,24 @@ async def fail_ticket(ticket_id: str, body: TicketFailRequest):
         error=body.error,
         reason=body.reason or body.error,
         actor=body.actor or "unknown:api",
+        expected_updated_at=body.expected_updated_at,
     )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "fail", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/fail", tags=["tickets"])
+async def fail_ticket(ticket_id: str, body: TicketFailRequest):
+    return await _fail_ticket(ticket_id, body)
+
+
+@app.post("/tickets/{ticket_id}/fail-if-current", tags=["tickets"])
+async def fail_ticket_if_current(ticket_id: str, body: TicketFailIfCurrentRequest):
+    """Fail a ticket only when it is still the exact observed revision."""
+
+    return await _fail_ticket(ticket_id, body)
 
 
 @app.post("/tickets/{ticket_id}/input-required", tags=["tickets"])
@@ -3177,7 +3207,11 @@ async def websocket_dsl(websocket: WebSocket, project_path: str = "."):
 @app.get("/health", tags=["system"])
 def health():
     import planfile
-    return {"status": "ok", "version": planfile.__version__}
+    return {
+        "status": "ok",
+        "version": planfile.__version__,
+        "capabilities": API_CAPABILITIES,
+    }
 
 
 @app.get("/", response_class=HTMLResponse, tags=["system"])
