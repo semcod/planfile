@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Fixed
+- Normalized runtime `date`, `datetime` and `time` values at the final JSON
+  mirror write boundary. Ticket mutations can no longer disable the sprint
+  mirror and force every agent request to reparse the full YAML archive.
 - Preserved management-event actor, correlation, causation, receipt, reason,
   decision, outcome, error, and idempotency context across `/events/ingest`,
   canonical SODL and the bounded public PLOG/1 projection.
