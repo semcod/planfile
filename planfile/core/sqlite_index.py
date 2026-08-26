@@ -336,6 +336,52 @@ class SQLiteTicketIndex:
             body.extend(b"]")
         return bytes(body), total, count
 
+    def payload_page_metrics(
+        self,
+        *,
+        sprint: str,
+        filters: dict[str, Any],
+        offset: int,
+        limit: int | None,
+    ) -> tuple[int, int, int]:
+        """Return total rows, selected rows and exact JSON-array bytes."""
+        conditions = []
+        parameters: list[Any] = []
+        if sprint != "all":
+            conditions.append("sprint=?")
+            parameters.append(sprint)
+        for key in ("status", "priority", "source"):
+            value = filters.get(key)
+            if value is None:
+                continue
+            conditions.append(f"{key}=?")
+            parameters.append(str(getattr(value, "value", value)))
+        where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+        with self._connect() as connection:
+            total = int(
+                connection.execute(
+                    f"SELECT COUNT(*) AS count FROM tickets{where}",
+                    parameters,
+                ).fetchone()["count"]
+            )
+            sql = f"SELECT ticket_json FROM tickets{where} ORDER BY position"
+            page_parameters = list(parameters)
+            if limit is not None:
+                sql += " LIMIT ? OFFSET ?"
+                page_parameters.extend((limit, offset))
+            elif offset:
+                sql += " LIMIT -1 OFFSET ?"
+                page_parameters.append(offset)
+            row = connection.execute(
+                "SELECT COUNT(*) AS count, "
+                "COALESCE(SUM(LENGTH(CAST(ticket_json AS BLOB))), 0) AS bytes "
+                f"FROM ({sql})",
+                page_parameters,
+            ).fetchone()
+        count = int(row["count"])
+        array_bytes = int(row["bytes"]) + max(0, count - 1) + 2
+        return total, count, array_bytes
+
     def status(self, signature: tuple | None = None) -> dict[str, Any]:
         if not self.path.exists():
             return {

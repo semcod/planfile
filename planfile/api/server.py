@@ -105,7 +105,12 @@ if _cors_origins:
         allow_origins=_cors_origins,
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
-        expose_headers=["X-Planfile-View", "X-Result-Count", "X-Total-Count"],
+        expose_headers=[
+            "X-Planfile-View",
+            "X-Result-Count",
+            "X-Total-Count",
+            "X-Planfile-Recommended-Limit",
+        ],
     )
 
 NO_STORE_HEADERS = {"Cache-Control": "no-store, max-age=0"}
@@ -352,6 +357,9 @@ _TICKET_LIST_LATEST: dict[tuple, tuple[float, bytes, int, int]] = {}
 _TICKET_LIST_RESPONSE_CACHE_DEFAULT_BYTES = 256 * 1024 * 1024
 _TICKET_LIST_RESPONSE_CACHE_MIN_BYTES = 1024 * 1024
 _TICKET_LIST_RESPONSE_CACHE_MAX_BYTES = 512 * 1024 * 1024
+_TICKET_LIST_RESPONSE_DEFAULT_MAX_BYTES = 64 * 1024 * 1024
+_TICKET_LIST_RESPONSE_MIN_MAX_BYTES = 1024 * 1024
+_TICKET_LIST_RESPONSE_MAX_MAX_BYTES = 512 * 1024 * 1024
 _DASHBOARD_STALE_WINDOW_SECONDS = 30.0
 _SPRINT_SUMMARY_CACHE: dict[str, tuple[tuple[int, int], dict[str, Any]]] = {}
 _SPRINT_SUMMARY_CACHE_LOCK = RLock()
@@ -429,6 +437,22 @@ def _ticket_list_response_cache_byte_limit() -> int:
     return max(
         _TICKET_LIST_RESPONSE_CACHE_MIN_BYTES,
         min(configured, _TICKET_LIST_RESPONSE_CACHE_MAX_BYTES),
+    )
+
+
+def _ticket_list_response_byte_limit() -> int:
+    try:
+        configured = int(
+            os.environ.get(
+                "PLANFILE_TICKET_RESPONSE_MAX_BYTES",
+                _TICKET_LIST_RESPONSE_DEFAULT_MAX_BYTES,
+            )
+        )
+    except (TypeError, ValueError):
+        configured = _TICKET_LIST_RESPONSE_DEFAULT_MAX_BYTES
+    return max(
+        _TICKET_LIST_RESPONSE_MIN_MAX_BYTES,
+        min(configured, _TICKET_LIST_RESPONSE_MAX_MAX_BYTES),
     )
 
 
@@ -514,6 +538,36 @@ def _ticket_list_response(
                     )
                     count = len(payload)
                 elif view == "full":
+                    total, count, estimated_bytes = pf.store.indexed_ticket_json_metrics(
+                        sprint=sprint,
+                        filters=filters,
+                        offset=offset,
+                        limit=limit,
+                    )
+                    response_limit = _ticket_list_response_byte_limit()
+                    if estimated_bytes > response_limit:
+                        requested_rows = max(1, count)
+                        recommended_limit = max(
+                            1,
+                            min(1000, int(requested_rows * response_limit / estimated_bytes)),
+                        )
+                        return JSONResponse(
+                            status_code=413,
+                            content={
+                                "detail": "ticket_response_too_large",
+                                "estimated_bytes": estimated_bytes,
+                                "max_bytes": response_limit,
+                                "recommended_limit": recommended_limit,
+                                "offset": offset,
+                            },
+                            headers={
+                                **NO_STORE_HEADERS,
+                                "X-Planfile-View": view,
+                                "X-Total-Count": str(total),
+                                "X-Result-Count": str(count),
+                                "X-Planfile-Recommended-Limit": str(recommended_limit),
+                            },
+                        )
                     body, total, count = pf.store.indexed_ticket_json_response(
                         sprint=sprint,
                         filters=filters,
