@@ -1413,6 +1413,23 @@ class Store(StoreFileMixin, TicketStoreMixin):
             limit=limit,
         )
 
+    def indexed_ticket_json_metrics(
+        self,
+        *,
+        sprint: str,
+        filters: dict,
+        offset: int,
+        limit: int | None,
+    ) -> tuple[int, int, int]:
+        """Measure a full-ticket page before materializing its JSON body."""
+        self.ensure_ticket_index()
+        return self._sqlite_ticket_index().payload_page_metrics(
+            sprint=sprint,
+            filters=filters,
+            offset=offset,
+            limit=limit,
+        )
+
     def migrate_to_sharded_yaml(
         self,
         *,

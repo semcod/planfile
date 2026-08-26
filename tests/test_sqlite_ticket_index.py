@@ -110,6 +110,35 @@ def test_full_and_operational_api_views_use_sqlite_without_model_cache(
     assert "history" not in operational.json()[0]
 
 
+def test_full_api_requires_pagination_before_materializing_oversized_page(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    for number in range(2):
+        pf.create_ticket(
+            name=f"Large ticket {number}",
+            description="ą" * (128 * 1024),
+        )
+    pf.store.configure_ticket_index(True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setenv("PLANFILE_TICKET_RESPONSE_MAX_BYTES", str(1024 * 1024))
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    rejected = client.get("/tickets?sprint=all&limit=5000&view=full")
+
+    assert rejected.status_code == 413
+    assert rejected.json()["detail"] == "ticket_response_too_large"
+    assert rejected.json()["estimated_bytes"] > 1024 * 1024
+    assert rejected.json()["recommended_limit"] == 1
+    assert rejected.headers["X-Total-Count"] == "2"
+    assert rejected.headers["X-Planfile-Recommended-Limit"] == "1"
+    assert server._TICKET_LIST_RESPONSE_CACHE == {}
+    assert client.get("/tickets?sprint=all&limit=1&view=full").status_code == 200
+
+
 def test_concurrent_stale_index_reads_perform_one_rebuild(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(name="Before concurrent rebuild")
