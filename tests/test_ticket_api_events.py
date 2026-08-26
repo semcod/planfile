@@ -1200,6 +1200,12 @@ def test_ticket_list_cache_does_not_retain_response_larger_than_byte_budget(
     assert server._ticket_list_response_cached_bytes() == 0
 
 
+def test_ticket_list_cache_default_budget_shares_one_large_archive(monkeypatch):
+    monkeypatch.delenv("PLANFILE_TICKET_RESPONSE_CACHE_MAX_BYTES", raising=False)
+
+    assert server._ticket_list_response_cache_byte_limit() == 256 * 1024 * 1024
+
+
 def test_ticket_list_cache_evicts_other_queries_before_exceeding_byte_budget(
     monkeypatch,
 ):
