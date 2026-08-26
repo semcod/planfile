@@ -349,6 +349,9 @@ _TICKET_LIST_RESPONSE_CACHE: dict[tuple, tuple[bytes, int, int]] = {}
 _TICKET_LIST_RESPONSE_CACHE_LIMIT = 4
 _TICKET_LIST_RESPONSE_CACHE_LOCK = RLock()
 _TICKET_LIST_LATEST: dict[tuple, tuple[float, bytes, int, int]] = {}
+_TICKET_LIST_RESPONSE_CACHE_DEFAULT_BYTES = 64 * 1024 * 1024
+_TICKET_LIST_RESPONSE_CACHE_MIN_BYTES = 1024 * 1024
+_TICKET_LIST_RESPONSE_CACHE_MAX_BYTES = 512 * 1024 * 1024
 _DASHBOARD_STALE_WINDOW_SECONDS = 30.0
 _SPRINT_SUMMARY_CACHE: dict[str, tuple[tuple[int, int], dict[str, Any]]] = {}
 _SPRINT_SUMMARY_CACHE_LOCK = RLock()
@@ -411,6 +414,59 @@ def _ticket_summary_payload(ticket) -> dict[str, Any]:
             "updated_at",
         },
     )
+
+
+def _ticket_list_response_cache_byte_limit() -> int:
+    try:
+        configured = int(
+            os.environ.get(
+                "PLANFILE_TICKET_RESPONSE_CACHE_MAX_BYTES",
+                _TICKET_LIST_RESPONSE_CACHE_DEFAULT_BYTES,
+            )
+        )
+    except (TypeError, ValueError):
+        configured = _TICKET_LIST_RESPONSE_CACHE_DEFAULT_BYTES
+    return max(
+        _TICKET_LIST_RESPONSE_CACHE_MIN_BYTES,
+        min(configured, _TICKET_LIST_RESPONSE_CACHE_MAX_BYTES),
+    )
+
+
+def _ticket_list_response_cached_bytes() -> int:
+    """Count retained response bodies once even when latest shares the object."""
+    bodies: dict[int, bytes] = {}
+    for body, _, _ in _TICKET_LIST_RESPONSE_CACHE.values():
+        bodies[id(body)] = body
+    for _, body, _, _ in _TICKET_LIST_LATEST.values():
+        bodies[id(body)] = body
+    return sum(len(body) for body in bodies.values())
+
+
+def _cache_ticket_list_response(
+    *,
+    query_key: tuple,
+    versioned_key: tuple,
+    body: bytes,
+    total: int,
+    count: int,
+) -> None:
+    """Retain only bounded ticket projections; full archives can be hundreds of MB."""
+    for existing_key in tuple(_TICKET_LIST_RESPONSE_CACHE):
+        if existing_key[:-1] == query_key:
+            _TICKET_LIST_RESPONSE_CACHE.pop(existing_key, None)
+    _TICKET_LIST_LATEST.pop(query_key, None)
+
+    byte_limit = _ticket_list_response_cache_byte_limit()
+    if len(body) > byte_limit:
+        return
+    if (
+        len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT
+        or _ticket_list_response_cached_bytes() + len(body) > byte_limit
+    ):
+        _TICKET_LIST_RESPONSE_CACHE.clear()
+        _TICKET_LIST_LATEST.clear()
+    _TICKET_LIST_RESPONSE_CACHE[versioned_key] = (body, total, count)
+    _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
 
 
 def _ticket_list_response(
@@ -489,16 +545,13 @@ def _ticket_list_response(
                 body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
             # Do not retain a response assembled across a concurrent file change.
             if signature == _ticket_snapshot_signature(pf, sprint):
-                logical_query = key[:-1]
-                for existing_key in tuple(_TICKET_LIST_RESPONSE_CACHE):
-                    if existing_key[:-1] == logical_query:
-                        _TICKET_LIST_RESPONSE_CACHE.pop(existing_key, None)
-                if len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT:
-                    _TICKET_LIST_RESPONSE_CACHE.clear()
-                _TICKET_LIST_RESPONSE_CACHE[key] = (body, total, count)
-                if len(_TICKET_LIST_LATEST) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT and query_key not in _TICKET_LIST_LATEST:
-                    _TICKET_LIST_LATEST.clear()
-                _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
+                _cache_ticket_list_response(
+                    query_key=query_key,
+                    versioned_key=key,
+                    body=body,
+                    total=total,
+                    count=count,
+                )
     return Response(
         content=body,
         media_type="application/json",

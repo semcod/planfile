@@ -1178,6 +1178,60 @@ def test_ticket_list_cache_evicts_superseded_versions_of_the_same_query(
     assert client.get(path).json()[0]["name"] == "Cache version 5"
 
 
+def test_ticket_list_cache_does_not_retain_response_larger_than_byte_budget(
+    monkeypatch,
+):
+    monkeypatch.setenv("PLANFILE_TICKET_RESPONSE_CACHE_MAX_BYTES", str(1024 * 1024))
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    query_key = ("/project", "all", (), 0, 5000, "full")
+    versioned_key = query_key + ((1, 1),)
+
+    server._cache_ticket_list_response(
+        query_key=query_key,
+        versioned_key=versioned_key,
+        body=b"x" * (1024 * 1024 + 1),
+        total=1,
+        count=1,
+    )
+
+    assert server._TICKET_LIST_RESPONSE_CACHE == {}
+    assert server._TICKET_LIST_LATEST == {}
+    assert server._ticket_list_response_cached_bytes() == 0
+
+
+def test_ticket_list_cache_evicts_other_queries_before_exceeding_byte_budget(
+    monkeypatch,
+):
+    monkeypatch.setenv("PLANFILE_TICKET_RESPONSE_CACHE_MAX_BYTES", str(1024 * 1024))
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    first_query = ("/project", "all", (), 0, 5000, "full")
+    second_query = ("/project", "current", (), 0, 1000, "operational")
+    first_body = b"a" * (700 * 1024)
+    second_body = b"b" * (700 * 1024)
+
+    server._cache_ticket_list_response(
+        query_key=first_query,
+        versioned_key=first_query + ((1, 1),),
+        body=first_body,
+        total=1,
+        count=1,
+    )
+    server._cache_ticket_list_response(
+        query_key=second_query,
+        versioned_key=second_query + ((1, 2),),
+        body=second_body,
+        total=1,
+        count=1,
+    )
+
+    assert first_query not in server._TICKET_LIST_LATEST
+    assert second_query in server._TICKET_LIST_LATEST
+    assert server._ticket_list_response_cached_bytes() == len(second_body)
+    assert server._ticket_list_response_cached_bytes() <= 1024 * 1024
+
+
 def test_dashboard_gets_bounded_stale_snapshot_during_mutation_burst(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(name="Before burst", source=TicketSource(tool="test"))
