@@ -44,7 +44,11 @@ from planfile.core.models import (
     TicketOutputs,
     TicketSource,
 )
-from planfile.core.store import ImmutableTerminalReopenError, TicketUpdatedAtConflictError
+from planfile.core.store import (
+    ImmutableTerminalReopenError,
+    TicketIndexContentionError,
+    TicketUpdatedAtConflictError,
+)
 from planfile.runtime_context import (
     DEFAULT_CONFIG as DEFAULT_RUNTIME_CONFIG,
 )
@@ -528,63 +532,73 @@ def _ticket_list_response(
             body, total, count = cached
         else:
             body = None
-            if pf.store.ticket_index_enabled():
-                if view == "summary":
-                    payload, total = pf.store.indexed_ticket_summaries(
-                        sprint=sprint,
-                        filters=filters,
-                        offset=offset,
-                        limit=limit,
-                    )
-                    count = len(payload)
-                elif view == "full":
-                    total, count, estimated_bytes = pf.store.indexed_ticket_json_metrics(
-                        sprint=sprint,
-                        filters=filters,
-                        offset=offset,
-                        limit=limit,
-                    )
-                    response_limit = _ticket_list_response_byte_limit()
-                    if estimated_bytes > response_limit:
-                        requested_rows = max(1, count)
-                        recommended_limit = max(
-                            1,
-                            min(1000, int(requested_rows * response_limit / estimated_bytes)),
+            use_durable_sources = not pf.store.ticket_index_enabled()
+            if not use_durable_sources:
+                try:
+                    if view == "summary":
+                        payload, total = pf.store.indexed_ticket_summaries(
+                            sprint=sprint,
+                            filters=filters,
+                            offset=offset,
+                            limit=limit,
                         )
+                        count = len(payload)
+                    elif view == "full":
+                        total, count, estimated_bytes = pf.store.indexed_ticket_json_metrics(
+                            sprint=sprint,
+                            filters=filters,
+                            offset=offset,
+                            limit=limit,
+                        )
+                        response_limit = _ticket_list_response_byte_limit()
+                        if estimated_bytes > response_limit:
+                            requested_rows = max(1, count)
+                            recommended_limit = max(
+                                1,
+                                min(1000, int(requested_rows * response_limit / estimated_bytes)),
+                            )
+                            return JSONResponse(
+                                status_code=413,
+                                content={
+                                    "detail": "ticket_response_too_large",
+                                    "estimated_bytes": estimated_bytes,
+                                    "max_bytes": response_limit,
+                                    "recommended_limit": recommended_limit,
+                                    "offset": offset,
+                                },
+                                headers={
+                                    **NO_STORE_HEADERS,
+                                    "X-Planfile-View": view,
+                                    "X-Total-Count": str(total),
+                                    "X-Result-Count": str(count),
+                                    "X-Planfile-Recommended-Limit": str(recommended_limit),
+                                },
+                            )
+                        body, total, count = pf.store.indexed_ticket_json_response(
+                            sprint=sprint,
+                            filters=filters,
+                            offset=offset,
+                            limit=limit,
+                        )
+                    else:
+                        payload, total = pf.store.indexed_ticket_payloads(
+                            sprint=sprint,
+                            filters=filters,
+                            offset=offset,
+                            limit=limit,
+                        )
+                        if view == "operational":
+                            payload = [_ticket_operational_payload(ticket) for ticket in payload]
+                        count = len(payload)
+                except TicketIndexContentionError:
+                    if view == "full":
                         return JSONResponse(
-                            status_code=413,
-                            content={
-                                "detail": "ticket_response_too_large",
-                                "estimated_bytes": estimated_bytes,
-                                "max_bytes": response_limit,
-                                "recommended_limit": recommended_limit,
-                                "offset": offset,
-                            },
-                            headers={
-                                **NO_STORE_HEADERS,
-                                "X-Planfile-View": view,
-                                "X-Total-Count": str(total),
-                                "X-Result-Count": str(count),
-                                "X-Planfile-Recommended-Limit": str(recommended_limit),
-                            },
+                            status_code=503,
+                            content={"detail": "ticket_index_temporarily_contended"},
+                            headers={**NO_STORE_HEADERS, "Retry-After": "5"},
                         )
-                    body, total, count = pf.store.indexed_ticket_json_response(
-                        sprint=sprint,
-                        filters=filters,
-                        offset=offset,
-                        limit=limit,
-                    )
-                else:
-                    payload, total = pf.store.indexed_ticket_payloads(
-                        sprint=sprint,
-                        filters=filters,
-                        offset=offset,
-                        limit=limit,
-                    )
-                    if view == "operational":
-                        payload = [_ticket_operational_payload(ticket) for ticket in payload]
-                    count = len(payload)
-            else:
+                    use_durable_sources = True
+            if use_durable_sources:
                 tickets = pf.list_tickets(sprint=sprint, **filters)
                 total = len(tickets)
                 tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]

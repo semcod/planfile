@@ -169,6 +169,47 @@ def test_concurrent_stale_index_reads_perform_one_rebuild(tmp_path, monkeypatch)
     }
 
 
+def test_index_source_contention_falls_back_without_rebuild_storm(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Durable during contention")
+    pf.store.configure_ticket_index(True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+
+    signature_calls = 0
+    original_signature = pf.store._ticket_index_signature
+
+    def changing_signature():
+        nonlocal signature_calls
+        signature_calls += 1
+        return original_signature(), signature_calls
+
+    monkeypatch.setattr(pf.store, "_ticket_index_signature", changing_signature)
+    client = TestClient(server.app)
+
+    first = client.get("/tickets?sprint=all&view=operational&limit=1000")
+    calls_after_first = signature_calls
+    second = client.get("/tickets?sprint=all&view=operational&limit=1000")
+    single = client.get(f"/tickets/{ticket.id}")
+    unbounded_full = client.get("/tickets?sprint=all&view=full&limit=1000")
+
+    assert first.status_code == 200
+    assert first.json()[0]["id"] == ticket.id
+    assert second.status_code == 200
+    assert second.json()[0]["id"] == ticket.id
+    assert single.status_code == 200
+    assert single.json()["id"] == ticket.id
+    assert unbounded_full.status_code == 503
+    assert unbounded_full.headers["Retry-After"] == "5"
+    # The deferral makes subsequent reads use YAML directly rather than start
+    # another pair of doomed full-index rebuild attempts.
+    assert signature_calls == calls_after_first
+
+
 def test_external_yaml_edit_marks_index_stale_and_self_heals(tmp_path):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(name="Before external edit")
