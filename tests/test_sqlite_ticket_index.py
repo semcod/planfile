@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import gc
 import json
+import sqlite3
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -13,12 +15,56 @@ from planfile import Planfile
 from planfile.api import server
 from planfile.cli.commands import app
 from planfile.core.fastio import mirror_path
+from planfile.core.sqlite_index import SQLiteTicketIndex
 
 
 def _disable_archive(pf: Planfile) -> None:
     config = pf.store._read_config()
     config["archive"]["enabled"] = False
     pf.store._write_config(config)
+
+
+def test_sqlite_rebuild_streams_records_in_bounded_batches(tmp_path):
+    class TrackedRecord(dict):
+        active = 0
+        maximum = 0
+
+        def __init__(self, number: int):
+            type(self).active += 1
+            type(self).maximum = max(type(self).maximum, type(self).active)
+            ticket_id = f"PLF-{number}"
+            super().__init__(
+                id=ticket_id,
+                sprint="current",
+                status="open",
+                priority="normal",
+                source=None,
+                queue="default",
+                created_at=None,
+                updated_at=None,
+                position=number,
+                ticket_json=json.dumps({"id": ticket_id}),
+                summary_json=json.dumps({"id": ticket_id}),
+                blocked_by=["PLF-0"] if number else [],
+            )
+
+        def __del__(self):
+            type(self).active -= 1
+
+    def records():
+        for number in range(257):
+            yield TrackedRecord(number)
+
+    index = SQLiteTicketIndex(tmp_path / "tickets.sqlite3")
+    count = index.rebuild(records(), ("source", 1), batch_size=16)
+    gc.collect()
+
+    assert count == 257
+    assert TrackedRecord.active == 0
+    assert TrackedRecord.maximum <= 16
+    with sqlite3.connect(index.path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM tickets").fetchone()[0] == 257
+        assert connection.execute("SELECT COUNT(*) FROM dependencies").fetchone()[0] == 256
 
 
 def test_sqlite_index_serves_get_without_reparsing_sprint_files(tmp_path, monkeypatch):
