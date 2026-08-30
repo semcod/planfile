@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import tempfile
+import time
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -20,6 +21,10 @@ from .store_tickets import TicketStoreMixin
 
 class ImmutableTerminalReopenError(RuntimeError):
     """Raised when an ordinary mutation tries to reactivate done/canceled work."""
+
+
+class TicketIndexContentionError(RuntimeError):
+    """Raised when the disposable index cannot capture a stable snapshot."""
 
 
 class TicketUpdatedAtConflictError(RuntimeError):
@@ -61,6 +66,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._evidence_dir = self.base_dir / "evidence"
         self._ticket_index_path = self.base_dir / "index" / "tickets.sqlite3"
         self._ticket_index_rebuild_lock_path = self.base_dir / "index" / ".rebuild.lock"
+        self._ticket_index_rebuild_deferred_until = 0.0
         self._history_locations_path = self.base_dir / "index" / "history-locations.yaml"
 
     def _storage_config(self) -> dict:
@@ -1281,6 +1287,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         index = self._sqlite_ticket_index()
         if not (force or self.ticket_index_enabled()):
             return index.status()
+        if not force and time.monotonic() < self._ticket_index_rebuild_deferred_until:
+            raise TicketIndexContentionError(
+                "ticket_index_rebuild_deferred_after_source_contention"
+            )
         signature = self._ticket_index_signature()
         if not force and index.is_current(signature):
             return index.status(signature) | {"rebuilt": False}
@@ -1310,11 +1320,18 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     raise
                 index.reset()
                 count = index.rebuild(records, signature_after)
+            self._ticket_index_rebuild_deferred_until = 0.0
             return index.status(signature_after) | {
                 "rebuilt": True,
                 "tickets": count,
             }
-        raise RuntimeError("ticket_index_sources_changed_during_rebuild")
+        # YAML remains authoritative. Immediate repeated rebuilds during a
+        # write burst amplify contention and can exhaust an API worker. Give
+        # callers a bounded window to read the durable files directly.
+        self._ticket_index_rebuild_deferred_until = time.monotonic() + 5.0
+        raise TicketIndexContentionError(
+            "ticket_index_sources_changed_during_rebuild"
+        )
 
     @contextmanager
     def ticket_index_rebuild_lock(self):
@@ -1725,7 +1742,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def get_ticket(self, ticket_id: str) -> Ticket | None:
         if self.ticket_index_enabled():
-            return self.indexed_ticket(ticket_id)
+            try:
+                return self.indexed_ticket(ticket_id)
+            except TicketIndexContentionError:
+                # SQLite is only an acceleration layer. Source contention must
+                # not make an exact durable-source lookup unavailable.
+                pass
         if self._uses_sharded_storage():
             storage = self._sharded_storage()
             active = storage.get_ticket("current", ticket_id)
