@@ -1181,11 +1181,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
     def _ticket_index_signature(self) -> tuple:
         return self.sprint_signature("all"), self._evidence_revision()
 
-    def _ticket_index_records(self) -> list[dict]:
+    def _ticket_index_records(self):
         from planfile.core.fastio import read_yaml_fast
 
         storage = self._sharded_storage() if self._uses_sharded_storage() else None
-        records = []
         position = 0
         for sprint_id in self._all_sprint_ids():
             if storage is not None:
@@ -1198,9 +1197,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 ticket = self._ticket_from_data(raw)
                 if ticket is None:
                     continue
-                records.append(self._ticket_index_record(ticket, sprint_id, position))
+                yield self._ticket_index_record(ticket, sprint_id, position)
                 position += 1
-        return records
 
     @staticmethod
     def _ticket_index_record(ticket: Ticket, sprint: str, position: int = 0) -> dict:
@@ -1306,20 +1304,19 @@ class Store(StoreFileMixin, TicketStoreMixin):
             signature_before = self._ticket_index_signature()
             if not force and index.is_current(signature_before):
                 return index.status(signature_before) | {"rebuilt": False}
-            records = self._ticket_index_records()
-            signature_after = self._ticket_index_signature()
-            if signature_before != signature_after:
-                force = True
-                continue
             try:
-                count = index.rebuild(records, signature_after)
+                count = index.rebuild(self._ticket_index_records(), signature_before)
             except Exception as exc:
                 import sqlite3
 
                 if not isinstance(exc, sqlite3.DatabaseError):
                     raise
                 index.reset()
-                count = index.rebuild(records, signature_after)
+                count = index.rebuild(self._ticket_index_records(), signature_before)
+            signature_after = self._ticket_index_signature()
+            if signature_before != signature_after:
+                force = True
+                continue
             self._ticket_index_rebuild_deferred_until = 0.0
             return index.status(signature_after) | {
                 "rebuilt": True,

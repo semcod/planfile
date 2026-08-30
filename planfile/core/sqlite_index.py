@@ -5,11 +5,13 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections.abc import Iterable
+from itertools import islice
 from pathlib import Path
 from typing import Any
 
 SQLITE_INDEX_SCHEMA = "planfile.sqlite-ticket-index/v1"
 _SCHEMA_VERSION = 1
+_REBUILD_BATCH_SIZE = 128
 
 
 class SQLiteTicketIndex:
@@ -96,33 +98,55 @@ class SQLiteTicketIndex:
         except sqlite3.DatabaseError:
             return False
 
-    def rebuild(self, records: Iterable[dict[str, Any]], signature: tuple) -> int:
-        rows = list(records)
+    def rebuild(
+        self,
+        records: Iterable[dict[str, Any]],
+        signature: tuple,
+        *,
+        batch_size: int = _REBUILD_BATCH_SIZE,
+    ) -> int:
+        """Atomically replace the index while retaining one bounded batch.
+
+        Durable Planfile stores can contain hundreds of megabytes of serialized
+        tickets.  Materializing the whole iterable here duplicates the object
+        graph already produced by the store and makes a disposable rebuild the
+        largest memory consumer in the service.
+        """
+        if batch_size < 1:
+            raise ValueError("ticket_index_rebuild_batch_size_invalid")
+        rows = iter(records)
+        count = 0
         with self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             connection.execute("DELETE FROM dependencies")
             connection.execute("DELETE FROM tickets")
-            connection.executemany(
-                """
-                INSERT INTO tickets(
-                    id, sprint, status, priority, source, queue,
-                    created_at, updated_at, position, ticket_json, summary_json
-                ) VALUES(
-                    :id, :sprint, :status, :priority, :source, :queue,
-                    :created_at, :updated_at, :position, :ticket_json, :summary_json
+            while True:
+                batch = list(islice(rows, batch_size))
+                if not batch:
+                    break
+                connection.executemany(
+                    """
+                    INSERT INTO tickets(
+                        id, sprint, status, priority, source, queue,
+                        created_at, updated_at, position, ticket_json, summary_json
+                    ) VALUES(
+                        :id, :sprint, :status, :priority, :source, :queue,
+                        :created_at, :updated_at, :position, :ticket_json, :summary_json
+                    )
+                    """,
+                    batch,
                 )
-                """,
-                rows,
-            )
-            dependencies = [
-                (row["id"], dependency)
-                for row in rows
-                for dependency in row.get("blocked_by", [])
-            ]
-            connection.executemany(
-                "INSERT INTO dependencies(ticket_id, blocked_by) VALUES(?, ?)",
-                dependencies,
-            )
+                connection.executemany(
+                    "INSERT INTO dependencies(ticket_id, blocked_by) VALUES(?, ?)",
+                    (
+                        (row["id"], dependency)
+                        for row in batch
+                        for dependency in row.get("blocked_by", [])
+                    ),
+                )
+                count += len(batch)
+                # Release record graphs before constructing the next batch.
+                batch.clear()
             connection.execute(
                 """
                 INSERT INTO meta(key, value) VALUES('source_signature', ?)
@@ -131,7 +155,7 @@ class SQLiteTicketIndex:
                 (self.serialize_signature(signature),),
             )
             connection.commit()
-        return len(rows)
+        return count
 
     def get_ticket(self, ticket_id: str) -> dict[str, Any] | None:
         with self._connect() as connection:
