@@ -237,9 +237,8 @@ def test_index_source_contention_falls_back_without_rebuild_storm(
     monkeypatch.setattr(pf.store, "_ticket_index_signature", changing_signature)
     client = TestClient(server.app)
 
-    first = client.get("/tickets?sprint=all&view=operational&limit=1000")
-    calls_after_first = signature_calls
-    second = client.get("/tickets?sprint=all&view=operational&limit=1000")
+    first = client.get("/tickets?view=operational&limit=1000")
+    second = client.get("/tickets?view=operational&limit=1000")
     single = client.get(f"/tickets/{ticket.id}")
     unbounded_full = client.get("/tickets?sprint=all&view=full&limit=1000")
 
@@ -251,9 +250,110 @@ def test_index_source_contention_falls_back_without_rebuild_storm(
     assert single.json()["id"] == ticket.id
     assert unbounded_full.status_code == 503
     assert unbounded_full.headers["Retry-After"] == "5"
-    # The deferral makes subsequent reads use YAML directly rather than start
-    # another pair of doomed full-index rebuild attempts.
-    assert signature_calls == calls_after_first
+    # Request threads may validate signatures, but never enumerate the full
+    # durable archive to repair the disposable projection.
+    assert signature_calls < 20
+
+
+def test_stale_api_reads_do_not_rebuild_the_index(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before external edit")
+    pf.store.configure_ticket_index(True)
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "Durable exact result"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(
+        pf.store,
+        "_ticket_index_records",
+        lambda: (_ for _ in ()).throw(AssertionError("request-triggered rebuild")),
+    )
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    exact = client.get(f"/tickets/{ticket.id}")
+    summary = client.get("/tickets?view=summary&limit=100")
+    full_archive = client.get("/tickets?sprint=all&view=full&limit=100")
+
+    assert exact.status_code == 200
+    assert exact.json()["name"] == "Durable exact result"
+    assert summary.status_code == 200
+    assert summary.json()[0]["name"] == "Durable exact result"
+    assert full_archive.status_code == 503
+    assert pf.store.ticket_index_status()["current"] is False
+
+
+def test_stale_archive_summary_uses_bounded_cached_projection(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Cached archive result")
+    pf.store.configure_ticket_index(True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+    query = "/tickets?sprint=all&view=summary&limit=100"
+    assert client.get(query).status_code == 200
+
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "New durable value"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+    monkeypatch.setattr(
+        pf.store,
+        "_ticket_index_records",
+        lambda: (_ for _ in ()).throw(AssertionError("request-triggered rebuild")),
+    )
+
+    stale = client.get(query)
+
+    assert stale.status_code == 200
+    assert stale.json()[0]["name"] == "Cached archive result"
+    assert stale.headers["X-Planfile-Index-State"] == "stale"
+
+
+def test_concurrent_background_repairs_coalesce_to_one_rebuild(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Before maintenance")
+    pf.store.configure_ticket_index(True)
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "After maintenance"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    expected_signature = pf.store._ticket_index_signature()
+    original_records = pf.store._ticket_index_records
+    calls = 0
+    calls_lock = threading.Lock()
+
+    def counted_records():
+        nonlocal calls
+        with calls_lock:
+            calls += 1
+        time.sleep(0.05)
+        return original_records()
+
+    monkeypatch.setattr(pf.store, "_ticket_index_records", counted_records)
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        reports = list(
+            pool.map(
+                lambda _number: server._repair_ticket_index_if_unchanged(
+                    expected_signature
+                ),
+                range(6),
+            )
+        )
+
+    assert calls == 1
+    assert any(report.get("rebuilt") for report in reports)
+    assert pf.get_ticket(ticket.id).name == "After maintenance"
+    assert pf.store.ticket_index_status()["current"] is True
 
 
 def test_external_yaml_edit_marks_index_stale_and_self_heals(tmp_path):
