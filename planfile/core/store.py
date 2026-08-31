@@ -1298,6 +1298,21 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 return index.status(signature) | {"rebuilt": False}
             return self._rebuild_ticket_index_unlocked(index, force=force)
 
+    def require_current_ticket_index(self) -> dict:
+        """Validate the projection without rebuilding it on the caller's thread.
+
+        Latency-sensitive API reads use this guard.  A stale projection is a
+        maintenance condition, not permission for an arbitrary GET request to
+        parse the complete durable archive.
+        """
+        index = self._sqlite_ticket_index()
+        if not self.ticket_index_enabled():
+            raise TicketIndexContentionError("ticket_index_disabled")
+        signature = self._ticket_index_signature()
+        if not index.is_current(signature):
+            raise TicketIndexContentionError("ticket_index_stale")
+        return index.status(signature) | {"rebuilt": False}
+
     def _rebuild_ticket_index_unlocked(self, index, *, force: bool) -> dict:
         """Rebuild while the caller holds the cross-process index lock."""
         for _attempt in range(2):
@@ -1372,8 +1387,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
         signature = self._ticket_index_signature() if index.path.exists() else None
         return index.status(signature) | {"enabled": self.ticket_index_enabled()}
 
-    def indexed_ticket(self, ticket_id: str) -> Ticket | None:
-        self.ensure_ticket_index()
+    def indexed_ticket(self, ticket_id: str, *, repair: bool = True) -> Ticket | None:
+        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
         data = self._sqlite_ticket_index().get_ticket(ticket_id)
         return self._ticket_from_data(data) if data is not None else None
 
@@ -1384,8 +1399,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
         filters: dict,
         offset: int,
         limit: int | None,
+        repair: bool = True,
     ) -> tuple[list[dict], int]:
-        self.ensure_ticket_index()
+        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
         return self._sqlite_ticket_index().list_summaries(
             sprint=sprint,
             filters=filters,
@@ -1400,9 +1416,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         filters: dict,
         offset: int,
         limit: int | None,
+        repair: bool = True,
     ) -> tuple[list[dict], int]:
         """Read full ticket JSON directly from the disposable SQLite projection."""
-        self.ensure_ticket_index()
+        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
         return self._sqlite_ticket_index().list_payloads(
             sprint=sprint,
             filters=filters,
@@ -1417,9 +1434,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         filters: dict,
         offset: int,
         limit: int | None,
+        repair: bool = True,
     ) -> tuple[bytes, int, int]:
         """Render full ticket JSON from SQLite without a Python object graph."""
-        self.ensure_ticket_index()
+        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
         return self._sqlite_ticket_index().render_payloads(
             sprint=sprint,
             filters=filters,
@@ -1434,9 +1452,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         filters: dict,
         offset: int,
         limit: int | None,
+        repair: bool = True,
     ) -> tuple[int, int, int]:
         """Measure a full-ticket page before materializing its JSON body."""
-        self.ensure_ticket_index()
+        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
         return self._sqlite_ticket_index().payload_page_metrics(
             sprint=sprint,
             filters=filters,
@@ -1737,10 +1756,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
         return ticket
 
-    def get_ticket(self, ticket_id: str) -> Ticket | None:
+    def get_ticket(self, ticket_id: str, *, repair_index: bool = True) -> Ticket | None:
         if self.ticket_index_enabled():
             try:
-                return self.indexed_ticket(ticket_id)
+                return self.indexed_ticket(ticket_id, repair=repair_index)
             except TicketIndexContentionError:
                 # SQLite is only an acceleration layer. Source contention must
                 # not make an exact durable-source lookup unavailable.

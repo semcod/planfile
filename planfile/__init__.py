@@ -142,8 +142,8 @@ class Planfile:
             ticket = Ticket(id=ticket_id, name=name, **kwargs)
             return self.store._create_ticket_unlocked(ticket), True
 
-    def get_ticket(self, ticket_id: str):
-        return self.store.get_ticket(ticket_id)
+    def get_ticket(self, ticket_id: str, *, repair_index: bool = True):
+        return self.store.get_ticket(ticket_id, repair_index=repair_index)
 
     def list_tickets(self, **filters):
         return self.store.list_tickets(**filters)
