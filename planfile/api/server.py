@@ -509,9 +509,12 @@ def _bounded_stale_index_response(
     offset: int,
     limit: int | None,
     view: Literal["full", "operational", "summary"],
+    allow_unbounded_summary: bool = False,
 ) -> Response | None:
     """Serve a recent, coherent projection while its source index is repaired."""
-    if sprint != "all" or limit is None or view == "full":
+    archive_queue = sprint == "all" and limit is not None
+    legacy_summary = allow_unbounded_summary and view == "summary"
+    if view == "full" or not (archive_queue or legacy_summary):
         return None
     index = pf.store._sqlite_ticket_index()
     if not index.has_fresh_snapshot(_INDEX_REPAIR_STALE_WINDOW_SECONDS):
@@ -557,6 +560,7 @@ def _ticket_list_response(
     limit: int | None,
     view: Literal["full", "operational", "summary"] = "full",
     allow_stale: bool = False,
+    allow_index_stale: bool = False,
 ) -> Response:
     # FastAPI runs this sync endpoint in a worker pool. Serialize cache misses so
     # a burst of websocket-driven dashboard refreshes builds one 5+ MB response,
@@ -670,6 +674,7 @@ def _ticket_list_response(
                         offset=offset,
                         limit=limit,
                         view=view,
+                        allow_unbounded_summary=allow_stale or allow_index_stale,
                     )
                     if stale_index_response is not None:
                         return stale_index_response
@@ -759,6 +764,7 @@ def list_tickets(
         limit=limit,
         view=effective_view,
         allow_stale=browser_client,
+        allow_index_stale=legacy_unbounded_request,
     )
 
 
