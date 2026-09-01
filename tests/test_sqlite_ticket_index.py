@@ -67,6 +67,56 @@ def test_sqlite_rebuild_streams_records_in_bounded_batches(tmp_path):
         assert connection.execute("SELECT COUNT(*) FROM dependencies").fetchone()[0] == 256
 
 
+def test_sqlite_rebuild_keeps_last_committed_snapshot_readable(tmp_path):
+    index = SQLiteTicketIndex(tmp_path / "tickets.sqlite3")
+
+    def record(ticket_id: str, name: str) -> dict:
+        ticket = {"id": ticket_id, "name": name}
+        encoded = json.dumps(ticket)
+        return {
+            "id": ticket_id,
+            "sprint": "current",
+            "status": "open",
+            "priority": "normal",
+            "source": None,
+            "queue": "default",
+            "created_at": None,
+            "updated_at": None,
+            "position": 0,
+            "ticket_json": encoded,
+            "summary_json": encoded,
+            "blocked_by": [],
+        }
+
+    index.rebuild([record("PLF-1", "Committed")], ("source", 1))
+    rebuild_started = threading.Event()
+    finish_rebuild = threading.Event()
+
+    def delayed_records():
+        rebuild_started.set()
+        assert finish_rebuild.wait(timeout=5)
+        yield record("PLF-2", "Replacement")
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(index.rebuild, delayed_records(), ("source", 2))
+        assert rebuild_started.wait(timeout=5)
+        try:
+            summaries, total = index.list_summaries(
+                sprint="all", filters={}, offset=0, limit=1
+            )
+        finally:
+            finish_rebuild.set()
+        assert future.result(timeout=5) == 1
+
+    assert total == 1
+    assert summaries == [{"id": "PLF-1", "name": "Committed"}]
+    replacement, replacement_total = index.list_summaries(
+        sprint="all", filters={}, offset=0, limit=1
+    )
+    assert replacement_total == 1
+    assert replacement == [{"id": "PLF-2", "name": "Replacement"}]
+
+
 def test_sqlite_index_serves_get_without_reparsing_sprint_files(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     _disable_archive(pf)
@@ -315,6 +365,83 @@ def test_stale_archive_summary_uses_bounded_cached_projection(tmp_path, monkeypa
     assert stale.status_code == 200
     assert stale.json()[0]["name"] == "Cached archive result"
     assert stale.headers["X-Planfile-Index-State"] == "stale"
+
+
+def test_stale_archive_queue_reads_use_recent_index_without_query_cache(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Last known good queue item")
+    pf.store.configure_ticket_index(True)
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "New durable value"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(
+        pf.store,
+        "_ticket_index_records",
+        lambda: (_ for _ in ()).throw(AssertionError("request-triggered rebuild")),
+    )
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    summary = client.get(
+        "/tickets?sprint=all&status=open&limit=1&view=summary"
+    )
+    operational = client.get(
+        "/tickets?sprint=all&status=open&limit=1&view=operational"
+    )
+
+    assert summary.status_code == 200
+    assert summary.json()[0]["name"] == "Last known good queue item"
+    assert summary.headers["X-Planfile-Index-State"] == "stale"
+    assert operational.status_code == 200
+    assert operational.json()[0]["name"] == "Last known good queue item"
+    assert operational.headers["X-Planfile-Index-State"] == "stale"
+    assert pf.store.ticket_index_status()["current"] is False
+
+
+def test_expired_stale_archive_index_remains_fail_closed(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Expired queue item")
+    pf.store.configure_ticket_index(True)
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "New durable value"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+    with sqlite3.connect(pf.store._ticket_index_path) as connection:
+        connection.execute(
+            "UPDATE meta SET value='0' WHERE key='source_indexed_at_ns'"
+        )
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    response = client.get(
+        "/tickets?sprint=all&status=open&limit=1&view=summary"
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "ticket_index_repair_pending"}
+
+
+def test_future_dated_stale_archive_index_remains_fail_closed(tmp_path):
+    index = SQLiteTicketIndex(tmp_path / "tickets.sqlite3")
+    index.rebuild([], ("source", 1))
+    with sqlite3.connect(index.path) as connection:
+        connection.execute(
+            "UPDATE meta SET value=? WHERE key='source_indexed_at_ns'",
+            (str(time.time_ns() + 1_000_000_000),),
+        )
+
+    assert index.has_fresh_snapshot(300) is False
 
 
 def test_concurrent_background_repairs_coalesce_to_one_rebuild(tmp_path, monkeypatch):

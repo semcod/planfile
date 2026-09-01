@@ -9,6 +9,7 @@ import asyncio
 import json
 import os
 import re
+import sqlite3
 import time
 from collections import deque
 from contextlib import asynccontextmanager
@@ -500,6 +501,53 @@ def _cache_ticket_list_response(
     _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
 
 
+def _bounded_stale_index_response(
+    pf,
+    *,
+    sprint: str,
+    filters: dict,
+    offset: int,
+    limit: int | None,
+    view: Literal["full", "operational", "summary"],
+) -> Response | None:
+    """Serve a recent, coherent projection while its source index is repaired."""
+    if sprint != "all" or limit is None or view == "full":
+        return None
+    index = pf.store._sqlite_ticket_index()
+    if not index.has_fresh_snapshot(_INDEX_REPAIR_STALE_WINDOW_SECONDS):
+        return None
+    try:
+        if view == "summary":
+            payload, total = index.list_summaries(
+                sprint=sprint,
+                filters=filters,
+                offset=offset,
+                limit=limit,
+            )
+        else:
+            payload, total = index.list_payloads(
+                sprint=sprint,
+                filters=filters,
+                offset=offset,
+                limit=limit,
+            )
+            payload = [_ticket_operational_payload(ticket) for ticket in payload]
+    except (json.JSONDecodeError, OSError, sqlite3.DatabaseError):
+        return None
+    body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return Response(
+        content=body,
+        media_type="application/json",
+        headers={
+            **NO_STORE_HEADERS,
+            "X-Planfile-View": view,
+            "X-Planfile-Index-State": "stale",
+            "X-Total-Count": str(total),
+            "X-Result-Count": str(len(payload)),
+        },
+    )
+
+
 def _ticket_list_response(
     pf,
     *,
@@ -615,6 +663,16 @@ def _ticket_list_response(
                                 "X-Result-Count": str(stale_count),
                             },
                         )
+                    stale_index_response = _bounded_stale_index_response(
+                        pf,
+                        sprint=sprint,
+                        filters=filters,
+                        offset=offset,
+                        limit=limit,
+                        view=view,
+                    )
+                    if stale_index_response is not None:
+                        return stale_index_response
                     if view == "full" or sprint == "all":
                         return JSONResponse(
                             status_code=503,

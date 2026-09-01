@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from collections.abc import Iterable
 from itertools import islice
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import Any
 SQLITE_INDEX_SCHEMA = "planfile.sqlite-ticket-index/v1"
 _SCHEMA_VERSION = 1
 _REBUILD_BATCH_SIZE = 128
+_SOURCE_INDEXED_AT_NS_KEY = "source_indexed_at_ns"
 
 
 class SQLiteTicketIndex:
@@ -32,10 +34,16 @@ class SQLiteTicketIndex:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         connection = sqlite3.connect(self.path, timeout=10)
         connection.row_factory = sqlite3.Row
-        connection.execute("PRAGMA journal_mode=WAL")
+        journal_mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
+        if str(journal_mode).lower() != "wal":
+            connection.execute("PRAGMA journal_mode=WAL")
         connection.execute("PRAGMA synchronous=NORMAL")
         connection.execute("PRAGMA foreign_keys=ON")
-        self._initialize(connection)
+        initialized = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='meta'"
+        ).fetchone()
+        if initialized is None:
+            self._initialize(connection)
         return connection
 
     @staticmethod
@@ -154,6 +162,13 @@ class SQLiteTicketIndex:
                 """,
                 (self.serialize_signature(signature),),
             )
+            connection.execute(
+                """
+                INSERT INTO meta(key, value) VALUES(?, ?)
+                ON CONFLICT(key) DO UPDATE SET value=excluded.value
+                """,
+                (_SOURCE_INDEXED_AT_NS_KEY, str(time.time_ns())),
+            )
             connection.commit()
         return count
 
@@ -234,7 +249,38 @@ class SQLiteTicketIndex:
                 """,
                 (self.serialize_signature(signature),),
             )
+            connection.execute(
+                """
+                INSERT INTO meta(key, value) VALUES(?, ?)
+                ON CONFLICT(key) DO UPDATE SET value=excluded.value
+                """,
+                (_SOURCE_INDEXED_AT_NS_KEY, str(time.time_ns())),
+            )
             connection.commit()
+
+    def has_fresh_snapshot(self, max_age_seconds: float) -> bool:
+        """Return whether the last atomic projection is recent enough to serve stale.
+
+        The source signature may stop matching while a durable mutation or a
+        background rebuild is in progress.  The committed SQLite transaction is
+        still a coherent last-known-good snapshot, but only for a bounded window.
+        """
+        if max_age_seconds < 0 or not self.path.exists():
+            return False
+        try:
+            with self._connect() as connection:
+                rows = connection.execute(
+                    "SELECT key, value FROM meta WHERE key IN ('source_signature', ?)",
+                    (_SOURCE_INDEXED_AT_NS_KEY,),
+                ).fetchall()
+            metadata = {row["key"]: row["value"] for row in rows}
+            if "source_signature" not in metadata:
+                return False
+            indexed_at_ns = int(metadata[_SOURCE_INDEXED_AT_NS_KEY])
+            age_ns = time.time_ns() - indexed_at_ns
+            return 0 <= age_ns <= int(max_age_seconds * 1_000_000_000)
+        except (KeyError, OSError, sqlite3.DatabaseError, TypeError, ValueError):
+            return False
 
     def list_summaries(
         self,
