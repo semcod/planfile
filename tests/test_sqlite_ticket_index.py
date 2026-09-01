@@ -405,6 +405,38 @@ def test_stale_archive_queue_reads_use_recent_index_without_query_cache(
     assert pf.store.ticket_index_status()["current"] is False
 
 
+def test_legacy_archive_dashboard_uses_recent_current_index_without_cache(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Last known good dashboard item")
+    pf.store.configure_ticket_index(True)
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "New durable value"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(
+        pf,
+        "list_tickets",
+        lambda **_kwargs: (_ for _ in ()).throw(
+            AssertionError("legacy request parsed durable sprint")
+        ),
+    )
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    response = client.get("/tickets?sprint=all")
+
+    assert response.status_code == 200
+    assert response.json()[0]["name"] == "Last known good dashboard item"
+    assert response.headers["X-Planfile-View"] == "summary"
+    assert response.headers["X-Planfile-Index-State"] == "stale"
+
+
 def test_expired_stale_archive_index_remains_fail_closed(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     _disable_archive(pf)
