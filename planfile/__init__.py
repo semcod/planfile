@@ -38,6 +38,14 @@ from planfile.core.models import (
 )
 from planfile.core.store import PlanfileStore
 from planfile.delegation import DelegationActor, load_delegation_actors
+from planfile.delivery_plan import DeliveryPlanError, DeliveryPlanRepository
+from planfile.delivery_plan_contracts import (
+    CompiledWorkPlanV1,
+    DeliveryCheckpointV1,
+    DeliveryPlanSplitV1,
+    TicketCandidateV1,
+    WorkPlanTerminalReceiptV1,
+)
 from planfile.dsl import DSLExecutor, DSLParser, DSLResult
 from planfile.testql_integration import (
     build_testql_tickets,
@@ -719,6 +727,45 @@ class Planfile:
                 tickets.append(Ticket(id=ticket_id, **data))
             return self.store._create_tickets_bulk_unlocked(tickets)
 
+    @property
+    def delivery_plans(self) -> DeliveryPlanRepository:
+        """Return the durable, execution-inert delivery-plan repository."""
+
+        return DeliveryPlanRepository(self.store)
+
+    def materialize_delivery_plan(
+        self,
+        compiled_plan: dict,
+        *,
+        terminal_receipts: list[dict] | tuple[dict, ...] = (),
+    ) -> dict:
+        """Atomically materialize a Strategy DAG or recover its exact prior IDs."""
+
+        return self.delivery_plans.materialize(
+            compiled_plan,
+            terminal_receipts=terminal_receipts,
+        )
+
+    def checkpoint_delivery_candidate(self, checkpoint: dict) -> dict:
+        """Append one explicit, hash-bound continuation checkpoint."""
+
+        return self.delivery_plans.record_checkpoint(checkpoint)
+
+    def record_delivery_terminal_receipt(self, plan_id: str, receipt: dict) -> dict:
+        """Deduplicate a protected terminal receipt and close its exact slice."""
+
+        return self.delivery_plans.record_terminal_receipt(plan_id, receipt)
+
+    def record_delivery_split(self, split: dict) -> dict:
+        """Link a split-required parent to already materialized bounded children."""
+
+        return self.delivery_plans.record_split(split)
+
+    def resume_delivery_plan(self, plan_id: str) -> dict:
+        """Read the deterministic continuation frontier without executing tools."""
+
+        return self.delivery_plans.resume(plan_id)
+
 
 def quick_ticket(name: str, tool: str = "unknown", **kwargs) -> Ticket:
     """One-liner ticket creation for tools."""
@@ -736,6 +783,9 @@ __all__ = [
     # Tickets
     "Ticket", "TicketStatus", "TicketSource",
     "TicketExecutor", "TicketExecution", "TicketInputs", "TicketOutputs",
+    "CompiledWorkPlanV1", "DeliveryCheckpointV1", "DeliveryPlanError",
+    "DeliveryPlanRepository", "DeliveryPlanSplitV1", "TicketCandidateV1",
+    "WorkPlanTerminalReceiptV1",
     # Store & API
     "PlanfileStore", "Planfile", "quick_ticket",
     # Executors (lazy loaded)
