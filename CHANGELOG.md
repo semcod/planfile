@@ -20,6 +20,11 @@
   frequently changing full-history query retains one serialized body, not four.
 
 ### Added
+- Added a durable `planfile.delivery-plan-state/v1` runtime for materializing
+  Strategy's inert ticket DAG, preserving parent/child split links, explicit
+  continuation checkpoints and deduplicated protected terminal receipts. The
+  resume projection survives a missing final state replace by recovering exact
+  candidate ticket IDs, and never derives lifecycle state from chat prose.
 - Added a public, append-only `PLOG/1` forensic timeline in
   `.planfile/events/logs.dsl.txt`, daily history partitions, bounded text/JSON
   APIs, streaming backfill from SODL, and durable coverage for evidence and

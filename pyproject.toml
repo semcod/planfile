@@ -82,7 +82,7 @@ where = ["."]
 include = ["planfile*"]
 
 [tool.setuptools.package-data]
-"planfile" = ["examples/**/*.yaml", "examples/**/*.yml"]
+"planfile" = ["examples/**/*.yaml", "examples/**/*.yml", "schemas/*.json"]
 
 [tool.ruff]
 line-length = 100
