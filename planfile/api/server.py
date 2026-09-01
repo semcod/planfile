@@ -12,10 +12,10 @@ import re
 import sqlite3
 import time
 from collections import deque
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from threading import RLock
+from threading import BoundedSemaphore, RLock
 from typing import Any, Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -360,7 +360,11 @@ def _validate_completion_receipt(receipt: dict[str, Any] | None, ticket_id: str)
 _TICKET_LIST_RESPONSE_CACHE: dict[tuple, tuple[bytes, int, int]] = {}
 _TICKET_LIST_RESPONSE_CACHE_LIMIT = 4
 _TICKET_LIST_RESPONSE_CACHE_LOCK = RLock()
-_TICKET_LIST_RESPONSE_BUILD_LOCKS = tuple(RLock() for _ in range(32))
+_TICKET_LIST_RESPONSE_BUILD_LOCKS = {
+    workload: tuple(RLock() for _ in range(32))
+    for workload in ("full", "operational", "summary", "archive-operational")
+}
+_TICKET_ARCHIVE_OPERATIONAL_BUILD_SLOTS = BoundedSemaphore(4)
 _TICKET_LIST_LATEST: dict[tuple, tuple[float, bytes, int, int]] = {}
 _TICKET_LIST_RESPONSE_CACHE_DEFAULT_BYTES = 256 * 1024 * 1024
 _TICKET_LIST_RESPONSE_CACHE_MIN_BYTES = 1024 * 1024
@@ -479,9 +483,56 @@ def _ticket_list_response_cached_bytes() -> int:
 
 def _ticket_list_response_build_lock(query_key: tuple) -> RLock:
     """Coalesce identical cache misses without blocking unrelated queue views."""
-    return _TICKET_LIST_RESPONSE_BUILD_LOCKS[
-        hash(query_key) % len(_TICKET_LIST_RESPONSE_BUILD_LOCKS)
-    ]
+    _, sprint, filters, _, limit, view = query_key
+    workload = (
+        "archive-operational"
+        if _ticket_list_is_heavy_archive(
+            sprint=sprint,
+            filters=filters,
+            limit=limit,
+            view=view,
+        )
+        else str(view)
+    )
+    locks = _TICKET_LIST_RESPONSE_BUILD_LOCKS[workload]
+    return locks[hash(query_key) % len(locks)]
+
+
+def _ticket_list_is_heavy_archive(
+    *,
+    sprint: str,
+    filters,
+    limit: int | None,
+    view: str,
+) -> bool:
+    return (
+        sprint == "all"
+        and view == "operational"
+        and not filters
+        and limit is not None
+        and limit >= 500
+    )
+
+
+@contextmanager
+def _ticket_list_workload_slot(
+    *,
+    sprint: str,
+    filters: dict,
+    limit: int | None,
+    view: Literal["full", "operational", "summary"],
+):
+    """Bound CPU-heavy archive projections while reserving queue-read capacity."""
+    if _ticket_list_is_heavy_archive(
+        sprint=sprint,
+        filters=filters,
+        limit=limit,
+        view=view,
+    ):
+        with _TICKET_ARCHIVE_OPERATIONAL_BUILD_SLOTS:
+            yield
+        return
+    yield
 
 
 def _cache_ticket_list_response(
@@ -585,7 +636,12 @@ def _ticket_list_response(
     # a burst of websocket-driven dashboard refreshes builds one 5+ MB response,
     # not one copy per browser tab.
     query_key = (str(pf.store.project_dir), sprint, tuple(sorted(filters.items())), offset, limit, view)
-    with _ticket_list_response_build_lock(query_key):
+    with _ticket_list_response_build_lock(query_key), _ticket_list_workload_slot(
+        sprint=sprint,
+        filters=filters,
+        limit=limit,
+        view=view,
+    ):
         with _TICKET_LIST_RESPONSE_CACHE_LOCK:
             latest = _TICKET_LIST_LATEST.get(query_key)
         if allow_stale and latest is not None and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS:
