@@ -307,6 +307,100 @@ def test_identical_ticket_queries_still_share_one_response_build(tmp_path, monke
     assert calls == 1
 
 
+def test_slow_archive_operational_build_never_blocks_summary_status(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.create_ticket(name="Workload isolation")
+    pf.store.configure_ticket_index(True)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    slow_started = threading.Event()
+    finish_slow = threading.Event()
+    original = pf.store.indexed_ticket_operational_response
+
+    def operational_response(**kwargs):
+        if not kwargs["filters"]:
+            slow_started.set()
+            assert finish_slow.wait(timeout=5)
+        return original(**kwargs)
+
+    monkeypatch.setattr(
+        pf.store,
+        "indexed_ticket_operational_response",
+        operational_response,
+    )
+
+    def slow_response():
+        return server._ticket_list_response(
+            pf,
+            sprint="all",
+            filters={},
+            offset=0,
+            limit=1000,
+            view="operational",
+        )
+
+    def status_response():
+        return server._ticket_list_response(
+            pf,
+            sprint="all",
+            filters={"source": "status"},
+            offset=0,
+            limit=1,
+            view="summary",
+        )
+
+    def filtered_operational_response():
+        return server._ticket_list_response(
+            pf,
+            sprint="all",
+            filters={"status": "open"},
+            offset=0,
+            limit=500,
+            view="operational",
+        )
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        slow = pool.submit(slow_response)
+        assert slow_started.wait(timeout=5)
+        status = pool.submit(status_response)
+        filtered = pool.submit(filtered_operational_response)
+        try:
+            assert status.result(timeout=1).status_code == 200
+            assert filtered.result(timeout=1).status_code == 200
+        finally:
+            finish_slow.set()
+        assert slow.result(timeout=5).status_code == 200
+
+
+def test_heavy_archive_operational_builds_have_bounded_concurrency():
+    active = 0
+    maximum = 0
+    lock = threading.Lock()
+
+    def build():
+        nonlocal active, maximum
+        with server._ticket_list_workload_slot(
+            sprint="all",
+            filters={},
+            limit=1000,
+            view="operational",
+        ):
+            with lock:
+                active += 1
+                maximum = max(maximum, active)
+            time.sleep(0.05)
+            with lock:
+                active -= 1
+
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        list(pool.map(lambda _number: build(), range(12)))
+
+    assert maximum == 4
+
+
 def test_sqlite_index_serves_get_without_reparsing_sprint_files(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     _disable_archive(pf)
