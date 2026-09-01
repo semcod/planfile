@@ -360,6 +360,7 @@ def _validate_completion_receipt(receipt: dict[str, Any] | None, ticket_id: str)
 _TICKET_LIST_RESPONSE_CACHE: dict[tuple, tuple[bytes, int, int]] = {}
 _TICKET_LIST_RESPONSE_CACHE_LIMIT = 4
 _TICKET_LIST_RESPONSE_CACHE_LOCK = RLock()
+_TICKET_LIST_RESPONSE_BUILD_LOCKS = tuple(RLock() for _ in range(32))
 _TICKET_LIST_LATEST: dict[tuple, tuple[float, bytes, int, int]] = {}
 _TICKET_LIST_RESPONSE_CACHE_DEFAULT_BYTES = 256 * 1024 * 1024
 _TICKET_LIST_RESPONSE_CACHE_MIN_BYTES = 1024 * 1024
@@ -474,6 +475,13 @@ def _ticket_list_response_cached_bytes() -> int:
     return sum(len(body) for body in bodies.values())
 
 
+def _ticket_list_response_build_lock(query_key: tuple) -> RLock:
+    """Coalesce identical cache misses without blocking unrelated queue views."""
+    return _TICKET_LIST_RESPONSE_BUILD_LOCKS[
+        hash(query_key) % len(_TICKET_LIST_RESPONSE_BUILD_LOCKS)
+    ]
+
+
 def _cache_ticket_list_response(
     *,
     query_key: tuple,
@@ -483,22 +491,23 @@ def _cache_ticket_list_response(
     count: int,
 ) -> None:
     """Retain only bounded ticket projections; full archives can be hundreds of MB."""
-    for existing_key in tuple(_TICKET_LIST_RESPONSE_CACHE):
-        if existing_key[:-1] == query_key:
-            _TICKET_LIST_RESPONSE_CACHE.pop(existing_key, None)
-    _TICKET_LIST_LATEST.pop(query_key, None)
+    with _TICKET_LIST_RESPONSE_CACHE_LOCK:
+        for existing_key in tuple(_TICKET_LIST_RESPONSE_CACHE):
+            if existing_key[:-1] == query_key:
+                _TICKET_LIST_RESPONSE_CACHE.pop(existing_key, None)
+        _TICKET_LIST_LATEST.pop(query_key, None)
 
-    byte_limit = _ticket_list_response_cache_byte_limit()
-    if len(body) > byte_limit:
-        return
-    if (
-        len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT
-        or _ticket_list_response_cached_bytes() + len(body) > byte_limit
-    ):
-        _TICKET_LIST_RESPONSE_CACHE.clear()
-        _TICKET_LIST_LATEST.clear()
-    _TICKET_LIST_RESPONSE_CACHE[versioned_key] = (body, total, count)
-    _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
+        byte_limit = _ticket_list_response_cache_byte_limit()
+        if len(body) > byte_limit:
+            return
+        if (
+            len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT
+            or _ticket_list_response_cached_bytes() + len(body) > byte_limit
+        ):
+            _TICKET_LIST_RESPONSE_CACHE.clear()
+            _TICKET_LIST_LATEST.clear()
+        _TICKET_LIST_RESPONSE_CACHE[versioned_key] = (body, total, count)
+        _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
 
 
 def _bounded_stale_index_response(
@@ -565,9 +574,10 @@ def _ticket_list_response(
     # FastAPI runs this sync endpoint in a worker pool. Serialize cache misses so
     # a burst of websocket-driven dashboard refreshes builds one 5+ MB response,
     # not one copy per browser tab.
-    with _TICKET_LIST_RESPONSE_CACHE_LOCK:
-        query_key = (str(pf.store.project_dir), sprint, tuple(sorted(filters.items())), offset, limit, view)
-        latest = _TICKET_LIST_LATEST.get(query_key)
+    query_key = (str(pf.store.project_dir), sprint, tuple(sorted(filters.items())), offset, limit, view)
+    with _ticket_list_response_build_lock(query_key):
+        with _TICKET_LIST_RESPONSE_CACHE_LOCK:
+            latest = _TICKET_LIST_LATEST.get(query_key)
         if allow_stale and latest is not None and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS:
             _, body, total, count = latest
             return Response(
@@ -582,7 +592,8 @@ def _ticket_list_response(
             )
         signature = _ticket_snapshot_signature(pf, sprint)
         key = query_key + (signature,)
-        cached = _TICKET_LIST_RESPONSE_CACHE.get(key)
+        with _TICKET_LIST_RESPONSE_CACHE_LOCK:
+            cached = _TICKET_LIST_RESPONSE_CACHE.get(key)
         if cached is not None:
             body, total, count = cached
         else:
