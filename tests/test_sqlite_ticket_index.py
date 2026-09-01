@@ -117,6 +117,106 @@ def test_sqlite_rebuild_keeps_last_committed_snapshot_readable(tmp_path):
     assert replacement == [{"id": "PLF-2", "name": "Replacement"}]
 
 
+def test_unrelated_ticket_queries_do_not_share_a_response_build_lock(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.create_ticket(name="Concurrent query")
+    pf.store.configure_ticket_index(True)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    slow_started = threading.Event()
+    finish_slow = threading.Event()
+    original = pf.store.indexed_ticket_summaries
+
+    def summaries(**kwargs):
+        if kwargs["filters"].get("source") == "slow":
+            slow_started.set()
+            assert finish_slow.wait(timeout=5)
+        return original(**kwargs)
+
+    monkeypatch.setattr(pf.store, "indexed_ticket_summaries", summaries)
+    slow_filters = {"source": "slow"}
+    fast_number = 0
+    while True:
+        fast_filters = {"source": f"fast-{fast_number}"}
+        slow_key = (str(pf.store.project_dir), "all", tuple(slow_filters.items()), 0, 1, "summary")
+        fast_key = (str(pf.store.project_dir), "all", tuple(fast_filters.items()), 0, 1, "summary")
+        if server._ticket_list_response_build_lock(slow_key) is not server._ticket_list_response_build_lock(fast_key):
+            break
+        fast_number += 1
+
+    def response(filters):
+        return server._ticket_list_response(
+            pf,
+            sprint="all",
+            filters=filters,
+            offset=0,
+            limit=1,
+            view="summary",
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        slow = pool.submit(response, slow_filters)
+        assert slow_started.wait(timeout=5)
+        fast = pool.submit(response, fast_filters)
+        try:
+            assert fast.result(timeout=1).status_code == 200
+        finally:
+            finish_slow.set()
+        assert slow.result(timeout=5).status_code == 200
+
+
+def test_identical_ticket_queries_still_share_one_response_build(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.create_ticket(name="Shared query")
+    pf.store.configure_ticket_index(True)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    first_started = threading.Event()
+    finish_first = threading.Event()
+    calls = 0
+    calls_lock = threading.Lock()
+    original = pf.store.indexed_ticket_summaries
+
+    def summaries(**kwargs):
+        nonlocal calls
+        with calls_lock:
+            calls += 1
+            current_call = calls
+        if current_call == 1:
+            first_started.set()
+            assert finish_first.wait(timeout=5)
+        return original(**kwargs)
+
+    monkeypatch.setattr(pf.store, "indexed_ticket_summaries", summaries)
+
+    def response():
+        return server._ticket_list_response(
+            pf,
+            sprint="all",
+            filters={"source": "shared"},
+            offset=0,
+            limit=1,
+            view="summary",
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(response)
+        assert first_started.wait(timeout=5)
+        second = pool.submit(response)
+        time.sleep(0.1)
+        try:
+            assert calls == 1
+        finally:
+            finish_first.set()
+        assert first.result(timeout=5).status_code == 200
+        assert second.result(timeout=5).status_code == 200
+    assert calls == 1
+
+
 def test_sqlite_index_serves_get_without_reparsing_sprint_files(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     _disable_archive(pf)
