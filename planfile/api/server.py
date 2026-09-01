@@ -375,6 +375,8 @@ _SPRINT_SUMMARY_CACHE_LOCK = RLock()
 
 
 def _ticket_snapshot_signature(pf, sprint: str) -> tuple:
+    if pf.store.ticket_index_enabled():
+        return pf.store._cached_ticket_index_signature()
     return pf.store.sprint_signature(sprint), pf.store._evidence_revision()
 
 
@@ -536,6 +538,14 @@ def _bounded_stale_index_response(
                 offset=offset,
                 limit=limit,
             )
+        elif view == "operational":
+            body, total, count = index.render_operational_payloads(
+                sprint=sprint,
+                filters=filters,
+                offset=offset,
+                limit=limit,
+            )
+            payload = None
         else:
             payload, total = index.list_payloads(
                 sprint=sprint,
@@ -543,10 +553,10 @@ def _bounded_stale_index_response(
                 offset=offset,
                 limit=limit,
             )
-            payload = [_ticket_operational_payload(ticket) for ticket in payload]
     except (json.JSONDecodeError, OSError, sqlite3.DatabaseError):
         return None
-    body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if view != "operational":
+        body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     return Response(
         content=body,
         media_type="application/json",
@@ -555,7 +565,7 @@ def _bounded_stale_index_response(
             "X-Planfile-View": view,
             "X-Planfile-Index-State": "stale",
             "X-Total-Count": str(total),
-            "X-Result-Count": str(len(payload)),
+            "X-Result-Count": str(count if view == "operational" else len(payload)),
         },
     )
 
@@ -608,6 +618,7 @@ def _ticket_list_response(
                             offset=offset,
                             limit=limit,
                             repair=False,
+                            signature=signature,
                         )
                         count = len(payload)
                     elif view == "full":
@@ -617,6 +628,7 @@ def _ticket_list_response(
                             offset=offset,
                             limit=limit,
                             repair=False,
+                            signature=signature,
                         )
                         response_limit = _ticket_list_response_byte_limit()
                         if estimated_bytes > response_limit:
@@ -648,6 +660,16 @@ def _ticket_list_response(
                             offset=offset,
                             limit=limit,
                             repair=False,
+                            signature=signature,
+                        )
+                    elif view == "operational":
+                        body, total, count = pf.store.indexed_ticket_operational_response(
+                            sprint=sprint,
+                            filters=filters,
+                            offset=offset,
+                            limit=limit,
+                            repair=False,
+                            signature=signature,
                         )
                     else:
                         payload, total = pf.store.indexed_ticket_payloads(
@@ -656,9 +678,8 @@ def _ticket_list_response(
                             offset=offset,
                             limit=limit,
                             repair=False,
+                            signature=signature,
                         )
-                        if view == "operational":
-                            payload = [_ticket_operational_payload(ticket) for ticket in payload]
                         count = len(payload)
                 except TicketIndexContentionError:
                     if (
@@ -709,8 +730,10 @@ def _ticket_list_response(
                 ]
             if body is None:
                 body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-            # Do not retain a response assembled across a concurrent file change.
-            if signature == _ticket_snapshot_signature(pf, sprint):
+            # SQLite reads are transactionally coherent and version-keyed. The
+            # durable-file fallback still needs a second source check because it
+            # can span multiple independently replaced YAML files.
+            if pf.store.ticket_index_enabled() or signature == _ticket_snapshot_signature(pf, sprint):
                 _cache_ticket_list_response(
                     query_key=query_key,
                     versioned_key=key,

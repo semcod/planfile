@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
+from threading import RLock
 
 import yaml
 from pydantic import BaseModel
@@ -67,6 +68,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._ticket_index_path = self.base_dir / "index" / "tickets.sqlite3"
         self._ticket_index_rebuild_lock_path = self.base_dir / "index" / ".rebuild.lock"
         self._ticket_index_rebuild_deferred_until = 0.0
+        self._ticket_index_signature_cache: tuple[float, tuple, tuple] | None = None
+        self._ticket_index_signature_cache_lock = RLock()
         self._history_locations_path = self.base_dir / "index" / "history-locations.yaml"
 
     def _storage_config(self) -> dict:
@@ -494,8 +497,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
             except ImportError:
                 pass
+            self._invalidate_ticket_index_signature_cache()
             yield
         finally:
+            self._invalidate_ticket_index_signature_cache()
             try:
                 import fcntl
 
@@ -1181,6 +1186,53 @@ class Store(StoreFileMixin, TicketStoreMixin):
     def _ticket_index_signature(self) -> tuple:
         return self.sprint_signature("all"), self._evidence_revision()
 
+    @staticmethod
+    def _ticket_index_signature_cache_seconds() -> float:
+        """Bound source-signature reuse during a concurrent API read burst."""
+        try:
+            configured = float(
+                os.environ.get("PLANFILE_TICKET_INDEX_SIGNATURE_CACHE_SECONDS", "0.25")
+            )
+        except (TypeError, ValueError):
+            configured = 0.25
+        return max(0.0, min(configured, 3.0))
+
+    def _cached_ticket_index_signature(self) -> tuple:
+        """Coalesce expensive filesystem scans without hiding local mutations.
+
+        A large store may contain thousands of evidence files. FastAPI executes
+        synchronous reads in parallel, so scanning that tree independently in
+        every worker amplifies one dashboard refresh into CPU and I/O
+        starvation. The mutation lock invalidates this process-local snapshot
+        before and after every write; the short TTL bounds observation of
+        changes made by another process.
+        """
+        now = time.monotonic()
+        probe = self._ticket_index_signature_cache_probe()
+        with self._ticket_index_signature_cache_lock:
+            cached = self._ticket_index_signature_cache
+            if (
+                cached is not None
+                and cached[2] == probe
+                and now - cached[0] <= self._ticket_index_signature_cache_seconds()
+            ):
+                return cached[1]
+            signature = self._ticket_index_signature()
+            self._ticket_index_signature_cache = (time.monotonic(), signature, probe)
+            return signature
+
+    def _ticket_index_signature_cache_probe(self) -> tuple:
+        """Cheaply detect the active-queue edits that must never wait for TTL."""
+        try:
+            evidence_dir_mtime = self._evidence_dir.stat().st_mtime_ns
+        except OSError:
+            evidence_dir_mtime = -1
+        return self.sprint_signature("current"), evidence_dir_mtime
+
+    def _invalidate_ticket_index_signature_cache(self) -> None:
+        with self._ticket_index_signature_cache_lock:
+            self._ticket_index_signature_cache = None
+
     def _ticket_index_records(self):
         from planfile.core.fastio import read_yaml_fast
 
@@ -1298,7 +1350,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 return index.status(signature) | {"rebuilt": False}
             return self._rebuild_ticket_index_unlocked(index, force=force)
 
-    def require_current_ticket_index(self) -> dict:
+    def require_current_ticket_index(self, *, signature: tuple | None = None) -> dict:
         """Validate the projection without rebuilding it on the caller's thread.
 
         Latency-sensitive API reads use this guard.  A stale projection is a
@@ -1308,7 +1360,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
         index = self._sqlite_ticket_index()
         if not self.ticket_index_enabled():
             raise TicketIndexContentionError("ticket_index_disabled")
-        signature = self._ticket_index_signature()
+        if signature is None:
+            signature = self._cached_ticket_index_signature()
         if not index.is_current(signature):
             raise TicketIndexContentionError("ticket_index_stale")
         return index.status(signature) | {"rebuilt": False}
@@ -1400,8 +1453,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
         offset: int,
         limit: int | None,
         repair: bool = True,
+        signature: tuple | None = None,
     ) -> tuple[list[dict], int]:
-        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
+        if repair:
+            self.ensure_ticket_index()
+        else:
+            self.require_current_ticket_index(signature=signature)
         return self._sqlite_ticket_index().list_summaries(
             sprint=sprint,
             filters=filters,
@@ -1417,9 +1474,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
         offset: int,
         limit: int | None,
         repair: bool = True,
+        signature: tuple | None = None,
     ) -> tuple[list[dict], int]:
         """Read full ticket JSON directly from the disposable SQLite projection."""
-        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
+        if repair:
+            self.ensure_ticket_index()
+        else:
+            self.require_current_ticket_index(signature=signature)
         return self._sqlite_ticket_index().list_payloads(
             sprint=sprint,
             filters=filters,
@@ -1435,9 +1496,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
         offset: int,
         limit: int | None,
         repair: bool = True,
+        signature: tuple | None = None,
     ) -> tuple[bytes, int, int]:
         """Render full ticket JSON from SQLite without a Python object graph."""
-        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
+        if repair:
+            self.ensure_ticket_index()
+        else:
+            self.require_current_ticket_index(signature=signature)
         return self._sqlite_ticket_index().render_payloads(
             sprint=sprint,
             filters=filters,
@@ -1453,10 +1518,36 @@ class Store(StoreFileMixin, TicketStoreMixin):
         offset: int,
         limit: int | None,
         repair: bool = True,
+        signature: tuple | None = None,
     ) -> tuple[int, int, int]:
         """Measure a full-ticket page before materializing its JSON body."""
-        (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
+        if repair:
+            self.ensure_ticket_index()
+        else:
+            self.require_current_ticket_index(signature=signature)
         return self._sqlite_ticket_index().payload_page_metrics(
+            sprint=sprint,
+            filters=filters,
+            offset=offset,
+            limit=limit,
+        )
+
+    def indexed_ticket_operational_response(
+        self,
+        *,
+        sprint: str,
+        filters: dict,
+        offset: int,
+        limit: int | None,
+        repair: bool = True,
+        signature: tuple | None = None,
+    ) -> tuple[bytes, int, int]:
+        """Render a bounded operational page without Python JSON object graphs."""
+        if repair:
+            self.ensure_ticket_index()
+        else:
+            self.require_current_ticket_index(signature=signature)
+        return self._sqlite_ticket_index().render_operational_payloads(
             sprint=sprint,
             filters=filters,
             offset=offset,
