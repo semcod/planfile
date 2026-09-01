@@ -406,6 +406,79 @@ class SQLiteTicketIndex:
             body.extend(b"]")
         return bytes(body), total, count
 
+    def render_operational_payloads(
+        self,
+        *,
+        sprint: str,
+        filters: dict[str, Any],
+        offset: int,
+        limit: int | None,
+    ) -> tuple[bytes, int, int]:
+        """Project and render queue payloads inside SQLite's JSON runtime."""
+        conditions = []
+        parameters: list[Any] = []
+        if sprint != "all":
+            conditions.append("sprint=?")
+            parameters.append(sprint)
+        for key in ("status", "priority", "source"):
+            value = filters.get(key)
+            if value is None:
+                continue
+            conditions.append(f"{key}=?")
+            parameters.append(str(getattr(value, "value", value)))
+        where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+        page_sql = f"SELECT position, ticket_json FROM tickets{where} ORDER BY position"
+        page_parameters = list(parameters)
+        if limit is not None:
+            page_sql += " LIMIT ? OFFSET ?"
+            page_parameters.extend((limit, offset))
+        elif offset:
+            page_sql += " LIMIT -1 OFFSET ?"
+            page_parameters.append(offset)
+        with self._connect() as connection:
+            total = int(
+                connection.execute(
+                    f"SELECT COUNT(*) AS count FROM tickets{where}",
+                    parameters,
+                ).fetchone()["count"]
+            )
+            cursor = connection.execute(
+                """
+                WITH page AS (
+                    """ + page_sql + """
+                ), stripped AS (
+                    SELECT position, json_remove(
+                        ticket_json,
+                        '$.history', '$.dsl', '$.file', '$.files',
+                        '$.integration', '$.llm_hints', '$.sync',
+                        '$.source.context', '$.outputs.notes', '$.outputs.artifacts'
+                    ) AS payload
+                    FROM page
+                ), without_empty_source AS (
+                    SELECT position,
+                        CASE WHEN json_extract(payload, '$.source') = '{}'
+                            THEN json_remove(payload, '$.source') ELSE payload END AS payload
+                    FROM stripped
+                ), normalized AS (
+                    SELECT position,
+                        CASE WHEN json_extract(payload, '$.outputs') = '{}'
+                            THEN json_remove(payload, '$.outputs') ELSE payload END AS payload
+                    FROM without_empty_source
+                )
+                SELECT payload FROM normalized ORDER BY position
+                """,
+                page_parameters,
+            )
+            body = bytearray(b"[")
+            count = 0
+            for row in cursor:
+                if count:
+                    body.extend(b",")
+                body.extend(row["payload"].encode("utf-8"))
+                count += 1
+            body.extend(b"]")
+        return bytes(body), total, count
+
     def payload_page_metrics(
         self,
         *,

@@ -117,6 +117,96 @@ def test_sqlite_rebuild_keeps_last_committed_snapshot_readable(tmp_path):
     assert replacement == [{"id": "PLF-2", "name": "Replacement"}]
 
 
+def test_concurrent_index_signature_reads_share_one_filesystem_scan(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.create_ticket(name="Signature coalescing")
+    pf.store.configure_ticket_index(True)
+    pf.store._invalidate_ticket_index_signature_cache()
+    original = pf.store._ticket_index_signature
+    scan_started = threading.Event()
+    finish_scan = threading.Event()
+    calls = 0
+
+    def slow_signature():
+        nonlocal calls
+        calls += 1
+        scan_started.set()
+        assert finish_scan.wait(timeout=5)
+        return original()
+
+    monkeypatch.setattr(pf.store, "_ticket_index_signature", slow_signature)
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        futures = [pool.submit(pf.store._cached_ticket_index_signature) for _ in range(16)]
+        assert scan_started.wait(timeout=5)
+        finish_scan.set()
+        signatures = [future.result(timeout=5) for future in futures]
+
+    assert calls == 1
+    assert all(signature == signatures[0] for signature in signatures)
+
+
+def test_local_mutation_invalidates_cached_index_signature(tmp_path):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.create_ticket(name="Before signature")
+    pf.store.configure_ticket_index(True)
+
+    before = pf.store._cached_ticket_index_signature()
+    pf.create_ticket(name="After signature")
+    after = pf.store._cached_ticket_index_signature()
+
+    assert after != before
+    assert pf.store.require_current_ticket_index(signature=after)["current"] is True
+
+
+def test_sqlite_renders_operational_projection_without_python_object_graph(tmp_path):
+    ticket = {
+        "id": "PLF-1",
+        "name": "Operational projection",
+        "status": "open",
+        "history": [{"large": "journal"}],
+        "dsl": "large dsl",
+        "source": {"tool": "test", "context": {"large": "source context"}},
+        "outputs": {
+            "notes": ["large note"],
+            "artifacts": ["artifact://large"],
+            "result": {"ready": True},
+        },
+    }
+    encoded = json.dumps(ticket, separators=(",", ":"))
+    index = SQLiteTicketIndex(tmp_path / "tickets.sqlite3")
+    index.rebuild(
+        [
+            {
+                "id": ticket["id"],
+                "sprint": "current",
+                "status": "open",
+                "priority": "normal",
+                "source": "test",
+                "queue": "default",
+                "created_at": None,
+                "updated_at": None,
+                "position": 0,
+                "ticket_json": encoded,
+                "summary_json": encoded,
+                "blocked_by": [],
+            }
+        ],
+        ("source", 1),
+    )
+
+    body, total, count = index.render_operational_payloads(
+        sprint="all", filters={}, offset=0, limit=100
+    )
+
+    assert total == 1
+    assert count == 1
+    assert json.loads(body) == [server._ticket_operational_payload(ticket)]
+
+
 def test_unrelated_ticket_queries_do_not_share_a_response_build_lock(
     tmp_path, monkeypatch
 ):
