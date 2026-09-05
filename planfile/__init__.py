@@ -419,6 +419,7 @@ class Planfile:
         *,
         reason: str | None = None,
         actor: str | None = None,
+        expected_updated_at: str | None = None,
     ) -> Ticket | None:
         ticket = self.get_ticket(ticket_id)
         if not ticket:
@@ -446,7 +447,10 @@ class Planfile:
             last_error=None,
         )
         execution = TicketExecution(**execution_data)
-        return self.update_ticket(ticket_id, status="done", execution=execution, outputs=outputs, reason=reason, actor=actor)
+        return self.update_ticket(
+            ticket_id, status="done", execution=execution, outputs=outputs,
+            reason=reason, actor=actor, expected_updated_at=expected_updated_at,
+        )
 
     def fail_ticket(
         self,
