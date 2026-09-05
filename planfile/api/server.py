@@ -80,7 +80,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-API_CAPABILITIES = ["ticket.fail.expected_updated_at"]
+API_CAPABILITIES = [
+    "ticket.fail.expected_updated_at",
+    "ticket.update.expected_updated_at",
+    "ticket.complete.expected_updated_at",
+]
 
 
 @app.exception_handler(ImmutableTerminalReopenError)
@@ -153,6 +157,10 @@ class TicketUpdate(BaseModel):
     actor: str | None = None
 
 
+class TicketUpdateIfCurrentRequest(TicketUpdate):
+    expected_updated_at: str = Field(..., min_length=1, pattern=r"\S")
+
+
 class TicketEvidenceAppendRequest(BaseModel):
     """Atomic, retry-safe evidence append.
 
@@ -209,6 +217,10 @@ class TicketCompleteRequest(BaseModel):
     completion_receipt: dict[str, Any] | None = None
     reason: str | None = None
     actor: str | None = None
+
+
+class TicketCompleteIfCurrentRequest(TicketCompleteRequest):
+    expected_updated_at: str = Field(..., min_length=1, pattern=r"\S")
 
 
 class TicketFailRequest(BaseModel):
@@ -1000,6 +1012,13 @@ async def update_ticket(ticket_id: str, body: TicketUpdate):
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
+@app.post("/tickets/{ticket_id}/update-if-current", tags=["tickets"])
+async def update_ticket_if_current(ticket_id: str, body: TicketUpdateIfCurrentRequest):
+    # A separate route prevents older servers silently ignoring the guard.
+    # Keep validation, the store mutation lock and event delivery shared.
+    return await update_ticket(ticket_id, body)
+
+
 @app.post("/tickets/{ticket_id}/evidence", tags=["tickets"])
 def append_ticket_evidence(
     ticket_id: str,
@@ -1135,11 +1154,17 @@ async def complete_ticket(ticket_id: str, body: TicketCompleteRequest):
         completion_receipt=body.completion_receipt,
         reason=body.reason or (body.completion_receipt or {}).get("reason") or body.note or "ticket_completed_via_api",
         actor=body.actor or (body.completion_receipt or {}).get("actor") or "unknown:api",
+        expected_updated_at=getattr(body, "expected_updated_at", None),
     )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
     await _broadcast_ticket_event("ticket.execution.changed", "complete", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/tickets/{ticket_id}/complete-if-current", tags=["tickets"])
+async def complete_ticket_if_current(ticket_id: str, body: TicketCompleteIfCurrentRequest):
+    return await complete_ticket(ticket_id, body)
 
 
 async def _fail_ticket(ticket_id: str, body: TicketFailRequest):
