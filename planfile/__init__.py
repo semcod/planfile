@@ -12,7 +12,7 @@ __version__ = "0.1.125"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -82,7 +82,7 @@ class Planfile:
 
     @staticmethod
     def _utcnow() -> datetime:
-        return datetime.now(UTC)
+        return datetime.now(timezone.utc)
 
     def __init__(self, project_path: str = "."):
         self.store = PlanfileStore(project_path)
