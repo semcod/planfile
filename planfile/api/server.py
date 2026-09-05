@@ -13,7 +13,7 @@ import sqlite3
 import time
 from collections import deque
 from contextlib import asynccontextmanager, contextmanager
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from threading import BoundedSemaphore, RLock
 from typing import Any, Literal
@@ -932,7 +932,7 @@ def public_forensic_log(
     limit: int = Query(500, ge=1, le=5000),
 ):
     """Bounded PLOG/1 text projection for applications, operators and LLMs."""
-    selected_day = day or datetime.now(UTC).date().isoformat()
+    selected_day = day or datetime.now(timezone.utc).date().isoformat()
     lines = get_planfile().store.forensic_log_lines(
         date=selected_day,
         ticket_id=ticket_id,
@@ -960,7 +960,7 @@ def public_forensic_log_json(
     """Parsed PLOG/1 records with the same bounded filters as the text file."""
     from planfile.core.forensic_log_dsl import parse
 
-    selected_day = day or datetime.now(UTC).date().isoformat()
+    selected_day = day or datetime.now(timezone.utc).date().isoformat()
     lines = get_planfile().store.forensic_log_lines(
         date=selected_day,
         ticket_id=ticket_id,
@@ -1574,7 +1574,7 @@ async def _watch_planfile_changes(interval_seconds: float = 3.0) -> None:
                 "type": "dashboard",
                 "action": "watch-error",
                 "ticket_id": "-",
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "ticket": {"execution": {"state": "failed", "last_error": str(exc)}},
             }
         )
@@ -1596,7 +1596,7 @@ async def _watch_planfile_changes(interval_seconds: float = 3.0) -> None:
                 "type": "dashboard",
                 "action": "watch-error",
                 "ticket_id": "-",
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "ticket": {"execution": {"state": "failed", "last_error": str(exc)}},
             }
             _remember_event(payload)
@@ -1618,7 +1618,7 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
     """Run the idempotent history sweep once on startup and per UTC date."""
     last_run_date = None
     while True:
-        today = datetime.now(UTC).date()
+        today = datetime.now(timezone.utc).date()
         if today != last_run_date:
             try:
                 report = await asyncio.to_thread(
@@ -1630,7 +1630,7 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
                         "type": "management.event",
                         "action": "daily-history-error",
                         "ticket_id": "-",
-                        "created_at": datetime.now(UTC).isoformat(),
+                        "created_at": datetime.now(timezone.utc).isoformat(),
                         "source": "planfile",
                         "tool": "planfile.api",
                         "level": "error",
@@ -1647,7 +1647,7 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
                             "type": "management.event",
                             "action": "daily-history",
                             "ticket_id": "-",
-                            "created_at": datetime.now(UTC).isoformat(),
+                            "created_at": datetime.now(timezone.utc).isoformat(),
                             "source": "planfile",
                             "tool": "planfile.api",
                             "level": "info",
@@ -1750,7 +1750,7 @@ async def _start_planfile_watcher() -> None:
             "type": "management.event",
             "action": "started",
             "ticket_id": "-",
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "source": "planfile",
             "tool": "planfile.api",
             "queue": "koru-management",
@@ -1798,7 +1798,7 @@ def list_events(
 @app.post("/events/test", tags=["events"])
 async def create_test_event(body: TestEventRequest):
     """Broadcast a synthetic dashboard event without mutating a real ticket."""
-    created_at = datetime.now(UTC).isoformat()
+    created_at = datetime.now(timezone.utc).isoformat()
     payload = {
         "type": "dashboard.test",
         "action": "error",
@@ -1831,7 +1831,7 @@ async def ingest_management_event(body: ManagementEventRequest):
         "type": "management.event",
         "action": body.action,
         "ticket_id": ticket_id,
-        "created_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "source": body.source,
         "tool": body.tool,
         "queue": body.queue,
@@ -3549,7 +3549,7 @@ async def _broadcast_ticket_event(
         "type": event_type,
         "action": action,
         "ticket_id": ticket.id if ticket is not None else ticket_id,
-        "created_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
     if ticket is not None:
         payload["ticket"] = ticket.model_dump(mode="json", exclude_none=True)
