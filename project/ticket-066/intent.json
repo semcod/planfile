@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-066",
+  "summary": "Compute the global evidence revision with one scandir pass",
+  "workstream": "store-performance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "planfile/core/store.py",
+    "tests/test_sqlite_ticket_index.py",
+    "project/ticket-066/**"
+  ],
+  "forbiddenPaths": [
+    ".env",
+    ".github/**"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

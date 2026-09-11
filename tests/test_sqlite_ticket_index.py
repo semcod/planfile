@@ -922,3 +922,37 @@ def test_storage_index_cli_lifecycle(tmp_path):
     assert json.loads(status.output)["current"] is True
     assert disabled.exit_code == 0
     assert Planfile(str(tmp_path)).store.ticket_index_enabled() is False
+
+
+def test_evidence_revision_matches_glob_and_stat_listing(tmp_path):
+    pf = Planfile(str(tmp_path))
+    evidence_dir = pf.store._evidence_dir
+    assert pf.store._evidence_revision() == ()
+
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    (evidence_dir / "PLF-2.jsonl").write_text('{"a": 1}\n', encoding="utf-8")
+    (evidence_dir / "PLF-10.jsonl").write_text("", encoding="utf-8")
+    (evidence_dir / ".hidden.jsonl").write_text("{}\n", encoding="utf-8")
+    (evidence_dir / "notes.json").write_text("{}", encoding="utf-8")
+    (evidence_dir / "nested.jsonl").mkdir()
+    (evidence_dir / "dangling.jsonl").symlink_to(evidence_dir / "missing")
+
+    expected = []
+    for path in sorted(evidence_dir.glob("*.jsonl")):
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        expected.append((path.name, stat.st_mtime_ns, stat.st_size))
+
+    assert pf.store._evidence_revision() == tuple(expected)
+    assert [name for name, _, _ in expected] == [
+        ".hidden.jsonl",
+        "PLF-10.jsonl",
+        "PLF-2.jsonl",
+        "nested.jsonl",
+    ]
+
+    with (evidence_dir / "PLF-2.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write('{"b": 2}\n')
+    assert pf.store._evidence_revision() != tuple(expected)
