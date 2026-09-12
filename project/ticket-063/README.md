@@ -1,5 +1,8 @@
 # ticket-063 — Executor metrics deployment acceptance
 
+- **Status**: DONE
+- **Workflow state**: DONE
+
 Intent: deploy the independently merged module from PR #62 into the existing
 Planfile service image, preserve live configuration and volumes, retain a stopped
 rollback container, and record independent runtime acceptance.

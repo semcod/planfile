@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-067",
+  "summary": "Adopt wellmanifest/new-project 0.20.24 governance",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-067/**",
+    "project/ticket-059/README.md",
+    "project/ticket-061/README.md",
+    "project/ticket-063/README.md",
+    "project/ticket-065/README.md",
+    "project/ticket-066/README.md",
+    "project/TICKETS.md",
+    "project.bat",
+    ".governance/manifest.json",
+    ".governance/required-checks.json",
+    ".governance/ticket-allocation.json",
+    ".subactor/manifest.json",
+    "AGENTS.md",
+    "pyproject.toml",
+    "docker-compose.yml",
+    ".gitignore"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "865a57e554f6e5a5b811bd66505bbecb6a2b195f",
+    "targetBranch": "main",
+    "standardAdoption": {
+      "sourceRepository": "wellmanifest/new-project",
+      "fromRevision": null,
+      "toRevision": "d54878a105a20d84dd554f205bc177dcacc8730a"
+    },
+    "outcome": "planfile carries the complete pinned governance package of wellmanifest/new-project 0.20.24 and passes its own gate, so goal governance check/adopt, the managed ticket workflow and the packaging-bound gate run in this repository.",
+    "nonGoals": [
+      "No source or test change, no release and no registry publish.",
+      "No change to the local CI and publication route, which the adopted .governance/docs/LOCAL_CI_PUBLICATION.md keeps."
+    ],
+    "complexity": "L",
+    "estimatedMinutes": 120,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 5,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 3
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Adopt the immutable published revision d54878a105a20d84dd554f205bc177dcacc8730a (release 0.20.24) as a null-to-SHA bootstrap through `goal governance adopt`. The managed payload is verified by the atomic adoption proof; this ticket owns only the repository instance files that proof does not cover. Because the adoption touches shared contract paths, it runs in the integration workstream.",
+      "components": [
+        {
+          "name": "governance-instance",
+          "paths": [
+            ".governance/manifest.json",
+            ".governance/required-checks.json",
+            ".governance/ticket-allocation.json",
+            ".subactor/manifest.json",
+            "AGENTS.md",
+            "project.bat",
+            "project/**"
+          ]
+        },
+        {
+          "name": "packaging-gate",
+          "paths": [
+            "pyproject.toml"
+          ]
+        },
+        {
+          "name": "container-images",
+          "paths": [
+            "docker-compose.yml"
+          ]
+        },
+        {
+          "name": "repository-hygiene",
+          "paths": [
+            ".gitignore"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit: the package is inert data plus hooks, core.hooksPath returns to unset, the Compose digests fall back to their tags and the ignore rules return."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "goal governance adopt --source-revision d54878a105a20d84dd554f205bc177dcacc8730a --check",
+          "./project/governance-check.sh --actor agent",
+          ".venv/bin/python -m pytest -q tests"
+        ],
+        "evidence": "Pending exact-head publication."
+      }
+    ]
+  }
+}
