@@ -109,9 +109,14 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 
+[tool.wellmanifest]
+standard = "0.20.25"
+revision = "d54878a105a20d84dd554f205bc177dcacc8730a"
+gate = "project/governance-check.sh"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short -p wellmanifest_governance"
 pythonpath = ["."]
 
 [tool.black]

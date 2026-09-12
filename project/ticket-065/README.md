@@ -1,6 +1,7 @@
 # Ticket 065: Reject invalid strategy input
 
-Status: IN_PROGRESS / EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 
 Issue: https://github.com/semcod/planfile/issues/65
 Doctor evidence: subactor/doctor-agent#381 (PLF-13741) and #382 (PLF-13742).

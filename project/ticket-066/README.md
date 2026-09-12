@@ -1,6 +1,7 @@
 # Ticket 066: Cheaper global evidence revision
 
-Status: IN_PROGRESS / EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 
 SESSION_EXECUTION_AUTHORIZATION: optimize, test, push and protected merge, requested by the owner on 2026-09-11.
 

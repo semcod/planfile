@@ -1,7 +1,7 @@
 # ticket-059: Intent and code alignment
 
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Workstream**: documentation
 
 SESSION_EXECUTION_AUTHORIZATION: user requested detection and repair of intent/code drift using subactor/search.

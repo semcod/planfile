@@ -1,5 +1,8 @@
 # ticket-061 — Observable executor metrics failures
 
+- **Status**: DONE
+- **Workflow state**: DONE
+
 Intent: retain best-effort project metrics for expected read failures, report
 incomplete file-read coverage in diagnostics and LLM context, and stop swallowing
 unexpected programming errors in the metrics collector.

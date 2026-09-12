@@ -3,7 +3,6 @@ version: '3.8'
 services:
   planfile-runner:
     build: .
-    image: planfile/runner:latest
     container_name: planfile-ci
     environment:
       # General settings
@@ -68,7 +67,7 @@ services:
 
   # Optional: PostgreSQL for storing results
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15-alpine@sha256:a2c20749c564b4eb73a77bfda626f8a3cde1bbfae020fb97c616a00cdc1a2181
     container_name: planfile-db
     environment:
       - POSTGRES_DB=planfile
@@ -83,7 +82,7 @@ services:
 
   # Optional: Redis for caching
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:1db42ccef14898aa29bae778452d567534b59c107129cbc1163fb552de184d3c
     container_name: planfile-redis
     command: redis-server --appendonly yes
     volumes:
