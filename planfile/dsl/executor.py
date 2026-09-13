@@ -29,8 +29,9 @@ class DSLResult:
 class DSLExecutor:
     """Execute DSL commands against a Planfile instance."""
 
-    def __init__(self, project_path: str = "."):
+    def __init__(self, project_path: str = ".", *, discover_project: bool = True):
         self._project_path = project_path
+        self._discover_project = discover_project
         self._pf = None
         self._parser = DSLParser()
 
@@ -38,7 +39,10 @@ class DSLExecutor:
     def pf(self):
         if self._pf is None:
             from planfile import Planfile
-            self._pf = Planfile.auto_discover(self._project_path)
+            self._pf = (
+                Planfile.auto_discover(self._project_path)
+                if self._discover_project else Planfile(self._project_path)
+            )
         return self._pf
 
     def run(self, text: str) -> DSLResult:

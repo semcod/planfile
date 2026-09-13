@@ -149,3 +149,115 @@ def test_mcp_project_path_is_confined(tmp_path, monkeypatch):
     assert server._require_project_path(str(allowed / "project")).startswith(str(allowed))
     with pytest.raises(PermissionError, match="PLANFILE_MCP_PROJECT_ROOT"):
         server._require_project_path(str(tmp_path / "outside"))
+
+
+@pytest.mark.parametrize("command", ["list tickets", 'create ticket "wrong destination"'])
+def test_dsl_rejects_uninitialized_child_without_parent_access(tmp_path, monkeypatch, command):
+    parent = Planfile(str(tmp_path))
+    parent.create_ticket(name="parent only")
+    child = tmp_path / "child"
+    child.mkdir()
+    monkeypatch.setenv("PLANFILE_MCP_PROJECT_ROOT", str(child))
+    with pytest.raises(ValueError, match="initialized"):
+        server.handle_tool_call("planfile_dsl", {"project_path": str(child), "command": command})
+    assert [t.name for t in parent.list_tickets()] == ["parent only"]
+    assert not (child / ".planfile").exists()
+
+
+def test_dsl_uses_exact_initialized_project(tmp_path):
+    parent = Planfile(str(tmp_path))
+    parent.create_ticket(name="parent only")
+    child = tmp_path / "child"
+    child.mkdir()
+    selected = Planfile(str(child))
+    result = server.handle_tool_call("planfile_dsl", {
+        "project_path": str(child), "command": 'create ticket "child only"',
+    })
+    assert result["ok"]
+    result = server.handle_tool_call("planfile_dsl", {
+        "project_path": str(child), "command": "list tickets",
+    })
+    assert [t["name"] for t in result["data"]] == ["child only"]
+    assert [t.name for t in parent.list_tickets()] == ["parent only"]
+    assert [t.name for t in selected.list_tickets()] == ["child only"]
+
+
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("command", ["list tickets", 'create ticket "must not escape"'])
+def test_dsl_rejects_store_symlink_escape(tmp_path, monkeypatch, nested, command):
+    outside = tmp_path / "outside"
+    external = Planfile(str(outside))
+    external.create_ticket(name="external only")
+    selected = tmp_path / "selected"
+    selected.mkdir()
+    if nested:
+        Planfile(str(selected))
+        config = selected / ".planfile" / "config.yaml"
+        config.unlink()
+        config.symlink_to(outside / ".planfile" / "config.yaml")
+    else:
+        (selected / ".planfile").symlink_to(outside / ".planfile", target_is_directory=True)
+    monkeypatch.setenv("PLANFILE_MCP_PROJECT_ROOT", str(selected))
+    with pytest.raises(PermissionError, match="storage"):
+        server.handle_tool_call("planfile_dsl", {"project_path": str(selected), "command": command})
+    assert [t.name for t in external.list_tickets()] == ["external only"]
+
+
+def test_dsl_default_path_uses_initialized_cwd(tmp_path, monkeypatch):
+    Planfile(str(tmp_path)).create_ticket(name="cwd only")
+    monkeypatch.chdir(tmp_path)
+    result = server.handle_tool_call("planfile_dsl", {"command": "list tickets"})
+    assert [t["name"] for t in result["data"]] == ["cwd only"]
+
+
+def test_dsl_help_does_not_initialize_project(tmp_path):
+    result = server.handle_tool_call("planfile_dsl", {"project_path": str(tmp_path), "command": "help"})
+    assert result["ok"]
+    assert not (tmp_path / ".planfile").exists()
+
+
+def test_cli_executor_retains_parent_discovery(tmp_path):
+    from planfile.dsl import DSLExecutor
+    Planfile(str(tmp_path)).create_ticket(name="CLI parent")
+    child = tmp_path / "child"
+    child.mkdir()
+    result = DSLExecutor(str(child)).run("list tickets")
+    assert [t["name"] for t in result.data] == ["CLI parent"]
+
+
+def test_dsl_configuration_initializes_only_explicit_child(tmp_path, monkeypatch):
+    parent = Planfile(str(tmp_path))
+    before = (tmp_path / '.planfile' / 'config.yaml').read_bytes()
+    child = tmp_path / 'child'
+    child.mkdir()
+    monkeypatch.setenv('PLANFILE_MCP_PROJECT_ROOT', str(child))
+    result = server.handle_tool_call('planfile_dsl', {
+        'project_path': str(child),
+        'command': 'set config store.archive.max_current_tickets=321',
+    })
+    assert result['ok']
+    assert (child / '.planfile' / 'config.yaml').is_file()
+    assert (tmp_path / '.planfile' / 'config.yaml').read_bytes() == before
+    assert parent.list_tickets() == []
+
+
+def test_mcp_stdio_survives_rejected_project_request(tmp_path, monkeypatch):
+    messages = [
+        {'jsonrpc': '2.0', 'id': 1, 'method': 'tools/call', 'params': {
+            'name': 'planfile_dsl',
+            'arguments': {'project_path': str(tmp_path), 'command': 'list tickets'},
+        }},
+        {'jsonrpc': '2.0', 'id': 2, 'method': 'tools/call', 'params': {
+            'name': 'planfile_dsl',
+            'arguments': {'project_path': str(tmp_path), 'command': 'help'},
+        }},
+    ]
+    output = StringIO()
+    monkeypatch.setattr(sys, 'stdin', StringIO('\n'.join(map(json.dumps, messages)) + '\n'))
+    monkeypatch.setattr(sys, 'stdout', output)
+    server.main()
+    replies = [json.loads(line) for line in output.getvalue().splitlines()]
+    assert [reply['id'] for reply in replies] == [1, 2]
+    assert replies[0]['result']['isError'] is True
+    assert json.loads(replies[1]['result']['content'][0]['text'])['ok'] is True
+    assert not (tmp_path / '.planfile').exists()
