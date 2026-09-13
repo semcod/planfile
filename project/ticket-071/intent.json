@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-071",
+  "summary": "Bind MCP DSL to the exact allowed project",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "planfile/mcp/server.py",
+    "planfile/dsl/executor.py",
+    "tests/test_mcp_server.py",
+    "project/ticket-071/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "31aaab644486400237ce8ffbfe6a01a9b02fb095",
+    "targetBranch": "main",
+    "outcome": "Prevent explicit MCP DSL requests from selecting an ancestor or symlinked external ticket store; publish and verify the fix.",
+    "nonGoals": [
+      "Change CLI discovery defaults",
+      "Touch other unfinished changes",
+      "Bypass protected publication"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Bind the MCP executor to an initialized exact project and reject escaping store paths before any read or write. Session continuation authorizes this bounded prerequisite of project-scoped registration.",
+      "components": [
+        {
+          "name": "mcp-routing",
+          "paths": [
+            "planfile/mcp/server.py",
+            "planfile/dsl/executor.py",
+            "tests/test_mcp_server.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional discover_project keyword defaults to existing CLI auto-discovery; MCP disables it."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected PR without deleting stores."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_mcp_server.py"
+        ],
+        "evidence": "Parent/child read and mutation isolation and symlink regressions."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest tests/test_mcp_server.py"
+        ],
+        "evidence": "Existing MCP behavior and explicit uninitialized project handling."
+      }
+    ]
+  }
+}

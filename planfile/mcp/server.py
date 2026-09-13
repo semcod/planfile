@@ -216,6 +216,25 @@ def _planfile_yaml_path(arguments: dict) -> Path:
     return Path(get_planfile().store.project_dir) / "planfile.yaml"
 
 
+def _require_initialized_store(project: Path, *, allow_initialize: bool = False) -> None:
+    """Check the effective store before a constructor can read or initialize it."""
+    store = project / ".planfile"
+    # Do not follow directory symlinks during inspection. A symlink to a
+    # different project is forbidden even when both projects are allowlisted.
+    paths = [store, project / "planfile.yaml"]
+    if store.is_dir() and not store.is_symlink():
+        paths.extend(store.rglob("*"))
+    for path in paths:
+        try:
+            path.resolve().relative_to(project)
+        except (ValueError, RuntimeError) as exc:
+            raise PermissionError("MCP storage is outside the selected project") from exc
+    if not allow_initialize and (
+        not store.is_dir() or not (store / "config.yaml").is_file()
+    ):
+        raise ValueError("MCP project must be initialized before ticket operations")
+
+
 def handle_tool_call(name: str, arguments: dict) -> dict:
     """Dispatch an MCP tool call and return the result dict."""
 
@@ -223,8 +242,18 @@ def handle_tool_call(name: str, arguments: dict) -> dict:
 
     if name == "planfile_dsl":
         from planfile.dsl import DSLExecutor
-        executor = DSLExecutor(project_path=_require_project_path(arguments.get("project_path", ".")))
-        result = executor.run(arguments.get("command", ""))
+        from planfile.dsl.parser import DSLParser
+        project = Path(_require_project_path(arguments.get("project_path", ".")))
+        command = DSLParser().parse(arguments.get("command", ""))
+        if command.verb != "help":
+            # The existing capability-gated configuration operation can
+            # initialize this exact store; ticket operations cannot.
+            _require_initialized_store(
+                project,
+                allow_initialize=command.verb == "update" and command.object_type == "config",
+            )
+        executor = DSLExecutor(project_path=str(project), discover_project=False)
+        result = executor.execute(command)
         return result.to_dict()
 
     if name == "planfile_yaml_get":
@@ -361,7 +390,22 @@ def main():
             params = msg.get("params", {})
             tool_name = params.get("name", "")
             arguments = params.get("arguments", {})
-            result = handle_tool_call(tool_name, arguments)
+            try:
+                result = handle_tool_call(tool_name, arguments)
+            except (PermissionError, ValueError) as exc:
+                # Expected guard/parser refusals are tool errors, not a reason
+                # to terminate the transport or expose the command's contents.
+                _write_jsonrpc({
+                    "jsonrpc": "2.0", "id": msg_id,
+                    "result": {
+                        "isError": True,
+                        "content": [{"type": "text", "text": json.dumps({
+                            "error": type(exc).__name__,
+                            "message": "Request rejected: check project initialization, storage boundary and mutation capability.",
+                        })}],
+                    },
+                })
+                continue
             _write_jsonrpc({
                 "jsonrpc": "2.0", "id": msg_id,
                 "result": {
