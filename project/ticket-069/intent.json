@@ -1,0 +1,71 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-069",
+  "summary": "Declare ownership of the existing Planfile Python package before MCP repair",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-069/**",
+    ".governance/manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b9b1603f12799b30bb3400c3090edc904f6d1735",
+    "targetBranch": "main",
+    "outcome": "The application workstream owns the existing planfile/** package, allowing governed source repairs such as GitHub #71.",
+    "nonGoals": [
+      "No source behavior change, dependency update or alteration of active ticket-068."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Repair a target-owned manifest omission through the integration workstream before application implementation. Add only the existing Python package root to application ownership; preserve standard-owned base and all admission/publication gates.",
+      "components": [
+        {
+          "name": "governance-instance",
+          "paths": [
+            ".governance/manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the manifest change; application repair then remains pending ownership admission."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash project/governance-check.sh --base b9b1603f12799b30bb3400c3090edc904f6d1735 --head HEAD --format json"
+        ],
+        "evidence": "Pending validation and independent exact-head review."
+      }
+    ]
+  }
+}
