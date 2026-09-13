@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-070",
+  "summary": "Honor explicit MCP project routing (GitHub #71)",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-070/**",
+    "planfile/mcp/server.py",
+    "tests/test_mcp_project_routing.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [
+    "ticket-069"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8a12e6faba1d2a1e0b1fb6fb034ca36bf77b01ce",
+    "targetBranch": "main",
+    "outcome": "Explicit MCP YAML read, patch and sprint requests select the validated project; omitted paths preserve the default store.",
+    "nonGoals": [
+      "No ticket CRUD or global cache changes.",
+      "No dependency or capability changes."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Select the explicit validated plan path before consulting any cached default project. Preserve the existing missing-file responses and security guards.",
+      "components": [
+        {
+          "name": "mcp",
+          "paths": [
+            "planfile/mcp/server.py"
+          ]
+        },
+        {
+          "name": "tests",
+          "paths": [
+            "tests/test_mcp_project_routing.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the MCP path selection change and its regression tests."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv run --no-sync python -m pytest -q tests/test_mcp_project_routing.py tests/test_mcp_server.py",
+          "uv run --no-sync python -m pytest -q"
+        ],
+        "evidence": "6 cases failed before repair; 22 MCP tests pass; full suite 502 passed and 6 skipped."
+      }
+    ]
+  }
+}
