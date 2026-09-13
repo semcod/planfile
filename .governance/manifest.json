@@ -47,7 +47,8 @@
           "lib/**",
           "packages/**",
           "test/**",
-          "tests/**"
+          "tests/**",
+          "planfile/**"
         ]
       },
       "governance": {
