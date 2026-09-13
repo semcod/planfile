@@ -209,6 +209,13 @@ TOOLS = [
 
 # ── Handler dispatch ──
 
+def _planfile_yaml_path(arguments: dict) -> Path:
+    """Bind an explicit project to its own plan without consulting the global cache."""
+    if "project_path" in arguments:
+        return Path(_require_project_path(arguments["project_path"])) / "planfile.yaml"
+    return Path(get_planfile().store.project_dir) / "planfile.yaml"
+
+
 def handle_tool_call(name: str, arguments: dict) -> dict:
     """Dispatch an MCP tool call and return the result dict."""
 
@@ -222,8 +229,7 @@ def handle_tool_call(name: str, arguments: dict) -> dict:
 
     if name == "planfile_yaml_get":
         import yaml
-        pf = get_planfile()
-        pf_path = Path(pf.store.project_dir) / "planfile.yaml"
+        pf_path = _planfile_yaml_path(arguments)
         if not pf_path.exists():
             return {"error": "planfile.yaml not found"}
         with open(pf_path) as f:
@@ -231,8 +237,7 @@ def handle_tool_call(name: str, arguments: dict) -> dict:
 
     if name == "planfile_yaml_patch":
         import yaml
-        pf = get_planfile()
-        pf_path = Path(pf.store.project_dir) / "planfile.yaml"
+        pf_path = _planfile_yaml_path(arguments)
         if not pf_path.exists():
             return {"error": "planfile.yaml not found"}
         with open(pf_path) as f:
@@ -250,8 +255,7 @@ def handle_tool_call(name: str, arguments: dict) -> dict:
 
     if name == "planfile_list_sprints":
         import yaml
-        pf = get_planfile()
-        pf_path = Path(pf.store.project_dir) / "planfile.yaml"
+        pf_path = _planfile_yaml_path(arguments)
         if not pf_path.exists():
             return []
         with open(pf_path) as f:
