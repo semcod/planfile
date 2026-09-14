@@ -162,13 +162,14 @@ def _load_tickets_for_sync(
     v1_data = None
     all_tickets = []
 
-    # Try 1: New .planfile/ structure
+    # Try 1: New .planfile/ structure. Completed tickets are moved to
+    # history-* sprints, but their mapped external issue still needs its final
+    # state synchronized. Iterate every sprint rather than only ``current``.
     if store.is_initialized():
         tickets_source = ".planfile/ structure"
-        sprint = store.load_sprint("current")
-        all_tickets.extend(_collect_tickets_from_sprint(sprint, integration_name))
-        backlog = store.load_backlog()
-        all_tickets.extend(_collect_tickets_from_backlog(backlog, integration_name))
+        for sprint_id in store._all_sprint_ids():
+            sprint = store.load_sprint(sprint_id)
+            all_tickets.extend(_collect_tickets_from_sprint(sprint, integration_name))
 
     # Try 2: Old format v1 (*.planfile.yaml files with sprint/backlog sections)
     if not all_tickets:
