@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-076",
+  "summary": "Synchronize scoped ticket notes to GitHub comments",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-076/**",
+    "planfile/sync/ticket_comments.py",
+    "tests/test_ticket_comments.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3b7a35b4f1fb25e710643fc9ab7e8d99806f59c2",
+    "targetBranch": "main",
+    "outcome": "Synchronize one deliberately public ticket result to its exact GitHub issue without backlog updates or executor replay.",
+    "nonGoals": [
+      "No implicit publication of raw notes or logs",
+      "No edits to GitHub issue bodies or lifecycle",
+      "No synchronization of unrelated tickets"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "An explicit scoped comment API persists private transport working data, then reconciles the exact GitHub comment on retry. No existing ticket schema or stored product records are migrated.",
+      "components": [
+        {
+          "name": "scoped-comments",
+          "paths": [
+            "planfile/sync/ticket_comments.py"
+          ]
+        },
+        {
+          "name": "tests",
+          "paths": [
+            "tests/test_ticket_comments.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Scoped comment synchronization API"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material implementation; preserve outstanding receipts and worktrees."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python -m pytest -q tests/test_ticket_comments.py",
+          "ruff check planfile/sync/ticket_comments.py tests/test_ticket_comments.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Nine focused tests plus scoped lint and managed gate"
+      }
+    ]
+  }
+}
