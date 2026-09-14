@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-074",
+  "summary": "Relock uv.lock after pfix removal",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-074/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "uv.lock",
+    ".governance/manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "src/**",
+    "tests/**",
+    "pyproject.toml"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f0b8cecac593df593644955a6100b2e83683f2c5",
+    "targetBranch": "main",
+    "outcome": "uv.lock matches pyproject.toml again, so locked installs and uv lock --check pass on main.",
+    "nonGoals": [
+      "No dependency upgrade.",
+      "No source or test change.",
+      "No release and no registry publish."
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Regenerate uv.lock with the pinned uv 0.12.13 from the unchanged pyproject.toml and assign uv.lock to the integration workstream.",
+      "components": [
+        {
+          "name": "dependency-lock",
+          "paths": [
+            "uv.lock",
+            ".governance/manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; the stale lock returns."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uvx --from uv==0.12.13 uv lock --check"
+        ],
+        "evidence": "origin/main f0b8cecac593: exit 1 (lock needs update); de3e6a6^: exit 0."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head publication."
+      }
+    ]
+  }
+}
