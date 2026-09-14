@@ -71,7 +71,7 @@ class GitHubBackend(BasePMBackend):
         issue_labels = []
         if labels:
             for label in labels:
-                if not label.startswith("priority: "):
+                if not label.startswith("priority: ") and label not in issue_labels:
                     issue_labels.append(label)
         if priority:
             priority_label = f"priority-{priority}"
@@ -179,13 +179,12 @@ class GitHubBackend(BasePMBackend):
         labels: list[str] | None,
         priority: str | None,
     ) -> None:
-        """Update issue labels, replacing priority labels."""
-        current_labels = [label.name for label in issue.labels]
-        current_labels = [label for label in current_labels if not label.startswith("priority: ")]
-        new_labels = labels or []
-        if priority:
-            new_labels.append(f"priority: {priority}")
-        issue.set_labels(*current_labels, *new_labels)
+        """Replace labels with the canonical, de-duplicated Planfile projection."""
+        # ``_prepare_labels`` removes legacy ``priority: high`` values, emits
+        # the canonical ``priority-high`` label and never mutates ``labels``.
+        # The old code appended to the caller's list, so every sync rewrote the
+        # local ticket with another priority label.
+        issue.set_labels(*self._prepare_labels(labels, priority))
 
     def _update_issue_state(self, issue: Issue, status: str) -> None:
         """Update issue open/closed state."""
