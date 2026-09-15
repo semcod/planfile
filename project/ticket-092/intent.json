@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-092",
+  "summary": "Validate discovered repository-local .planfile configuration",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-092/**",
+    "project/TICKETS.md",
+    "tests/test_schema_discovery.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "34bd57f4ed91302f77e4c79dc7228173e9af3a04",
+    "targetBranch": "main",
+    "outcome": "Schema validation resolves the exact repository-local .planfile/config.yaml, refuses parent/global fallback, and retains explicit legacy planfile.yaml support.",
+    "nonGoals": [
+      "No migration of existing configuration data.",
+      "No change to Planfile.auto_discover or GitHub credentials.",
+      "No dependency, release, or hosted CI policy changes."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Lock the already-merged repository-bounded schema selection with offline regression cases: local config precedence, explicit legacy support, and fail-closed parent/global behavior. Keep implementation paths untouched because their current changes are dirty in another checkout.",
+      "components": [
+        {
+          "name": "schema-discovery-tests",
+          "paths": [
+            "tests/test_schema_discovery.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the regression test commit; the already-merged bounded discovery implementation remains unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_schema_discovery.py tests/test_schema.py"
+        ],
+        "evidence": "Offline CLI cases cover local config precedence, parent fallback refusal, explicit legacy support, and non-mutation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head publication."
+      }
+    ]
+  }
+}
