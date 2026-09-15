@@ -16,8 +16,8 @@ Publish Planfile `0.1.126`, the version pinned by the reusable synchronization
 workflow, so calling repositories can install the exact workflow runtime.
 Update the integration-owned package metadata and lockfile, build and verify
 the distribution, and publish the release through the repository's supported
-release boundary. The runtime module version is coordinated by the separate
-application ticket that owns `planfile/__init__.py`.
+release boundary. The runtime module version is coordinated by dependent
+application ticket-100, which owns `planfile/__init__.py`.
 
 ## Acceptance criteria
 
