@@ -10,6 +10,8 @@ generated findings are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
+- [ ] ticket-099 - Publish Planfile 0.1.126 for the reusable GitHub
+  synchronization workflow.
 - [ ] ticket-100 - Align the Planfile runtime version with release metadata.
 - [ ] ticket-095 - Utrwalać mapowanie GitHub po aktualizacji istniejącego issue;
   powiązany z `PLF-074` / `semcod/planfile#116`.
