@@ -5,6 +5,7 @@ from planfile.core.store import Store
 from planfile.sync.base import TicketState
 from planfile.sync.operations import _import_new_ticket, _process_external_ticket
 from planfile.sync.outbound import sync_to_external
+from planfile.sync.state import SyncState
 
 
 class StoreWithCustomSprints:
@@ -158,6 +159,52 @@ def test_outbound_custom_sprint_mapping_is_persisted(tmp_path):
     saved = store.load_sprint("custom-review")["tickets"]["PLF-7"]
     assert saved["sync"]["github"]["id"] == "31"
     assert saved["sync"]["github"]["repository"] == "owner/repo"
+
+
+def test_outbound_state_only_mapping_is_projected_on_existing_ticket(tmp_path):
+    store = Store(tmp_path)
+    store.init()
+    ticket = {
+        "id": "PLF-8",
+        "name": "recovered ticket",
+        "description": "persist the recovered mapping",
+        "status": "open",
+        "integration": ["github"],
+        "sync": {
+            "github": {
+                "url": "https://github.com/owner/repo/issues/31",
+                "key": "owner/repo#31",
+                "repository": "owner/repo",
+            }
+        },
+    }
+    store.save_sprint("custom-review", {"tickets": {"PLF-8": ticket}})
+    state = SyncState(store.base_dir, "github", repository="owner/repo")
+    state.save_sync({"PLF-8": "31"})
+
+    class Backend:
+        config = {"repo": "owner/repo"}
+
+        def update_ticket(self, external_id, **fields):
+            assert external_id == "31"
+
+    sync_to_external(Backend(), [("PLF-8", ticket)], False, store, "github")
+
+    saved = store.load_sprint("custom-review")["tickets"]["PLF-8"]
+    assert saved["sync"]["github"] == {
+        "id": "31",
+        "url": "https://github.com/owner/repo/issues/31",
+        "key": "owner/repo#31",
+        "repository": "owner/repo",
+    }
+    assert (
+        SyncState(store.base_dir, "github", repository="owner/repo").get_remote_id("PLF-8")
+        == "31"
+    )
+    assert (
+        SyncState(store.base_dir, "github", repository="owner/repo").get_last_sync()["repository"]
+        == "owner/repo"
+    )
 
 
 def test_outbound_rejects_ticket_bound_to_another_repository(tmp_path):

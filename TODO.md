@@ -10,6 +10,9 @@ generated findings are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
+- [ ] ticket-095 - Utrwalać mapowanie GitHub po aktualizacji istniejącego issue;
+  powiązany z `PLF-074` / `semcod/planfile#116`.
+
 ## 📋 Current Issues (178 unresolved entries from the generated snapshot)
 
 - [ ] ticket-081 - Preserve canonical identity for imported external tickets
