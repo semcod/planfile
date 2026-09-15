@@ -34,12 +34,12 @@
       "No mutation of project stores or GitHub state",
       "No changes to the external analysis backends"
     ],
-    "complexity": "M",
-    "estimatedMinutes": 90,
+    "complexity": "L",
+    "estimatedMinutes": 120,
     "budgets": {
-      "maxImplementationFiles": 3,
-      "maxAffectedComponents": 3,
-      "maxPublicInterfaceChanges": 3,
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 4,
+      "maxPublicInterfaceChanges": 4,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
@@ -62,6 +62,12 @@
           "name": "workflow-parser",
           "paths": [
             "planfile/analysis/parsers/yaml_parser.py"
+          ]
+        },
+        {
+          "name": "regressions",
+          "paths": [
+            "tests/test_health_check.py"
           ]
         }
       ],

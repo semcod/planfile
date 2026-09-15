@@ -74,6 +74,7 @@ def test_health_json_is_read_only_and_reports_project(tmp_path):
     assert payload["limits"]["max_files"] == 5000
     assert payload["analysis"]["truncated"] is False
     assert payload["diagnostics"] == []
+    assert payload["summary"]["total_issues"] == 0
     assert not (tmp_path / ".planfile_analysis").exists()
 
 
