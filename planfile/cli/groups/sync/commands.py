@@ -18,9 +18,13 @@ def github_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with GitHub Issues."""
-    sync_integration("github", directory, dry_run, direction)
+    sync_integration(
+        "github", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def onedev_cmd(
@@ -29,9 +33,13 @@ def onedev_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with a local OneDev Issue queue."""
-    sync_integration("onedev", directory, dry_run, direction)
+    sync_integration(
+        "onedev", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def publish_cmd(
@@ -54,9 +62,13 @@ def gitlab_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with GitLab Issues."""
-    sync_integration("gitlab", directory, dry_run, direction)
+    sync_integration(
+        "gitlab", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def jira_cmd(
@@ -65,9 +77,13 @@ def jira_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with Jira."""
-    sync_integration("jira", directory, dry_run, direction)
+    sync_integration(
+        "jira", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def markdown_cmd(
@@ -76,9 +92,13 @@ def markdown_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with markdown files (CHANGELOG.md, TODO.md)."""
-    sync_integration("markdown", directory, dry_run, direction)
+    sync_integration(
+        "markdown", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def handle_no_integrations(directory: str, dry_run: bool, direction: str) -> None:
