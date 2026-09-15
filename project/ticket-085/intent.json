@@ -71,7 +71,7 @@
       ],
       "dataChanges": [],
       "ui": {
-        "impact": "cli",
+        "impact": "none",
         "states": [],
         "evidence": []
       },
