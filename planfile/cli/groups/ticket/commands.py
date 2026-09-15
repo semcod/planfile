@@ -24,8 +24,14 @@ def _find_template_placeholders(*texts: str | None) -> list[str]:
     return found
 
 
-def _auto_sync(directory: str, integrations: list[str] | None = None, dry_run: bool = False) -> None:
-    """Auto-sync changes to configured integrations after ticket modification."""
+def _auto_sync(
+    directory: str,
+    integrations: list[str] | None = None,
+    dry_run: bool = False,
+    ticket_ids: list[str] | None = None,
+    sprint_ids: list[str] | None = None,
+) -> None:
+    """Sync only the requested local records after a ticket modification."""
     from planfile.cli.groups.sync.core import sync_integration
     from planfile.integrations.config import IntegrationConfig
 
@@ -48,11 +54,28 @@ def _auto_sync(directory: str, integrations: list[str] | None = None, dry_run: b
 
     console.print(f"\n[blue]🔄 Auto-syncing to: {', '.join(to_sync)}...[/blue]")
 
+    failures = []
     for integration in to_sync:
         try:
-            sync_integration(integration, directory, dry_run, "to", show_header=False)
+            sync_integration(
+                integration,
+                directory,
+                dry_run,
+                "to",
+                show_header=False,
+                ticket_ids=ticket_ids,
+                sprint_ids=sprint_ids,
+            )
+        except typer.Exit:
+            raise
         except Exception as e:
+            failures.append(integration)
             console.print(f"[yellow]⚠️ Auto-sync failed for {integration}: {e}[/yellow]")
+    if failures:
+        console.print(
+            f"[red]✗ Auto-sync failed for: {', '.join(failures)}; local ticket was retained[/red]"
+        )
+        raise typer.Exit(1)
 
 def _display_tickets(tickets, fmt: str='table') -> None:
     """Display tickets in the requested format."""
@@ -199,13 +222,30 @@ def ticket_create(name: str=typer.Argument(..., help='Ticket name'), priority: s
     ticket_data = {'name': name, 'priority': priority, 'sprint': sprint, 'source': TicketSource(tool=source), 'labels': list(label) if label else [], 'description': description}
     if files:
         ticket_data['files'] = list(files)
+    if sync and not integration:
+        # ``--sync`` is explicit authority to publish, but it still needs a
+        # deterministic target set. Store that set on the new local record so
+        # the exact-ticket loader does not treat it as an unconfigured ticket.
+        from planfile.integrations.config import IntegrationConfig
+
+        integration_config = IntegrationConfig(str(pf.store.project_dir))
+        integration_config.load_configs()
+        integration = list(integration_config.config.get('integrations', {}).keys())
+        if "markdown" not in integration:
+            integration.append("markdown")
     if integration:
         ticket_data['integration'] = list(integration)
     ticket = pf.create_ticket(**ticket_data)
     console.print(f'[green]✓[/green] Created {ticket.id}: {ticket.name}')
 
     if sync:
-        _auto_sync(str(pf.store.project_dir), integration, sync_dry_run)
+        _auto_sync(
+            str(pf.store.project_dir),
+            integration,
+            sync_dry_run,
+            ticket_ids=[ticket.id],
+            sprint_ids=[sprint],
+        )
 
 def ticket_list(sprint: str=typer.Option('current', '-s', '--sprint'), status: str | None=typer.Option(None, help='open|in_progress|review|done|blocked|all'), source: str | None=typer.Option(None, help='Filter by source tool'), label: list[str] | None=typer.Option(None, '-l', '--label'), files: list[str] | None=typer.Option(None, '--files', help='Filter by file glob pattern(s)'), fmt: str=typer.Option('table', '--format', help='table | json | yaml')) -> None:
     """List tickets with optional filters."""
@@ -344,7 +384,7 @@ def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: 
     console.print(f'[green]✓[/green] Updated {ticket.id}')
 
     if sync:
-        _auto_sync(str(pf.store.project_dir), None, sync_dry_run)
+        _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=[ticket_id])
 
 def ticket_move(ticket_id: str=typer.Argument(..., help='Ticket ID'), to_sprint: str=typer.Argument(..., help='Target sprint')) -> None:
     """Move ticket to another sprint."""
@@ -555,7 +595,7 @@ def ticket_delete(
         console.print(f'[yellow]⚠[/yellow] {len(not_found)} ticket(s) not found: {", ".join(not_found)}')
 
     if sync and deleted:
-        _auto_sync(str(pf.store.project_dir), None, sync_dry_run)
+        _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=deleted)
 
 def _print_bulk_update_preview(
     tickets: list,
@@ -689,7 +729,7 @@ def ticket_bulk_update(
             console.print(f'  - {tid}: {err}')
 
     if sync and updated:
-        _auto_sync(str(pf.store.project_dir), None, sync_dry_run)
+        _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=updated)
 
 
 # ── Git-like decomposition: split / tree / group / merge ──────────────────────
@@ -726,7 +766,7 @@ def ticket_split(
                                sprint=sprint, block_parent=not no_block, sequential=sequential)
     except DecomposeError as exc:
         console.print(f'[red]✗[/red] {exc}')
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
     if fmt == 'json':
         console.print(json.dumps({'parent': ticket_id, 'children': [c.id for c in created]}))
         return
@@ -757,7 +797,7 @@ def ticket_tree(
         prog = tree_progress(pf, ticket_id)
     except DecomposeError as exc:
         console.print(f'[red]✗[/red] {exc}')
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
     if fmt == 'json':
         console.print(json.dumps(prog))
         return
@@ -779,7 +819,7 @@ def ticket_group(
         updated = group_tickets(pf, group_name, list(ticket_ids))
     except DecomposeError as exc:
         console.print(f'[red]✗[/red] {exc}')
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
     console.print(f'[green]✓[/green] Grouped {len(updated)} ticket(s) under [cyan]{group_name}[/cyan]: {", ".join(updated)}')
 
 
@@ -796,7 +836,7 @@ def ticket_merge(
         result = merge_ticket(pf, child_id, into_id)
     except DecomposeError as exc:
         console.print(f'[red]✗[/red] {exc}')
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
     console.print(f"[green]✓[/green] Merged [cyan]{child_id}[/cyan] into [cyan]{into_id}[/cyan] "
                   f"({result['files']} file(s), {result['notes']} note(s)); child canceled")
 
@@ -817,7 +857,7 @@ def ticket_depend(
         result = add_dependency(pf, ticket_id, after=list(after or []), before=list(before or []))
     except DecomposeError as exc:
         console.print(f'[red]✗[/red] {exc}')
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
     parts = []
     if result['after']:
         parts.append(f"after {', '.join(result['after'])}")
