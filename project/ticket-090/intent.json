@@ -1,0 +1,62 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-090",
+  "summary": "Make external publish receipts durable and idempotent",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-090/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/outbound.py",
+    "planfile/sync/receipts.py",
+    "tests/test_sync_receipts.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-082"],
+  "integrationTicket": null
+  ,"delivery": {
+    "acceptedBaseSha": "61a62e31b5faee1a572a67c892c937796207e4c6",
+    "targetBranch": "main",
+    "outcome": "Record repository-bound publish outcomes in a durable receipt log and suppress duplicate successful retries by deterministic idempotency key.",
+    "nonGoals": [
+      "No remote issue deletion or credential changes",
+      "No changes to the legacy sync operations implementation",
+      "No automatic merge or required-check policy changes"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep receipts in a lock-protected Planfile sync sidecar; derive the idempotency key from repository, ticket and sanitized payload digest, and never persist tokens or raw exception text.",
+      "components": [
+        {"name": "receipt-store", "paths": ["planfile/sync/receipts.py"]},
+        {"name": "outbound-publish", "paths": ["planfile/sync/outbound.py"]},
+        {"name": "regressions", "paths": ["tests/test_sync_receipts.py"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket commit; retain the receipt sidecar for forensic recovery and do not delete remote issues."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-02", "commands": ["uv run pytest -q tests/test_sync_receipts.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-03", "commands": ["uv run pytest -q tests/test_sync_failure_status.py tests/test_sync_receipts.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-04", "commands": ["uv run pytest -q", "uv run ruff check planfile/sync/outbound.py planfile/sync/receipts.py tests/test_sync_receipts.py", "./project/governance-check.sh --base origin/main --head HEAD --actor agent"], "evidence": "Pending exact-head validation"}
+    ]
+  }
+}
