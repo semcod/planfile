@@ -64,9 +64,13 @@ def test_partial_batch_saves_successes_before_raising_and_retries_without_create
         outbound(backend, path, data, store)
     assert asdict(caught.value.result) == {
         "succeeded": ("good", "later"),
+        "created": ("good", "later"),
+        "reused": (),
+        "updated": (),
         "failed": ("bad",),
         "planned": (),
     }
+    assert caught.value.result.to_dict()["succeeded"] == ["good", "later"]
     assert backend.created == ["good", "bad", "later"]
     saved = yaml.safe_load(path.read_text())
     assert saved["backlog"]["tickets"]["good"]["sync"]["github"]["id"] == "good-remote"
