@@ -12,7 +12,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from planfile.cli.core import console, print_error, print_warning
 from planfile.integrations.config import IntegrationConfig
-from planfile.sync.operations import sync_from_external, sync_to_external
+from planfile.sync.operations import sync_from_external
+from planfile.sync.outbound import OutboundSyncError, sync_to_external
 
 
 def _initialize_backend(integration_name: str, config: IntegrationConfig, show_header: bool) -> Any:
@@ -271,17 +272,21 @@ def sync_integration(
         console.print("\n[cyan]🔍 DRY RUN - No changes will be made[/cyan]")
 
     # Execute sync with progress
-    _execute_sync_with_progress(
-        backend,
-        all_tickets,
-        dry_run,
-        store,
-        integration_name,
-        v1_source_file,
-        v1_data,
-        direction,
-        publish_to,
-    )
+    try:
+        _execute_sync_with_progress(
+            backend,
+            all_tickets,
+            dry_run,
+            store,
+            integration_name,
+            v1_source_file,
+            v1_data,
+            direction,
+            publish_to,
+        )
+    except OutboundSyncError as error:
+        print_error(str(error))
+        raise typer.Exit(1) from error
 
     if not dry_run:
         console.print(f"\n✅ Sync with {integration_name} completed successfully")
