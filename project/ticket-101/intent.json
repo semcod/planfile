@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-101",
+  "summary": "Make legacy GitHub sync fail-closed with durable outcomes and readback",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-101/**",
+    "project/TICKETS.md",
+    "planfile/sync/operations.py",
+    "planfile/sync/outbound.py",
+    "tests/test_sync_legacy_operations.py",
+    "tests/test_sync_receipts.py",
+    "tests/test_sync_failure_status.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-082", "ticket-084", "ticket-090", "ticket-095"],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e79d79509c050514ba434c3bd6589f932b91c920",
+    "targetBranch": "main",
+    "outcome": "Legacy sync callers receive fail-closed, repository-bound outcomes and lost-create recovery without duplicate remote effects.",
+    "nonGoals": [
+      "No credentials or CI policy changes",
+      "No inbound comment transport redesign",
+      "No mutation of the dirty primary checkout",
+      "No live provider fault injection"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep outbound as the single batch implementation, delegate the legacy operations entry point locally to avoid an import cycle, classify outcomes explicitly, and recover a lost create only from one repository-scoped marker match.",
+      "components": [
+        {
+          "name": "sync-outbound",
+          "paths": ["planfile/sync/operations.py", "planfile/sync/outbound.py"]
+        },
+        {
+          "name": "offline-regressions",
+          "paths": [
+            "tests/test_sync_legacy_operations.py",
+            "tests/test_sync_failure_status.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "OutboundSyncResult exposes outcome categories and to_dict()",
+        "Legacy operations API returns the same result and failure contract"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket commit; retain existing valid sync state and receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["uv run --no-sync pytest -q tests/test_sync_legacy_operations.py tests/test_sync_failure_status.py"],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "uv run --no-sync pytest -q",
+          "uv run --no-sync ruff check planfile/sync/operations.py planfile/sync/outbound.py tests/test_sync_legacy_operations.py",
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head validation"
+      }
+    ]
+  }
+}
