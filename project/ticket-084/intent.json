@@ -1,0 +1,62 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-084",
+  "summary": "Harden repository routing and local-only ticket creation",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-084/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/project_paths.py",
+    "planfile/cli/groups/ticket/commands.py",
+    "tests/test_repository_routing.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+      "acceptedBaseSha": "b5c583a09abc68e2618cdda8302bca979b6b6e46",
+    "targetBranch": "main",
+    "outcome": "Repository discovery stops at Git boundaries, rejects configured GitHub origin mismatches, and ticket-triggered sync remains exact and fail-closed.",
+    "nonGoals": [
+      "No remote issue mutation during validation",
+      "No changes to ticket-radar or other parallel worktrees",
+      "No changes to GitHub trust policy or comment transport"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use read-only Git root/origin probes at auto-discovery and pass exact ticket and sprint filters to the existing protected sync path; keep local creation independent from external publication unless --sync is explicit.",
+      "components": [
+        {"name": "routing", "paths": ["planfile/project_paths.py"]},
+        {"name": "ticket-cli", "paths": ["planfile/cli/groups/ticket/commands.py"]},
+        {"name": "regressions", "paths": ["tests/test_repository_routing.py"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["RepositoryRoutingError", "scoped _auto_sync arguments"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket commit; retain local stores and do not alter remote issues."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-02", "commands": ["uv run pytest -q tests/test_repository_routing.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-03", "commands": ["uv run pytest -q tests/test_repository_routing.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-04", "commands": ["uv run pytest -q", "uv run ruff check planfile/project_paths.py planfile/cli/groups/ticket/commands.py tests/test_repository_routing.py", "./project/governance-check.sh --base origin/main --head HEAD --actor agent"], "evidence": "Pending exact-head validation"}
+    ]
+  }
+}
