@@ -12,7 +12,7 @@ __version__ = "0.1.125"
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
-from datetime import timezone, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -47,6 +47,7 @@ from planfile.delivery_plan_contracts import (
     WorkPlanTerminalReceiptV1,
 )
 from planfile.dsl import DSLExecutor, DSLParser, DSLResult
+from planfile.project_paths import canonical_project_root
 from planfile.testql_integration import (
     build_testql_tickets,
     run_testql_validation,
@@ -106,13 +107,16 @@ class Planfile:
 
     @classmethod
     def auto_discover(cls, start_path: str = ".") -> "Planfile":
-        """Find .planfile/ in CWD or parent directories."""
-        path = Path(start_path).resolve()
-        while path != path.parent:
-            if (path / ".planfile").exists():
+        """Find the owning ``.planfile`` without creating nested stores."""
+        path = canonical_project_root(start_path)
+        while True:
+            candidate = path / ".planfile"
+            if candidate.is_dir():
                 return cls(str(path))
+            if path == path.parent:
+                break
             path = path.parent
-        return cls(start_path)  # init in CWD
+        return cls(str(canonical_project_root(start_path)))  # initialise at the project root
 
     def create_ticket(self, name: str, **kwargs) -> Ticket:
         return self.create_ticket_deduplicated(name, **kwargs)[0]
@@ -191,14 +195,14 @@ class Planfile:
             )
             if not valid:
                 return "process-envelope-invalid"
-        labels = [str(l).lower() for l in (ticket.labels or [])]
+        labels = [str(label).lower() for label in (ticket.labels or [])]
         if "autonomy-frontier" in labels:
             return "autonomy-frontier"
         if "actor:human" in labels:
             return "actor:human"
-        for l in labels:
-            if l.startswith("waiting:") or l.startswith("needs-human"):
-                return l
+        for label in labels:
+            if label.startswith("waiting:") or label.startswith("needs-human"):
+                return label
         return ""
 
     @staticmethod
@@ -217,7 +221,7 @@ class Planfile:
         if not goal:
             return False
         domain = goal.split(".")[0]
-        labels = [str(l).lower() for l in (ticket.labels or [])]
+        labels = [str(label).lower() for label in (ticket.labels or [])]
         if f"goal:{goal}" in labels or f"goal:{domain}" in labels:
             return False
         blob = f"{ticket.name} {ticket.description or ''} {' '.join(labels)}".lower()
@@ -722,7 +726,7 @@ class Planfile:
         with self.store.mutation_lock():
             ticket_ids = self.store._reserve_ids_unlocked(len(tickets_data))
             tickets = []
-            for ticket_id, original in zip(ticket_ids, tickets_data):
+            for ticket_id, original in zip(ticket_ids, tickets_data, strict=True):
                 data = dict(original)
                 data.pop("id", None)
                 if source and "source" not in data:
