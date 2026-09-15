@@ -7,10 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from planfile.sync.operations import (
+    _backend_repository,
     _create_new_ticket,
     _save_sync_results,
     _ticket_external_id,
     _update_existing_ticket,
+    _validate_ticket_binding,
     console,
 )
 from planfile.sync.state import SyncState
@@ -40,7 +42,9 @@ def sync_to_external(
     backend, tickets, dry_run: bool, store, integration_name: str, v1_source_file=None, v1_data=None
 ) -> OutboundSyncResult:
     """Attempt each outbound ticket, save successes, then report any failures."""
-    sync_state = SyncState(Path(store.base_dir), integration_name)
+    sync_state = SyncState(
+        Path(store.base_dir), integration_name, repository=_backend_repository(backend)
+    )
     ticket_map = {}
     succeeded = []
     failed = []
@@ -53,6 +57,7 @@ def sync_to_external(
             console.print(f"  Would create/update: {ticket_id} - {ticket_name}")
             continue
         try:
+            _validate_ticket_binding(ticket, integration_name, backend)
             external_id = _ticket_external_id(ticket, ticket_id, integration_name, sync_state)
             if external_id:
                 _update_existing_ticket(
@@ -71,7 +76,7 @@ def sync_to_external(
 
     if not dry_run:
         sync_state.save_sync(ticket_map)
-        _save_sync_results(store, v1_source_file, v1_data)
+        _save_sync_results(store, v1_source_file, v1_data, tickets=tickets)
 
     result = OutboundSyncResult(tuple(succeeded), tuple(failed), tuple(planned))
     if failed:

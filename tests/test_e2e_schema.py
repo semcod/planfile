@@ -1,11 +1,12 @@
 """E2E tests for schema validation."""
 
-import pytest
-import tempfile
-import yaml
-from pathlib import Path
+import os
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
+
+import yaml
 
 
 def test_e2e_validate_schema_valid_planfile():
@@ -164,3 +165,49 @@ def test_e2e_validate_schema_verbose():
         assert "Schema validation passed" in result.stdout
         assert "Current schema version" in result.stdout
         assert "File schema version" in result.stdout
+
+
+def test_e2e_validate_schema_defaults_to_repository_local_config(tmp_path):
+    project = tmp_path / "project"
+    project.mkdir()
+    subprocess.run(["git", "init", "--quiet", str(project)], check=True)
+    config = project / ".planfile" / "config.yaml"
+    config.parent.mkdir()
+    config.write_text("project: demo\nprefix: PLF\nnext_id: 1\n", encoding="utf-8")
+
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = str(Path(__file__).resolve().parents[1])
+    result = subprocess.run(
+        [sys.executable, "-m", "planfile.cli", "validate", "schema"],
+        cwd=project,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "type: config" in result.stdout
+    assert "Schema validation passed" in result.stdout
+
+
+def test_e2e_validate_schema_refuses_parent_config_fallback(tmp_path):
+    parent = tmp_path / "parent"
+    project = parent / "project"
+    project.mkdir(parents=True)
+    subprocess.run(["git", "init", "--quiet", str(project)], check=True)
+    config = parent / ".planfile" / "config.yaml"
+    config.parent.mkdir()
+    config.write_text("project: shared\nprefix: PLF\nnext_id: 1\n", encoding="utf-8")
+
+    environment = os.environ.copy()
+    environment["PYTHONPATH"] = str(Path(__file__).resolve().parents[1])
+    result = subprocess.run(
+        [sys.executable, "-m", "planfile.cli", "validate", "schema"],
+        cwd=project,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 1
+    assert "refusing to use a parent or global" in result.stdout

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import typer
 
 from planfile.cli.core import console, print_error
-from planfile.core.schema import SchemaValidator, validate_yaml_file
+from planfile.core.schema import SchemaValidator, detect_file_type, validate_yaml_file
 from planfile.loaders.yaml_loader import load_strategy_yaml
 from planfile.testql_integration import (
     build_testql_tickets,
@@ -50,25 +51,49 @@ def validate_strategy_cli(
 
 
 def validate_schema_cli(
-    file_path: Path = typer.Argument(None, help="Path to YAML file (default: planfile.yaml)"),
-    file_type: str = typer.Option("auto", help="File type: auto, planfile, sprint"),
+    file_path: Path = typer.Argument(None, help="Path to YAML file (default: repository-local config)"),
+    file_type: str = typer.Option("auto", help="File type: auto, planfile, sprint, strategy, config"),
     verbose: bool = typer.Option(False, help="Verbose output"),
 ) -> None:
     """Validate YAML file schema version and structure."""
-    from planfile import Planfile
-
-    # Auto-detect file path if not provided
+    # Do not use Planfile.auto_discover here: it intentionally walks parent
+    # directories and could validate a shared/global config as this project's.
     if file_path is None:
-        pf = Planfile.auto_discover(".")
-        file_path = Path(pf.store.project_dir) / "planfile.yaml"
-        file_type = "planfile"
+        start = Path.cwd().resolve()
+        try:
+            repository_root = Path(
+                subprocess.check_output(
+                    ["git", "rev-parse", "--show-toplevel"],
+                    cwd=start,
+                    text=True,
+                    stderr=subprocess.DEVNULL,
+                ).strip()
+            ).resolve()
+        except (OSError, subprocess.CalledProcessError):
+            repository_root = start
 
-    # Auto-detect file type
+        local_config = repository_root / ".planfile" / "config.yaml"
+        legacy_strategy = repository_root / "planfile.yaml"
+        if local_config.is_file():
+            file_path = local_config
+            file_type = "config"
+        elif legacy_strategy.is_file():
+            file_path = legacy_strategy
+            file_type = "planfile"
+        else:
+            print_error(
+                "No repository-local schema document found; refusing to use a "
+                "parent or global Planfile configuration."
+            )
+            raise typer.Exit(1)
+
+    # Auto-detect an explicit path from its content, while retaining the
+    # historical redsl filename convention.
     if file_type == "auto":
         if "redsl" in file_path.name:
             file_type = "redsl"
         else:
-            file_type = "planfile"
+            file_type = detect_file_type(file_path)
 
     console.print(f"[bold]Validating:[/bold] {file_path} (type: {file_type})")
 
@@ -82,7 +107,7 @@ def validate_schema_cli(
     if is_valid:
         console.print("[green]✓[/green] Schema validation passed!")
 
-        if verbose and file_type == "planfile":
+        if verbose and file_type in {"planfile", "config"}:
             with open(file_path) as f:
                 import yaml
                 data = yaml.safe_load(f)
