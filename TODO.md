@@ -12,6 +12,9 @@ generated findings are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 📋 Current Issues (178 unresolved entries from the generated snapshot)
 
+- [ ] ticket-081 - Preserve canonical identity for imported external tickets
+  after sync readback; add regression coverage and verify exact-head delivery.
+
 - [ ] planfile/analysis/__init__.py:18 - Duplicate import: planfile.analysis.generator.generator
 - [ ] planfile/analysis/__init__.py:18 - Duplicate import: 'generator' (first at line 6)
 - [ ] planfile/__init__.py:1 - Import sections should be separated by blank lines

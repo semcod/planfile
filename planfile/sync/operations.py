@@ -548,12 +548,15 @@ def _update_local_ticket(
 
     if planfile_id in sprint.get("tickets", {}):
         ticket = sprint["tickets"][planfile_id]
+        default_sprint = str(sprint.get("id") or "current")
     elif planfile_id in backlog.get("tickets", {}):
         ticket = backlog["tickets"][planfile_id]
+        default_sprint = str(backlog.get("id") or "backlog")
     else:
         return updated_count
 
     ticket.update(update_fields)
+    ticket.setdefault("sprint", default_sprint)
     if ext_data.get("url") and "github.com/" in str(ext_data["url"]):
         backend_ref["repository"] = str(ext_data["url"]).split("github.com/", 1)[1].split(
             "/issues/", 1
@@ -583,6 +586,7 @@ def _import_new_ticket(
         "name": ext_data.get("name") or ext_data.get("title"),
         "description": ext_data["description"],
         "status": ext_data["status"],
+        "sprint": "backlog",
         "assignee": ext_data["assignee"],
         "labels": ext_data["labels"],
         "external_id": ext_data["id"],
