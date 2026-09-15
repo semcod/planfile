@@ -129,6 +129,18 @@ def _update_existing_ticket(
             priority=ticket.get("priority"),
             assignee=ticket.get("assignee"),
         )
+        # A mapping may have been recovered from the backend state file after
+        # an interrupted create. Keep the physical ticket record equally
+        # authoritative so ``ticket show`` and later retries expose the same
+        # backend-scoped identity. The update API does not return a TicketRef,
+        # therefore persist the stable ID and preserve richer fields already
+        # present on the local record.
+        _record_backend_ref(
+            ticket,
+            integration_name,
+            {"id": str(external_id)},
+            external_id,
+        )
         console.print(f"  ✓ Updated: {ticket_id} → {external_id}")
     except Exception as e:
         if "404" in str(e) or "Not Found" in str(e):
@@ -195,11 +207,15 @@ def _record_backend_ref(
     url = external_ticket.url if hasattr(external_ticket, "url") else external_ticket.get("url")
     key = external_ticket.key if hasattr(external_ticket, "key") else external_ticket.get("key")
     sync = ticket.setdefault("sync", {})
-    reference = {
-        key: value
-        for key, value in {"id": str(external_id), "url": url, "key": key}.items()
-        if value
-    }
+    existing = sync.get(integration_name)
+    reference = dict(existing) if isinstance(existing, dict) else {}
+    reference.update(
+        {
+            key: value
+            for key, value in {"id": str(external_id), "url": url, "key": key}.items()
+            if value
+        }
+    )
     if url and "github.com/" in str(url):
         reference["repository"] = str(url).split("github.com/", 1)[1].split("/issues/", 1)[0]
     sync[integration_name] = reference

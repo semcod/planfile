@@ -1,0 +1,68 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-095",
+  "summary": "Utrwalać mapowanie GitHub po aktualizacji istniejącego issue",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-095/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/operations.py",
+    "tests/test_sync_scope.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-082"],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e2f1e297a4fe4ded7bb7dd9ced3d0d018eede40e",
+    "targetBranch": "main",
+    "outcome": "Po udanej aktualizacji istniejącego issue lokalny rekord i state file zawierają zgodne mapowanie GitHub.",
+    "nonGoals": [
+      "Brak masowej migracji historycznych ticketów.",
+      "Brak zmian polityki merge i brak nowych zależności runtime."
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Ponownie użyć istniejącego helpera rejestrującego backend reference bez nadpisywania bogatszych pól mapowania.",
+      "components": [
+        {
+          "name": "github-sync-projection",
+          "paths": ["planfile/sync/operations.py", "tests/test_sync_scope.py"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert exact implementation commit; nie usuwać istniejących mapowań ani issue."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["uv run --no-sync pytest -p no:wellmanifest_governance -q tests/test_sync_scope.py"],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["./project/governance-check.sh --base origin/main --head HEAD --actor agent"],
+        "evidence": "Pending exact-head publication"
+      }
+    ]
+  }
+}
