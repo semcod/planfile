@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-097",
+  "summary": "Automate GitHub synchronization for reusable CI workflows",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-097/**",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/commands.py",
+    "planfile/cli/groups/sync/core.py",
+    "planfile/sync/operations.py",
+    "tests/test_sync_managed_only.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-087"],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "73683681dfa50543e3f1afa1032e77b98e088954",
+    "targetBranch": "main",
+    "outcome": "The GitHub sync CLI accepts an explicit repository and can restrict inbound reconciliation to Planfile-managed Issues without changing outbound ticket selection.",
+    "nonGoals": [
+      "No workflow or release publication changes in this ticket.",
+      "No deletion or migration of existing GitHub Issues.",
+      "No credentials are persisted or derived from repository-local state."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxAffectedComponents": 3,
+      "maxImplementationFiles": 4,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep repository selection as an explicit CLI override and pass managed Issue labels through the existing backend list_tickets protocol. The filter applies only to inbound reads; outbound local ticket selection remains unchanged.",
+      "components": [
+        {"name": "github-sync-cli", "paths": ["planfile/cli/groups/sync/commands.py", "planfile/cli/groups/sync/core.py"]},
+        {"name": "external-read-filter", "paths": ["planfile/sync/operations.py"]},
+        {"name": "offline-regressions", "paths": ["tests/test_sync_managed_only.py"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "GitHub sync accepts --repo and --managed-only.",
+        "Inbound sync passes optional labels to backend.list_tickets()."
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the CLI options and label plumbing; existing config-driven sync remains available."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["python -m planfile sync github --help"],
+        "evidence": "The help output exposes the explicit repository binding."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["pytest -q -p no:wellmanifest_governance tests/test_sync_managed_only.py"],
+        "evidence": "The fake backend records the managed label filter and outbound behavior remains unchanged."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "pytest -q -p no:wellmanifest_governance",
+          "ruff check planfile/cli/groups/sync/commands.py planfile/cli/groups/sync/core.py planfile/sync/operations.py tests/test_sync_managed_only.py",
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head validation and protected publication."
+      }
+    ]
+  }
+}
