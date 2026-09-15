@@ -1,0 +1,95 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-086",
+  "summary": "Reject nested .planfile project discovery",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-086/**",
+    "planfile/project_paths.py",
+    "planfile/__init__.py",
+    "planfile/core/store.py",
+    "tests/test_project_paths.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-084"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "eb18dfdc45381218dbeaed4cf9adee54be88a74c",
+    "targetBranch": "main",
+    "outcome": "Resolve Planfile discovery from paths below .planfile to the owning repository root and reject explicit nested-store construction before writes.",
+    "nonGoals": [
+      "No migration or deletion of existing nested stores",
+      "No changes to ticket synchronization or external integrations",
+      "No rewrite of existing project configuration"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Centralize root-path handling in a small pure helper. Auto-discovery anchors at the outermost .planfile ancestor; direct store construction rejects any path inside .planfile. Existing nested directories remain untouched.",
+      "components": [
+        {
+          "name": "path-resolution",
+          "paths": [
+            "planfile/project_paths.py",
+            "planfile/__init__.py"
+          ]
+        },
+        {
+          "name": "store-guard",
+          "paths": [
+            "planfile/core/store.py"
+          ]
+        },
+        {
+          "name": "regressions",
+          "paths": [
+            "tests/test_project_paths.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Planfile/PlanfileStore now reject explicit project paths inside .planfile"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the helper and guard; no persisted files are changed by this ticket."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest -q tests/test_project_paths.py",
+          "ruff check planfile/project_paths.py planfile/__init__.py planfile/core/store.py tests/test_project_paths.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Focused path-discovery regression, Ruff and governance outputs retained in the PR receipt."
+      }
+    ]
+  }
+}

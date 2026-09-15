@@ -7,13 +7,15 @@ import shutil
 import tempfile
 import time
 from contextlib import contextmanager
-from datetime import timezone, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
 from threading import RLock
 
 import yaml
 from pydantic import BaseModel
+
+from planfile.project_paths import ensure_project_root
 
 from .jsonl_tail import OPERATIONS_TAIL_MAX_BYTES, read_jsonl_tail
 from .models import TICKET_CONTRACT_VERSION, Ticket
@@ -55,7 +57,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
     TERMINAL_STATUSES = {"done", "canceled", "failed", "blocked"}
 
     def __init__(self, directory: str | Path):
-        self.project_dir = Path(directory).resolve()
+        self.project_dir = ensure_project_root(directory)
         self.base_dir = self.project_dir / ".planfile"
         self._config_path = self.base_dir / "config.yaml"
         self._sprints_dir = self.base_dir / "sprints"
