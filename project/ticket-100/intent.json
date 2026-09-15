@@ -1,0 +1,56 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-100",
+  "summary": "Align Planfile runtime version with release metadata",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-100/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": ["ticket-098"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "1e9ed8efd177195c52727141837e1bde30789716",
+    "targetBranch": "main",
+    "outcome": "The application runtime reports Planfile version 0.1.126, matching the release metadata and workflow pin.",
+    "nonGoals": [
+      "No package metadata or lockfile changes.",
+      "No repository-specific workflow rollout."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the runtime version constant in the application-owned module and let the integration release ticket own package metadata.",
+      "components": [
+        {"name": "runtime-version", "paths": ["planfile/__init__.py"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Runtime version reports 0.1.126"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the single runtime version constant change."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-02", "commands": ["python -c \"import planfile; assert planfile.__version__ == '0.1.126'\""], "evidence": "The installed source runtime reports the release version."},
+      {"criterion": "AC-03", "commands": ["./project/governance-check.sh --base origin/main --head HEAD --actor agent"], "evidence": "Managed governance passes before protected publication."}
+    ]
+  }
+}

@@ -10,6 +10,7 @@ generated findings are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
+- [ ] ticket-100 - Align the Planfile runtime version with release metadata.
 - [ ] ticket-095 - Utrwalać mapowanie GitHub po aktualizacji istniejącego issue;
   powiązany z `PLF-074` / `semcod/planfile#116`.
 
