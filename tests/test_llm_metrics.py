@@ -82,12 +82,12 @@ def test_failed_attempt_keeps_error_type_only(tmp_path):
         started_at="2026-09-15T00:00:00+00:00",
         latency_ms=2,
         status="failed",
-        error=RuntimeError("token=private"),
+        error=RuntimeError("private-error-payload"),
     )
     assert record["error_type"] == "RuntimeError"
     assert record["retry_count"] == 1
     raw = (tmp_path / "llm.jsonl").read_text(encoding="utf-8")
-    assert "token=private" not in raw
+    assert "private-error-payload" not in raw
     assert "secret prompt" not in raw
 
 
