@@ -17,8 +17,12 @@
     "project/ticket-085/**",
     "project/TICKETS.md"
   ],
-  "forbiddenPaths": ["project/ticket-*/user-*.md"],
-  "stacks": ["python"],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
   "dependsOn": [],
   "conflictsWith": [],
   "integrationTicket": null,
@@ -26,12 +30,64 @@
     "acceptedBaseSha": "db93d41fc9e512fb25e81473cba7099d4beb3cfa",
     "targetBranch": "main",
     "outcome": "Health checks are bounded, read-only and machine-readable; GitHub workflow YAML is analyzed without false parser failures.",
-    "nonGoals": ["No mutation of project stores or GitHub state", "No changes to the external analysis backends"],
+    "nonGoals": [
+      "No mutation of project stores or GitHub state",
+      "No changes to the external analysis backends"
+    ],
     "complexity": "M",
     "estimatedMinutes": 90,
-    "budgets": {"maxImplementationFiles": 3, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 3, "maxRuntimeDependencies": 0},
-    "architecture": {"status": "accepted", "decision": "Keep the health command diagnostic-only, enforce limits in the analyzer and use a YAML 1.2-compatible workflow loader fallback.", "components": ["health-cli", "analysis", "workflow-parser"], "responsibilityChanges": false, "interfaceChanges": ["health check options and JSON output"], "dataChanges": [], "ui": {"impact": "cli", "states": [], "evidence": []}, "rollback": "Revert the ticket commit; no project data is changed."},
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the health command diagnostic-only, enforce limits in the analyzer and use a YAML 1.2-compatible workflow loader fallback.",
+      "components": [
+        {
+          "name": "health-cli",
+          "paths": [
+            "planfile/cli/groups/health/commands.py"
+          ]
+        },
+        {
+          "name": "analysis",
+          "paths": [
+            "planfile/analysis/file_analyzer.py"
+          ]
+        },
+        {
+          "name": "workflow-parser",
+          "paths": [
+            "planfile/analysis/parsers/yaml_parser.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "health check options and JSON output"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "cli",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit; no project data is changed."
+    },
     "runtimeDependencies": [],
-    "validation": [{"criterion": "AC-05", "commands": ["python -m pytest -q", "python -m ruff check planfile/analysis/file_analyzer.py planfile/analysis/parsers/yaml_parser.py planfile/cli/groups/health/commands.py tests/test_health_check.py tests/test_yaml_parser.py", "./project/governance-check.sh --base origin/main --head HEAD --actor agent"], "evidence": "Pending exact-head validation"}]
+    "validation": [
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "python -m pytest -q",
+          "python -m ruff check planfile/analysis/file_analyzer.py planfile/analysis/parsers/yaml_parser.py planfile/cli/groups/health/commands.py tests/test_health_check.py tests/test_yaml_parser.py",
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head validation"
+      }
+    ]
   }
 }
