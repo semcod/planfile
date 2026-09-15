@@ -1,0 +1,22 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-087",
+  "summary": "Project terminal Planfile statuses to closed GitHub issues",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-087/**",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "tests/test_github_deduplication.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-082"],
+  "integrationTicket": null
+}

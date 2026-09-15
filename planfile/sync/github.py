@@ -199,11 +199,20 @@ class GitHubBackend(BasePMBackend):
         issue.set_labels(*self._prepare_labels(labels, priority))
 
     def _update_issue_state(self, issue: Issue, status: str) -> None:
-        """Update issue open/closed state."""
+        """Update issue state using GitHub's two-state issue lifecycle.
+
+        Planfile has richer execution statuses, so all terminal values must
+        be projected explicitly before an outbound update is sent.
+        """
         status_lower = status.lower()
-        if status_lower == "closed":
+        # Planfile uses ``done``/``completed`` (and cancellation variants) for
+        # terminal tickets, while GitHub only exposes open/closed issue state.
+        # Projecting every terminal status here keeps outbound lifecycle sync
+        # fail-closed and prevents completed local tickets from remaining open
+        # forever on GitHub.
+        if status_lower in {"closed", "done", "completed", "canceled", "cancelled"}:
             issue.edit(state="closed")
-        elif status_lower == "open":
+        elif status_lower in {"open", "triage", "in_progress", "in-progress"}:
             issue.edit(state="open")
 
     def _update_ticket(
