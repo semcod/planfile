@@ -1,0 +1,21 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-080",
+  "summary": "Make repository-local Planfile configuration and external readback reconciliation deterministic",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "planfile/cli/groups/config/commands.py",
+    "tests/test_config_project_isolation.py",
+    "project/ticket-080/**"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

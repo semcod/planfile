@@ -1,0 +1,134 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-082",
+  "summary": "Make GitHub sync repository-bound and discover all active Planfile sprints",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-082/**",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/core.py",
+    "planfile/cli/groups/sync/commands.py",
+    "planfile/sync/operations.py",
+    "planfile/sync/outbound.py",
+    "planfile/sync/state.py",
+    "planfile/sync/github.py",
+    "planfile/sync/base.py",
+    "planfile/core/models/ticket.py",
+    "tests/test_sync_routing.py",
+    "tests/test_github_deduplication.py",
+    "tests/test_sync_state.py",
+    "tests/test_sync_scope.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-075",
+    "ticket-076",
+    "ticket-078",
+    "ticket-081"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "db93d41fc9e512fb25e81473cba7099d4beb3cfa",
+    "targetBranch": "main",
+    "outcome": "GitHub sync discovers all declared active sprints, keeps imported tickets readable, and rejects cross-repository or non-idempotent mappings.",
+    "nonGoals": [
+      "No credential changes or GitHub issue mutation during validation",
+      "No comment data-model or implicit outbound publication change; ticket-076 owns the explicit comment outbox",
+      "No changes to unrelated active ticket workstreams"
+    ],
+    "complexity": "L",
+    "estimatedMinutes": 120,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 4,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the Store API as the source of all non-history sprint files, pass an explicit repository identity into SyncState, and reconcile remote markers only inside that repository. Keep legacy state readable and atomically replace valid state files.",
+      "components": [
+        {
+          "name": "sync-scope",
+          "paths": [
+            "planfile/cli/groups/sync/core.py",
+            "planfile/cli/groups/sync/commands.py",
+            "planfile/sync/operations.py",
+            "planfile/sync/outbound.py"
+          ]
+        },
+        {
+          "name": "sync-state",
+          "paths": [
+            "planfile/sync/state.py"
+          ]
+        },
+        {
+          "name": "github-backend",
+          "paths": [
+            "planfile/sync/github.py",
+            "planfile/sync/base.py"
+          ]
+        },
+        {
+          "name": "regressions",
+          "paths": [
+            "tests/test_sync_routing.py",
+            "tests/test_github_deduplication.py",
+            "tests/test_sync_state.py",
+            "tests/test_sync_scope.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional repository-bound SyncState identity",
+        "Exact local sync scope helpers"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit; retain any existing valid sync state and do not delete local stores or remote issues."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "uv run pytest -q tests/test_sync_scope.py tests/test_sync_routing.py"
+        ],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "uv run pytest -q tests/test_sync_state.py"
+        ],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "uv run pytest -q",
+          "uv run ruff check planfile/sync planfile/cli/groups/sync tests/test_sync_scope.py tests/test_sync_state.py tests/test_sync_routing.py tests/test_github_deduplication.py",
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head validation"
+      }
+    ]
+  }
+}

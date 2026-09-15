@@ -13,7 +13,9 @@ from planfile.cli.core import console
 def _manager(project_path: str):
     from planfile import Planfile
 
-    return Planfile.auto_discover(project_path).configuration
+    # An explicit project path is a trust boundary.  Do not walk into a
+    # parent checkout (or the user's home directory) and mutate its config.
+    return Planfile(project_path).configuration
 
 
 def _emit(payload: dict, as_json: bool) -> None:

@@ -92,6 +92,7 @@
           "VERSION",
           "package.json",
           "pyproject.toml",
+          "uv.lock",
           "go.mod",
           "Cargo.toml",
           "pom.xml",

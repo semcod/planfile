@@ -18,9 +18,13 @@ def github_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with GitHub Issues."""
-    sync_integration("github", directory, dry_run, direction)
+    sync_integration(
+        "github", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def onedev_cmd(
@@ -29,9 +33,13 @@ def onedev_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with a local OneDev Issue queue."""
-    sync_integration("onedev", directory, dry_run, direction)
+    sync_integration(
+        "onedev", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def publish_cmd(
@@ -54,9 +62,13 @@ def gitlab_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with GitLab Issues."""
-    sync_integration("gitlab", directory, dry_run, direction)
+    sync_integration(
+        "gitlab", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def jira_cmd(
@@ -65,9 +77,13 @@ def jira_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with Jira."""
-    sync_integration("jira", directory, dry_run, direction)
+    sync_integration(
+        "jira", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def markdown_cmd(
@@ -76,9 +92,13 @@ def markdown_cmd(
         False, "--dry-run", help="Show what would be synced without doing it"
     ),
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
+    ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
+    sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
 ) -> None:
     """Sync tickets with markdown files (CHANGELOG.md, TODO.md)."""
-    sync_integration("markdown", directory, dry_run, direction)
+    sync_integration(
+        "markdown", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+    )
 
 
 def handle_no_integrations(directory: str, dry_run: bool, direction: str) -> None:
@@ -89,16 +109,19 @@ def handle_no_integrations(directory: str, dry_run: bool, direction: str) -> Non
 
 def sync_all_integrations(
     integrations: list[str], directory: str, dry_run: bool, direction: str
-) -> None:
+) -> bool:
     """Sync with all configured integrations, handling errors per integration."""
     console.print(f"🔄 Syncing with integrations: {', '.join(integrations)}")
 
+    succeeded = True
     for integration in integrations:
         console.print(f"\n📡 Syncing with {integration}...")
         try:
             sync_integration(integration, directory, dry_run, direction, show_header=False)
         except Exception as e:
+            succeeded = False
             console.print(f"[red]❌ Failed to sync with {integration}: {e}[/red]")
+    return succeeded
 
 
 def all_cmd(
@@ -121,7 +144,8 @@ def all_cmd(
 
     integrations = list(config.config.get("integrations", {}).keys())
 
-    sync_all_integrations(integrations, directory, dry_run, direction)
+    if not sync_all_integrations(integrations, directory, dry_run, direction):
+        raise typer.Exit(1)
 
 
 def _resolve_watch_integrations(config: Any, integrations: list[str] | None) -> list[str]:
@@ -150,12 +174,15 @@ def _detect_changes(last: dict[str, float], current: dict[str, float]) -> bool:
     return any(path not in current for path in last)
 
 
-def _run_sync_once(to_sync: list[str], directory: str, direction: str) -> None:
+def _run_sync_once(to_sync: list[str], directory: str, direction: str) -> bool:
+    succeeded = True
     for integration in to_sync:
         try:
             sync_integration(integration, directory, False, direction, show_header=False)
         except Exception as e:
+            succeeded = False
             console.print(f"[yellow]⚠️ Sync failed for {integration}: {e}[/yellow]")
+    return succeeded
 
 
 def watch_cmd(
@@ -187,7 +214,8 @@ def watch_cmd(
 
     if once:
         console.print("[blue]🔄 Running one-time sync...[/blue]")
-        _run_sync_once(to_sync, directory, direction)
+        if not _run_sync_once(to_sync, directory, direction):
+            raise typer.Exit(1)
         return
 
     last_states = _get_planfile_dir_states(planfile_dir)

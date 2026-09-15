@@ -1,0 +1,102 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-075",
+  "summary": "Synchronize archived GitHub tickets idempotently",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-075/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/core.py",
+    "planfile/sync/github.py",
+    "tests/test_sync_routing.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    ".github/**",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3b7a35b4f1fb25e710643fc9ab7e8d99806f59c2",
+    "targetBranch": "main",
+    "outcome": "GitHub synchronization includes mapped completed tickets in history sprints and projects each ticket label set idempotently.",
+    "nonGoals": [
+      "No changes to GitHub credentials or integration configuration.",
+      "No change to ticket archival policy.",
+      "No dependency or release update."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 50,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Collect integration-tagged tickets from every local sprint and reuse one canonical label projection for GitHub create and update operations.",
+      "components": [
+        {
+          "name": "external-sync",
+          "paths": [
+            "planfile/cli/groups/sync/core.py",
+            "planfile/sync/github.py"
+          ]
+        },
+        {
+          "name": "sync-regression-tests",
+          "paths": [
+            "tests/test_sync_routing.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the single synchronization commit; external issues retain their last synchronized state."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv run pytest -p no:wellmanifest_governance tests/test_sync_routing.py tests/test_github_deduplication.py -q"
+        ],
+        "evidence": "Pending exact-head validation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "uv run ruff check planfile/cli/groups/sync/core.py planfile/sync/github.py tests/test_sync_routing.py"
+        ],
+        "evidence": "Pending exact-head validation."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head validation; baseline ticket-055 schema finding is tracked separately."
+      }
+    ]
+  }
+}

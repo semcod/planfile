@@ -1,0 +1,46 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-078",
+  "summary": "Fail closed on partial external ticket synchronization",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-078/**",
+    "planfile/sync/outbound.py",
+    "planfile/cli/groups/sync/core.py",
+    "planfile/cli/groups/sync/commands.py",
+    "tests/test_sync_failure_status.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "dfa9b75fef3ae14ec87806e7d7e2afc8c3519cc4",
+    "targetBranch": "main",
+    "outcome": "Publish and merge fail-closed outbound sync failure reporting through protected checks and independent Validator.",
+    "nonGoals": ["Inbound redesign", "Repository-scoped outbox migration", "Deployment", "Editing ticket-073", "Policy changes"],
+    "complexity": "S",
+    "estimatedMinutes": 60,
+    "budgets": {"maxImplementationFiles": 4, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a dedicated outbound batch module from CLI, reusing existing operation helpers. Aggregate failures after persisting successful mappings and translate the typed error into a nonzero CLI exit. Preserve the concurrently edited legacy operations module; direct legacy API callers remain a follow-up.",
+      "components": [{"name": "sync", "paths": ["planfile/sync/outbound.py"]}, {"name": "sync-cli", "paths": ["planfile/cli/groups/sync/core.py", "planfile/cli/groups/sync/commands.py", "tests/test_sync_failure_status.py"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Typed outbound batch failure and success result"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert only this change; existing remote issues and persisted mappings remain intact."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-04", "commands": ["uv run --frozen pytest tests/test_sync_failure_status.py tests/test_sync_routing.py tests/test_github_deduplication.py -q", "./project/governance-check.sh"], "evidence": "Pending exact-head validation"}
+    ]
+  }
+}

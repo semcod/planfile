@@ -1,0 +1,70 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-077",
+  "summary": "Fetch accepted history in locked Python tests",
+  "workstream": "infrastructure",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-077/**",
+    ".github/workflows/test-locked.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3b7a35b4f1fb25e710643fc9ab7e8d99806f59c2",
+    "targetBranch": "main",
+    "outcome": "Locked Python tests can resolve the accepted base SHA before running the mandatory governance gate.",
+    "nonGoals": [
+      "Do not weaken or skip governance and test checks",
+      "Do not alter protected validator policy"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a full-history checkout for the existing Python matrix, matching the deterministic ci-loop job.",
+      "components": [
+        {
+          "name": "locked-tests",
+          "paths": [
+            ".github/workflows/test-locked.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material implementation; preserve outstanding receipts and worktrees."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Workflow parsed locally and both hosted Python jobs run against complete target history"
+      }
+    ]
+  }
+}

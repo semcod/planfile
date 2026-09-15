@@ -71,7 +71,7 @@ class GitHubBackend(BasePMBackend):
         issue_labels = []
         if labels:
             for label in labels:
-                if not label.startswith("priority: "):
+                if not label.startswith("priority: ") and label not in issue_labels:
                     issue_labels.append(label)
         if priority:
             priority_label = f"priority-{priority}"
@@ -87,6 +87,17 @@ class GitHubBackend(BasePMBackend):
         """Append strategy metadata section to body."""
         if not metadata:
             return body
+        metadata = dict(metadata)
+        if metadata.get("planfile_id") and not any(
+            metadata.get(key) for key in ("deduplication_key", "dedupe_key", "fingerprint")
+        ):
+            local_id = str(metadata["planfile_id"])
+            repository = str(getattr(self.repo, "full_name", self.config.get("repo", "")))
+            if repository and not local_id.startswith(f"{repository}:"):
+                # Legacy callers supplied a store-local ID only. Namespacing it
+                # by the target repository prevents cross-repository marker
+                # collisions while preserving same-store retry idempotency.
+                metadata["planfile_id"] = f"{repository}:{local_id}"
         deduplication_key = next(
             (
                 str(metadata[key]).strip()
@@ -127,6 +138,7 @@ class GitHubBackend(BasePMBackend):
             (
                 issue
                 for issue in self.repo.get_issues(state="all")
+                if not getattr(issue, "pull_request", None)
                 if any(marker in (issue.body or "") for marker in markers)
             ),
             None,
@@ -179,13 +191,12 @@ class GitHubBackend(BasePMBackend):
         labels: list[str] | None,
         priority: str | None,
     ) -> None:
-        """Update issue labels, replacing priority labels."""
-        current_labels = [label.name for label in issue.labels]
-        current_labels = [label for label in current_labels if not label.startswith("priority: ")]
-        new_labels = labels or []
-        if priority:
-            new_labels.append(f"priority: {priority}")
-        issue.set_labels(*current_labels, *new_labels)
+        """Replace labels with the canonical, de-duplicated Planfile projection."""
+        # ``_prepare_labels`` removes legacy ``priority: high`` values, emits
+        # the canonical ``priority-high`` label and never mutates ``labels``.
+        # The old code appended to the caller's list, so every sync rewrote the
+        # local ticket with another priority label.
+        issue.set_labels(*self._prepare_labels(labels, priority))
 
     def _update_issue_state(self, issue: Issue, status: str) -> None:
         """Update issue open/closed state."""
@@ -271,6 +282,10 @@ class GitHubBackend(BasePMBackend):
         tickets = []
         # GitHub listing path
         for issue in issues:
+            if getattr(issue, "pull_request", None) and not self.config.get(
+                "include_pull_requests", False
+            ):
+                continue
             if limit and len(tickets) >= limit:
                 break
             tickets.append(self._issue_to_ticket_status(issue))
@@ -284,7 +299,11 @@ class GitHubBackend(BasePMBackend):
         tickets = []
         # GitHub search path
         for issue in issues:
-            if query.lower() in issue.title.lower() or query.lower() in issue.body.lower():
+            if getattr(issue, "pull_request", None) and not self.config.get(
+                "include_pull_requests", False
+            ):
+                continue
+            if query.lower() in issue.title.lower() or query.lower() in (issue.body or "").lower():
                 tickets.append(self._issue_to_ticket_status(issue))
 
         return tickets
