@@ -155,7 +155,11 @@ def _load_tickets_v1_format(
 
 
 def _load_tickets_for_sync(
-    store: Any, directory: str, integration_name: str
+    store: Any,
+    directory: str,
+    integration_name: str,
+    ticket_ids: list[str] | None = None,
+    sprint_ids: list[str] | None = None,
 ) -> tuple[list[tuple[str, dict]], str | None, str | None, dict | None]:
     """Load tickets from all sources for sync operation."""
     tickets_source = None
@@ -168,9 +172,32 @@ def _load_tickets_for_sync(
     # state synchronized. Iterate every sprint rather than only ``current``.
     if store.is_initialized():
         tickets_source = ".planfile/ structure"
-        for sprint_id in store._all_sprint_ids():
+        seen_ids: set[str] = set()
+        requested_tickets = {str(value).strip() for value in (ticket_ids or []) if str(value).strip()}
+        requested_sprints = {str(value).strip() for value in (sprint_ids or []) if str(value).strip()}
+        available_sprints = store._all_sprint_ids()
+        sprint_scan = (
+            [sprint for sprint in available_sprints if sprint in requested_sprints]
+            if requested_sprints
+            else available_sprints
+        )
+        for sprint_id in sprint_scan:
             sprint = store.load_sprint(sprint_id)
-            all_tickets.extend(_collect_tickets_from_sprint(sprint, integration_name))
+            for ticket_id, ticket in _collect_tickets_from_sprint(sprint, integration_name):
+                if requested_tickets and ticket_id not in requested_tickets:
+                    continue
+                # A physical ticket ID is the Planfile identity. If an
+                # interrupted move leaves it in two sprints, publish one
+                # deterministic record and keep the first source visible for
+                # later reconciliation instead of creating duplicate issues.
+                if ticket_id in seen_ids:
+                    console.print(
+                        f"[yellow]⚠️ Duplicate local ticket {ticket_id}; "
+                        f"ignoring sprint {sprint_id}[/yellow]"
+                    )
+                    continue
+                seen_ids.add(ticket_id)
+                all_tickets.append((ticket_id, ticket))
 
     # Try 2: Old format v1 (*.planfile.yaml files with sprint/backlog sections)
     if not all_tickets:
@@ -178,6 +205,10 @@ def _load_tickets_for_sync(
             directory, integration_name
         )
         all_tickets.extend(v1_tickets)
+
+    if ticket_ids:
+        requested_tickets = {str(value).strip() for value in ticket_ids if str(value).strip()}
+        all_tickets = [item for item in all_tickets if item[0] in requested_tickets]
 
     return all_tickets, tickets_source, v1_source_file, v1_data
 
@@ -192,6 +223,8 @@ def _execute_sync_with_progress(
     v1_data: dict | None,
     direction: str,
     publish_to: list[str] | None = None,
+    ticket_ids: list[str] | None = None,
+    sprint_ids: list[str] | None = None,
 ) -> None:
     """Execute sync with progress bar."""
     with Progress(
@@ -214,6 +247,8 @@ def _execute_sync_with_progress(
                 v1_source_file,
                 v1_data,
                 publish_to=publish_to,
+                ticket_ids=ticket_ids,
+                sprint_ids=sprint_ids,
             )
             progress.update(task, description="[green]✓ Synced from external system[/green]")
 
@@ -225,6 +260,8 @@ def sync_integration(
     direction: str,
     show_header: bool = True,
     publish_to: list[str] | None = None,
+    ticket_ids: list[str] | None = None,
+    sprint_ids: list[str] | None = None,
 ) -> None:
     """Sync with a specific integration."""
     if show_header:
@@ -251,7 +288,7 @@ def sync_integration(
 
     store = PlanfileStore(directory)
     all_tickets, tickets_source, v1_source_file, v1_data = _load_tickets_for_sync(
-        store, directory, integration_name
+        store, directory, integration_name, ticket_ids=ticket_ids, sprint_ids=sprint_ids
     )
 
     if not all_tickets and direction == "to":
@@ -283,6 +320,8 @@ def sync_integration(
             v1_data,
             direction,
             publish_to,
+            ticket_ids,
+            sprint_ids,
         )
     except OutboundSyncError as error:
         print_error(str(error))
