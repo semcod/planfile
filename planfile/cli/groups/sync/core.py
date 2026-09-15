@@ -42,6 +42,21 @@ def _initialize_backend(integration_name: str, config: IntegrationConfig, show_h
     return backend
 
 
+def _apply_github_overrides(
+    config: IntegrationConfig,
+    repo: str | None,
+) -> None:
+    """Apply explicit CLI overrides before validating the GitHub backend."""
+    if not repo:
+        return
+
+    integrations = config.config.setdefault("integrations", {})
+    github = dict(integrations.get("github") or {})
+    if repo:
+        github["repo"] = repo
+    integrations["github"] = github
+
+
 def _ticket_matches_integration(ticket: dict, integration_name: str) -> bool:
     """Check if ticket matches the given integration."""
     ticket_integration = ticket.get("integration")
@@ -225,6 +240,7 @@ def _execute_sync_with_progress(
     publish_to: list[str] | None = None,
     ticket_ids: list[str] | None = None,
     sprint_ids: list[str] | None = None,
+    remote_labels: list[str] | None = None,
 ) -> None:
     """Execute sync with progress bar."""
     with Progress(
@@ -249,6 +265,7 @@ def _execute_sync_with_progress(
                 publish_to=publish_to,
                 ticket_ids=ticket_ids,
                 sprint_ids=sprint_ids,
+                remote_labels=remote_labels,
             )
             progress.update(task, description="[green]✓ Synced from external system[/green]")
 
@@ -262,6 +279,8 @@ def sync_integration(
     publish_to: list[str] | None = None,
     ticket_ids: list[str] | None = None,
     sprint_ids: list[str] | None = None,
+    repo: str | None = None,
+    managed_only: bool = False,
 ) -> None:
     """Sync with a specific integration."""
     if show_header:
@@ -270,6 +289,8 @@ def sync_integration(
     # Load configuration
     config = IntegrationConfig(directory)
     config.load_configs()
+    if integration_name == "github":
+        _apply_github_overrides(config, repo)
 
     # Initialize backend
     backend = _initialize_backend(integration_name, config, show_header)
@@ -308,6 +329,8 @@ def sync_integration(
     if dry_run:
         console.print("\n[cyan]🔍 DRY RUN - No changes will be made[/cyan]")
 
+    remote_labels = ["planfile", "managed"] if managed_only else None
+
     # Execute sync with progress
     try:
         _execute_sync_with_progress(
@@ -322,6 +345,7 @@ def sync_integration(
             publish_to,
             ticket_ids,
             sprint_ids,
+            remote_labels,
         )
     except OutboundSyncError as error:
         print_error(str(error))

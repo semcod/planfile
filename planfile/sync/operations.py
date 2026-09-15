@@ -345,10 +345,15 @@ def _find_local_ticket(
     return matches[0] if matches else (None, None, None)
 
 
-def _fetch_external_tickets(backend, integration_name: str) -> list | None:
+def _fetch_external_tickets(
+    backend,
+    integration_name: str,
+    labels: list[str] | None = None,
+) -> list | None:
     """Fetch tickets from external system. Returns None on error, empty list if no tickets."""
     try:
-        external_tickets = backend.list_tickets()
+        kwargs = {"labels": labels} if labels else {}
+        external_tickets = backend.list_tickets(**kwargs)
         if external_tickets is None:
             console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
             return None
@@ -425,6 +430,7 @@ def sync_from_external(
     publish_to: list[str] | None = None,
     ticket_ids: list[str] | None = None,
     sprint_ids: list[str] | None = None,
+    remote_labels: list[str] | None = None,
 ) -> None:
     """Sync tickets from external system to planfile."""
     sync_state = SyncState(
@@ -453,7 +459,7 @@ def sync_from_external(
             return
         import_target = sections[target_id]
         lookup_sections = {target_id: import_target}
-    external_tickets = _fetch_external_tickets(backend, integration_name)
+    external_tickets = _fetch_external_tickets(backend, integration_name, remote_labels)
 
     if external_tickets is None:
         return

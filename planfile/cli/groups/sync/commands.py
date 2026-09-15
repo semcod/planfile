@@ -20,10 +20,27 @@ def github_cmd(
     direction: str = typer.Option("both", "--direction", help="Sync direction: to, from, or both"),
     ticket_ids: list[str] = typer.Option([], "--ticket", help="Sync only these local ticket IDs"),
     sprint_ids: list[str] = typer.Option([], "--sprint", help="Sync only these sprint IDs"),
+    repo: str | None = typer.Option(
+        None,
+        "--repo",
+        help="GitHub owner/repository override (useful in reusable GitHub Actions)",
+    ),
+    managed_only: bool = typer.Option(
+        False,
+        "--managed-only",
+        help="Import only Issues carrying both the planfile and managed labels",
+    ),
 ) -> None:
     """Sync tickets with GitHub Issues."""
     sync_integration(
-        "github", directory, dry_run, direction, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+        "github",
+        directory,
+        dry_run,
+        direction,
+        ticket_ids=ticket_ids,
+        sprint_ids=sprint_ids,
+        repo=repo,
+        managed_only=managed_only,
     )
 
 
