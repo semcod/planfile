@@ -210,7 +210,15 @@ class GitHubBackend(BasePMBackend):
         # Projecting every terminal status here keeps outbound lifecycle sync
         # fail-closed and prevents completed local tickets from remaining open
         # forever on GitHub.
-        if status_lower in {"closed", "done", "completed", "canceled", "cancelled"}:
+        if status_lower in {
+            "closed",
+            "done",
+            "completed",
+            "blocked",
+            "failed",
+            "canceled",
+            "cancelled",
+        }:
             issue.edit(state="closed")
         elif status_lower in {"open", "triage", "in_progress", "in-progress"}:
             issue.edit(state="open")

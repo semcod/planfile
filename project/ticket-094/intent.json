@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-094",
+  "summary": "Project terminal statuses to GitHub closed state",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-094/**",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "tests/test_sync_routing.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-082"],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e2f1e297a4fe4ded7bb7dd9ced3d0d018eede40e",
+    "targetBranch": "main",
+    "outcome": "Regression evidence binds every Planfile terminal status to GitHub closed state while preserving open-state projections.",
+    "nonGoals": [
+      "No new GitHub API behavior beyond the implementation already on main.",
+      "No credentials, live network calls, or issue mutation in tests.",
+      "No changes to receipt storage or label projection."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 35,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the canonical terminal status set with blocked and failed, then assert every terminal/open projection through an offline fake issue; retain unknown status as a no-op.",
+      "components": [
+        {
+          "name": "sync-status-projection",
+          "paths": [
+            "planfile/sync/github.py",
+            "tests/test_sync_routing.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the status-set extension and regression tests; prior status projection remains available."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_sync_routing.py"
+        ],
+        "evidence": "Offline fake issue asserts done, completed, failed, blocked, canceled and open mappings without network."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head publication."
+      }
+    ]
+  }
+}
