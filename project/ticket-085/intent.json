@@ -39,7 +39,7 @@
     "budgets": {
       "maxImplementationFiles": 10,
       "maxAffectedComponents": 4,
-      "maxPublicInterfaceChanges": 4,
+      "maxPublicInterfaceChanges": 3,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
