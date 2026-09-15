@@ -67,8 +67,27 @@ class FileAnalyzer:
     def _extract_from_json_structure(self, data: Any, path: str, parent_key: str = ""):
         return extract_from_yaml_structure(data, path, parent_key)
 
-    def analyze_directory(self, directory: Path, patterns: list[str] = None) -> dict[str, Any]:
-        """Analyze all matching files in directory."""
+    def analyze_directory(
+        self,
+        directory: Path,
+        patterns: list[str] = None,
+        *,
+        max_files: int | None = None,
+        max_bytes: int | None = None,
+    ) -> dict[str, Any]:
+        """Analyze matching files without exceeding optional read budgets.
+
+        The analyzer is read-only.  Limits are enforced before opening each
+        file, and the result records whether the view was truncated so callers
+        can fail closed instead of presenting a partial health report as
+        complete.
+        """
+        if max_files is not None and max_files < 1:
+            raise ValueError("max_files must be positive")
+        if max_bytes is not None and max_bytes < 1:
+            raise ValueError("max_bytes must be positive")
+
+        directory = Path(directory)
         if patterns is None:
             patterns = ['*.yaml', '*.yml', '*.json', '*.toon.yaml', '*.toon.yml']
 
@@ -76,9 +95,16 @@ class FileAnalyzer:
         all_metrics = []
         all_tasks = []
         analyzed_files = []
+        analyzed_bytes = 0
+        truncated = False
+        seen: set[Path] = set()
 
         for pattern in patterns:
             for file_path in directory.rglob(pattern):
+                file_path = file_path.resolve()
+                if file_path in seen:
+                    continue
+                seen.add(file_path)
                 # Skip hidden files and common exclusions
                 if file_path.name.startswith('.') or any(skip in str(file_path) for skip in ['__pycache__', '.git', 'node_modules', '.pytest_cache', '.planfile_analysis']):
                     continue
@@ -87,19 +113,40 @@ class FileAnalyzer:
                 if 'analysis_summary.json' in file_path.name or 'local-strategy.yaml' in file_path.name:
                     continue
 
+                if max_files is not None and len(analyzed_files) >= max_files:
+                    truncated = True
+                    break
+                try:
+                    file_size = file_path.stat().st_size
+                except OSError:
+                    file_size = 0
+                if max_bytes is not None and analyzed_bytes + file_size > max_bytes:
+                    truncated = True
+                    break
+
                 issues, metrics, tasks = self.analyze_file(file_path)
 
                 all_issues.extend(issues)
                 all_metrics.extend(metrics)
                 all_tasks.extend(tasks)
                 analyzed_files.append(str(file_path))
+                analyzed_bytes += file_size
+            if truncated:
+                break
 
         return {
             'issues': all_issues,
             'metrics': all_metrics,
             'tasks': all_tasks,
             'analyzed_files': analyzed_files,
-            'summary': self._generate_summary(all_issues, all_metrics, all_tasks)
+            'summary': self._generate_summary(all_issues, all_metrics, all_tasks),
+            'budget': {
+                'max_files': max_files,
+                'max_bytes': max_bytes,
+                'files': len(analyzed_files),
+                'bytes': analyzed_bytes,
+                'truncated': truncated,
+            },
         }
 
     def _generate_summary(self, issues: list[ExtractedIssue], metrics: list[ExtractedMetric], tasks: list[ExtractedTask]) -> dict[str, Any]:

@@ -45,7 +45,10 @@ def _process_yaml_dict(data: dict, path: str, parent_key: str, visited: set) -> 
     """Process a YAML dict and extract issues."""
     issues = []
     for key, value in data.items():
-        full_key = f"{parent_key}.{key}" if parent_key else key
+        # YAML 1.1 loaders decode the GitHub Actions ``on`` key as ``True``.
+        # Keep paths textual so diagnostics never call string methods on a bool.
+        key_text = str(key)
+        full_key = f"{parent_key}.{key_text}" if parent_key else key_text
         # Skip if we're already processing issues (prevent self-reference)
         if 'issues' in full_key.lower():
             continue
@@ -88,28 +91,49 @@ def analyze_yaml(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
         with open(file_path) as f:
             content = f.read()
 
+        parsed = False
         try:
             data = yaml.safe_load(content)
-            issues.extend(extract_from_yaml_structure(data, str(file_path)))
-
-        except yaml.YAMLError as e:
+            parsed = True
+        except yaml.YAMLError as error:
             if 'toon' in str(file_path):
                 return analyze_toon(file_path)
 
-            issues.append(ExtractedIssue(
-                name=f"Fix YAML syntax in {file_path.name}",
-                description=f"YAML parsing error: {str(e)}",
-                priority="high",
-                category="bug",
-                file_path=str(file_path),
-                effort_estimate="1h",
-                tags=["yaml", "syntax"]
-            ))
+            # GitHub Actions accepts expression-heavy scalar values and YAML
+            # 1.2 keys that PyYAML's default YAML 1.1 resolver mishandles. The
+            # BaseLoader keeps every scalar as text and is a safe diagnostic
+            # fallback; it never constructs Python objects.
+            if _is_github_workflow(file_path):
+                try:
+                    data = yaml.load(content, Loader=yaml.BaseLoader)
+                    parsed = True
+                except yaml.YAMLError as workflow_error:
+                    issues.append(ExtractedIssue(
+                        name=f"Unsupported GitHub Actions YAML in {file_path.name}",
+                        description=f"Unsupported GitHub Actions YAML construct: {workflow_error}",
+                        priority="high",
+                        category="bug",
+                        file_path=str(file_path),
+                        effort_estimate="1h",
+                        tags=["yaml", "github-actions", "unsupported"]
+                    ))
+            else:
+                issues.append(ExtractedIssue(
+                    name=f"Fix YAML syntax in {file_path.name}",
+                    description=f"YAML parsing error: {error}",
+                    priority="high",
+                    category="bug",
+                    file_path=str(file_path),
+                    effort_estimate="1h",
+                    tags=["yaml", "syntax"]
+                ))
 
-        text_issues, text_metrics, text_tasks = analyze_text(file_path)
-        issues.extend(text_issues)
-        metrics.extend(text_metrics)
-        tasks.extend(text_tasks)
+        if parsed:
+            issues.extend(extract_from_yaml_structure(data, str(file_path)))
+            text_issues, text_metrics, text_tasks = analyze_text(file_path)
+            issues.extend(text_issues)
+            metrics.extend(text_metrics)
+            tasks.extend(text_tasks)
 
     except Exception as e:
         issues.append(ExtractedIssue(
@@ -121,3 +145,8 @@ def analyze_yaml(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
         ))
 
     return issues, metrics, tasks
+
+
+def _is_github_workflow(file_path: Path) -> bool:
+    """Return whether *file_path* is below a GitHub Actions workflow folder."""
+    return ".github" in file_path.parts and "workflows" in file_path.parts
