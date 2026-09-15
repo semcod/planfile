@@ -1,0 +1,71 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-098",
+  "summary": "Provide reusable GitHub Actions workflow for Planfile sync",
+  "workstream": "infrastructure",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-098/**",
+    "project/TICKETS.md",
+    ".github/workflows/planfile-sync-reusable.yml",
+    ".github/planfile-github-sync.yml"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": ["ticket-097"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d1e1cfd31627ea7d5931e3dca2f343b1e19576ef",
+    "targetBranch": "main",
+    "outcome": "A reusable GitHub Actions workflow performs repository-bound Planfile/GitHub reconciliation, and a caller template supplies hourly, manual and source-change triggers.",
+    "nonGoals": [
+      "No repository-specific workflow installation in this ticket.",
+      "No release version bump or package publication in this ticket.",
+      "No automatic write access to repository contents."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the reusable workflow in the Planfile repository and distribute only a small caller template. The caller passes its GITHUB_REPOSITORY to the Planfile CLI and receives the least permissions required for Issue reconciliation.",
+      "components": [
+        {"name": "reusable-workflow", "paths": [".github/workflows/planfile-sync-reusable.yml"]},
+        {"name": "caller-template", "paths": [".github/planfile-github-sync.yml"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove the reusable workflow and caller template; existing manual Planfile CLI sync remains available."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["python -c \"from pathlib import Path; text=Path('.github/workflows/planfile-sync-reusable.yml').read_text(); assert 'issues: write' in text and 'contents: read' in text\""],
+        "evidence": "The workflow declares least-privilege permissions and uses GITHUB_REPOSITORY."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["python -c \"from pathlib import Path; text=Path('.github/planfile-github-sync.yml').read_text(); assert 'schedule:' in text and 'workflow_dispatch:' in text and 'concurrency:' in text\""],
+        "evidence": "The caller template contains periodic, manual and serialized triggers."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["./project/governance-check.sh --base origin/main --head HEAD --actor agent"],
+        "evidence": "Pending exact-head validation and protected publication."
+      }
+    ]
+  }
+}
