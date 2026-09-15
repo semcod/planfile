@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-091",
+  "summary": "Record LLM latency cost and replayable receipts",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-091/**",
+    "project/TICKETS.md",
+    "planfile/llm/metrics.py",
+    "planfile/llm/client.py",
+    "tests/test_llm_metrics.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0111f8b678b878100f89ad1bd3b9de8f7fb29c79",
+    "targetBranch": "main",
+    "outcome": "LLM client calls emit redacted, digest-bound receipts and a deterministic aggregate export with nullable usage and cost.",
+    "nonGoals": [
+      "No live provider calls or provider billing reconciliation.",
+      "No prompt, response, credential, or raw provider error storage.",
+      "No instrumentation of LLM integrations outside planfile.llm.client."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep a lock-protected JSONL evidence store at an explicit environment path or initialized project .planfile directory. Record hashes and bounded metadata at the client boundary; aggregate without replaying content.",
+      "components": [
+        {
+          "name": "llm-metrics",
+          "paths": [
+            "planfile/llm/metrics.py",
+            "planfile/llm/client.py"
+          ]
+        },
+        {
+          "name": "llm-metrics-tests",
+          "paths": [
+            "tests/test_llm_metrics.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "call_llm accepts optional metrics_store and correlation_id keyword arguments."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the client instrumentation and metrics module; existing provider call behavior remains available."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_llm_metrics.py"
+        ],
+        "evidence": "Offline provider fakes cover direct and fallback attempts, failure redaction, missing usage, and aggregate export."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head publication."
+      }
+    ]
+  }
+}
