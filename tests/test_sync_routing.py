@@ -46,6 +46,8 @@ def test_onedev_import_routes_ticket_to_github_without_losing_evidence():
 
     ticket = backlog["tickets"]["ONEDEV-11"]
     assert imported == 1
+    assert ticket["id"] == "ONEDEV-11"
+    assert ticket["sprint"] == "backlog"
     assert ticket["name"] == "Doctor finding"
     assert ticket["description"] == "full evidence"
     assert ticket["integration"] == ["onedev", "github"]
@@ -99,6 +101,8 @@ def test_onedev_refresh_updates_content_and_preserves_other_backend_reference():
 
     ticket = backlog["tickets"]["ONEDEV-11"]
     assert updated == 1
+    assert ticket["id"] == "ONEDEV-11"
+    assert ticket["sprint"] == "backlog"
     assert ticket["name"] == "Current title"
     assert ticket["description"] == "current evidence"
     assert ticket["sync"]["onedev"]["id"] == "11"

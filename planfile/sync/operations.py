@@ -350,12 +350,18 @@ def _update_local_ticket(
 
     if planfile_id in sprint.get("tickets", {}):
         ticket = sprint["tickets"][planfile_id]
+        default_sprint = "current"
     elif planfile_id in backlog.get("tickets", {}):
         ticket = backlog["tickets"][planfile_id]
+        default_sprint = "backlog"
     else:
         return updated_count
 
     ticket.update(update_fields)
+    # Legacy imports used the mapping key as the only local identity. Keep the
+    # record visible to the current ticket projection when it is refreshed.
+    ticket.setdefault("id", planfile_id)
+    ticket.setdefault("sprint", default_sprint)
     ticket.setdefault("sync", {})[integration_name] = backend_ref
 
     console.print(f"  ✓ Updated: {planfile_id} from {ext_data['id']}")
@@ -374,9 +380,11 @@ def _import_new_ticket(
     new_id = f"{integration_name.upper()}-{ext_data['id']}"
 
     ticket_data = {
+        "id": new_id,
         "name": ext_data.get("name") or ext_data.get("title"),
         "description": ext_data["description"],
         "status": ext_data["status"],
+        "sprint": "backlog",
         "assignee": ext_data["assignee"],
         "labels": ext_data["labels"],
         "external_id": ext_data["id"],
