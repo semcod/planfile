@@ -14,14 +14,16 @@ synchronization across the participating repositories.
 
 Publish Planfile `0.1.126`, the version pinned by the reusable synchronization
 workflow, so calling repositories can install the exact workflow runtime.
-Update the package metadata and lockfile, build and verify the distribution,
-and publish the release through the repository's supported release boundary.
+Update the integration-owned package metadata and lockfile, build and verify
+the distribution, and publish the release through the repository's supported
+release boundary. The runtime module version is coordinated by the separate
+application ticket that owns `planfile/__init__.py`.
 
 ## Acceptance criteria
 
 - [x] AC-01: Scope is approved by the owner's execution authorization above.
-- [ ] AC-02: `VERSION`, `pyproject.toml`, `planfile/__init__.py` and `uv.lock`
-  consistently identify version `0.1.126`.
+- [ ] AC-02: `VERSION`, `pyproject.toml` and `uv.lock` consistently identify
+  version `0.1.126`.
 - [ ] AC-03: The source distribution and wheel build successfully and expose
   the expected package version.
 - [ ] AC-04: The release is available from the configured package registry and

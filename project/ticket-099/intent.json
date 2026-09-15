@@ -14,7 +14,6 @@
     "project/TICKETS.md",
     "VERSION",
     "pyproject.toml",
-    "planfile/__init__.py",
     "uv.lock"
   ],
   "forbiddenPaths": ["project/ticket-*/user-*.md"],
@@ -40,9 +39,9 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Keep the release version aligned across source metadata and the uv lockfile; publish through the existing package release boundary.",
+      "decision": "Keep the integration-owned release version aligned across package metadata and the uv lockfile; publish through the existing package release boundary.",
       "components": [
-        {"name": "package-metadata", "paths": ["VERSION", "pyproject.toml", "planfile/__init__.py"]},
+        {"name": "package-metadata", "paths": ["VERSION", "pyproject.toml"]},
         {"name": "dependency-lock", "paths": ["uv.lock"]}
       ],
       "responsibilityChanges": false,
@@ -53,7 +52,7 @@
     },
     "runtimeDependencies": [],
     "validation": [
-      {"criterion": "AC-02", "commands": ["python -c \"from pathlib import Path; import tomllib; assert Path('VERSION').read_text().strip() == '0.1.126'; assert tomllib.loads(Path('pyproject.toml').read_text())['project']['version'] == '0.1.126'\""], "evidence": "All package version sources agree."},
+      {"criterion": "AC-02", "commands": ["python -c \"from pathlib import Path; import tomllib; assert Path('VERSION').read_text().strip() == '0.1.126'; assert tomllib.loads(Path('pyproject.toml').read_text())['project']['version'] == '0.1.126'\""], "evidence": "Integration-owned package metadata agrees; the application-owned runtime version is delivered by the dependent application ticket."},
       {"criterion": "AC-03", "commands": ["uv build", "python -c \"import zipfile, glob; assert glob.glob('dist/planfile-0.1.126-*.whl')\""], "evidence": "Both distribution formats build with the expected version."},
       {"criterion": "AC-05", "commands": ["./project/governance-check.sh --base origin/main --head HEAD --actor agent"], "evidence": "Pending exact-head validation and protected publication."}
     ]
