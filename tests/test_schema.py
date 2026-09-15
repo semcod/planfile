@@ -1,14 +1,14 @@
 """Tests for schema validation."""
 
-import pytest
 import tempfile
-import yaml
 from pathlib import Path
+
+import yaml
 
 
 def test_validate_planfile_valid():
     """Test validation of valid planfile.yaml."""
-    from planfile.core.schema import SchemaValidator, validate_yaml_file
+    from planfile.core.schema import SchemaValidator
     
     data = {
         "schema": "1.1",
@@ -160,3 +160,55 @@ def test_get_current_schema_version():
     
     version = SchemaValidator.get_current_schema_version()
     assert version == "1.1"
+
+
+def test_validate_repository_config_schema():
+    from planfile.core.schema import SchemaValidator
+
+    valid = {
+        "project": "demo",
+        "prefix": "PLF",
+        "next_id": 4,
+        "archive": {"enabled": True, "terminal_statuses": ["done", "blocked"]},
+        "storage": {"backend": "single-yaml", "index": "none"},
+    }
+
+    is_valid, errors = SchemaValidator.validate_config(valid)
+
+    assert is_valid is True
+    assert errors == []
+
+
+def test_validate_repository_config_rejects_unknown_and_invalid_values():
+    from planfile.core.schema import SchemaValidator
+
+    is_valid, errors = SchemaValidator.validate_config(
+        {
+            "project": "",
+            "prefix": "not valid!",
+            "next_id": 0,
+            "unknown": True,
+            "storage": {"backend": "remote"},
+        }
+    )
+
+    assert is_valid is False
+    assert any("Unknown config field: unknown" in error for error in errors)
+    assert any("Invalid config field project" in error for error in errors)
+    assert any("Invalid config field next_id" in error for error in errors)
+    assert any("Invalid config field storage.backend" in error for error in errors)
+
+
+def test_auto_schema_detection_distinguishes_document_contracts(tmp_path):
+    from planfile.core.schema import detect_file_type, validate_yaml_file
+
+    config = tmp_path / ".planfile" / "config.yaml"
+    config.parent.mkdir()
+    config.write_text("project: demo\nprefix: PLF\nnext_id: 1\n", encoding="utf-8")
+    assert detect_file_type(config) == "config"
+    assert validate_yaml_file(config, "auto") == (True, [])
+
+    strategy = tmp_path / "strategy.yaml"
+    strategy.write_text("name: demo\nsprints: []\n", encoding="utf-8")
+    assert detect_file_type(strategy) == "strategy"
+    assert validate_yaml_file(strategy, "auto") == (True, [])
