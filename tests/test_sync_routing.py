@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from planfile.cli.groups.sync.core import _load_tickets_for_sync
 from planfile.sync.base import TicketState
 from planfile.sync.operations import (
@@ -176,3 +178,50 @@ def test_github_label_update_is_idempotent_and_does_not_mutate_ticket_labels():
     expected = ("regression", "priority-high", "planfile", "managed")
     assert ticket_labels == ["regression", "priority: high", "regression"]
     assert issue.set_calls == [expected, expected]
+
+
+@pytest.mark.parametrize(
+    "status",
+    ["closed", "done", "completed", "blocked", "failed", "canceled", "cancelled"],
+)
+def test_github_projects_all_terminal_planfile_statuses_to_closed(status):
+    from planfile.sync.github import GitHubBackend
+
+    class FakeIssue:
+        def __init__(self):
+            self.edits = []
+
+        def edit(self, **kwargs):
+            self.edits.append(kwargs)
+
+    issue = FakeIssue()
+    GitHubBackend.__new__(GitHubBackend)._update_issue_state(issue, status)
+
+    assert issue.edits == [{"state": "closed"}]
+
+
+@pytest.mark.parametrize("status", ["open", "triage", "in_progress", "in-progress"])
+def test_github_keeps_active_planfile_statuses_open(status):
+    from planfile.sync.github import GitHubBackend
+
+    class FakeIssue:
+        def __init__(self):
+            self.edits = []
+
+        def edit(self, **kwargs):
+            self.edits.append(kwargs)
+
+    issue = FakeIssue()
+    GitHubBackend.__new__(GitHubBackend)._update_issue_state(issue, status)
+
+    assert issue.edits == [{"state": "open"}]
+
+
+def test_github_ignores_unknown_status_without_external_mutation():
+    from planfile.sync.github import GitHubBackend
+
+    class FakeIssue:
+        def edit(self, **_kwargs):
+            raise AssertionError("unknown status must not mutate GitHub")
+
+    GitHubBackend.__new__(GitHubBackend)._update_issue_state(FakeIssue(), "needs-review")
