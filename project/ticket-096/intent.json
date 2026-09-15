@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-096",
+  "summary": "Bound auto_discover to repository boundary",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-096/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "tests/test_repository_routing.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "73683681dfa50543e3f1afa1032e77b98e088954",
+    "targetBranch": "main",
+    "outcome": "auto_discover resolves the nearest repository boundary and never selects a parent repository's Planfile store for a nested Git repository.",
+    "nonGoals": [
+      "No changes to GitHub credentials or synchronization behavior.",
+      "No mutation of an existing parent repository configuration."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the canonical repository-root resolver as the sole auto-discovery boundary and cover nested Git repositories with an offline regression.",
+      "components": [
+        {
+          "name": "repository-discovery",
+          "paths": [
+            "planfile/__init__.py",
+            "tests/test_repository_routing.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit; repository-local discovery behavior returns to the previous implementation."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv run pytest -q tests/test_repository_routing.py"
+        ],
+        "evidence": "Offline nested-repository regression and existing routing cases."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "uv run pytest -q",
+          "uv run ruff check",
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head publication."
+      }
+    ]
+  }
+}

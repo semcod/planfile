@@ -52,6 +52,20 @@ def test_canonical_root_does_not_cross_nested_repository_boundary(tmp_path: Path
     assert canonical_project_root(nested) == nested.resolve()
 
 
+def test_auto_discover_does_not_cross_nested_repository_boundary(tmp_path: Path) -> None:
+    parent = tmp_path / "parent"
+    _git_repo(parent, "git@github.com:owner/parent.git")
+    _github_config(parent, "owner/parent")
+    nested = parent / "nested"
+    _git_repo(nested, "git@github.com:owner/nested.git")
+
+    discovered = planfile.Planfile.auto_discover(str(nested))
+
+    assert discovered.store.project_dir == nested.resolve()
+    assert (nested / ".planfile" / "config.yaml").exists()
+    assert (parent / ".planfile" / "integrations.oql.planfile.yaml").exists()
+
+
 def test_auto_discover_rejects_configured_origin_mismatch(tmp_path: Path) -> None:
     root = tmp_path / "project"
     _git_repo(root, "git@github.com:owner/actual.git")

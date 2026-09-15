@@ -108,15 +108,11 @@ class Planfile:
     @classmethod
     def auto_discover(cls, start_path: str = ".") -> "Planfile":
         """Find the owning ``.planfile`` without creating nested stores."""
-        path = canonical_project_root(start_path)
-        while True:
-            candidate = path / ".planfile"
-            if candidate.is_dir():
-                return cls(str(path))
-            if path == path.parent:
-                break
-            path = path.parent
-        return cls(str(canonical_project_root(start_path)))  # initialise at the project root
+        # ``canonical_project_root`` already resolves the nearest store while
+        # respecting the current Git repository boundary.  Walking above that
+        # result would let a nested checkout inherit a parent repository's
+        # store, which binds tickets and integrations to the wrong project.
+        return cls(str(canonical_project_root(start_path)))
 
     def create_ticket(self, name: str, **kwargs) -> Ticket:
         return self.create_ticket_deduplicated(name, **kwargs)[0]
