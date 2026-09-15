@@ -64,3 +64,37 @@ def test_same_local_id_from_two_stores_gets_distinct_markers():
     second = _backend_ticket_payload(ticket, "PLF-2", "owner/repo", "store-b")
 
     assert first["metadata"]["planfile_id"] != second["metadata"]["planfile_id"]
+
+
+def test_terminal_planfile_status_closes_github_issue():
+    class FakeIssue:
+        def __init__(self):
+            self.edits = []
+
+        def edit(self, **kwargs):
+            self.edits.append(kwargs)
+
+    backend = GitHubBackend.__new__(GitHubBackend)
+    issue = FakeIssue()
+
+    for status in ("done", "completed", "closed", "canceled", "cancelled"):
+        backend._update_issue_state(issue, status)
+
+    assert issue.edits == [{"state": "closed"}] * 5
+
+
+def test_non_terminal_planfile_status_keeps_github_issue_open():
+    class FakeIssue:
+        def __init__(self):
+            self.edits = []
+
+        def edit(self, **kwargs):
+            self.edits.append(kwargs)
+
+    backend = GitHubBackend.__new__(GitHubBackend)
+    issue = FakeIssue()
+
+    for status in ("open", "triage", "in_progress", "in-progress"):
+        backend._update_issue_state(issue, status)
+
+    assert issue.edits == [{"state": "open"}] * 4
