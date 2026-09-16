@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import traceback
 from pathlib import Path
+from typing import Any
 
 from rich.console import Console
 
@@ -49,37 +49,22 @@ def _validate_ticket_binding(ticket: dict, integration_name: str, backend) -> No
 
 def sync_to_external(
     backend, tickets, dry_run: bool, store, integration_name: str, v1_source_file=None, v1_data=None
-) -> None:
-    """Sync planfile tickets to external system."""
-    sync_state = SyncState(
-        Path(store.base_dir), integration_name, repository=_backend_repository(backend)
+) -> Any:
+    """Use the canonical fail-closed batcher for legacy callers as well."""
+    # Import lazily because outbound.py reuses the helper functions defined in
+    # this module. This keeps the public legacy entry point compatible without
+    # introducing an import cycle at module load time.
+    from planfile.sync.outbound import sync_to_external as sync_outbound
+
+    return sync_outbound(
+        backend,
+        tickets,
+        dry_run,
+        store,
+        integration_name,
+        v1_source_file,
+        v1_data,
     )
-    ticket_map = {}
-
-    for ticket_id, ticket in tickets:
-        if dry_run:
-            ticket_name = ticket.get("name") or ticket.get("title", "No title")
-            console.print(f"  Would create/update: {ticket_id} - {ticket_name}")
-        else:
-            try:
-                _validate_ticket_binding(ticket, integration_name, backend)
-                external_id = _ticket_external_id(ticket, ticket_id, integration_name, sync_state)
-                if external_id:
-                    _update_existing_ticket(
-                        backend, ticket, ticket_id, external_id, integration_name, sync_state
-                    )
-                else:
-                    _create_new_ticket(
-                        backend, ticket, ticket_id, integration_name, sync_state, ticket_map
-                    )
-            except Exception as e:
-                console.print(f"  ✗ Failed to sync {ticket_id}: {e}")
-                if "403" not in str(e) and "Forbidden" not in str(e):
-                    console.print(f"    [dim]Error details: {traceback.format_exc()}[/dim]")
-
-    if not dry_run:
-        sync_state.save_sync(ticket_map)
-        _save_sync_results(store, v1_source_file, v1_data, tickets=tickets)
 
 
 def _ticket_external_id(
@@ -117,7 +102,7 @@ def _backend_ticket_payload(
 
 def _update_existing_ticket(
     backend, ticket, ticket_id: str, external_id: str, integration_name: str, sync_state
-) -> None:
+) -> str:
     """Update an existing ticket in the external system."""
     try:
         backend.update_ticket(
@@ -161,6 +146,7 @@ def _update_existing_ticket(
             sync_state.save_sync({ticket_id: new_id})
             _record_backend_ref(ticket, integration_name, external_ticket, new_id)
             console.print(f"  ✓ Created: {ticket_id} → {new_id}")
+            return "created"
         elif _is_permission_error(e):
             _print_permission_error(ticket_id)
             raise RuntimeError(
@@ -168,6 +154,7 @@ def _update_existing_ticket(
             ) from e
         else:
             raise
+    return "updated"
 
 
 def _create_new_ticket(
