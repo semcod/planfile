@@ -1,0 +1,91 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-125",
+  "summary": "Stop the outbound sync deleting issue content and resurrecting closed issues",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-125/**",
+    "planfile/sync/github.py",
+    "tests/test_github_sync_preserves_issue.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-082"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fa7d60ea8be874ed15fb7494e9a54769afcd6ed8",
+    "targetBranch": "main",
+    "outcome": "An outbound sync owns one delimited section of an issue body and never renames an existing issue.",
+    "nonGoals": [
+      "No inbound direction changes",
+      "No credentials or CI policy changes",
+      "No change to issue state projection, including the reopen that ticket-101's routing tests assert",
+      "No mutation of the dirty primary checkout"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Own a delimited planfile section inside the issue body instead of replacing it, drop the title rewrite for an existing issue, and remove the reopen branch while keeping ticket-101's terminal projection.",
+      "components": [
+        {
+          "name": "sync-github",
+          "paths": [
+            "planfile/sync/github.py"
+          ]
+        },
+        {
+          "name": "offline-regressions",
+          "paths": [
+            "tests/test_github_sync_preserves_issue.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commits; existing issue bodies keep the delimited section, which a later sync updates in place."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_github_sync_preserves_issue.py"
+        ],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q",
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Pending exact-head validation"
+      }
+    ]
+  }
+}
