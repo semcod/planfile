@@ -122,6 +122,30 @@ class GitHubBackend(BasePMBackend):
                     metadata_section += f"- {phase}: {tier}\n"
         return body + metadata_section
 
+    DESCRIPTION_START = "<!-- planfile:description:start -->"
+    DESCRIPTION_END = "<!-- planfile:description:end -->"
+
+    @classmethod
+    def _merge_description(cls, existing: str | None, description: str) -> str:
+        """Write the description into its own section and keep the rest.
+
+        An issue body accumulates discussion, evidence and decisions from
+        everyone; the ticket description is the local planning record.
+        Replacing the body with the description deletes the former, so own a
+        delimited section and leave every other line untouched.
+        """
+        section = f"{cls.DESCRIPTION_START}\n{description.strip()}\n{cls.DESCRIPTION_END}"
+        current = existing or ""
+        owned = re.compile(
+            re.escape(cls.DESCRIPTION_START) + r".*?" + re.escape(cls.DESCRIPTION_END),
+            re.DOTALL,
+        )
+        if owned.search(current):
+            return owned.sub(lambda _match: section, current, count=1)
+        if not current.strip():
+            return section
+        return f"{current.rstrip()}\n\n{section}"
+
     @staticmethod
     def _deduplication_markers(body: str | None) -> list[str]:
         patterns = (
@@ -237,15 +261,17 @@ class GitHubBackend(BasePMBackend):
         """Update an existing GitHub issue."""
         issue = self.repo.get_issue(int(ticket_id))
 
-        if name:
-            issue.edit(title=name)
+        # The title is set when the issue is created. Renaming it from a ticket
+        # name silently shortened semcod/fixos#46 on 2026-09-16, so a rename is
+        # a deliberate action on the issue, not a side effect of a sync.
         if body:
+            merged = self._merge_description(issue.body, body)
             markers = self._deduplication_markers(issue.body)
-            missing_markers = [marker for marker in markers if marker not in body]
+            missing_markers = [marker for marker in markers if marker not in merged]
             if missing_markers:
-                marker_prefix = "\n".join(missing_markers)
-                body = f"{marker_prefix}\n{body}"
-            issue.edit(body=body)
+                merged = "\n".join(missing_markers) + "\n" + merged
+            if merged != (issue.body or ""):
+                issue.edit(body=merged)
         if labels is not None or priority:
             self._update_labels(issue, labels, priority)
         if status:
