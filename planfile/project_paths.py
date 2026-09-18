@@ -115,6 +115,11 @@ def canonical_project_root(start: str | Path) -> Path:
     ]
     if same_repo_stores:
         project_root = same_repo_stores[-1].parent
+    elif not start_root:
+        # Without a Git boundary, an ancestor .planfile may belong to a
+        # different project (for example /tmp/.planfile or ~/.planfile).
+        # Only an explicit store path handled above is safe to adopt.
+        project_root = path
     else:
         project_root = path
         cursor = path

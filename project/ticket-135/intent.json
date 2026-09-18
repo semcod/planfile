@@ -1,54 +1,43 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-135",
-  "summary": "Cache provider reads and rate-limit cooldowns in Planfile sync",
+  "summary": "Bound project-root discovery outside Git repositories",
   "workstream": "application",
-  "classification": {
-    "kind": "BUG",
-    "priority": "P1",
-    "origin": "requested"
-  },
+  "classification": {"kind": "BUG", "priority": "P1", "origin": "requested"},
   "allowedPaths": [
-    "project/ticket-135/**",
-    "TODO.md",
-    "project/TICKETS.md",
-    "planfile/sync/github.py",
-    "planfile/sync/github_projects.py",
-    "planfile/sync/onedev.py",
-    "planfile/sync/generic.py",
-    "tests/**"
+    "planfile/project_paths.py",
+    "tests/test_project_paths.py",
+    "tests/test_mcp_server.py",
+    "project/ticket-135/**"
   ],
   "forbiddenPaths": ["project/ticket-*/user-*.md"],
   "stacks": ["python"],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": "ticket-138",
+  "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "4fc420a94c88624b19dd068117407b56a7ae703f",
+    "acceptedBaseSha": "5b63eea936f2e8b374d57ae006a5993615bd5e5a",
     "targetBranch": "main",
-    "outcome": "Planfile provider reads use shared SQLite TTL caching, cross-process request coalescing and cooldowns, while mutations invalidate cached reads.",
-    "nonGoals": ["No GitLab or Jira SDK transport interception.", "No provider data mutations during tests."],
-    "complexity": "M",
-    "estimatedMinutes": 90,
-    "budgets": {"maxImplementationFiles": 6, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 1},
+    "outcome": "Project-root discovery no longer adopts unrelated ancestor Planfile stores when no Git boundary exists.",
+    "nonGoals": ["No change to discovery inside a Git repository or from an explicit .planfile path."],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 3, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
     "architecture": {
       "status": "accepted",
-      "decision": "Wrap read-only provider transport calls with procache; preserve explicit mutation paths and clear provider read namespaces after writes.",
-      "components": [
-        {"name": "github-sync", "paths": ["planfile/sync/github.py", "planfile/sync/github_projects.py"]},
-        {"name": "http-sync", "paths": ["planfile/sync/onedev.py", "planfile/sync/generic.py"]},
-        {"name": "provider-cache-tests", "paths": ["tests/**"]}
-      ],
+      "decision": "Treat the caller path as the boundary when Git cannot provide a repository root, while retaining the existing explicit-store path resolution.",
+      "components": [{"name": "project-root-discovery", "paths": ["planfile/project_paths.py", "tests/test_project_paths.py", "tests/test_mcp_server.py"]}],
       "responsibilityChanges": false,
       "interfaceChanges": [],
       "dataChanges": [],
       "ui": {"impact": "none", "states": [], "evidence": []},
-      "rollback": "Revert the provider cache integration commits; provider reads return to direct transport calls."
+      "rollback": "Revert the bounded no-Git branch and its regression test."
     },
-    "runtimeDependencies": ["subactor-procache"],
+    "runtimeDependencies": [],
     "validation": [
-      {"criterion": "AC-01", "commands": ["python -m pytest -p no:wellmanifest_governance -q tests/test_github_deduplication.py tests/test_github_sync_preserves_issue.py tests/test_sync_routing.py tests/test_github_projects.py tests/test_onedev_backend.py tests/test_generic_cache.py"], "evidence": "42 passed locally."},
-      {"criterion": "AC-02", "commands": ["python -m pytest -q"], "evidence": "7 passed in the procache repository before dependency pinning."}
+      {"criterion": "AC-01", "commands": ["uv run --frozen pytest -p no:wellmanifest_governance -q tests/test_project_paths.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-02", "commands": ["uv run --frozen pytest -p no:wellmanifest_governance -q tests/test_repository_routing.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-03", "commands": ["./project/governance-check.sh --base origin/main --head HEAD --actor agent"], "evidence": "Pending exact-head validation"}
     ]
   }
 }
