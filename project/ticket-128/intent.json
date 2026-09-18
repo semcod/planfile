@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-128",
+  "summary": "Add planfile info and summary commands with markdown and details",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-128/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/commands.py",
+    "planfile/cli/groups/info.py",
+    "planfile/cli/groups/ticket/__init__.py",
+    "planfile/cli/groups/ticket/commands.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-131", "ticket-132"],
+  "integrationTicket": null
+}
