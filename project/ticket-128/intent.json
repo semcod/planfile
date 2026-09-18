@@ -20,6 +20,6 @@
   "forbiddenPaths": ["project/ticket-*/user-*.md"],
   "stacks": [],
   "dependsOn": [],
-  "conflictsWith": [],
+  "conflictsWith": ["ticket-131", "ticket-132"],
   "integrationTicket": null
 }

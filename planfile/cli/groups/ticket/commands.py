@@ -111,7 +111,7 @@ def format_markdown_tickets(tickets: list, details: bool = False, gh_repo: str =
                 files_str = ', '.join(f"`{f}`" for f in t.files)
                 lines.append(f"- **Pliki**: {files_str}")
             if getattr(t, 'labels', None):
-                labels_str = ', '.join(f"`{l}`" for l in t.labels)
+                labels_str = ', '.join(f"`{label}`" for label in t.labels)
                 lines.append(f"- **Etykiety**: {labels_str}")
             if getattr(t, 'blocked_by', None):
                 lines.append(f"- **Zablokowane przez**: {', '.join(t.blocked_by)}")
@@ -119,8 +119,8 @@ def format_markdown_tickets(tickets: list, details: bool = False, gh_repo: str =
                 lines.append(f"- **Blokuje**: {', '.join(t.blocks)}")
             if getattr(t, 'description', None):
                 clean_lines = [
-                    l for l in t.description.strip().splitlines()
-                    if not l.startswith('<!-- planfile:') and not l.startswith('**Strategy Metadata:**') and not l.startswith('- repository:') and not l.startswith('- planfile_id:')
+                    line for line in t.description.strip().splitlines()
+                    if not line.startswith('<!-- planfile:') and not line.startswith('**Strategy Metadata:**') and not line.startswith('- repository:') and not line.startswith('- planfile_id:')
                 ]
                 clean_desc = '\n'.join(clean_lines).strip()
                 if clean_desc:
