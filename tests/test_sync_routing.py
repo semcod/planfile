@@ -146,14 +146,19 @@ def test_sync_loads_mapped_history_tickets_for_external_completion():
     assert tickets[1][1]["status"] == "done"
 
 
-def test_github_label_update_is_idempotent_and_does_not_mutate_ticket_labels():
+def test_github_label_update_is_idempotent_and_does_not_mutate_ticket_labels(tmp_path):
     from types import SimpleNamespace
 
     from planfile.sync.github import GitHubBackend
 
     class FakeRepo:
         def get_labels(self):
-            return [SimpleNamespace(name="planfile"), SimpleNamespace(name="managed")]
+            return [
+                SimpleNamespace(name="planfile"),
+                SimpleNamespace(name="managed"),
+                SimpleNamespace(name="regression"),
+                SimpleNamespace(name="priority-high"),
+            ]
 
         def create_label(self, **kwargs):
             raise AssertionError(f"unexpected label creation: {kwargs}")
@@ -168,6 +173,7 @@ def test_github_label_update_is_idempotent_and_does_not_mutate_ticket_labels():
             self.labels = [SimpleNamespace(name=label) for label in labels]
 
     backend = GitHubBackend.__new__(GitHubBackend)
+    backend.config = {"repo": "owner/repo", "cache_dir": str(tmp_path)}
     backend.repo = FakeRepo()
     issue = FakeIssue()
     ticket_labels = ["regression", "priority: high", "regression"]
@@ -178,6 +184,118 @@ def test_github_label_update_is_idempotent_and_does_not_mutate_ticket_labels():
     expected = ("regression", "priority-high", "planfile", "managed")
     assert ticket_labels == ["regression", "priority: high", "regression"]
     assert issue.set_calls == [expected, expected]
+
+
+def test_github_label_cache_is_shared_by_backend_instances(tmp_path):
+    from types import SimpleNamespace
+
+    from planfile.sync.github import GitHubBackend
+
+    class CountingRepo:
+        full_name = "owner/repo"
+
+        def __init__(self):
+            self.label_reads = 0
+
+        def get_labels(self):
+            self.label_reads += 1
+            return [SimpleNamespace(name="planfile"), SimpleNamespace(name="managed")]
+
+        def create_label(self, **_kwargs):
+            raise AssertionError("cache test should not create labels")
+
+    first_repo = CountingRepo()
+    first = GitHubBackend.__new__(GitHubBackend)
+    first.config = {"repo": "owner/repo", "cache_dir": str(tmp_path)}
+    first.repo = first_repo
+    first._ensure_labels_exist(["planfile", "managed"])
+
+    second_repo = CountingRepo()
+    second = GitHubBackend.__new__(GitHubBackend)
+    second.config = {"repo": "owner/repo", "cache_dir": str(tmp_path)}
+    second.repo = second_repo
+    second._ensure_labels_exist(["planfile", "managed"])
+
+    assert first_repo.label_reads == 1
+    assert second_repo.label_reads == 0
+
+
+def test_github_marker_cache_avoids_repeating_full_issue_scan(tmp_path):
+    from types import SimpleNamespace
+
+    from planfile.sync.github import GitHubBackend
+
+    class CountingRepo:
+        full_name = "owner/repo"
+
+        def __init__(self):
+            self.issue_reads = 0
+
+        def get_issues(self, **_kwargs):
+            self.issue_reads += 1
+            return [
+                SimpleNamespace(
+                    number=42,
+                    html_url="https://github.com/owner/repo/issues/42",
+                    state="open",
+                    body="<!-- planfile:deduplication-key=owner/repo:PLF-1 -->",
+                )
+            ]
+
+    markers = ["<!-- planfile:deduplication-key=owner/repo:PLF-1 -->"]
+    first_repo = CountingRepo()
+    first = GitHubBackend.__new__(GitHubBackend)
+    first.config = {"repo": "owner/repo", "cache_dir": str(tmp_path)}
+    first.repo = first_repo
+    assert first._find_issue_by_markers(markers).number == 42
+
+    second_repo = CountingRepo()
+    second = GitHubBackend.__new__(GitHubBackend)
+    second.config = {"repo": "owner/repo", "cache_dir": str(tmp_path)}
+    second.repo = second_repo
+    cached = second._find_issue_by_markers(markers)
+
+    assert cached.number == 42
+    assert first_repo.issue_reads == 1
+    assert second_repo.issue_reads == 0
+
+
+def test_github_marker_cache_short_lived_negative_result_avoids_repeat_scan(tmp_path):
+    from planfile.sync.github import GitHubBackend
+
+    class CountingRepo:
+        full_name = "owner/repo"
+
+        def __init__(self):
+            self.issue_reads = 0
+
+        def get_issues(self, **_kwargs):
+            self.issue_reads += 1
+            return []
+
+    markers = ["<!-- planfile:deduplication-key=owner/repo:missing -->"]
+    repo = CountingRepo()
+    backend = GitHubBackend.__new__(GitHubBackend)
+    backend.config = {"repo": "owner/repo", "cache_dir": str(tmp_path)}
+    backend.repo = repo
+
+    assert backend._find_issue_by_markers(markers) is None
+    assert backend._find_issue_by_markers(markers) is None
+    assert repo.issue_reads == 1
+
+
+def test_github_preflight_filters_internal_dedupe_labels_and_rejects_long_labels():
+    from planfile.sync.github import GitHubBackend
+
+    backend = GitHubBackend.__new__(GitHubBackend)
+    backend.preflight(
+        [("PLF-1", {"labels": ["dedupe:" + "x" * 120, "backend"]})]
+    )
+
+    with pytest.raises(ValueError, match="Invalid GitHub label"):
+        backend.preflight(
+            [("PLF-2", {"labels": ["x" * (GitHubBackend.MAX_LABEL_LENGTH + 1)]})]
+        )
 
 
 @pytest.mark.parametrize(
