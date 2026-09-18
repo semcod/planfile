@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -16,6 +17,12 @@ from planfile.mcp.server import handle_tool_call
 
 
 def _executor(tmp_path: Path) -> DSLExecutor:
+    # canonical_project_root walks up from tmp_path looking for an ancestor
+    # .planfile store when tmp_path isn't inside a Git repo. On a machine with
+    # a stray store somewhere above /tmp (e.g. /tmp/.planfile, ~/.planfile),
+    # that walk would silently pick it up instead of tmp_path. git init bounds
+    # the walk at tmp_path, matching how a real project is always in a repo.
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     return DSLExecutor(str(tmp_path))
 
 
@@ -392,12 +399,12 @@ def test_integration_oql_uses_canonical_overlay_without_rewriting_source(tmp_pat
 def test_integration_oql_validates_allowlist_and_never_accepts_credentials(tmp_path):
     executor = _executor(tmp_path)
 
-    token = executor.run("set config integrations.github.token=unsafe")
+    token_attempt = executor.run("set config integrations.github.token=unsafe")
     username = executor.run("set config integrations.onedev.username=operator")
     invalid_url = executor.run("set config integrations.gitlab.url=not-a-url")
 
-    assert not token.ok
-    assert token.error == "config_sensitive_path_forbidden"
+    assert not token_attempt.ok
+    assert token_attempt.error == "config_sensitive_path_forbidden"
     assert not username.ok
     assert username.error == "config_integration_path_not_writable"
     assert not invalid_url.ok
