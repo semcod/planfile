@@ -12,7 +12,7 @@ import pytest
 import yaml
 
 from planfile.sync.github import GitHubBackend
-from planfile.sync.outbound import sync_to_external
+from planfile.sync.outbound import OutboundSyncError, sync_to_external
 from planfile.sync.state import SyncState
 
 
@@ -83,7 +83,7 @@ def test_create_whose_readback_is_a_pull_request_is_reported_failed_not_created(
     path, data, store = _source(tmp_path)
     backend = BackendCreatesButReadbackIsAPullRequest()
 
-    with pytest.raises(Exception):
+    with pytest.raises(OutboundSyncError):
         sync_to_external(
             backend, list(data["backlog"]["tickets"].items()), False, store, "github", path, data
         )
