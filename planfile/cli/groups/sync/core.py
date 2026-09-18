@@ -14,6 +14,7 @@ from planfile.cli.core import console, print_error, print_warning
 from planfile.integrations.config import IntegrationConfig
 from planfile.sync.operations import sync_from_external
 from planfile.sync.outbound import OutboundSyncError, sync_to_external
+from planfile.sync.ticket_comments import sync_pending_comments
 
 
 def _initialize_backend(integration_name: str, config: IntegrationConfig, show_header: bool) -> Any:
@@ -347,11 +348,16 @@ def sync_integration(
             sprint_ids,
             remote_labels,
         )
+        delivered_comments = []
+        if integration_name == "github" and direction in {"to", "both"} and not dry_run:
+            delivered_comments = sync_pending_comments(store, backend, ticket_ids)
     except OutboundSyncError as error:
         print_error(str(error))
         raise typer.Exit(1) from error
 
     if not dry_run:
         console.print(f"\n✅ Sync with {integration_name} completed successfully")
+        if integration_name == "github" and direction in {"to", "both"} and delivered_comments:
+            console.print(f"   ✓ Delivered {len(delivered_comments)} public comment(s)")
     else:
         console.print(f"\n✅ Dry run completed for {integration_name}")

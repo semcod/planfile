@@ -386,6 +386,31 @@ def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: 
     if sync:
         _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=[ticket_id])
 
+
+def ticket_comment(
+    ticket_id: str = typer.Argument(..., help="Mapped Planfile ticket ID"),
+    message: str = typer.Argument(..., help="Text to publish as a public GitHub comment"),
+    event_id: str | None = typer.Option(None, "--event-id", help="Stable id for retry-safe replay"),
+    sync: bool = typer.Option(False, "--sync", help="Deliver immediately through configured GitHub sync"),
+    sync_dry_run: bool = typer.Option(False, "--sync-dry-run", help="Queue only; do not deliver"),
+) -> None:
+    """Queue an explicitly public comment for the ticket's exact GitHub issue mapping."""
+    from planfile import Planfile
+    from planfile.sync.ticket_comments import queue_comment
+
+    pf = Planfile.auto_discover()
+    stable_event_id = event_id or f"cli-{__import__('time').time_ns()}"
+    try:
+        comment_id = queue_comment(
+            pf.store, ticket_id, event_id=stable_event_id, public_body=message
+        )
+    except ValueError as exc:
+        console.print(f"[red]✗[/red] {exc}")
+        raise typer.Exit(1) from exc
+    console.print(f"[green]✓[/green] Queued public comment {comment_id[:12]}…")
+    if sync and not sync_dry_run:
+        _auto_sync(str(pf.store.project_dir), ["github"], False, ticket_ids=[ticket_id])
+
 def ticket_move(ticket_id: str=typer.Argument(..., help='Ticket ID'), to_sprint: str=typer.Argument(..., help='Target sprint')) -> None:
     """Move ticket to another sprint."""
     from planfile import Planfile

@@ -19,9 +19,20 @@ _ISSUE = re.compile(r"https://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/issu
 
 def _binding(store, ticket_id: str) -> tuple[str, int, str]:
     ticket = store.get_ticket(ticket_id)
-    if ticket is None:
-        raise ValueError("ticket does not exist")
-    mapping = ticket.sync.get("github", {})
+    if ticket is not None:
+        mapping = ticket.sync.get("github", {})
+    else:
+        # External issue records can carry a valid mapping while using a
+        # lifecycle status unknown to the local Ticket enum.  Comments only
+        # need the durable identity, so read that raw record without making
+        # the whole external record pretend to be a local Ticket.
+        mapping = None
+        for record in store.ticket_records(sprint="all"):
+            if str(record.get("id", "")) == ticket_id:
+                mapping = (record.get("sync") or {}).get("github", {})
+                break
+        if mapping is None:
+            raise ValueError("ticket does not exist")
     match = _ISSUE.fullmatch(str(mapping.get("url", "")))
     if not match or str(mapping.get("id", "")) != match[2]:
         raise ValueError("ticket needs an exact GitHub issue URL and id mapping")
@@ -112,3 +123,24 @@ def sync_comment(store, backend, comment_id: str) -> dict:
             raise
         db.commit()
         return {"id": comment_id, "state": "delivered", "url": comment.html_url}
+
+
+def pending_comment_ids(store, ticket_ids: list[str] | None = None) -> list[str]:
+    """Return pending public events, optionally restricted to ticket IDs."""
+    with _outbox(store) as db:
+        if ticket_ids:
+            placeholders = ",".join("?" for _ in ticket_ids)
+            rows = db.execute(
+                f"SELECT id FROM comments WHERE state='pending' AND ticket IN ({placeholders}) ORDER BY rowid",
+                tuple(ticket_ids),
+            ).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT id FROM comments WHERE state='pending' ORDER BY rowid"
+            ).fetchall()
+    return [str(row["id"]) for row in rows]
+
+
+def sync_pending_comments(store, backend, ticket_ids: list[str] | None = None) -> list[dict]:
+    """Deliver queued public events and return their delivery receipts."""
+    return [sync_comment(store, backend, comment_id) for comment_id in pending_comment_ids(store, ticket_ids)]
