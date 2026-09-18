@@ -49,7 +49,11 @@ class TicketStoreMixin:
     def _tickets_from_sprint_data(self, sprint_data: dict[str, Any]) -> list[Ticket]:
         tickets_dict = sprint_data.get('tickets') or {}
         tickets: list[Ticket] = []
-        for t_data in tickets_dict.values():
+        for tid, t_data in tickets_dict.items():
+            if not isinstance(t_data, dict):
+                continue
+            if 'id' not in t_data:
+                t_data = dict(t_data, id=str(tid))
             ticket = self._ticket_from_data(t_data)
             if ticket is not None:
                 tickets.append(ticket)

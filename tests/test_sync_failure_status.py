@@ -132,6 +132,54 @@ def test_dry_run_does_not_write_or_call_backend(tmp_path):
     assert not store.base_dir.exists()
 
 
+def test_rate_limit_stops_batch_after_current_ticket_and_preserves_success(tmp_path):
+    path, data, store = source(tmp_path)
+
+    class RateLimitedBackend(Backend):
+        def create_ticket(self, ticket):
+            self.created.append(ticket["metadata"]["planfile_id"])
+            if len(self.created) == 2:
+                error = RuntimeError("secondary rate limit; retry-after: 60")
+                error.status = 403
+                raise error
+            return {"id": ticket["metadata"]["planfile_id"] + "-remote"}
+
+    backend = RateLimitedBackend()
+    with pytest.raises(RuntimeError, match="1 ticket") as caught:
+        outbound(backend, path, data, store)
+
+    assert caught.value.result.succeeded == ("good",)
+    assert caught.value.result.failed == ("bad",)
+    assert backend.created == ["good", "bad"]
+    assert "sync" not in data["backlog"]["tickets"]["later"]
+
+
+def test_rate_limit_error_exposes_retry_after_hint(tmp_path):
+    path, data, store = source(tmp_path, ("only",))
+
+    class RateLimitedBackend(Backend):
+        def create_ticket(self, ticket):
+            error = RuntimeError("secondary rate limit")
+            error.status = 403
+            error.headers = {"Retry-After": "37"}
+            raise error
+
+    with pytest.raises(RuntimeError, match="retry after 37s") as caught:
+        outbound(RateLimitedBackend(), path, data, store)
+
+    assert caught.value.retry_after == 37
+
+
+def test_rate_limit_error_converts_absolute_reset_to_seconds(monkeypatch):
+    from planfile.sync.outbound import _retry_after_seconds
+
+    monkeypatch.setattr("planfile.sync.outbound.time.time", lambda: 1_000.0)
+    error = RuntimeError("primary rate limit")
+    error.headers = {"X-RateLimit-Reset": "1042"}
+
+    assert _retry_after_seconds(error) == 42
+
+
 def test_persistence_failure_propagates(tmp_path, monkeypatch):
     path, data, store = source(tmp_path, ("good",))
 
