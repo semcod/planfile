@@ -108,11 +108,22 @@ def _interactive_shell(executor, fmt: str) -> None:
         _run_single(executor, line, fmt, fail_on_error=False)
 
 
+def shell_cmd(
+    command: str | None = typer.Argument(None, help="Optional DSL command to execute. Omit for interactive shell."),
+    project: str = typer.Option(".", "--project", "-p", help="Project root directory"),
+    fmt: str = typer.Option("text", "--format", "-f", help="Output format: text | json | yaml"),
+    fail_on_error: bool = typer.Option(False, "--fail-on-error", help="Exit with code 1 if command fails"),
+) -> None:
+    """Start an interactive planfile DSL shell (REPL) or run a single DSL command."""
+    dsl_run(command=command, project=project, fmt=fmt, fail_on_error=fail_on_error)
+
+
 def register_dsl_commands(app: typer.Typer) -> None:
     """Register DSL commands on the main app."""
     dsl_app = typer.Typer(
         help="Execute DSL / natural language commands against planfile.",
         context_settings={"help_option_names": ["-h", "--help"]},
+        invoke_without_command=True,
     )
     dsl_app.command("run", help="Run a DSL command or start interactive shell.")(dsl_run)
 
@@ -124,4 +135,19 @@ def register_dsl_commands(app: typer.Typer) -> None:
         result = executor.execute(DSLCommand(verb="help"))
         console.print(result.message or "")
 
+    @dsl_app.callback(invoke_without_command=True)
+    def dsl_callback(
+        ctx: typer.Context,
+        command: str | None = typer.Argument(None, help="DSL command to execute. Omit for interactive shell."),
+        project: str = typer.Option(".", "--project", "-p", help="Project root directory"),
+        fmt: str = typer.Option("text", "--format", "-f", help="Output format: text | json | yaml"),
+        fail_on_error: bool = typer.Option(False, "--fail-on-error", help="Exit with code 1 if command fails"),
+    ) -> None:
+        """Execute DSL / natural language commands or start interactive shell."""
+        if ctx.invoked_subcommand is None:
+            dsl_run(command=command, project=project, fmt=fmt, fail_on_error=fail_on_error)
+            raise typer.Exit()
+
     app.add_typer(dsl_app, name="dsl", help="DSL / natural language commands")
+    app.command("shell", help="Start an interactive planfile DSL shell (REPL).")(shell_cmd)
+    app.command("sh", help="Alias for 'planfile shell' (interactive DSL shell).")(shell_cmd)
