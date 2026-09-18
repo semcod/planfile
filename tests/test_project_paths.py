@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,16 @@ import pytest
 from planfile import Planfile
 from planfile.core.store import PlanfileStore
 from planfile.project_paths import canonical_project_root, ensure_project_root
+
+
+def _git_init(path: Path) -> None:
+    # canonical_project_root only bounds its upward walk for an ancestor
+    # .planfile store when the start path is inside a Git repo. Without this,
+    # a stray store above /tmp (e.g. /tmp/.planfile, ~/.planfile) on the host
+    # machine silently wins over tmp_path, which is what this suite exists to
+    # rule out — see ticket-129.
+    path.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "init", "-q"], cwd=path, check=True)
 
 
 def test_discovery_from_inside_store_uses_outer_project(tmp_path: Path) -> None:
@@ -48,6 +59,8 @@ def test_explicit_store_path_is_rejected_instead_of_nested_initialisation(tmp_pa
 
 def test_path_helpers_leave_normal_project_paths_unchanged(tmp_path: Path) -> None:
     root = tmp_path / "repo"
+    _git_init(root)
+    (root / "src").mkdir()
 
     assert canonical_project_root(root / "src") == (root / "src").resolve()
     assert ensure_project_root(root) == root.resolve()
