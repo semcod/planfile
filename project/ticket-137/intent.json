@@ -1,0 +1,23 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-137",
+  "summary": "Expose GitHub rate-limit retry hints to outbound callers",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "planfile/sync/outbound.py",
+    "tests/test_sync_failure_status.py",
+    "project/ticket-137/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
