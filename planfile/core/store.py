@@ -788,13 +788,47 @@ class Store(StoreFileMixin, TicketStoreMixin):
     def _next_id_unlocked(self) -> str:
         return self._reserve_ids_unlocked(1)[0]
 
+    def _known_ticket_highwater(self, prefix: str) -> int:
+        """Return the highest numeric ID known to storage or its journal.
+
+        The allocator config is intended to be monotonic, but old branches and
+        replayed event journals can leave it behind a deleted ticket.  Looking
+        at the journal keeps deleted IDs reserved as well, so a later create
+        cannot silently reuse an identity that already exists in the audit
+        trail.
+        """
+        pattern = re.compile(rf"^{re.escape(prefix)}-(\d+)$")
+        highest = 0
+
+        for record in self.ticket_records(sprint="all"):
+            match = pattern.fullmatch(str(record.get("id") or ""))
+            if match:
+                highest = max(highest, int(match.group(1)))
+
+        try:
+            journal_size = self._operations_path.stat().st_size
+        except OSError:
+            journal_size = 0
+        rows = read_jsonl_tail(
+            self._operations_path,
+            limit=1_000_000,
+            max_bytes=max(OPERATIONS_TAIL_MAX_BYTES, journal_size),
+        )
+        for row in rows:
+            event = row.get("event") or {}
+            match = pattern.fullmatch(str(event.get("ticket_id") or ""))
+            if match:
+                highest = max(highest, int(match.group(1)))
+        return highest
+
     def _reserve_ids_unlocked(self, count: int) -> list[str]:
         count = max(0, int(count))
         if count == 0:
             return []
         config = self._read_config()
         prefix = config.get("prefix", "PLF")
-        first = int(config.get("next_id", 1))
+        configured_first = int(config.get("next_id", 1))
+        first = max(configured_first, self._known_ticket_highwater(prefix) + 1)
         ticket_ids = [f"{prefix}-{number:03d}" for number in range(first, first + count)]
         config["next_id"] = first + count
         self._write_config(config)

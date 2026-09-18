@@ -1,0 +1,42 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-147",
+  "summary": "Preserve Planfile ticket IDs across journal history",
+  "workstream": "application",
+  "classification": {"kind": "BUG", "priority": "P1", "origin": "requested"},
+  "allowedPaths": [
+    "planfile/core/store.py",
+    "tests/test_ticket_id_allocator.py",
+    "project/ticket-147/**"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-130"],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7477ce2a71045a340d9a0cb0bf3b0ba7f5bb83d2",
+    "targetBranch": "main",
+    "outcome": "Ticket ID allocation remains monotonic across active storage and the append-only event journal.",
+    "nonGoals": ["No migration rewrites existing ticket files or event history."],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 2, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Raise the allocator floor from both stored ticket records and journaled ticket IDs while holding the existing mutation lock.",
+      "components": [{"name": "ticket-allocator", "paths": ["planfile/core/store.py", "tests/test_ticket_id_allocator.py"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the allocator change and regression test."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run --frozen pytest -q tests/test_ticket_id_allocator.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-02", "commands": ["PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 uv run --frozen pytest -q tests/test_sharded_yaml_storage.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-03", "commands": ["git diff --check"], "evidence": "Pending exact-head validation"}
+    ]
+  }
+}
