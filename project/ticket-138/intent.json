@@ -1,0 +1,34 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-138",
+  "summary": "Pin procache with Python 3.10 compatibility",
+  "workstream": "integration",
+  "classification": {"kind": "BUG", "priority": "P1", "origin": "requested"},
+  "allowedPaths": ["project/ticket-138/**", "TODO.md", "project/TICKETS.md", "pyproject.toml", "uv.lock"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4fc420a94c88624b19dd068117407b56a7ae703f",
+    "targetBranch": "main",
+    "outcome": "Planfile locks the Python 3.10 compatible procache commit so locked CI installs resolve on all supported Python versions.",
+    "nonGoals": ["No Planfile runtime source changes.", "No provider data mutations."],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 3, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 1},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep dependency manifest and lockfile ownership in the integration workstream; pin the already tested procache commit and regenerate uv.lock.",
+      "components": [{"name": "python-dependency-lock", "paths": ["pyproject.toml", "uv.lock"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the dependency pin and lockfile commit."
+    },
+    "runtimeDependencies": ["subactor-procache"],
+    "validation": [{"criterion": "AC-01", "commands": ["uv lock --check", "uv sync --locked --extra dev --python 3.13"], "evidence": "Pending exact-head validation."}]
+  }
+}
