@@ -9,8 +9,6 @@ Three defects are covered here:
   3. `validate schema` judged a Strategy against the ticket-store schema.
 """
 
-import json
-import textwrap
 from pathlib import Path
 
 import pytest

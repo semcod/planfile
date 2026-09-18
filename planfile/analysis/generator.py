@@ -1,13 +1,4 @@
 
-CONSTANT_3 = 3
-CONSTANT_4 = 4
-CONSTANT_5 = 5
-CONSTANT_20 = 20
-CONSTANT_50 = 50
-CONSTANT_60 = 60
-
-
-
 """
 Main planfile generator from code analysis.
 Integrates file analysis and sprint generation to create complete strategies.
@@ -32,6 +23,13 @@ from planfile.analysis.generators import (
 )
 from planfile.analysis.sprint_generator import SprintGenerator
 from planfile.models import Strategy
+
+CONSTANT_3 = 3
+CONSTANT_4 = 4
+CONSTANT_5 = 5
+CONSTANT_20 = 20
+CONSTANT_50 = 50
+CONSTANT_60 = 60
 
 
 class PlanfileGenerator:
@@ -64,7 +62,7 @@ class PlanfileGenerator:
         external_results = self.external_runner.run_all()
 
         # Convert external results to internal format
-        analysis_result = self._external_to_internal_analysis(external_results)
+        self._external_to_internal_analysis(external_results)
 
         # Generate strategy from combined analysis
         return self.generate_from_analysis(
