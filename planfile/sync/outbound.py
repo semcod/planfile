@@ -184,7 +184,7 @@ def sync_to_external(
                 (created if update_kind == "created" else updated).append(ticket_id)
             else:
                 try:
-                    _create_new_ticket(
+                    new_id, new_ticket = _create_new_ticket(
                         backend, ticket, ticket_id, integration_name, sync_state, ticket_map
                     )
                 except Exception:
@@ -223,7 +223,36 @@ def sync_to_external(
                         )
                     )
                     continue
+                # Verify before recording or announcing success: create_ticket
+                # returning without raising is not proof an issue exists at
+                # that id (e.g. a lost-response retry, or a dedup match that
+                # resolved to something unexpected). A rejection here (raises)
+                # must reach the ticket_id's except-handler below without
+                # touching ticket["sync"], so an unverified id is never
+                # persisted. A backend without get_ticket verifies as None,
+                # which is the pre-existing "trust the create response" path.
+                new_verified_ref = _verify_remote_readback(
+                    backend, ticket, ticket_id, integration_name, str(new_id)
+                )
+                _record_backend_ref(
+                    ticket, integration_name, new_verified_ref or new_ticket, new_id
+                )
+                console.print(f"  ✓ Created: {ticket_id} → {new_id}")
                 created.append(ticket_id)
+                succeeded.append(ticket_id)
+                new_reference = (ticket.get("sync") or {}).get(integration_name) or {}
+                pending_receipts.append(
+                    (
+                        intent,
+                        operation,
+                        str(new_reference.get("id") or new_id or "") or None,
+                        new_reference.get("url"),
+                        new_reference.get("key"),
+                        "succeeded",
+                        None,
+                    )
+                )
+                continue
             succeeded.append(ticket_id)
             reference = (ticket.get("sync") or {}).get(integration_name) or {}
             verified_ref = _verify_remote_readback(
@@ -249,6 +278,12 @@ def sync_to_external(
             )
         except Exception as error:
             failed.append(ticket_id)
+            # A create or recovery attempt may have set ticket_map[ticket_id]
+            # before a later readback check rejected the result (e.g. the
+            # resolved id turned out to be a pull request, not the issue it
+            # was supposed to be). Drop it so the unverified id is neither
+            # persisted to sync_state nor reported on the failure receipt.
+            rejected_id = ticket_map.pop(ticket_id, None)
             console.print(f"  ✗ Failed to sync {ticket_id}: {error}")
             if "403" not in str(error) and "Forbidden" not in str(error):
                 console.print(f"    [dim]Error details: {traceback.format_exc()}[/dim]")
@@ -256,7 +291,7 @@ def sync_to_external(
                 (
                     intent,
                     operation,
-                    external_id or ticket_map.get(ticket_id),
+                    external_id or rejected_id,
                     None,
                     None,
                     "failed",
