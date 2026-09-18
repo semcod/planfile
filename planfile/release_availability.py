@@ -28,7 +28,10 @@ def published_info(url: str) -> dict[str, str]:
 
 
 def check(root: Path, *, offline: bool = False) -> dict[str, object]:
-    import tomllib
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python 3.10 uses the locked tomli dependency.
+        import tomli as tomllib
 
     project = tomllib.loads((root / "pyproject.toml").read_text())
     metadata = json.loads((root / "planfile/release-metadata.json").read_text())
