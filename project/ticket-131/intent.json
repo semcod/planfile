@@ -1,0 +1,68 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-131",
+  "summary": "Add planfile shell and sh interactive commands",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-131/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/commands.py",
+    "planfile/cli/groups/dsl/commands.py",
+    "tests/test_cli_help.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3c5365b82307bb20e3102da9062249cb6530e143",
+    "targetBranch": "main",
+    "outcome": "Add planfile shell and sh interactive commands and allow planfile dsl to launch interactive shell",
+    "nonGoals": [
+      "No change to existing CLI subcommands other than shell aliases and dsl default behavior"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the existing DSL runner for top-level shell aliases and the dsl callback, preserving one implementation of interactive behavior.",
+      "components": [
+        {
+          "name": "cli-dsl",
+          "paths": ["planfile/cli/groups/dsl/commands.py", "tests/test_cli_help.py"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket commit to remove the aliases and callback while leaving the existing dsl run command intact."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["pytest -q tests/test_cli_help.py"],
+        "evidence": "Focused CLI tests pass."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["pytest -q tests/test_cli_help.py tests/test_dsl.py"],
+        "evidence": "62 tests pass."
+      }
+    ]
+  }
+}

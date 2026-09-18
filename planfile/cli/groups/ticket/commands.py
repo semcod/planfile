@@ -77,7 +77,64 @@ def _auto_sync(
         )
         raise typer.Exit(1)
 
-def _display_tickets(tickets, fmt: str='table') -> None:
+def format_markdown_tickets(tickets: list, details: bool = False, gh_repo: str = "") -> str:
+    """Format ticket list as a markdown summary table, optionally with full details."""
+    lines = []
+    lines.append("| Ticket Planfile | Zewnętrzny ID / Issue | Status | Priorytet | Nazwa zadania |")
+    lines.append("|:---|:---|:---:|:---:|:---|")
+    for t in tickets:
+        status_val = t.status.value if hasattr(t.status, 'value') else str(t.status)
+        gh = t.sync.get('github', {}) if hasattr(t, 'sync') and isinstance(t.sync, dict) else {}
+        issue_id = gh.get('id') or getattr(t, 'external_id', None)
+        issue_url = gh.get('url') or (f"https://github.com/{gh_repo}/issues/{issue_id}" if gh_repo and issue_id else None)
+        if issue_id and issue_url:
+            ext_ref = f"[#{issue_id}]({issue_url})"
+        elif issue_id:
+            ext_ref = f"#{issue_id}"
+        else:
+            ext_ref = "-"
+        lines.append(f"| **{t.id}** | {ext_ref} | `{status_val}` | `{t.priority}` | {t.name} |")
+
+    if details:
+        lines.append("\n---\n")
+        lines.append("### 📝 Szczegóły zadań\n")
+        for t in tickets:
+            status_val = t.status.value if hasattr(t.status, 'value') else str(t.status)
+            gh = t.sync.get('github', {}) if hasattr(t, 'sync') and isinstance(t.sync, dict) else {}
+            issue_id = gh.get('id') or getattr(t, 'external_id', None)
+            issue_url = gh.get('url') or (f"https://github.com/{gh_repo}/issues/{issue_id}" if gh_repo and issue_id else None)
+            lines.append(f"#### {t.id}: {t.name}")
+            lines.append(f"- **Status**: `{status_val}` | **Priorytet**: `{t.priority}`")
+            if issue_url:
+                lines.append(f"- **Zewnętrzne zgłoszenie**: [#{issue_id}]({issue_url})")
+            if getattr(t, 'files', None):
+                files_str = ', '.join(f"`{f}`" for f in t.files)
+                lines.append(f"- **Pliki**: {files_str}")
+            if getattr(t, 'labels', None):
+                labels_str = ', '.join(f"`{label}`" for label in t.labels)
+                lines.append(f"- **Etykiety**: {labels_str}")
+            if getattr(t, 'blocked_by', None):
+                lines.append(f"- **Zablokowane przez**: {', '.join(t.blocked_by)}")
+            if getattr(t, 'blocks', None):
+                lines.append(f"- **Blokuje**: {', '.join(t.blocks)}")
+            if getattr(t, 'description', None):
+                clean_lines = [
+                    line for line in t.description.strip().splitlines()
+                    if not line.startswith('<!-- planfile:') and not line.startswith('**Strategy Metadata:**') and not line.startswith('- repository:') and not line.startswith('- planfile_id:')
+                ]
+                clean_desc = '\n'.join(clean_lines).strip()
+                if clean_desc:
+                    lines.append(f"- **Opis**:\n  {clean_desc.replace(chr(10), chr(10) + '  ')}")
+            if getattr(t, 'acceptance_criteria', None):
+                lines.append("- **Kryteria akceptacji**:")
+                for ac in t.acceptance_criteria:
+                    lines.append(f"  - [ ] {ac}")
+            lines.append("")
+
+    return "\n".join(lines)
+
+
+def _display_tickets(tickets, fmt: str = 'table', details: bool = False, gh_repo: str = "") -> None:
     """Display tickets in the requested format."""
     if fmt == 'json':
         print(json.dumps([t.model_dump(mode='json', exclude_none=True) for t in tickets], indent=2, default=str))
@@ -85,10 +142,16 @@ def _display_tickets(tickets, fmt: str='table') -> None:
     if fmt == 'yaml':
         console.print(yaml.dump([t.model_dump(mode='json', exclude_none=True) for t in tickets], default_flow_style=False, sort_keys=False))
         return
+    if fmt in ('markdown', 'md'):
+        if not tickets:
+            print('Brak ticketów.')
+            return
+        print(format_markdown_tickets(tickets, details=details, gh_repo=gh_repo))
+        return
     if not tickets:
         console.print('[dim]No tickets found.[/dim]')
         return
-    table = create_ticket_table(tickets)
+    table = create_ticket_table(tickets, gh_repo=gh_repo)
     console.print(table)
 
 
@@ -191,10 +254,11 @@ def ticket_validate(
     if fail_on_stale and int(report.get('stale', 0)) > 0:
         raise typer.Exit(1)
 
-def create_ticket_table(tickets) -> Table:
+def create_ticket_table(tickets, gh_repo: str = "") -> Table:
     """Create and populate a Rich table for displaying tickets."""
     table = Table(title=f'Tickets ({len(tickets)})')
     table.add_column('ID', style='cyan', no_wrap=True)
+    table.add_column('External', style='magenta')
     table.add_column('Status', style='bold')
     table.add_column('Priority')
     table.add_column('Name')
@@ -207,7 +271,10 @@ def create_ticket_table(tickets) -> Table:
         sc = status_colors.get(status_val, 'white')
         pc = priority_colors.get(t.priority, 'white')
         source_str = t.source.tool if t.source else ''
-        table.add_row(t.id, f'[{sc}]{status_val}[/{sc}]', f'[{pc}]{t.priority}[/{pc}]', t.name, ', '.join(t.labels) if t.labels else '', source_str)
+        gh = t.sync.get('github', {}) if hasattr(t, 'sync') and isinstance(t.sync, dict) else {}
+        issue_id = gh.get('id') or getattr(t, 'external_id', None)
+        ext_str = f"#{issue_id}" if issue_id else "-"
+        table.add_row(t.id, ext_str, f'[{sc}]{status_val}[/{sc}]', f'[{pc}]{t.priority}[/{pc}]', t.name, ', '.join(t.labels) if t.labels else '', source_str)
     return table
 
 def ticket_create(name: str=typer.Argument(..., help='Ticket name'), priority: str=typer.Option('normal', '-p', '--priority', help='critical | high | normal | low'), sprint: str=typer.Option('current', '-s', '--sprint'), source: str=typer.Option('human', help='Source tool name'), label: list[str] | None=typer.Option(None, '-l', '--label'), description: str=typer.Option('', '-d', '--description'), files: list[str] | None=typer.Option(None, '--files', help='File(s) associated with this ticket'), integration: list[str] | None=typer.Option(None, '-i', '--integration', help='Integration(s) to sync with (e.g., github, gitlab)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after creation'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes'), force: bool=typer.Option(False, '--force', help='Create even if name/description contain unfilled <placeholder> tokens')) -> None:
@@ -247,10 +314,28 @@ def ticket_create(name: str=typer.Argument(..., help='Ticket name'), priority: s
             sprint_ids=[sprint],
         )
 
-def ticket_list(sprint: str=typer.Option('current', '-s', '--sprint'), status: str | None=typer.Option(None, help='open|in_progress|review|done|blocked|all'), source: str | None=typer.Option(None, help='Filter by source tool'), label: list[str] | None=typer.Option(None, '-l', '--label'), files: list[str] | None=typer.Option(None, '--files', help='Filter by file glob pattern(s)'), fmt: str=typer.Option('table', '--format', help='table | json | yaml')) -> None:
+def ticket_list(
+    sprint: str = typer.Option('current', '-s', '--sprint'),
+    status: str | None = typer.Option(None, help='open|in_progress|review|done|blocked|all'),
+    source: str | None = typer.Option(None, help='Filter by source tool'),
+    label: list[str] | None = typer.Option(None, '-l', '--label'),
+    files: list[str] | None = typer.Option(None, '--files', help='Filter by file glob pattern(s)'),
+    fmt: str = typer.Option('table', '--format', help='table | markdown | md | json | yaml'),
+    details: bool = typer.Option(False, '-d', '--details', help='Show detailed description, files and criteria in markdown'),
+) -> None:
     """List tickets with optional filters."""
     from planfile import Planfile
+    from planfile.integrations.config import IntegrationConfig
+
     pf = Planfile.auto_discover()
+    gh_repo = ""
+    try:
+        ic = IntegrationConfig(str(pf.store.project_dir))
+        ic.load_configs()
+        gh_repo = ic.config.get('integrations', {}).get('github', {}).get('repo', '')
+    except Exception:
+        pass
+
     filters = {}
     if status and status != 'all':
         filters['status'] = status
@@ -261,7 +346,7 @@ def ticket_list(sprint: str=typer.Option('current', '-s', '--sprint'), status: s
     if files:
         filters['files'] = files
     tickets = pf.list_tickets(sprint=sprint, **filters)
-    _display_tickets(tickets, fmt)
+    _display_tickets(tickets, fmt, details=details, gh_repo=gh_repo)
 
 def _annotate_blockers(pf: Any, data: dict) -> None:
     """Decorate `blocked_by` with each blocker's current status.

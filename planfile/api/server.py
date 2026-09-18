@@ -13,7 +13,7 @@ import sqlite3
 import time
 from collections import deque
 from contextlib import asynccontextmanager, contextmanager
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import BoundedSemaphore, RLock
 from typing import Any, Literal
@@ -190,12 +190,19 @@ class DSLRequest(BaseModel):
     project_path: str = "."
 
 
+class QueryRequest(BaseModel):
+    query: str
+    project_path: str = "."
+    allow_llm_fallback: bool = True
+
+
 class DSLResponse(BaseModel):
     ok: bool
     command: dict
     data: Any = None
     error: str | None = None
     message: str | None = None
+    source_layer: str | None = "direct_dsl"
 
 
 class YAMLPatchRequest(BaseModel):
@@ -991,7 +998,7 @@ def public_forensic_log_days():
 _MERGEABLE_TICKET_SECTIONS = ("executor", "execution", "inputs", "outputs")
 
 
-def _merged_ticket_updates(body: "TicketUpdate", current) -> dict:
+def _merged_ticket_updates(body: TicketUpdate, current) -> dict:
     """Apply only the fields a PATCH actually sent.
 
     FastAPI parses `{"inputs": {"uri_processes": [...]}}` into a complete
@@ -1468,6 +1475,15 @@ def dsl_command(body: DSLRequest) -> DSLResponse:
     from planfile.dsl import DSLExecutor
     executor = DSLExecutor(project_path=body.project_path)
     result = executor.run(body.command)
+    return DSLResponse(**result.to_dict())
+
+
+@app.post("/query", response_model=DSLResponse, tags=["dsl"])
+def query_command(body: QueryRequest) -> DSLResponse:
+    """Execute a natural language query against planfile via NL-DSL-LLM."""
+    from planfile.dsl import DSLExecutor
+    executor = DSLExecutor(project_path=body.project_path)
+    result = executor.run(body.query, allow_llm_fallback=body.allow_llm_fallback)
     return DSLResponse(**result.to_dict())
 
 

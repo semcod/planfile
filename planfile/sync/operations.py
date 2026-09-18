@@ -159,8 +159,14 @@ def _update_existing_ticket(
 
 def _create_new_ticket(
     backend, ticket, ticket_id: str, integration_name: str, sync_state, ticket_map: dict
-) -> None:
-    """Create a new ticket in the external system."""
+):
+    """Create a new ticket in the external system.
+
+    Returns ``(external_id, external_ticket)``. Does not record the reference
+    on *ticket* or announce success — the caller verifies the readback first,
+    so an id this call could not actually vouch for (e.g. a lost-response
+    retry) is never persisted before that check runs.
+    """
     try:
         external_ticket = backend.create_ticket(
             _backend_ticket_payload(
@@ -183,8 +189,7 @@ def _create_new_ticket(
             raise
 
     ticket_map[ticket_id] = external_id
-    _record_backend_ref(ticket, integration_name, external_ticket, external_id)
-    console.print(f"  ✓ Created: {ticket_id} → {external_id}")
+    return external_id, external_ticket
 
 
 def _record_backend_ref(
