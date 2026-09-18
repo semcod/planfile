@@ -6,6 +6,7 @@ from planfile.cli.core import console
 from planfile.cli.groups.ticket.commands import (
     ticket_block,
     ticket_claim,
+    ticket_comment,
     ticket_bulk_update,
     ticket_complete,
     ticket_create,
@@ -51,6 +52,7 @@ def register_ticket_commands(app: typer.Typer) -> None:
     ticket_app.command("claim")(ticket_claim)
     ticket_app.command("show")(ticket_show)
     ticket_app.command("update")(ticket_update)
+    ticket_app.command("comment")(ticket_comment)
     ticket_app.command("delete")(ticket_delete)
     ticket_app.command("bulk-update")(ticket_bulk_update)
     ticket_app.command("move")(ticket_move)

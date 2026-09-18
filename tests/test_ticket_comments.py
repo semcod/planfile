@@ -3,7 +3,12 @@ from types import SimpleNamespace
 import pytest
 
 from planfile import Planfile
-from planfile.sync.ticket_comments import queue_comment, sync_comment
+from planfile.sync.ticket_comments import (
+    pending_comment_ids,
+    queue_comment,
+    sync_comment,
+    sync_pending_comments,
+)
 
 
 @pytest.fixture
@@ -118,3 +123,20 @@ def test_notes_not_exported(context):
     event = queue_comment(store, ticket.id, event_id="run1", public_body="Verified")
     sync_comment(store, backend, event)
     assert "private" not in issue.comments[0].body
+
+
+def test_external_mapping_with_unknown_status_can_publish(context):
+    store, ticket, backend, issue = context
+    raw = store.load_sprint("current")
+    record = raw["tickets"].pop(ticket.id)
+    record["id"] = "GITHUB-12"
+    record["status"] = "waiting_input"
+    raw["tickets"]["GITHUB-12"] = record
+    store.save_sprint("current", raw)
+
+    event = queue_comment(store, "GITHUB-12", event_id="external-1", public_body="Status verified")
+    assert event in pending_comment_ids(store)
+    assert sync_pending_comments(store, backend) == [
+        {"id": event, "state": "delivered", "url": issue.html_url + "#issuecomment-1"}
+    ]
+    assert pending_comment_ids(store) == []

@@ -1,0 +1,27 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-132",
+  "summary": "Wire Planfile public comments into GitHub sync and load external issue mappings",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+    "allowedPaths": [
+      "project/ticket-132/**",
+      "TODO.md",
+      "project/TICKETS.md",
+      "planfile/sync/ticket_comments.py",
+      "planfile/cli/groups/sync/core.py",
+      "planfile/cli/groups/ticket/commands.py",
+      "planfile/cli/groups/ticket/__init__.py",
+      "tests/test_ticket_comments.py",
+      "tests/test_sync_ticket_comments.py"
+    ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+    "stacks": ["python"],
+  "dependsOn": [],
+    "conflictsWith": [],
+  "integrationTicket": null
+}
