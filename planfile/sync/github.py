@@ -1,6 +1,9 @@
 import os
 import re
 from typing import Any
+from pathlib import Path
+
+from procache import CachedPyGithubRequester, SQLiteResponseCache
 
 try:
     from github import Github
@@ -31,7 +34,17 @@ class GitHubBackend(BasePMBackend):
         config = {"repo": repo, "token": token or os.environ.get("GITHUB_TOKEN"), **kwargs}
         super().__init__(config)
 
+        cache_path = self.config.get("cache_path") or os.environ.get("SUBACTOR_PROCACHE_PATH")
+        if cache_path is None:
+            cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+            cache_path = cache_root / "subactor" / "planfile-github.sqlite3"
+        self._read_cache = SQLiteResponseCache(cache_path, namespace=f"planfile-github:{repo}")
         self.github = Github(self.config["token"])
+        self.github._Github__requester = CachedPyGithubRequester(
+            self.github.requester,
+            self._read_cache,
+            ttl=float(os.environ.get("SUBACTOR_GITHUB_READ_TTL", "15")),
+        )
         self.repo: Repository = self.github.get_repo(repo)
 
     def _validate_config(self) -> None:
@@ -44,6 +57,11 @@ class GitHubBackend(BasePMBackend):
 
         if "/" not in self.config["repo"]:
             raise ValueError("Repository must be in format 'owner/repo'")
+
+    def _clear_read_cache(self) -> None:
+        cache = getattr(self, "_read_cache", None)
+        if cache is not None:
+            cache.clear()
 
     def _ensure_labels_exist(self, labels: list[str]):
         """Ensure labels exist in the repository, create them if needed."""
@@ -61,6 +79,7 @@ class GitHubBackend(BasePMBackend):
                 except Exception:
                     # If label creation fails, skip this label
                     pass
+        self._clear_read_cache()
 
     def _prepare_labels(
         self,
@@ -200,6 +219,7 @@ class GitHubBackend(BasePMBackend):
             create_kwargs["assignee"] = assignee
 
         issue: Issue = self.repo.create_issue(**create_kwargs)
+        self._clear_read_cache()
 
         return self.build_ticket_ref(
             id=str(issue.number),
@@ -278,6 +298,7 @@ class GitHubBackend(BasePMBackend):
             self._update_issue_state(issue, status)
         if assignee:
             issue.edit(assignee=assignee)
+        self._clear_read_cache()
 
     def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get GitHub issue status."""

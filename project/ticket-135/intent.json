@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-135",
+  "summary": "Cache provider reads and rate-limit cooldowns in Planfile sync",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-135/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "pyproject.toml",
+    "planfile/sync/github.py",
+    "planfile/sync/github_projects.py",
+    "planfile/sync/onedev.py",
+    "tests/**"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

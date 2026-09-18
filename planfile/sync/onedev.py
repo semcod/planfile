@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import os
+import json
 import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
 import requests
+from procache import SQLiteResponseCache, is_rate_limit_error
 
 from planfile.sync.base import BasePMBackend, TicketRef, TicketState
 
@@ -68,12 +70,19 @@ class OneDevBackend(BasePMBackend):
             **kwargs,
         }
         super().__init__(config)
+        supplied_session = session is not None
         self.session = session or requests.Session()
         self.session.auth = (self.config["username"], self.config["password"])
         self.session.headers.update(
             {"Accept": "application/json", "Content-Type": "application/json"}
         )
         self._project_cache: dict[str, Any] | None = None
+        if supplied_session:
+            self._read_cache = None
+        else:
+            cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+            cache_path = os.environ.get("SUBACTOR_PROCACHE_PATH", str(cache_root / "subactor" / "planfile-onedev.sqlite3"))
+            self._read_cache = SQLiteResponseCache(cache_path, namespace="planfile-onedev")
 
     @property
     def publish_to(self) -> list[str]:
@@ -98,22 +107,39 @@ class OneDevBackend(BasePMBackend):
         raw_payload: str | None = None,
         params: dict[str, Any] | None = None,
     ) -> Any:
-        body = {"data": raw_payload.encode("utf-8")} if raw_payload is not None else {"json": payload}
-        response = self.session.request(
-            method,
-            f"{self.config['url']}{path}",
-            params=params,
-            timeout=float(self.config.get("timeout", 30)),
-            **body,
-        )
-        try:
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            detail = getattr(response, "text", "")[-2000:]
-            raise OneDevError(f"OneDev {method} {path} failed: {detail or exc}") from exc
-        if not getattr(response, "content", b""):
-            return None
-        return response.json()
+        def fetch() -> bytes:
+            body = {"data": raw_payload.encode("utf-8")} if raw_payload is not None else {"json": payload}
+            response = self.session.request(
+                method,
+                f"{self.config['url']}{path}",
+                params=params,
+                timeout=float(self.config.get("timeout", 30)),
+                **body,
+            )
+            try:
+                response.raise_for_status()
+            except requests.RequestException as exc:
+                detail = getattr(response, "text", "")[-2000:]
+                raise OneDevError(f"OneDev {method} {path} failed: {detail or exc}") from exc
+            if not getattr(response, "content", b""):
+                return b""
+            return json.dumps(response.json(), separators=(",", ":")).encode("utf-8")
+
+        if method.upper() == "GET" and self._read_cache is not None:
+            key = self._read_cache.key("onedev", self.config["url"], path, params)
+            raw, _ = self._read_cache.get_or_set(
+                key,
+                fetch,
+                ttl=15,
+                cooldown_key="provider",
+                cooldown_seconds=60,
+                is_rate_limit=is_rate_limit_error,
+            )
+        else:
+            raw = fetch()
+        if method.upper() != "GET" and self._read_cache is not None:
+            self._read_cache.clear()
+        return json.loads(raw) if raw else None
 
     def _projects(self) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
