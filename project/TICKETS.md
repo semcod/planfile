@@ -44,5 +44,8 @@ This file indexes governance tickets without taking ownership of
 | **ticket-100** | [`README.md`](./ticket-100/README.md) | - | - | - | - | - |
 | **ticket-101** | [`README.md`](./ticket-101/README.md) | - | - | - | - | - |
 | **ticket-125** | [`README.md`](./ticket-125/README.md) | - | - | - | - | - |
+<<<<<<< HEAD
 | **ticket-131** | [`README.md`](./ticket-131/README.md) | - | - | - | - | - |
+=======
+>>>>>>> 79f7d64 (test: seal project-root discovery tests against a stray ancestor .planfile (ticket-129))
 <!-- AUTO:TICKET_INDEX:END -->
