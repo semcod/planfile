@@ -1,6 +1,7 @@
 """Tests for Model Context Protocol (MCP) server integration."""
 
 import json
+import subprocess
 import sys
 from io import StringIO
 
@@ -219,6 +220,7 @@ def test_dsl_help_does_not_initialize_project(tmp_path):
 def test_cli_executor_retains_parent_discovery(tmp_path):
     from planfile.dsl import DSLExecutor
     Planfile(str(tmp_path)).create_ticket(name="CLI parent")
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     child = tmp_path / "child"
     child.mkdir()
     result = DSLExecutor(str(child)).run("list tickets")

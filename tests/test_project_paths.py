@@ -64,3 +64,13 @@ def test_path_helpers_leave_normal_project_paths_unchanged(tmp_path: Path) -> No
 
     assert canonical_project_root(root / "src") == (root / "src").resolve()
     assert ensure_project_root(root) == root.resolve()
+
+
+def test_discovery_without_git_does_not_adopt_an_ancestor_store(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    (root / ".planfile" / "sprints").mkdir(parents=True)
+    (root / ".planfile" / "config.yaml").write_text("project: stray\n", encoding="utf-8")
+    nested = root / "src"
+    nested.mkdir()
+
+    assert canonical_project_root(nested) == nested.resolve()
