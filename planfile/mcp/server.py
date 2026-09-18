@@ -56,6 +56,7 @@ def _require_project_path(raw_path: object) -> str:
 def _guard_tool_call(name: str, arguments: dict) -> None:
     if "project_path" in arguments or name in {
         "planfile_dsl",
+        "planfile_ask",
         "planfile_yaml_get",
         "planfile_yaml_patch",
         "planfile_list_sprints",
@@ -64,15 +65,47 @@ def _guard_tool_call(name: str, arguments: dict) -> None:
 
     if name in _MUTATING_TOOLS:
         _require_mutation(name)
-    elif name == "planfile_dsl":
-        command = str(arguments.get("command") or "").strip()
-        verb = command.split(maxsplit=1)[0].lower() if command else ""
-        if verb not in _READ_ONLY_DSL_VERBS:
-            _require_mutation("planfile_dsl")
+    elif name in ("planfile_dsl", "planfile_ask"):
+        command = str(arguments.get("command") or arguments.get("query") or "").strip()
+        from planfile.dsl.parser import DSLParser
+        parsed = DSLParser().parse(command)
+        if parsed.verb not in _READ_ONLY_DSL_VERBS:
+            _require_mutation(name)
 
 # ── MCP tool definitions (JSON-Schema) ──
 
 TOOLS = [
+    {
+        "name": "planfile_ask",
+        "description": (
+            "Ask a natural language query in Polish or English to inspect or modify planfile resources "
+            "via the NL-DSL-LLM pattern. Fast-path supports PL/EN verbs and adjectives; falls back to LLM translation. "
+            "Examples: 'pokaż otwarte zadania', 'show open tickets', 'dodaj zadanie Napraw bug', 'zamknij zadanie PLF-001'."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Natural language query in Polish or English",
+                },
+                "project_path": {
+                    "type": "string",
+                    "default": ".",
+                    "description": "Path to project directory (default: current directory)",
+                },
+            },
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "planfile_describe_grammar",
+        "description": "Return the supported DSL and natural language grammar, vocabulary, and usage examples.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
     {
         "name": "planfile_dsl",
         "description": (
@@ -240,11 +273,12 @@ def handle_tool_call(name: str, arguments: dict) -> dict:
 
     _guard_tool_call(name, arguments)
 
-    if name == "planfile_dsl":
+    if name in ("planfile_dsl", "planfile_ask"):
         from planfile.dsl import DSLExecutor
         from planfile.dsl.parser import DSLParser
         project = Path(_require_project_path(arguments.get("project_path", ".")))
-        command = DSLParser().parse(arguments.get("command", ""))
+        raw_input = arguments.get("command") or arguments.get("query", "")
+        command = DSLParser().parse(raw_input)
         if command.verb != "help":
             # The existing capability-gated configuration operation can
             # initialize this exact store; ticket operations cannot.
@@ -253,8 +287,23 @@ def handle_tool_call(name: str, arguments: dict) -> dict:
                 allow_initialize=command.verb == "update" and command.object_type == "config",
             )
         executor = DSLExecutor(project_path=str(project), discover_project=False)
-        result = executor.execute(command)
+        result = executor.run(raw_input) if name == "planfile_ask" else executor.execute(command)
         return result.to_dict()
+
+    if name == "planfile_describe_grammar":
+        from planfile.dsl import DSLCommand, DSLExecutor
+        executor = DSLExecutor()
+        result = executor.execute(DSLCommand(verb="help"))
+        return {
+            "grammar": result.message or "",
+            "supported_languages": ["pl", "en"],
+            "standard": "wellmanifest/nl-dsl-llm",
+            "layers": {
+                "layer_1": "Deterministic NL regex parser (<1ms, 0 tokens, PL + EN)",
+                "layer_2": "Canonical DSL execution engine and validator",
+                "layer_3": "LiteLLM adaptive fallback compiler"
+            }
+        }
 
     if name == "planfile_yaml_get":
         import yaml

@@ -190,12 +190,19 @@ class DSLRequest(BaseModel):
     project_path: str = "."
 
 
+class QueryRequest(BaseModel):
+    query: str
+    project_path: str = "."
+    allow_llm_fallback: bool = True
+
+
 class DSLResponse(BaseModel):
     ok: bool
     command: dict
     data: Any = None
     error: str | None = None
     message: str | None = None
+    source_layer: str | None = "direct_dsl"
 
 
 class YAMLPatchRequest(BaseModel):
@@ -1468,6 +1475,15 @@ def dsl_command(body: DSLRequest) -> DSLResponse:
     from planfile.dsl import DSLExecutor
     executor = DSLExecutor(project_path=body.project_path)
     result = executor.run(body.command)
+    return DSLResponse(**result.to_dict())
+
+
+@app.post("/query", response_model=DSLResponse, tags=["dsl"])
+def query_command(body: QueryRequest) -> DSLResponse:
+    """Execute a natural language query against planfile via NL-DSL-LLM."""
+    from planfile.dsl import DSLExecutor
+    executor = DSLExecutor(project_path=body.project_path)
+    result = executor.run(body.query, allow_llm_fallback=body.allow_llm_fallback)
     return DSLResponse(**result.to_dict())
 
 
