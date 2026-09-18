@@ -7,7 +7,7 @@ from pathlib import Path
 import typer
 
 from planfile.cli.core import console, print_error
-from planfile.core.schema import SchemaValidator, validate_yaml_file
+from planfile.core.schema import SchemaValidator, detect_file_type, validate_yaml_file
 from planfile.loaders.yaml_loader import load_strategy_yaml
 from planfile.testql_integration import (
     build_testql_tickets,
@@ -63,12 +63,14 @@ def validate_schema_cli(
         file_path = Path(pf.store.project_dir) / "planfile.yaml"
         file_type = "planfile"
 
-    # Auto-detect file type
+    # Auto-detect file type: the redsl special case is decided by filename, the
+    # rest by document content so a Strategy is not judged against the
+    # ticket-store schema.
     if file_type == "auto":
         if "redsl" in file_path.name:
             file_type = "redsl"
         else:
-            file_type = "planfile"
+            file_type = detect_file_type(file_path)
 
     console.print(f"[bold]Validating:[/bold] {file_path} (type: {file_type})")
 

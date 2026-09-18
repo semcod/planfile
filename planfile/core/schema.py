@@ -95,6 +95,35 @@ class SchemaValidator:
         return CURRENT_SCHEMA_VERSION
 
 
+def detect_document_type(data: Dict[str, Any]) -> str:
+    """Infer which schema a loaded YAML document is meant to satisfy.
+
+    A ticket-store `planfile.yaml` and a `Strategy` file are different documents
+    that happen to share an extension. Guessing "planfile" for both makes every
+    generated strategy fail validation for missing ticket-store keys.
+    """
+    if not isinstance(data, dict):
+        return "planfile"
+    if "sprint" in data and isinstance(data.get("sprint"), dict):
+        return "sprint"
+    if "schema" in data and "project" in data:
+        return "planfile"
+    # A Strategy always names itself and carries sprints and/or quality gates.
+    if "name" in data and ("sprints" in data or "quality_gates" in data):
+        return "strategy"
+    return "planfile"
+
+
+def detect_file_type(file_path: Path) -> str:
+    """Infer the document type of a YAML file on disk (safe on unreadable files)."""
+    try:
+        with open(file_path) as f:
+            data = yaml.safe_load(f)
+    except (OSError, yaml.YAMLError):
+        return "planfile"
+    return detect_document_type(data)
+
+
 def validate_yaml_file(file_path: Path, file_type: str = "planfile") -> tuple[bool, List[str]]:
     """Validate a YAML file against its schema."""
     if not file_path.exists():
@@ -108,9 +137,20 @@ def validate_yaml_file(file_path: Path, file_type: str = "planfile") -> tuple[bo
         except yaml.YAMLError as e:
             return False, [f"Invalid YAML: {e}"]
     
+    if file_type == "auto":
+        file_type = detect_document_type(data)
+
     if file_type == "planfile":
         return SchemaValidator.validate_planfile(data)
     elif file_type == "sprint":
         return SchemaValidator.validate_sprint(data)
+    elif file_type == "strategy":
+        from planfile.core.models.strategy import Strategy
+
+        try:
+            Strategy(**data)
+        except Exception as e:  # pydantic ValidationError and friends
+            return False, [str(e)]
+        return True, []
     else:
         return False, [f"Unknown file type: {file_type}"]
