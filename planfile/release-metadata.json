@@ -1,0 +1,8 @@
+{
+  "schema": "planfile.release-metadata/v1",
+  "package": "planfile",
+  "source": {"version": "0.1.126", "build_mode": "local-source", "reason": "The protected image installs checked-out source from the locked repository."},
+  "runtime": {"version": "0.1.126", "source": "Dockerfile local-source build", "python_requires": ">=3.10"},
+  "published": {"index": "https://pypi.org/pypi/planfile/json", "version": "0.1.126", "python_requires": ">=3.10"},
+  "release": {"owner": "planfile maintainers", "sequence": ["publish for every declared Python target", "verify published metadata and lockfile", "update runtime pins or source metadata", "run the supported matrix before protected publication"]}
+}
