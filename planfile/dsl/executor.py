@@ -170,9 +170,10 @@ class DSLExecutor:
         return DSLResult(ok=False, command=cmd.to_dict(), error=f"Cannot create '{obj}' via DSL.")
 
     def _exec_create_sprint(self, cmd: DSLCommand) -> DSLResult:
-        import yaml
         from pathlib import Path
-        name = cmd.target or cmd.params.get("name", f"Sprint")
+
+        import yaml
+        name = cmd.target or cmd.params.get("name", "Sprint")
         days = int(cmd.params.get("days", 14))
         pf_path = Path(self.pf.store.project_dir) / "planfile.yaml"
         if not pf_path.exists():
@@ -215,8 +216,9 @@ class DSLExecutor:
         return DSLResult(ok=False, command=cmd.to_dict(), error=f"Cannot list '{obj}'.")
 
     def _exec_list_sprints(self, cmd: DSLCommand) -> DSLResult:
-        import yaml
         from pathlib import Path
+
+        import yaml
         pf_path = Path(self.pf.store.project_dir) / "planfile.yaml"
         if not pf_path.exists():
             return DSLResult(ok=False, command=cmd.to_dict(), error="planfile.yaml not found.")
@@ -375,8 +377,8 @@ class DSLExecutor:
         )
 
     def _exec_validate(self, cmd: DSLCommand) -> DSLResult:
+
         from planfile import validate_planfile_tickets
-        from pathlib import Path
         strategy_path = cmd.params.get("strategy", "planfile.yaml")
         project_path = cmd.params.get("project", self._project_path)
         report = validate_planfile_tickets(strategy_path=strategy_path, project_path=project_path)

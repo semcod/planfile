@@ -13,7 +13,7 @@ import sqlite3
 import time
 from collections import deque
 from contextlib import asynccontextmanager, contextmanager
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import BoundedSemaphore, RLock
 from typing import Any, Literal
@@ -998,7 +998,7 @@ def public_forensic_log_days():
 _MERGEABLE_TICKET_SECTIONS = ("executor", "execution", "inputs", "outputs")
 
 
-def _merged_ticket_updates(body: "TicketUpdate", current) -> dict:
+def _merged_ticket_updates(body: TicketUpdate, current) -> dict:
     """Apply only the fields a PATCH actually sent.
 
     FastAPI parses `{"inputs": {"uri_processes": [...]}}` into a complete
