@@ -31,7 +31,6 @@ dependencies = [
     "filelock>=3.0",
     "python-dotenv>=1.0",
     "PyGithub>=2.0",
-    "subactor-procache @ git+https://github.com/subactor/procache.git@85b548e272006fde8f844abfe3f6a95cb5c79218",
 ]
 
 license = "Apache-2.0"

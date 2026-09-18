@@ -12,15 +12,43 @@
     "project/ticket-135/**",
     "TODO.md",
     "project/TICKETS.md",
-    "pyproject.toml",
     "planfile/sync/github.py",
     "planfile/sync/github_projects.py",
     "planfile/sync/onedev.py",
+    "planfile/sync/generic.py",
     "tests/**"
   ],
   "forbiddenPaths": ["project/ticket-*/user-*.md"],
   "stacks": ["python"],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": "ticket-138",
+  "delivery": {
+    "acceptedBaseSha": "4fc420a",
+    "targetBranch": "main",
+    "outcome": "Planfile provider reads use shared SQLite TTL caching, cross-process request coalescing and cooldowns, while mutations invalidate cached reads.",
+    "nonGoals": ["No GitLab or Jira SDK transport interception.", "No provider data mutations during tests."],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {"maxImplementationFiles": 6, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 1},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Wrap read-only provider transport calls with procache; preserve explicit mutation paths and clear provider read namespaces after writes.",
+      "components": [
+        {"name": "github-sync", "paths": ["planfile/sync/github.py", "planfile/sync/github_projects.py"]},
+        {"name": "http-sync", "paths": ["planfile/sync/onedev.py", "planfile/sync/generic.py"]},
+        {"name": "provider-cache-tests", "paths": ["tests/**"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the provider cache integration commits; provider reads return to direct transport calls."
+    },
+    "runtimeDependencies": ["subactor-procache"],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python -m pytest -p no:wellmanifest_governance -q tests/test_github_deduplication.py tests/test_github_sync_preserves_issue.py tests/test_sync_routing.py tests/test_github_projects.py tests/test_onedev_backend.py tests/test_generic_cache.py"], "evidence": "42 passed locally."},
+      {"criterion": "AC-02", "commands": ["python -m pytest -q /home/tom/github/subactor/procache"], "evidence": "7 passed in procache repository."}
+    ]
+  }
 }
