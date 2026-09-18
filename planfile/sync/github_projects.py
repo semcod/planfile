@@ -12,9 +12,12 @@ GitHub App token.
 from __future__ import annotations
 
 import os
+import json
+from pathlib import Path
 from typing import Any
 
 import requests
+from procache import SQLiteResponseCache, is_rate_limit_error
 
 GRAPHQL_URL = "https://api.github.com/graphql"
 
@@ -32,19 +35,38 @@ class GitHubProjectsBackend:
             raise ValueError("GitHub token is required (pass token= or set GITHUB_TOKEN)")
         self._session = session or requests.Session()
         self._timeout = timeout
+        cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+        cache_path = os.environ.get("SUBACTOR_PROCACHE_PATH", str(cache_root / "subactor" / "planfile-github.sqlite3"))
+        self._read_cache = SQLiteResponseCache(cache_path, namespace="planfile-github-projects")
 
     def _graphql(self, query: str, variables: dict[str, Any]) -> dict[str, Any]:
-        response = self._session.post(
-            GRAPHQL_URL,
-            json={"query": query, "variables": variables},
-            headers={"Authorization": f"Bearer {self.token}", "Accept": "application/vnd.github+json"},
-            timeout=self._timeout,
-        )
-        response.raise_for_status()
-        payload = response.json()
-        if payload.get("errors"):
-            raise GitHubProjectsError(str(payload["errors"]))
-        return payload.get("data", {})
+        read_only = not query.lstrip().startswith("mutation")
+        key = self._read_cache.key("graphql", GRAPHQL_URL, query, variables)
+
+        def fetch() -> bytes:
+            response = self._session.post(
+                GRAPHQL_URL,
+                json={"query": query, "variables": variables},
+                headers={"Authorization": f"Bearer {self.token}", "Accept": "application/vnd.github+json"},
+                timeout=self._timeout,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            if payload.get("errors"):
+                raise GitHubProjectsError(str(payload["errors"]))
+            return json.dumps(payload.get("data", {}), separators=(",", ":")).encode("utf-8")
+
+        if read_only:
+            raw, _ = self._read_cache.get_or_set(
+                key,
+                fetch,
+                ttl=15,
+                cooldown_key="provider",
+                cooldown_seconds=60,
+                is_rate_limit=is_rate_limit_error,
+            )
+            return json.loads(raw)
+        return json.loads(fetch())
 
     def project_id(self, owner: str, number: int) -> str:
         data = self._graphql(
@@ -71,6 +93,7 @@ class GitHubProjectsBackend:
             "mutation($p:ID!,$c:ID!){ addProjectV2ItemById(input:{projectId:$p,contentId:$c}){ item{ id } } }",
             {"p": project_id, "c": content_node_id},
         )
+        self._read_cache.clear()
         return data["addProjectV2ItemById"]["item"]["id"]
 
     def single_select_field(self, project_id: str, name: str) -> dict[str, Any] | None:
@@ -91,6 +114,7 @@ class GitHubProjectsBackend:
             "projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){ projectV2Item{ id } } }",
             {"p": project_id, "i": item_id, "f": field_id, "o": option_id},
         )
+        self._read_cache.clear()
 
     def add_issue(
         self,

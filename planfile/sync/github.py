@@ -4,9 +4,11 @@ import os
 import re
 import sqlite3
 import time
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+from pathlib import Path
+
+from procache import CachedPyGithubRequester, SQLiteResponseCache
 
 from filelock import FileLock
 
@@ -97,6 +99,17 @@ class GitHubReadCache:
             finally:
                 connection.close()
 
+    def clear(self) -> None:
+        if not self.enabled:
+            return
+        with self.lock:
+            connection = self._connect()
+            try:
+                connection.execute("DELETE FROM github_read_cache")
+                connection.commit()
+            finally:
+                connection.close()
+
 
 class GitHubBackend(BasePMBackend):
     """GitHub Issues integration backend."""
@@ -118,7 +131,17 @@ class GitHubBackend(BasePMBackend):
         config = {"repo": repo, "token": token or os.environ.get("GITHUB_TOKEN"), **kwargs}
         super().__init__(config)
 
+        cache_path = self.config.get("cache_path") or os.environ.get("SUBACTOR_PROCACHE_PATH")
+        if cache_path is None:
+            cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+            cache_path = cache_root / "subactor" / "planfile-github.sqlite3"
+        self._provider_read_cache = SQLiteResponseCache(cache_path, namespace=f"planfile-github:{repo}")
         self.github = Github(self.config["token"])
+        self.github._Github__requester = CachedPyGithubRequester(
+            self.github.requester,
+            self._provider_read_cache,
+            ttl=float(os.environ.get("SUBACTOR_GITHUB_READ_TTL", "15")),
+        )
         self.repo: Repository = self.github.get_repo(repo)
         self._label_names: set[str] | None = None
         self._last_mutation_at = 0.0
@@ -143,6 +166,14 @@ class GitHubBackend(BasePMBackend):
 
         if "/" not in self.config["repo"]:
             raise ValueError("Repository must be in format 'owner/repo'")
+
+    def _clear_read_cache(self) -> None:
+        metadata_cache = getattr(self, "_read_cache", None)
+        if metadata_cache is not None:
+            metadata_cache.clear()
+        provider_cache = getattr(self, "_provider_read_cache", None)
+        if provider_cache is not None:
+            provider_cache.clear()
 
     def _ensure_labels_exist(self, labels: list[str]):
         """Ensure labels exist in the repository, create them if needed."""
@@ -357,6 +388,7 @@ class GitHubBackend(BasePMBackend):
 
         self._throttle_mutation()
         issue: Issue = self.repo.create_issue(**create_kwargs)
+        self._clear_read_cache()
 
         return self.build_ticket_ref(
             id=str(issue.number),
@@ -440,6 +472,7 @@ class GitHubBackend(BasePMBackend):
         if assignee:
             self._throttle_mutation()
             issue.edit(assignee=assignee)
+        self._clear_read_cache()
 
     def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get GitHub issue status."""
