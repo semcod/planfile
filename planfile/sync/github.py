@@ -444,6 +444,14 @@ class GitHubBackend(BasePMBackend):
     def _get_ticket(self, ticket_id: str) -> TicketState:
         """Get GitHub issue status."""
         issue = self.repo.get_issue(int(ticket_id))
+        if getattr(issue, "pull_request", None) is not None:
+            # GET /issues/{number} answers for a pull request number too, so a
+            # caller that resolves a ticket ref through this path (readback
+            # verification, recovery-after-lost-create) would otherwise accept
+            # a PR as if it were the issue it just created or is updating.
+            raise ValueError(
+                f"{self.repo.full_name}#{ticket_id} is a pull request, not an issue"
+            )
 
         return self._issue_to_ticket_status(issue)
 
