@@ -15,6 +15,7 @@ class DSLResult:
     data: Any = None
     error: str | None = None
     message: str | None = None
+    source_layer: str = "direct_dsl"
 
     def to_dict(self) -> dict:
         return {
@@ -23,6 +24,7 @@ class DSLResult:
             "data": self.data,
             "error": self.error,
             "message": self.message,
+            "source_layer": self.source_layer,
         }
 
 
@@ -45,10 +47,53 @@ class DSLExecutor:
             )
         return self._pf
 
-    def run(self, text: str) -> DSLResult:
-        """Parse and execute a DSL command string."""
+    def run(self, text: str, *, allow_llm_fallback: bool = True) -> DSLResult:
+        """Parse and execute a DSL command string with optional LLM translation fallback."""
         cmd = self._parser.parse(text)
-        return self.execute(cmd)
+        if (not cmd.is_valid or cmd.verb == "unknown") and allow_llm_fallback:
+            translated = self._translate_with_llm(text)
+            if translated:
+                fallback_cmd = self._parser.parse(translated)
+                if fallback_cmd.is_valid:
+                    res = self.execute(fallback_cmd)
+                    res.source_layer = "llm_fallback"
+                    res.command["source_layer"] = "llm_fallback"
+                    res.command["original_input"] = text
+                    return res
+
+        res = self.execute(cmd)
+        res.source_layer = "nl_fast_path" if any(w in text.lower() for w in ("pokaż", "zadanie", "zadania", "otwarte", "zamknij", "dodaj", "tickety")) else "direct_dsl"
+        res.command["source_layer"] = res.source_layer
+        return res
+
+    def _translate_with_llm(self, text: str) -> str | None:
+        """Translate natural language text to canonical planfile DSL via LiteLLM if available."""
+        import os
+        prompt = (
+            "Translate the following natural language user request into a single valid planfile DSL command.\n"
+            "Supported DSL syntax examples:\n"
+            "  create ticket \"NAME\" [priority=P] [sprint=S] [labels=a,b]\n"
+            "  list tickets [sprint=S] [status=ST]\n"
+            "  show ticket ID\n"
+            "  update ticket ID [status=ST] [priority=P] [title=T]\n"
+            "  done ticket ID\n"
+            "  delete ticket ID\n"
+            "  list sprints\n"
+            "  show config\n"
+            "Respond with ONLY the exact DSL command string, no explanations, no markdown backticks.\n\n"
+            f"User request: {text.strip()}\n"
+            "DSL:"
+        )
+        model = os.getenv("PLANFILE_LLM_MODEL", os.getenv("LLM_MODEL_VALIDATOR", "openrouter/anthropic/claude-3.5-haiku"))
+        try:
+            from planfile.llm.client import call_llm
+            resp = call_llm(prompt, model=model, temperature=0.0)
+            cleaned = resp.strip().strip("`").strip()
+            if cleaned.startswith("dsl "):
+                cleaned = cleaned[4:].strip()
+            return cleaned
+        except Exception:
+            return None
 
     def execute(self, cmd: DSLCommand) -> DSLResult:
         """Execute an already-parsed DSLCommand."""
@@ -125,9 +170,10 @@ class DSLExecutor:
         return DSLResult(ok=False, command=cmd.to_dict(), error=f"Cannot create '{obj}' via DSL.")
 
     def _exec_create_sprint(self, cmd: DSLCommand) -> DSLResult:
-        import yaml
         from pathlib import Path
-        name = cmd.target or cmd.params.get("name", f"Sprint")
+
+        import yaml
+        name = cmd.target or cmd.params.get("name", "Sprint")
         days = int(cmd.params.get("days", 14))
         pf_path = Path(self.pf.store.project_dir) / "planfile.yaml"
         if not pf_path.exists():
@@ -170,8 +216,9 @@ class DSLExecutor:
         return DSLResult(ok=False, command=cmd.to_dict(), error=f"Cannot list '{obj}'.")
 
     def _exec_list_sprints(self, cmd: DSLCommand) -> DSLResult:
-        import yaml
         from pathlib import Path
+
+        import yaml
         pf_path = Path(self.pf.store.project_dir) / "planfile.yaml"
         if not pf_path.exists():
             return DSLResult(ok=False, command=cmd.to_dict(), error="planfile.yaml not found.")
@@ -330,8 +377,8 @@ class DSLExecutor:
         )
 
     def _exec_validate(self, cmd: DSLCommand) -> DSLResult:
+
         from planfile import validate_planfile_tickets
-        from pathlib import Path
         strategy_path = cmd.params.get("strategy", "planfile.yaml")
         project_path = cmd.params.get("project", self._project_path)
         report = validate_planfile_tickets(strategy_path=strategy_path, project_path=project_path)

@@ -1,0 +1,24 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-127",
+  "summary": "Generator/analyzer produce identical plans and skip validate auto-detection; extend todo-sync edge-case coverage",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P3",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-127/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/analysis/generator.py",
+    "planfile/analysis/file_analyzer.py",
+    "tests/test_generator_analysis_passthrough.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

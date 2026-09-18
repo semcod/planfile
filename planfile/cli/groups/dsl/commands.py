@@ -118,6 +118,50 @@ def shell_cmd(
     dsl_run(command=command, project=project, fmt=fmt, fail_on_error=fail_on_error)
 
 
+def ask_run(
+    query: str = typer.Argument(..., help="Natural language query in Polish or English, e.g. 'pokaż otwarte zadania' or 'show open tickets'"),
+    project: str = typer.Option(".", "--project", "-p", help="Project root directory"),
+    fmt: str = typer.Option("text", "--format", "-f", help="Output format: text | json | yaml"),
+    no_fallback: bool = typer.Option(False, "--no-fallback", help="Disable LLM translation fallback"),
+    fail_on_error: bool = typer.Option(False, "--fail-on-error", help="Exit with code 1 if command fails"),
+) -> None:
+    """Execute a natural language request using the NL-DSL-LLM engine."""
+    from planfile.dsl import DSLExecutor
+    executor = DSLExecutor(project_path=project)
+    result = executor.run(query, allow_llm_fallback=not no_fallback)
+
+    if fmt == "json":
+        print(json.dumps(result.to_dict(), indent=2, default=str))
+    elif fmt == "yaml":
+        console.print(yaml.dump(result.to_dict(), default_flow_style=False, sort_keys=False, allow_unicode=True))
+    else:
+        if result.ok:
+            if result.message:
+                console.print(f"[green]✓[/green] {result.message}")
+            if result.data is not None:
+                _pretty_data(result.data)
+        else:
+            console.print(f"[red]✗[/red] {result.error}")
+
+    if fail_on_error and not result.ok:
+        raise typer.Exit(1)
+
+
+def mcp_run(
+    project_root: str = typer.Option(".", "--project-root", "-p", help="Project root directory for MCP operations"),
+    allow_mutation: bool = typer.Option(False, "--allow-mutation", help="Allow mutating tool operations"),
+) -> None:
+    """Run the Model Context Protocol (MCP) server over stdio for AI agents."""
+    import os
+
+    from planfile.mcp.server import main as run_mcp
+
+    os.environ["PLANFILE_MCP_PROJECT_ROOT"] = project_root
+    if allow_mutation:
+        os.environ["PLANFILE_MCP_ALLOW_MUTATION"] = "1"
+    run_mcp()
+
+
 def register_dsl_commands(app: typer.Typer) -> None:
     """Register DSL commands on the main app."""
     dsl_app = typer.Typer(
@@ -149,5 +193,11 @@ def register_dsl_commands(app: typer.Typer) -> None:
             raise typer.Exit()
 
     app.add_typer(dsl_app, name="dsl", help="DSL / natural language commands")
+
+    # Top-level shell aliases
     app.command("shell", help="Start an interactive planfile DSL shell (REPL).")(shell_cmd)
     app.command("sh", help="Alias for 'planfile shell' (interactive DSL shell).")(shell_cmd)
+
+    # Top-level NL and MCP commands
+    app.command("ask", help="Execute natural language query in Polish or English (NL-DSL-LLM)")(ask_run)
+    app.command("mcp", help="Run Model Context Protocol (MCP) stdio server for AI agents")(mcp_run)
