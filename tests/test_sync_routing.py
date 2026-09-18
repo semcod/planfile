@@ -261,6 +261,8 @@ def test_github_marker_cache_avoids_repeating_full_issue_scan(tmp_path):
 
 
 def test_github_marker_cache_short_lived_negative_result_avoids_repeat_scan(tmp_path):
+    from planfile.sync.github import GitHubBackend
+
     class CountingRepo:
         full_name = "owner/repo"
 
