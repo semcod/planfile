@@ -170,6 +170,16 @@ def test_rate_limit_error_exposes_retry_after_hint(tmp_path):
     assert caught.value.retry_after == 37
 
 
+def test_rate_limit_error_converts_absolute_reset_to_seconds(monkeypatch):
+    from planfile.sync.outbound import _retry_after_seconds
+
+    monkeypatch.setattr("planfile.sync.outbound.time.time", lambda: 1_000.0)
+    error = RuntimeError("primary rate limit")
+    error.headers = {"X-RateLimit-Reset": "1042"}
+
+    assert _retry_after_seconds(error) == 42
+
+
 def test_persistence_failure_propagates(tmp_path, monkeypatch):
     path, data, store = source(tmp_path, ("good",))
 
