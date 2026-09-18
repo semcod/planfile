@@ -1,0 +1,49 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-137",
+  "summary": "Expose GitHub rate-limit retry hints to outbound callers",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "planfile/sync/outbound.py",
+    "tests/test_sync_failure_status.py",
+    "project/ticket-137/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-130"],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4fc420a94c88624b19dd068117407b56a7ae703f",
+    "targetBranch": "main",
+    "outcome": "Outbound GitHub synchronization exposes bounded Retry-After and X-RateLimit-Reset hints to callers.",
+    "nonGoals": ["No automatic wait or merge is introduced in the outbound sync loop."],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 2, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep retry hint extraction in the outbound synchronization module and expose it on OutboundSyncError so schedulers can choose the retry time.",
+      "components": [{"name": "outbound-sync", "paths": ["planfile/sync/outbound.py", "tests/test_sync_failure_status.py"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["OutboundSyncError.retry_after"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket commit to remove retry hint extraction while retaining existing batch stop behavior."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["uv run --frozen pytest -q tests/test_sync_failure_status.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-02", "commands": ["uv run --frozen pytest -q tests/test_sync_failure_status.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-03", "commands": ["uv run --frozen pytest -q tests/test_sync_failure_status.py tests/test_sync_receipts.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-04", "commands": ["./project/governance-check.sh"], "evidence": "Pending exact-head validation"}
+    ]
+  }
+}

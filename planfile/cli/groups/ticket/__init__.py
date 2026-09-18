@@ -5,12 +5,12 @@ import typer
 from planfile.cli.core import console
 from planfile.cli.groups.ticket.commands import (
     ticket_block,
+    ticket_bulk_update,
     ticket_claim,
     ticket_comment,
-    ticket_bulk_update,
     ticket_complete,
-    ticket_create,
     ticket_coverage,
+    ticket_create,
     ticket_decompose,
     ticket_delete,
     ticket_depend,
@@ -23,8 +23,8 @@ from planfile.cli.groups.ticket.commands import (
     ticket_list,
     ticket_merge,
     ticket_move,
-    ticket_prune_deps,
     ticket_next,
+    ticket_prune_deps,
     ticket_ready,
     ticket_show,
     ticket_split,
@@ -48,6 +48,7 @@ def register_ticket_commands(app: typer.Typer) -> None:
 
     ticket_app.command("create")(ticket_create)
     ticket_app.command("list")(ticket_list)
+    ticket_app.command("ls", help="Alias for ticket list")(ticket_list)
     ticket_app.command("next")(ticket_next)
     ticket_app.command("claim")(ticket_claim)
     ticket_app.command("show")(ticket_show)

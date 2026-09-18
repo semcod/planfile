@@ -4,9 +4,9 @@ Grammar (simplified EBNF):
   command     := verb object? target? modifiers*
   verb        := 'create'|'add'|'list'|'show'|'get'|'update'|'set'|'move'
                  |'delete'|'remove'|'done'|'start'|'block'|'validate'|'sync'
-                 |'query'|'export'
+                 |'query'|'export'|'pokaż'|'dodaj'|'zamknij'|'usuń'|'edytuj'
   object      := 'ticket'|'tickets'|'sprint'|'sprints'|'backlog'|'strategy'
-                 |'config'|'configuration'|'settings'
+                 |'config'|'configuration'|'settings'|'zadanie'|'zadania'
   target      := TICKET_ID | QUOTED_STRING | WORD
   modifiers   := KEY=VALUE | 'to' VALUE | 'where' FILTER_EXPR
   FILTER_EXPR := KEY=VALUE ('and' KEY=VALUE)*
@@ -19,8 +19,8 @@ import shlex
 from dataclasses import dataclass, field
 from typing import Any
 
-
 VERBS = {
+    # English
     "create": "create",
     "add": "create",
     "new": "create",
@@ -54,9 +54,63 @@ VERBS = {
     "search": "query",
     "export": "export",
     "help": "help",
+    # Polish
+    "pokaż": "list",
+    "pokaz": "list",
+    "wypisz": "list",
+    "wyświetl": "list",
+    "wyswietl": "list",
+    "lista": "list",
+    "listuj": "list",
+    "szczegóły": "show",
+    "szczegoly": "show",
+    "dane": "show",
+    "dodaj": "create",
+    "utwórz": "create",
+    "utworz": "create",
+    "stwórz": "create",
+    "stworz": "create",
+    "nowy": "create",
+    "nowa": "create",
+    "nowe": "create",
+    "załóż": "create",
+    "zaloz": "create",
+    "zmień": "update",
+    "zmien": "update",
+    "edytuj": "update",
+    "zaktualizuj": "update",
+    "ustaw": "update",
+    "przenieś": "move",
+    "przenies": "move",
+    "zamknij": "done",
+    "zakończ": "done",
+    "zakoncz": "done",
+    "zrobione": "done",
+    "gotowe": "done",
+    "rozpocznij": "start",
+    "zacznij": "start",
+    "zablokuj": "block",
+    "odblokuj": "start",
+    "usuń": "delete",
+    "usun": "delete",
+    "skasuj": "delete",
+    "odrzuć": "delete",
+    "odrzuc": "delete",
+    "wyrzuć": "delete",
+    "wyrzuc": "delete",
+    "szukaj": "query",
+    "znajdź": "query",
+    "znajdz": "query",
+    "synchronizuj": "sync",
+    "wypchnij": "sync",
+    "waliduj": "validate",
+    "sprawdź": "validate",
+    "sprawdz": "validate",
+    "pomoc": "help",
 }
 
 OBJECTS = {
+    # English
     "ticket": "ticket",
     "tickets": "ticket",
     "issue": "ticket",
@@ -73,6 +127,52 @@ OBJECTS = {
     "config": "config",
     "configuration": "config",
     "settings": "config",
+    # Polish
+    "zadanie": "ticket",
+    "zadania": "ticket",
+    "zadań": "ticket",
+    "zadan": "ticket",
+    "tickety": "ticket",
+    "ticketów": "ticket",
+    "ticketow": "ticket",
+    "zgłoszenie": "ticket",
+    "zgłoszenia": "ticket",
+    "zgłoszeń": "ticket",
+    "zagadnienie": "ticket",
+    "sprinty": "sprint",
+    "sprintów": "sprint",
+    "sprintow": "sprint",
+    "iteracja": "sprint",
+    "iteracji": "sprint",
+    "strategia": "strategy",
+    "strategie": "strategy",
+    "strategii": "strategy",
+    "konfiguracja": "config",
+    "konfiguracji": "config",
+    "ustawienia": "config",
+    "ustawień": "config",
+}
+
+STATUS_ADJECTIVES = {
+    "otwarte": "todo",
+    "otwarty": "todo",
+    "otwarta": "todo",
+    "open": "todo",
+    "nieukończone": "todo",
+    "niescalone": "todo",
+    "zamknięte": "done",
+    "zamknięty": "done",
+    "zamkniete": "done",
+    "closed": "done",
+    "done": "done",
+    "zrobione": "done",
+    "ukończone": "done",
+    "w_toku": "in_progress",
+    "rozpoczęte": "in_progress",
+    "trwające": "in_progress",
+    "active": "in_progress",
+    "zablokowane": "blocked",
+    "blocked": "blocked",
 }
 
 TICKET_ID_RE = re.compile(r"^[A-Z]+-\d+$|^#\d+$")
@@ -89,7 +189,7 @@ class DSLCommand:
 
     @property
     def is_valid(self) -> bool:
-        return bool(self.verb)
+        return bool(self.verb) and self.verb != "unknown"
 
     def to_dict(self) -> dict:
         return {
@@ -117,28 +217,61 @@ class DSLParser:
         if not tokens:
             return DSLCommand(verb="help", raw=text)
 
+        # Support direct entity.operation format (e.g. ticket.list, ticket.create)
+        if "." in tokens[0] and not tokens[0].startswith("."):
+            parts = tokens[0].split(".", 1)
+            ent_raw = parts[0].lower()
+            op_raw = parts[1].lower()
+            verb = VERBS.get(op_raw, op_raw)
+            obj = OBJECTS.get(ent_raw, ent_raw)
+            cmd = DSLCommand(verb=verb, object_type=obj, raw=text)
+            rest = tokens[1:]
+            rest = self._extract_target(cmd, rest)
+            self._extract_modifiers(cmd, rest)
+            return cmd
+
         verb_raw = tokens[0].lower()
         verb = VERBS.get(verb_raw)
+
         if not verb:
-            return DSLCommand(verb="unknown", raw=text, params={"input": text})
+            # Check if first token is an object or adjective, implying 'list'
+            if verb_raw in OBJECTS or verb_raw in STATUS_ADJECTIVES:
+                verb = "list"
+                rest = tokens
+            else:
+                return DSLCommand(verb="unknown", raw=text, params={"input": text})
+        else:
+            rest = tokens[1:]
 
         cmd = DSLCommand(verb=verb, raw=text)
-        rest = tokens[1:]
 
-        rest = self._extract_object(cmd, rest)
+        rest = self._extract_object_and_status(cmd, rest)
         rest = self._extract_target(cmd, rest)
         self._extract_modifiers(cmd, rest)
 
+        # Default object to 'ticket' if target matches ticket pattern or id
+        if not cmd.object_type and cmd.target and TICKET_ID_RE.match(cmd.target.upper()):
+            cmd.object_type = "ticket"
+
+        # Default create title parameter
+        if cmd.verb == "create" and cmd.target and "title" not in cmd.params:
+            cmd.params["title"] = cmd.target
+
         return cmd
 
-    def _extract_object(self, cmd: DSLCommand, tokens: list[str]) -> list[str]:
-        if not tokens:
-            return tokens
-        obj = OBJECTS.get(tokens[0].lower())
-        if obj:
-            cmd.object_type = obj
-            return tokens[1:]
-        return tokens
+    def _extract_object_and_status(self, cmd: DSLCommand, tokens: list[str]) -> list[str]:
+        """Extract object type and any status adjective (PL & EN) from tokens."""
+        remaining: list[str] = []
+        for tok in tokens:
+            lower = tok.lower()
+            if not cmd.object_type and lower in OBJECTS:
+                cmd.object_type = OBJECTS[lower]
+                continue
+            if "status" not in cmd.params and lower in STATUS_ADJECTIVES:
+                cmd.params["status"] = STATUS_ADJECTIVES[lower]
+                continue
+            remaining.append(tok)
+        return remaining
 
     def _extract_target(self, cmd: DSLCommand, tokens: list[str]) -> list[str]:
         if not tokens:
@@ -147,7 +280,7 @@ class DSLParser:
         if TICKET_ID_RE.match(first.upper()):
             cmd.target = first.upper()
             return tokens[1:]
-        if first.startswith('"') or (not KV_RE.match(first) and first.lower() not in ("to", "where", "and", "in")):
+        if first.startswith('"') or (not KV_RE.match(first) and first.lower() not in ("to", "where", "and", "in", "do")):
             if not KV_RE.match(first):
                 cmd.target = first
                 return tokens[1:]
@@ -158,7 +291,7 @@ class DSLParser:
         while i < len(tokens):
             token = tokens[i]
 
-            if token.lower() == "to" and i + 1 < len(tokens):
+            if token.lower() in ("to", "do") and i + 1 < len(tokens):
                 next_tok = tokens[i + 1]
                 m = KV_RE.match(next_tok)
                 if m:
@@ -168,9 +301,9 @@ class DSLParser:
                 i += 2
                 continue
 
-            if token.lower() == "where":
+            if token.lower() in ("where", "gdzie"):
                 i += 1
-                while i < len(tokens) and tokens[i].lower() != "order":
+                while i < len(tokens) and tokens[i].lower() not in ("order", "sortuj"):
                     m = KV_RE.match(tokens[i])
                     if m:
                         cmd.params[m.group(1)] = self._coerce(m.group(2))
@@ -181,7 +314,7 @@ class DSLParser:
             if m:
                 key = m.group(1)
                 val_str = m.group(2)
-                if "," in val_str and key in ("labels", "tags", "files"):
+                if "," in val_str and key in ("labels", "tags", "files", "tagi"):
                     cmd.params[key] = [v.strip() for v in val_str.split(",")]
                 else:
                     cmd.params[key] = self._coerce(val_str)
@@ -194,9 +327,9 @@ class DSLParser:
 
     @staticmethod
     def _coerce(val: str) -> Any:
-        if val.lower() in ("true", "yes"):
+        if val.lower() in ("true", "yes", "tak"):
             return True
-        if val.lower() in ("false", "no"):
+        if val.lower() in ("false", "no", "nie"):
             return False
         try:
             return int(val)

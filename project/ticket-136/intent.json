@@ -1,0 +1,29 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-136",
+  "summary": "integrate NL-DSL-LLM pattern with multilingual parser and CLI MCP tools",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "planfile/dsl/parser.py",
+    "planfile/dsl/executor.py",
+    "planfile/cli/groups/dsl/commands.py",
+    "planfile/mcp/server.py",
+    "planfile/api/server.py",
+    "tests/test_nl_dsl_llm.py",
+    "project/ticket-136/**",
+    "project/TICKETS.md",
+    "TODO.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

@@ -1,6 +1,10 @@
+import json
+import os
+from pathlib import Path
 from typing import Any
 
 import requests
+from procache import SQLiteResponseCache, is_rate_limit_error
 
 from planfile.sync.base import BasePMBackend, TicketRef, TicketState
 
@@ -13,6 +17,7 @@ class GenericBackend(BasePMBackend):
         base_url: str,
         api_key: str | None = None,
         headers: dict[str, str] | None = None,
+        session: requests.Session | None = None,
         **kwargs
     ):
         """
@@ -31,7 +36,8 @@ class GenericBackend(BasePMBackend):
         }
         super().__init__(config)
 
-        self.session = requests.Session()
+        supplied_session = session is not None
+        self.session = session or requests.Session()
 
         # Set up authentication
         if self.config["api_key"]:
@@ -43,6 +49,14 @@ class GenericBackend(BasePMBackend):
 
         # Default to JSON content type
         self.session.headers.update({"Content-Type": "application/json"})
+        if supplied_session:
+            self._read_cache = None
+        else:
+            cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+            cache_path = os.environ.get(
+                "SUBACTOR_PROCACHE_PATH", str(cache_root / "subactor" / "planfile-generic.sqlite3")
+            )
+            self._read_cache = SQLiteResponseCache(cache_path, namespace="planfile-generic")
 
     def _validate_config(self) -> None:
         """Validate generic backend configuration."""
@@ -59,17 +73,27 @@ class GenericBackend(BasePMBackend):
         """Make HTTP request to the API."""
         url = f"{self.config['base_url']}/{endpoint.lstrip('/')}"
 
-        response = self.session.request(
-            method=method,
-            url=url,
-            json=data,
-            params=params
-        )
+        def fetch() -> bytes:
+            response = self.session.request(method=method, url=url, json=data, params=params)
+            if not response.ok:
+                raise RuntimeError(f"API request failed: {response.status_code} - {response.text}")
+            return response.content
 
-        if not response.ok:
-            raise RuntimeError(f"API request failed: {response.status_code} - {response.text}")
-
-        return response.json()
+        if method.upper() == "GET" and self._read_cache is not None:
+            key = self._read_cache.key("generic", method.upper(), url, params)
+            raw, _ = self._read_cache.get_or_set(
+                key,
+                fetch,
+                ttl=15,
+                cooldown_key="provider",
+                cooldown_seconds=60,
+                is_rate_limit=is_rate_limit_error,
+            )
+        else:
+            raw = fetch()
+        if method.upper() != "GET" and self._read_cache is not None:
+            self._read_cache.clear()
+        return json.loads(raw)
 
     def _create_ticket(
         self,

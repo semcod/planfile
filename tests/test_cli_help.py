@@ -41,3 +41,35 @@ def test_legacy_auto_loop_alias_remains_available() -> None:
 
     assert result.exit_code == 0
     assert "Run automated CI/CD loop" in result.output
+
+
+def test_dsl_shell_aliases_show_help() -> None:
+    runner = CliRunner()
+
+    shell_help = runner.invoke(app, ["shell", "--help"])
+    sh_help = runner.invoke(app, ["sh", "--help"])
+
+    assert shell_help.exit_code == 0
+    assert "Start an interactive planfile DSL shell" in shell_help.output
+    assert sh_help.exit_code == 0
+    assert "Alias for 'planfile shell'" in sh_help.output
+
+
+def test_dsl_shell_aliases_execute_a_command() -> None:
+    runner = CliRunner()
+
+    shell_result = runner.invoke(app, ["shell", "help"])
+    sh_result = runner.invoke(app, ["sh", "help"])
+
+    assert shell_result.exit_code == 0
+    assert "planfile DSL commands" in shell_result.output
+    assert sh_result.exit_code == 0
+    assert "planfile DSL commands" in sh_result.output
+
+
+def test_dsl_without_subcommand_starts_interactive_shell() -> None:
+    result = CliRunner().invoke(app, ["dsl"], input="exit\n")
+
+    assert result.exit_code == 0
+    assert "planfile DSL shell" in result.output
+    assert "Bye." in result.output
