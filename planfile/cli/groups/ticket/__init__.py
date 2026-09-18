@@ -48,6 +48,7 @@ def register_ticket_commands(app: typer.Typer) -> None:
 
     ticket_app.command("create")(ticket_create)
     ticket_app.command("list")(ticket_list)
+    ticket_app.command("ls", help="Alias for ticket list")(ticket_list)
     ticket_app.command("next")(ticket_next)
     ticket_app.command("claim")(ticket_claim)
     ticket_app.command("show")(ticket_show)

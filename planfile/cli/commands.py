@@ -19,6 +19,7 @@ from planfile.cli.groups.sync import register_sync_commands
 from planfile.cli.groups.ticket import register_ticket_commands
 from planfile.cli.groups.dsl import register_dsl_commands
 from planfile.cli.groups.validate import register_validate_commands
+from planfile.cli.groups.info import register_info_commands
 
 app = typer.Typer(
     help="planfile — universal ticket standard for developer toolchains",
@@ -63,6 +64,7 @@ register_storage_commands(app)
 register_sync_commands(app)
 register_ticket_commands(app)
 register_validate_commands(app)
+register_info_commands(app)
 
 # Health + examples
 from planfile.cli.extra_commands import add_extra_commands
