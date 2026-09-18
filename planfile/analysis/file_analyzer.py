@@ -16,6 +16,35 @@ from planfile.analysis.parsers.yaml_parser import analyze_yaml, extract_from_yam
 class FileAnalyzer:
     """Analyzes YAML/JSON files to extract issues and metrics."""
 
+    #: Directory names that never contain first-party source. Matched against the
+    #: parts of each path, so a vendored tree is skipped wherever it is nested.
+    EXCLUDED_DIRS = frozenset({
+        '__pycache__', '.git', 'node_modules', '.pytest_cache', '.planfile_analysis',
+        '.venv', 'venv', '.env', 'site-packages', 'vendor', 'third_party',
+        'dist', 'build', '.tox', '.nox', '.mypy_cache', '.ruff_cache',
+        'htmlcov', '.coverage', 'coverage', '.cache', '.gradle', 'target',
+        '.terraform', '.next', '.nuxt', '.svelte-kit', 'bower_components',
+    })
+
+    #: Suffixes of directory names that never contain first-party source.
+    EXCLUDED_DIR_SUFFIXES = ('.egg-info',)
+
+    @classmethod
+    def is_excluded(cls, file_path: Path, root: Path | None = None) -> bool:
+        """True if *file_path* lives inside a directory we must not analyze.
+
+        Only the part of the path below *root* is inspected, so a project that
+        merely happens to live under e.g. ~/build is still analyzed.
+        """
+        try:
+            parts = file_path.relative_to(root).parts if root else file_path.parts
+        except ValueError:
+            parts = file_path.parts
+        for part in parts[:-1]:
+            if part in cls.EXCLUDED_DIRS or part.endswith(cls.EXCLUDED_DIR_SUFFIXES):
+                return True
+        return False
+
     def __init__(self):
         self.extractors = {
             '.yaml': analyze_yaml,
@@ -105,8 +134,10 @@ class FileAnalyzer:
                 if file_path in seen:
                     continue
                 seen.add(file_path)
-                # Skip hidden files and common exclusions
-                if file_path.name.startswith('.') or any(skip in str(file_path) for skip in ['__pycache__', '.git', 'node_modules', '.pytest_cache', '.planfile_analysis']):
+                # Skip hidden files and anything inside a vendored/build directory.
+                # NOTE: rglob yields files, so a dot-prefixed *directory* such as
+                # .venv is only caught by the directory check below.
+                if file_path.name.startswith('.') or self.is_excluded(file_path, directory):
                     continue
 
                 # Skip analysis files to prevent recursive analysis

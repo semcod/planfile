@@ -185,16 +185,22 @@ class PlanfileGenerator:
                              max_sprints: int = CONSTANT_4,
                              focus_area: str = None,
                              external_metrics: dict[str, Any] | None = None,
-                             compact: bool = False) -> Strategy:
-        """Generate planfile from analyzed files."""
-        # Analyze files
-        analysis_result = self.analyzer.analyze_directory(Path(analysis_path))
+                             compact: bool = False,
+                             analysis_result: dict[str, Any] | None = None) -> Strategy:
+        """Generate planfile from analyzed files.
+
+        *analysis_result* lets a caller that has already analyzed the project pass
+        the result straight through, instead of forcing a second pass over a
+        different directory.
+        """
+        if analysis_result is None:
+            analysis_result = self.analyzer.analyze_directory(Path(analysis_path))
         summary = analysis_result['summary']
         sprints = self.generator.generate_sprints(analysis_result, max_sprints)
         tickets = self.generator.generate_tickets(analysis_result)
 
         metrics = self._extract_key_metrics(analysis_result, external_metrics)
-        project_name = project_name or Path(analysis_path).name
+        project_name = project_name or Path(analysis_path).resolve().name
 
         strategy_data = {
             'name': f'{project_name.title()} Improvement Plan',
@@ -227,19 +233,25 @@ class PlanfileGenerator:
         if patterns is None:
             patterns = ['*.yaml', '*.yml', '*.json', '*.toon.yaml', '*.toon.yml', '*.py']
 
-        analysis_result = self.analyzer.analyze_directory(Path(project_path), patterns)
+        project_path = Path(project_path).resolve()
+        analysis_result = self.analyzer.analyze_directory(project_path, patterns)
 
-        temp_dir = Path(project_path) / ".planfile_analysis"
-        temp_dir.mkdir(exist_ok=True)
-
-        # Only save analysis summary if not in compact mode
+        # Only save the analysis summary if not in compact mode. This is a debug
+        # artifact; the strategy below is built from analysis_result directly.
         if not compact:
+            temp_dir = project_path / ".planfile_analysis"
+            temp_dir.mkdir(exist_ok=True)
             with open(temp_dir / "analysis_summary.json", 'w') as f:
                 serializable_result = self._make_serializable(analysis_result)
                 json.dump(serializable_result, f, indent=2, default=str)
 
+        # The CLI always passes project_name (None when unset), so setdefault
+        # would not fire; fall back on the real directory name.
+        if not kwargs.get("project_name"):
+            kwargs["project_name"] = project_path.name
         return self.generate_from_analysis(
-            analysis_path=str(temp_dir),
+            analysis_path=str(project_path),
+            analysis_result=analysis_result,
             compact=compact,
             **kwargs
         )
