@@ -20,6 +20,16 @@ from planfile.sync.receipts import publish_intent, record_receipt, successful_re
 from planfile.sync.state import SyncState
 
 
+def _is_rate_limit_error(error: Exception) -> bool:
+    """Recognize primary, secondary and abuse-limit provider responses."""
+    status = getattr(error, "status", None)
+    message = str(error).lower()
+    return status in {403, 429} or any(
+        marker in message
+        for marker in ("rate limit", "secondary rate", "abuse detection", "retry-after")
+    )
+
+
 def _external_reference(value: object) -> dict[str, str]:
     """Extract only stable identity fields from a provider result."""
     if isinstance(value, dict):
@@ -157,6 +167,11 @@ def sync_to_external(
     planned = []
     pending_receipts = []
 
+    if not dry_run:
+        preflight = getattr(backend, "preflight", None)
+        if callable(preflight):
+            preflight(tickets)
+
     for ticket_id, ticket in tickets:
         if dry_run:
             planned.append(ticket_id)
@@ -187,7 +202,9 @@ def sync_to_external(
                     _create_new_ticket(
                         backend, ticket, ticket_id, integration_name, sync_state, ticket_map
                     )
-                except Exception:
+                except Exception as error:
+                    if _is_rate_limit_error(error):
+                        raise
                     recovered = _recover_lost_create(
                         backend,
                         ticket,
@@ -250,6 +267,9 @@ def sync_to_external(
         except Exception as error:
             failed.append(ticket_id)
             console.print(f"  ✗ Failed to sync {ticket_id}: {error}")
+            if _is_rate_limit_error(error):
+                console.print("    GitHub rate/abuse limit reached; stopping batch for safe retry.")
+                break
             if "403" not in str(error) and "Forbidden" not in str(error):
                 console.print(f"    [dim]Error details: {traceback.format_exc()}[/dim]")
             pending_receipts.append(
