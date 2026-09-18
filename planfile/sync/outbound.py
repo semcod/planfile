@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,6 +19,36 @@ from planfile.sync.operations import (
 )
 from planfile.sync.receipts import publish_intent, record_receipt, successful_receipt
 from planfile.sync.state import SyncState
+
+
+def _is_rate_limit_error(error: Exception) -> bool:
+    """Recognize primary, secondary and abuse-limit provider responses."""
+    status = getattr(error, "status", None)
+    message = str(error).lower()
+    return status in {403, 429} or any(
+        marker in message
+        for marker in ("rate limit", "secondary rate", "abuse detection", "retry-after")
+    )
+
+
+def _retry_after_seconds(error: Exception) -> int | None:
+    """Extract GitHub's retry hint without exposing provider response data."""
+    headers = getattr(error, "headers", None) or {}
+    retry_after = next(
+        (value for key, value in headers.items() if str(key).lower() == "retry-after"), None
+    )
+    if retry_after is not None:
+        try:
+            return max(0, int(float(retry_after)))
+        except (TypeError, ValueError):
+            pass
+    reset = next(
+        (value for key, value in headers.items() if str(key).lower() == "x-ratelimit-reset"), None
+    )
+    try:
+        return max(0, int(float(reset) - time.time())) if reset is not None else None
+    except (TypeError, ValueError):
+        return None
 
 
 def _external_reference(value: object) -> dict[str, str]:
@@ -133,11 +164,18 @@ class OutboundSyncResult:
 class OutboundSyncError(RuntimeError):
     """Partial failure raised after preserving successful synchronization state."""
 
-    def __init__(self, integration_name: str, result: OutboundSyncResult):
+    def __init__(
+        self,
+        integration_name: str,
+        result: OutboundSyncResult,
+        retry_after: int | None = None,
+    ):
         self.result = result
+        self.retry_after = retry_after
+        retry_hint = f"; retry after {retry_after}s" if retry_after is not None else ""
         super().__init__(
             f"{integration_name} sync failed for {len(result.failed)} ticket(s) "
-            f"({len(result.succeeded)} succeeded): {', '.join(result.failed)}"
+            f"({len(result.succeeded)} succeeded): {', '.join(result.failed)}{retry_hint}"
         )
 
 
@@ -156,6 +194,12 @@ def sync_to_external(
     failed = []
     planned = []
     pending_receipts = []
+    rate_limit_retry_after = None
+
+    if not dry_run:
+        preflight = getattr(backend, "preflight", None)
+        if callable(preflight):
+            preflight(tickets)
 
     for ticket_id, ticket in tickets:
         if dry_run:
@@ -187,7 +231,9 @@ def sync_to_external(
                     new_id, new_ticket = _create_new_ticket(
                         backend, ticket, ticket_id, integration_name, sync_state, ticket_map
                     )
-                except Exception:
+                except Exception as error:
+                    if _is_rate_limit_error(error):
+                        raise
                     recovered = _recover_lost_create(
                         backend,
                         ticket,
@@ -285,6 +331,12 @@ def sync_to_external(
             # persisted to sync_state nor reported on the failure receipt.
             rejected_id = ticket_map.pop(ticket_id, None)
             console.print(f"  ✗ Failed to sync {ticket_id}: {error}")
+            if _is_rate_limit_error(error):
+                rate_limit_retry_after = _retry_after_seconds(error)
+                console.print("    GitHub rate/abuse limit reached; stopping batch for safe retry.")
+                if rate_limit_retry_after is not None:
+                    console.print(f"    Retry after approximately {rate_limit_retry_after}s.")
+                break
             if "403" not in str(error) and "Forbidden" not in str(error):
                 console.print(f"    [dim]Error details: {traceback.format_exc()}[/dim]")
             pending_receipts.append(
@@ -323,5 +375,5 @@ def sync_to_external(
         planned=tuple(planned),
     )
     if failed:
-        raise OutboundSyncError(integration_name, result)
+        raise OutboundSyncError(integration_name, result, rate_limit_retry_after)
     return result

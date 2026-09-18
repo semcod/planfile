@@ -20,6 +20,6 @@
   "forbiddenPaths": ["project/ticket-*/user-*.md"],
   "stacks": ["python"],
   "dependsOn": [],
-  "conflictsWith": ["ticket-082"],
+  "conflictsWith": ["ticket-082", "ticket-134"],
   "integrationTicket": null
 }

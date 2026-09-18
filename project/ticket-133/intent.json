@@ -1,0 +1,53 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-133",
+  "summary": "Harden GitHub outbound sync against API limits and invalid labels",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-133/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "planfile/sync/outbound.py",
+    "tests/test_sync_routing.py",
+    "tests/test_sync_failure_status.py"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": ["ticket-130"],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2fd6af635c87e9d11e731f6cc4d12d54c9b3c797",
+    "targetBranch": "main",
+    "outcome": "GitHub outbound sync validates labels before writes, throttles mutations, and stops after rate-limit responses while preserving durable receipts.",
+    "nonGoals": ["No changes to GitHub repositories or issue data during implementation."],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {"maxImplementationFiles": 4, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep provider-specific validation and mutation pacing in the GitHub backend, and make the generic outbound loop stop on provider rate-limit signals while preserving existing receipts.",
+      "components": [
+        {"name": "github-backend", "paths": ["planfile/sync/github.py", "tests/test_sync_routing.py"]},
+        {"name": "outbound-batch", "paths": ["planfile/sync/outbound.py", "tests/test_sync_failure_status.py"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket commit; provider synchronization returns to the previous label creation and batch error behavior."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-02", "commands": ["uv run --frozen pytest -q tests/test_sync_routing.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-03", "commands": ["uv run --frozen pytest -q tests/test_sync_failure_status.py"], "evidence": "Pending exact-head validation"},
+      {"criterion": "AC-04", "commands": ["./project/governance-check.sh"], "evidence": "Pending exact-head validation"}
+    ]
+  }
+}
