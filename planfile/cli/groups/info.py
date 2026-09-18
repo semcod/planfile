@@ -60,7 +60,7 @@ def register_info_commands(app: typer.Typer) -> None:
 
         if fmt in ("markdown", "md"):
             out = []
-            out.append(f"## 📊 Planfile: Podsumowanie projektu\n")
+            out.append("## 📊 Planfile: Podsumowanie projektu\n")
             out.append(f"- **Katalog projektu**: `{project_dir}`")
             out.append(f"- **Sprint**: `{sprint}` (Łącznie ticketów: **{len(tickets)}**)")
             if metrics_str:

@@ -5,11 +5,14 @@ import logging
 import typer
 
 from planfile.cli.core import console
+from planfile.cli.extra_commands import add_extra_commands
 from planfile.cli.groups.apply import register_apply_commands
 from planfile.cli.groups.auto import register_auto_commands
 from planfile.cli.groups.backlog import register_backlog_commands
 from planfile.cli.groups.config import register_config_commands
+from planfile.cli.groups.dsl import register_dsl_commands
 from planfile.cli.groups.generate import register_generate_commands
+from planfile.cli.groups.info import register_info_commands
 from planfile.cli.groups.init import register_init_commands
 from planfile.cli.groups.query import register_query_commands
 from planfile.cli.groups.review import register_review_commands
@@ -17,9 +20,7 @@ from planfile.cli.groups.serve import register_serve_commands
 from planfile.cli.groups.storage import register_storage_commands
 from planfile.cli.groups.sync import register_sync_commands
 from planfile.cli.groups.ticket import register_ticket_commands
-from planfile.cli.groups.dsl import register_dsl_commands
 from planfile.cli.groups.validate import register_validate_commands
-from planfile.cli.groups.info import register_info_commands
 
 app = typer.Typer(
     help="planfile — universal ticket standard for developer toolchains",
@@ -65,9 +66,6 @@ register_sync_commands(app)
 register_ticket_commands(app)
 register_validate_commands(app)
 register_info_commands(app)
-
-# Health + examples
-from planfile.cli.extra_commands import add_extra_commands
 
 add_extra_commands(app)
 
