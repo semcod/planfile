@@ -132,6 +132,28 @@ def test_dry_run_does_not_write_or_call_backend(tmp_path):
     assert not store.base_dir.exists()
 
 
+def test_rate_limit_stops_batch_after_current_ticket_and_preserves_success(tmp_path):
+    path, data, store = source(tmp_path)
+
+    class RateLimitedBackend(Backend):
+        def create_ticket(self, ticket):
+            self.created.append(ticket["metadata"]["planfile_id"])
+            if len(self.created) == 2:
+                error = RuntimeError("secondary rate limit; retry-after: 60")
+                error.status = 403
+                raise error
+            return {"id": ticket["metadata"]["planfile_id"] + "-remote"}
+
+    backend = RateLimitedBackend()
+    with pytest.raises(RuntimeError, match="1 ticket") as caught:
+        outbound(backend, path, data, store)
+
+    assert caught.value.result.succeeded == ("good",)
+    assert caught.value.result.failed == ("bad",)
+    assert backend.created == ["good", "bad"]
+    assert "sync" not in data["backlog"]["tickets"]["later"]
+
+
 def test_persistence_failure_propagates(tmp_path, monkeypatch):
     path, data, store = source(tmp_path, ("good",))
 
