@@ -1,0 +1,69 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-155",
+  "summary": "Assign Python API example scope to application workstream",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    ".governance/manifest.json",
+    "project/ticket-155/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e6ceadb46ab832f8beb671794ab5b011fc0955da",
+    "targetBranch": "main",
+    "outcome": "Declare ownership of Python API demonstrations so a governed isolated repair can be allocated",
+    "nonGoals": [
+      "No automatic terminal reopening or other provider lifecycle changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend target-owned application scope by one previously unowned directory without changing managed policy or required checks",
+      "components": [
+        {
+          "name": "target-ownership",
+          "paths": [
+            ".governance/manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded follow-up commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Scope admission recognizes exact examples/python-api path; managed lock hashes unchanged"
+      }
+    ]
+  }
+}
