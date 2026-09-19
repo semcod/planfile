@@ -23,7 +23,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "4869f4e97ee39a8d3d6815650f5f4d816ca060d0",
+    "acceptedBaseSha": "5ca845342ced8396a60afc814bc95b836d048c59",
     "targetBranch": "main",
     "outcome": "Correct quota diagnostics and preserve provider retry metadata for PLF-076 / Issue153.",
     "nonGoals": [

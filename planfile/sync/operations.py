@@ -152,6 +152,10 @@ def _update_existing_ticket(
             _record_backend_ref(ticket, integration_name, external_ticket, new_id)
             console.print(f"  ✓ Created: {ticket_id} → {new_id}")
             return "created"
+        elif _is_rate_limit_error(e):
+            _print_rate_limit_error(ticket_id, e)
+            # Keep status and retry headers available to the outbound scheduler.
+            raise
         elif _is_permission_error(e):
             _print_permission_error(ticket_id)
             raise RuntimeError(

@@ -71,3 +71,26 @@ def test_unrelated_429_text_and_untrusted_headers_are_not_instructions(monkeypat
     operations._print_rate_limit_error("PLF-001", error)
     assert "private" not in output.getvalue()
     assert "secret" not in output.getvalue()
+
+
+def test_outbound_batch_keeps_retry_hint_and_stops_after_quota_failure(tmp_path):
+    import yaml
+
+    from planfile.sync.outbound import OutboundSyncError, sync_to_external
+
+    error = GithubException(403, {"message": "Secondary rate limit"}, {"Retry-After": "45"})
+    calls = []
+    def create(ticket):
+        calls.append(ticket)
+        raise error
+    backend = SimpleNamespace(config={"repo": "owner/repo"}, create_ticket=create)
+    tickets = {key: {"title": key, "integration": "github"} for key in ("first", "later")}
+    data = {"project": {"name": "owner/repo"}, "backlog": {"tickets": tickets}}
+    path = tmp_path / "tickets.planfile.yaml"
+    path.write_text(yaml.safe_dump(data))
+    store = SimpleNamespace(base_dir=tmp_path / ".planfile")
+    with pytest.raises(OutboundSyncError) as caught:
+        sync_to_external(backend, list(tickets.items()), False, store, "github", path, data)
+    assert caught.value.retry_after == 45
+    assert len(calls) == 1
+    assert not caught.value.result.succeeded
