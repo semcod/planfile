@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-153",
+  "summary": "Normalize inbound GitHub lifecycle for native Planfile tickets",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "planfile/sync/operations.py",
+    "planfile/sync/github.py",
+    "tests/test_sync_routing.py",
+    "project/ticket-153/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "09c0b0b6e662a6a41d8f876a05dedab2ccb46822",
+    "targetBranch": "main",
+    "outcome": "Persist GitHub lifecycle as valid native statuses with conservative completion evidence",
+    "nonGoals": [
+      "No automatic terminal reopening or other provider lifecycle changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 40,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep raw provider state for transport readback; normalize at the native persistence boundary with GitHub state_reason metadata",
+      "components": [
+        {
+          "name": "github-sync",
+          "paths": [
+            "planfile/sync/operations.py",
+            "planfile/sync/github.py",
+            "tests/test_sync_routing.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded follow-up commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sync_routing.py tests/test_sync_scope.py"
+        ],
+        "evidence": "Native store reload regression"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Protected exact-head publication"
+      }
+    ]
+  }
+}

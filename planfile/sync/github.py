@@ -491,6 +491,9 @@ class GitHubBackend(BasePMBackend):
 
     def _issue_to_ticket_status(self, issue: Issue) -> TicketState:
         """Convert a GitHub issue object into a TicketState."""
+        metadata = {"state_reason": getattr(issue, "state_reason", None)}
+        if markers := self._deduplication_markers(issue.body):
+            metadata["deduplication_key"] = markers[0].split("=", 1)[1].rsplit("-->", 1)[0].strip()
         return self.build_ticket_state(
             id=str(issue.number),
             key=f"{self.repo.full_name}#{issue.number}",
@@ -501,9 +504,7 @@ class GitHubBackend(BasePMBackend):
             assignee=issue.assignee.login if issue.assignee else None,
             labels=[label.name for label in issue.labels],
             updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
-            metadata={"deduplication_key": markers[0].split("=", 1)[1].rsplit("-->", 1)[0].strip()}
-            if (markers := self._deduplication_markers(issue.body))
-            else {},
+            metadata=metadata,
         )
 
     def _list_tickets(

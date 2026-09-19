@@ -575,6 +575,28 @@ def _integration_routes(integration_name: str, publish_to: list[str] | None) -> 
     return list(dict.fromkeys([integration_name, *(publish_to or [])]))
 
 
+def _inbound_status(ext_data: dict, integration_name: str, local_status=None) -> str:
+    """Project GitHub's coarse lifecycle without erasing native execution state."""
+    status = ext_data["status"]
+    if integration_name != "github":
+        return status
+    if status not in {"open", "closed"}:
+        raise ValueError(f"Unsupported GitHub issue state: {status!r}")
+    # Native terminal reopening needs its own authorized store operation.
+    # Failed/blocked/canceled all project to closed on outbound sync as well.
+    if local_status in {"done", "canceled", "failed", "blocked"}:
+        return local_status
+    if status == "open":
+        return local_status if local_status in {"in_progress", "review"} else "open"
+    reason = (ext_data.get("metadata") or {}).get("state_reason")
+    if reason == "completed":
+        return "done"
+    if reason == "not_planned":
+        return "canceled"
+    # A legacy/unknown reason proves closure, not successful completion.
+    return "blocked"
+
+
 def _update_local_ticket(
     sprint: dict,
     backlog: dict,
@@ -614,6 +636,7 @@ def _update_local_ticket(
     else:
         return updated_count
 
+    update_fields["status"] = _inbound_status(ext_data, integration_name, ticket.get("status"))
     ticket.update(update_fields)
     ticket.setdefault("sprint", default_sprint)
     if ext_data.get("url") and "github.com/" in str(ext_data["url"]):
@@ -644,7 +667,7 @@ def _import_new_ticket(
         "id": new_id,
         "name": ext_data.get("name") or ext_data.get("title"),
         "description": ext_data["description"],
-        "status": ext_data["status"],
+        "status": _inbound_status(ext_data, integration_name),
         "sprint": "backlog",
         "assignee": ext_data["assignee"],
         "labels": ext_data["labels"],

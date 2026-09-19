@@ -343,3 +343,71 @@ def test_github_ignores_unknown_status_without_external_mutation():
             raise AssertionError("unknown status must not mutate GitHub")
 
     GitHubBackend.__new__(GitHubBackend)._update_issue_state(FakeIssue(), "needs-review")
+
+
+@pytest.mark.parametrize("operation", ["import", "update"])
+@pytest.mark.parametrize("reason, expected", [
+    ("completed", "done"), ("not_planned", "canceled"),
+    (None, "blocked"), ("unknown", "blocked"),
+])
+def test_github_closed_roundtrip_remains_readable(tmp_path, operation, reason, expected):
+    from planfile import Planfile
+    from planfile.sync.github import GitHubBackend
+    from types import SimpleNamespace
+
+    backend = GitHubBackend.__new__(GitHubBackend)
+    backend.repo = SimpleNamespace(full_name="owner/repo")
+    issue = SimpleNamespace(number=17, title="Closed issue", body="Evidence",
+                            html_url="https://github.com/owner/repo/issues/17",
+                            state="closed", state_reason=reason, assignee=None,
+                            labels=[], updated_at=None)
+    data = _extract_ticket_data(backend._issue_to_ticket_status(issue))
+    backlog = {"tickets": {}}
+    if operation == "import":
+        _import_new_ticket(backlog, data, "github", FakeSyncState(), 0)
+        ticket_id = "GITHUB-17"
+    else:
+        ticket_id = "PLF-17"
+        backlog["tickets"][ticket_id] = {"id": ticket_id, "name": "Old title", "status": "open"}
+        _update_local_ticket({}, backlog, ticket_id, data, 0, "github", None)
+    pf = Planfile(str(tmp_path))
+    pf.store.save_backlog(backlog)
+    reloaded = Planfile(str(tmp_path)).get_ticket(ticket_id)
+    assert reloaded is not None
+    assert reloaded.status.value == expected
+    assert reloaded.sync["github"]["id"] == "17"
+    assert backlog["tickets"][ticket_id]["metadata"]["state_reason"] == reason
+
+
+@pytest.mark.parametrize("remote_status", ["open", "closed"])
+@pytest.mark.parametrize("local_status", ["done", "canceled", "failed", "blocked"])
+def test_github_refresh_preserves_native_terminal_or_blocked_state(remote_status, local_status):
+    backlog = {"tickets": {"PLF-17": {"id": "PLF-17", "status": local_status}}}
+    data = TicketState(id="17", name="Issue", status=remote_status,
+                       metadata={"state_reason": "completed"}).model_dump()
+    _update_local_ticket({}, backlog, "PLF-17", data, 0, "github", None)
+    assert backlog["tickets"]["PLF-17"]["status"] == local_status
+
+
+@pytest.mark.parametrize("local_status", ["in_progress", "review"])
+def test_github_open_refresh_preserves_richer_execution_state(local_status):
+    backlog = {"tickets": {"PLF-17": {"status": local_status}}}
+    data = TicketState(id="17", name="Issue", status="open").model_dump()
+    _update_local_ticket({}, backlog, "PLF-17", data, 0, "github", None)
+    assert backlog["tickets"]["PLF-17"]["status"] == local_status
+
+
+@pytest.mark.parametrize("operation", ["import", "update"])
+def test_github_unknown_state_is_rejected_without_partial_write(operation):
+    import copy
+    backlog = {"tickets": {"PLF-17": {"name": "Original", "status": "open"}}}
+    before = copy.deepcopy(backlog)
+    data = TicketState(id="17", name="Changed", status="unexpected").model_dump()
+    state = FakeSyncState()
+    with pytest.raises(ValueError, match="Unsupported GitHub issue state"):
+        if operation == "import":
+            _import_new_ticket(backlog, data, "github", state, 0)
+        else:
+            _update_local_ticket({}, backlog, "PLF-17", data, 0, "github", None)
+    assert backlog == before
+    assert state.mapping == {}
