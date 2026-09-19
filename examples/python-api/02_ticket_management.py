@@ -9,9 +9,12 @@ Shows full CRUD lifecycle:
 - Delete
 """
 
+from demo_store import isolated_demo
+
 from planfile import Planfile
 
 
+@isolated_demo
 def example_create_tickets():
     """Create multiple tickets."""
     print("=== Creating Tickets ===\n")
@@ -20,7 +23,7 @@ def example_create_tickets():
 
     # Create different types of tickets (using labels to categorize)
     bug = pf.create_ticket(
-        title="Login button not working on mobile",
+        name="Login button not working on mobile",
         description="Users report login button is unresponsive on iOS Safari",
         priority="high",
         labels=["bug", "mobile", "ios"],
@@ -29,7 +32,7 @@ def example_create_tickets():
     print(f"✓ Bug ticket: {bug.id}")
 
     feature = pf.create_ticket(
-        title="Add dark mode support",
+        name="Add dark mode support",
         description="Implement system-wide dark mode toggle",
         priority="medium",
         labels=["feature", "ui", "accessibility"],
@@ -37,7 +40,7 @@ def example_create_tickets():
     print(f"✓ Feature ticket: {feature.id}")
 
     docs = pf.create_ticket(
-        title="Update API documentation",
+        name="Update API documentation",
         description="Add examples for new endpoints",
         priority="low",
         labels=["docs", "api"],
@@ -47,6 +50,7 @@ def example_create_tickets():
     return [bug.id, feature.id, docs.id]
 
 
+@isolated_demo
 def example_read_tickets(ticket_ids):
     """Read/retrieve tickets."""
     print("=== Reading Tickets ===\n")
@@ -57,7 +61,7 @@ def example_read_tickets(ticket_ids):
     ticket = pf.get_ticket(ticket_ids[0])
     print("Single ticket lookup:")
     print(f"  ID: {ticket.id}")
-    print(f"  Title: {ticket.title}")
+    print(f"  Title: {ticket.name}")
     print(f"  Priority: {ticket.priority}")
     print(f"  Status: {ticket.status}")
     print()
@@ -67,6 +71,7 @@ def example_read_tickets(ticket_ids):
     print(f"Total tickets: {len(all_tickets)}\n")
 
 
+@isolated_demo
 def example_update_tickets(ticket_ids):
     """Update ticket properties."""
     print("=== Updating Tickets ===\n")
@@ -74,7 +79,7 @@ def example_update_tickets(ticket_ids):
     pf = Planfile.auto_discover(".")
 
     # Update status
-    updated = pf.update_ticket(ticket_ids[0], status="in_progress", comment="Started investigation")
+    updated = pf.update_ticket(ticket_ids[0], status="in_progress")
     print(f"✓ Updated {updated.id}: status → {updated.status}")
 
     # Update multiple fields
@@ -88,6 +93,7 @@ def example_update_tickets(ticket_ids):
     print()
 
 
+@isolated_demo
 def example_bulk_operations():
     """Bulk create tickets from external data."""
     print("=== Bulk Operations ===\n")
@@ -97,20 +103,20 @@ def example_bulk_operations():
     # Import from external source (e.g., Jira, CSV, monitoring alerts)
     external_data = [
         {
-            "title": "Database connection timeout",
+            "name": "Database connection timeout",
             "description": "Intermittent timeouts during peak hours",
             "priority": "critical",
             "labels": ["bug"],
             "source_id": "JIRA-1234",
         },
         {
-            "title": "Implement user search",
+            "name": "Implement user search",
             "description": "Add fuzzy search to user directory",
             "priority": "medium",
             "labels": ["feature"],
         },
         {
-            "title": "Refactor auth module",
+            "name": "Refactor auth module",
             "description": "Reduce code complexity in auth.py",
             "priority": "low",
             "labels": ["chore"],
@@ -124,12 +130,13 @@ def example_bulk_operations():
 
     print(f"✓ Bulk created {len(created)} tickets:\n")
     for t in created:
-        print(f"  {t.id}: {t.title} [{t.priority}] - Labels: {t.labels}")
+        print(f"  {t.id}: {t.name} [{t.priority}] - Labels: {t.labels}")
     print()
 
     return [t.id for t in created]
 
 
+@isolated_demo
 def example_delete_and_move(ticket_ids):
     """Delete and move tickets."""
     print("=== Delete and Move ===\n")
@@ -137,7 +144,7 @@ def example_delete_and_move(ticket_ids):
     pf = Planfile.auto_discover(".")
 
     # Move ticket to different sprint
-    moved = pf.store.move_ticket(ticket_ids[0], to_sprint="backlog")
+    pf.store.move_ticket(ticket_ids[0], to_sprint="backlog")
     print(f"✓ Moved {ticket_ids[0]} to backlog\n")
 
     # Delete a ticket (use with caution)
@@ -145,6 +152,7 @@ def example_delete_and_move(ticket_ids):
     # print(f"✓ Deleted {ticket_ids[-1]}\n")
 
 
+@isolated_demo
 def main():
     """Run all examples."""
     print("\n" + "=" * 60)
@@ -154,7 +162,7 @@ def main():
     ticket_ids = example_create_tickets()
     example_read_tickets(ticket_ids)
     example_update_tickets(ticket_ids)
-    bulk_ids = example_bulk_operations()
+    example_bulk_operations()
     example_delete_and_move(ticket_ids)
 
     print("=" * 60)

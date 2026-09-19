@@ -8,10 +8,13 @@ Shows how to:
 - Track metrics and alerts as tickets
 """
 
+from demo_store import isolated_demo
+
 from planfile import quick_ticket
 from planfile.extensions import TicketLogger
 
 
+@isolated_demo
 def example_cli_tool_integration():
     """Show integration with a CLI tool."""
     print("=== Example: CLI Tool Integration ===\n")
@@ -32,6 +35,7 @@ def example_cli_tool_integration():
     print()
 
 
+@isolated_demo
 def example_monitoring_integration():
     """Monitoring system integration."""
     print("=== Example: Monitoring Integration ===\n")
@@ -55,6 +59,7 @@ def example_monitoring_integration():
     print()
 
 
+@isolated_demo
 def example_ci_pipeline_integration():
     """CI pipeline failure tracking."""
     print("=== Example: CI Pipeline Integration ===\n")
@@ -84,6 +89,7 @@ def example_ci_pipeline_integration():
     print()
 
 
+@isolated_demo
 def example_custom_decorator():
     """Decorator for automatic error tracking."""
     print("=== Example: Error Tracking Decorator ===\n")
@@ -97,7 +103,7 @@ def example_custom_decorator():
                     return func(*args, **kwargs)
                 except Exception as e:
                     quick_ticket(
-                        title=f"[{tool_name}] {func.__name__} failed: {str(e)[:40]}",
+                        name=f"[{tool_name}] {func.__name__} failed: {str(e)[:40]}",
                         tool=tool_name,
                         priority="high",
                         description=f"Function {func.__name__} raised {type(e).__name__}",
@@ -138,6 +144,7 @@ def example_custom_decorator():
     print()
 
 
+@isolated_demo
 def main():
     """Run all examples."""
     print("\n" + "=" * 60)
