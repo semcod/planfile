@@ -129,7 +129,11 @@ def _update_existing_ticket(
         )
         console.print(f"  ✓ Updated: {ticket_id} → {external_id}")
     except Exception as e:
-        if "404" in str(e) or "Not Found" in str(e):
+        if _is_rate_limit_error(e):
+            _print_rate_limit_error(ticket_id, e)
+            # Keep status and retry headers available to the outbound scheduler.
+            raise
+        elif "404" in str(e) or "Not Found" in str(e):
             console.print(f"  ⚠️  Issue not found, creating new: {external_id}")
             external_ticket = backend.create_ticket(
                 _backend_ticket_payload(
@@ -148,10 +152,6 @@ def _update_existing_ticket(
             _record_backend_ref(ticket, integration_name, external_ticket, new_id)
             console.print(f"  ✓ Created: {ticket_id} → {new_id}")
             return "created"
-        elif _is_rate_limit_error(e):
-            _print_rate_limit_error(ticket_id, e)
-            # Keep status and retry headers available to the outbound scheduler.
-            raise
         elif _is_permission_error(e):
             _print_permission_error(ticket_id)
             raise RuntimeError(

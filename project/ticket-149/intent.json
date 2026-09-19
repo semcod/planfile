@@ -21,5 +21,60 @@
   "stacks": [],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4869f4e97ee39a8d3d6815650f5f4d816ca060d0",
+    "targetBranch": "main",
+    "outcome": "Correct quota diagnostics and preserve provider retry metadata for PLF-076 / Issue153.",
+    "nonGoals": [
+      "No changes to other active tickets, credentials, publication policy or dependencies."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the change in its existing module and existing test boundaries.",
+      "components": [
+        {
+          "name": "sync-diagnostics",
+          "paths": [
+            "planfile/sync/operations.py",
+            "tests/test_sync_rate_limit_diagnostics.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "multi-state",
+        "states": [
+          "empty",
+          "error",
+          "success"
+        ],
+        "evidence": [
+          "tests/test_sync_rate_limit_diagnostics.py"
+        ]
+      },
+      "rollback": "Revert the bounded follow-up commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python -m pytest -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Exact worktree test logs and governance output in host recovery storage."
+      }
+    ]
+  }
 }
