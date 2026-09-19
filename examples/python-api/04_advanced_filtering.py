@@ -8,9 +8,12 @@ Shows how to:
 - Export filtered results
 """
 
+from demo_store import isolated_demo
+
 from planfile import Planfile
 
 
+@isolated_demo
 def example_basic_filtering():
     """Basic ticket filtering."""
     print("=== Basic Filtering ===\n")
@@ -34,6 +37,7 @@ def example_basic_filtering():
     print()
 
 
+@isolated_demo
 def example_combined_filters():
     """Combined filter criteria."""
     print("=== Combined Filters ===\n")
@@ -44,10 +48,11 @@ def example_combined_filters():
     urgent_tickets = pf.list_tickets(status="open", priority="high", sprint="current")
     print(f"Urgent tickets in current sprint: {len(urgent_tickets)}")
     for t in urgent_tickets[:3]:
-        print(f"  {t.id}: {t.title}")
+        print(f"  {t.id}: {t.name}")
     print()
 
 
+@isolated_demo
 def example_search_by_labels():
     """Search by labels and tags."""
     print("=== Label-based Search ===\n")
@@ -71,6 +76,7 @@ def example_search_by_labels():
     print()
 
 
+@isolated_demo
 def example_export_filtered():
     """Export filtered results to various formats."""
     print("=== Export Filtered Results ===\n")
@@ -78,24 +84,28 @@ def example_export_filtered():
     pf = Planfile.auto_discover(".")
 
     # Get high priority open tickets for sprint planning
-    sprint_tickets = pf.list_tickets(sprint="current", status="open", priority=["high", "critical"])
+    sprint_tickets = [
+        ticket for ticket in pf.list_tickets(sprint="current", status="open")
+        if ticket.priority in {"high", "critical"}
+    ]
 
     # Export to CSV format
     print("CSV Export:")
     print("id,title,priority,labels")
     for t in sprint_tickets[:5]:
         labels_str = "|".join(t.labels) if t.labels else "none"
-        print(f"{t.id},{t.title[:30]},{t.priority},{labels_str}")
+        print(f"{t.id},{t.name[:30]},{t.priority},{labels_str}")
 
     print("\nMarkdown Export:")
     print("## Sprint Tickets (High/Critical Priority)\n")
     for t in sprint_tickets[:5]:
-        print(f"- **{t.id}** [{t.priority}] {t.title}")
+        print(f"- **{t.id}** [{t.priority}] {t.name}")
         if t.labels:
             print(f"  - Labels: {', '.join(t.labels)}")
     print()
 
 
+@isolated_demo
 def example_statistics():
     """Generate ticket statistics."""
     print("=== Ticket Statistics ===\n")
@@ -131,8 +141,12 @@ def example_statistics():
     print()
 
 
+@isolated_demo
 def main():
     """Run all examples."""
+    Planfile.auto_discover(".").create_ticket(
+        name="Example authentication bug", priority="high", labels=["bug", "backend"]
+    )
     print("\n" + "=" * 60)
     print("Planfile Python Library - Advanced Filtering")
     print("=" * 60 + "\n")

@@ -6,9 +6,12 @@ BEFORE: 200 lines (manual implementation)
 AFTER: 40 lines (using native API)
 """
 
+from demo_store import isolated_demo
+
 from planfile.extensions import TicketLogger
 
 
+@isolated_demo
 def main():
     """Run simplified integration examples."""
     print("\n" + "=" * 60)
@@ -40,7 +43,7 @@ def main():
 
     try:
         risky_operation()
-    except:
+    except ValueError:
         print("   Error tracked as ticket")
 
     print("\n" + "=" * 60)

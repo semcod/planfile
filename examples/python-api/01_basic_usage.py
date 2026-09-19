@@ -8,20 +8,24 @@ This example shows how to:
 3. Use the quick_ticket helper
 """
 
+from demo_store import isolated_demo
+
 from planfile import Planfile, quick_ticket
 
 
+@isolated_demo
 def example_1_basic_initialization():
     """Initialize planfile with auto-discovery."""
     print("=== Example 1: Basic Initialization ===\n")
 
     # Auto-discover .planfile/ in current or parent directories
     pf = Planfile.auto_discover(".")
-    print(f"✓ Planfile initialized at: {pf.store.root}")
-    print(f"  Store path: {pf.store.planfile_dir}")
+    print(f"✓ Planfile initialized at: {pf.store.project_dir}")
+    print(f"  Store path: {pf.store.base_dir}")
     print()
 
 
+@isolated_demo
 def example_2_create_ticket():
     """Create a ticket programmatically."""
     print("=== Example 2: Creating a Ticket ===\n")
@@ -30,7 +34,7 @@ def example_2_create_ticket():
 
     # Create a simple ticket
     ticket = pf.create_ticket(
-        title="Fix authentication bug",
+        name="Fix authentication bug",
         description="Users cannot login with OAuth provider",
         priority="high",
         status="open",
@@ -39,20 +43,21 @@ def example_2_create_ticket():
     )
 
     print(f"✓ Created ticket: {ticket.id}")
-    print(f"  Title: {ticket.title}")
+    print(f"  Title: {ticket.name}")
     print(f"  Priority: {ticket.priority}")
     print(f"  Status: {ticket.status}")
     print(f"  Sprint: {ticket.sprint}")
     print()
 
 
+@isolated_demo
 def example_3_quick_ticket():
     """Use quick_ticket helper for one-off ticket creation."""
     print("=== Example 3: Quick Ticket Helper ===\n")
 
     # One-liner for tools and scripts
     ticket = quick_ticket(
-        title="Production alert: High memory usage on prod-01",
+        name="Production alert: High memory usage on prod-01",
         tool="monitoring-system",
         priority="critical",
         context={"server": "prod-01", "metric": "memory", "threshold": "90%", "duration": "5m"},
@@ -64,6 +69,7 @@ def example_3_quick_ticket():
     print()
 
 
+@isolated_demo
 def example_4_list_tickets():
     """List and filter tickets."""
     print("=== Example 4: Listing Tickets ===\n")
@@ -75,7 +81,7 @@ def example_4_list_tickets():
     print(f"Found {len(tickets)} tickets in current sprint:\n")
 
     for t in tickets[:5]:  # Show first 5
-        print(f"  {t.id}: {t.title} [{t.status}]")
+        print(f"  {t.id}: {t.name} [{t.status}]")
 
     if len(tickets) > 5:
         print(f"  ... and {len(tickets) - 5} more")
@@ -86,6 +92,7 @@ def example_4_list_tickets():
     print()
 
 
+@isolated_demo
 def main():
     """Run all examples."""
     print("\n" + "=" * 60)

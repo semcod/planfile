@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-156",
+  "summary": "Isolate Python API demos from real queues and align supported API",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "examples/python-api/**",
+    "planfile/extensions/__init__.py",
+    "tests/test_python_api_examples.py",
+    "project/ticket-156/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "45546de9ed645a2e92c1f9ff8c855a645f0c3c57",
+    "targetBranch": "main",
+    "outcome": "Run every executable Python API demonstration in a disposable local queue without changing the caller project; supported TicketLogger operations succeed",
+    "nonGoals": [
+      "No removal or attribution of historical sample tickets",
+      "No remote sync or changes to real project queues",
+      "No changes to other example directories"
+    ],
+    "complexity": "L",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep disposable cwd lifecycle in an example-only helper so auto-discovery, quick_ticket and TicketLogger use the same fresh local store",
+      "components": [
+        {
+          "name": "examples",
+          "paths": [
+            "examples/python-api/**"
+          ]
+        },
+        {
+          "name": "logger",
+          "paths": [
+            "planfile/extensions/__init__.py"
+          ]
+        },
+        {
+          "name": "regression",
+          "paths": [
+            "tests/test_python_api_examples.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded follow-up commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_python_api_examples.py"
+        ],
+        "evidence": "Actual example subprocesses preserve sentinel caller queue and restore cwd on error"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q",
+          "python -m ruff check --no-respect-gitignore examples/python-api planfile/extensions/__init__.py tests/test_python_api_examples.py",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Full suite and scope validation pass; exact-head protected CI before merge"
+      }
+    ]
+  }
+}

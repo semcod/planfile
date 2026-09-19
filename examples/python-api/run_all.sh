@@ -1,30 +1,13 @@
-#!/bin/bash
-# Run all Python API examples
-
-set -e
-
-echo "=========================================="
-echo "Planfile Python API Examples"
-echo "=========================================="
-echo
-
-cd "$(dirname "$0")"
-
-# Check if planfile is installed
-if ! python3 -c "import planfile" 2>/dev/null; then
-    echo "Installing planfile..."
-    pip install planfile
+#!/usr/bin/env bash
+# Run local demonstrations; each script initializes and removes its own store.
+set -euo pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+PYTHON="${PYTHON:-python3}"
+if ! "$PYTHON" -c "import planfile"; then
+    echo "Install planfile in your chosen Python environment before running examples." >&2
+    exit 1
 fi
-
-echo "Running examples..."
-echo
-
-python3 01_basic_usage.py
-python3 02_ticket_management.py
-python3 03_integration.py
-python3 04_advanced_filtering.py
-
-echo
-echo "=========================================="
-echo "All examples completed!"
-echo "=========================================="
+for script in "$SCRIPT_DIR"/[0-9]*.py; do
+    "$PYTHON" "$script"
+done
+echo "All examples completed; disposable stores removed."
