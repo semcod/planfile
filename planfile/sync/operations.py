@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -147,6 +148,10 @@ def _update_existing_ticket(
             _record_backend_ref(ticket, integration_name, external_ticket, new_id)
             console.print(f"  ✓ Created: {ticket_id} → {new_id}")
             return "created"
+        elif _is_rate_limit_error(e):
+            _print_rate_limit_error(ticket_id, e)
+            # Keep status and retry headers available to the outbound scheduler.
+            raise
         elif _is_permission_error(e):
             _print_permission_error(ticket_id)
             raise RuntimeError(
@@ -180,7 +185,10 @@ def _create_new_ticket(
             external_ticket.id if hasattr(external_ticket, "id") else str(external_ticket.get("id"))
         )
     except Exception as e:
-        if _is_permission_error(e):
+        if _is_rate_limit_error(e):
+            _print_rate_limit_error(ticket_id, e)
+            raise
+        elif _is_permission_error(e):
             _print_permission_error(ticket_id)
             raise RuntimeError(
                 "GitHub token lacks required permissions. See instructions above."
@@ -216,8 +224,34 @@ def _record_backend_ref(
         ticket["backend"] = integration_name
 
 
+def _is_rate_limit_error(e: Exception) -> bool:
+    """Distinguish exhausted provider quotas from an ordinary access denial."""
+    status = getattr(e, "status", None)
+    headers = _error_headers(e)
+    if status == 429:
+        return True
+    if status == 403 and (
+        str(headers.get("x-ratelimit-remaining")) == "0" or "retry-after" in headers
+    ):
+        return True
+    err_str = str(e).lower()
+    return any(
+        marker in err_str
+        for marker in ("rate limit", "ratelimit", "secondary limit", "abuse detection")
+    )
+
+
+def _error_headers(e: Exception) -> dict:
+    headers = getattr(e, "headers", None)
+    if not isinstance(headers, dict):
+        return {}
+    return {str(key).lower(): value for key, value in headers.items()}
+
+
 def _is_permission_error(e: Exception) -> bool:
     """Check if exception is a permission-related error."""
+    if _is_rate_limit_error(e):
+        return False
     err_str = str(e).lower()
     return (
         "403" in str(e)
@@ -226,17 +260,24 @@ def _is_permission_error(e: Exception) -> bool:
     )
 
 
+def _print_rate_limit_error(ticket_id: str, e: Exception) -> None:
+    """Print bounded retry metadata without response bodies or credentials."""
+    console.print(f"[red]❌ GitHub API rate limit exceeded for {ticket_id}[/red]")
+    headers = _error_headers(e)
+    for key, label in (("retry-after", "Retry-After (seconds)"),
+                       ("x-ratelimit-reset", "X-RateLimit-Reset (Unix seconds)")):
+        value = str(headers.get(key, ""))
+        if re.fullmatch(r"[0-9]{1,12}(?:\.[0-9]{1,3})?", value):
+            console.print(f"  {label}: {value}")
+    console.print("[yellow]Wait for the provider's retry window, then retry the same tickets.[/yellow]")
+    console.print("[yellow]Rate limiting does not establish missing permissions; keep the existing account and token.[/yellow]")
+
+
 def _print_permission_error(ticket_id: str) -> None:
     """Print permission error instructions."""
     console.print(f"[red]❌ GitHub permission denied for {ticket_id}[/red]")
-    console.print("[yellow]🔑 Your GitHub token lacks permission to create issues[/yellow]")
-    console.print("[yellow]📝 To fix this:[/yellow]")
-    console.print("[yellow]   1. Go to: https://github.com/settings/tokens[/yellow]")
-    console.print("[yellow]   2. Click 'Generate new token (classic)'[/yellow]")
-    console.print("[yellow]   3. Select 'repo' scope (or 'public_repo' for public repos)[/yellow]")
-    console.print("[yellow]   4. Copy the new token[/yellow]")
-    console.print("[yellow]   5. Update your .env file with the new token[/yellow]")
-    console.print("[yellow]   6. Try again: planfile sync github[/yellow]")
+    console.print("[yellow]Verify the configured account and its access to Issues in this repository.[/yellow]")
+    console.print("[yellow]Correct the missing repository permission before retrying the same tickets.[/yellow]")
 
 
 def _save_sync_results(
