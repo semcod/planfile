@@ -4,13 +4,12 @@ import os
 import re
 import sqlite3
 import time
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
-from pathlib import Path
-
-from procache import CachedPyGithubRequester, SQLiteResponseCache
 
 from filelock import FileLock
+from procache import CachedPyGithubRequester, SQLiteResponseCache
 
 try:
     from github import Github
@@ -136,7 +135,9 @@ class GitHubBackend(BasePMBackend):
             cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
             cache_path = cache_root / "subactor" / "planfile-github.sqlite3"
         self._provider_read_cache = SQLiteResponseCache(cache_path, namespace=f"planfile-github:{repo}")
-        self.github = Github(self.config["token"])
+        # OutboundJournal owns durable retry/cooldown. PyGithub's default retry
+        # can sleep until quota reset before the journal ever sees the failure.
+        self.github = Github(self.config["token"], retry=0)
         self.github._Github__requester = CachedPyGithubRequester(
             self.github.requester,
             self._provider_read_cache,
