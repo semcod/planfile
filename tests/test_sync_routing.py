@@ -351,9 +351,10 @@ def test_github_ignores_unknown_status_without_external_mutation():
     (None, "blocked"), ("unknown", "blocked"),
 ])
 def test_github_closed_roundtrip_remains_readable(tmp_path, operation, reason, expected):
+    from types import SimpleNamespace
+
     from planfile import Planfile
     from planfile.sync.github import GitHubBackend
-    from types import SimpleNamespace
 
     backend = GitHubBackend.__new__(GitHubBackend)
     backend.repo = SimpleNamespace(full_name="owner/repo")
