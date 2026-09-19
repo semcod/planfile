@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-151",
+  "summary": "Surface provider quota before SDK retry sleep and adopt isolated cache",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-151/**",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ab8028332b37094fa32b28d1d5dcdb65d1f1c759",
+    "targetBranch": "main",
+    "outcome": "Adopt immutable merged procache authentication isolation in Planfile",
+    "nonGoals": [
+      "No changes to unrelated queue records or publication policy."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 40,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Pin the already merged procache fixes without changing GitHub transport in this ticket.",
+      "components": [
+        {
+          "name": "package",
+          "paths": [
+            "pyproject.toml",
+            "uv.lock"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "multi-state",
+        "states": [
+          "empty",
+          "error",
+          "success"
+        ],
+        "evidence": [
+          "tests/test_sync_rate_limit_diagnostics.py"
+        ]
+      },
+      "rollback": "Revert the bounded follow-up commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python -m pytest -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Exact worktree test logs and governance output in host recovery storage."
+      }
+    ]
+  }
+}
