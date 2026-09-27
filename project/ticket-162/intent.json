@@ -1,0 +1,74 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-162",
+  "summary": "Production alerts triage and automated handling in current sprint",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-162/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/analysis/alerts_triage.py",
+    "tests/test_alerts_triage.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b0987f2fb519b4bba9745d4a94afc6b949a2dfb8",
+    "targetBranch": "main",
+    "outcome": "Automated triage engine and classification for production alerts in current sprint with root-cause analysis and Koru remediation linkage",
+    "nonGoals": [
+      "No changes to other active tickets, credentials, publication policy or dependencies."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Introduce AlertClassifier and triage_sprint_tickets in planfile/analysis/alerts_triage.py with deterministic pattern extraction for RAM, CPU, database timeout, disk space and data processor starvation alerts.",
+      "components": [
+        {
+          "name": "analysis-alerts-triage",
+          "paths": [
+            "planfile/analysis/alerts_triage.py",
+            "tests/test_alerts_triage.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded follow-up commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 -m pytest -q tests/test_alerts_triage.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "All focused tests pass with complete coverage and governance check reports GOV-PASS."
+      }
+    ]
+  }
+}
