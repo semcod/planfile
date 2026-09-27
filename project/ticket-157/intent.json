@@ -1,0 +1,102 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-157",
+  "summary": "Web conversational interface for plans and tasks with voice and option network",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "planfile/api/server.py",
+    "planfile/dsl/executor.py",
+    "tests/test_conversational_web.py",
+    "project/ticket-157/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4455a1d8640cdb2c14eebbc2bc023cffc4120832",
+    "targetBranch": "main",
+    "outcome": "Deliver interactive conversational web interface in planfile web dashboard allowing voice and text interaction with plans, tickets, and tasks via NL-DSL-LLM and Option Network.",
+    "nonGoals": [
+      "No breaking changes to existing REST endpoints.",
+      "No external API keys required."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add conversational chat and voice interface into planfile dashboard HTML and enhance DSLExecutor with conversational query handlers.",
+      "components": [
+        {
+          "name": "web-server",
+          "paths": [
+            "planfile/api/server.py"
+          ]
+        },
+        {
+          "name": "dsl-executor",
+          "paths": [
+            "planfile/dsl/executor.py"
+          ]
+        },
+        {
+          "name": "test-suite",
+          "paths": [
+            "tests/test_conversational_web.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add interactive chat and speech recognition assistant into planfile web dashboard."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "multi-state",
+        "states": [
+          "empty",
+          "loading",
+          "error",
+          "success"
+        ],
+        "evidence": [
+          "Interactive chat transcript and suggestion pills rendered in planfile dashboard."
+        ]
+      },
+      "rollback": "Revert the commit on ticket branch."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest tests/test_conversational_web.py"
+        ],
+        "evidence": "Conversational DSL queries and web API query tests pass."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Governance check passes with 0 errors and 0 warnings."
+      }
+    ]
+  }
+}

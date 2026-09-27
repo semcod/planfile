@@ -49,6 +49,10 @@ class DSLExecutor:
 
     def run(self, text: str, *, allow_llm_fallback: bool = True) -> DSLResult:
         """Parse and execute a DSL command string with optional LLM translation fallback."""
+        conv_res = self._handle_conversational_query(text)
+        if conv_res is not None:
+            return conv_res
+
         cmd = self._parser.parse(text)
         if (not cmd.is_valid or cmd.verb == "unknown") and allow_llm_fallback:
             translated = self._translate_with_llm(text)
@@ -66,9 +70,318 @@ class DSLExecutor:
         res.command["source_layer"] = res.source_layer
         return res
 
+    def _handle_conversational_query(self, text: str) -> DSLResult | None:
+        """Handle natural conversation questions about plans, tickets, blockers, and next actions."""
+        import re
+        import unicodedata
+
+        clean = text.strip().lower().rstrip("?!.,")
+        if clean.startswith((
+            "create ticket", "update ticket", "list tickets", "show ticket",
+            "done ticket", "delete ticket", "export ", "query tickets", "move ticket",
+            "set ticket", "start ticket", "block ticket",
+        )):
+            return None
+
+        normalized = "".join(
+            c for c in unicodedata.normalize("NFD", clean)
+            if unicodedata.category(c) != "Mn"
+        )
+        raw_text = text.strip().rstrip("?!.,")
+
+        # ── Safe Conversational Mutation Proposals (Human-In-The-Loop) ──
+        # A. Create ticket proposal
+        m_create = re.search(
+            r"^(?:dodaj|stworz|utworz|nowe)\s+(?:zadanie|ticket|task)\s+(.+)$",
+            normalized,
+            re.IGNORECASE,
+        )
+        if m_create:
+            m_create_orig = re.search(
+                r"^(?:dodaj|stworz|utworz|stwórz|utwórz|nowe)\s+(?:zadanie|ticket|task)\s+(.+)$",
+                raw_text,
+                re.IGNORECASE,
+            )
+            raw_title_part = m_create_orig.group(1).strip() if m_create_orig else m_create.group(1).strip()
+            norm_title_part = m_create.group(1).strip()
+
+            prio = "normal"
+            m_prio = re.search(
+                r"(?:z\s+priorytetem|priorytet|priority)\s*[:=]?\s*(krytyczn\w*|wysok\w*|normaln\w*|nisk\w*|critical|high|normal|low)",
+                norm_title_part,
+                re.IGNORECASE,
+            )
+            if m_prio:
+                p_word = m_prio.group(1).lower()
+                if "krytycz" in p_word or "critical" in p_word:
+                    prio = "critical"
+                elif "wysok" in p_word or "high" in p_word:
+                    prio = "high"
+                elif "nisk" in p_word or "low" in p_word:
+                    prio = "low"
+                else:
+                    prio = "normal"
+                raw_title_part = raw_title_part[:m_prio.start()].strip().rstrip("-,;:")
+
+            title = raw_title_part.strip().strip('"\'')
+            if title:
+                return DSLResult(
+                    ok=True,
+                    command={
+                        "verb": "action_proposal",
+                        "action": {
+                            "type": "create_ticket",
+                            "name": title,
+                            "priority": prio,
+                            "sprint": "current",
+                        },
+                        "conversational_intent": "create_ticket",
+                    },
+                    data={
+                        "proposal": True,
+                        "action": {
+                            "type": "create_ticket",
+                            "name": title,
+                            "priority": prio,
+                            "sprint": "current",
+                        },
+                    },
+                    message=f"Czy chcesz utworzyć zadanie '{title}' z priorytetem '{prio}'?",
+                    source_layer="conversational_fast_path",
+                )
+
+        # B. Close / Done proposal
+        m_done = re.search(
+            r"^(?:oznacz|zamknij|ukoncz)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+jako\s+(?:zrobione|done|ukonczone|wykonane))?$",
+            normalized,
+            re.IGNORECASE,
+        )
+        if m_done:
+            t_id = m_done.group(1).upper()
+            return DSLResult(
+                ok=True,
+                command={
+                    "verb": "action_proposal",
+                    "action": {
+                        "type": "update_status",
+                        "ticket_id": t_id,
+                        "status": "done",
+                    },
+                    "conversational_intent": "close_ticket",
+                },
+                data={
+                    "proposal": True,
+                    "action": {
+                        "type": "update_status",
+                        "ticket_id": t_id,
+                        "status": "done",
+                    },
+                },
+                message=f"Czy chcesz oznaczyć zadanie {t_id} jako wykonane (done)?",
+                source_layer="conversational_fast_path",
+            )
+
+        # C. Change priority proposal
+        m_prio_change = re.search(
+            r"^(?:zmien|ustaw|zwieksz|zmniejsz|change|set)\s+priorytet\s+(?:zadania\s+|ticketu\s+)?([A-Za-z0-9_-]+)\s+na\s+(krytyczn\w*|wysok\w*|normaln\w*|nisk\w*|critical|high|normal|low)$",
+            normalized,
+            re.IGNORECASE,
+        )
+        if not m_prio_change:
+            m_prio_change = re.search(
+                r"^(?:set|change)\s+priority\s+(?:of\s+)?([A-Za-z0-9_-]+)\s+to\s+(critical|high|normal|low)$",
+                normalized,
+                re.IGNORECASE,
+            )
+        if m_prio_change:
+            t_id = m_prio_change.group(1).upper()
+            p_word = m_prio_change.group(2).lower()
+            if "krytycz" in p_word or "critical" in p_word:
+                prio = "critical"
+            elif "wysok" in p_word or "high" in p_word:
+                prio = "high"
+            elif "nisk" in p_word or "low" in p_word:
+                prio = "low"
+            else:
+                prio = "normal"
+            return DSLResult(
+                ok=True,
+                command={
+                    "verb": "action_proposal",
+                    "action": {
+                        "type": "change_priority",
+                        "ticket_id": t_id,
+                        "priority": prio,
+                    },
+                    "conversational_intent": "change_priority",
+                },
+                data={
+                    "proposal": True,
+                    "action": {
+                        "type": "change_priority",
+                        "ticket_id": t_id,
+                        "priority": prio,
+                    },
+                },
+                message=f"Czy chcesz zmienić priorytet zadania {t_id} na '{prio}'?",
+                source_layer="conversational_fast_path",
+            )
+
+        # D. Block ticket proposal
+        m_block = re.search(
+            r"^(?:zablokuj)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+(?:z powodu|powod:?)\s+(.+))?$",
+            raw_text,
+            re.IGNORECASE,
+        )
+        if m_block:
+            t_id = m_block.group(1).upper()
+            reason = m_block.group(2).strip() if m_block.group(2) else None
+            return DSLResult(
+                ok=True,
+                command={
+                    "verb": "action_proposal",
+                    "action": {
+                        "type": "block_ticket",
+                        "ticket_id": t_id,
+                        "reason": reason or "Zablokowane przez asystenta głosowego",
+                    },
+                    "conversational_intent": "block_ticket",
+                },
+                data={
+                    "proposal": True,
+                    "action": {
+                        "type": "block_ticket",
+                        "ticket_id": t_id,
+                        "reason": reason,
+                    },
+                },
+                message=f"Czy chcesz zablokować zadanie {t_id}" + (f" z powodu: '{reason}'?" if reason else "?"),
+                source_layer="conversational_fast_path",
+            )
+
+        # ── Conversational Read / Status Queries ──
+        # 1. Blocked / waiting queries
+        if any(p in normalized for p in ("co jest zablokowane", "zablokowane", "blokuj", "blocked", "czeka na", "co blokuje")):
+            try:
+                tickets = self.pf.list_tickets(sprint="current")
+                all_tickets = self.pf.list_tickets(sprint="all")
+            except Exception:
+                tickets, all_tickets = [], []
+            seen = set()
+            combined = []
+            for t in tickets + all_tickets:
+                if t.id not in seen:
+                    seen.add(t.id)
+                    combined.append(t)
+            blocked = [
+                t for t in combined
+                if getattr(t, "status", "") == "blocked"
+                or (getattr(t, "execution", None) and getattr(t.execution, "state", None) in ("failed", "waiting_input", "blocked"))
+            ]
+            if not blocked:
+                msg = "Wszystkie zadania postępują prawidłowo. Brak zablokowanych zadań w bieżącym sprincie."
+            else:
+                items = [f"{t.id}: {t.name}" for t in blocked]
+                msg = f"Znaleziono {len(blocked)} zablokowane zadanie(a): " + "; ".join(items)
+            return DSLResult(
+                ok=True,
+                command={"verb": "list", "object_type": "ticket", "params": {"status": "blocked"}, "conversational_intent": "blocked_tickets"},
+                data=[t.model_dump(mode="json", exclude_none=True) for t in blocked],
+                message=msg,
+                source_layer="conversational_fast_path",
+            )
+
+        # 2. Next task queries
+        if any(p in normalized for p in ("nastepne", "co robic", "co dalej", "next task", "next ticket", "co teraz", "kolejne zadanie")):
+            try:
+                tickets = self.pf.list_tickets(sprint="current")
+            except Exception:
+                tickets = []
+            open_tickets = [t for t in tickets if getattr(t, "status", "") in ("todo", "open", "ready", "pending")]
+            prio_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
+            open_tickets.sort(key=lambda t: prio_order.get(getattr(t, "priority", "normal"), 2))
+            if open_tickets:
+                nxt = open_tickets[0]
+                q_name = getattr(nxt.execution, "queue", "default") if getattr(nxt, "execution", None) else "default"
+                msg = f"Następne rekomendowane zadanie to {nxt.id}: '{nxt.name}' (priorytet: {nxt.priority}, kolejka: {q_name})."
+                return DSLResult(
+                    ok=True,
+                    command={"verb": "show", "object_type": "ticket", "target": nxt.id, "conversational_intent": "next_ticket"},
+                    data=nxt.model_dump(mode="json", exclude_none=True),
+                    message=msg,
+                    source_layer="conversational_fast_path",
+                )
+            else:
+                return DSLResult(
+                    ok=True,
+                    command={"verb": "show", "conversational_intent": "next_ticket"},
+                    data=None,
+                    message="Brak oczekujących zadań do podjęcia w bieżącym sprincie.",
+                    source_layer="conversational_fast_path",
+                )
+
+        # 3. Sprint / Plan summary
+        if any(p in normalized for p in ("stan sprintu", "status planu", "podsumuj sprint", "podsumowanie", "jak idzie", "sprint summary", "plan status")):
+            try:
+                tickets = self.pf.list_tickets(sprint="current")
+                all_tickets = self.pf.list_tickets(sprint="all")
+            except Exception:
+                tickets, all_tickets = [], []
+            seen = set()
+            combined = []
+            for t in tickets + all_tickets:
+                if t.id not in seen:
+                    seen.add(t.id)
+                    combined.append(t)
+            total = len(combined)
+            done = sum(1 for t in combined if getattr(t, "status", "") == "done")
+            running = sum(1 for t in combined if getattr(t, "execution", None) and getattr(t.execution, "state", None) == "running")
+            blocked = sum(1 for t in combined if getattr(t, "status", "") == "blocked" or (getattr(t, "execution", None) and getattr(t.execution, "state", None) in ("failed", "waiting_input", "blocked")))
+            open_cnt = max(0, total - done - running - blocked)
+            pct = round((done / total * 100), 1) if total > 0 else 0.0
+            msg = f"Stan sprintu: {total} zadań (Ukończone: {done} [{pct}%], W toku: {running}, Otwarte: {open_cnt}, Zablokowane: {blocked})."
+            return DSLResult(
+                ok=True,
+                command={"verb": "summary", "object_type": "sprint", "conversational_intent": "sprint_summary"},
+                data={
+                    "total": total,
+                    "done": done,
+                    "running": running,
+                    "open": open_cnt,
+                    "blocked": blocked,
+                    "completion_rate_pct": pct,
+                },
+                message=msg,
+                source_layer="conversational_fast_path",
+            )
+
+        # 4. High priority queries
+        if any(p in normalized for p in ("wysoki priorytet", "krytyczne", "pilne", "high priority", "critical")):
+            try:
+                tickets = self.pf.list_tickets(sprint="current")
+            except Exception:
+                tickets = []
+            high_prio = [t for t in tickets if getattr(t, "priority", "") in ("critical", "high") and getattr(t, "status", "") != "done"]
+            if not high_prio:
+                msg = "Brak aktywnych zadań o wysokim lub krytycznym priorytecie."
+            else:
+                items = [f"{t.id}: {t.name} ({t.priority})" for t in high_prio]
+                msg = f"Aktywne zadania o wysokim priorytecie ({len(high_prio)}): " + "; ".join(items)
+            return DSLResult(
+                ok=True,
+                command={"verb": "list", "object_type": "ticket", "params": {"priority": "high"}, "conversational_intent": "high_priority"},
+                data=[t.model_dump(mode="json", exclude_none=True) for t in high_prio],
+                message=msg,
+                source_layer="conversational_fast_path",
+            )
+
+        return None
+
     def _translate_with_llm(self, text: str) -> str | None:
         """Translate natural language text to canonical planfile DSL via LiteLLM if available."""
         import os
+        if not (os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("GEMINI_API_KEY")):
+            return None
         prompt = (
             "Translate the following natural language user request into a single valid planfile DSL command.\n"
             "Supported DSL syntax examples:\n"
