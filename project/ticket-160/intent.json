@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-160",
+  "summary": "Preserve sprint envelope extensions during concurrent Planfile saves",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-160/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store.py",
+    "tests/test_store_concurrency.py",
+    "planfile/core/sharded_yaml.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4455a1d8640cdb2c14eebbc2bc023cffc4120832",
+    "targetBranch": "main",
+    "outcome": "Preserve opaque sprint envelope data through stale native saves, sharded migration and outbound sync for PLF-086 / Issue174",
+    "nonGoals": [
+      "No changes to other active tickets, credentials, publication policy or dependencies."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep opaque YAML envelope fields at their original level, prefer current disk extension values under the existing writer lock, and retain established ticket conflict handling.",
+      "components": [
+        {
+          "name": "native-store",
+          "paths": [
+            "planfile/core/store.py",
+            "planfile/core/sharded_yaml.py",
+            "tests/test_store_concurrency.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded follow-up commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 -m pytest -q tests/test_store_concurrency.py tests/test_sharded_yaml_storage.py tests/test_sync*.py tests/test_ticket_status_normalization.py tests/test_ticket_archiving.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Ten regressions fail before the change; all 144 focused tests pass after; protected full suite before merge."
+      }
+    ]
+  }
+}

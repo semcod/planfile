@@ -12,8 +12,9 @@ import json
 import os
 import re
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from .fastio import mirror_path, read_yaml_fast
 
@@ -115,7 +116,12 @@ class ShardedYamlStorage:
         metadata.setdefault("name", sprint.replace("-", " ").title())
         metadata.setdefault("status", "active")
         metadata["tickets"] = tickets
-        return {"sprint": metadata}
+        envelope = (
+            metadata_data
+            if isinstance(metadata_data, dict) and isinstance(metadata_data.get("sprint"), dict)
+            else {}
+        )
+        return {**envelope, "sprint": metadata}
 
     def get_ticket(self, sprint: str, ticket_id: str) -> dict[str, Any] | None:
         data = read_yaml_fast(self.shard_path(sprint, ticket_id)) or {}
@@ -224,7 +230,8 @@ class ShardedYamlStorage:
         tickets = self._tickets(root)
         root.pop("tickets", None)
         root.setdefault("id", sprint)
-        self.yaml_writer(self.metadata_path(sprint), {"sprint": root}, allow_unicode=True)
+        envelope = data if isinstance(data, dict) and isinstance(data.get("sprint"), dict) else {}
+        self.yaml_writer(self.metadata_path(sprint), {**envelope, "sprint": root}, allow_unicode=True)
 
         grouped: dict[str, dict[str, dict[str, Any]]] = {}
         for ticket_id, ticket in tickets.items():
