@@ -64,7 +64,6 @@ def test_unrelated_listener_is_preserved(state):
             pass
 
 
-@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Linux pidfds required")
 def test_real_process_is_replaced_on_same_port(state):
     port = free_port()
     source = """
@@ -277,7 +276,6 @@ def test_container_readiness_timeout_is_failure(monkeypatch):
     assert ("restart", "--time", "10", "a" * 64) in calls
 
 
-@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Linux local restart")
 def test_two_real_cli_invocations_serve_http_on_same_port(tmp_path):
     import time
     import urllib.request
