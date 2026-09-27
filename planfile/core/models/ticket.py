@@ -117,6 +117,16 @@ class Ticket(BaseModel):
                 pass
         return value
 
+    @field_validator("priority", mode="before")
+    @classmethod
+    def _normalize_priority(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in ("medium", "med"):
+                return "normal"
+            return normalized
+        return value
+
     priority: str = "normal"           # critical | high | normal | low
     sprint: str = "current"            # current | backlog | sprint-XXX
 
