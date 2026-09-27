@@ -10,6 +10,7 @@ generated findings are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
+- [x] ticket-162 - Production alerts triage and automated handling in current sprint.
 - [ ] ticket-136 - Integrate NL-DSL-LLM pattern with multilingual parser, CLI ask/mcp commands, and MCP tools.
 - [ ] ticket-099 - Publish Planfile 0.1.126 for the reusable GitHub
   synchronization workflow.
