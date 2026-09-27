@@ -588,6 +588,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         sides, the record with the newer ``updated_at`` wins; a stale bulk
         save therefore fails closed instead of reverting a newer lifecycle
         transition.
+
+        Fields beside the wrapped ``sprint`` are owned by other producers.
+        Preserve them at their original level; a stale snapshot may add a new
+        extension but must not overwrite an existing extension from disk.
         """
         self._sprint_file(sprint)  # validate before acquiring the mutation lock
         if self._uses_sharded_storage():
@@ -658,7 +662,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 continue
             merged_tickets[ticket_id] = incoming_ticket
         merged_root["tickets"] = merged_tickets
-        return {"sprint": merged_root}
+        envelope = {}
+        # Incoming first, then current: opaque fields have no timestamp/CAS
+        # contract here. A bulk ticket save cannot safely replace disk values.
+        for snapshot in (incoming, current):
+            if isinstance(snapshot, dict) and isinstance(snapshot.get("sprint"), dict):
+                envelope.update({key: value for key, value in snapshot.items() if key != "sprint"})
+        return {**envelope, "sprint": merged_root}
 
     def save_backlog(self, data: dict) -> None:
         """Merge backlog data with the same concurrency guarantees as a sprint."""
