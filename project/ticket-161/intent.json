@@ -1,0 +1,74 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-161",
+  "summary": "Hash full outbound ticket content before receipt deduplication",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-161/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/receipts.py",
+    "tests/test_sync_receipts.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "865072ed5ba743336fac84c48066f6437d0f9cf7",
+    "targetBranch": "main",
+    "outcome": "Publish long-description edits through Planfile without mistaking a shared prefix for an already synchronized payload; PLF-086 / GitHub174",
+    "nonGoals": [
+      "No changes to other active tickets, credentials, publication policy or dependencies."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Hash complete normalized outbound fields; retain bounded intent previews and digest-only durable receipts. Existing mappings route migration to updates, never duplicate issues.",
+      "components": [
+        {
+          "name": "sync-receipts",
+          "paths": [
+            "planfile/sync/receipts.py",
+            "tests/test_sync_receipts.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded follow-up commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 -m pytest -q tests/test_sync*.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Regression fails before fix and passes after; exact-head protected verification before merge."
+      }
+    ]
+  }
+}
