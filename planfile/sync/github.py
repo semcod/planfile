@@ -391,12 +391,11 @@ class GitHubBackend(BasePMBackend):
         issue: Issue = self.repo.create_issue(**create_kwargs)
         self._clear_read_cache()
 
-        status = "done" if str(issue.state).lower() == "closed" else issue.state
         return self.build_ticket_ref(
             id=str(issue.number),
             url=issue.html_url,
             key=f"{self.repo.full_name}#{issue.number}",
-            status=status,
+            status=issue.state,
             metadata=metadata,
         )
 
@@ -495,14 +494,13 @@ class GitHubBackend(BasePMBackend):
         metadata = {"state_reason": getattr(issue, "state_reason", None)}
         if markers := self._deduplication_markers(issue.body):
             metadata["deduplication_key"] = markers[0].split("=", 1)[1].rsplit("-->", 1)[0].strip()
-        status = "done" if str(issue.state).lower() == "closed" else issue.state
         return self.build_ticket_state(
             id=str(issue.number),
             key=f"{self.repo.full_name}#{issue.number}",
             name=issue.title,
             description=issue.body or "",
             url=issue.html_url,
-            status=status,
+            status=issue.state,
             assignee=issue.assignee.login if issue.assignee else None,
             labels=[label.name for label in issue.labels],
             updated_at=issue.updated_at.isoformat() if issue.updated_at else None,

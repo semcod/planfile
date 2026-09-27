@@ -1,9 +1,7 @@
-"""Tests for ticket status normalization in core models and sync."""
+"""Tests for ticket status normalization in core models."""
 
-from unittest.mock import MagicMock
 from planfile.core.models.base import TicketStatus
 from planfile.core.models.ticket import Ticket
-from planfile.sync.github import GitHubBackend
 
 
 def test_ticket_model_status_normalization_closed():
@@ -57,27 +55,7 @@ def test_ticket_model_validate_dict_normalization():
     assert ticket.status == TicketStatus.done
 
 
-def test_github_sync_issue_to_ticket_status_normalization():
-    """Verify GitHubBackend._issue_to_ticket_status maps closed state to done."""
-    # Create backend instance with mock github
-    backend = GitHubBackend.__new__(GitHubBackend)
-    backend.repo = MagicMock()
-    backend.repo.full_name = "test/repo"
-    backend.config = {}
-
-    # Mock issue with closed state
-    mock_issue = MagicMock()
-    mock_issue.number = 42
-    mock_issue.title = "Sample closed issue"
-    mock_issue.body = "Issue description"
-    mock_issue.html_url = "https://github.com/test/repo/issues/42"
-    mock_issue.state = "closed"
-    mock_issue.state_reason = "completed"
-    mock_issue.assignee = None
-    mock_issue.labels = []
-    mock_issue.updated_at = None
-
-    state = backend._issue_to_ticket_status(mock_issue)
-    assert state.status == "done"
-    assert state.id == "42"
-    assert state.name == "Sample closed issue"
+def test_ticket_model_preserves_canonical_enum():
+    """Verify Ticket model preserves canonical TicketStatus enums."""
+    ticket = Ticket(id="PLF-12", name="Task 12", status=TicketStatus.review)
+    assert ticket.status == TicketStatus.review
