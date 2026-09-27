@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-163",
+  "summary": "Restart a verified existing Planfile instance on the requested serve endpoint; refuse unrelated listeners.",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-163/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/serve/**",
+    "tests/test_serve_restart.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
