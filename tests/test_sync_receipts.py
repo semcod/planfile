@@ -90,6 +90,57 @@ def test_changed_payload_gets_a_new_receipt_and_updates_existing_issue(tmp_path)
     assert len(lines) == 2
 
 
+@pytest.mark.parametrize(
+    ("field", "limit"),
+    [("description", 4096), ("body", 4096), ("name", 512), ("title", 512), ("labels", 128)],
+)
+def test_publication_identity_includes_content_beyond_preview_limit(field, limit):
+    ticket = _ticket()
+    if field == "body":
+        ticket.pop("description")
+    if field == "title":
+        ticket.pop("name")
+    value = "x" * limit
+    ticket[field] = [value + "old"] if field == "labels" else value + "old"
+    before = publish_intent("PLF-1", ticket, "github", "owner/repo")
+    ticket[field] = [value + "new"] if field == "labels" else value + "new"
+    after = publish_intent("PLF-1", ticket, "github", "owner/repo")
+
+    assert before["payload"] == after["payload"]  # previews remain bounded
+    assert before["payload_digest"] != after["payload_digest"]
+    assert before["idempotency_key"] != after["idempotency_key"]
+
+
+def test_long_body_with_legacy_receipt_updates_once_without_recreating_issue(tmp_path):
+    store = _store(tmp_path)
+    ticket = _ticket()
+    ticket["description"] = "x" * 4096 + "new deployment result"
+    ticket["sync"] = {"github": {"id": "42", "repository": "owner/repo"}}
+    # Older writers computed identity from just this prefix.
+    legacy = publish_intent(
+        "PLF-1", {**ticket, "description": ticket["description"][:4096]},
+        "github", "owner/repo",
+    )
+    record_receipt(store.base_dir, legacy, operation="update", outcome="succeeded", remote_id="42")
+
+    class RecordingBackend(Backend):
+        def update_ticket(self, external_id, **fields):
+            super().update_ticket(external_id, **fields)
+            assert fields["body"] == ticket["description"]
+
+    backend = RecordingBackend()
+    first = sync_to_external(backend, [("PLF-1", ticket)], False, store, "github")
+    second = sync_to_external(backend, [("PLF-1", ticket)], False, store, "github")
+
+    assert first.updated == ("PLF-1",)
+    assert second.reused == ("PLF-1",)
+    assert backend.updated == ["42"]
+    assert backend.created == []
+    receipts = (store.base_dir / "sync/github.receipts.jsonl").read_text()
+    assert len(receipts.splitlines()) == 2
+    assert "new deployment result" not in receipts  # no raw body in durable receipts
+
+
 def test_failed_attempt_is_recorded_without_raw_error_and_can_retry(tmp_path):
     store = _store(tmp_path)
     ticket = _ticket()

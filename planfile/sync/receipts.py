@@ -49,7 +49,7 @@ def _safe_url(value: object) -> str | None:
     return urlunsplit((parts.scheme.lower(), netloc, parts.path, "", ""))
 
 
-def _safe_text(value: object, limit: int = 512) -> str | None:
+def _safe_text(value: object, limit: int | None = 512) -> str | None:
     if value is None:
         return None
     text = str(value).strip().replace("\x00", " ")
@@ -65,18 +65,27 @@ def publish_intent(
     """Build the digest-bound identity of one outbound payload."""
     normalized_repo = normalize_repository(repository) if repository else None
     payload = {
-        "name": _safe_text(ticket.get("name") or ticket.get("title")),
-        "body": _safe_text(ticket.get("description") or ticket.get("body"), 4096),
-        "status": _safe_text(ticket.get("status")),
-        "labels": sorted({_safe_text(item, 128) for item in ticket.get("labels") or [] if _safe_text(item, 128)}),
-        "priority": _safe_text(ticket.get("priority")),
-        "assignee": _safe_text(ticket.get("assignee")),
+        "name": _safe_text(ticket.get("name") or ticket.get("title"), None),
+        "body": _safe_text(ticket.get("description") or ticket.get("body"), None),
+        "status": _safe_text(ticket.get("status"), None),
+        "labels": sorted({_safe_text(item, None) for item in ticket.get("labels") or [] if _safe_text(item, None)}),
+        "priority": _safe_text(ticket.get("priority"), None),
+        "assignee": _safe_text(ticket.get("assignee"), None),
     }
     payload_digest = hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode(
             "utf-8"
         )
     ).hexdigest()
+    # Bound the observable preview only after hashing the complete content.
+    # Otherwise edits beyond the preview limit reuse an unrelated success
+    # receipt and never reach the provider. Durable receipts retain the digest,
+    # not this payload, so hashing full text does not expand their storage.
+    preview = {
+        field: _safe_text(value, 4096 if field == "body" else 512)
+        for field, value in payload.items() if field != "labels"
+    }
+    preview["labels"] = sorted({_safe_text(label, 128) for label in payload["labels"]})
     target = normalized_repo or "unbound"
     key = f"{integration}:{target}:{ticket_id}:{payload_digest}"
     return {
@@ -85,7 +94,7 @@ def publish_intent(
         "integration": integration,
         "repository": normalized_repo,
         "ticket_id": str(ticket_id),
-        "payload": payload,
+        "payload": preview,
     }
 
 
