@@ -76,6 +76,13 @@ class DSLExecutor:
         import unicodedata
 
         clean = text.strip().lower().rstrip("?!.,")
+        if clean.startswith((
+            "create ticket", "update ticket", "list tickets", "show ticket",
+            "done ticket", "delete ticket", "export ", "query tickets", "move ticket",
+            "set ticket", "start ticket", "block ticket",
+        )):
+            return None
+
         normalized = "".join(
             c for c in unicodedata.normalize("NFD", clean)
             if unicodedata.category(c) != "Mn"
@@ -85,13 +92,13 @@ class DSLExecutor:
         # ── Safe Conversational Mutation Proposals (Human-In-The-Loop) ──
         # A. Create ticket proposal
         m_create = re.search(
-            r"^(?:dodaj|stworz|utworz|nowe|add|create)\s+(?:zadanie|ticket|task)\s+(.+)$",
+            r"^(?:dodaj|stworz|utworz|nowe)\s+(?:zadanie|ticket|task)\s+(.+)$",
             normalized,
             re.IGNORECASE,
         )
         if m_create:
             m_create_orig = re.search(
-                r"^(?:dodaj|stworz|utworz|stwórz|utwórz|nowe|add|create)\s+(?:zadanie|ticket|task)\s+(.+)$",
+                r"^(?:dodaj|stworz|utworz|stwórz|utwórz|nowe)\s+(?:zadanie|ticket|task)\s+(.+)$",
                 raw_text,
                 re.IGNORECASE,
             )
@@ -145,7 +152,7 @@ class DSLExecutor:
 
         # B. Close / Done proposal
         m_done = re.search(
-            r"^(?:oznacz|zamknij|ukoncz|mark|done|close)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+jako\s+(?:zrobione|done|ukonczone|wykonane)|\s+as\s+done)?$",
+            r"^(?:oznacz|zamknij|ukoncz)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+jako\s+(?:zrobione|done|ukonczone|wykonane))?$",
             normalized,
             re.IGNORECASE,
         )
@@ -222,7 +229,7 @@ class DSLExecutor:
 
         # D. Block ticket proposal
         m_block = re.search(
-            r"^(?:zablokuj|block)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+(?:z powodu|because|powod:?|reason:?)\s+(.+))?$",
+            r"^(?:zablokuj)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+(?:z powodu|powod:?)\s+(.+))?$",
             raw_text,
             re.IGNORECASE,
         )
@@ -373,6 +380,8 @@ class DSLExecutor:
     def _translate_with_llm(self, text: str) -> str | None:
         """Translate natural language text to canonical planfile DSL via LiteLLM if available."""
         import os
+        if not (os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("GEMINI_API_KEY")):
+            return None
         prompt = (
             "Translate the following natural language user request into a single valid planfile DSL command.\n"
             "Supported DSL syntax examples:\n"
