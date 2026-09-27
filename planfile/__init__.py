@@ -258,9 +258,10 @@ class Planfile:
     @staticmethod
     def _ticket_sort_key(ticket: "Ticket"):
         """Bug-first ordering: priority, then bugs before features, then age, then id."""
-        priority_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
+        priority_order = {"critical": 0, "high": 1, "normal": 2, "medium": 2, "low": 3}
         is_bug = 0 if ticket.labels and "bug" in ticket.labels else 1
-        return (priority_order.get(str(ticket.priority), 99), is_bug, str(ticket.created_at), ticket.id)
+        priority_str = str(ticket.priority).strip().lower() if ticket.priority else "normal"
+        return (priority_order.get(priority_str, 99), is_bug, str(ticket.created_at), ticket.id)
 
     def _ticket_snapshot_with_dependencies(self, tickets: list["Ticket"]) -> dict[str, "Ticket"]:
         """Extend one current snapshot with directly located archived dependencies."""
