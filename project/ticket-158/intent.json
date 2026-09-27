@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-158",
+  "summary": "normalize closed status for github synced tickets in planfile core models",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-158/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/models/ticket.py",
+    "planfile/sync/github.py",
+    "tests/test_ticket_status_normalization.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

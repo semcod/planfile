@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .base import TicketStatus
 from .strategy import ModelHints
@@ -97,6 +97,26 @@ class Ticket(BaseModel):
     # a legacy record must not silently rewrite its provenance.
     contract_version: str | None = None
     status: TicketStatus = TicketStatus.open  # Default to open status
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            normalized = value.strip().lower().replace("-", "_")
+            if normalized in ("closed", "close", "resolved", "completed"):
+                return TicketStatus.done
+            if normalized in ("in_progress", "inprogress", "doing", "active"):
+                return TicketStatus.in_progress
+            if normalized in ("todo", "backlog"):
+                return TicketStatus.open
+            if normalized in ("cancelled", "canceled"):
+                return TicketStatus.canceled
+            try:
+                return TicketStatus(normalized)
+            except ValueError:
+                pass
+        return value
+
     priority: str = "normal"           # critical | high | normal | low
     sprint: str = "current"            # current | backlog | sprint-XXX
 
