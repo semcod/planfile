@@ -76,3 +76,105 @@ def test_web_query_api_conversational(tmp_path):
     assert payload["ok"] is True
     assert payload["source_layer"] == "conversational_fast_path"
     assert "Stan sprintu" in payload["message"]
+
+
+def test_conversational_create_ticket_proposal(dsl_executor):
+    res = dsl_executor.run("dodaj zadanie Naprawić autoryzację z priorytetem wysokim")
+    assert res.ok is True
+    assert res.source_layer == "conversational_fast_path"
+    assert res.command["verb"] == "action_proposal"
+    assert res.command["action"]["type"] == "create_ticket"
+    assert res.command["action"]["name"] == "Naprawić autoryzację"
+    assert res.command["action"]["priority"] == "high"
+    assert "Czy chcesz utworzyć zadanie 'Naprawić autoryzację'" in res.message
+    assert res.data["proposal"] is True
+
+
+def test_conversational_mark_done_proposal(dsl_executor):
+    res = dsl_executor.run("oznacz zadanie PLF-1 jako zrobione")
+    assert res.ok is True
+    assert res.source_layer == "conversational_fast_path"
+    assert res.command["verb"] == "action_proposal"
+    assert res.command["action"]["type"] == "update_status"
+    assert res.command["action"]["ticket_id"] == "PLF-1"
+    assert res.command["action"]["status"] == "done"
+    assert "Czy chcesz oznaczyć zadanie PLF-1 jako wykonane (done)?" in res.message
+
+
+def test_conversational_change_priority_proposal(dsl_executor):
+    res = dsl_executor.run("zmień priorytet PLF-2 na krytyczny")
+    assert res.ok is True
+    assert res.source_layer == "conversational_fast_path"
+    assert res.command["verb"] == "action_proposal"
+    assert res.command["action"]["type"] == "change_priority"
+    assert res.command["action"]["ticket_id"] == "PLF-2"
+    assert res.command["action"]["priority"] == "critical"
+    assert "Czy chcesz zmienić priorytet zadania PLF-2 na 'critical'?" in res.message
+
+
+def test_conversational_block_ticket_proposal(dsl_executor):
+    res = dsl_executor.run("zablokuj zadanie PLF-3 z powodu błędu bazy danych")
+    assert res.ok is True
+    assert res.source_layer == "conversational_fast_path"
+    assert res.command["verb"] == "action_proposal"
+    assert res.command["action"]["type"] == "block_ticket"
+    assert res.command["action"]["ticket_id"] == "PLF-3"
+    assert res.command["action"]["reason"] == "błędu bazy danych"
+    assert "Czy chcesz zablokować zadanie PLF-3" in res.message
+
+
+def test_assistant_execute_endpoints(tmp_path):
+    from planfile import Planfile
+    pf = Planfile(str(tmp_path))
+    client = TestClient(app)
+
+    # 1. Create ticket via assistant execute
+    create_resp = client.post("/api/assistant/execute", json={
+        "action": "create_ticket",
+        "name": "Wygenerowane przez asystenta",
+        "priority": "high",
+        "project_path": str(tmp_path),
+    })
+    assert create_resp.status_code == 200
+    create_data = create_resp.json()
+    assert create_data["ok"] is True
+    t_id = create_data["ticket"]["id"]
+    assert create_data["ticket"]["name"] == "Wygenerowane przez asystenta"
+    assert create_data["ticket"]["priority"] == "high"
+
+    # 2. Change priority
+    prio_resp = client.post("/api/assistant/execute", json={
+        "action": "change_priority",
+        "ticket_id": t_id,
+        "priority": "critical",
+        "project_path": str(tmp_path),
+    })
+    assert prio_resp.status_code == 200
+    prio_data = prio_resp.json()
+    assert prio_data["ok"] is True
+    assert prio_data["ticket"]["priority"] == "critical"
+
+    # 3. Block ticket
+    block_resp = client.post("/api/assistant/execute", json={
+        "action": "block_ticket",
+        "ticket_id": t_id,
+        "reason": "Oczekiwanie na certyfikat SSL",
+        "project_path": str(tmp_path),
+    })
+    assert block_resp.status_code == 200
+    block_data = block_resp.json()
+    assert block_data["ok"] is True
+    assert block_data["ticket"]["status"] == "blocked"
+
+    # 4. Mark done
+    done_resp = client.post("/api/assistant/execute", json={
+        "action": "update_status",
+        "ticket_id": t_id,
+        "status": "done",
+        "project_path": str(tmp_path),
+    })
+    assert done_resp.status_code == 200
+    done_data = done_resp.json()
+    assert done_data["ok"] is True
+    assert done_data["ticket"]["status"] == "done"
+

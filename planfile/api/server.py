@@ -205,6 +205,18 @@ class DSLResponse(BaseModel):
     source_layer: str | None = "direct_dsl"
 
 
+class AssistantActionRequest(BaseModel):
+    action: str
+    name: str | None = None
+    title: str | None = None
+    ticket_id: str | None = None
+    status: str | None = None
+    priority: str | None = "normal"
+    sprint: str | None = "current"
+    reason: str | None = None
+    project_path: str = "."
+
+
 class YAMLPatchRequest(BaseModel):
     path: str
     value: Any
@@ -1487,6 +1499,76 @@ def query_command(body: QueryRequest) -> DSLResponse:
     return DSLResponse(**result.to_dict())
 
 
+@app.post("/api/assistant/execute", tags=["assistant"])
+def assistant_execute(body: AssistantActionRequest):
+    """Execute a confirmed conversational action (create, update, block)."""
+    from planfile import Planfile, TicketSource
+    pf = Planfile(body.project_path)
+    action = (body.action or "").lower()
+
+    if action in ("create_ticket", "create"):
+        name = body.name or body.title
+        if not name:
+            return JSONResponse(status_code=400, content={"ok": False, "error": "Nazwa zadania jest wymagana (name required)"})
+        priority = (body.priority or "normal").lower()
+        sprint = body.sprint or "current"
+        ticket = pf.create_ticket(
+            name=name,
+            priority=priority,
+            sprint=sprint,
+            source=TicketSource(tool="conversational_assistant"),
+        )
+        return {
+            "ok": True,
+            "message": f"Utworzono zadanie {ticket.id}: {ticket.name}",
+            "ticket": ticket.model_dump(mode="json", exclude_none=True),
+        }
+
+    if action in ("update_status", "status", "done"):
+        ticket_id = body.ticket_id
+        if not ticket_id:
+            return JSONResponse(status_code=400, content={"ok": False, "error": "Identyfikator zadania (ticket_id) jest wymagany"})
+        status = body.status or "done"
+        ticket = pf.update_ticket(ticket_id, status=status)
+        if not ticket:
+            return JSONResponse(status_code=404, content={"ok": False, "error": f"Nie znaleziono zadania {ticket_id}"})
+        return {
+            "ok": True,
+            "message": f"Zaktualizowano status zadania {ticket_id} na '{status}'",
+            "ticket": ticket.model_dump(mode="json", exclude_none=True),
+        }
+
+    if action in ("change_priority", "priority"):
+        ticket_id = body.ticket_id
+        if not ticket_id:
+            return JSONResponse(status_code=400, content={"ok": False, "error": "Identyfikator zadania (ticket_id) jest wymagany"})
+        priority = (body.priority or "normal").lower()
+        ticket = pf.update_ticket(ticket_id, priority=priority)
+        if not ticket:
+            return JSONResponse(status_code=404, content={"ok": False, "error": f"Nie znaleziono zadania {ticket_id}"})
+        return {
+            "ok": True,
+            "message": f"Zmieniono priorytet zadania {ticket_id} na '{priority}'",
+            "ticket": ticket.model_dump(mode="json", exclude_none=True),
+        }
+
+    if action in ("block_ticket", "block"):
+        ticket_id = body.ticket_id
+        if not ticket_id:
+            return JSONResponse(status_code=400, content={"ok": False, "error": "Identyfikator zadania (ticket_id) jest wymagany"})
+        ticket = pf.block_ticket(ticket_id, reason=body.reason)
+        if not ticket:
+            return JSONResponse(status_code=404, content={"ok": False, "error": f"Nie znaleziono zadania {ticket_id}"})
+        return {
+            "ok": True,
+            "message": f"Zablokowano zadanie {ticket_id}",
+            "ticket": ticket.model_dump(mode="json", exclude_none=True),
+        }
+
+    return JSONResponse(status_code=400, content={"ok": False, "error": f"Nieobsługiwana akcja: {body.action}"})
+
+
+
 @app.get("/dsl/help", tags=["dsl"])
 def dsl_help():
     """Return DSL command reference."""
@@ -2644,6 +2726,7 @@ def _dashboard_html() -> str:
           <button type="button" class="pill-btn" data-query="co jest następne?">⚡ Następne zadanie</button>
           <button type="button" class="pill-btn" data-query="stan sprintu">📊 Stan sprintu</button>
           <button type="button" class="pill-btn" data-query="wysoki priorytet">🔥 Wysoki priorytet</button>
+          <button type="button" class="pill-btn" data-query="dodaj zadanie Nowe zadanie z priorytetem wysokim">➕ Dodaj zadanie</button>
           <button type="button" class="pill-btn" data-query="pokaż otwarte zadania">📋 Otwarte</button>
         </div>
       </div>
@@ -2655,7 +2738,7 @@ def _dashboard_html() -> str:
       </div>
       <div class="assistant-input-bar">
         <button id="mic-btn" type="button" class="mic-btn" title="Naciśnij mikrofon, aby mówić (Voice-to-Text)">🎤</button>
-        <input type="text" id="chat-input" placeholder="Powiedz lub wpisz np. 'co jest zablokowane?'" autocomplete="off" />
+        <input type="text" id="chat-input" placeholder="Powiedz lub wpisz np. 'co jest zablokowane?' lub 'dodaj zadanie...'" autocomplete="off" />
         <button id="chat-send" type="button">Wyślij</button>
       </div>
     </section>
@@ -3756,6 +3839,88 @@ def _dashboard_html() -> str:
       body.className = "msg-body";
       body.textContent = text;
       bubble.appendChild(body);
+
+      if (data && data.proposal && data.action) {
+        const action = data.action;
+        const card = document.createElement("div");
+        card.className = "chat-action-card";
+        card.style.cssText = "margin-top:8px; padding:10px 12px; background:rgba(30,41,59,0.7); border:1px solid rgba(99,102,241,0.3); border-radius:8px;";
+
+        const titleDiv = document.createElement("div");
+        titleDiv.style.cssText = "font-weight:600; color:#a5b4fc; margin-bottom:6px; font-size:12px;";
+        let actionDesc = "";
+        if (action.type === "create_ticket") {
+          actionDesc = `➕ Propozycja utworzenia: <strong>${escapeHtml(action.name || "")}</strong> (priorytet: ${escapeHtml(action.priority || "normal")})`;
+        } else if (action.type === "update_status") {
+          actionDesc = `✅ Propozycja oznaczenia: <strong>${escapeHtml(action.ticket_id || "")}</strong> → ${escapeHtml(action.status || "done")}`;
+        } else if (action.type === "change_priority") {
+          actionDesc = `🚨 Propozycja zmiany priorytetu: <strong>${escapeHtml(action.ticket_id || "")}</strong> → ${escapeHtml(action.priority || "")}`;
+        } else if (action.type === "block_ticket") {
+          actionDesc = `🚫 Propozycja zablokowania: <strong>${escapeHtml(action.ticket_id || "")}</strong>` + (action.reason ? ` (powód: ${escapeHtml(action.reason)})` : "");
+        } else {
+          actionDesc = `⚡ Akcja: ${escapeHtml(action.type)}`;
+        }
+        titleDiv.innerHTML = actionDesc;
+        card.appendChild(titleDiv);
+
+        const btnRow = document.createElement("div");
+        btnRow.style.cssText = "display:flex; gap:8px; margin-top:8px;";
+
+        const confirmBtn = document.createElement("button");
+        confirmBtn.className = "pill-btn";
+        confirmBtn.style.cssText = "background:#22c55e; color:#fff; border:none; padding:4px 10px; font-size:12px; border-radius:4px; cursor:pointer;";
+        confirmBtn.textContent = "✓ Zatwierdź";
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.className = "pill-btn";
+        cancelBtn.style.cssText = "background:#64748b; color:#fff; border:none; padding:4px 10px; font-size:12px; border-radius:4px; cursor:pointer;";
+        cancelBtn.textContent = "✕ Anuluj";
+
+        confirmBtn.onclick = async () => {
+          confirmBtn.disabled = true;
+          cancelBtn.disabled = true;
+          confirmBtn.textContent = "Wykonywanie...";
+          try {
+            const execRes = await fetch("/api/assistant/execute", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: action.type,
+                name: action.name,
+                title: action.name,
+                ticket_id: action.ticket_id,
+                status: action.status,
+                priority: action.priority,
+                reason: action.reason,
+                sprint: action.sprint || "current",
+              }),
+            });
+            const execData = await execRes.json();
+            if (execRes.ok && execData.ok) {
+              card.style.borderColor = "#22c55e";
+              btnRow.innerHTML = `<span style="color:#22c55e; font-size:12px;">✓ ${escapeHtml(execData.message || "Wykonano pomyślnie")}</span>`;
+              refreshTickets({ notifyChanges: false }).catch(() => {});
+            } else {
+              card.style.borderColor = "#ef4444";
+              btnRow.innerHTML = `<span style="color:#ef4444; font-size:12px;">✕ Błąd: ${escapeHtml(execData.error || "Nie udało się wykonać")}</span>`;
+            }
+          } catch (e) {
+            btnRow.innerHTML = `<span style="color:#ef4444; font-size:12px;">✕ Błąd połączenia</span>`;
+          }
+        };
+
+        cancelBtn.onclick = () => {
+          confirmBtn.disabled = true;
+          cancelBtn.disabled = true;
+          card.style.opacity = "0.6";
+          btnRow.innerHTML = `<span style="color:#94a3b8; font-size:12px;">✕ Anulowano operację</span>`;
+        };
+
+        btnRow.appendChild(confirmBtn);
+        btnRow.appendChild(cancelBtn);
+        card.appendChild(btnRow);
+        bubble.appendChild(card);
+      }
 
       if (data && Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
         const cardList = document.createElement("div");

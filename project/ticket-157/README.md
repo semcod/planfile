@@ -17,10 +17,11 @@ Implement an interactive conversational web interface in planfile's web service 
 
 ## Acceptance criteria
 
-- [ ] AC-01: Conversational Assistant panel rendered in planfile dashboard with voice button and option network pills.
-- [ ] AC-02: `DSLExecutor` answers conversational queries (blocked tasks, next task, sprint status, high priority) in Polish and English.
-- [ ] AC-03: Regression tests in `tests/test_conversational_web.py` pass.
-- [ ] AC-04: Governance checks pass (`./project/governance-check.sh`).
+- [x] AC-01: Conversational Assistant panel rendered in planfile dashboard with voice button and option network pills.
+- [x] AC-02: `DSLExecutor` answers conversational queries (blocked tasks, next task, sprint status, high priority) in Polish and English.
+- [x] AC-03: Two-step conversational mutations (create, done, priority, block) with interactive Action Cards and `/api/assistant/execute` endpoint.
+- [x] AC-04: Regression tests in `tests/test_conversational_web.py` pass.
+- [x] AC-05: Governance checks pass (`./project/governance-check.sh`).
 
 ## Tracking boundary
 
