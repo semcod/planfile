@@ -24,7 +24,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "3c261d692e8000342f694112710951c65b16155f",
+    "acceptedBaseSha": "4455a1d8640cdb2c14eebbc2bc023cffc4120832",
     "targetBranch": "main",
     "outcome": "Deliver interactive conversational web interface in planfile web dashboard allowing voice and text interaction with plans, tickets, and tasks via NL-DSL-LLM and Option Network.",
     "nonGoals": [

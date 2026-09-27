@@ -3,8 +3,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from planfile.dsl import DSLExecutor
 from planfile.api.server import app
+from planfile.dsl import DSLExecutor
 
 
 @pytest.fixture
@@ -125,7 +125,7 @@ def test_conversational_block_ticket_proposal(dsl_executor):
 
 def test_assistant_execute_endpoints(tmp_path):
     from planfile import Planfile
-    pf = Planfile(str(tmp_path))
+    Planfile(str(tmp_path))
     client = TestClient(app)
 
     # 1. Create ticket via assistant execute
