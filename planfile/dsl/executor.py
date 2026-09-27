@@ -49,6 +49,10 @@ class DSLExecutor:
 
     def run(self, text: str, *, allow_llm_fallback: bool = True) -> DSLResult:
         """Parse and execute a DSL command string with optional LLM translation fallback."""
+        conv_res = self._handle_conversational_query(text)
+        if conv_res is not None:
+            return conv_res
+
         cmd = self._parser.parse(text)
         if (not cmd.is_valid or cmd.verb == "unknown") and allow_llm_fallback:
             translated = self._translate_with_llm(text)
@@ -65,6 +69,133 @@ class DSLExecutor:
         res.source_layer = "nl_fast_path" if any(w in text.lower() for w in ("pokaż", "zadanie", "zadania", "otwarte", "zamknij", "dodaj", "tickety")) else "direct_dsl"
         res.command["source_layer"] = res.source_layer
         return res
+
+    def _handle_conversational_query(self, text: str) -> DSLResult | None:
+        """Handle natural conversation questions about plans, tickets, blockers, and next actions."""
+        import unicodedata
+
+        clean = text.strip().lower().rstrip("?!.,")
+        normalized = "".join(
+            c for c in unicodedata.normalize("NFD", clean)
+            if unicodedata.category(c) != "Mn"
+        )
+
+        # 1. Blocked / waiting queries
+        if any(p in normalized for p in ("zablokowan", "blokuj", "blocked", "czeka na", "co blokuje")):
+            try:
+                tickets = self.pf.list_tickets(sprint="current")
+                all_tickets = self.pf.list_tickets(sprint="all")
+            except Exception:
+                tickets, all_tickets = [], []
+            seen = set()
+            combined = []
+            for t in tickets + all_tickets:
+                if t.id not in seen:
+                    seen.add(t.id)
+                    combined.append(t)
+            blocked = [
+                t for t in combined
+                if getattr(t, "status", "") == "blocked"
+                or (getattr(t, "execution", None) and getattr(t.execution, "state", None) in ("failed", "waiting_input", "blocked"))
+            ]
+            if not blocked:
+                msg = "Wszystkie zadania postępują prawidłowo. Brak zablokowanych zadań w bieżącym sprincie."
+            else:
+                items = [f"{t.id}: {t.name}" for t in blocked]
+                msg = f"Znaleziono {len(blocked)} zablokowane zadanie(a): " + "; ".join(items)
+            return DSLResult(
+                ok=True,
+                command={"verb": "list", "object_type": "ticket", "params": {"status": "blocked"}, "conversational_intent": "blocked_tickets"},
+                data=[t.model_dump(mode="json", exclude_none=True) for t in blocked],
+                message=msg,
+                source_layer="conversational_fast_path",
+            )
+
+        # 2. Next task queries
+        if any(p in normalized for p in ("nastepne", "co robic", "co dalej", "next task", "next ticket", "co teraz", "kolejne zadanie")):
+            try:
+                tickets = self.pf.list_tickets(sprint="current")
+            except Exception:
+                tickets = []
+            open_tickets = [t for t in tickets if getattr(t, "status", "") in ("todo", "open", "ready", "pending")]
+            prio_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
+            open_tickets.sort(key=lambda t: prio_order.get(getattr(t, "priority", "normal"), 2))
+            if open_tickets:
+                nxt = open_tickets[0]
+                q_name = getattr(nxt.execution, "queue", "default") if getattr(nxt, "execution", None) else "default"
+                msg = f"Następne rekomendowane zadanie to {nxt.id}: '{nxt.name}' (priorytet: {nxt.priority}, kolejka: {q_name})."
+                return DSLResult(
+                    ok=True,
+                    command={"verb": "show", "object_type": "ticket", "target": nxt.id, "conversational_intent": "next_ticket"},
+                    data=nxt.model_dump(mode="json", exclude_none=True),
+                    message=msg,
+                    source_layer="conversational_fast_path",
+                )
+            else:
+                return DSLResult(
+                    ok=True,
+                    command={"verb": "show", "conversational_intent": "next_ticket"},
+                    data=None,
+                    message="Brak oczekujących zadań do podjęcia w bieżącym sprincie.",
+                    source_layer="conversational_fast_path",
+                )
+
+        # 3. Sprint / Plan summary
+        if any(p in normalized for p in ("stan sprintu", "status planu", "podsumuj sprint", "podsumowanie", "jak idzie", "sprint summary", "plan status")):
+            try:
+                tickets = self.pf.list_tickets(sprint="current")
+                all_tickets = self.pf.list_tickets(sprint="all")
+            except Exception:
+                tickets, all_tickets = [], []
+            seen = set()
+            combined = []
+            for t in tickets + all_tickets:
+                if t.id not in seen:
+                    seen.add(t.id)
+                    combined.append(t)
+            total = len(combined)
+            done = sum(1 for t in combined if getattr(t, "status", "") == "done")
+            running = sum(1 for t in combined if getattr(t, "execution", None) and getattr(t.execution, "state", None) == "running")
+            blocked = sum(1 for t in combined if getattr(t, "status", "") == "blocked" or (getattr(t, "execution", None) and getattr(t.execution, "state", None) in ("failed", "waiting_input", "blocked")))
+            open_cnt = max(0, total - done - running - blocked)
+            pct = round((done / total * 100), 1) if total > 0 else 0.0
+            msg = f"Stan sprintu: {total} zadań (Ukończone: {done} [{pct}%], W toku: {running}, Otwarte: {open_cnt}, Zablokowane: {blocked})."
+            return DSLResult(
+                ok=True,
+                command={"verb": "summary", "object_type": "sprint", "conversational_intent": "sprint_summary"},
+                data={
+                    "total": total,
+                    "done": done,
+                    "running": running,
+                    "open": open_cnt,
+                    "blocked": blocked,
+                    "completion_rate_pct": pct,
+                },
+                message=msg,
+                source_layer="conversational_fast_path",
+            )
+
+        # 4. High priority queries
+        if any(p in normalized for p in ("wysoki priorytet", "krytyczne", "pilne", "high priority", "critical")):
+            try:
+                tickets = self.pf.list_tickets(sprint="current")
+            except Exception:
+                tickets = []
+            high_prio = [t for t in tickets if getattr(t, "priority", "") in ("critical", "high") and getattr(t, "status", "") != "done"]
+            if not high_prio:
+                msg = "Brak aktywnych zadań o wysokim lub krytycznym priorytecie."
+            else:
+                items = [f"{t.id}: {t.name} ({t.priority})" for t in high_prio]
+                msg = f"Aktywne zadania o wysokim priorytecie ({len(high_prio)}): " + "; ".join(items)
+            return DSLResult(
+                ok=True,
+                command={"verb": "list", "object_type": "ticket", "params": {"priority": "high"}, "conversational_intent": "high_priority"},
+                data=[t.model_dump(mode="json", exclude_none=True) for t in high_prio],
+                message=msg,
+                source_layer="conversational_fast_path",
+            )
+
+        return None
 
     def _translate_with_llm(self, text: str) -> str | None:
         """Translate natural language text to canonical planfile DSL via LiteLLM if available."""

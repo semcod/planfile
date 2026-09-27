@@ -2139,7 +2139,7 @@ def _dashboard_html() -> str:
     h1 { font-size: 18px; margin: 0; font-weight: 650; }
     main {
       display: grid;
-      grid-template-columns: minmax(300px, 420px) minmax(320px, 520px) minmax(0, 1fr);
+      grid-template-columns: minmax(280px, 360px) minmax(300px, 420px) minmax(320px, 440px) minmax(240px, 1fr);
       gap: 16px;
       padding: 16px;
     }
@@ -2413,10 +2413,138 @@ def _dashboard_html() -> str:
     .copyable-code > .copy-control { position: absolute; top: 7px; right: 7px; z-index: 2; }
     .copy-inline-control { margin-left: 5px; vertical-align: middle; }
     .copy-control.copied { border-color: var(--ok); color: var(--ok); }
+    /* Conversational Assistant & Voice styles */
+    .assistant-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .assistant-toolbar {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-2);
+    }
+    .suggestions-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .pill-btn {
+      background: #14181f;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      border-radius: 999px;
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pill-btn:hover {
+      border-color: var(--info);
+      color: var(--text);
+      background: #1d232e;
+    }
+    .chat-history {
+      flex: 1;
+      min-height: 240px;
+      max-height: calc(100vh - 280px);
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-msg {
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 92%;
+      font-size: 13px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+      background: #1e3a5f;
+      border: 1px solid #2b5488;
+      color: #eaf2ff;
+    }
+    .chat-msg.assistant {
+      align-self: flex-start;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+    .chat-msg .msg-header {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .chat-msg.user .msg-header {
+      color: #9ac2f4;
+    }
+    .chat-ticket-card {
+      margin-top: 6px;
+      padding: 6px 8px;
+      background: #101216;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .chat-ticket-card:hover {
+      border-color: var(--info);
+    }
+    .assistant-input-bar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      background: #14171c;
+      align-items: center;
+    }
+    .assistant-input-bar input {
+      flex: 1;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+    .assistant-input-bar input:focus {
+      outline: none;
+      border-color: var(--info);
+    }
+    .mic-btn {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .mic-btn.recording {
+      border-color: var(--err);
+      color: var(--err);
+      background: #381a1a;
+      animation: pulse-mic 1s infinite alternate;
+    }
+    @keyframes pulse-mic {
+      from { box-shadow: 0 0 2px var(--err); }
+      to { box-shadow: 0 0 8px var(--err); }
+    }
+    @media (max-width: 1400px) {
+      main { grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr); }
+    }
     @media (max-width: 820px) {
       header { align-items: flex-start; flex-direction: column; }
       main { grid-template-columns: 1fr; }
-      .list, .events, .detail { max-height: none; }
+      .list, .events, .detail, .chat-history { max-height: none; }
     }
   </style>
 </head>
@@ -2504,6 +2632,32 @@ def _dashboard_html() -> str:
     <section>
       <div class="section-head"><h2>Ticket Detail</h2><span id="detail-status" class="status">select a ticket</span></div>
       <div id="ticket-detail" class="detail empty">Select a ticket from the queue to inspect status history, tool logs, related work, and human input blockers.</div>
+    </section>
+    <section class="assistant-panel" id="assistant-panel">
+      <div class="section-head">
+        <h2>Rozmawiaj z planem (Voice &amp; NL)</h2>
+        <span id="assistant-status" class="status"><span class="dot ok"></span> gotowy</span>
+      </div>
+      <div class="assistant-toolbar">
+        <div id="assistant-suggestions" class="suggestions-bar">
+          <button type="button" class="pill-btn" data-query="co jest zablokowane?">⚠️ Zablokowane</button>
+          <button type="button" class="pill-btn" data-query="co jest następne?">⚡ Następne zadanie</button>
+          <button type="button" class="pill-btn" data-query="stan sprintu">📊 Stan sprintu</button>
+          <button type="button" class="pill-btn" data-query="wysoki priorytet">🔥 Wysoki priorytet</button>
+          <button type="button" class="pill-btn" data-query="pokaż otwarte zadania">📋 Otwarte</button>
+        </div>
+      </div>
+      <div id="chat-messages" class="chat-history">
+        <div class="chat-msg assistant">
+          <div class="msg-header">Asystent Planu</div>
+          <div class="msg-body">Cześć! Możesz rozmawiać z planem za pomocą głosu lub tekstu. Kliknij podpowiedź, napisz pytanie lub naciśnij 🎤, aby mówić.</div>
+        </div>
+      </div>
+      <div class="assistant-input-bar">
+        <button id="mic-btn" type="button" class="mic-btn" title="Naciśnij mikrofon, aby mówić (Voice-to-Text)">🎤</button>
+        <input type="text" id="chat-input" placeholder="Powiedz lub wpisz np. 'co jest zablokowane?'" autocomplete="off" />
+        <button id="chat-send" type="button">Wyślij</button>
+      </div>
     </section>
     <section>
       <div class="section-head"><h2>Live Events</h2><span id="event-count" class="status">0 events</span></div>
@@ -3580,6 +3734,154 @@ def _dashboard_html() -> str:
       refreshTickets({ notifyChanges: true }).catch((error) => addEvent({ type: "dashboard", action: "error", ticket_id: "-", ticket: { execution: { state: "failed", last_error: String(error) } } }));
       refreshSelectedTicket();
     }, 60000);
+
+    // Conversational Assistant & Voice
+    const chatInput = $("chat-input");
+    const chatSend = $("chat-send");
+    const chatMessages = $("chat-messages");
+    const micBtn = $("mic-btn");
+    const assistantStatus = $("assistant-status");
+    let isRecording = false;
+    let recognitionInstance = null;
+
+    function addChatBubble(sender, text, data = null) {
+      const bubble = document.createElement("div");
+      bubble.className = `chat-msg ${sender}`;
+      const header = document.createElement("div");
+      header.className = "msg-header";
+      header.textContent = sender === "user" ? "Ty" : "Asystent Planu";
+      bubble.appendChild(header);
+
+      const body = document.createElement("div");
+      body.className = "msg-body";
+      body.textContent = text;
+      bubble.appendChild(body);
+
+      if (data && Array.isArray(data) && data.length > 0 && typeof data[0] === "object") {
+        const cardList = document.createElement("div");
+        cardList.style.marginTop = "6px";
+        data.slice(0, 5).forEach((item) => {
+          if (item && item.id) {
+            const card = document.createElement("div");
+            card.className = "chat-ticket-card";
+            card.innerHTML = `<strong>${escapeHtml(item.id)}</strong> <span>${escapeHtml(item.name || "")}</span> <span class="pill ${escapeHtml(item.status || "")}">${escapeHtml(item.status || "")}</span>`;
+            card.onclick = () => {
+              state.selectedTicketId = item.id;
+              syncUrlState();
+              refreshSelectedTicket();
+            };
+            cardList.appendChild(card);
+          }
+        });
+        bubble.appendChild(cardList);
+      }
+
+      chatMessages.appendChild(bubble);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function executeAssistantQuery(queryText) {
+      const q = (queryText || "").trim();
+      if (!q) return;
+      chatInput.value = "";
+      addChatBubble("user", q);
+
+      try {
+        assistantStatus.innerHTML = '<span class="dot"></span> przetwarzam...';
+        const res = await fetch("/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: q, allow_llm_fallback: true }),
+        });
+        if (!res.ok) {
+          throw new Error(`Błąd serwera (${res.status})`);
+        }
+        const result = await res.json();
+        assistantStatus.innerHTML = '<span class="dot ok"></span> gotowy';
+        const replyMsg = result.message || (result.ok ? "Polecenie wykonane pomyślnie." : (result.error || "Nie udało się zrealizować zapytania."));
+        addChatBubble("assistant", replyMsg, result.data);
+
+        if (result.ok && result.command && ["create", "update", "done", "start", "block", "delete", "move"].includes(result.command.verb)) {
+          refreshTickets({ notifyChanges: false }).catch(() => {});
+        }
+      } catch (err) {
+        assistantStatus.innerHTML = '<span class="dot err"></span> błąd';
+        addChatBubble("assistant", `Wystąpił błąd: ${err.message}`);
+      }
+    }
+
+    if (chatSend && chatInput) {
+      chatSend.addEventListener("click", () => executeAssistantQuery(chatInput.value));
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          executeAssistantQuery(chatInput.value);
+        }
+      });
+    }
+
+    document.querySelectorAll(".pill-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const q = btn.getAttribute("data-query");
+        if (q) executeAssistantQuery(q);
+      });
+    });
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition && micBtn) {
+      recognitionInstance = new SpeechRecognition();
+      recognitionInstance.lang = "pl-PL";
+      recognitionInstance.interimResults = true;
+      recognitionInstance.continuous = false;
+
+      recognitionInstance.onstart = () => {
+        isRecording = true;
+        micBtn.classList.add("recording");
+        micBtn.title = "Słucham... Kliknij, aby zatrzymać";
+        assistantStatus.innerHTML = '<span class="dot" style="background:#ff6b6b"></span> słucham...';
+      };
+
+      recognitionInstance.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        chatInput.value = transcript;
+        if (event.results[0].isFinal) {
+          executeAssistantQuery(transcript);
+        }
+      };
+
+      recognitionInstance.onerror = (e) => {
+        console.warn("Speech recognition error:", e.error);
+        isRecording = false;
+        micBtn.classList.remove("recording");
+        assistantStatus.innerHTML = '<span class="dot ok"></span> gotowy';
+      };
+
+      recognitionInstance.onend = () => {
+        isRecording = false;
+        micBtn.classList.remove("recording");
+        micBtn.title = "Naciśnij mikrofon, aby mówić (Voice-to-Text)";
+        assistantStatus.innerHTML = '<span class="dot ok"></span> gotowy';
+      };
+
+      micBtn.addEventListener("click", () => {
+        if (isRecording) {
+          recognitionInstance.stop();
+        } else {
+          try {
+            recognitionInstance.start();
+          } catch (e) {
+            console.error("Mic start failed", e);
+          }
+        }
+      });
+    } else if (micBtn) {
+      micBtn.title = "Rozpoznawanie mowy nie jest obsługiwane w tej przeglądarce (użyj Chrome/Edge lub pisz tekstowo)";
+      micBtn.style.opacity = "0.5";
+    }
+
     connect();
   </script>
 </body>
