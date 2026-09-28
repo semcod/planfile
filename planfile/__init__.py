@@ -380,6 +380,11 @@ class Planfile:
         from planfile.core.decompose import execution_waves
         return execution_waves(self, sprint=sprint)
 
+    def validate_dependencies(self, sprint: str = "current") -> tuple[bool, list[str]]:
+        """Validate that all ticket dependencies in the sprint form an acyclic graph."""
+        from planfile.core.decompose import validate_ticket_dag
+        return validate_ticket_dag(self, sprint=sprint)
+
     def update_ticket(
         self,
         ticket_id: str,

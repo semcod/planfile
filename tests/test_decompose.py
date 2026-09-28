@@ -116,6 +116,28 @@ def test_add_dependency_rejects_self_and_missing(tmp_path):
         add_dependency(pf, a.id, after=["GHOST-9"])
 
 
+def test_add_dependency_rejects_cycles(tmp_path):
+    pf = _pf(tmp_path)
+    a = pf.create_ticket(name="a")
+    b = pf.create_ticket(name="b")
+    c = pf.create_ticket(name="c")
+    add_dependency(pf, b.id, after=[a.id])
+    add_dependency(pf, c.id, after=[b.id])
+    # a depends on c creates a cycle: a -> c -> b -> a
+    with pytest.raises(DecomposeError, match="cycle detected"):
+        add_dependency(pf, a.id, after=[c.id])
+
+
+def test_planfile_validate_dependencies(tmp_path):
+    pf = _pf(tmp_path)
+    a = pf.create_ticket(name="a")
+    b = pf.create_ticket(name="b")
+    add_dependency(pf, b.id, after=[a.id])
+    is_dag, cycles = pf.validate_dependencies()
+    assert is_dag is True
+    assert cycles == []
+
+
 def test_prune_dangling_dependencies_unblocks(tmp_path):
     pf = _pf(tmp_path)
     real = pf.create_ticket(name="real blocker")
