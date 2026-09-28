@@ -19,13 +19,25 @@ from typing import Any
 
 try:
     from planfile_graph import (
-        build_tree as _native_build_tree,
-        clean_ghost_dependencies as _native_clean_ghost,
-        execution_layers as _native_execution_layers,
-        transitive_dependents as _native_transitive_dependents,
-        tree_progress as _native_tree_progress,
-        validate_dag as _native_validate_dag,
         HAS_RUST_GRAPH,
+    )
+    from planfile_graph import (
+        build_tree as _native_build_tree,
+    )
+    from planfile_graph import (
+        clean_ghost_dependencies as _native_clean_ghost,
+    )
+    from planfile_graph import (
+        execution_layers as _native_execution_layers,
+    )
+    from planfile_graph import (
+        transitive_dependents as _native_transitive_dependents,
+    )
+    from planfile_graph import (
+        tree_progress as _native_tree_progress,
+    )
+    from planfile_graph import (
+        validate_dag as _native_validate_dag,
     )
 except ImportError:
     HAS_RUST_GRAPH = False
@@ -104,7 +116,7 @@ def split_ticket(
     is always a single subtask, which is how you orchestrate dependent steps without conflict.
     Returns the created child Tickets (in order).
     """
-    from planfile import TicketExecutor, TicketSource  # local import: avoid cycle at module load
+    from planfile import TicketExecutor  # local import: avoid cycle at module load
 
     parent = pf.get_ticket(parent_id)
     if not parent:
@@ -123,7 +135,7 @@ def split_ticket(
 
     child_ids = [c.id for c in created]
     if sequential:  # stack: each subtask waits on the previous → strict order, single runnable front
-        for prev, cur in zip(child_ids, child_ids[1:]):
+        for prev, cur in zip(child_ids, child_ids[1:], strict=False):
             pf.update_ticket(cur, blocked_by=[prev])
     pf.update_ticket(parent_id, children=_dedup([*(parent.children or []), *child_ids]))
     if block_parent:
@@ -140,18 +152,85 @@ def _validate_dep_targets(pf: Any, ticket_id: str, deps: list[str]) -> None:
             raise DecomposeError(f"dependency ticket {dep} not found")
 
 
+def _validate_dag_python(
+    edges: list[tuple[str, str]], all_nodes: list[str] | None = None
+) -> tuple[bool, list[str]]:
+    nodes = set(all_nodes or [])
+    for u, v in edges:
+        nodes.add(u)
+        nodes.add(v)
+    in_degree: dict[str, int] = dict.fromkeys(nodes, 0)
+    adj: dict[str, list[str]] = {n: [] for n in nodes}
+    for u, v in edges:
+        adj[v].append(u)
+        in_degree[u] += 1
+    queue = [n for n, d in in_degree.items() if d == 0]
+    visited = 0
+    while queue:
+        curr = queue.pop(0)
+        visited += 1
+        for nxt in adj[curr]:
+            in_degree[nxt] -= 1
+            if in_degree[nxt] == 0:
+                queue.append(nxt)
+    if visited == len(nodes):
+        return True, []
+    cycle_nodes = sorted([n for n, d in in_degree.items() if d > 0])
+    return False, cycle_nodes
+
+
+def validate_ticket_dag(pf: Any, sprint: str = "current") -> tuple[bool, list[str]]:
+    """Check if all tickets in the sprint form a valid DAG (no cycles)."""
+    tickets = list(pf.list_tickets(sprint=sprint)) if hasattr(pf, "list_tickets") else []
+    ticket_ids = [t.id for t in tickets]
+    id_set = set(ticket_ids)
+    edges = [(t.id, dep) for t in tickets for dep in (t.blocked_by or []) if dep in id_set]
+    if HAS_RUST_GRAPH and _native_validate_dag is not None:
+        try:
+            return _native_validate_dag(edges, all_nodes=ticket_ids, prerequisite_first=True)
+        except Exception:
+            pass
+    return _validate_dag_python(edges, all_nodes=ticket_ids)
+
+
 def add_dependency(pf: Any, ticket_id: str, *, after: list[str] | None = None,
                    before: list[str] | None = None) -> dict:
     """Declare ordering between EXISTING tickets (git-like sequencing primitive).
 
     ``after`` = this ticket is ``blocked_by`` those (runs after them); ``before`` = those
-    become ``blocked_by`` this one (they run after it). Idempotent, validates existence."""
+    become ``blocked_by`` this one (they run after it). Idempotent, validates existence and acyclicity."""
     t = pf.get_ticket(ticket_id)
     if not t:
         raise DecomposeError(f"ticket {ticket_id} not found")
     after = [a for a in (after or []) if a]
     before = [b for b in (before or []) if b]
     _validate_dep_targets(pf, ticket_id, [*after, *before])
+
+    # Validate against dependency cycles using native validate_dag or Python fallback
+    existing_tickets = list(pf.list_tickets()) if hasattr(pf, "list_tickets") else []
+    edges: list[tuple[str, str]] = []
+    all_nodes = [ticket.id for ticket in existing_tickets]
+    for other in existing_tickets:
+        for dep in (other.blocked_by or []):
+            edges.append((other.id, dep))
+    for a in after:
+        edges.append((ticket_id, a))
+    for b in before:
+        edges.append((b, ticket_id))
+
+    is_dag = True
+    cycle_nodes: list[str] = []
+    if HAS_RUST_GRAPH and _native_validate_dag is not None:
+        try:
+            is_dag, cycle_nodes = _native_validate_dag(edges, all_nodes=all_nodes, prerequisite_first=True)
+        except Exception:
+            is_dag, cycle_nodes = _validate_dag_python(edges, all_nodes=all_nodes)
+    else:
+        is_dag, cycle_nodes = _validate_dag_python(edges, all_nodes=all_nodes)
+
+    if not is_dag:
+        raise DecomposeError(f"dependency cycle detected: {cycle_nodes}")
+
     if after:
         pf.update_ticket(ticket_id, blocked_by=_dedup([*(t.blocked_by or []), *after]))
     for b in before:
@@ -168,6 +247,26 @@ def prune_dangling_dependencies(pf: Any, sprint: str = "current") -> dict:
     the single highest-value step toward actually closing a backlog. Returns what was cleaned."""
     tickets = list(pf.list_tickets(sprint=sprint))
     existing = {t.id for t in tickets}
+
+    if HAS_RUST_GRAPH and _native_clean_ghost is not None:
+        try:
+            raw_tickets = [{"id": t.id, "blocked_by": list(t.blocked_by or [])} for t in tickets]
+            report = _native_clean_ghost(raw_tickets, existing)
+            cleaned = []
+            for item in report.get("cleaned", []):
+                tid = item["ticket"]
+                kept = item["remaining"]
+                pf.update_ticket(tid, blocked_by=kept)
+                cleaned.append(item)
+            return {
+                "sprint": sprint,
+                "scanned": len(tickets),
+                "cleaned": cleaned,
+                "unblocked": [c["ticket"] for c in cleaned if c.get("unblocked")],
+            }
+        except Exception:
+            pass
+
     cleaned = []
     for t in tickets:
         deps = t.blocked_by or []
@@ -340,7 +439,7 @@ def execution_waves(pf: Any, sprint: str = "current") -> list[list[str]]:
             pass
 
     # Python fallback (Kahn's layer traversal)
-    in_degree = {tid: 0 for tid in ticket_ids}
+    in_degree = dict.fromkeys(ticket_ids, 0)
     adj: dict[str, list[str]] = {tid: [] for tid in ticket_ids}
     for tid, dep in edges:
         adj[dep].append(tid)
