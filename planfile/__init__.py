@@ -48,12 +48,6 @@ from planfile.delivery_plan_contracts import (
 )
 from planfile.dsl import DSLExecutor, DSLParser, DSLResult
 from planfile.project_paths import canonical_project_root
-from planfile.testql_integration import (
-    build_testql_tickets,
-    run_testql_validation,
-    sync_testql_tickets,
-    upsert_testql_tickets,
-)
 from planfile.ticket_validation import validate_planfile_tickets
 from planfile.todo_sync import sync_todo_checkboxes_from_planfile
 
@@ -74,6 +68,12 @@ if TYPE_CHECKING:
         execute_strategy,
     )
     from planfile.runner import load_valid_strategy, run_strategy, verify_strategy_post_execution
+    from planfile.testql_integration import (
+        build_testql_tickets,
+        run_testql_validation,
+        sync_testql_tickets,
+        upsert_testql_tickets,
+    )
 
 
 class Planfile:
@@ -868,9 +868,28 @@ __all__ = [
     "DSLParser", "DSLExecutor", "DSLResult",
 ]
 
-# Lazy loading functions for executors
+_TESTQL_EXPORTS = frozenset({
+    "run_testql_validation",
+    "build_testql_tickets",
+    "upsert_testql_tickets",
+    "sync_testql_tickets",
+})
+
+
+def __dir__():
+    """Keep public exports discoverable before optional modules are loaded."""
+    return sorted(set(globals()) | set(__all__))
+
+
+# Lazy loading functions for optional integrations and executors
 def __getattr__(name):
-    """Lazy import executor modules when accessed."""
+    """Lazy import optional modules when their public exports are accessed."""
+    if name in _TESTQL_EXPORTS:
+        from planfile import testql_integration
+
+        value = getattr(testql_integration, name)
+        globals()[name] = value
+        return value
     if name in ["runner", "executor_standalone"]:
         import importlib
         return importlib.import_module(f"planfile.{name}")
