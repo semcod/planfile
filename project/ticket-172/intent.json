@@ -1,0 +1,27 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-172",
+  "summary": "parallel ticket scheduling with dynamic file scoping and exclusion",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-172/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "planfile/core/decompose.py",
+    "tests/test_decompose.py",
+    "tests/test_scheduler_parallel.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
