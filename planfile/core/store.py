@@ -1962,11 +1962,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def _ticket_lookup_sprints(self, ticket_id: str):
         """Use current, the durable history locator, then deterministic fallback."""
-        checked = set()
-        for sprint in ("current", self._history_locations().get(ticket_id)):
-            if sprint and sprint not in checked:
-                checked.add(sprint)
-                yield sprint
+        checked = {"current"}
+        yield "current"
+        history_sprint = self._history_locations().get(ticket_id)
+        if history_sprint and history_sprint not in checked:
+            checked.add(history_sprint)
+            yield history_sprint
         for sprint in self._all_sprint_ids():
             if sprint not in checked:
                 yield sprint
