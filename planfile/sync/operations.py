@@ -378,7 +378,17 @@ def _find_local_ticket(
             if isinstance(reference, dict) and str(reference.get("id")) == str(remote_id):
                 matches.append((str(sprint_id), str(local_id), ticket))
     if len(matches) > 1:
-        raise ValueError(f"ambiguous local mapping for remote ticket {remote_id}")
+        unique_local_ids = {m[1] for m in matches}
+        if len(unique_local_ids) == 1:
+            for preferred in ("current", "backlog"):
+                for m in matches:
+                    if m[0] == preferred:
+                        return m
+            return matches[0]
+        preferred_matches = [m for m in matches if m[0] in ("current", "backlog")]
+        if len(preferred_matches) == 1:
+            return preferred_matches[0]
+        raise ValueError(f"ambiguous local mapping for remote ticket {remote_id}: {sorted(unique_local_ids)}")
     return matches[0] if matches else (None, None, None)
 
 
