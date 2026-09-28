@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-170",
+  "summary": "Defer optional TestQL imports on Planfile SDK startup for Koru",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "planfile/__init__.py",
+    "tests/test_public_api_startup.py",
+    "project/ticket-170/**",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-169"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
