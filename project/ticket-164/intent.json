@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-164",
+  "summary": "Preserve ticket file-change execution contract",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-164/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/models/ticket.py",
+    "tests/test_ticket_execution_contract.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2de73abb1b1ba144879584686d097cd28f85482c",
+    "targetBranch": "main",
+    "outcome": "Preserve explicit file-change expectation across native ticket model, storage and CLI so Koru cannot accept an unchanged declared edit after command exit zero.",
+    "nonGoals": [
+      "No broad preservation of unknown input fields",
+      "No runtime deployment, hardware actions or changes to ticket322 ownership",
+      "No changes to omitted-flag inference or publication checks"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add a strict boolean input field; omit it during serialization when not explicitly supplied, retaining current Koru label inference.",
+      "components": [
+        {
+          "name": "ticket-inputs",
+          "paths": [
+            "planfile/core/models/ticket.py",
+            "tests/test_ticket_execution_contract.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the isolated model change; retain failed pilot receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_ticket_execution_contract.py tests/test_ticket_execution.py tests/test_partial_ticket_update.py"
+        ],
+        "evidence": "True and false survive create/update/readback and CLI; omitted remains absent; invalid nonboolean rejected."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Exact scoped governance validation and independent protected publication."
+      }
+    ]
+  }
+}
