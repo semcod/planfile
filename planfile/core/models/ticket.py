@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, StrictBool, field_validator, model_serializer
 
 from .base import TicketStatus
 from .strategy import ModelHints
@@ -66,6 +66,7 @@ class TicketInputs(BaseModel):
     prompt: str | None = None
     env_keys: list[str] = Field(default_factory=list)
     script: str | None = None
+    expect_files_changed: StrictBool = False
     api_endpoint: str | None = None
     api_method: str = "GET"
     api_headers: dict[str, str] = Field(default_factory=dict)
@@ -77,6 +78,14 @@ class TicketInputs(BaseModel):
     # Structured process contract. Legacy clients may still embed v1 in the
     # description; governed v2 tickets use this field as the authority.
     process_manifest: dict[str, Any] | None = None
+
+    @model_serializer(mode="wrap")
+    def serialize_inputs(self, handler):
+        """Preserve explicit expectations without overriding legacy inference."""
+        data = handler(self)
+        if "expect_files_changed" not in self.model_fields_set:
+            data.pop("expect_files_changed", None)
+        return data
 
 
 class TicketOutputs(BaseModel):
