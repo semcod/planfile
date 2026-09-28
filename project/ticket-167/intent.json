@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-167",
+  "summary": "Preserve LLM context and timeout inputs for Koru execution",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-167/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/models/ticket.py",
+    "tests/test_ticket_llm_context_contract.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d2bb82688e30b087b4db3e8dd1b9ab129d9866c6",
+    "targetBranch": "main",
+    "outcome": "Preserve explicitly supplied LLM context selectors and timeout across native ticket storage and CLI, so Koru receives the accepted source context.",
+    "nonGoals": [
+      "No automatic inference from prose or arbitrary unknown input fields",
+      "No change to provider routing, model choice, or semantic completion authority"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add optional typed fields already consumed by Koru; legacy omitted fields remain absent with exclude_none serialization.",
+      "components": [
+        {
+          "name": "ticket-inputs",
+          "paths": [
+            "planfile/core/models/ticket.py",
+            "tests/test_ticket_llm_context_contract.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the isolated model change; retain failed pilot receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest tests/test_ticket_llm_context_contract.py tests/test_ticket_execution_contract.py tests/test_partial_ticket_update.py"
+        ],
+        "evidence": "Context fields and timeout survive create/update/CLI, legacy omission unchanged."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Managed governance gate; independent protected review and merge."
+      }
+    ]
+  }
+}
