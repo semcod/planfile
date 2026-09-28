@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-165",
-  "summary": "integrate planfile-io native rust acceleration",
+  "summary": "integrate native rust acceleration crates into planfile",
   "workstream": "application",
   "classification": {
     "kind": "SERVICE",
@@ -13,7 +13,13 @@
     "TODO.md",
     "project/TICKETS.md",
     "planfile/core/fastio.py",
-    "tests/test_fastio_native.py"
+    "planfile/core/semantic.py",
+    "planfile/core/decompose.py",
+    "planfile/core/jsonl_tail.py",
+    "planfile/analysis/file_analyzer.py",
+    "planfile/dsl/parser.py",
+    "tests/test_fastio_native.py",
+    "tests/test_native_acceleration.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"

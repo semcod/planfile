@@ -17,6 +17,17 @@ from __future__ import annotations
 
 from typing import Any
 
+try:
+    from planfile_graph import (
+        build_tree as _native_build_tree,
+        tree_progress as _native_tree_progress,
+        HAS_RUST_GRAPH,
+    )
+except ImportError:
+    HAS_RUST_GRAPH = False
+    _native_build_tree = None
+    _native_tree_progress = None
+
 
 class DecomposeError(ValueError):
     """Raised when a decomposition request is invalid (missing parent, no subtasks, …)."""
@@ -181,7 +192,9 @@ def group_tickets(pf: Any, group_name: str, ticket_ids: list[str]) -> list[str]:
 
 def build_tree(pf: Any, root_id: str) -> dict:
     """Nested ``{id, name, status, children:[...]}`` decomposition tree (cycle-safe)."""
-    root = pf.get_ticket(root_id)
+    if isinstance(pf, dict) and HAS_RUST_GRAPH and _native_build_tree is not None:
+        return _native_build_tree(pf, root_id)
+    root = pf.get_ticket(root_id) if hasattr(pf, "get_ticket") else None
     if not root:
         raise DecomposeError(f"ticket {root_id} not found")
     return _tree_node(pf, root, set())
@@ -206,6 +219,8 @@ def _tree_node(pf: Any, t: Any, seen: set) -> dict:
 
 def tree_progress(pf: Any, root_id: str) -> dict:
     """Roll-up completion of a decomposition: how many leaf/child subtasks are done."""
+    if isinstance(pf, dict) and HAS_RUST_GRAPH and _native_tree_progress is not None:
+        return _native_tree_progress(pf, root_id)
     tree = build_tree(pf, root_id)
     total = done = 0
 
