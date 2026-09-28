@@ -20,6 +20,8 @@ Integrate the extracted native Rust crates (`planfile-io`, `planfile-semantic`, 
 - [x] AC-06: When `planfile_journal` is importable, `read_jsonl_tail` delegates to native memory-mapped reverse tail.
 - [x] AC-07: Graceful pure-Python fallback remains fully functional for every module.
 - [x] AC-08: Full test suite and governance checks pass.
+- [x] AC-09: `Planfile.execution_waves()` partitions sprint tickets into parallel layers.
+- [x] AC-10: `Planfile.next_tickets()` supports batch dispatch with critical path priority and disjoint file locking.
 
 ## Tracking boundary
 

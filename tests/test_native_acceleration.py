@@ -76,3 +76,53 @@ def test_graph_acceleration():
     assert prog["subtasks"] == 2
     assert prog["done"] == 1
     assert prog["complete"] is False
+
+
+def test_execution_waves_and_critical_path(tmp_path):
+    from planfile import Planfile
+    from planfile.core.decompose import execution_waves, calculate_critical_priority
+
+    pf = Planfile(str(tmp_path))
+    # a has no dependencies
+    # b depends on a
+    # c depends on a (so a blocks b and c)
+    # d depends on b and c
+    # e is independent
+    a = pf.create_ticket(name="a", files=["a.py"])
+    b = pf.create_ticket(name="b", blocked_by=[a.id], files=["b.py"])
+    c = pf.create_ticket(name="c", blocked_by=[a.id], files=["a.py"])  # overlaps with a.py
+    d = pf.create_ticket(name="d", blocked_by=[b.id, c.id], files=["d.py"])
+    e = pf.create_ticket(name="e", files=["e.py"])
+
+    # 1. Execution waves
+    waves = pf.execution_waves()
+    assert len(waves) >= 3
+    # First wave must contain a and e (unblocked)
+    assert set(waves[0]) == {a.id, e.id}
+    # Second wave must contain b and c
+    assert set(waves[1]) == {b.id, c.id}
+    # Third wave must contain d
+    assert set(waves[2]) == {d.id}
+
+    # 2. Critical path weighting: a blocks b, c, d (downstream weight >= 3)
+    tickets = pf.list_tickets()
+    weights = calculate_critical_priority(tickets)
+    assert weights[a.id] >= 3
+    assert weights[d.id] == 0
+
+    # 3. next_tickets: batch selection
+    runnable = pf.next_tickets(count=2, disjoint_files=True)
+    runnable_ids = [t.id for t in runnable]
+    assert a.id in runnable_ids
+    assert e.id in runnable_ids
+
+    # 4. next_tickets respects disjoint files
+    pf.update_ticket(a.id, status="done")
+    # Now b and c are runnable. But b has files=["b.py"], c has files=["a.py"]
+    # What if two runnable tickets share files?
+    f1 = pf.create_ticket(name="f1", files=["shared.py"])
+    f2 = pf.create_ticket(name="f2", files=["shared.py"])
+    batch = pf.next_tickets(count=5, disjoint_files=True)
+    batch_ids = [t.id for t in batch]
+    # f1 and f2 cannot be both in batch because they share shared.py
+    assert not (f1.id in batch_ids and f2.id in batch_ids)

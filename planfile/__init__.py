@@ -320,6 +320,66 @@ class Planfile:
         )
         return min(runnable, key=self._ticket_sort_key, default=None)
 
+    def next_tickets(
+        self,
+        count: int = 1,
+        sprint: str = "current",
+        queue: str | None = None,
+        disjoint_files: bool = True,
+    ) -> list[Ticket]:
+        """Return up to `count` RUNNABLE tickets for parallel worker execution.
+
+        Prioritizes tickets on the critical path (most downstream dependents).
+        When disjoint_files is True, ensures no two returned tickets have overlapping
+        file scopes, allowing multiple agents to run simultaneously without merge conflicts.
+        """
+        tickets = self.list_tickets(sprint=sprint)
+        ticket_by_id = self._ticket_snapshot_with_dependencies(tickets)
+        open_tickets = [
+            t for t in tickets
+            if (t.status.value if hasattr(t.status, "value") else str(t.status)) == "open"
+        ]
+
+        from planfile.core.decompose import calculate_critical_priority
+        weights = calculate_critical_priority(open_tickets)
+
+        runnable = [
+            ticket
+            for ticket in open_tickets
+            if not self.runnability_skip_reason(
+                ticket,
+                queue=queue,
+                ticket_by_id=ticket_by_id,
+            )
+        ]
+
+        def sort_key(t: Ticket):
+            base_key = self._ticket_sort_key(t)
+            crit_weight = -weights.get(t.id, 0)
+            return (base_key[0], base_key[1], crit_weight, base_key[2], base_key[3])
+
+        runnable.sort(key=sort_key)
+
+        if not disjoint_files or count <= 1:
+            return runnable[:count]
+
+        selected: list[Ticket] = []
+        locked_files: set[str] = set()
+        for t in runnable:
+            t_files = set(t.files or [])
+            if t_files and not t_files.isdisjoint(locked_files):
+                continue
+            selected.append(t)
+            locked_files.update(t_files)
+            if len(selected) >= count:
+                break
+        return selected
+
+    def execution_waves(self, sprint: str = "current") -> list[list[str]]:
+        """Return sprint tickets partitioned into parallel execution waves (topological layers)."""
+        from planfile.core.decompose import execution_waves
+        return execution_waves(self, sprint=sprint)
+
     def update_ticket(
         self,
         ticket_id: str,

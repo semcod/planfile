@@ -18,6 +18,7 @@
     "planfile/core/jsonl_tail.py",
     "planfile/analysis/file_analyzer.py",
     "planfile/dsl/parser.py",
+    "planfile/__init__.py",
     "tests/test_fastio_native.py",
     "tests/test_native_acceleration.py"
   ],
