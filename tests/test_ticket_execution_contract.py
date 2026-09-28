@@ -2,9 +2,9 @@
 
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -44,8 +44,9 @@ def test_omitted_expectation_does_not_override_label_inference(tmp_path):
 @pytest.mark.parametrize("expected", [True, False])
 def test_api_partial_inputs_update_keeps_expectation(tmp_path, monkeypatch, expected):
     from fastapi.testclient import TestClient
-    from planfile.api import server
+
     from planfile import server_common
+    from planfile.api import server
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(server_common, "_planfile", Planfile(str(tmp_path)))
