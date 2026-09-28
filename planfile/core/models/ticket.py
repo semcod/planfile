@@ -74,6 +74,13 @@ class TicketInputs(BaseModel):
     api_timeout_seconds: float = 30.0
     mcp_tool: str | None = None
     llm_model: str | None = None
+    # Explicit execution inputs consumed by Koru's context assembler/runner.
+    # None keeps legacy tickets from acquiring implicit context or time limits.
+    context_files: list[str] | None = None
+    context_globs: list[str] | None = None
+    include_project_context: StrictBool | None = None
+    max_context_chars: int | None = None
+    llm_timeout_seconds: float | None = None
     uri_processes: list[TicketUriProcess] = Field(default_factory=list)
     # Structured process contract. Legacy clients may still embed v1 in the
     # description; governed v2 tickets use this field as the authority.
