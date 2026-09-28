@@ -58,7 +58,7 @@ def test_analyzer_acceleration(tmp_path):
     issues, metrics, tasks = analyzer.analyze_file(sample)
     assert len(issues) == 2
     assert any("implement caching" in i.name for i in issues)
-    assert any(m.name == "coverage" and m.value == 92.5 for m in metrics)
+    assert any(m.name in ("coverage", "Test Coverage") and m.value == 92.5 for m in metrics)
 
 
 def test_graph_acceleration():

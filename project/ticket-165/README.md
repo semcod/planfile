@@ -3,7 +3,7 @@
 - **ID**: ticket-165
 - **Owner**: agent:gemini
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Authorization**: SESSION_EXECUTION_AUTHORIZATION — user requests acceleration and native planfile-* integration; 2026-09-28.
 
 ## Goal and scope

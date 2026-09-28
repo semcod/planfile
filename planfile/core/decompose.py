@@ -200,8 +200,34 @@ def group_tickets(pf: Any, group_name: str, ticket_ids: list[str]) -> list[str]:
 
 def build_tree(pf: Any, root_id: str) -> dict:
     """Nested ``{id, name, status, children:[...]}`` decomposition tree (cycle-safe)."""
-    if isinstance(pf, dict) and HAS_RUST_GRAPH and _native_build_tree is not None:
-        return _native_build_tree(pf, root_id)
+    if isinstance(pf, dict):
+        if HAS_RUST_GRAPH and _native_build_tree is not None:
+            return _native_build_tree(pf, root_id)
+        if root_id not in pf:
+            raise DecomposeError(f"ticket {root_id} not found")
+        seen: set[str] = set()
+
+        def _node_from_dict(cid: str) -> dict | None:
+            if cid in seen or cid not in pf:
+                return None
+            seen.add(cid)
+            item = pf[cid]
+            name = item.get("name") if isinstance(item, dict) else getattr(item, "name", "")
+            st = item.get("status") if isinstance(item, dict) else getattr(item, "status", "")
+            st_str = st.value if hasattr(st, "value") else str(st)
+            children_raw = item.get("children") if isinstance(item, dict) else getattr(item, "children", [])
+            children = []
+            for child_id in (children_raw or []):
+                child_node = _node_from_dict(child_id)
+                if child_node is not None:
+                    children.append(child_node)
+            return {"id": cid, "name": name, "status": st_str, "children": children}
+
+        res = _node_from_dict(root_id)
+        if res is None:
+            raise DecomposeError(f"ticket {root_id} not found")
+        return res
+
     root = pf.get_ticket(root_id) if hasattr(pf, "get_ticket") else None
     if not root:
         raise DecomposeError(f"ticket {root_id} not found")
