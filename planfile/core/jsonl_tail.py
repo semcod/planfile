@@ -13,6 +13,12 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
+try:
+    from planfile_journal import read_jsonl_tail as _native_read_jsonl_tail, HAS_RUST_JOURNAL
+except ImportError:
+    HAS_RUST_JOURNAL = False
+    _native_read_jsonl_tail = None
+
 #: Default reverse-walk budget.
 #:
 #: An unfiltered read fills its limit from the last few kilobytes, so the budget
@@ -51,6 +57,11 @@ def read_jsonl_tail(
     """
     wanted = max(1, int(limit))
     budget = max(1, int(max_bytes))
+    if HAS_RUST_JOURNAL and _native_read_jsonl_tail is not None and keep is None:
+        try:
+            return _native_read_jsonl_tail(str(path), limit=wanted, max_bytes=budget)
+        except Exception:
+            pass
     step = max(1024, int(chunk_bytes))
     rows: list[dict] = []
     try:

@@ -12,6 +12,12 @@ from planfile.analysis.parsers.text_parser import analyze_text
 from planfile.analysis.parsers.toon_parser import analyze_toon
 from planfile.analysis.parsers.yaml_parser import analyze_yaml, extract_from_yaml_structure
 
+try:
+    from planfile_analyzer import analyze_file as _native_analyze_file, HAS_RUST_ANALYZER
+except ImportError:
+    HAS_RUST_ANALYZER = False
+    _native_analyze_file = None
+
 
 class FileAnalyzer:
     """Analyzes YAML/JSON files to extract issues and metrics."""
@@ -71,6 +77,15 @@ class FileAnalyzer:
                 break
 
         if not analyzer:
+            if HAS_RUST_ANALYZER and _native_analyze_file is not None:
+                try:
+                    raw_issues, raw_metrics, raw_tasks = _native_analyze_file(file_path)
+                    issues = [ExtractedIssue(**i) for i in raw_issues]
+                    metrics = [ExtractedMetric(**m) for m in raw_metrics]
+                    tasks = [ExtractedTask(**t) for t in raw_tasks]
+                    return issues, metrics, tasks
+                except Exception:
+                    pass
             # Default text analysis
             issues, metrics, tasks = analyze_text(file_path)
         else:

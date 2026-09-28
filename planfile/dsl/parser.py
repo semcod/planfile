@@ -19,6 +19,12 @@ import shlex
 from dataclasses import dataclass, field
 from typing import Any
 
+try:
+    from planfile_dsl import parse_dsl as _native_parse_dsl, HAS_RUST_DSL
+except ImportError:
+    HAS_RUST_DSL = False
+    _native_parse_dsl = None
+
 VERBS = {
     # English
     "create": "create",
@@ -205,6 +211,18 @@ class DSLParser:
 
     def parse(self, text: str) -> DSLCommand:
         """Parse a single DSL command string."""
+        if HAS_RUST_DSL and _native_parse_dsl is not None:
+            try:
+                native_cmd = _native_parse_dsl(text)
+                return DSLCommand(
+                    verb=native_cmd.verb,
+                    object_type=native_cmd.object_type,
+                    target=native_cmd.target,
+                    params=dict(native_cmd.params),
+                    raw=native_cmd.raw,
+                )
+            except Exception:
+                pass
         text = text.strip()
         if not text:
             return DSLCommand(verb="help", raw=text)

@@ -18,6 +18,17 @@ import os
 import re
 from typing import Any
 
+try:
+    from planfile_semantic import (
+        lexical_similarity as _native_lexical_similarity,
+        similarity_matrix as _native_similarity_matrix,
+        HAS_RUST_SEMANTIC,
+    )
+except ImportError:
+    HAS_RUST_SEMANTIC = False
+    _native_lexical_similarity = None
+    _native_similarity_matrix = None
+
 _WORD_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
 # Small PL+EN stopword set so shared filler doesn't inflate similarity.
 _STOP = {
@@ -58,6 +69,8 @@ def ticket_text(t: Any) -> str:
 
 def lexical_similarity(a: str, b: str) -> float:
     """Blend of content-token Jaccard (meaning) and trigram Jaccard (surface form)."""
+    if HAS_RUST_SEMANTIC and _native_lexical_similarity is not None:
+        return _native_lexical_similarity(a, b)
     tok = _jaccard(_tokens(a), _tokens(b))
     tri = _jaccard(_trigrams(a), _trigrams(b))
     return round(0.7 * tok + 0.3 * tri, 4)
@@ -98,13 +111,25 @@ def similarity_matrix(texts: list[str]) -> tuple[list[list[float]], str]:
     """Pairwise similarity of texts. Returns (matrix, method) — 'embed' when embeddings are
     available, else deterministic 'lexical'."""
     vectors = embed_texts(texts)
+    if vectors:
+        n = len(texts)
+        matrix = [[0.0] * n for _ in range(n)]
+        for i in range(n):
+            for j in range(i + 1, n):
+                score = cosine(vectors[i], vectors[j])
+                matrix[i][j] = matrix[j][i] = round(score, 4)
+        return matrix, "embed"
+
+    if HAS_RUST_SEMANTIC and _native_similarity_matrix is not None:
+        return _native_similarity_matrix(texts), "lexical"
+
     n = len(texts)
     matrix = [[0.0] * n for _ in range(n)]
     for i in range(n):
         for j in range(i + 1, n):
-            score = cosine(vectors[i], vectors[j]) if vectors else lexical_similarity(texts[i], texts[j])
+            score = lexical_similarity(texts[i], texts[j])
             matrix[i][j] = matrix[j][i] = round(score, 4)
-    return matrix, ("embed" if vectors else "lexical")
+    return matrix, "lexical"
 
 
 # ── 1. duplicate detection ───────────────────────────────────────────────────

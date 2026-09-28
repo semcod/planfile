@@ -35,6 +35,17 @@ except ImportError:  # pragma: no cover - environment without libyaml
     from yaml import SafeLoader as FastLoader
     from yaml import SafeDumper as FastDumper
 
+try:  # planfile-io native Rust acceleration (60x faster)
+    import planfile_io_rs as _native_io
+    HAS_RUST_IO = True
+except ImportError:
+    try:
+        from planfile_io import planfile_io_rs as _native_io
+        HAS_RUST_IO = True
+    except ImportError:
+        _native_io = None
+        HAS_RUST_IO = False
+
 _MIRROR_SUFFIX = ".fast.json"
 _MIRROR_VERSION = 1
 
@@ -170,6 +181,7 @@ def read_yaml_fast(path: Path) -> Any | None:
     still return the data — it is a valid parse of *some* real snapshot)
     when the mtime moved under us.
     """
+    path = Path(path)
     mtime_ns = _stat_mtime_ns(path)
     if mtime_ns is None:
         return None
@@ -184,6 +196,16 @@ def read_yaml_fast(path: Path) -> Any | None:
         return data  # raced with a concurrent writer — do not cache a mismatched pair
     write_mirror(path, data, mtime_ns=mtime_ns)
     return data
+
+
+def read_yaml_native(path: Path | str) -> Any | None:
+    """Direct high-performance read via native Rust engine (planfile-io)."""
+    if HAS_RUST_IO and _native_io is not None:
+        try:
+            return _native_io.read_yaml_fast(str(path))
+        except Exception:
+            pass
+    return read_yaml_fast(Path(path))
 
 
 def audit_mirror(path: Path) -> dict[str, Any]:

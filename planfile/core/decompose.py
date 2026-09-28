@@ -17,6 +17,25 @@ from __future__ import annotations
 
 from typing import Any
 
+try:
+    from planfile_graph import (
+        build_tree as _native_build_tree,
+        clean_ghost_dependencies as _native_clean_ghost,
+        execution_layers as _native_execution_layers,
+        transitive_dependents as _native_transitive_dependents,
+        tree_progress as _native_tree_progress,
+        validate_dag as _native_validate_dag,
+        HAS_RUST_GRAPH,
+    )
+except ImportError:
+    HAS_RUST_GRAPH = False
+    _native_build_tree = None
+    _native_clean_ghost = None
+    _native_execution_layers = None
+    _native_transitive_dependents = None
+    _native_tree_progress = None
+    _native_validate_dag = None
+
 
 class DecomposeError(ValueError):
     """Raised when a decomposition request is invalid (missing parent, no subtasks, …)."""
@@ -181,7 +200,35 @@ def group_tickets(pf: Any, group_name: str, ticket_ids: list[str]) -> list[str]:
 
 def build_tree(pf: Any, root_id: str) -> dict:
     """Nested ``{id, name, status, children:[...]}`` decomposition tree (cycle-safe)."""
-    root = pf.get_ticket(root_id)
+    if isinstance(pf, dict):
+        if HAS_RUST_GRAPH and _native_build_tree is not None:
+            return _native_build_tree(pf, root_id)
+        if root_id not in pf:
+            raise DecomposeError(f"ticket {root_id} not found")
+        seen: set[str] = set()
+
+        def _node_from_dict(cid: str) -> dict | None:
+            if cid in seen or cid not in pf:
+                return None
+            seen.add(cid)
+            item = pf[cid]
+            name = item.get("name") if isinstance(item, dict) else getattr(item, "name", "")
+            st = item.get("status") if isinstance(item, dict) else getattr(item, "status", "")
+            st_str = st.value if hasattr(st, "value") else str(st)
+            children_raw = item.get("children") if isinstance(item, dict) else getattr(item, "children", [])
+            children = []
+            for child_id in (children_raw or []):
+                child_node = _node_from_dict(child_id)
+                if child_node is not None:
+                    children.append(child_node)
+            return {"id": cid, "name": name, "status": st_str, "children": children}
+
+        res = _node_from_dict(root_id)
+        if res is None:
+            raise DecomposeError(f"ticket {root_id} not found")
+        return res
+
+    root = pf.get_ticket(root_id) if hasattr(pf, "get_ticket") else None
     if not root:
         raise DecomposeError(f"ticket {root_id} not found")
     return _tree_node(pf, root, set())
@@ -206,6 +253,8 @@ def _tree_node(pf: Any, t: Any, seen: set) -> dict:
 
 def tree_progress(pf: Any, root_id: str) -> dict:
     """Roll-up completion of a decomposition: how many leaf/child subtasks are done."""
+    if isinstance(pf, dict) and HAS_RUST_GRAPH and _native_tree_progress is not None:
+        return _native_tree_progress(pf, root_id)
     tree = build_tree(pf, root_id)
     total = done = 0
 
@@ -266,3 +315,78 @@ def merge_ticket(pf: Any, child_id: str, into_id: str) -> dict:
     pf.update_ticket(child_id, status="canceled")
     _detach_from_parent(pf, child)
     return {"merged": child_id, "into": into_id, "files": len(files), "notes": note_count}
+
+
+def execution_waves(pf: Any, sprint: str = "current") -> list[list[str]]:
+    """Partition sprint tickets into parallel execution waves (topological layers).
+
+    All tickets in wave 0 can run immediately in parallel.
+    Tickets in wave k depend only on tickets in waves < k.
+    """
+    tickets = list(pf.list_tickets(sprint=sprint)) if hasattr(pf, "list_tickets") else []
+    ticket_ids = [t.id for t in tickets]
+    id_set = set(ticket_ids)
+
+    edges: list[tuple[str, str]] = []
+    for t in tickets:
+        for dep in (t.blocked_by or []):
+            if dep in id_set:
+                edges.append((t.id, dep))
+
+    if HAS_RUST_GRAPH and _native_execution_layers is not None:
+        try:
+            return _native_execution_layers(edges, all_nodes=ticket_ids, prerequisite_first=True)
+        except Exception:
+            pass
+
+    # Python fallback (Kahn's layer traversal)
+    in_degree = {tid: 0 for tid in ticket_ids}
+    adj: dict[str, list[str]] = {tid: [] for tid in ticket_ids}
+    for tid, dep in edges:
+        adj[dep].append(tid)
+        in_degree[tid] += 1
+
+    waves: list[list[str]] = []
+    current_wave = [tid for tid, deg in in_degree.items() if deg == 0]
+    while current_wave:
+        waves.append(current_wave)
+        next_wave = []
+        for u in current_wave:
+            for v in adj[u]:
+                in_degree[v] -= 1
+                if in_degree[v] == 0:
+                    next_wave.append(v)
+        current_wave = next_wave
+    return waves
+
+
+def calculate_critical_priority(tickets: list[Any]) -> dict[str, int]:
+    """Calculate downstream dependents count for each ticket to boost critical path priority."""
+    id_set = {t.id for t in tickets}
+    edges: list[tuple[str, str]] = [
+        (t.id, dep) for t in tickets for dep in (t.blocked_by or []) if dep in id_set
+    ]
+    if HAS_RUST_GRAPH and _native_transitive_dependents is not None:
+        weights: dict[str, int] = {}
+        for t in tickets:
+            try:
+                deps = _native_transitive_dependents(edges, t.id, prerequisite_first=True)
+                weights[t.id] = len(deps)
+            except Exception:
+                weights[t.id] = 0
+        return weights
+
+    adj: dict[str, list[str]] = {t.id: [] for t in tickets}
+    for tid, dep in edges:
+        adj[dep].append(tid)
+    weights = {}
+    for t in tickets:
+        visited: set[str] = set()
+        stack = list(adj[t.id])
+        while stack:
+            curr = stack.pop()
+            if curr not in visited:
+                visited.add(curr)
+                stack.extend(adj.get(curr, []))
+        weights[t.id] = len(visited)
+    return weights
