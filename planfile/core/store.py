@@ -1247,8 +1247,20 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
         return SQLiteTicketIndex(self._ticket_index_path)
 
+    def _history_locations_signature(self):
+        try:
+            locator_stat = self._history_locations_path.stat()
+            locator_signature = (locator_stat.st_mtime_ns, locator_stat.st_size)
+        except FileNotFoundError:
+            locator_signature = None
+        return locator_signature
+
     def _ticket_index_signature(self) -> tuple:
-        return self.sprint_signature("all"), self._evidence_revision()
+        return (
+            self.sprint_signature("all"),
+            self._evidence_revision(),
+            self._history_locations_signature(),
+        )
 
     @staticmethod
     def _ticket_index_signature_cache_seconds() -> float:
@@ -1291,7 +1303,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
             evidence_dir_mtime = self._evidence_dir.stat().st_mtime_ns
         except OSError:
             evidence_dir_mtime = -1
-        return self.sprint_signature("current"), evidence_dir_mtime
+        return (
+            self.sprint_signature("current"),
+            evidence_dir_mtime,
+            self._history_locations_signature(),
+        )
 
     def _invalidate_ticket_index_signature_cache(self) -> None:
         with self._ticket_index_signature_cache_lock:
@@ -1301,18 +1317,40 @@ class Store(StoreFileMixin, TicketStoreMixin):
         from planfile.core.fastio import read_yaml_fast
 
         storage = self._sharded_storage() if self._uses_sharded_storage() else None
+
+        def read_tickets(sprint):
+            snapshot = (
+                storage.load_sprint(sprint)
+                if storage is not None
+                else read_yaml_fast(self._sprint_file(sprint)) or {}
+            )
+            root = snapshot.get("sprint", snapshot)
+            return root.get("tickets") or {} if isinstance(root, dict) else {}
+
+        # Validate locator targets once per sprint, retaining only IDs. A stale
+        # locator must not hide a ticket that the exact-source fallback finds.
+        locations = self._history_locations()
+        preferred = {}
+        by_sprint = {}
+        for ticket_id, sprint in locations.items():
+            by_sprint.setdefault(sprint, set()).add(ticket_id)
+        for sprint, ids in by_sprint.items():
+            records = read_tickets(sprint)
+            for ticket_id in ids:
+                if records.get(ticket_id) is not None:
+                    preferred[ticket_id] = sprint
+        seen = set()
         position = 0
         for sprint_id in self._all_sprint_ids():
-            if storage is not None:
-                snapshot = storage.load_sprint(sprint_id)
-            else:
-                snapshot = read_yaml_fast(self._sprint_file(sprint_id)) or {}
-            root = snapshot.get("sprint", snapshot)
-            raw_tickets = root.get("tickets") or {} if isinstance(root, dict) else {}
-            for raw in raw_tickets.values():
+            for ticket_id, raw in read_tickets(sprint_id).items():
+                if ticket_id in seen:
+                    continue
+                if sprint_id != "current" and preferred.get(ticket_id, sprint_id) != sprint_id:
+                    continue
                 ticket = self._ticket_from_data(raw)
                 if ticket is None:
                     continue
+                seen.add(ticket_id)
                 yield self._ticket_index_record(ticket, sprint_id, position)
                 position += 1
 
@@ -1919,45 +1957,31 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 # SQLite is only an acceleration layer. Source contention must
                 # not make an exact durable-source lookup unavailable.
                 pass
-        if self._uses_sharded_storage():
-            storage = self._sharded_storage()
-            active = storage.get_ticket("current", ticket_id)
-            if active is not None:
-                return self._ticket_from_data(active)
-            history_sprint = self._history_locations().get(ticket_id)
-            if history_sprint:
-                archived = storage.get_ticket(history_sprint, ticket_id)
-                if archived is not None:
-                    return self._ticket_from_data(archived)
-            located = storage.locate_ticket(ticket_id)
-            return self._ticket_from_data(located[1]) if located is not None else None
-        checked_files = set()
-        current_file = self._sprint_file("current")
-        current_data = self._read_yaml_cached(current_file) or {}
-        checked_files.add(current_file)
-        current_root = current_data.get("sprint", current_data)
-        active = (current_root.get("tickets") or {}).get(ticket_id)
-        if active is not None:
-            return self._ticket_from_data(active)
-        history_sprint = self._history_locations().get(ticket_id)
-        if history_sprint:
-            history_file = self._sprint_file(history_sprint)
-            history_data = self._read_yaml_cached(history_file) or {}
-            checked_files.add(history_file)
-            history_root = history_data.get("sprint", history_data)
-            archived = (history_root.get("tickets") or {}).get(ticket_id)
-            if archived is not None:
-                return self._ticket_from_data(archived)
-        for sprint_file in self._all_sprint_files():
-            if sprint_file in checked_files:
-                continue
-            data = self._read_yaml_cached(sprint_file)
-            if not data:
-                continue
-            sprint_data = data.get("sprint", data)
-            tickets = sprint_data.get("tickets", {})
-            if ticket_id in tickets:
-                return self._ticket_from_data(tickets[ticket_id])
+        located = self._locate_ticket_source(ticket_id)
+        return self._ticket_from_data(located[1]) if located is not None else None
+
+    def _ticket_lookup_sprints(self, ticket_id: str):
+        """Use current, the durable history locator, then deterministic fallback."""
+        checked = set()
+        for sprint in ("current", self._history_locations().get(ticket_id)):
+            if sprint and sprint not in checked:
+                checked.add(sprint)
+                yield sprint
+        for sprint in self._all_sprint_ids():
+            if sprint not in checked:
+                yield sprint
+
+    def _locate_ticket_source(self, ticket_id: str):
+        storage = self._sharded_storage() if self._uses_sharded_storage() else None
+        for sprint in self._ticket_lookup_sprints(ticket_id):
+            if storage is not None:
+                raw = storage.get_ticket(sprint, ticket_id)
+            else:
+                snapshot = self._read_yaml_cached(self._sprint_file(sprint)) or {}
+                root = snapshot.get("sprint", snapshot)
+                raw = (root.get("tickets") or {}).get(ticket_id)
+            if raw is not None:
+                return sprint, raw
         return None
 
     def _serialize_update_value(self, value):
@@ -2268,7 +2292,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
         from planfile.core.fastio import read_yaml_fast
 
-        for sprint_file in self._all_sprint_files():
+        for sprint in self._ticket_lookup_sprints(ticket_id):
+            sprint_file = self._sprint_file(sprint)
             data = read_yaml_fast(sprint_file) or {}
             sprint_data = data.get("sprint", data)
             tickets = sprint_data.get("tickets", {})
@@ -2347,7 +2372,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         **updates,
     ) -> Ticket | None:
         storage = self._sharded_storage()
-        located = storage.locate_ticket(ticket_id)
+        located = self._locate_ticket_source(ticket_id)
         if located is None:
             return None
         sprint, ticket_data = located
@@ -2399,9 +2424,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
             self._append_operational_line(operational_dsl)
         self._invalidate_sharded_cache(sprint)
         archive_report = (
-            self._archive_completed_unlocked()
-            if sprint == "current"
-            else {"archived": 0}
+            self._archive_completed_unlocked() if sprint == "current" else {"archived": 0}
         )
         model = self._ticket_from_data(current)
         if model is not None and not archive_report.get("archived"):
