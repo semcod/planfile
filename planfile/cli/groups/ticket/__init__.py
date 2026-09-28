@@ -32,6 +32,7 @@ from planfile.cli.groups.ticket.commands import (
     ticket_tree,
     ticket_update,
     ticket_validate,
+    ticket_waves,
 )
 
 
@@ -50,6 +51,7 @@ def register_ticket_commands(app: typer.Typer) -> None:
     ticket_app.command("list")(ticket_list)
     ticket_app.command("ls", help="Alias for ticket list")(ticket_list)
     ticket_app.command("next")(ticket_next)
+    ticket_app.command("waves")(ticket_waves)
     ticket_app.command("claim")(ticket_claim)
     ticket_app.command("show")(ticket_show)
     ticket_app.command("update")(ticket_update)
