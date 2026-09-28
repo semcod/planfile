@@ -416,13 +416,20 @@ def merge_ticket(pf: Any, child_id: str, into_id: str) -> dict:
     return {"merged": child_id, "into": into_id, "files": len(files), "notes": note_count}
 
 
-def execution_waves(pf: Any, sprint: str = "current") -> list[list[str]]:
+def execution_waves(
+    pf: Any,
+    sprint: str = "current",
+    status: str | None = "open",
+) -> list[list[str]]:
     """Partition sprint tickets into parallel execution waves (topological layers).
 
     All tickets in wave 0 can run immediately in parallel.
     Tickets in wave k depend only on tickets in waves < k.
     """
-    tickets = list(pf.list_tickets(sprint=sprint)) if hasattr(pf, "list_tickets") else []
+    filters: dict[str, Any] = {"sprint": sprint}
+    if status is not None:
+        filters["status"] = status
+    tickets = list(pf.list_tickets(**filters)) if hasattr(pf, "list_tickets") else []
     ticket_ids = [t.id for t in tickets]
     id_set = set(ticket_ids)
 

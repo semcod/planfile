@@ -326,6 +326,8 @@ class Planfile:
         sprint: str = "current",
         queue: str | None = None,
         disjoint_files: bool = True,
+        locked_files: set[str] | None = None,
+        exclude_ids: set[str] | None = None,
     ) -> list[Ticket]:
         """Return up to `count` RUNNABLE tickets for parallel worker execution.
 
@@ -343,10 +345,12 @@ class Planfile:
         from planfile.core.decompose import calculate_critical_priority
         weights = calculate_critical_priority(open_tickets)
 
+        excluded = set(exclude_ids or [])
         runnable = [
             ticket
             for ticket in open_tickets
-            if not self.runnability_skip_reason(
+            if ticket.id not in excluded
+            and not self.runnability_skip_reason(
                 ticket,
                 queue=queue,
                 ticket_by_id=ticket_by_id,
@@ -360,25 +364,31 @@ class Planfile:
 
         runnable.sort(key=sort_key)
 
-        if not disjoint_files or count <= 1:
+        active_locked_files: set[str] = set(locked_files or [])
+        if not disjoint_files or (count <= 1 and not active_locked_files):
             return runnable[:count]
 
         selected: list[Ticket] = []
-        locked_files: set[str] = set()
         for t in runnable:
-            t_files = set(t.files or [])
-            if t_files and not t_files.isdisjoint(locked_files):
+            t_files: set[str] = set()
+            for f in (t.files or []):
+                if isinstance(f, str):
+                    for part in f.split(","):
+                        part = part.strip()
+                        if part:
+                            t_files.add(part)
+            if t_files and not t_files.isdisjoint(active_locked_files):
                 continue
             selected.append(t)
-            locked_files.update(t_files)
+            active_locked_files.update(t_files)
             if len(selected) >= count:
                 break
         return selected
 
-    def execution_waves(self, sprint: str = "current") -> list[list[str]]:
+    def execution_waves(self, sprint: str = "current", status: str | None = "open") -> list[list[str]]:
         """Return sprint tickets partitioned into parallel execution waves (topological layers)."""
         from planfile.core.decompose import execution_waves
-        return execution_waves(self, sprint=sprint)
+        return execution_waves(self, sprint=sprint, status=status)
 
     def validate_dependencies(self, sprint: str = "current") -> tuple[bool, list[str]]:
         """Validate that all ticket dependencies in the sprint form an acyclic graph."""
