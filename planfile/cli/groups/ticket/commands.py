@@ -402,13 +402,23 @@ def ticket_show(ticket_id: str=typer.Argument(..., help='Ticket ID (e.g. PLF-001
 def ticket_next(
     sprint: str = typer.Option('current', '-s', '--sprint'),
     queue: str | None = typer.Option(None, '--queue', help='Only consider tickets in this execution queue'),
+    count: int = typer.Option(1, '-c', '--count', help='Maximum number of runnable tickets to return'),
+    disjoint_files: bool = typer.Option(True, '--disjoint-files/--no-disjoint-files', help='Ensure returned tickets have disjoint file scopes'),
     fmt: str = typer.Option('yaml', '--format', help='yaml | json'),
     debug: bool = typer.Option(False, '--debug', help='Explain runnability: which tickets are servable vs why each is skipped'),
 ) -> None:
-    """Show the next runnable ticket for queue-like workflows."""
+    """Show the next runnable ticket (or disjoint batch) for queue-like workflows."""
     import os
 
     from planfile import Planfile
+
+    # Normalize defaults when invoked directly as a Python callable in tests
+    sprint = str(sprint.default if hasattr(sprint, 'default') else sprint)
+    queue = queue.default if hasattr(queue, 'default') else queue
+    count = int(count.default if hasattr(count, 'default') else count)
+    disjoint_files = bool(disjoint_files.default if hasattr(disjoint_files, 'default') else disjoint_files)
+    fmt = str(fmt.default if hasattr(fmt, 'default') else fmt)
+    debug = bool(debug.default if hasattr(debug, 'default') else debug)
 
     pf = Planfile.auto_discover()
     if debug:
@@ -425,19 +435,76 @@ def ticket_next(
             if report.get('warning'):
                 console.print(f"[yellow]WARNING: {report['warning']}[/yellow]")
         raise typer.Exit(0)
-    ticket = pf.next_ticket(sprint=sprint, queue=queue)
-    if not ticket:
-        if fmt == "json":
-            print("null")
+
+    if count <= 1:
+        ticket = pf.next_ticket(sprint=sprint, queue=queue)
+        if not ticket:
+            if fmt == "json":
+                print("null")
+            else:
+                console.print("[dim]No runnable ticket found.[/dim]")
+            raise typer.Exit(0)
+
+        data = ticket.model_dump(mode='json', exclude_none=True)
+        if fmt == 'json':
+            print(json.dumps(data, indent=2, default=str))
         else:
-            console.print("[dim]No runnable ticket found.[/dim]")
+            console.print(yaml.dump(data, default_flow_style=False, sort_keys=False))
+        return
+
+    tickets = pf.next_tickets(
+        count=count,
+        sprint=sprint,
+        queue=queue,
+        disjoint_files=disjoint_files,
+    )
+    if not tickets:
+        if fmt == "json":
+            print("[]")
+        else:
+            console.print("[dim]No runnable tickets found.[/dim]")
         raise typer.Exit(0)
 
-    data = ticket.model_dump(mode='json', exclude_none=True)
+    data = [t.model_dump(mode='json', exclude_none=True) for t in tickets]
     if fmt == 'json':
         print(json.dumps(data, indent=2, default=str))
     else:
         console.print(yaml.dump(data, default_flow_style=False, sort_keys=False))
+
+
+def ticket_waves(
+    sprint: str = typer.Option('current', '-s', '--sprint'),
+    fmt: str = typer.Option('table', '--format', help='table | json | yaml'),
+) -> None:
+    """Show tickets partitioned into parallel execution waves (topological layers)."""
+    from planfile import Planfile
+
+    sprint = str(sprint.default if hasattr(sprint, 'default') else sprint)
+    fmt = str(fmt.default if hasattr(fmt, 'default') else fmt)
+
+    pf = Planfile.auto_discover()
+    waves = pf.execution_waves(sprint=sprint)
+    if fmt == 'json':
+        print(json.dumps(waves, indent=2))
+        return
+    if fmt == 'yaml':
+        console.print(yaml.dump(waves, default_flow_style=False, sort_keys=False))
+        return
+
+    if not waves:
+        console.print("[dim]No tickets found in execution waves.[/dim]")
+        return
+
+    table = Table(title=f"Execution Waves (Sprint: {sprint})")
+    table.add_column("Wave", style="cyan", no_wrap=True)
+    table.add_column("Count", style="magenta", justify="right")
+    table.add_column("Tickets", style="green")
+
+    for i, wave in enumerate(waves, 1):
+        table.add_row(f"Wave {i}", str(len(wave)), ", ".join(wave))
+
+    console.print(table)
+
 
 def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: str | None=typer.Option(None, help='New status'), priority: str | None=typer.Option(None, '-p', '--priority'), name: str | None=typer.Option(None, help='New name'), description: str | None=typer.Option(None, '-d', '--description', help='New description (replaces existing)'), note: str | None=typer.Option(None, '-n', '--note', help='Append a note to outputs.notes (additive, does NOT replace description)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after update'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
     """Update ticket fields. `--note` appends to outputs.notes without replacing other fields."""
