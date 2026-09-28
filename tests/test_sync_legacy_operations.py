@@ -193,3 +193,56 @@ def test_readback_mismatch_is_failed_closed(tmp_path):
 
     assert caught.value.result.failed == ("PLF-1",)
     assert len(backend.created) == 1
+
+
+def test_find_local_ticket_deduplicates_same_local_id_across_sprints(tmp_path):
+    ticket_payload = {
+        "sync": {
+            "github": {"id": "174", "key": "semcod/koru#174"}
+        }
+    }
+    sections = {
+        "history-2026-09-02": {"tickets": {"STARTER-601": ticket_payload}},
+        "history-2026-09-16": {"tickets": {"STARTER-601": ticket_payload}},
+        "current": {"tickets": {}},
+    }
+    sync_state = operations.SyncState(tmp_path, "github", repository="semcod/koru")
+
+    sprint_id, planfile_id, ticket = operations._find_local_ticket(
+        sections, "174", sync_state, "github"
+    )
+
+    assert planfile_id == "STARTER-601"
+    assert sprint_id in ("history-2026-09-02", "history-2026-09-16")
+    assert ticket == ticket_payload
+
+
+def test_find_local_ticket_prefers_current_sprint(tmp_path):
+    ticket_payload = {
+        "sync": {
+            "github": {"id": "174", "key": "semcod/koru#174"}
+        }
+    }
+    sections = {
+        "history-2026-09-02": {"tickets": {"STARTER-601": ticket_payload}},
+        "current": {"tickets": {"STARTER-601": ticket_payload}},
+    }
+    sync_state = operations.SyncState(tmp_path, "github", repository="semcod/koru")
+
+    sprint_id, planfile_id, ticket = operations._find_local_ticket(
+        sections, "174", sync_state, "github"
+    )
+
+    assert planfile_id == "STARTER-601"
+    assert sprint_id == "current"
+
+
+def test_find_local_ticket_raises_on_genuinely_ambiguous_local_ids(tmp_path):
+    sections = {
+        "history-2026-09-02": {"tickets": {"STARTER-601": {"sync": {"github": {"id": "174"}}}}},
+        "history-2026-09-16": {"tickets": {"STARTER-602": {"sync": {"github": {"id": "174"}}}}},
+    }
+    sync_state = operations.SyncState(tmp_path, "github", repository="semcod/koru")
+
+    with pytest.raises(ValueError, match="ambiguous local mapping for remote ticket 174"):
+        operations._find_local_ticket(sections, "174", sync_state, "github")
