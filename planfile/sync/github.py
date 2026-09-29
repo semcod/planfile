@@ -10,6 +10,9 @@ from typing import Any
 
 from filelock import FileLock
 from procache import CachedPyGithubRequester, SQLiteResponseCache
+from rich.console import Console
+
+console = Console()
 
 try:
     from github import Github
@@ -331,13 +334,44 @@ class GitHubBackend(BasePMBackend):
         hit, cached = self._cache().get("markers", cache_key)
         if hit:
             return SimpleNamespace(**cached) if cached else None
+
+        matches = []
         for issue in self.repo.get_issues(state="all"):
             if getattr(issue, "pull_request", None):
                 continue
-            if any(marker in (issue.body or "") for marker in markers):
-                return self._cache_marker_result(markers, issue)
-        self._cache_marker_result(markers, None)
-        return None
+            if any(marker in (getattr(issue, "body", "") or "") for marker in markers):
+                matches.append(issue)
+
+        if not matches:
+            self._cache_marker_result(markers, None)
+            return None
+
+        # Prioritize OPEN issues over CLOSED duplicates
+        open_matches = [i for i in matches if getattr(i, "state", "").lower() == "open"]
+        if open_matches:
+            # Lowest issue number is canonical (oldest created)
+            open_matches.sort(key=lambda i: getattr(i, "number", 0))
+            canonical = open_matches[0]
+            if len(open_matches) > 1:
+                duplicate_numbers = [getattr(i, "number", None) for i in open_matches[1:]]
+                setattr(canonical, "duplicate_numbers", duplicate_numbers)
+                console.print(
+                    f"  ⚠️  Detected duplicate open GitHub issues sharing markers: "
+                    f"#{canonical.number} and duplicates {duplicate_numbers}; binding to #{canonical.number}"
+                )
+            return self._cache_marker_result(markers, canonical)
+
+        # If only closed exist, select highest issue ID (most recently closed/created)
+        matches.sort(key=lambda i: getattr(i, "number", 0), reverse=True)
+        canonical = matches[0]
+        if len(matches) > 1:
+            duplicate_numbers = [getattr(i, "number", None) for i in matches[1:]]
+            setattr(canonical, "duplicate_numbers", duplicate_numbers)
+            console.print(
+                f"  ⚠️  Detected duplicate closed GitHub issues sharing markers: "
+                f"#{canonical.number} and duplicates {duplicate_numbers}; binding to #{canonical.number}"
+            )
+        return self._cache_marker_result(markers, canonical)
 
     def _cache_marker_result(self, markers: list[str], issue):
         """Cache one marker lookup, including a short-lived negative result."""
@@ -345,16 +379,31 @@ class GitHubBackend(BasePMBackend):
         if issue is None:
             self._cache().put("markers", cache_key, None, ttl=60)
         else:
+            payload = {
+                "number": getattr(issue, "number", None),
+                "html_url": getattr(issue, "html_url", None),
+                "state": getattr(issue, "state", None),
+            }
+            if hasattr(issue, "duplicate_numbers") and issue.duplicate_numbers:
+                payload["duplicate_numbers"] = issue.duplicate_numbers
             self._cache().put(
                 "markers",
                 cache_key,
-                {
-                    "number": issue.number,
-                    "html_url": issue.html_url,
-                    "state": issue.state,
-                },
+                payload,
             )
         return issue
+
+    def _creation_lock(self, deduplication_key: str | None = None) -> FileLock:
+        config = getattr(self, "config", {}) or {}
+        configured_dir = config.get("cache_dir") or os.environ.get("PLANFILE_GITHUB_CACHE_DIR")
+        root = Path(configured_dir or Path.home() / ".cache" / "planfile" / "github")
+        lock_dir = root / "locks"
+        lock_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        repo_name = str(getattr(self.repo, "full_name", None) or config.get("repo", "repo"))
+        repo_hash = hashlib.sha256(repo_name.encode("utf-8")).hexdigest()[:16]
+        key_part = hashlib.sha256(str(deduplication_key or "default").encode("utf-8")).hexdigest()[:16]
+        lock_file = lock_dir / f"create_{repo_hash}_{key_part}.lock"
+        return FileLock(str(lock_file), timeout=60)
 
     def _create_ticket(
         self,
@@ -369,35 +418,41 @@ class GitHubBackend(BasePMBackend):
         """Create a new GitHub issue."""
         issue_labels = self._prepare_labels(labels, priority)
         body = self._build_metadata_body(body, metadata)
-        existing = self._find_issue_by_markers(self._deduplication_markers(body))
-        if existing is not None:
+        markers = self._deduplication_markers(body)
+        dedup_key = markers[0] if markers else None
+
+        with self._creation_lock(dedup_key):
+            existing = self._find_issue_by_markers(markers)
+            if existing is not None:
+                return self.build_ticket_ref(
+                    id=str(existing.number),
+                    url=existing.html_url,
+                    key=f"{self.repo.full_name}#{existing.number}",
+                    status=existing.state,
+                    metadata=metadata,
+                )
+
+            create_kwargs = {
+                "title": name,
+                "body": body,
+                "labels": issue_labels,
+            }
+            if assignee:
+                create_kwargs["assignee"] = assignee
+
+            self._throttle_mutation()
+            issue: Issue = self.repo.create_issue(**create_kwargs)
+            self._clear_read_cache()
+            if markers:
+                self._cache_marker_result(markers, issue)
+
             return self.build_ticket_ref(
-                id=str(existing.number),
-                url=existing.html_url,
-                key=f"{self.repo.full_name}#{existing.number}",
-                status=existing.state,
+                id=str(issue.number),
+                url=issue.html_url,
+                key=f"{self.repo.full_name}#{issue.number}",
+                status=issue.state,
                 metadata=metadata,
             )
-
-        create_kwargs = {
-            "title": name,
-            "body": body,
-            "labels": issue_labels,
-        }
-        if assignee:
-            create_kwargs["assignee"] = assignee
-
-        self._throttle_mutation()
-        issue: Issue = self.repo.create_issue(**create_kwargs)
-        self._clear_read_cache()
-
-        return self.build_ticket_ref(
-            id=str(issue.number),
-            url=issue.html_url,
-            key=f"{self.repo.full_name}#{issue.number}",
-            status=issue.state,
-            metadata=metadata,
-        )
 
     def _update_labels(
         self,
@@ -492,18 +547,31 @@ class GitHubBackend(BasePMBackend):
     def _issue_to_ticket_status(self, issue: Issue) -> TicketState:
         """Convert a GitHub issue object into a TicketState."""
         metadata = {"state_reason": getattr(issue, "state_reason", None)}
-        if markers := self._deduplication_markers(issue.body):
+        body = getattr(issue, "body", "") or ""
+        if markers := self._deduplication_markers(body):
             metadata["deduplication_key"] = markers[0].split("=", 1)[1].rsplit("-->", 1)[0].strip()
+        assignee = getattr(issue, "assignee", None)
+        assignee_login = getattr(assignee, "login", None) if assignee else (assignee if isinstance(assignee, str) else None)
+        raw_labels = getattr(issue, "labels", None) or []
+        labels = [getattr(l, "name", str(l)) for l in raw_labels]
+        updated_at = getattr(issue, "updated_at", None)
+        updated_at_str = (
+            updated_at.isoformat()
+            if hasattr(updated_at, "isoformat")
+            else (str(updated_at) if updated_at else None)
+        )
+        repo_name = getattr(self.repo, "full_name", None) or (getattr(self, "config", {}) or {}).get("repo", "")
+        number = getattr(issue, "number", "")
         return self.build_ticket_state(
-            id=str(issue.number),
-            key=f"{self.repo.full_name}#{issue.number}",
-            name=issue.title,
-            description=issue.body or "",
-            url=issue.html_url,
-            status=issue.state,
-            assignee=issue.assignee.login if issue.assignee else None,
-            labels=[label.name for label in issue.labels],
-            updated_at=issue.updated_at.isoformat() if issue.updated_at else None,
+            id=str(number),
+            key=f"{repo_name}#{number}",
+            name=getattr(issue, "title", ""),
+            description=body,
+            url=getattr(issue, "html_url", ""),
+            status=getattr(issue, "state", ""),
+            assignee=assignee_login,
+            labels=labels,
+            updated_at=updated_at_str,
             metadata=metadata,
         )
 

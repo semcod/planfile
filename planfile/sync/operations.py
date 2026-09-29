@@ -738,3 +738,145 @@ def _save_import_results(
         console.print(
             f"\n📥 Imported {imported_count} new tickets, updated {updated_count} existing"
         )
+
+
+def check_sync_consistency(
+    store,
+    integration_name: str = "github",
+    backend=None,
+    v1_source_file=None,
+    v1_data=None,
+) -> list[dict[str, Any]]:
+    """Flag ticket sync mappings disagreeing with backend state file or remote issues.
+
+    Checks:
+    - Ticket has sync mapping differing from state.yaml ticket_map.
+    - Ticket has sync mapping but is missing from state.yaml.
+    - State.yaml has ticket mapped but ticket is missing sync mapping.
+    - If backend is supplied: remote ticket is missing (404) or closed while local is open.
+    """
+    sections = _load_sync_sections(store, v1_source_file, v1_data)
+    store_dir = Path(getattr(store, "base_dir", "."))
+    sync_state = SyncState(
+        store_dir,
+        integration_name,
+        repository=_backend_repository(backend) if backend else None,
+    )
+    last_sync = sync_state.get_last_sync()
+    state_map = last_sync.get("ticket_map") or {}
+
+    discrepancies: list[dict[str, Any]] = []
+    seen_ticket_ids = set()
+
+    for sprint_id, section in sections.items():
+        tickets = section.get("tickets") or {}
+        if not isinstance(tickets, dict):
+            continue
+        for ticket_id, ticket in tickets.items():
+            if not isinstance(ticket, dict):
+                continue
+            seen_ticket_ids.add(str(ticket_id))
+            sync_info = (ticket.get("sync") or {}).get(integration_name)
+            ticket_remote_id = (
+                str(sync_info.get("id"))
+                if isinstance(sync_info, dict) and sync_info.get("id")
+                else None
+            )
+            state_remote_id = state_map.get(str(ticket_id))
+            if state_remote_id is not None:
+                state_remote_id = str(state_remote_id)
+
+            if ticket_remote_id and state_remote_id and ticket_remote_id != state_remote_id:
+                discrepancies.append(
+                    {
+                        "ticket_id": str(ticket_id),
+                        "kind": "state_mismatch",
+                        "ticket_remote_id": ticket_remote_id,
+                        "state_remote_id": state_remote_id,
+                        "message": (
+                            f"Ticket {ticket_id} has remote ID {ticket_remote_id} "
+                            f"but state file has {state_remote_id}"
+                        ),
+                    }
+                )
+            elif ticket_remote_id and not state_remote_id:
+                discrepancies.append(
+                    {
+                        "ticket_id": str(ticket_id),
+                        "kind": "missing_state_mapping",
+                        "ticket_remote_id": ticket_remote_id,
+                        "message": (
+                            f"Ticket {ticket_id} has remote ID {ticket_remote_id} "
+                            f"but is missing from {integration_name}.state.yaml"
+                        ),
+                    }
+                )
+            elif not ticket_remote_id and state_remote_id:
+                discrepancies.append(
+                    {
+                        "ticket_id": str(ticket_id),
+                        "kind": "missing_ticket_mapping",
+                        "state_remote_id": state_remote_id,
+                        "message": (
+                            f"Ticket {ticket_id} mapped to {state_remote_id} "
+                            f"in {integration_name}.state.yaml but missing from ticket"
+                        ),
+                    }
+                )
+
+            effective_remote_id = ticket_remote_id or state_remote_id
+            if backend and effective_remote_id and hasattr(backend, "get_ticket"):
+                try:
+                    remote = backend.get_ticket(str(effective_remote_id))
+                    remote_status = getattr(remote, "status", None) or getattr(remote, "state", None)
+                    if isinstance(remote, dict):
+                        remote_status = remote.get("status") or remote.get("state")
+                    local_status = str(ticket.get("status", "")).lower()
+                    if (
+                        remote_status
+                        and str(remote_status).lower() == "closed"
+                        and local_status in {"open", "in_progress", "in-progress"}
+                    ):
+                        discrepancies.append(
+                            {
+                                "ticket_id": str(ticket_id),
+                                "kind": "remote_closed",
+                                "remote_id": str(effective_remote_id),
+                                "local_status": local_status,
+                                "remote_status": str(remote_status),
+                                "message": (
+                                    f"Ticket {ticket_id} is {local_status} locally "
+                                    f"but remote #{effective_remote_id} is closed"
+                                ),
+                            }
+                        )
+                except Exception as exc:
+                    if "404" in str(exc) or "not found" in str(exc).lower():
+                        discrepancies.append(
+                            {
+                                "ticket_id": str(ticket_id),
+                                "kind": "remote_missing",
+                                "remote_id": str(effective_remote_id),
+                                "message": (
+                                    f"Remote issue #{effective_remote_id} for ticket "
+                                    f"{ticket_id} was not found (404)"
+                                ),
+                            }
+                        )
+
+    # Check for state entries pointing to non-existent local tickets
+    for state_ticket_id, remote_id in state_map.items():
+        if str(state_ticket_id) not in seen_ticket_ids:
+            discrepancies.append(
+                {
+                    "ticket_id": str(state_ticket_id),
+                    "kind": "orphaned_state_mapping",
+                    "state_remote_id": str(remote_id),
+                    "message": (
+                        f"{integration_name}.state.yaml has mapping for "
+                        f"{state_ticket_id} -> {remote_id} but ticket does not exist locally"
+                    ),
+                }
+            )
+
+    return discrepancies

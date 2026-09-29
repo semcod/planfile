@@ -1,0 +1,28 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-174",
+  "summary": "Reconcile duplicate issues and serialize creation in GitHub sync",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-174/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "planfile/sync/outbound.py",
+    "planfile/sync/operations.py",
+    "tests/test_github_deduplication.py",
+    "tests/test_sync_reconciliation.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
