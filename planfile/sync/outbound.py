@@ -193,7 +193,6 @@ def sync_to_external(
     updated = []
     failed = []
     planned = []
-    pending_receipts = []
     rate_limit_retry_after = None
 
     if not dry_run:
@@ -256,17 +255,20 @@ def sync_to_external(
                     _record_backend_ref(ticket, integration_name, recovered_ref, recovered_id)
                     console.print(f"  ↺ Recovered existing: {ticket_id} → {recovered_id}")
                     reused.append(ticket_id)
-                    succeeded.append(ticket_id)
-                    pending_receipts.append(
-                        (
-                            intent,
-                            operation,
-                            recovered_id,
-                            recovered_ref.get("url"),
-                            recovered_ref.get("key"),
-                            "succeeded",
-                            None,
-                        )
+                    try:
+                        sync_state.save_sync({ticket_id: str(recovered_id)})
+                        _save_sync_results(store, v1_source_file, v1_data, tickets=[(ticket_id, ticket)])
+                    except OSError:
+                        raise
+                    record_receipt(
+                        Path(store.base_dir),
+                        intent,
+                        operation=operation,
+                        outcome="succeeded",
+                        remote_id=str(recovered_id),
+                        remote_url=recovered_ref.get("url"),
+                        remote_key=recovered_ref.get("key"),
+                        error_type=None,
                     )
                     continue
                 # Verify before recording or announcing success: create_ticket
@@ -287,16 +289,20 @@ def sync_to_external(
                 created.append(ticket_id)
                 succeeded.append(ticket_id)
                 new_reference = (ticket.get("sync") or {}).get(integration_name) or {}
-                pending_receipts.append(
-                    (
-                        intent,
-                        operation,
-                        str(new_reference.get("id") or new_id or "") or None,
-                        new_reference.get("url"),
-                        new_reference.get("key"),
-                        "succeeded",
-                        None,
-                    )
+                try:
+                    sync_state.save_sync({ticket_id: str(new_id)})
+                    _save_sync_results(store, v1_source_file, v1_data, tickets=[(ticket_id, ticket)])
+                except OSError:
+                    raise
+                record_receipt(
+                    Path(store.base_dir),
+                    intent,
+                    operation=operation,
+                    outcome="succeeded",
+                    remote_id=str(new_reference.get("id") or new_id or "") or None,
+                    remote_url=new_reference.get("url"),
+                    remote_key=new_reference.get("key"),
+                    error_type=None,
                 )
                 continue
             succeeded.append(ticket_id)
@@ -311,18 +317,23 @@ def sync_to_external(
             if verified_ref:
                 reference = verified_ref
                 _record_backend_ref(ticket, integration_name, verified_ref, str(reference["id"]))
-            pending_receipts.append(
-                (
-                    intent,
-                    operation,
-                    str(reference.get("id") or external_id or "") or None,
-                    reference.get("url"),
-                    reference.get("key"),
-                    "succeeded",
-                    None,
-                )
+            try:
+                _save_sync_results(store, v1_source_file, v1_data, tickets=[(ticket_id, ticket)])
+            except OSError:
+                raise
+            record_receipt(
+                Path(store.base_dir),
+                intent,
+                operation=operation,
+                outcome="succeeded",
+                remote_id=str(reference.get("id") or external_id or "") or None,
+                remote_url=reference.get("url"),
+                remote_key=reference.get("key"),
+                error_type=None,
             )
         except Exception as error:
+            if isinstance(error, OSError):
+                raise
             failed.append(ticket_id)
             # A create or recovery attempt may have set ticket_map[ticket_id]
             # before a later readback check rejected the result (e.g. the
@@ -331,6 +342,16 @@ def sync_to_external(
             # persisted to sync_state nor reported on the failure receipt.
             rejected_id = ticket_map.pop(ticket_id, None)
             console.print(f"  ✗ Failed to sync {ticket_id}: {error}")
+            record_receipt(
+                Path(store.base_dir),
+                intent,
+                operation=operation,
+                outcome="failed",
+                remote_id=external_id or rejected_id,
+                remote_url=None,
+                remote_key=None,
+                error_type=type(error).__name__,
+            )
             if _is_rate_limit_error(error):
                 rate_limit_retry_after = _retry_after_seconds(error)
                 console.print("    GitHub rate/abuse limit reached; stopping batch for safe retry.")
@@ -339,32 +360,9 @@ def sync_to_external(
                 break
             if "403" not in str(error) and "Forbidden" not in str(error):
                 console.print(f"    [dim]Error details: {traceback.format_exc()}[/dim]")
-            pending_receipts.append(
-                (
-                    intent,
-                    operation,
-                    external_id or rejected_id,
-                    None,
-                    None,
-                    "failed",
-                    type(error).__name__,
-                )
-            )
 
     if not dry_run:
-        sync_state.save_sync(ticket_map)
         _save_sync_results(store, v1_source_file, v1_data, tickets=tickets)
-        for intent, operation, remote_id, remote_url, remote_key, outcome, error_type in pending_receipts:
-            record_receipt(
-                Path(store.base_dir),
-                intent,
-                operation=operation,
-                outcome=outcome,
-                remote_id=remote_id,
-                remote_url=remote_url,
-                remote_key=remote_key,
-                error_type=error_type,
-            )
 
     result = OutboundSyncResult(
         succeeded=tuple(succeeded),
