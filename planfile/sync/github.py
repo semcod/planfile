@@ -16,8 +16,8 @@ console = Console()
 
 try:
     from github import Github
-    from github.Issue import Issue
     from github.GithubObject import GithubObject
+    from github.Issue import Issue
     from github.Repository import Repository
 except ImportError:
     Github = None
