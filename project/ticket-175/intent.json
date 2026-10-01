@@ -1,0 +1,56 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-175",
+  "summary": "Avoid per-issue hydration during GitHub marker deduplication",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-175/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "tests/test_sync_marker_hydration.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "dc427042c831b4bf0af3d18f82de071004a490c1",
+    "targetBranch": "main",
+    "outcome": "Avoid per-issue hydration during marker lookup while preserving deduplication semantics.",
+    "nonGoals": ["No dependency upgrade", "No publication policy changes", "No deduplication identity changes"],
+    "complexity": "S",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read complete PyGithub list payloads without triggering lazy hydration; preserve safe fallback for partial objects.",
+      "components": [{"name": "GitHub sync", "paths": ["planfile/sync/github.py", "tests/test_sync_marker_hydration.py"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this ticket's implementation commits; no persistent schema changes."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 -m pytest tests/test_sync_marker_hydration.py -q"], "evidence": "Real PyGithub objects reproduce five extra GET requests before the fix and zero after."},
+      {"criterion": "AC-02", "commands": ["python3 -m pytest tests/test_sync_marker_hydration.py -q"], "evidence": "Matching PR list entries are excluded."},
+      {"criterion": "AC-03", "commands": ["python3 -m pytest tests/test_sync_marker_hydration.py -q"], "evidence": "Partial PR objects hydrate once and remain excluded."},
+      {"criterion": "AC-04", "commands": ["python3 -m pytest tests/test_sync*.py tests/test_ticket_comments.py -q", "python3 -m ruff check planfile/sync/github.py tests/test_sync_marker_hydration.py"], "evidence": "126 passing tests; full lint of changed Python files passes."}
+    ]
+  }
+}
