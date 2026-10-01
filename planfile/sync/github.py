@@ -17,6 +17,7 @@ console = Console()
 try:
     from github import Github
     from github.Issue import Issue
+    from github.GithubObject import GithubObject
     from github.Repository import Repository
 except ImportError:
     Github = None
@@ -337,7 +338,22 @@ class GitHubBackend(BasePMBackend):
 
         matches = []
         for issue in self.repo.get_issues(state="all"):
-            if getattr(issue, "pull_request", None):
+            # GitHub's list payload omits pull_request for ordinary issues.
+            # PyGithub's lazy property then hydrates every issue individually.
+            # Use the complete list projection; retain hydration for partial
+            # objects and compatibility with alternative backend test doubles.
+            # CompletableGithubObject.raw_data also triggers hydration; the
+            # base accessor exposes only the payload already received.
+            raw = (
+                GithubObject.raw_data.fget(issue)
+                if Issue is not None and isinstance(issue, Issue)
+                else None
+            )
+            if isinstance(raw, dict) and {"number", "body", "state"} <= raw.keys():
+                is_pull_request = raw.get("pull_request") is not None
+            else:
+                is_pull_request = bool(getattr(issue, "pull_request", None))
+            if is_pull_request:
                 continue
             if any(marker in (getattr(issue, "body", "") or "") for marker in markers):
                 matches.append(issue)
