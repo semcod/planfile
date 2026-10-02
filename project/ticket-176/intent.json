@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-176",
+  "summary": "Wire automatic bidirectional GitHub sync for all Planfile tickets",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-176/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".governance/manifest.json",
+    ".github/planfile-github-sync.yml",
+    ".github/workflows/planfile-github-sync.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

@@ -1,3 +1,12 @@
+# Caller workflow for Planfile GitHub Issues synchronization.
+# To enable in a member repository:
+# 1. Copy this file to .github/workflows/planfile-github-sync.yml
+# 2. Ensure repository settings allow GitHub Actions with:
+#    - Read access to repository contents
+#    - Read and write access to Issues
+# 3. Runs hourly (at :17), on manual workflow_dispatch, and on push to main
+#    when .planfile or ticket files change.
+
 name: Planfile GitHub sync
 
 on:
@@ -12,6 +21,7 @@ on:
       - "*.planfile.yml"
       - "planfile.yaml"
       - "tickets.planfile.yaml"
+      - "project/**"
 
 concurrency:
   group: planfile-github-sync-${{ github.repository }}
