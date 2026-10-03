@@ -277,42 +277,123 @@ def create_ticket_table(tickets, gh_repo: str = "") -> Table:
         table.add_row(t.id, ext_str, f'[{sc}]{status_val}[/{sc}]', f'[{pc}]{t.priority}[/{pc}]', t.name, ', '.join(t.labels) if t.labels else '', source_str)
     return table
 
-def ticket_create(name: str=typer.Argument(..., help='Ticket name'), priority: str=typer.Option('normal', '-p', '--priority', help='critical | high | normal | low'), sprint: str=typer.Option('current', '-s', '--sprint'), source: str=typer.Option('human', help='Source tool name'), label: list[str] | None=typer.Option(None, '-l', '--label'), description: str=typer.Option('', '-d', '--description'), files: list[str] | None=typer.Option(None, '--files', help='File(s) associated with this ticket'), integration: list[str] | None=typer.Option(None, '-i', '--integration', help='Integration(s) to sync with (e.g., github, gitlab)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after creation'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes'), force: bool=typer.Option(False, '--force', help='Create even if name/description contain unfilled <placeholder> tokens')) -> None:
+def ticket_create(
+    name: str = typer.Argument(..., help="Ticket name"),
+    priority: str = typer.Option(
+        "normal", "-p", "--priority", help="critical | high | normal | low"
+    ),
+    sprint: str = typer.Option("current", "-s", "--sprint"),
+    source: str = typer.Option("human", help="Source tool name"),
+    label: list[str] | None = typer.Option(None, "-l", "--label"),
+    description: str = typer.Option("", "-d", "--description"),
+    files: list[str] | None = typer.Option(
+        None, "--files", help="File(s) associated with this ticket"
+    ),
+    integration: list[str] | None = typer.Option(
+        None, "-i", "--integration", help="Integration(s) to sync with (e.g., github, gitlab)"
+    ),
+    sync: bool | None = typer.Option(
+        None,
+        "--sync/--no-sync",
+        help="Auto-sync to configured integrations after creation (defaults to true when remote integrations are configured)",
+    ),
+    sync_dry_run: bool = typer.Option(
+        False, "--sync-dry-run", help="Preview sync without making changes"
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Create even if name/description contain unfilled <placeholder> tokens",
+    ),
+) -> None:
     """Create a new ticket."""
     from planfile import Planfile, TicketSource
+    from planfile.integrations.config import IntegrationConfig
+
     placeholders = _find_template_placeholders(name, description)
     if placeholders and not force:
-        console.print(f"[red]✗[/red] Refusing to create ticket with unfilled template placeholders: {', '.join(sorted(set(placeholders)))}")
-        console.print('[dim]Fill in real values (finding key, failing line, command) or pass --force to override.[/dim]')
+        console.print(
+            f"[red]✗[/red] Refusing to create ticket with unfilled template placeholders: {', '.join(sorted(set(placeholders)))}"
+        )
+        console.print(
+            "[dim]Fill in real values (finding key, failing line, command) or pass --force to override.[/dim]"
+        )
         raise typer.Exit(2)
     pf = Planfile.auto_discover()
-    ticket_data = {'name': name, 'priority': priority, 'sprint': sprint, 'source': TicketSource(tool=source), 'labels': list(label) if label else [], 'description': description}
+    ticket_data = {
+        "name": name,
+        "priority": priority,
+        "sprint": sprint,
+        "source": TicketSource(tool=source),
+        "labels": list(label) if label else [],
+        "description": description,
+    }
     if files:
-        ticket_data['files'] = list(files)
-    if sync and not integration:
-        # ``--sync`` is explicit authority to publish, but it still needs a
-        # deterministic target set. Store that set on the new local record so
-        # the exact-ticket loader does not treat it as an unconfigured ticket.
-        from planfile.integrations.config import IntegrationConfig
+        ticket_data["files"] = list(files)
 
-        integration_config = IntegrationConfig(str(pf.store.project_dir))
-        integration_config.load_configs()
-        integration = list(integration_config.config.get('integrations', {}).keys())
-        if "markdown" not in integration:
-            integration.append("markdown")
+    # Discover configured integrations
+    integration_config = IntegrationConfig(str(pf.store.project_dir))
+    integration_config.load_configs()
+    configured_integrations = list(integration_config.config.get("integrations", {}).keys())
+    valid_remote_integrations = [
+        k
+        for k in configured_integrations
+        if k != "markdown" and integration_config.validate_integration(k)
+    ]
+
+    target_integrations: list[str] = []
     if integration:
-        ticket_data['integration'] = list(integration)
-    ticket = pf.create_ticket(**ticket_data)
-    console.print(f'[green]✓[/green] Created {ticket.id}: {ticket.name}')
-
-    if sync:
-        _auto_sync(
-            str(pf.store.project_dir),
-            integration,
-            sync_dry_run,
-            ticket_ids=[ticket.id],
-            sprint_ids=[sprint],
+        target_integrations = list(integration)
+    elif valid_remote_integrations:
+        target_integrations = [
+            k
+            for k in configured_integrations
+            if integration_config.validate_integration(k)
+        ]
+    elif sync is True:
+        target_integrations = (
+            list(configured_integrations) if configured_integrations else ["markdown"]
         )
+        if "markdown" not in target_integrations:
+            target_integrations.append("markdown")
+
+    if target_integrations:
+        ticket_data["integration"] = list(target_integrations)
+
+    ticket = pf.create_ticket(**ticket_data)
+    console.print(f"[green]✓[/green] Created {ticket.id}: {ticket.name}")
+
+    # Determine whether to auto-sync
+    if sync is True:
+        should_sync = True
+    elif sync is False:
+        should_sync = False
+    else:
+        # sync is None: auto-sync by default if remote integrations configured or explicit -i passed
+        should_sync = bool(
+            valid_remote_integrations
+            or (integration and any(i != "markdown" for i in integration))
+        )
+
+    if should_sync and target_integrations:
+        try:
+            _auto_sync(
+                str(pf.store.project_dir),
+                target_integrations,
+                sync_dry_run,
+                ticket_ids=[ticket.id],
+                sprint_ids=[sprint],
+            )
+        except typer.Exit:
+            if sync is True:
+                raise
+            console.print("[yellow]⚠️ Auto-sync failed; ticket was created locally.[/yellow]")
+        except Exception as exc:
+            if sync is True:
+                raise
+            console.print(
+                f"[yellow]⚠️ Auto-sync failed ({exc}); ticket was created locally.[/yellow]"
+            )
 
 def ticket_list(
     sprint: str = typer.Option('current', '-s', '--sprint'),
