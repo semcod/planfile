@@ -388,6 +388,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def _apply_ticket_evidence_events(self, ticket_data: dict, events: list[dict]) -> dict:
         projected = dict(ticket_data)
+        # outputs.result is Any-valued; object coercion belongs only to event projection.
+        if not events:
+            return projected
         outputs = dict(projected.get("outputs") or {})
         result = dict(outputs.get("result") or {})
         notes = list(outputs.get("notes") or [])

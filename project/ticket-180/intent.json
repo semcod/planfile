@@ -1,0 +1,73 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-180",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: user requests continuing repairs and protected delivery. Preserve Any-valued ticket outputs.result on reads when no evidence events exist; do not turn valid scalars/lists into unreadable tickets. Keep explicit object requirement when appending evidence.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-180/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store.py",
+    "tests/test_ticket_evidence.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "643585e24970cf52243440dd74dbbdf2d45ee3d8",
+    "targetBranch": "main",
+    "outcome": "Valid scalar/list execution results survive source/index lookups and updates; evidence appends remain object-only.",
+    "nonGoals": [
+      "No schema, dependencies, storage format, execution authority or synchronization policy changes."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Return an unchanged projection copy before coercing result when no evidence events exist. Test plain/sharded storage with indexed/source lookups and preserve object-only evidence append rejection.",
+      "components": [
+        {
+          "name": "ticket-store",
+          "paths": [
+            "planfile/core/store.py",
+            "tests/test_ticket_evidence.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert helper early return; no persisted format migration."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_evidence.py tests/test_sqlite_ticket_index.py tests/test_store_concurrency.py"
+        ],
+        "evidence": "Regression-first API result roundtrip, storage variants, source/index fallback, CAS update and evidence append behavior."
+      }
+    ]
+  }
+}
