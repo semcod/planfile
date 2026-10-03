@@ -410,6 +410,52 @@ def _fetch_external_tickets(
         return None
 
 
+def _resolve_selected_remote_ids(
+    ticket_ids: set[str] | list[str] | None,
+    sections: dict[str, dict] | None,
+    sync_state,
+    integration_name: str,
+) -> set[str] | None:
+    """Pre-resolve candidate remote IDs from ticket filters to avoid ambiguous lookups."""
+    if not ticket_ids:
+        return None
+    normalized = {str(value).strip() for value in ticket_ids if str(value).strip()}
+    if not normalized:
+        return None
+
+    remote_ids: set[str] = set()
+    for tid in normalized:
+        clean = tid.lstrip("#")
+        if clean.isdigit():
+            remote_ids.add(clean)
+        remote_ids.add(tid)
+        remote_ids.add(clean)
+
+        # Look up in sync_state (local -> remote mapping)
+        if sync_state is not None and hasattr(sync_state, "get_remote_id"):
+            try:
+                mapped_remote = sync_state.get_remote_id(tid)
+                if mapped_remote:
+                    remote_ids.add(str(mapped_remote).strip())
+            except Exception:
+                pass
+
+        # Look up in sections (section tickets -> sync.<integration>.id)
+        if sections:
+            for _sprint_id, section in sections.items():
+                if not isinstance(section, dict):
+                    continue
+                ticket = (section.get("tickets") or {}).get(tid)
+                if isinstance(ticket, dict):
+                    ref = (ticket.get("sync") or {}).get(integration_name) or {}
+                    if isinstance(ref, dict):
+                        rid = ref.get("id")
+                        if rid is not None and str(rid).strip():
+                            remote_ids.add(str(rid).strip())
+
+    return remote_ids
+
+
 def _process_external_ticket(
     ext_ticket,
     sprint: dict,
@@ -423,18 +469,39 @@ def _process_external_ticket(
     sections: dict[str, dict] | None = None,
     ticket_ids: set[str] | None = None,
     import_target: dict | None = None,
+    selected_remote_ids: set[str] | None = None,
 ) -> tuple[int, int]:
     """Process a single external ticket. Returns updated (imported_count, updated_count)."""
     ext_data = _extract_ticket_data(ext_ticket)
     if sections is None:
         sections = {"current": sprint, "backlog": backlog}
+
+    if ticket_ids:
+        if selected_remote_ids is None:
+            selected_remote_ids = _resolve_selected_remote_ids(
+                ticket_ids, sections, sync_state, integration_name
+            )
+        if selected_remote_ids is not None:
+            candidate_ids = {ext_data["id"], f"#{ext_data['id']}"}
+            if ext_data.get("key"):
+                candidate_ids.add(str(ext_data["key"]).strip())
+            if not candidate_ids.intersection(selected_remote_ids):
+                return imported_count, updated_count
+
     sprint_name, planfile_id, local_ticket = _find_local_ticket(
         sections, ext_data["id"], sync_state, integration_name
     )
     if local_ticket is None:
         planfile_id = None
-    if ticket_ids and planfile_id not in ticket_ids:
-        return imported_count, updated_count
+    if ticket_ids:
+        matches_local = bool(planfile_id and planfile_id in ticket_ids)
+        matches_remote = bool(
+            ext_data["id"] in ticket_ids
+            or f"#{ext_data['id']}" in ticket_ids
+            or (ext_data.get("key") and str(ext_data["key"]).strip() in ticket_ids)
+        )
+        if not (matches_local or matches_remote):
+            return imported_count, updated_count
 
     if dry_run:
         _print_dry_run_action(planfile_id, ext_data)
@@ -514,6 +581,13 @@ def sync_from_external(
         console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
         return
 
+    normalized_ticket_ids = (
+        {str(value).strip() for value in (ticket_ids or []) if str(value).strip()} or None
+    )
+    selected_remote_ids = _resolve_selected_remote_ids(
+        normalized_ticket_ids, lookup_sections, sync_state, integration_name
+    )
+
     for ext_ticket in external_tickets:
         imported_count, updated_count = _process_external_ticket(
             ext_ticket,
@@ -526,8 +600,9 @@ def sync_from_external(
             updated_count,
             publish_to,
             lookup_sections,
-            {str(value).strip() for value in (ticket_ids or []) if str(value).strip()},
+            normalized_ticket_ids,
             import_target,
+            selected_remote_ids,
         )
 
     if not dry_run and (imported_count > 0 or updated_count > 0):

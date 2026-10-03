@@ -1,0 +1,23 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-178",
+  "summary": "Filter remote tickets before mapping lookup during selective sync",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-178/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/**",
+    "tests/**"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
