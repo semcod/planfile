@@ -104,6 +104,8 @@ def _verify_remote_readback(
     ticket_id: str,
     integration_name: str,
     remote_id: str,
+    *,
+    check_title: bool = True,
 ) -> dict[str, str] | None:
     """Verify a provider readback when the backend exposes a getter.
 
@@ -133,7 +135,7 @@ def _verify_remote_readback(
         actual_name = remote.get("name") or remote.get("title")
     else:
         actual_name = getattr(remote, "name", None) or getattr(remote, "title", None)
-    if expected_name and actual_name and str(expected_name) != str(actual_name):
+    if check_title and expected_name and actual_name and str(expected_name) != str(actual_name):
         raise RuntimeError("sync_readback_title_mismatch")
     return reference
 
@@ -224,7 +226,6 @@ def sync_to_external(
                 update_kind = _update_existing_ticket(
                     backend, ticket, ticket_id, external_id, integration_name, sync_state
                 )
-                (created if update_kind == "created" else updated).append(ticket_id)
             else:
                 try:
                     new_id, new_ticket = _create_new_ticket(
@@ -305,7 +306,6 @@ def sync_to_external(
                     error_type=None,
                 )
                 continue
-            succeeded.append(ticket_id)
             reference = (ticket.get("sync") or {}).get(integration_name) or {}
             verified_ref = _verify_remote_readback(
                 backend,
@@ -313,6 +313,11 @@ def sync_to_external(
                 ticket_id,
                 integration_name,
                 str(reference.get("id") or external_id or ""),
+                # Only an actual update may preserve a tracker-owned title.
+                # A missing mapped issue creates a replacement, which must
+                # still pass the normal create title verification.
+                check_title=(update_kind != "updated"
+                             or not getattr(backend, "preserves_remote_titles", False)),
             )
             if verified_ref:
                 reference = verified_ref
@@ -321,6 +326,8 @@ def sync_to_external(
                 _save_sync_results(store, v1_source_file, v1_data, tickets=[(ticket_id, ticket)])
             except OSError:
                 raise
+            (created if update_kind == "created" else updated).append(ticket_id)
+            succeeded.append(ticket_id)
             record_receipt(
                 Path(store.base_dir),
                 intent,

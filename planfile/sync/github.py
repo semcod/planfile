@@ -117,6 +117,9 @@ class GitHubReadCache:
 class GitHubBackend(BasePMBackend):
     """GitHub Issues integration backend."""
 
+    # Sync owns the managed description, not deliberate tracker titles.
+    preserves_remote_titles = True
+
     MAX_LABEL_LENGTH = 50
     DEFAULT_MUTATION_INTERVAL = 1.0
 
