@@ -101,3 +101,20 @@ def test_an_empty_issue_body_becomes_just_the_section():
     _backend(issue)._update_ticket("7", body="only record")
 
     assert issue.body == f"{GitHubBackend.DESCRIPTION_START}\nonly record\n{GitHubBackend.DESCRIPTION_END}"
+
+
+def test_outbound_body_update_respects_github_title_policy(tmp_path):
+    from planfile.core.store import Store
+    from planfile.sync.outbound import sync_to_external
+
+    issue = FakeIssue(number=46, title='Deliberate remote title', state='open', body=EVIDENCE,
+                      html_url='https://github.com/semcod/fixos/issues/46')
+    store = Store(tmp_path)
+    store.init()
+    ticket = {'id': 'PLF-1', 'name': 'Local planning label', 'description': 'Updated plan',
+              'sync': {'github': {'id': '46', 'repository': 'semcod/fixos'}}}
+    result = sync_to_external(_backend(issue), [('PLF-1', ticket)], False, store, 'github')
+    assert result.succeeded == ('PLF-1',)
+    assert result.failed == ()
+    assert issue.title == 'Deliberate remote title'
+    assert 'Updated plan' in issue.body

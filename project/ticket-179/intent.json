@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-179",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: fix observed Planfile update readback failure, verify, publish and merge through independent local Validator. Honor GitHub protected-title sync policy without weakening create identity checks; failed readbacks must not count as successes.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-179/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "planfile/sync/outbound.py",
+    "tests/test_github_sync_preserves_issue.py",
+    "tests/test_sync_legacy_operations.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "45cae956df347d419bedd00af5fbdfd75b8c6808",
+    "targetBranch": "main",
+    "outcome": "Existing GitHub issues retain deliberate titles while valid body updates verify successfully; failed readbacks count only as failed.",
+    "nonGoals": [
+      "No automatic issue renaming or skipped create identity verification."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 35,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Declare existing GitHub title-preservation policy and respect it only for update readback, retaining repository and ID validation and create title matching.",
+      "components": [
+        {
+          "name": "outbound-sync",
+          "paths": [
+            "planfile/sync/github.py",
+            "planfile/sync/outbound.py",
+            "tests/test_github_sync_preserves_issue.py",
+            "tests/test_sync_legacy_operations.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert bounded sync policy/readback fix."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest tests/test_github_sync_preserves_issue.py tests/test_sync_legacy_operations.py"
+        ],
+        "evidence": "Regressions cover preserved title updates, strict create rejection and failed counts."
+      }
+    ]
+  }
+}

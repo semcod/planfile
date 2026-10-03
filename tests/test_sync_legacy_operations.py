@@ -246,3 +246,73 @@ def test_find_local_ticket_raises_on_genuinely_ambiguous_local_ids(tmp_path):
 
     with pytest.raises(ValueError, match="ambiguous local mapping for remote ticket 174"):
         operations._find_local_ticket(sections, "174", sync_state, "github")
+
+
+class UpdateReadbackBackend(ReadbackBackend):
+    def update_ticket(self, ticket_id, **kwargs):
+        pass
+
+
+def test_failed_update_readback_does_not_count_as_succeeded(tmp_path):
+    store = _store(tmp_path)
+    backend = UpdateReadbackBackend(title='unexpected remote title')
+    ticket = _ticket('PLF-1')
+    ticket['sync'] = {'github': {'id': '42', 'repository': 'owner/repo'}}
+    with pytest.raises(OutboundSyncError) as caught:
+        operations.sync_to_external(backend, [('PLF-1', ticket)], False, store, 'github')
+    assert caught.value.result.failed == ('PLF-1',)
+    assert caught.value.result.succeeded == ()
+    assert caught.value.result.updated == ()
+    assert caught.value.result.created == ()
+
+
+def test_preserved_title_policy_cannot_waive_create_readback(tmp_path):
+    backend = ReadbackBackend(title='unexpected remote title')
+    backend.preserves_remote_titles = True
+    with pytest.raises(OutboundSyncError) as caught:
+        operations.sync_to_external(backend, [('PLF-1', _ticket('PLF-1'))], False,
+                                    _store(tmp_path), 'github')
+    assert caught.value.result.failed == ('PLF-1',)
+    assert caught.value.result.succeeded == ()
+    assert caught.value.result.updated == ()
+    assert caught.value.result.created == ()
+
+
+def test_missing_mapping_replacement_still_checks_create_title(tmp_path):
+    class MissingUpdateBackend(ReadbackBackend):
+        preserves_remote_titles = True
+
+        def update_ticket(self, ticket_id, **kwargs):
+            raise RuntimeError('404 Not Found')
+
+    backend = MissingUpdateBackend(title='unexpected replacement title')
+    ticket = _ticket('PLF-1')
+    ticket['sync'] = {'github': {'id': '19', 'repository': 'owner/repo'}}
+    with pytest.raises(OutboundSyncError) as caught:
+        operations.sync_to_external(backend, [('PLF-1', ticket)], False,
+                                    _store(tmp_path), 'github')
+    assert caught.value.result.failed == ('PLF-1',)
+    assert caught.value.result.succeeded == ()
+    assert caught.value.result.updated == ()
+    assert caught.value.result.created == ()
+    assert len(backend.created) == 1
+
+
+def test_preserved_title_update_still_rejects_wrong_remote_identity(tmp_path):
+    class WrongIdentityBackend(UpdateReadbackBackend):
+        preserves_remote_titles = True
+
+        def get_ticket(self, remote_id):
+            state = super().get_ticket(remote_id)
+            state.id = '999'
+            return state
+
+    ticket = _ticket('PLF-1')
+    ticket['sync'] = {'github': {'id': '42', 'repository': 'owner/repo'}}
+    with pytest.raises(OutboundSyncError) as caught:
+        operations.sync_to_external(WrongIdentityBackend(), [('PLF-1', ticket)], False,
+                                    _store(tmp_path), 'github')
+    assert caught.value.result.failed == ('PLF-1',)
+    assert caught.value.result.succeeded == ()
+    assert caught.value.result.updated == ()
+    assert caught.value.result.created == ()
