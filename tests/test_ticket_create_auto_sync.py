@@ -1,6 +1,6 @@
 """Tests for automatic synchronization on ticket creation."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 import typer
@@ -117,3 +117,43 @@ class TestTicketCreateAutoSync:
             args, kwargs = mock_sync.call_args
             assert args[1] == ["github"]
             assert kwargs["ticket_ids"] == ["PLF-001"]
+
+
+    def test_inline_delivery_is_journaled_before_network_and_verified(
+        self, ticket_cli, initialized_repo
+    ):
+        from planfile.sync.receipts import publish_intent, record_receipt
+        from planfile.sync.retry import RetryQueue
+
+        (initialized_repo / ".planfile/github.planfile.yaml").write_text(
+            "integrations:\n  github:\n    repo: owner/repo\n"
+        )
+        def deliver(directory, integrations, dry_run, **kwargs):
+            pf = Planfile(directory)
+            job = RetryQueue(pf.store.base_dir).entries()[0]
+            assert job["state"] == "running" and job["attempts"] == 1
+            ticket = pf.get_ticket(kwargs["ticket_ids"][0])
+            intent = publish_intent(ticket.id, ticket.model_dump(mode="json"), "github", "owner/repo")
+            record_receipt(pf.store.base_dir, intent, operation="create", outcome="succeeded",
+                           remote_id="42", remote_url="https://github.com/owner/repo/issues/42")
+        with patch("planfile.cli.groups.ticket.commands._auto_sync", side_effect=deliver):
+            result = CliRunner().invoke(ticket_cli, ["ticket", "create", "Verified", "--sync"])
+        assert result.exit_code == 0, result.output
+        assert RetryQueue(initialized_repo / ".planfile").entries()[0]["state"] == "succeeded"
+
+    def test_return_without_publication_proof_retains_retry(
+        self, ticket_cli, initialized_repo
+    ):
+        from planfile.sync.retry import RetryQueue
+
+        (initialized_repo / ".planfile/github.planfile.yaml").write_text(
+            "integrations:\n  github:\n    repo: owner/repo\n"
+        )
+        with patch("planfile.cli.groups.ticket.commands._auto_sync"):
+            result = CliRunner().invoke(ticket_cli, ["ticket", "create", "Unverified"])
+        assert result.exit_code == 0
+        entry = RetryQueue(initialized_repo / ".planfile").entries()[0]
+        assert entry["state"] == "failed" and entry["last_error"] == "RuntimeError"
+        with patch("planfile.cli.groups.ticket.commands._auto_sync"):
+            explicit = CliRunner().invoke(ticket_cli, ["ticket", "create", "Explicit unverified", "--sync"])
+        assert explicit.exit_code == 1

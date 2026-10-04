@@ -12,6 +12,39 @@ from planfile.cli.core import console
 from planfile.cli.groups.sync.core import sync_integration
 
 
+def retry_cmd(
+    directory: str = typer.Argument('.', help='Project containing the GitHub retry journal'),
+    max_tickets: int = typer.Option(2, '--max-tickets', min=1, max=100, help='Maximum jobs per cycle'),
+    cycles: int = typer.Option(1, '--cycles', min=1, max=100, help='Bounded polling cycles; opt in explicitly'),
+    interval: float = typer.Option(30, '--interval', min=1, max=3600, help='Seconds between cycles'),
+    dry_run: bool = typer.Option(False, '--dry-run', help='Preview due jobs without claiming or publishing'),
+    status_only: bool = typer.Option(False, '--status', help='Show all retry states without network effects'),
+) -> None:
+    """Retry queued GitHub autosync with revision fencing and persisted cooldowns.
+
+    Uses the configured repository and exact ticket scope. Local creation remains
+    valid after an implicit autosync failure; --no-sync creates no retry job.
+    """
+    import json
+
+    from planfile import Planfile
+    from planfile.sync.retry import RetryQueue, drain_retries
+
+    pf = Planfile(directory)
+    if status_only:
+        print(json.dumps({'jobs': RetryQueue(Path(pf.store.base_dir)).entries()}))
+        return
+    failed = False
+    for cycle in range(cycles):
+        result = drain_retries(pf, max_tickets=max_tickets, dry_run=dry_run)
+        print(json.dumps(result))
+        failed = failed or bool(result['failed'])
+        if not dry_run and cycle + 1 < cycles:
+            time.sleep(interval)
+    if failed:
+        raise typer.Exit(1)
+
+
 def github_cmd(
     directory: str = typer.Argument(".", help="Directory containing planfile configs"),
     dry_run: bool = typer.Option(
