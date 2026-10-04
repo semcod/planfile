@@ -13,4 +13,4 @@ SESSION_EXECUTION_AUTHORIZATION: kontynuuj. Planfile PLF-106 / GitHub #218; pare
 - AC-03: Preserve explicit integration routing, once/failure status and local-only SDK boundary; actual scoped GitHub canary verifies restart/failure recovery.
 - AC-04: Full tests, genuine exact-head/base OneDev and independent protected publication pass; installed source verified.
 
-Validation:8 regression-first failures reproduced startup/retry/preserved-mtime boundaries. After correction,28 focused tests and952 full tests passed (6 existing skips). Ruff passed. Genuine scoped GitHub watch canary and protected publication remain pending.
+Validation: 8 startup/retry/content regressions and one delivery-state feedback regression reproduced before fixes. After correction, 25 focused tests, Ruff and governance passed. Actual isolated GitHub diagnostic #221 retried a controlled outage at startup, reconciled a local SDK edit on restart, and closed the same issue on restart; each successful pass settled without feedback. Full combined-base suite: 963 passed, 6 existing skips. Independent protected publication remains pending.

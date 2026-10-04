@@ -127,3 +127,13 @@ def test_failed_partial_batch_retries_even_if_local_content_reverts(watcher):
     watcher.update(on_tick=edit, on_sync=fail_second)
     watcher['run']()
     assert watcher['calls'] == [(0, 'name: original\n'), (5, 'name: changed\n'), (35, 'name: original\n')]
+
+
+def test_successful_delivery_state_does_not_trigger_another_sync(watcher):
+    def write_delivery_state(number):
+        runtime = watcher['root'] / 'sync'
+        runtime.mkdir(exist_ok=True)
+        (runtime / 'github.state.yaml').write_text(f'last_sync: {number}\n')
+    watcher['on_sync'] = write_delivery_state
+    watcher['run']()
+    assert watcher['calls'] == [(0, 'name: original\n')]

@@ -212,6 +212,10 @@ def _get_planfile_dir_states(planfile_dir: Path) -> dict[str, str]:
     """Fingerprint content: an atomic writer may preserve file timestamps."""
     states: dict[str, str] = {}
     for path in planfile_dir.rglob("*"):
+        # Delivery receipts are outputs, not pending input. Their timestamps
+        # change after every sync and would otherwise keep the watcher busy.
+        if path.relative_to(planfile_dir).parts[0] == "sync":
+            continue
         if path.suffix not in {".yaml", ".yml"} or not path.is_file():
             continue
         try:
