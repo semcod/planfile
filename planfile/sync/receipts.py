@@ -185,8 +185,14 @@ def record_receipt(
                     )
                 ):
                     raise SyncReceiptConflict("sync_receipt_remote_conflict")
-                return item, False
-            if item.get("outcome") == outcome and all(
+        # Older successes bind remote identity but must not erase a later
+        # failed observation or a subsequent recovery. Coalesce only the most
+        # recent attempt for this key with the same outcome and error class.
+        if prior:
+            item = prior[-1]
+            if item.get("outcome") == outcome and item.get("error_type") == (
+                _safe_text(error_type, 128) if outcome == "failed" else None
+            ) and all(
                 not value or not item.get(field) or value == item.get(field)
                 for field, value in (
                     ("remote_id", safe_remote_id),

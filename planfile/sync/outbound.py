@@ -137,6 +137,14 @@ def _verify_remote_readback(
         actual_name = getattr(remote, "name", None) or getattr(remote, "title", None)
     if check_title and expected_name and actual_name and str(expected_name) != str(actual_name):
         raise RuntimeError("sync_readback_title_mismatch")
+    # Only backends declaring a lifecycle projection opt into this contract.
+    # Looking it up on the class avoids fabricating a capability on mocks.
+    projector = getattr(type(backend), "project_remote_status", None)
+    if callable(projector) and ticket.get("status"):
+        expected_status = backend.project_remote_status(ticket["status"])
+        actual_status = remote.get("status") if isinstance(remote, dict) else getattr(remote, "status", None)
+        if actual_status != expected_status:
+            raise RuntimeError("sync_readback_status_mismatch")
     return reference
 
 
@@ -215,13 +223,40 @@ def sync_to_external(
         # Create is the dangerous non-idempotent operation. Native stores have
         # a durable receipt projection for updates too; retain legacy v1's
         # historical replay behaviour until its source file is migrated.
-        if prior is not None and (operation == "create" or v1_source_file is None):
-            reused.append(ticket_id)
-            succeeded.append(ticket_id)
-            console.print(f"  ↺ Already published: {ticket_id} ({prior['receipt_id'][:12]})")
-            continue
         try:
             _validate_ticket_binding(ticket, integration_name, backend)
+            if prior is not None and (operation == "create" or v1_source_file is None):
+                receipt_id = str(prior.get("remote_id") or "")
+                if external_id and receipt_id and str(external_id) != receipt_id:
+                    raise RuntimeError("sync_receipt_mapping_conflict")
+                external_id = external_id or receipt_id
+                if not external_id:
+                    raise RuntimeError("sync_receipt_remote_id_missing")
+                try:
+                    verified = _verify_remote_readback(
+                        backend, ticket, ticket_id, integration_name, str(external_id),
+                        check_title=not getattr(backend, "preserves_remote_titles", False),
+                    )
+                except RuntimeError as exc:
+                    if str(exc) != "sync_readback_status_mismatch":
+                        raise
+                    # The receipt binds identity, not current lifecycle. Reuse
+                    # that exact issue for repair and verify the update below.
+                    operation = "update"
+                else:
+                    if verified:
+                        _record_backend_ref(ticket, integration_name, verified, str(external_id))
+                        sync_state.save_sync({ticket_id: str(external_id)})
+                        _save_sync_results(store, v1_source_file, v1_data, tickets=[(ticket_id, ticket)])
+                    record_receipt(
+                        Path(store.base_dir), intent, operation=operation, outcome="succeeded",
+                        remote_id=str(external_id), remote_url=prior.get("remote_url"),
+                        remote_key=prior.get("remote_key"),
+                    )
+                    reused.append(ticket_id)
+                    succeeded.append(ticket_id)
+                    console.print(f"  ↺ Reused publication: {ticket_id} ({prior['receipt_id'][:12]})")
+                    continue
             if external_id:
                 update_kind = _update_existing_ticket(
                     backend, ticket, ticket_id, external_id, integration_name, sync_state
@@ -271,6 +306,7 @@ def sync_to_external(
                         remote_key=recovered_ref.get("key"),
                         error_type=None,
                     )
+                    succeeded.append(ticket_id)
                     continue
                 # Verify before recording or announcing success: create_ticket
                 # returning without raising is not proof an issue exists at

@@ -180,3 +180,23 @@ def test_receipt_conflict_and_url_redaction_are_fail_closed(tmp_path):
             outcome="succeeded",
             remote_id="8",
         )
+
+
+def test_later_failure_and_recovery_preserve_history_and_remote_identity(tmp_path):
+    intent = publish_intent("PLF-2", _ticket(), "github", "owner/repo")
+    directory = tmp_path / ".planfile"
+    def record(outcome, remote_id="7", error_type=None):
+        return record_receipt(directory, intent, operation="update", outcome=outcome,
+                              remote_id=remote_id, error_type=error_type)
+    success, created = record("succeeded")
+    assert created
+    failure, created = record("failed", error_type="RuntimeError")
+    assert created and failure["attempt"] == 2
+    assert record("failed", error_type="RuntimeError") == (failure, False)
+    recovered, created = record("succeeded")
+    assert created and recovered["attempt"] == 3
+    assert record("succeeded") == (recovered, False)
+    assert successful_receipt(directory, "github", intent["idempotency_key"]) == recovered
+    with pytest.raises(SyncReceiptConflict):
+        record("succeeded", remote_id="8")
+    assert success["remote_id"] == recovered["remote_id"] == "7"

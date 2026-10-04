@@ -1,0 +1,91 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-181",
+  "summary": "Verify and reconcile GitHub lifecycle before publishing sync receipts",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-181/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "planfile/sync/outbound.py",
+    "tests/test_sync_lifecycle_readback.py",
+    "planfile/sync/receipts.py",
+    "tests/test_sync_receipts.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "be0444614d27639f2755a8469356526df82cd26f",
+    "targetBranch": "main",
+    "outcome": "Verify and reconcile actual GitHub lifecycle before acknowledging create/update/retry synchronization; publish and deploy the tested fix.",
+    "nonGoals": [
+      "Tracker body/title rewrite",
+      "New runtime dependencies",
+      "Removing unknown worktrees",
+      "Automatic execution of deferred backlog"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "GitHub owns its lifecycle projection; canonical outbound batch verifies fresh state and reconciles drift before reuse. Other backends preserve compatibility. Receipt history preserves remote identity while recording later failed observations and recovery.",
+      "components": [
+        {
+          "name": "github-sync",
+          "paths": [
+            "planfile/sync/github.py",
+            "planfile/sync/outbound.py",
+            "planfile/sync/receipts.py"
+          ]
+        },
+        {
+          "name": "lifecycle-regressions",
+          "paths": [
+            "tests/test_sync_lifecycle_readback.py",
+            "tests/test_sync_receipts.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert protected merge."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_sync_lifecycle_readback.py -q",
+          "python3 -m pytest tests -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Create and dedup lifecycle; fresh retry verification; unavailable or mismatched readback; protected OneDev and independent exact-head approval; actual GitHub canary."
+      }
+    ]
+  }
+}

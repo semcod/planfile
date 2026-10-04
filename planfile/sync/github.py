@@ -424,6 +424,32 @@ class GitHubBackend(BasePMBackend):
         lock_file = lock_dir / f"create_{repo_hash}_{key_part}.lock"
         return FileLock(str(lock_file), timeout=60)
 
+    @staticmethod
+    def project_remote_status(status: str) -> str:
+        """Project the existing Planfile lifecycle onto GitHub's two states."""
+        normalized = str(status).strip().lower()
+        if normalized in {"closed", "done", "completed", "blocked", "failed", "canceled", "cancelled"}:
+            return "closed"
+        if normalized in {"open", "triage", "in_progress", "in-progress"}:
+            return "open"
+        raise ValueError("sync_github_status_unsupported")
+
+    def create_ticket(self, ticket: dict[str, Any], **kwargs) -> TicketRef:
+        """Apply lifecycle to both a new issue and a durable-marker match."""
+        status = ticket.get("status")
+        # Reject unsupported states before a non-idempotent provider create.
+        expected = self.project_remote_status(status) if status else None
+        reference = super().create_ticket(ticket, **kwargs)
+        if expected is not None:
+            self._clear_read_cache()
+            issue = self.repo.get_issue(int(reference.id))
+            if getattr(issue, "pull_request", None) is not None:
+                raise ValueError("sync_github_create_resolved_pull_request")
+            self._update_issue_state(issue, status)
+            self._clear_read_cache()
+            reference = reference.model_copy(update={"status": issue.state})
+        return reference
+
     def _create_ticket(
         self,
         name: str,
@@ -493,26 +519,10 @@ class GitHubBackend(BasePMBackend):
         Planfile has richer execution statuses, so all terminal values must
         be projected explicitly before an outbound update is sent.
         """
-        status_lower = status.lower()
-        # Planfile uses ``done``/``completed`` (and cancellation variants) for
-        # terminal tickets, while GitHub only exposes open/closed issue state.
-        # Projecting every terminal status here keeps outbound lifecycle sync
-        # fail-closed and prevents completed local tickets from remaining open
-        # forever on GitHub.
-        if status_lower in {
-            "closed",
-            "done",
-            "completed",
-            "blocked",
-            "failed",
-            "canceled",
-            "cancelled",
-        }:
+        expected = self.project_remote_status(status)
+        if issue.state != expected:
             self._throttle_mutation()
-            issue.edit(state="closed")
-        elif status_lower in {"open", "triage", "in_progress", "in-progress"}:
-            self._throttle_mutation()
-            issue.edit(state="open")
+            issue.edit(state=expected)
 
     def _update_ticket(
         self,
@@ -526,6 +536,7 @@ class GitHubBackend(BasePMBackend):
         assignee: str | None = None,
     ) -> None:
         """Update an existing GitHub issue."""
+        self._clear_read_cache()
         issue = self.repo.get_issue(int(ticket_id))
 
         # The title is set when the issue is created. Renaming it from a ticket
@@ -550,7 +561,8 @@ class GitHubBackend(BasePMBackend):
         self._clear_read_cache()
 
     def _get_ticket(self, ticket_id: str) -> TicketState:
-        """Get GitHub issue status."""
+        """Read actual provider state, bypassing cached lifecycle observations."""
+        self._clear_read_cache()
         issue = self.repo.get_issue(int(ticket_id))
         if getattr(issue, "pull_request", None) is not None:
             # GET /issues/{number} answers for a pull request number too, so a
