@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-188",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: continue repairs, tests and protected merges. Complete PLF-089 / GitHub194 with explicit completion enqueue policy, durable idempotent asynchronous delivery and restart recovery.",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-188/**",
+    "planfile/core/store.py",
+    "planfile/core/configuration.py",
+    "planfile/sync/retry.py",
+    "planfile/sync/completion.py",
+    "planfile/cli/groups/sync/commands.py",
+    "tests/test_sync_completion.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e6de5bc1b2d108526c46287953fa13feba5f2151",
+    "targetBranch": "main",
+    "outcome": "Opted-in SDK/store/API completion queues exact GitHub tickets locally; authorized retry workers recover missed enqueue after restart and deliver using existing fenced retry, mapping and success receipts. Independently verified protected merge and installed runtime readback.",
+    "nonGoals": [
+      "No fleet or worker service deployment",
+      "No default SDK network effects",
+      "No incremental synchronization work owned by PLF-091",
+      "No new dependencies, remote protocol or repository allocation"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse GitHub RetryQueue for revision-fenced local completion jobs. A literal boolean opt-in integration setting enables enqueue after successful store mutation under its existing lock; config inspection uses the credential-redacting, non-dotenv configuration reader. A bounded authorized retry worker reconciles done tickets in this project before delivery to recover commit/enqueue crash gaps. Queue errors warn that local completion is committed; worker reconciliation errors fail visibly without reporting remote success. Existing delivery receipts, repository guards and Retry-After survive.",
+      "components": [
+        {
+          "name": "ticket-mutation",
+          "paths": [
+            "planfile/core/store.py",
+            "tests/test_sync_completion.py"
+          ]
+        },
+        {
+          "name": "completion-retry",
+          "paths": [
+            "planfile/sync/completion.py",
+            "planfile/sync/retry.py",
+            "planfile/cli/groups/sync/commands.py"
+          ]
+        },
+        {
+          "name": "integration-configuration",
+          "paths": [
+            "planfile/core/configuration.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "integrations.github.sync.enqueue_on_done opt-in boolean",
+        "drain_retries completion reconciliation when policy is enabled"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert protected merge; retain ignored retry jobs and use existing explicitly invoked worker."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_sync_completion.py tests/test_sync_retry.py tests/test_ticket_api_events.py -q",
+          "python3 -m pytest tests -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Meaningful regression before source; default/no-route no enqueue, SDK/API/sharded done enqueue, failure/restart reconciliation, CAS rejection, concurrent revision fencing/cooldown/dry-run, native and real scoped canary, exact-head/base OneDev and independent merge."
+      }
+    ]
+  }
+}

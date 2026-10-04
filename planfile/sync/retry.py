@@ -145,11 +145,20 @@ def drain_retries(pf, *, max_tickets: int = 2, dry_run: bool = False,
     repository = normalize_repository(repository) if repository else None
     queue = RetryQueue(Path(pf.store.base_dir))
     clock = time.time() if now is None else now
+    from planfile.sync.completion import reconcile_completions
+
+    try:
+        recovered = reconcile_completions(pf, queue, repository, dry_run=dry_run, now=now)
+    except Exception:
+        # Local commit/enqueue recovery failed. Do not expose config/SQL errors
+        # or claim that any remote ticket completed.
+        raise RuntimeError('sync_completion_reconcile_failed') from None
     due = [j for j in queue.entries() if (
         j['state'] in {'pending', 'failed'} and j['next_attempt_at'] <= clock
     ) or (j['state'] == 'running' and j['lease_until'] <= clock)]
     if dry_run:
-        return {'planned': [j['ticket_id'] for j in due[:max_tickets]],
+        planned = list(dict.fromkeys([j['ticket_id'] for j in due] + recovered))
+        return {'planned': planned[:max_tickets],
                 'succeeded': [], 'failed': [], 'refreshed': []}
     result = {'planned': [], 'succeeded': [], 'failed': [], 'refreshed': []}
     backend = None
