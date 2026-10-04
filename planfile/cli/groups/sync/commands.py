@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import time
 from pathlib import Path
 from typing import Any
@@ -207,44 +208,67 @@ def _resolve_watch_integrations(config: Any, integrations: list[str] | None) -> 
     return to_sync or ["markdown"]
 
 
-def _get_planfile_dir_states(planfile_dir: Path) -> dict[str, float]:
-    states: dict[str, float] = {}
-    for path in planfile_dir.rglob("*.yaml"):
+def _get_planfile_dir_states(planfile_dir: Path) -> dict[str, str]:
+    """Fingerprint content: an atomic writer may preserve file timestamps."""
+    states: dict[str, str] = {}
+    for path in planfile_dir.rglob("*"):
+        # Delivery receipts are outputs, not pending input. Their timestamps
+        # change after every sync and would otherwise keep the watcher busy.
+        if path.relative_to(planfile_dir).parts[0] == "sync":
+            continue
+        if path.suffix not in {".yaml", ".yml"} or not path.is_file():
+            continue
         try:
-            states[str(path)] = path.stat().st_mtime
-        except OSError:
-            pass
+            digest = hashlib.sha256()
+            with path.open("rb") as stream:
+                while chunk := stream.read(65536):
+                    digest.update(chunk)
+            states[str(path)] = digest.hexdigest()
+        except OSError as error:
+            # Do not silently lose the path; restored readability changes its
+            # fingerprint even when timestamps remain unchanged.
+            states[str(path)] = "unreadable:" + type(error).__name__
     return states
 
 
-def _detect_changes(last: dict[str, float], current: dict[str, float]) -> bool:
-    for path, mtime in current.items():
-        if path not in last or last[path] != mtime:
-            return True
-    return any(path not in current for path in last)
+def _detect_changes(last: dict[str, str], current: dict[str, str]) -> bool:
+    return last != current
 
 
-def _run_sync_once(to_sync: list[str], directory: str, direction: str) -> bool:
+def _run_sync_once(to_sync: list[str], directory: str, direction: str,
+                   cooldowns: list[float] | None = None) -> bool:
+    from planfile.sync.retry import retry_hint
+
     succeeded = True
     for integration in to_sync:
         try:
             sync_integration(integration, directory, False, direction, show_header=False)
-        except Exception as e:
+        except Exception as error:
             succeeded = False
-            console.print(f"[yellow]⚠️ Sync failed for {integration}: {e}[/yellow]")
+            hint = retry_hint(error)
+            if cooldowns is not None and hint is not None:
+                cooldowns.append(hint)
+            console.print(f"[yellow]⚠️ Sync failed for {integration}: {type(error).__name__}[/yellow]")
     return succeeded
 
 
 def watch_cmd(
     directory: str = typer.Argument(".", help="Directory to watch"),
-    interval: int = typer.Option(5, "--interval", "-i", help="Polling interval in seconds"),
+    interval: int = typer.Option(5, "--interval", "-i", min=1, max=3600, help="Polling interval in seconds"),
     integrations: list[str] = typer.Option(
         None, "--integration", help="Specific integrations to watch (default: all configured)"
     ),
     direction: str = typer.Option("to", "--direction", help="Sync direction: to, from, or both"),
     once: bool = typer.Option(False, "--once", help="Run sync once and exit (no watch loop)"),
 ) -> None:
-    """Watch .planfile/ directory and auto-sync on changes."""
+    """Reconcile .planfile at startup and watch SDK/import/file changes.
+
+    Explicit invocation authorizes the configured integrations and direction.
+    SDK mutations alone remain local. Failed batches retry with backoff and
+    provider cooldown; existing files are reconciled after a watcher restart.
+    """
+    if not 1 <= interval <= 3600:
+        raise typer.BadParameter("interval must be between 1 and 3600 seconds")
     from planfile.integrations.config import IntegrationConfig
 
     planfile_dir = Path(directory) / ".planfile"
@@ -268,15 +292,29 @@ def watch_cmd(
             raise typer.Exit(1)
         return
 
-    last_states = _get_planfile_dir_states(planfile_dir)
+    last_states: dict[str, str] = {}
+    synced_once = False
+    failures = 0
+    next_attempt = 0.0
     try:
         while True:
-            time.sleep(interval)
             current_states = _get_planfile_dir_states(planfile_dir)
-            if _detect_changes(last_states, current_states):
-                console.print(f"[blue]📝 Detected changes at {time.strftime('%H:%M:%S')}[/blue]")
-                _run_sync_once(to_sync, directory, direction)
-                console.print("")
-                last_states = current_states
+            pending = failures > 0 or not synced_once or _detect_changes(last_states, current_states)
+            if pending and time.monotonic() >= next_attempt:
+                console.print("[blue]📝 Reconciling pending local changes...[/blue]")
+                cooldowns: list[float] = []
+                if _run_sync_once(to_sync, directory, direction, cooldowns=cooldowns):
+                    # Acknowledge the PRE-attempt snapshot. An edit during the
+                    # provider call must remain visible to the next iteration.
+                    last_states = current_states
+                    synced_once = True
+                    failures = 0
+                    next_attempt = time.monotonic() + interval
+                else:
+                    failures += 1
+                    backoff = min(300, 30 * 2 ** min(failures - 1, 4))
+                    next_attempt = time.monotonic() + max(interval, backoff, *cooldowns)
+                    console.print("[yellow]Pending changes retained for a bounded retry.[/yellow]")
+            time.sleep(interval)
     except KeyboardInterrupt:
         console.print("\n[dim]👋 Watch stopped.[/dim]")

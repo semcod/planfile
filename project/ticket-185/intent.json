@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-185",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: kontynuuj. PLF-106/#218, child of PLF-098/#202: recover authorized file watch after restart/transient failures with content snapshots and bounded cooldown.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "planfile/cli/groups/sync/commands.py",
+    "tests/test_sync_watch_recovery.py",
+    "project/ticket-185/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f88a4e07589542ffafffb74178e92c83ae0defd4",
+    "targetBranch": "main",
+    "outcome": "Authorized watch reconciles existing local SDK/import/file tickets at startup and retries failed batches without losing later edits; content detection and provider cooldown are tested.",
+    "nonGoals": [
+      "Fleet deployment",
+      "Implicit API/import network effects",
+      "NL compiler changes",
+      "Automatic source commits for tracker reconciliation"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Content-hash snapshots, startup reconciliation and pre-attempt baseline acknowledgement only on success. Failed batches retain pending work with monotonic capped exponential backoff and provider Retry-After. SDK itself performs no hidden network effects.",
+      "components": [
+        {
+          "name": "file-watch",
+          "paths": [
+            "planfile/cli/groups/sync/commands.py",
+            "tests/test_sync_watch_recovery.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "watch startup reconciliation and CLI help"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the protected merge; retain the external outbox."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sync_watch_recovery.py tests/test_sync_failure_status.py"
+        ],
+        "evidence": "Startup, failure recovery, cooldown, preserved-mtime and in-flight edits; exact routing; actual scoped GitHub canary."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Full suite, genuine exact-head/current-base OneDev and independent protected merge."
+      }
+    ]
+  }
+}
