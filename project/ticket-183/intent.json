@@ -1,0 +1,108 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-183",
+  "summary": "Persist failed GitHub autosync and drain bounded retries",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-183/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/__init__.py",
+    "planfile/cli/groups/sync/commands.py",
+    "planfile/cli/groups/ticket/commands.py",
+    "planfile/sync/retry.py",
+    "tests/test_sync_retry.py",
+    "tests/test_sync_retry_cli.py",
+    "tests/test_ticket_create_auto_sync.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6ce257dddbb6b05a13cc9927a94e4b109790aec8",
+    "targetBranch": "main",
+    "outcome": "Persist failed GitHub ticket autosync, expose pending/failed state and provide a bounded opt-in retry worker; verify and publish the repaired producer.",
+    "nonGoals": [
+      "Fleet deployment",
+      "Implicit API/import network effects",
+      "NL compiler changes",
+      "Automatic source commits for tracker reconciliation"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "A repository-bound SQLite outbox journals explicit CLI GitHub autosync before network effects. Revision and worker-token CAS preserve newer edits; failure retains safe error codes and cooldown. The opt-in retry CLI loads current native records and uses the existing exact-ticket sync/readback contract.",
+      "components": [
+        {
+          "name": "sync-outbox",
+          "paths": [
+            "planfile/sync/retry.py"
+          ]
+        },
+        {
+          "name": "cli-sync",
+          "paths": [
+            "planfile/cli/groups/ticket/commands.py",
+            "planfile/cli/groups/sync/commands.py",
+            "planfile/cli/groups/sync/__init__.py"
+          ]
+        },
+        {
+          "name": "retry-tests",
+          "paths": [
+            "tests/test_sync_retry.py",
+            "tests/test_sync_retry_cli.py",
+            "tests/test_ticket_create_auto_sync.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "sync retry CLI and ticket-show retry projection"
+      ],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "sync-outbox",
+          "description": "Private repository-bound GitHub retry journal; no migration or transfer of domain data"
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the protected merge; retain the external outbox."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_sync_retry.py tests/test_sync_retry_cli.py tests/test_ticket_create_auto_sync.py -q",
+          "python3 -m pytest tests -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Crash/restart durability, revision fencing, backoff/Retry-After, no-sync/dry-run, exact routing, lost-response replay, actual scoped GitHub canary and independent protected publication."
+      }
+    ]
+  }
+}
