@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-189",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: continue repairs, tests and protected merges. Finish PLF-089 / GitHub194 by retaining provider cooldown across queued completion payload edits.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-189/**",
+    "planfile/sync/retry.py",
+    "tests/test_sync_completion.py",
+    "tests/test_schema_discovery.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0c34278f8d5c29aa12c4c3af1b316120f23615f4",
+    "targetBranch": "main",
+    "outcome": "Queued completion payload revisions preserve provider retry deadlines, attempts and sanitized failure history until successful retry. Protected exact-head merge and installed runtime readback.",
+    "nonGoals": [
+      "No global provider backoff or incremental selection owned by PLF-091",
+      "No fleet activation or new worker",
+      "No dependencies or unrelated publication policy changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse RetryQueue revision fencing. Replacing a pending/failed job with retry history carries its attempts and error, and preserves the later of now and the provider deadline. Repeated edits cannot bypass Retry-After; running/succeeded replacement semantics stay unchanged. Make the pre-existing schema discovery assertion insensitive to terminal line wrapping; verify narrow, default and wide presentation without changing schema validation behavior.",
+      "components": [
+        {
+          "name": "completion-retry",
+          "paths": [
+            "planfile/sync/retry.py",
+            "tests/test_sync_completion.py",
+            "tests/test_schema_discovery.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert protected merge; preserve queued jobs."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_sync_completion.py tests/test_sync_retry.py tests/test_sync_retry_cli.py tests/test_ticket_api_events.py tests/test_ticket_update_precondition.py -q tests/test_schema_discovery.py",
+          "python3 -m pytest tests -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Two genuine failed regressions on previous source, consecutive payload edits during provider cooldown, full suite, Ruff, real same-issue canary, exact head/base OneDev and independent protected merge."
+      }
+    ]
+  }
+}

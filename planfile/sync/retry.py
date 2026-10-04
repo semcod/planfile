@@ -60,12 +60,19 @@ class RetryQueue:
             if old is not None and old['payload_digest'] == digest:
                 return old['revision']
             revision = old['revision'] + 1 if old else 1
-            db.execute('''INSERT INTO retry_jobs VALUES(?,?,?,?, 'pending',0,?,NULL,NULL,NULL)
+            # A replacement payload stays pending, so later edits must retain
+            # the same cooldown/attempt history too until a worker succeeds.
+            cooling = old is not None and old['state'] in {'pending', 'failed'} and old['attempts'] > 0
+            next_attempt = max(now, old['next_attempt_at']) if cooling else now
+            attempts = old['attempts'] if cooling else 0
+            last_error = old['last_error'] if cooling else None
+            db.execute('''INSERT INTO retry_jobs VALUES(?,?,?,?, 'pending',?,?,NULL,NULL,?)
                 ON CONFLICT(repository,ticket_id) DO UPDATE SET
                 payload_digest=excluded.payload_digest, revision=excluded.revision,
-                state='pending', attempts=0, next_attempt_at=excluded.next_attempt_at,
-                lease_until=NULL, worker_token=NULL, last_error=NULL''',
-                       (repository, ticket_id, digest, revision, now))
+                state='pending', attempts=excluded.attempts,
+                next_attempt_at=excluded.next_attempt_at,
+                lease_until=NULL, worker_token=NULL, last_error=excluded.last_error''',
+                       (repository, ticket_id, digest, revision, attempts, next_attempt, last_error))
             return revision
 
     def claim(self, *, repository: str | None = None, ticket_id: str | None = None,
