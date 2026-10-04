@@ -14,6 +14,9 @@ from planfile.sync.state import SyncState, SyncStateRepositoryMismatch
 
 
 class MetadataRequester:
+    base_url = 'https://api.github.com'
+    is_not_lazy = False
+
     def __init__(self):
         self.data = {
             '/repos/owner/old': {'id': 123, 'full_name': 'owner/new'},
@@ -24,7 +27,7 @@ class MetadataRequester:
         }
         self.calls = []
 
-    def requestJsonAndCheck(self, verb, path):
+    def requestJsonAndCheck(self, verb, path, **kwargs):
         assert verb == 'GET'
         self.calls.append(path)
         value = self.data[path]
@@ -242,3 +245,26 @@ def test_binding_change_during_verification_is_not_overwritten(tmp_path):
     with pytest.raises(SyncStateRepositoryMismatch, match='binding changed'):
         SyncState.from_backend(tmp_path / '.planfile', 'github', b)
     assert yaml.safe_load(old.state_file.read_text()) == newer
+
+
+def test_verified_binding_replaces_stale_sdk_repository_handle(tmp_path):
+    bound_state(tmp_path)
+    b = RedirectBackend()
+    b.github = SimpleNamespace(requester=b._identity_requester)
+    b.repo = SimpleNamespace(full_name='other/reused-name', url='https://api.github.com/repos/other/reused-name')
+    SyncState.from_backend(tmp_path / '.planfile', 'github', b)
+    assert b.repo.id == 123
+    assert b.repo.full_name == 'owner/new'
+    assert b.repo.url == 'https://api.github.com/repositories/123'
+
+
+def test_sdk_issue_lookup_uses_verified_numeric_route(tmp_path):
+    bound_state(tmp_path)
+    b = RedirectBackend()
+    b.github = SimpleNamespace(requester=b._identity_requester)
+    b._identity_requester.data['https://api.github.com/repositories/123/issues/42'] = {'id': 456, 'number': 42, 'title': 'Original', 'state': 'open'}
+    SyncState.from_backend(tmp_path / '.planfile', 'github', b)
+    issue = b.repo.get_issue(42)
+    assert issue.number == 42
+    assert issue.title == 'Original'
+    assert b._identity_requester.calls[-1] == 'https://api.github.com/repositories/123/issues/42'

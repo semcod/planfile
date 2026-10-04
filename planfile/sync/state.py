@@ -173,6 +173,9 @@ class SyncState:
         state.repository = canonical
         state.repository_id = repository_id
         state._verified_aliases = aliases
+        binder = getattr(type(backend), "_bind_repository_identity", None)
+        if callable(binder):
+            binder(backend, identity)
         if persist:
             with state._locked():
                 current = state._read_unlocked()

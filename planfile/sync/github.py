@@ -181,6 +181,21 @@ class GitHubBackend(BasePMBackend):
             raise SyncStateRepositoryMismatch("GitHub repository identity readback disagrees")
         return {"repository": canonical, "repository_id": str(identity)}
 
+    def _bind_repository_identity(self, identity: dict) -> None:
+        """Use the verified numeric route rather than a stale SDK name handle."""
+        client = getattr(self, "github", None)
+        if client is None:
+            return
+        requester = client.requester
+        self.repo = Repository(
+            requester, completed=True,
+            attributes={
+                "id": int(identity["repository_id"]),
+                "full_name": identity["repository"],
+                "url": f"{requester.base_url.rstrip('/')}/repositories/{identity['repository_id']}",
+            },
+        )
+
     def _cache(self) -> GitHubReadCache:
         cache = getattr(self, "_read_cache", None)
         if cache is None:
