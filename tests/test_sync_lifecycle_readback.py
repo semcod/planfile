@@ -81,6 +81,17 @@ def test_terminal_create_and_deduplicated_create_close_same_issue(status):
     assert b.repo.creates == 1
 
 
+@pytest.mark.parametrize("status", ["open", "in_progress", "review", "triage"])
+def test_active_create_and_dedup_project_to_open(status):
+    b = backend()
+    first = b.create_ticket(ticket(status))
+    assert first.status == "open"
+    b.repo.issue.state = "closed"
+    second = b.create_ticket(ticket(status))
+    assert second.id == first.id and second.status == "open"
+    assert b.repo.creates == 1
+
+
 def test_successful_receipt_retry_reconciles_drift_without_duplicate(tmp_path):
     store = Store(tmp_path)
     store.init()

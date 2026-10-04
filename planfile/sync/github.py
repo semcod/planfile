@@ -430,7 +430,7 @@ class GitHubBackend(BasePMBackend):
         normalized = str(status).strip().lower()
         if normalized in {"closed", "done", "completed", "blocked", "failed", "canceled", "cancelled"}:
             return "closed"
-        if normalized in {"open", "triage", "in_progress", "in-progress"}:
+        if normalized in {"open", "triage", "in_progress", "in-progress", "review"}:
             return "open"
         return None
 
