@@ -142,6 +142,8 @@ def _verify_remote_readback(
     projector = getattr(type(backend), "project_remote_status", None)
     if callable(projector) and ticket.get("status"):
         expected_status = backend.project_remote_status(ticket["status"])
+        if expected_status is None:
+            raise ValueError("sync_github_status_unsupported")
         actual_status = remote.get("status") if isinstance(remote, dict) else getattr(remote, "status", None)
         if actual_status != expected_status:
             raise RuntimeError("sync_readback_status_mismatch")

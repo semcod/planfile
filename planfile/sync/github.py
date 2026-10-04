@@ -425,20 +425,22 @@ class GitHubBackend(BasePMBackend):
         return FileLock(str(lock_file), timeout=60)
 
     @staticmethod
-    def project_remote_status(status: str) -> str:
+    def project_remote_status(status: str) -> str | None:
         """Project the existing Planfile lifecycle onto GitHub's two states."""
         normalized = str(status).strip().lower()
         if normalized in {"closed", "done", "completed", "blocked", "failed", "canceled", "cancelled"}:
             return "closed"
         if normalized in {"open", "triage", "in_progress", "in-progress"}:
             return "open"
-        raise ValueError("sync_github_status_unsupported")
+        return None
 
     def create_ticket(self, ticket: dict[str, Any], **kwargs) -> TicketRef:
         """Apply lifecycle to both a new issue and a durable-marker match."""
         status = ticket.get("status")
         # Reject unsupported states before a non-idempotent provider create.
         expected = self.project_remote_status(status) if status else None
+        if status and expected is None:
+            raise ValueError("sync_github_status_unsupported")
         reference = super().create_ticket(ticket, **kwargs)
         if expected is not None:
             self._clear_read_cache()
@@ -520,7 +522,7 @@ class GitHubBackend(BasePMBackend):
         be projected explicitly before an outbound update is sent.
         """
         expected = self.project_remote_status(status)
-        if issue.state != expected:
+        if expected is not None and getattr(issue, "state", None) != expected:
             self._throttle_mutation()
             issue.edit(state=expected)
 
