@@ -55,6 +55,7 @@ def _auto_sync(
     console.print(f"\n[blue]🔄 Auto-syncing to: {', '.join(to_sync)}...[/blue]")
 
     failures = []
+    last_failure = None
     for integration in to_sync:
         try:
             sync_integration(
@@ -70,12 +71,13 @@ def _auto_sync(
             raise
         except Exception as e:
             failures.append(integration)
+            last_failure = e
             console.print(f"[yellow]⚠️ Auto-sync failed for {integration}: {e}[/yellow]")
     if failures:
         console.print(
             f"[red]✗ Auto-sync failed for: {', '.join(failures)}; local ticket was retained[/red]"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from last_failure
 
 def format_markdown_tickets(tickets: list, details: bool = False, gh_repo: str = "") -> str:
     """Format ticket list as a markdown summary table, optionally with full details."""
@@ -376,6 +378,21 @@ def ticket_create(
         )
 
     if should_sync and target_integrations:
+        from planfile.sync.receipts import publish_intent, successful_receipt
+        from planfile.sync.retry import RetryQueue, retry_hint
+
+        queue = None
+        job = None
+        repository = integration_config.get_integration_config('github').get('repo')
+        if 'github' in target_integrations and repository and not sync_dry_run:
+            queue = RetryQueue(Path(pf.store.base_dir))
+            queue.enqueue(repository, ticket.id, ticket.model_dump(mode='json'))
+            job = queue.claim(repository=repository, ticket_id=ticket.id)
+            if job is None:
+                console.print('[yellow]GitHub delivery is already queued; use sync retry --status.[/yellow]')
+                if sync is True:
+                    raise typer.Exit(1)
+                return
         try:
             _auto_sync(
                 str(pf.store.project_dir),
@@ -384,11 +401,27 @@ def ticket_create(
                 ticket_ids=[ticket.id],
                 sprint_ids=[sprint],
             )
-        except typer.Exit:
+            if job is not None:
+                current = pf.get_ticket(ticket.id)
+                intent = publish_intent(ticket.id, current.model_dump(mode='json'), 'github', repository)
+                receipt = successful_receipt(
+                    Path(pf.store.base_dir), 'github', intent['idempotency_key'],
+                )
+                if intent['payload_digest'] != job['payload_digest']:
+                    queue.enqueue(repository, ticket.id, current.model_dump(mode='json'))
+                else:
+                    if receipt is None:
+                        raise RuntimeError('sync_receipt_missing')
+                    queue.finish(job)
+        except typer.Exit as exc:
+            if job is not None:
+                queue.finish(job, error=type(exc).__name__, retry_after=retry_hint(exc))
             if sync is True:
                 raise
             console.print("[yellow]⚠️ Auto-sync failed; ticket was created locally.[/yellow]")
         except Exception as exc:
+            if job is not None:
+                queue.finish(job, error=type(exc).__name__, retry_after=retry_hint(exc))
             if sync is True:
                 raise
             console.print(
@@ -474,6 +507,11 @@ def ticket_show(ticket_id: str=typer.Argument(..., help='Ticket ID (e.g. PLF-001
         raise typer.Exit(1)
     data = ticket.model_dump(mode='json', exclude_none=True)
     _annotate_blockers(pf, data)
+    from planfile.sync.retry import RetryQueue
+
+    retries = RetryQueue(Path(pf.store.base_dir)).entries(ticket_id)
+    if retries:
+        data['sync_retry'] = retries
     if fmt == 'json':
         print(json.dumps(data, indent=2, default=str))
     else:
