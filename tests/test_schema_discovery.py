@@ -2,10 +2,12 @@
 
 from pathlib import Path
 
+import pytest
 import yaml
 from typer.testing import CliRunner
 
 from planfile.cli.commands import app
+from planfile.cli.core import console
 from planfile.core.schema import validate_yaml_file
 
 
@@ -48,7 +50,9 @@ def test_parent_global_config_is_not_selected_or_mutated(tmp_path, monkeypatch):
     assert not (child / ".planfile").exists()
 
 
-def test_root_legacy_planfile_remains_supported(tmp_path, monkeypatch):
+@pytest.mark.parametrize("width", [40, 80, 120])
+def test_root_legacy_planfile_remains_supported(tmp_path, monkeypatch, width):
+    monkeypatch.setattr(console, "width", width)
     legacy = tmp_path / "planfile.yaml"
     legacy.write_text("schema: '1.1'\nproject: legacy\n", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
@@ -56,7 +60,7 @@ def test_root_legacy_planfile_remains_supported(tmp_path, monkeypatch):
     result = CliRunner().invoke(app, ["validate", "schema"])
 
     assert result.exit_code == 0
-    assert str(legacy) in result.output
+    assert str(legacy) in result.output.replace("\n", "")
     assert "Schema validation passed" in result.output
 
 

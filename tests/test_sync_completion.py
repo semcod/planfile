@@ -192,3 +192,25 @@ def test_typed_policy_rejects_non_boolean_values(context):
     pf, _ = context
     with pytest.raises(ValueError, match='boolean_required'):
         enable(pf, ['not a boolean'])
+
+
+def test_new_content_cannot_bypass_existing_provider_cooldown(context, monkeypatch):
+    pf, queue = context
+    enable(pf)
+    ticket = pf.create_ticket('Changed during provider cooldown', integration=['github'])
+    pf.update_ticket(ticket.id, status='done')
+    job = queue.claim(now=10**12)
+    assert queue.finish(job, error='RuntimeError', retry_after=240, now=10**12)
+    monkeypatch.setattr('planfile.sync.retry.time.time', lambda: 10**12 + 1)
+    pf.update_ticket(ticket.id, description='New accepted content')
+    row = queue.entries(ticket.id)[0]
+    assert row['revision'] == 2
+    assert row['next_attempt_at'] == 10**12 + 240
+    assert row['attempts'] == 1
+    assert row['last_error'] == 'RuntimeError'
+    pf.update_ticket(ticket.id, description='Another accepted content edit')
+    assert queue.entries(ticket.id)[0]['revision'] == 3
+    assert queue.entries(ticket.id)[0]['next_attempt_at'] == 10**12 + 240
+    assert queue.claim(now=10**12 + 239) is None
+    retry = queue.claim(now=10**12 + 240)
+    assert retry['revision'] == 3 and retry['attempts'] == 2
