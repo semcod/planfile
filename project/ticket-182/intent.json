@@ -1,0 +1,71 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-182",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: wykonaj. Execute Planfile PLF-102 / GitHub #208. Bound store and index flock waits, report contention without reclaiming ownership, preserve ticket/outbox data and recover after lock-holder exit.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "planfile/core/store.py",
+    "tests/test_store_lock_timeout.py",
+    "project/ticket-182/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "be0444614d27639f2755a8469356526df82cd26f",
+    "targetBranch": "main",
+    "outcome": "Contending mutation/index flock acquisition ends within a bounded budget without taking ownership or changing durable data.",
+    "nonGoals": [
+      "No forced unlock, owner process termination, storage migration, dependency change or synchronization policy change."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use nonblocking flock retries with a monotonic deadline; unlock only an acquired descriptor. Kernel PID lookup is advisory.",
+      "components": [
+        {
+          "name": "store-locking",
+          "paths": [
+            "planfile/core/store.py",
+            "tests/test_store_lock_timeout.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert locking helper; no persisted data migration."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_store_lock_timeout.py tests/test_store_concurrency.py tests/test_sqlite_ticket_index.py tests/test_ticket_evidence.py"
+        ],
+        "evidence": "67 tests passed and read-only live lock contention returned in 0.213 s preserving the existing owner."
+      }
+    ]
+  }
+}

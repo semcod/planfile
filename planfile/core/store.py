@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import shutil
@@ -35,6 +36,10 @@ class TicketUpdatedAtConflictError(RuntimeError):
     """Raised when a ticket changed after the caller observed it."""
 
 
+class StoreLockTimeoutError(TimeoutError):
+    """Contention exceeded the wait budget; the existing owner stays intact."""
+
+
 class Store(StoreFileMixin, TicketStoreMixin):
     """File-based ticket store using .planfile/ directory."""
 
@@ -55,6 +60,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
     SPRINT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
     IMMUTABLE_TERMINAL_STATUSES = {"done", "canceled"}
     TERMINAL_STATUSES = {"done", "canceled", "failed", "blocked"}
+    LOCK_TIMEOUT_SECONDS = 10.0
 
     def __init__(self, directory: str | Path):
         self.project_dir = ensure_project_root(directory)
@@ -509,28 +515,75 @@ class Store(StoreFileMixin, TicketStoreMixin):
         )
 
     @contextmanager
-    def mutation_lock(self):
-        """Serialize multi-process YAML mutations."""
-        self.base_dir.mkdir(parents=True, exist_ok=True)
-        lock_file = self._lock_path.open("a+", encoding="utf-8")
+    def _file_lock(self, path: Path, *, timeout_seconds: float | None = None):
+        """Wait a bounded time without replacing locks or reclaiming owners."""
+        timeout = self.LOCK_TIMEOUT_SECONDS if timeout_seconds is None else timeout_seconds
+        try:
+            timeout = float(timeout)
+        except (TypeError, ValueError) as error:
+            raise ValueError("invalid_lock_timeout") from error
+        if not math.isfinite(timeout) or timeout < 0:
+            raise ValueError("invalid_lock_timeout")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        lock_file = path.open("a+", encoding="utf-8")
+        acquired = False
         try:
             try:
                 import fcntl
-
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
             except ImportError:
-                pass
-            self._invalidate_ticket_index_signature_cache()
+                fcntl = None
+            if fcntl is not None:
+                deadline = time.monotonic() + timeout
+                while True:
+                    try:
+                        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        acquired = True
+                        break
+                    except (BlockingIOError, InterruptedError):
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            owner = self._kernel_lock_owner(lock_file.fileno())
+                            raise StoreLockTimeoutError(
+                                f"planfile_store_lock_timeout path={path} "
+                                f"timeout_seconds={timeout:g} owner_pid={owner}; "
+                                "inspect the owner and request handoff; do not remove the lock"
+                            ) from None
+                        time.sleep(min(0.05, remaining))
             yield
         finally:
+            try:
+                if acquired:
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            finally:
+                lock_file.close()
+
+    @staticmethod
+    def _kernel_lock_owner(descriptor: int) -> str:
+        """Best-effort Linux diagnostic, never an ownership-transfer signal."""
+        stat = os.fstat(descriptor)
+        identity = (os.major(stat.st_dev), os.minor(stat.st_dev), stat.st_ino)
+        try:
+            with open("/proc/locks", encoding="ascii") as locks:
+                for line in locks:
+                    fields = line.split()
+                    if len(fields) < 6 or fields[1] != "FLOCK":
+                        continue
+                    major, minor, inode = fields[5].split(":")
+                    if (int(major, 16), int(minor, 16), int(inode)) == identity:
+                        return str(int(fields[4]))
+        except (OSError, ValueError):
+            pass
+        return "unknown"
+
+    @contextmanager
+    def mutation_lock(self, *, timeout_seconds: float | None = None):
+        """Serialize YAML mutations, failing safely on prolonged contention."""
+        with self._file_lock(self._lock_path, timeout_seconds=timeout_seconds):
             self._invalidate_ticket_index_signature_cache()
             try:
-                import fcntl
-
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-            except ImportError:
-                pass
-            lock_file.close()
+                yield
+            finally:
+                self._invalidate_ticket_index_signature_cache()
 
     def _write_yaml_atomic(self, path: Path, data: dict, *, allow_unicode: bool = False) -> None:
         from planfile.core.fastio import dump_yaml, write_mirror
@@ -1504,26 +1557,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
         )
 
     @contextmanager
-    def ticket_index_rebuild_lock(self):
-        """Prevent concurrent readers from materializing duplicate full rebuilds."""
-        self._ticket_index_rebuild_lock_path.parent.mkdir(parents=True, exist_ok=True)
-        lock_file = self._ticket_index_rebuild_lock_path.open("a+", encoding="utf-8")
-        try:
-            try:
-                import fcntl
-
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-            except ImportError:
-                pass
+    def ticket_index_rebuild_lock(self, *, timeout_seconds: float | None = None):
+        """Bound contention between readers rebuilding the disposable index."""
+        with self._file_lock(
+            self._ticket_index_rebuild_lock_path, timeout_seconds=timeout_seconds
+        ):
             yield
-        finally:
-            try:
-                import fcntl
-
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-            except ImportError:
-                pass
-            lock_file.close()
 
     def configure_ticket_index(self, enabled: bool, *, before_mutation=None) -> dict:
         """Enable/disable SQLite indexing without deleting its rebuildable data."""
