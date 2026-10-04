@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-187",
+  "summary": "Verify GitHub repository redirects before preserving mappings",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-187/**",
+    "planfile/sync/state.py",
+    "planfile/sync/github.py",
+    "planfile/sync/operations.py",
+    "planfile/sync/outbound.py",
+    "tests/test_sync_repository_redirects.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e8acb8818da2021062680f54443f84e2ffdcfb0b",
+    "targetBranch": "main",
+    "outcome": "Preserve repository-bound mappings across provider-verified GitHub redirects without trusting local aliases or publishing across unrelated/reused names. Protected exact-head publication and installed runtime verification.",
+    "nonGoals": [
+      "File watcher changes owned by ticket-185",
+      "Fleet deployment",
+      "Repository rename/transfer effects",
+      "Global config changes",
+      "Tracker-only source commits"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "A fresh GitHub metadata query and stable numeric repository identity attest the configured/canonical route. The state factory verifies the previous binding and aliases before atomic migration under the existing state lock, retaining concurrent mappings and non-secret fields. Scoped inbound/outbound/reconciliation share this factory; dry-run performs no identity verification or state migration.",
+      "components": [
+        {
+          "name": "sync-state",
+          "paths": [
+            "planfile/sync/state.py",
+            "planfile/sync/operations.py",
+            "planfile/sync/outbound.py",
+            "tests/test_sync_repository_redirects.py"
+          ]
+        },
+        {
+          "name": "github-identity",
+          "paths": [
+            "planfile/sync/github.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "SyncState.from_backend factory",
+        "GitHubBackend.resolve_repository_identity query"
+      ],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "sync-state",
+          "description": "Add non-secret numeric repository_id and verified name aliases to existing ignored sync state; retain readable v2 mappings."
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert protected merge; preserve existing sync state mappings and aliases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_sync_repository_redirects.py tests/test_sync_state.py tests/test_sync_routing.py -q",
+          "python3 -m pytest tests -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Legacy and bound redirects, reused names, mismatched IDs, unverified aliases, concurrent mapping preservation, no secrets/dry-run effects, real non-mutating GitHub redirect observation and protected current head/base merge."
+      }
+    ]
+  }
+}

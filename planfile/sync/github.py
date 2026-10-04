@@ -145,6 +145,9 @@ class GitHubBackend(BasePMBackend):
         # OutboundJournal owns durable retry/cooldown. PyGithub's default retry
         # can sleep until quota reset before the journal ever sees the failure.
         self.github = Github(self.config["token"], retry=0)
+        # Identity observations must bypass the read cache: an old name may
+        # have been reused by a different repository since the cached response.
+        self._identity_requester = self.github.requester
         self.github._Github__requester = CachedPyGithubRequester(
             self.github.requester,
             self._provider_read_cache,
@@ -155,6 +158,43 @@ class GitHubBackend(BasePMBackend):
         self._last_mutation_at = 0.0
         self._mutation_interval = float(kwargs.get("mutation_interval", self.DEFAULT_MUTATION_INTERVAL))
         self._read_cache = GitHubReadCache(repo, self.config)
+
+    def resolve_repository_identity(self, repository: str | None = None) -> dict | None:
+        """Verify a named route against fresh GitHub numeric-ID readback."""
+        from planfile.sync.state import SyncStateRepositoryMismatch, normalize_repository
+
+        requester = getattr(self, "_identity_requester", None)
+        if requester is None:
+            # Legacy adapters/test doubles do not claim redirect capability.
+            return None
+        name = normalize_repository(repository or self.config["repo"])
+        _, metadata = requester.requestJsonAndCheck("GET", f"/repos/{name}")
+        identity = metadata.get("id") if isinstance(metadata, dict) else None
+        if not isinstance(identity, int) or isinstance(identity, bool) or identity <= 0:
+            raise SyncStateRepositoryMismatch("GitHub repository identity is unavailable")
+        canonical = normalize_repository(metadata.get("full_name"))
+        _, confirmed = requester.requestJsonAndCheck("GET", f"/repositories/{identity}")
+        if (not canonical or not isinstance(confirmed, dict)
+                or not isinstance(confirmed.get("id"), int) or isinstance(confirmed.get("id"), bool)
+                or confirmed.get("id") != identity
+                or normalize_repository(confirmed.get("full_name")) != canonical):
+            raise SyncStateRepositoryMismatch("GitHub repository identity readback disagrees")
+        return {"repository": canonical, "repository_id": str(identity)}
+
+    def _bind_repository_identity(self, identity: dict) -> None:
+        """Use the verified numeric route rather than a stale SDK name handle."""
+        client = getattr(self, "github", None)
+        if client is None:
+            return
+        requester = client.requester
+        self.repo = Repository(
+            requester, completed=True,
+            attributes={
+                "id": int(identity["repository_id"]),
+                "full_name": identity["repository"],
+                "url": f"{requester.base_url.rstrip('/')}/repositories/{identity['repository_id']}",
+            },
+        )
 
     def _cache(self) -> GitHubReadCache:
         cache = getattr(self, "_read_cache", None)

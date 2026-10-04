@@ -15,6 +15,9 @@ console = Console()
 
 def _backend_repository(backend) -> str | None:
     """Return the configured repository without persisting credentials."""
+    verified = getattr(backend, "_verified_repository", None)
+    if isinstance(verified, str) and verified:
+        return normalize_repository(verified)
     config = getattr(backend, "config", {})
     value = config.get("repo") if isinstance(config, dict) else None
     if value is None:
@@ -31,6 +34,9 @@ def _validate_ticket_binding(ticket: dict, integration_name: str, backend) -> No
     reference = (ticket.get("sync") or {}).get(integration_name) or {}
     if not isinstance(reference, dict):
         return
+    aliases = getattr(backend, "_verified_repository_aliases", ())
+    if not isinstance(aliases, (tuple, list, set)):
+        aliases = ()
     candidates = [reference.get("repository"), reference.get("repo")]
     url = str(reference.get("url") or "")
     if "/issues/" in url:
@@ -41,7 +47,7 @@ def _validate_ticket_binding(ticket: dict, integration_name: str, backend) -> No
     for candidate in candidates:
         if candidate:
             normalized = normalize_repository(str(candidate))
-            if normalized != repository:
+            if normalized != repository and normalized not in aliases:
                 raise ValueError(
                     f"ticket {ticket.get('id') or '<unknown>'} maps to {normalized}, "
                     f"backend targets {repository}"
@@ -547,8 +553,8 @@ def sync_from_external(
     remote_labels: list[str] | None = None,
 ) -> None:
     """Sync tickets from external system to planfile."""
-    sync_state = SyncState(
-        Path(store.base_dir), integration_name, repository=_backend_repository(backend)
+    sync_state = SyncState.from_backend(
+        Path(store.base_dir), integration_name, backend, dry_run=dry_run
     )
     imported_count = 0
     updated_count = 0
@@ -832,18 +838,15 @@ def check_sync_consistency(
     """
     sections = _load_sync_sections(store, v1_source_file, v1_data)
     store_dir = Path(getattr(store, "base_dir", "."))
-    sync_state = SyncState(
-        store_dir,
-        integration_name,
-        repository=_backend_repository(backend) if backend else None,
-    )
+    sync_state = (SyncState.from_backend(store_dir, integration_name, backend, persist=False)
+                  if backend else SyncState(store_dir, integration_name))
     last_sync = sync_state.get_last_sync()
     state_map = last_sync.get("ticket_map") or {}
 
     discrepancies: list[dict[str, Any]] = []
     seen_ticket_ids = set()
 
-    for sprint_id, section in sections.items():
+    for _sprint_id, section in sections.items():
         tickets = section.get("tickets") or {}
         if not isinstance(tickets, dict):
             continue

@@ -100,6 +100,97 @@ class SyncState:
         ).hexdigest()[:16]
         self.state_file = self.planfile_dir / "sync" / f"{self.backend}.state.yaml"
         self.lock_file = self.state_file.with_suffix(self.state_file.suffix + ".lock")
+        self.repository_id: str | None = None
+        self._verified_aliases: set[str] = set()
+
+    @staticmethod
+    def _safe_state(state: dict) -> dict:
+        return {
+            key: state[key] for key in (
+                "schema", "backend", "repository", "repository_id",
+                "repository_aliases", "ticket_map", "synced_at",
+            ) if key in state
+        }
+
+    @classmethod
+    def from_backend(
+        cls, planfile_dir: Path, backend_name: str, backend,
+        *, dry_run: bool = False, persist: bool = True,
+    ) -> SyncState:
+        """Bind mappings to a fresh provider identity before following redirects.
+
+        Dry-run performs no additional provider query or migration. Read-only
+        reconciliation can verify the route with ``persist=False``. Providers
+        without an explicit identity capability retain their existing contract.
+        """
+        from planfile.sync.operations import _backend_repository
+
+        state = cls(planfile_dir, backend_name, repository=_backend_repository(backend))
+        resolver = getattr(type(backend), "resolve_repository_identity", None)
+        if dry_run or backend_name != "github" or not callable(resolver):
+            return state
+        # Clear prior per-batch proof before asking for a fresh observation.
+        backend._verified_repository = None
+        backend._verified_repository_aliases = ()
+        initial = state._read_unlocked()
+        identity = resolver(backend)
+        if identity is None:
+            return state
+        canonical = normalize_repository(identity["repository"])
+        repository_id = identity["repository_id"]
+        recorded = normalize_repository(initial.get("repository"))
+        recorded_id = initial.get("repository_id")
+        if recorded_id is not None and str(recorded_id) != repository_id:
+            raise SyncStateRepositoryMismatch("sync state numeric repository identity disagrees")
+        # A v2 binding without a numeric ID needs a fresh observation of its
+        # original route. Local alias strings cannot waive this check.
+        aliases = set()
+        configured = normalize_repository(backend.config.get("repo"))
+        if configured and configured != canonical:
+            aliases.add(configured)
+        if recorded and recorded != canonical:
+            previous = resolver(backend, recorded)
+            if previous != identity:
+                raise SyncStateRepositoryMismatch("previous repository route is not the same GitHub repository")
+            aliases.add(recorded)
+        candidates = initial.get("repository_aliases") or []
+        if not isinstance(candidates, list) or len(candidates) > 16:
+            raise SyncStateRepositoryMismatch("invalid repository alias inventory")
+        for candidate in candidates:
+            normalized = normalize_repository(candidate) if isinstance(candidate, str) else None
+            if not normalized or normalized == canonical or normalized in aliases:
+                continue
+            try:
+                observed = resolver(backend, normalized)
+            except Exception as error:
+                if getattr(error, "status", None) == 404:
+                    continue
+                raise
+            if observed == identity:
+                aliases.add(normalized)
+        if len(aliases) > 16:
+            raise SyncStateRepositoryMismatch("verified repository alias inventory exceeds bound")
+        state.repository = canonical
+        state.repository_id = repository_id
+        state._verified_aliases = aliases
+        binder = getattr(type(backend), "_bind_repository_identity", None)
+        if callable(binder):
+            binder(backend, identity)
+        if persist:
+            with state._locked():
+                current = state._read_unlocked()
+                binding = (current.get("repository"), current.get("repository_id"))
+                if binding != (initial.get("repository"), initial.get("repository_id")):
+                    raise SyncStateRepositoryMismatch("sync state binding changed during identity verification")
+                clean = state._safe_state(current)
+                clean.update(schema=SYNC_STATE_SCHEMA, backend=backend_name,
+                             repository=canonical, repository_id=repository_id,
+                             repository_aliases=sorted(aliases))
+                if clean != current:
+                    _atomic_write_text(state.state_file, yaml.safe_dump(clean, sort_keys=False))
+        backend._verified_repository = canonical
+        backend._verified_repository_aliases = tuple(sorted(aliases))
+        return state
 
     def _read_unlocked(self) -> dict:
         if not self.state_file.exists():
@@ -113,6 +204,9 @@ class SyncState:
         return value
 
     def _validate_repository(self, state: dict) -> None:
+        if (self.repository_id is not None and state.get("repository_id") is not None
+                and str(state["repository_id"]) != self.repository_id):
+            raise SyncStateRepositoryMismatch("sync state numeric repository identity disagrees")
         recorded = state.get("repository")
         if recorded is None or self.repository is None:
             return
@@ -128,7 +222,9 @@ class SyncState:
                 aliases.add(normalize_repository(alias))
             except ValueError:
                 continue
-        if normalized != self.repository and self.repository not in aliases:
+        accepted_alias = (normalized in self._verified_aliases if self.repository_id is not None
+                          else self.repository in aliases)
+        if normalized != self.repository and not accepted_alias:
             raise SyncStateRepositoryMismatch(
                 f"sync state belongs to {normalized}, backend targets {self.repository}"
             )
@@ -159,18 +255,7 @@ class SyncState:
             self._validate_repository(state)
             # Only copy the documented, non-secret state fields. Older files
             # were permissive and could contain a token or an API response.
-            state = {
-                key: state[key]
-                for key in (
-                    "schema",
-                    "backend",
-                    "repository",
-                    "repository_aliases",
-                    "ticket_map",
-                    "synced_at",
-                )
-                if key in state
-            }
+            state = self._safe_state(state)
             state["schema"] = SYNC_STATE_SCHEMA
             state["backend"] = self.backend
             if self.repository:
