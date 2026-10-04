@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-190",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: continue repairs, tests and protected merges. Complete PLF-091 / GitHub196 with persisted incremental dirty selection and repository-scoped provider cooldown.",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-190/**",
+    "planfile/sync/incremental.py",
+    "planfile/sync/retry.py",
+    "planfile/sync/outbound.py",
+    "planfile/sync/receipts.py",
+    "planfile/cli/groups/sync/core.py",
+    "planfile/cli/groups/sync/commands.py",
+    "tests/test_sync_incremental.py",
+    "tests/test_sync_incremental_cli.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "1790cc12ac15404c36a17cd9193b8b24b17a205d",
+    "targetBranch": "main",
+    "outcome": "Explicit incremental outbound synchronization persists changed/new revisions, skips acknowledged unchanged records before backend initialization, drains only the requested scope in bounded cycles and honors provider cooldown across that repository after restart. Protected exact-head merge and installed runtime verification.",
+    "nonGoals": [
+      "No global account-wide provider quota service",
+      "No fleet activation or background daemon",
+      "No inbound incremental reconciliation or legacy v1 migration",
+      "No dependencies or publication policy changes"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the existing digest-bound receipt log and revision-fenced RetryQueue as durable acknowledgement/dirty state. Read current rather than historical acknowledgement and current local tickets before enqueue. Add an additive repository pause table and enforce it before claim; rate-limit failures pause the repository and stop the cycle without sleeping. Incremental CLI initializes the provider only if there is an eligible exact-ticket job. Preserve current scoping, routing, dry-run and failure signals.",
+      "components": [
+        {
+          "name": "incremental-selection",
+          "paths": [
+            "planfile/sync/incremental.py",
+            "planfile/sync/receipts.py",
+            "tests/test_sync_incremental.py"
+          ]
+        },
+        {
+          "name": "retry-delivery",
+          "paths": [
+            "planfile/sync/retry.py",
+            "planfile/sync/outbound.py"
+          ]
+        },
+        {
+          "name": "sync-cli",
+          "paths": [
+            "planfile/cli/groups/sync/core.py",
+            "planfile/cli/groups/sync/commands.py",
+            "tests/test_sync_incremental_cli.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit outbound --incremental and --max-tickets CLI options",
+        "Bounded incremental synchronization SDK function"
+      ],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "retry-delivery",
+          "description": "Add repository retry deadline table to the existing ignored GitHub retry journal; retain existing job schema and old journals."
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert protected merge; preserve receipts and retry jobs."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_sync_incremental.py tests/test_sync_incremental_cli.py tests/test_sync_retry.py tests/test_sync_completion.py tests/test_sync_receipts.py tests/test_sync_rate_limit_diagnostics.py -q",
+          "python3 -m pytest tests -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Genuine before-fix regressions for unchanged selection, scope isolation, concurrent edits/reverts, retry pause across jobs/restart and narrow/wide CLI dry-run. Real existing-issue canary, full suite, Ruff, exact head/base OneDev, independent protected merge and installed readback."
+      }
+    ]
+  }
+}
