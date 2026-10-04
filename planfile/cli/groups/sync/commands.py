@@ -25,6 +25,9 @@ def retry_cmd(
 
     Uses the configured repository and exact ticket scope. Local creation remains
     valid after an implicit autosync failure; --no-sync creates no retry job.
+    integrations.github.sync.enqueue_on_done=true also queues local completions.
+    This explicit worker recovers missed done events before bounded delivery.
+    --dry-run previews recovery without writes; --status only reads existing jobs.
     """
     import json
 

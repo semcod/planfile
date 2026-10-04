@@ -244,6 +244,11 @@ RUNTIME_SETTINGS: dict[str, Setting] = {
 }
 
 INTEGRATION_SETTINGS: dict[str, Setting] = {
+    "integrations.github.sync.enqueue_on_done": Setting(
+        _boolean,
+        f".planfile/{_INTEGRATION_CONFIG_NAME}",
+        "Queue completed GitHub tickets locally; an authorized retry worker delivers",
+    ),
     "integrations.github.repo": Setting(
         _text,
         f".planfile/{_INTEGRATION_CONFIG_NAME}",

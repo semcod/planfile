@@ -2126,13 +2126,30 @@ class Store(StoreFileMixin, TicketStoreMixin):
         Use reason/actor (or _reason/_actor in **updates) for rich audit on status transitions.
         """
         with self.mutation_lock():
-            return self._update_ticket_unlocked(
+            ticket = self._update_ticket_unlocked(
                 ticket_id,
                 reason=reason,
                 actor=actor,
                 expected_updated_at=expected_updated_at,
                 **updates,
             )
+            if ticket is not None and ticket.status == "done":
+                from planfile.sync.completion import enqueue_completion
+
+                try:
+                    enqueue_completion(self, ticket)
+                except Exception:
+                    import warnings
+
+                    # The local mutation already committed. Never report it as
+                    # failed or claim remote completion; the worker reconciles
+                    # this durable done record after enqueue failure/restart.
+                    warnings.warn(
+                        "sync_completion_enqueue_failed: local ticket committed; "
+                        "remote completion unverified; retry worker will reconcile",
+                        RuntimeWarning, stacklevel=2,
+                    )
+            return ticket
 
     @staticmethod
     def _updated_at_instant(value: object) -> datetime | None:
