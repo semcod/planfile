@@ -245,7 +245,11 @@ class GitHubBackend(BasePMBackend):
         return issue_labels
 
     def preflight(self, tickets) -> None:
-        """Validate every outbound label before the first provider mutation."""
+        """Validate lifecycle and labels before the first provider mutation."""
+        for _, ticket in tickets:
+            status = ticket.get("status")
+            if status and self.project_remote_status(status) is None:
+                raise ValueError("sync_github_status_unsupported")
         for _, ticket in tickets:
             self._canonical_labels(ticket.get("labels"), ticket.get("priority"))
 
@@ -427,10 +431,10 @@ class GitHubBackend(BasePMBackend):
     @staticmethod
     def project_remote_status(status: str) -> str | None:
         """Project the existing Planfile lifecycle onto GitHub's two states."""
-        normalized = str(status).strip().lower()
-        if normalized in {"closed", "done", "completed", "blocked", "failed", "canceled", "cancelled"}:
+        normalized = str(getattr(status, "value", status)).strip().lower().replace("-", "_")
+        if normalized in {"closed", "close", "resolved", "done", "completed", "blocked", "failed", "canceled", "cancelled"}:
             return "closed"
-        if normalized in {"open", "triage", "in_progress", "in-progress", "review"}:
+        if normalized in {"open", "triage", "in_progress", "inprogress", "doing", "active", "todo", "backlog", "review"}:
             return "open"
         return None
 
@@ -538,6 +542,8 @@ class GitHubBackend(BasePMBackend):
         assignee: str | None = None,
     ) -> None:
         """Update an existing GitHub issue."""
+        if status and self.project_remote_status(status) is None:
+            raise ValueError("sync_github_status_unsupported")
         self._clear_read_cache()
         issue = self.repo.get_issue(int(ticket_id))
 

@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-184",
+  "summary": "Normalize legacy status aliases and fail closed before unsupported GitHub updates",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-184/**",
+    "planfile/sync/github.py",
+    "planfile/sync/outbound.py",
+    "tests/test_sync_status_preflight.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6ce257dddbb6b05a13cc9927a94e4b109790aec8",
+    "targetBranch": "main",
+    "outcome": "Alias-compatible GitHub lifecycle and rejection before invalid provider writes, published through exact-head independent verification",
+    "nonGoals": [
+      "Autosync retry worker",
+      "Fleet rollout",
+      "Changing blocked status projection"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Project existing model aliases consistently; preflight all batch statuses and reject invalid direct updates before provider access.",
+      "components": [
+        {
+          "name": "github-lifecycle",
+          "paths": [
+            "planfile/sync/github.py",
+            "tests/test_sync_status_preflight.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert protected merge; no persisted data migration"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest tests/test_sync_status_preflight.py tests/test_sync_lifecycle_readback.py tests/test_sync_receipts.py -q",
+          "python -m pytest tests -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "40 focused tests and 920 full tests passed, 6 skipped; authentic exact-head CI and trusted merge required"
+      }
+    ]
+  }
+}
