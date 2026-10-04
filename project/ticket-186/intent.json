@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-186",
+  "summary": "Atomic CLI dedupe-key with occurrence notes",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-186/**",
+    "planfile/__init__.py",
+    "planfile/cli/groups/ticket/commands.py",
+    "tests/test_ticket_create_dedupe_cli.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f88a4e07589542ffafffb74178e92c83ae0defd4",
+    "targetBranch": "main",
+    "outcome": "Expose atomic CLI dedupe-key create-or-append-note with safe targeted synchronization and protected publication.",
+    "nonGoals": [
+      "Fleet execution",
+      "Changing HTTP API behavior",
+      "Tracker source commits",
+      "File watcher repair owned by ticket-185"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the existing store mutation lock for both dedupe lookup and occurrence-note append. CLI resolves the original ticket and its own integration/sprint before sync; existing API behavior stays unchanged without the optional occurrence note.",
+      "components": [
+        {
+          "name": "ticket-dedupe",
+          "paths": [
+            "planfile/__init__.py",
+            "tests/test_ticket_create_dedupe_cli.py"
+          ]
+        },
+        {
+          "name": "ticket-cli",
+          "paths": [
+            "planfile/cli/groups/ticket/commands.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "ticket create --dedupe-key KEY",
+        "Optional dedupe_note on existing create_ticket_deduplicated Python method"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert protected merge; existing notes remain readable."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_ticket_create_dedupe_cli.py tests/test_ticket_create_dedupe.py tests/test_ticket_create_auto_sync.py -q",
+          "python3 -m pytest tests -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Independent concurrent CLI calls create one ticket and preserve occurrence notes, exact original sprint/routing, no-sync and dry-run, full suite and trusted current head/base publication."
+      }
+    ]
+  }
+}
