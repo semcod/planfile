@@ -307,11 +307,17 @@ def ticket_create(
         "--force",
         help="Create even if name/description contain unfilled <placeholder> tokens",
     ),
+    dedupe_key: str | None = typer.Option(
+        None, "--dedupe-key",
+        help="Stable key: reuse a live ticket and append description (or name) as an occurrence note",
+    ),
 ) -> None:
     """Create a new ticket."""
     from planfile import Planfile, TicketSource
     from planfile.integrations.config import IntegrationConfig
 
+    if dedupe_key is not None and not dedupe_key.strip():
+        raise typer.BadParameter("dedupe key must not be empty", param_hint="--dedupe-key")
     placeholders = _find_template_placeholders(name, description)
     if placeholders and not force:
         console.print(
@@ -362,8 +368,18 @@ def ticket_create(
     if target_integrations:
         ticket_data["integration"] = list(target_integrations)
 
-    ticket = pf.create_ticket(**ticket_data)
-    console.print(f"[green]✓[/green] Created {ticket.id}: {ticket.name}")
+    ticket, created = pf.create_ticket_deduplicated(
+        **ticket_data, dedupe_key=dedupe_key,
+        dedupe_note=(description or name) if dedupe_key is not None else None,
+    )
+    action = "Created" if created else "Reused"
+    console.print(f"[green]✓[/green] {action} {ticket.id}: {ticket.name}")
+    if not created:
+        # The key identifies an existing record, including its original route.
+        # Current defaults or incoming -i/-s must never retarget that record.
+        target_integrations = list(ticket.integration or [])
+        if sync is True and not target_integrations:
+            target_integrations = ["markdown"]
 
     # Determine whether to auto-sync
     if sync is True:
@@ -372,10 +388,7 @@ def ticket_create(
         should_sync = False
     else:
         # sync is None: auto-sync by default if remote integrations configured or explicit -i passed
-        should_sync = bool(
-            valid_remote_integrations
-            or (integration and any(i != "markdown" for i in integration))
-        )
+        should_sync = any(i != "markdown" for i in target_integrations)
 
     if should_sync and target_integrations:
         from planfile.sync.receipts import publish_intent, successful_receipt
@@ -399,7 +412,7 @@ def ticket_create(
                 target_integrations,
                 sync_dry_run,
                 ticket_ids=[ticket.id],
-                sprint_ids=[sprint],
+                sprint_ids=[ticket.sprint],
             )
             if job is not None:
                 current = pf.get_ticket(ticket.id)

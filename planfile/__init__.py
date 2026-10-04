@@ -126,8 +126,11 @@ class Planfile:
         return next((label for label in labels if str(label).startswith("dedupe:") and str(label)[7:]), None)
 
     def create_ticket_deduplicated(self, name: str, **kwargs) -> tuple[Ticket, bool]:
-        """Atomically create a ticket or return its live dedupe-key owner."""
+        """Atomically create or reuse a live key, optionally appending an occurrence note."""
         dedupe_key = kwargs.pop("dedupe_key", None)
+        dedupe_note = kwargs.pop("dedupe_note", None)
+        if dedupe_note is not None and not isinstance(dedupe_note, str):
+            raise ValueError("dedupe_note must be a string")
         labels = list(kwargs.pop("labels", None) or [])
         dedupe_label = self._ticket_dedupe_label(dedupe_key, labels)
         if dedupe_label and dedupe_label not in labels:
@@ -145,6 +148,14 @@ class Planfile:
                     oldest = min(live, key=lambda record: str(record.get("created_at") or ""))
                     existing = self.store.get_ticket(str(oldest.get("id") or ""))
                     if existing:
+                        if dedupe_note and dedupe_note.strip():
+                            outputs = existing.outputs.model_dump(mode="json") if existing.outputs else {}
+                            outputs["notes"] = [*outputs.get("notes", []), dedupe_note]
+                            existing = self.store._update_ticket_unlocked(
+                                existing.id, outputs=outputs,
+                                expected_updated_at=existing.updated_at,
+                                reason="Append deduplicated occurrence", actor="planfile.dedupe",
+                            )
                         return existing, False
             ticket_id = self.store._next_id_unlocked()
             ticket = Ticket(id=ticket_id, name=name, **kwargs)
