@@ -126,6 +126,21 @@ def _read(path: Path) -> list[dict]:
     return records
 
 
+def latest_ticket_receipts(planfile_dir: Path, integration: str, repository: str) -> dict[str, dict]:
+    """Read the latest attempt per ticket, without creating files or locks.
+
+    The writer atomically replaces this log, so readers see one complete
+    snapshot. Historical payloads and unrelated repositories cannot grant
+    a current acknowledgement.
+    """
+    repository = normalize_repository(repository)
+    result = {}
+    for receipt in _read(receipt_path(planfile_dir, integration)):
+        if receipt.get('integration') == integration and receipt.get('repository') == repository:
+            result[receipt['ticket_id']] = receipt
+    return result
+
+
 def successful_receipt(planfile_dir: Path, integration: str, idempotency_key: str) -> dict | None:
     """Return a prior success for an exact payload, if one exists."""
     path = receipt_path(planfile_dir, integration)
@@ -188,7 +203,12 @@ def record_receipt(
         # Older successes bind remote identity but must not erase a later
         # failed observation or a subsequent recovery. Coalesce only the most
         # recent attempt for this key with the same outcome and error class.
-        if prior:
+        latest = next((item for item in reversed(records) if (
+            item.get('ticket_id') == intent.get('ticket_id')
+            and item.get('integration') == intent.get('integration')
+            and item.get('repository') == intent.get('repository')
+        )), None)
+        if prior and latest and latest.get('idempotency_key') == key:
             item = prior[-1]
             if item.get("outcome") == outcome and item.get("error_type") == (
                 _safe_text(error_type, 128) if outcome == "failed" else None

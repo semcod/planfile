@@ -282,6 +282,8 @@ def sync_integration(
     sprint_ids: list[str] | None = None,
     repo: str | None = None,
     managed_only: bool = False,
+    incremental: bool = False,
+    max_tickets: int = 2,
 ) -> None:
     """Sync with a specific integration."""
     if show_header:
@@ -292,6 +294,40 @@ def sync_integration(
     config.load_configs()
     if integration_name == "github":
         _apply_github_overrides(config, repo)
+
+    if incremental:
+        import json
+
+        from planfile import Planfile
+        from planfile.core.store import PlanfileStore
+        from planfile.sync.incremental import sync_incremental
+
+        if integration_name != 'github' or direction != 'to':
+            print_error('Incremental sync requires github --direction to')
+            raise typer.Exit(1)
+        store = PlanfileStore(directory)
+        if not store.is_initialized():
+            print_error('Incremental sync requires an initialized native .planfile store')
+            raise typer.Exit(1)
+        selected, _, legacy, _ = _load_tickets_for_sync(
+            store, directory, integration_name, ticket_ids=ticket_ids, sprint_ids=sprint_ids
+        )
+        if legacy:
+            print_error('Incremental sync does not publish legacy v1 records')
+            raise typer.Exit(1)
+        try:
+            outcome = sync_incremental(
+                Planfile(directory), ticket_ids=[ident for ident, _ in selected],
+                repository=config.get_integration_config('github').get('repo'),
+                max_tickets=max_tickets, dry_run=dry_run,
+            )
+        except Exception:
+            print_error('sync_incremental_failed: local state retained; remote completion unverified')
+            raise typer.Exit(1) from None
+        print(json.dumps(outcome))
+        if outcome['failed']:
+            raise typer.Exit(1)
+        return
 
     # Initialize backend
     backend = _initialize_backend(integration_name, config, show_header)

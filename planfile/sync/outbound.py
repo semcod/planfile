@@ -16,18 +16,19 @@ from planfile.sync.operations import (
     _validate_ticket_binding,
     console,
 )
-from planfile.sync.receipts import publish_intent, record_receipt, successful_receipt
+from planfile.sync.receipts import (
+    latest_ticket_receipts,
+    publish_intent,
+    record_receipt,
+    successful_receipt,
+)
 from planfile.sync.state import SyncState
 
 
 def _is_rate_limit_error(error: Exception) -> bool:
     """Recognize primary, secondary and abuse-limit provider responses."""
-    status = getattr(error, "status", None)
-    message = str(error).lower()
-    return status in {403, 429} or any(
-        marker in message
-        for marker in ("rate limit", "secondary rate", "abuse detection", "retry-after")
-    )
+    from planfile.sync.operations import _is_rate_limit_error as provider_rate_limit
+    return provider_rate_limit(error)
 
 
 def _retry_after_seconds(error: Exception) -> int | None:
@@ -39,14 +40,14 @@ def _retry_after_seconds(error: Exception) -> int | None:
     if retry_after is not None:
         try:
             return max(0, int(float(retry_after)))
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             pass
     reset = next(
         (value for key, value in headers.items() if str(key).lower() == "x-ratelimit-reset"), None
     )
     try:
         return max(0, int(float(reset) - time.time())) if reset is not None else None
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
@@ -180,9 +181,11 @@ class OutboundSyncError(RuntimeError):
         integration_name: str,
         result: OutboundSyncResult,
         retry_after: int | None = None,
+        *, rate_limited: bool = False,
     ):
         self.result = result
         self.retry_after = retry_after
+        self.rate_limited = rate_limited
         retry_hint = f"; retry after {retry_after}s" if retry_after is not None else ""
         super().__init__(
             f"{integration_name} sync failed for {len(result.failed)} ticket(s) "
@@ -205,6 +208,8 @@ def sync_to_external(
     failed = []
     planned = []
     rate_limit_retry_after = None
+    rate_limited = False
+    latest = latest_ticket_receipts(Path(store.base_dir), integration_name, sync_state.repository) if sync_state.repository else {}
 
     if not dry_run:
         preflight = getattr(backend, "preflight", None)
@@ -226,6 +231,9 @@ def sync_to_external(
         # historical replay behaviour until its source file is migrated.
         try:
             _validate_ticket_binding(ticket, integration_name, backend)
+            embedded_id = ((ticket.get('sync') or {}).get(integration_name) or {}).get('id')
+            if embedded_id and external_id and str(embedded_id) != str(external_id):
+                raise RuntimeError('sync_receipt_mapping_conflict')
             if prior is not None and (operation == "create" or v1_source_file is None):
                 receipt_id = str(prior.get("remote_id") or "")
                 if external_id and receipt_id and str(external_id) != receipt_id:
@@ -234,14 +242,18 @@ def sync_to_external(
                 if not external_id:
                     raise RuntimeError("sync_receipt_remote_id_missing")
                 try:
+                    current_receipt = latest.get(ticket_id)
+                    if current_receipt and (current_receipt.get('payload_digest') != intent['payload_digest']
+                                            or current_receipt.get('outcome') != 'succeeded'):
+                        raise RuntimeError('sync_receipt_payload_superseded')
                     verified = _verify_remote_readback(
                         backend, ticket, ticket_id, integration_name, str(external_id),
                         check_title=not getattr(backend, "preserves_remote_titles", False),
                     )
                 except RuntimeError as exc:
-                    if str(exc) != "sync_readback_status_mismatch":
+                    if str(exc) not in {"sync_readback_status_mismatch", "sync_receipt_payload_superseded"}:
                         raise
-                    # The receipt binds identity, not current lifecycle. Reuse
+                    # The receipt binds identity, not current payload/lifecycle. Reuse
                     # that exact issue for repair and verify the update below.
                     operation = "update"
                 else:
@@ -397,6 +409,7 @@ def sync_to_external(
                 error_type=type(error).__name__,
             )
             if _is_rate_limit_error(error):
+                rate_limited = True
                 rate_limit_retry_after = _retry_after_seconds(error)
                 console.print("    GitHub rate/abuse limit reached; stopping batch for safe retry.")
                 if rate_limit_retry_after is not None:
@@ -417,5 +430,6 @@ def sync_to_external(
         planned=tuple(planned),
     )
     if failed:
-        raise OutboundSyncError(integration_name, result, rate_limit_retry_after)
+        raise OutboundSyncError(integration_name, result, rate_limit_retry_after,
+                                rate_limited=rate_limited)
     return result

@@ -67,6 +67,8 @@ def github_cmd(
         "--managed-only",
         help="Import only Issues carrying both the planfile and managed labels",
     ),
+    incremental: bool = typer.Option(False, '--incremental', help='Queue changed/new outbound tickets; requires --direction to'),
+    max_tickets: int = typer.Option(2, '--max-tickets', min=1, max=100, help='Maximum incremental deliveries per invocation'),
 ) -> None:
     """Sync tickets with GitHub Issues."""
     sync_integration(
@@ -78,6 +80,8 @@ def github_cmd(
         sprint_ids=sprint_ids,
         repo=repo,
         managed_only=managed_only,
+        incremental=incremental,
+        max_tickets=max_tickets,
     )
 
 
