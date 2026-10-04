@@ -3,7 +3,7 @@
 - **ID**: ticket-181
 - **Owner**: codex / user-authorized maintenance
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Created**: 2026-10-03
 
 ## Goal and scope

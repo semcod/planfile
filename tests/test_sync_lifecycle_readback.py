@@ -1,7 +1,7 @@
 """A publication receipt proves identity, not the current GitHub lifecycle."""
 
-from contextlib import nullcontext
 import json
+from contextlib import nullcontext
 from types import SimpleNamespace
 
 import pytest
