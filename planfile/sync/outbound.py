@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from planfile.sync.operations import (
-    _backend_repository,
     _create_new_ticket,
     _record_backend_ref,
     _save_sync_results,
@@ -195,8 +194,8 @@ def sync_to_external(
     backend, tickets, dry_run: bool, store, integration_name: str, v1_source_file=None, v1_data=None
 ) -> OutboundSyncResult:
     """Attempt each outbound ticket, save successes, then report any failures."""
-    sync_state = SyncState(
-        Path(store.base_dir), integration_name, repository=_backend_repository(backend)
+    sync_state = SyncState.from_backend(
+        Path(store.base_dir), integration_name, backend, dry_run=dry_run
     )
     ticket_map = {}
     succeeded = []
