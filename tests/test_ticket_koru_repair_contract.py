@@ -87,3 +87,15 @@ def test_repair_flags_do_not_coerce_strings_or_numbers(field, value):
 def test_patch_attempts_are_nonnegative_integers(value):
     with pytest.raises(ValidationError):
         TicketInputs(max_patch_attempts=value)
+
+
+@pytest.mark.parametrize("field", ["patch_mode", "worktree"])
+@pytest.mark.parametrize("sharded", [False, True])
+def test_explicit_disable_survives_roundtrip(tmp_path, field, sharded):
+    plan = Planfile(str(tmp_path))
+    ticket = plan.create_ticket("Keep repair disabled", inputs={field: False})
+    if sharded:
+        plan.store.migrate_to_sharded_yaml()
+    inputs = Planfile(str(tmp_path)).get_ticket(ticket.id).inputs
+    assert inputs.model_dump()[field] is False
+    assert json.loads(inputs.model_dump_json())[field] is False
