@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-192",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: continue tests, fixes and independent protected delivery. PLF-112 / GitHub234, bounded inbound-only polling child of PLF-111 / GitHub233.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-192/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/commands.py",
+    "tests/test_sync_watch_inbound_polling.py",
+    "planfile/sync/operations.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5553c46a1e588b8b872f9e238689ed3392ae92ac",
+    "targetBranch": "main",
+    "outcome": "Explicit inbound-only watcher polls remote changes at bounded intervals even without local YAML edits; backoff and outbound-only defaults preserved. Native protected publication and local installed readback.",
+    "nonGoals": [
+      "No changes to both-mode conflict/reopening semantics; parent233 remains open",
+      "No SDK implicit network effects, dependencies, fleet enrollment or daemon restart"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse existing watch loop scheduling and failure backoff; mark explicitly requested from direction as pending at each configured poll interval. Leave outbound and legacy both routing untouched. Test actual loop with deterministic clock and real Planfile import adapter using a local backend. Propagate actual inbound provider read failures with a bounded error and exception chaining so the existing scheduler honors backoff and cooldown; prerequisite PLF-113 / GitHub235.",
+      "components": [
+        {
+          "name": "sync-watch-scheduling",
+          "paths": [
+            "planfile/cli/groups/sync/commands.py",
+            "tests/test_sync_watch_inbound_polling.py",
+            "planfile/sync/operations.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert bounded polling change; parent233 remains open for broader bidirectional work."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_sync_watch_inbound_polling.py tests/test_sync_watch_recovery.py tests/test_sync_failure_status.py -q",
+          "python3 -m pytest -q",
+          "python3 -m ruff check planfile/cli/groups/sync/commands.py planfile/sync/operations.py tests/test_sync_watch_inbound_polling.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Actual watch loop and real import adapter: remote-only closure/new ticket, deterministic idle cadence, backoff/cooldown, unchanged default outbound behavior and concurrent local edits; full suite and protected exact-head publication."
+      }
+    ]
+  }
+}

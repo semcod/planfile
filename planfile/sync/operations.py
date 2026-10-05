@@ -403,7 +403,7 @@ def _fetch_external_tickets(
     integration_name: str,
     labels: list[str] | None = None,
 ) -> list | None:
-    """Fetch tickets from external system. Returns None on error, empty list if no tickets."""
+    """Fetch tickets; preserve provider failures for caller retry and cooldown."""
     try:
         kwargs = {"labels": labels} if labels else {}
         external_tickets = backend.list_tickets(**kwargs)
@@ -411,9 +411,10 @@ def _fetch_external_tickets(
             console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
             return None
         return list(external_tickets)
-    except Exception as e:
-        console.print(f"  ✗ Failed to fetch tickets: {e}")
-        return None
+    except Exception as error:
+        # Provider diagnostics may contain credentials. Keep a bounded message
+        # and the cause so the caller can still observe retry/cooldown hints.
+        raise RuntimeError("sync_inbound_fetch_failed") from error
 
 
 def _resolve_selected_remote_ids(

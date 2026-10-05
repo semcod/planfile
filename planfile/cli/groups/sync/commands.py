@@ -271,6 +271,7 @@ def watch_cmd(
     """Reconcile .planfile at startup and watch SDK/import/file changes.
 
     Explicit invocation authorizes the configured integrations and direction.
+    Inbound-only mode polls remote changes at the configured interval.
     SDK mutations alone remain local. Failed batches retry with backoff and
     provider cooldown; existing files are reconciled after a watcher restart.
     """
@@ -306,9 +307,12 @@ def watch_cmd(
     try:
         while True:
             current_states = _get_planfile_dir_states(planfile_dir)
-            pending = failures > 0 or not synced_once or _detect_changes(last_states, current_states)
+            pending = (
+                direction == "from" or failures > 0 or not synced_once
+                or _detect_changes(last_states, current_states)
+            )
             if pending and time.monotonic() >= next_attempt:
-                console.print("[blue]📝 Reconciling pending local changes...[/blue]")
+                console.print("[blue]📝 Reconciling configured integrations...[/blue]")
                 cooldowns: list[float] = []
                 if _run_sync_once(to_sync, directory, direction, cooldowns=cooldowns):
                     # Acknowledge the PRE-attempt snapshot. An edit during the
