@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-191",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: immediately ticket errors and repair through Koru/OpenCode. PLF-107 / GitHub228: preserve explicit repair input contract, verify and publish through independent protected delivery.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-191/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/models/ticket.py",
+    "tests/test_ticket_koru_repair_contract.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cc16628201d2f557fe117ca317cb1dd67dde5ba9",
+    "targetBranch": "main",
+    "outcome": "Koru OpenCode repair parameters survive Planfile SDK/storage/CLI/API and partial updates without defaults enabling repair on legacy tickets. Protected publication and installed readback.",
+    "nonGoals": [
+      "No worker deployment or willmux source changes",
+      "No dependency changes or relaxed execution authority"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add optional typed executor input fields; retain unknown-extra and omitted-legacy behavior. Planfile transports inputs; Koru keeps authority and verify policy.",
+      "components": [
+        {
+          "name": "ticket-input-contract",
+          "paths": [
+            "planfile/core/models/ticket.py",
+            "tests/test_ticket_koru_repair_contract.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Additive optional Koru repair input fields"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert bounded input contract extension."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_ticket_koru_repair_contract.py tests/test_ticket_llm_context_contract.py tests/test_ticket_execution_contract.py tests/test_partial_ticket_update.py -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Before/after loss reproduced through actual storage/API boundaries; Koru consumes preserved provider/repair inputs."
+      }
+    ]
+  }
+}

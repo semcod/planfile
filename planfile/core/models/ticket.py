@@ -74,6 +74,15 @@ class TicketInputs(BaseModel):
     api_timeout_seconds: float = 30.0
     mcp_tool: str | None = None
     llm_model: str | None = None
+    # Koru owns execution policy; Planfile preserves its explicit repair inputs.
+    # Omitted legacy inputs must not select a client or enable editing implicitly.
+    provider: str | None = None
+    patch_mode: StrictBool | None = None
+    promotion_mode: str | None = None
+    worktree: StrictBool | None = None
+    max_patch_attempts: int | None = Field(default=None, strict=True, ge=0)
+    verify_command: str | None = None
+    verify_profile: str | None = None
     # Explicit execution inputs consumed by Koru's context assembler/runner.
     # None keeps legacy tickets from acquiring implicit context or time limits.
     context_files: list[str] | None = None
@@ -92,6 +101,14 @@ class TicketInputs(BaseModel):
         data = handler(self)
         if "expect_files_changed" not in self.model_fields_set:
             data.pop("expect_files_changed", None)
+        # Koru distinguishes an absent flag from a present false/null override.
+        # Preserve that distinction even for ordinary model_dump()/JSON callers.
+        for key in (
+            "provider", "patch_mode", "promotion_mode", "worktree",
+            "max_patch_attempts", "verify_command", "verify_profile",
+        ):
+            if getattr(self, key) is None:
+                data.pop(key, None)
         return data
 
 
