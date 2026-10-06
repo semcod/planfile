@@ -185,6 +185,17 @@ class SprintCreate(BaseModel):
     objectives: list[str] = Field(default_factory=list)
 
 
+class VoiceSprintDigestResponse(BaseModel):
+    sprint: str
+    total_tickets: int
+    done_tickets: int
+    in_progress_tickets: int
+    blocked_tickets: int
+    todo_tickets: int
+    summary_text: str
+    tts_text: str
+
+
 class DSLRequest(BaseModel):
     command: str
     project_path: str = "."
@@ -1392,6 +1403,91 @@ def create_sprint(body: SprintCreate):
         if str(exc).startswith("sprint_exists:"):
             raise HTTPException(409, str(exc)) from exc
         raise
+
+
+# ── Voice sprint digest ────────────────────────────────────────────────────────
+
+@app.get("/api/voice-digest", response_model=VoiceSprintDigestResponse, tags=["sprints", "voice"])
+def get_voice_sprint_digest(
+    response: Response,
+    sprint: str = Query("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$"),
+    lang: str = Query("en", pattern=r"^(?:en|pl)$"),
+):
+    """Return a read-only, bounded natural-language sprint summary suitable for TTS."""
+    response.headers.update(NO_STORE_HEADERS)
+    pf = get_planfile()
+    try:
+        tickets = pf.list_tickets(sprint=sprint)
+    except Exception:
+        tickets = []
+
+    total = len(tickets)
+    done_count = 0
+    in_progress_count = 0
+    blocked_count = 0
+    todo_count = 0
+
+    for ticket in tickets:
+        status = (getattr(ticket, "status", None) or "open").lower().strip()
+        if status in {"done", "completed", "closed"}:
+            done_count += 1
+        elif status in {"in_progress", "in-progress", "active", "claimed", "running"}:
+            in_progress_count += 1
+        elif status in {"blocked"}:
+            blocked_count += 1
+        else:
+            todo_count += 1
+
+    if lang == "pl":
+        if total == 0:
+            summary = f"Sprint '{sprint}' jest pusty (0 zgłoszeń)."
+            tts = f"Sprint {sprint} nie zawiera obecnie żadnych zadań."
+        else:
+            pct = round((done_count / total) * 100)
+            summary = (
+                f"Sprint '{sprint}': {done_count}/{total} ukończonych ({pct}%), "
+                f"{in_progress_count} w toku, {blocked_count} zablokowanych, {todo_count} do zrobienia."
+            )
+            tts_parts = [
+                f"Podsumowanie sprintu {sprint}: łącznie {total} zgłoszeń.",
+                f"{done_count} ukończonych, {in_progress_count} w toku, {todo_count} do zrobienia.",
+            ]
+            if blocked_count > 0:
+                tts_parts.append(f"Uwaga: {blocked_count} zgłoszeń jest zablokowanych.")
+            if done_count == total:
+                tts_parts.append("Wszystkie zadania w tym sprincie zostały ukończone.")
+            tts = " ".join(tts_parts)
+    else:
+        if total == 0:
+            summary = f"Sprint '{sprint}' is empty with 0 tickets."
+            tts = f"Sprint {sprint} currently has no active tickets."
+        else:
+            pct = round((done_count / total) * 100)
+            summary = (
+                f"Sprint '{sprint}': {done_count}/{total} done ({pct}%), "
+                f"{in_progress_count} in progress, {blocked_count} blocked, {todo_count} to do."
+            )
+            tts_parts = [
+                f"Sprint {sprint} digest: {total} total tickets.",
+                f"{done_count} completed, {in_progress_count} in progress, {todo_count} to do.",
+            ]
+            if blocked_count > 0:
+                block_word = "ticket is" if blocked_count == 1 else "tickets are"
+                tts_parts.append(f"Notice: {blocked_count} {block_word} blocked.")
+            if done_count == total:
+                tts_parts.append("All tickets in this sprint are complete.")
+            tts = " ".join(tts_parts)
+
+    return VoiceSprintDigestResponse(
+        sprint=sprint,
+        total_tickets=total,
+        done_tickets=done_count,
+        in_progress_tickets=in_progress_count,
+        blocked_tickets=blocked_count,
+        todo_tickets=todo_count,
+        summary_text=summary,
+        tts_text=tts,
+    )
 
 
 # ── YAML direct operations ─────────────────────────────────────────────────────

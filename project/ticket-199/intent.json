@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-199",
+  "summary": "Voice sprint digest endpoint",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-199/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/api/server.py",
+    "tests/test_api_voice_digest.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "dc9bb7139871485ea9d1dea8d2918101a861d68c",
+    "targetBranch": "main",
+    "outcome": "Implement read-only GET /api/voice-digest endpoint in FastAPI server producing a bounded natural-language sprint summary suitable for TTS, with explicit sprint selection, status/counts aggregation, empty-sprint handling, and comprehensive API tests.",
+    "nonGoals": [
+      "No microphone STT or audio playback integration in this endpoint",
+      "No destructive sprint mutations"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Expose GET /api/voice-digest on the FastAPI server accepting sprint query parameter (defaulting to 'current'); query tickets using Planfile store, compute total, done, in-progress, blocked, and pending counts, and synthesize a concise, structured TTS-ready digest string along with structured metric fields; handle empty sprint gracefully.",
+      "components": [
+        {
+          "name": "api-server",
+          "paths": [
+            "planfile/api/server.py",
+            "tests/test_api_voice_digest.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "GET /api/voice-digest"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit on ticket/199-voice-sprint-digest-endpoint."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_api_voice_digest.py -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "All voice digest API tests pass and governance check exits 0"
+      }
+    ]
+  }
+}
