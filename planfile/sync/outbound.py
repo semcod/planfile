@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 import traceback
 from dataclasses import dataclass
@@ -23,6 +24,8 @@ from planfile.sync.receipts import (
     successful_receipt,
 )
 from planfile.sync.state import SyncState
+
+logger = logging.getLogger(__name__)
 
 
 def _is_rate_limit_error(error: Exception) -> bool:
@@ -82,7 +85,8 @@ def _recover_lost_create(
         return None
     try:
         matches = list(search(marker) or [])
-    except Exception:
+    except Exception as error:
+        logger.debug("Remote ticket search for marker %s failed: %s", marker, error)
         return None
     if len(matches) != 1:
         return None

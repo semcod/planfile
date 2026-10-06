@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,7 @@ from rich.console import Console
 
 from planfile.sync.state import SyncState, normalize_repository
 
+logger = logging.getLogger(__name__)
 console = Console()
 
 
@@ -478,8 +480,8 @@ def _resolve_selected_remote_ids(
                 mapped_remote = sync_state.get_remote_id(tid)
                 if mapped_remote:
                     remote_ids.add(str(mapped_remote).strip())
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("sync_state remote id lookup failed for ticket %s: %s", tid, exc)
 
         # Look up in sections (section tickets -> sync.<integration>.id)
         if sections:

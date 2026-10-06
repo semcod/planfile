@@ -110,4 +110,6 @@ This file indexes governance tickets without taking ownership of
 | **ticket-198** | [`README.md`](./ticket-198/README.md) | - | - | - | - | - |
 | **ticket-199** | [`README.md`](./ticket-199/README.md) | - | - |  [`ai-antigravity.md`](./ticket-199/ai-antigravity.md) | - | - |
 | **ticket-200** | [`README.md`](./ticket-200/README.md) | - | - |  [`ai-antigravity.md`](./ticket-200/ai-antigravity.md) | - | - |
+| **ticket-201** | [`README.md`](./ticket-201/README.md) | - | - | - | - | - |
+| **ticket-202** | [`README.md`](./ticket-202/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
