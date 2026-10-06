@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-195",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: Skip non-whitelisted hidden directories and prioritize per-file size bounding in FileAnalyzer.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-195/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/analysis/file_analyzer.py",
+    "tests/test_health_analysis.py",
+    "tests/test_health_check.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "026d61a35232a1612179b51784946ccd27af6e4f",
+    "targetBranch": "main",
+    "outcome": "Prune all non-whitelisted hidden directories in directory traversal and evaluate per-file size limits before repository byte budgets in FileAnalyzer.",
+    "nonGoals": [
+      "No changes to CLI argument signatures or output models"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Prune any directory component starting with dot (except .github) in FileAnalyzer traversal and is_excluded; check max_single_file_bytes before max_bytes so skipped files do not trip repository budget limits.",
+      "components": [
+        {
+          "name": "health-check-file-analyzer",
+          "paths": [
+            "planfile/analysis/file_analyzer.py",
+            "tests/test_health_analysis.py",
+            "tests/test_health_check.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit on ticket/195-health-bounds-hidden-dirs."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv run --no-sync pytest tests/test_health_analysis.py tests/test_health_check.py -q"
+        ],
+        "evidence": "15 passed in 3.19s (exact-head pytest tests/test_health_analysis.py tests/test_health_check.py)"
+      }
+    ]
+  }
+}

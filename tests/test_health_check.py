@@ -150,3 +150,46 @@ def test_health_check_local_project_runs_promptly():
     payload = json.loads(result.stdout)
     assert payload["status"] == "ok"
     assert payload["analysis"]["truncated"] is False
+
+
+def test_file_analyzer_excludes_all_hidden_directories_except_github(tmp_path):
+    # Hidden tool and ad-hoc dirs
+    hidden_dirs = [".intent-batch", ".benchmarks", ".my-tool", ".random_cache"]
+    for hd in hidden_dirs:
+        d = tmp_path / hd
+        d.mkdir(parents=True)
+        (d / "item.yaml").write_text("TODO: hidden tool issue\n", encoding="utf-8")
+
+    # .github workflow
+    gh = tmp_path / ".github" / "workflows"
+    gh.mkdir(parents=True)
+    (gh / "ci.yml").write_text("name: CI\non: push\n", encoding="utf-8")
+
+    analyzer = FileAnalyzer()
+    result = analyzer.analyze_directory(tmp_path)
+    analyzed = result["analyzed_files"]
+
+    assert any("ci.yml" in f for f in analyzed)
+    for hd in hidden_dirs:
+        assert not any(hd in f for f in analyzed)
+
+
+def test_file_analyzer_prioritizes_single_file_bounding_over_repo_byte_budget(tmp_path):
+    oversized = tmp_path / "oversized.yaml"
+    oversized.write_text("data: " + ("y" * 500) + "\n", encoding="utf-8")
+
+    normal = tmp_path / "normal.yaml"
+    normal.write_text("TODO: normal issue\n", encoding="utf-8")
+
+    analyzer = FileAnalyzer()
+    # max_bytes is 200, which is smaller than oversized file (500), but larger than normal file (~20)
+    result = analyzer.analyze_directory(
+        tmp_path,
+        max_bytes=200,
+        max_single_file_bytes=100,
+    )
+
+    # Repository budget must NOT be truncated because the oversized file was skipped
+    assert result["budget"]["truncated"] is False
+    assert str(oversized.resolve()) not in result["analyzed_files"]
+    assert str(normal.resolve()) in result["analyzed_files"]
