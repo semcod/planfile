@@ -47,7 +47,10 @@ class TicketStoreMixin:
             return None
 
     def _tickets_from_sprint_data(self, sprint_data: dict[str, Any]) -> list[Ticket]:
-        tickets_dict = sprint_data.get('tickets') or {}
+        if not isinstance(sprint_data, dict):
+            return []
+        raw_tickets = sprint_data.get('tickets')
+        tickets_dict = raw_tickets if isinstance(raw_tickets, dict) else {}
         tickets: list[Ticket] = []
         for tid, t_data in tickets_dict.items():
             if not isinstance(t_data, dict):
@@ -81,7 +84,9 @@ class TicketStoreMixin:
         if not self._yaml_file_cacheable(sprint_file):
             cache.pop(key, None)
             return self._tickets_from_sprint_data(sprint_data)
-        ticket_ids = (sprint_data.get('tickets') or {}).keys()
+        raw_tickets = sprint_data.get('tickets') if isinstance(sprint_data, dict) else None
+        tickets_dict = raw_tickets if isinstance(raw_tickets, dict) else {}
+        ticket_ids = tickets_dict.keys()
         evidence_revision = (
             self._ticket_evidence_revision(ticket_ids)
             if hasattr(self, '_ticket_evidence_revision')

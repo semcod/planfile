@@ -1,7 +1,7 @@
 """Schema validation and versioning for Planfile YAML documents."""
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import yaml
 
@@ -37,7 +37,7 @@ _CONFIG_SECTION_SETTINGS = {
 
 class SchemaValidator:
     """Validate planfile YAML files against schema definitions."""
-    
+
     # Schema definitions
     SCHEMAS = {
         "planfile": {
@@ -67,54 +67,78 @@ class SchemaValidator:
             }
         }
     }
-    
+
     @classmethod
-    def validate_planfile(cls, data: Dict[str, Any]) -> tuple[bool, List[str]]:
+    def validate_planfile(cls, data: dict[str, Any]) -> tuple[bool, list[str]]:
         """Validate planfile.yaml structure."""
         schema = cls.SCHEMAS["planfile"]
         errors = []
-        
+
         # Check required fields
         for field in schema["required_fields"]:
             if field not in data:
                 errors.append(f"Missing required field: {field}")
-        
+
         # Check schema version
         if "schema" in data:
             schema_version = data["schema"]
             if schema_version != schema["version"]:
                 errors.append(f"Schema version mismatch: expected {schema['version']}, got {schema_version}")
-        
+
         # Validate structure types
         for field, expected_type in schema["structure"].items():
             if field in data and not isinstance(data[field], expected_type):
                 errors.append(f"Field '{field}' should be {expected_type.__name__}, got {type(data[field]).__name__}")
-        
+
         return len(errors) == 0, errors
-    
+
     @classmethod
-    def validate_sprint(cls, data: Dict[str, Any]) -> tuple[bool, List[str]]:
+    def validate_sprint(cls, data: dict[str, Any]) -> tuple[bool, list[str]]:
         """Validate sprint YAML structure."""
+        if not isinstance(data, dict):
+            return False, ["Sprint document must be a mapping"]
+
         schema = cls.SCHEMAS["sprint"]
         errors = []
-        
+
+        # Detect legacy top-level tasks list
+        if "tasks" in data and isinstance(data["tasks"], list):
+            errors.append(
+                "Legacy top-level 'tasks' list detected; sprint documents require "
+                "'sprint.tickets' mapping (run migration to convert)"
+            )
+
         # Check required fields
         for field in schema["required_fields"]:
             if field not in data:
                 errors.append(f"Missing required field: {field}")
-        
+
         # Validate sprint structure
-        if "sprint" in data and isinstance(data["sprint"], dict):
-            sprint_data = data["sprint"]
-            if "id" not in sprint_data:
-                errors.append("Missing required field: sprint.id")
-            if "name" not in sprint_data:
-                errors.append("Missing required field: sprint.name")
-        
+        if "sprint" in data:
+            if not isinstance(data["sprint"], dict):
+                errors.append(
+                    f"Field 'sprint' must be a mapping, got {type(data['sprint']).__name__}"
+                )
+            else:
+                sprint_data = data["sprint"]
+                if "id" not in sprint_data:
+                    errors.append("Missing required field: sprint.id")
+                if "name" not in sprint_data:
+                    errors.append("Missing required field: sprint.name")
+                if "tickets" in sprint_data and not isinstance(sprint_data["tickets"], dict):
+                    errors.append(
+                        f"Field 'sprint.tickets' must be a mapping, got {type(sprint_data['tickets']).__name__}"
+                    )
+                if "tasks" in sprint_data and isinstance(sprint_data["tasks"], list):
+                    errors.append(
+                        "Legacy sprint 'tasks' list detected; sprint documents require "
+                        "'sprint.tickets' mapping (run migration to convert)"
+                    )
+
         return len(errors) == 0, errors
 
     @classmethod
-    def validate_config(cls, data: Dict[str, Any]) -> tuple[bool, List[str]]:
+    def validate_config(cls, data: dict[str, Any]) -> tuple[bool, list[str]]:
         """Validate the repository-local ``.planfile/config.yaml`` contract."""
         errors: list[str] = []
         if not isinstance(data, dict):
@@ -163,14 +187,14 @@ class SchemaValidator:
                     errors.append(f"Invalid config field {section}.{field}: {error}")
 
         return len(errors) == 0, errors
-    
+
     @classmethod
     def get_current_schema_version(cls) -> str:
         """Get the current schema version."""
         return CURRENT_SCHEMA_VERSION
 
 
-def detect_document_type(data: Dict[str, Any]) -> str:
+def detect_document_type(data: dict[str, Any]) -> str:
     """Infer the schema contract represented by a loaded YAML document."""
     if not isinstance(data, dict):
         return "unknown"
@@ -179,6 +203,10 @@ def detect_document_type(data: Dict[str, Any]) -> str:
     ):
         return "config"
     if "sprint" in data and isinstance(data.get("sprint"), dict):
+        return "sprint"
+    if data.get("schema") == "planfile.sprint/v1":
+        return "sprint"
+    if "tasks" in data and isinstance(data.get("tasks"), list) and ("project" not in data):
         return "sprint"
     if "schema" in data and "project" in data:
         return "planfile"
@@ -200,11 +228,11 @@ def detect_file_type(file_path: Path) -> str:
     return "planfile" if detected == "unknown" else detected
 
 
-def validate_yaml_file(file_path: Path, file_type: str = "planfile") -> tuple[bool, List[str]]:
+def validate_yaml_file(file_path: Path, file_type: str = "planfile") -> tuple[bool, list[str]]:
     """Validate a YAML file against its schema."""
     if not file_path.exists():
         return False, [f"File not found: {file_path}"]
-    
+
     with open(file_path) as f:
         try:
             from planfile.core.fastio import FastLoader
@@ -215,7 +243,7 @@ def validate_yaml_file(file_path: Path, file_type: str = "planfile") -> tuple[bo
 
     if not isinstance(data, dict):
         return False, ["YAML document must be a mapping"]
-    
+
     if file_type == "auto":
         file_type = detect_document_type(data)
 
