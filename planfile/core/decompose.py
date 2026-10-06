@@ -15,6 +15,7 @@ mutation lock, history, and sync stay intact. They are pure orchestration over t
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 try:
@@ -47,6 +48,8 @@ except ImportError:
     _native_transitive_dependents = None
     _native_tree_progress = None
     _native_validate_dag = None
+
+logger = logging.getLogger(__name__)
 
 
 class DecomposeError(ValueError):
@@ -188,8 +191,8 @@ def validate_ticket_dag(pf: Any, sprint: str = "current") -> tuple[bool, list[st
     if HAS_RUST_GRAPH and _native_validate_dag is not None:
         try:
             return _native_validate_dag(edges, all_nodes=ticket_ids, prerequisite_first=True)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Native DAG validation failed in validate_ticket_dag, falling back to python: %s", exc)
     return _validate_dag_python(edges, all_nodes=ticket_ids)
 
 
@@ -223,7 +226,8 @@ def add_dependency(pf: Any, ticket_id: str, *, after: list[str] | None = None,
     if HAS_RUST_GRAPH and _native_validate_dag is not None:
         try:
             is_dag, cycle_nodes = _native_validate_dag(edges, all_nodes=all_nodes, prerequisite_first=True)
-        except Exception:
+        except Exception as exc:
+            logger.debug("Native DAG validation failed in add_dependency, falling back to python: %s", exc)
             is_dag, cycle_nodes = _validate_dag_python(edges, all_nodes=all_nodes)
     else:
         is_dag, cycle_nodes = _validate_dag_python(edges, all_nodes=all_nodes)
@@ -264,8 +268,8 @@ def prune_dangling_dependencies(pf: Any, sprint: str = "current") -> dict:
                 "cleaned": cleaned,
                 "unblocked": [c["ticket"] for c in cleaned if c.get("unblocked")],
             }
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Native ghost cleaning failed in prune_dangling_dependencies, falling back to python: %s", exc)
 
     cleaned = []
     for t in tickets:
@@ -442,8 +446,8 @@ def execution_waves(
     if HAS_RUST_GRAPH and _native_execution_layers is not None:
         try:
             return _native_execution_layers(edges, all_nodes=ticket_ids, prerequisite_first=True)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Native execution layers failed in execution_waves, falling back to python: %s", exc)
 
     # Python fallback (Kahn's layer traversal)
     in_degree = dict.fromkeys(ticket_ids, 0)
@@ -478,7 +482,8 @@ def calculate_critical_priority(tickets: list[Any]) -> dict[str, int]:
             try:
                 deps = _native_transitive_dependents(edges, t.id, prerequisite_first=True)
                 weights[t.id] = len(deps)
-            except Exception:
+            except Exception as exc:
+                logger.debug("Failed calculating native transitive dependents for ticket %s: %s", t.id, exc)
                 weights[t.id] = 0
         return weights
 
