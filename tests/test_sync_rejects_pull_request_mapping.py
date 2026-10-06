@@ -6,6 +6,7 @@ for an id it cannot actually vouch for as the created issue.
 
 from __future__ import annotations
 
+from contextlib import nullcontext
 from types import SimpleNamespace
 
 import pytest
@@ -41,6 +42,28 @@ def test_get_ticket_rejects_a_pull_request_number():
 
     with pytest.raises(ValueError, match="pull request"):
         backend.get_ticket("19")
+
+
+def test_update_ticket_rejects_a_pull_request_number():
+    backend = GitHubBackend.__new__(GitHubBackend)
+    backend.config = {"repo": "semcod/monag"}
+    backend.repo = FakeRepoWithPullRequest()
+
+    with pytest.raises(ValueError, match="pull request"):
+        backend.update_ticket("19", body="new body")
+
+
+def test_create_ticket_rejects_pull_request_from_markers():
+    backend = GitHubBackend.__new__(GitHubBackend)
+    backend.config = {"repo": "semcod/monag"}
+    backend.repo = FakeRepoWithPullRequest()
+    backend._creation_lock = lambda dedup_key: nullcontext()
+    backend._find_issue_by_markers = lambda markers: FakeIssue(
+        number=19, title="fix: unrelated PR", pull_request=object()
+    )
+
+    with pytest.raises(ValueError, match="pull request"):
+        backend._create_ticket("new ticket", "<!-- planfile:deduplication-key=foo -->")
 
 
 class BackendCreatesButReadbackIsAPullRequest:

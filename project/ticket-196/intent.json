@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-196",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: Reject PR marker collisions and protect issue identities in GitHub sync.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-196/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "tests/test_sync_rejects_pull_request_mapping.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "675f55eb6f91579393c1d7668bc5c03c3753522a",
+    "targetBranch": "main",
+    "outcome": "Ensure GitHub sync rejects pull request mappings on update, create, and marker lookup, preventing PR collisions from mutating or resolving issue identities.",
+    "nonGoals": [
+      "No changes to external GitHub issue schema or non-GitHub sync backends"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add pull request guard to _update_ticket and ensure _create_ticket / _find_issue_by_markers strictly filter out pull requests across all lookup and readback paths.",
+      "components": [
+        {
+          "name": "sync-github",
+          "paths": [
+            "planfile/sync/github.py",
+            "tests/test_sync_rejects_pull_request_mapping.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit on ticket/196-pr-marker-collision-protection."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv run --no-sync pytest tests/test_sync_rejects_pull_request_mapping.py -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "All tests pass and governance check exits 0"
+      }
+    ]
+  }
+}
