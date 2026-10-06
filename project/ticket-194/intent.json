@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-194",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: Bound health check operational directory exclusion and single file size.",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-194/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/analysis/file_analyzer.py",
+    "planfile/cli/groups/health/commands.py",
+    "planfile/cli/groups/sync/commands.py",
+    "tests/test_health_analysis.py",
+    "tests/test_health_check.py",
+    "tests/test_sync_watch_inbound_polling.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e9bf5d949abe53ed104d597a7924d8efcb4e53d4",
+    "targetBranch": "main",
+    "outcome": "Prune operational directories during traversal, enforce single-file size bounds in FileAnalyzer, and enable idle inbound polling in sync watch both mode.",
+    "nonGoals": [
+      "No change to durable ticket schema or storage formats",
+      "No removal of existing analysis reporting models"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add operational directories to EXCLUDED_DIRS and prune directory traversal; enforce max_single_file_bytes in analyze_directory; update watch_cmd to trigger periodic inbound sync when direction is both and local files are unchanged.",
+      "components": [
+        {
+          "name": "health-check-analysis",
+          "paths": [
+            "planfile/analysis/file_analyzer.py",
+            "planfile/cli/groups/health/commands.py",
+            "tests/test_health_analysis.py",
+            "tests/test_health_check.py"
+          ]
+        },
+        {
+          "name": "sync-watch-polling",
+          "paths": [
+            "planfile/cli/groups/sync/commands.py",
+            "tests/test_sync_watch_inbound_polling.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit on ticket/194-health-check-bounds."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv run --no-sync pytest tests/test_health_analysis.py tests/test_health_check.py -q"
+        ],
+        "evidence": "13 passed in 4.49s (exact-head pytest tests/test_health_analysis.py tests/test_health_check.py)"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "uv run --no-sync pytest tests/test_sync_watch_inbound_polling.py -q"
+        ],
+        "evidence": "12 passed in 1.91s (exact-head pytest tests/test_sync_watch_inbound_polling.py)"
+      }
+    ]
+  }
+}
