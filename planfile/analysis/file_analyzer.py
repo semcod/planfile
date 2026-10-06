@@ -54,7 +54,11 @@ class FileAnalyzer:
         except ValueError:
             parts = file_path.parts
         for part in parts[:-1]:
-            if part in cls.EXCLUDED_DIRS or part.endswith(cls.EXCLUDED_DIR_SUFFIXES):
+            if (
+                (part.startswith('.') and part != '.github')
+                or part in cls.EXCLUDED_DIRS
+                or part.endswith(cls.EXCLUDED_DIR_SUFFIXES)
+            ):
                 return True
         return False
 
@@ -211,10 +215,11 @@ class FileAnalyzer:
         seen: set[Path] = set()
 
         for root, dirs, files in os.walk(directory):
-            # Prune excluded directories in-place before traversing into them
+            # Prune excluded and non-whitelisted hidden directories in-place
             dirs[:] = [
                 d for d in dirs
-                if d not in self.EXCLUDED_DIRS
+                if not (d.startswith('.') and d != '.github')
+                and d not in self.EXCLUDED_DIRS
                 and not d.endswith(self.EXCLUDED_DIR_SUFFIXES)
             ]
             dirs.sort()
@@ -242,13 +247,6 @@ class FileAnalyzer:
                 except OSError:
                     file_size = 0
 
-                if max_files is not None and len(analyzed_files) >= max_files:
-                    truncated = True
-                    break
-                if max_bytes is not None and analyzed_bytes + file_size > max_bytes:
-                    truncated = True
-                    break
-
                 if max_single_file_bytes is not None and file_size > max_single_file_bytes:
                     all_issues.append(
                         ExtractedIssue(
@@ -264,6 +262,13 @@ class FileAnalyzer:
                         )
                     )
                     continue
+
+                if max_files is not None and len(analyzed_files) >= max_files:
+                    truncated = True
+                    break
+                if max_bytes is not None and analyzed_bytes + file_size > max_bytes:
+                    truncated = True
+                    break
 
                 issues, metrics, tasks = self.analyze_file(
                     file_path, max_single_file_bytes=max_single_file_bytes
