@@ -47,27 +47,68 @@ class DSLExecutor:
             )
         return self._pf
 
-    def run(self, text: str, *, allow_llm_fallback: bool = True) -> DSLResult:
+    def run(self, text: str, *, allow_llm_fallback: bool = True, dry_run: bool = False) -> DSLResult:
         """Parse and execute a DSL command string with optional LLM translation fallback."""
+        stripped = text.strip()
+        if stripped.startswith("{") and ("wellmanifest.nl-plan/v1" in stripped or '"plan"' in stripped):
+            return self.execute_plan(stripped, dry_run=dry_run)
+
         conv_res = self._handle_conversational_query(text)
         if conv_res is not None:
             return conv_res
 
         cmd = self._parser.parse(text)
+        if dry_run:
+            cmd.params["dry_run"] = True
+
         if (not cmd.is_valid or cmd.verb == "unknown") and allow_llm_fallback:
-            translated = self._translate_with_llm(text)
-            if translated:
-                fallback_cmd = self._parser.parse(translated)
-                if fallback_cmd.is_valid:
-                    res = self.execute(fallback_cmd)
-                    res.source_layer = "llm_fallback"
-                    res.command["source_layer"] = "llm_fallback"
-                    res.command["original_input"] = text
-                    return res
+            if not (cmd.raw.startswith(("planfile://", "uri:")) or cmd.params.get("error")):
+                translated = self._translate_with_llm(text)
+                if translated:
+                    fallback_cmd = self._parser.parse(translated)
+                    if fallback_cmd.is_valid:
+                        if dry_run:
+                            fallback_cmd.params["dry_run"] = True
+                        res = self.execute(fallback_cmd)
+                        res.source_layer = "llm_fallback"
+                        res.command["source_layer"] = "llm_fallback"
+                        res.command["original_input"] = text
+                        return res
 
         res = self.execute(cmd)
-        res.source_layer = "nl_fast_path" if any(w in text.lower() for w in ("pokaż", "zadanie", "zadania", "otwarte", "zamknij", "dodaj", "tickety")) else "direct_dsl"
+        if cmd.verb in ("clarify", "unsupported", "sequence"):
+            res.source_layer = "nl_plan_v1"
+        elif cmd.raw.startswith(("planfile://", "uri:")):
+            res.source_layer = "uri_dsl"
+        else:
+            res.source_layer = "nl_fast_path" if any(w in text.lower() for w in ("pokaż", "zadanie", "zadania", "otwarte", "zamknij", "dodaj", "tickety")) else "direct_dsl"
         res.command["source_layer"] = res.source_layer
+        return res
+
+    def execute_plan(self, envelope: dict | str, *, dry_run: bool = False) -> DSLResult:
+        """Execute a wellmanifest.nl-plan/v1 envelope."""
+        import json
+        if isinstance(envelope, str):
+            try:
+                envelope = json.loads(envelope)
+            except Exception as exc:
+                return DSLResult(ok=False, error=f"Invalid JSON envelope: {exc}", source_layer="nl_plan_v1")
+        if not isinstance(envelope, dict):
+            return DSLResult(ok=False, error="Envelope must be a JSON object", source_layer="nl_plan_v1")
+        schema = envelope.get("schema")
+        if schema not in ("wellmanifest.nl-plan/v1", "nl-plan/v1"):
+            return DSLResult(
+                ok=False,
+                error=f"Unsupported schema '{schema}'. Expected 'wellmanifest.nl-plan/v1'.",
+                source_layer="nl_plan_v1",
+            )
+        raw_json = json.dumps(envelope)
+        cmd = self._parser.parse(raw_json)
+        if dry_run:
+            cmd.params["dry_run"] = True
+        res = self.execute(cmd)
+        res.source_layer = "nl_plan_v1"
+        res.command["source_layer"] = "nl_plan_v1"
         return res
 
     def _handle_conversational_query(self, text: str) -> DSLResult | None:
@@ -77,9 +118,9 @@ class DSLExecutor:
 
         clean = text.strip().lower().rstrip("?!.,")
         if clean.startswith((
-            "create ticket", "update ticket", "list tickets", "show ticket",
+            "planfile://", "uri:", "create ticket", "update ticket", "list tickets", "show ticket",
             "done ticket", "delete ticket", "export ", "query tickets", "move ticket",
-            "set ticket", "start ticket", "block ticket",
+            "set ticket", "start ticket", "block ticket", "set config", "show config",
         )):
             return None
 
@@ -448,28 +489,127 @@ class DSLExecutor:
         return DSLResult(ok=True, command=cmd.to_dict(), message=help_text)
 
     def _exec_unknown(self, cmd: DSLCommand) -> DSLResult:
+        err = cmd.params.get("error") or f"Unrecognized command: '{cmd.raw}'. Type 'help' for usage."
         return DSLResult(
             ok=False,
             command=cmd.to_dict(),
-            error=f"Unrecognized command: '{cmd.raw}'. Type 'help' for usage.",
+            error=err,
+        )
+
+    def _exec_clarify(self, cmd: DSLCommand) -> DSLResult:
+        q = cmd.params.get("question", "Clarification required")
+        return DSLResult(
+            ok=False,
+            command=cmd.to_dict(),
+            data={"status": "clarify", "question": q},
+            message=q,
+            source_layer="nl_plan_v1",
+        )
+
+    def _exec_unsupported(self, cmd: DSLCommand) -> DSLResult:
+        reason = cmd.params.get("reason", "Unsupported request")
+        return DSLResult(
+            ok=False,
+            command=cmd.to_dict(),
+            data={"status": "unsupported", "reason": reason},
+            error=reason,
+            source_layer="nl_plan_v1",
+        )
+
+    def _exec_sequence(self, cmd: DSLCommand) -> DSLResult:
+        import json
+        calls = cmd.params.get("calls", [])
+        if not (1 <= len(calls) <= 16):
+            return DSLResult(
+                ok=False,
+                command=cmd.to_dict(),
+                error=f"Sequence must contain 1-16 calls, got {len(calls)}",
+                source_layer="nl_plan_v1",
+            )
+        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
+        step_results = []
+        for idx, call in enumerate(calls):
+            if not isinstance(call, dict) or call.get("kind") != "call":
+                return DSLResult(
+                    ok=False,
+                    command=cmd.to_dict(),
+                    error=f"Invalid call specification at step {idx}: {call}",
+                    data={"completed_steps": idx, "step_results": step_results},
+                    source_layer="nl_plan_v1",
+                )
+            op = call.get("operation")
+            args = call.get("arguments", {})
+            if not op or not isinstance(op, str):
+                return DSLResult(
+                    ok=False,
+                    command=cmd.to_dict(),
+                    error=f"Missing operation URI in step {idx}",
+                    data={"completed_steps": idx, "step_results": step_results},
+                    source_layer="nl_plan_v1",
+                )
+            step_cmd_text = f"uri: {op} {json.dumps(args)}"
+            step_cmd = self._parser.parse(step_cmd_text)
+            if dry_run:
+                step_cmd.params["dry_run"] = True
+            step_res = self.execute(step_cmd)
+            step_results.append(step_res.to_dict())
+            if not step_res.ok:
+                return DSLResult(
+                    ok=False,
+                    command=cmd.to_dict(),
+                    error=f"Step {idx} ({op}) failed: {step_res.error}",
+                    data={"completed_steps": idx, "step_results": step_results},
+                    source_layer="nl_plan_v1",
+                )
+        return DSLResult(
+            ok=True,
+            command=cmd.to_dict(),
+            data={"steps_count": len(calls), "step_results": step_results, "dry_run": dry_run},
+            message=f"Executed sequence of {len(calls)} call(s)",
+            source_layer="nl_plan_v1",
         )
 
     def _exec_create(self, cmd: DSLCommand) -> DSLResult:
         obj = cmd.object_type or "ticket"
         if obj == "ticket":
-            name = cmd.target or cmd.params.pop("name", None)
+            params = dict(cmd.params)
+            params.pop("title", None)
+            params_name = params.pop("name", None)
+            name = cmd.target or params_name
             if not name:
                 return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket name required.")
-            params = dict(cmd.params)
-            params.setdefault("priority", "normal")
-            params.setdefault("sprint", "current")
+            dry_run = bool(params.pop("dry_run", False)) or params.get("mode") == "dry-run"
+            priority = params.pop("priority", "normal")
+            sprint = params.pop("sprint", "current")
+            labels = params.pop("labels", [])
+            description = params.pop("description", "")
+            if dry_run:
+                with self.pf.store.mutation_lock():
+                    preview_id = self.pf.store._next_id_unlocked()
+                return DSLResult(
+                    ok=True,
+                    command=cmd.to_dict(),
+                    data={
+                        "dry_run": True,
+                        "ticket": {
+                            "id": preview_id,
+                            "name": name,
+                            "priority": priority,
+                            "sprint": sprint,
+                            "status": "todo",
+                            "labels": labels,
+                            "description": description,
+                        },
+                    },
+                    message=f"[dry-run] Would create ticket {preview_id}: {name}",
+                )
             from planfile import TicketSource
             ticket = self.pf.create_ticket(
                 name=name,
-                priority=params.pop("priority"),
-                sprint=params.pop("sprint"),
-                description=params.pop("description", ""),
-                labels=params.pop("labels", []),
+                priority=priority,
+                sprint=sprint,
+                description=description,
+                labels=labels,
                 source=TicketSource(tool="dsl"),
                 **params,
             )
@@ -488,6 +628,13 @@ class DSLExecutor:
         import yaml
         name = cmd.target or cmd.params.get("name", "Sprint")
         days = int(cmd.params.get("days", 14))
+        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
+        if dry_run:
+            return DSLResult(
+                ok=True, command=cmd.to_dict(),
+                data={"dry_run": True, "name": name, "length_days": days},
+                message=f"[dry-run] Would create sprint: {name}",
+            )
         pf_path = Path(self.pf.store.project_dir) / "planfile.yaml"
         if not pf_path.exists():
             return DSLResult(ok=False, command=cmd.to_dict(), error="planfile.yaml not found.")
@@ -568,9 +715,21 @@ class DSLExecutor:
         ticket_id = cmd.target
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
-        if not cmd.params:
+        params = dict(cmd.params)
+        dry_run = bool(params.pop("dry_run", False)) or params.get("mode") == "dry-run"
+        if not params:
             return DSLResult(ok=False, command=cmd.to_dict(), error="No fields to update.")
-        ticket = self.pf.update_ticket(ticket_id, **cmd.params)
+        if dry_run:
+            ticket = self.pf.get_ticket(ticket_id)
+            if not ticket:
+                return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
+            return DSLResult(
+                ok=True,
+                command=cmd.to_dict(),
+                data={"dry_run": True, "ticket_id": ticket_id, "updates": params},
+                message=f"[dry-run] Would update {ticket_id}",
+            )
+        ticket = self.pf.update_ticket(ticket_id, **params)
         if not ticket:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
         return DSLResult(
@@ -623,10 +782,20 @@ class DSLExecutor:
     def _exec_move(self, cmd: DSLCommand) -> DSLResult:
         ticket_id = cmd.target
         to_sprint = cmd.params.get("to") or cmd.params.get("sprint")
+        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
         if not to_sprint:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Target sprint required: move ticket ID to=sprint_id")
+        if dry_run:
+            ticket = self.pf.get_ticket(ticket_id)
+            if not ticket:
+                return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
+            return DSLResult(
+                ok=True, command=cmd.to_dict(),
+                data={"dry_run": True, "ticket_id": ticket_id, "to_sprint": to_sprint},
+                message=f"[dry-run] Would move {ticket_id} → sprint {to_sprint}",
+            )
         ok = self.pf.store.move_ticket(ticket_id, str(to_sprint))
         if not ok:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
@@ -638,8 +807,18 @@ class DSLExecutor:
 
     def _exec_done(self, cmd: DSLCommand) -> DSLResult:
         ticket_id = cmd.target
+        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
+        if dry_run:
+            ticket = self.pf.get_ticket(ticket_id)
+            if not ticket:
+                return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
+            return DSLResult(
+                ok=True, command=cmd.to_dict(),
+                data={"dry_run": True, "ticket_id": ticket_id, "status": "done"},
+                message=f"[dry-run] Would mark {ticket_id} as done",
+            )
         ticket = self.pf.update_ticket(ticket_id, status="done")
         if not ticket:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
@@ -651,8 +830,18 @@ class DSLExecutor:
 
     def _exec_start(self, cmd: DSLCommand) -> DSLResult:
         ticket_id = cmd.target
+        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
+        if dry_run:
+            ticket = self.pf.get_ticket(ticket_id)
+            if not ticket:
+                return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
+            return DSLResult(
+                ok=True, command=cmd.to_dict(),
+                data={"dry_run": True, "ticket_id": ticket_id, "status": "in_progress"},
+                message=f"[dry-run] Would start {ticket_id}",
+            )
         ticket = self.pf.update_ticket(ticket_id, status="in_progress")
         if not ticket:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
@@ -664,9 +853,19 @@ class DSLExecutor:
 
     def _exec_block(self, cmd: DSLCommand) -> DSLResult:
         ticket_id = cmd.target
+        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
         reason = cmd.params.get("reason")
+        if dry_run:
+            ticket = self.pf.get_ticket(ticket_id)
+            if not ticket:
+                return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
+            return DSLResult(
+                ok=True, command=cmd.to_dict(),
+                data={"dry_run": True, "ticket_id": ticket_id, "status": "blocked", "reason": reason},
+                message=f"[dry-run] Would block {ticket_id}",
+            )
         ticket = self.pf.block_ticket(ticket_id, reason=reason)
         if not ticket:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
@@ -678,8 +877,18 @@ class DSLExecutor:
 
     def _exec_delete(self, cmd: DSLCommand) -> DSLResult:
         ticket_id = cmd.target
+        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
+        if dry_run:
+            ticket = self.pf.get_ticket(ticket_id)
+            if not ticket:
+                return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
+            return DSLResult(
+                ok=True, command=cmd.to_dict(),
+                data={"dry_run": True, "ticket_id": ticket_id, "deleted": True},
+                message=f"[dry-run] Would delete {ticket_id}",
+            )
         ok = self.pf.delete_ticket(ticket_id)
         if not ok:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
