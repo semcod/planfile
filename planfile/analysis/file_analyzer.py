@@ -3,10 +3,13 @@ File analysis module for planfile generation.
 Extracts issues, metrics, and tasks from various file formats.
 """
 
+import logging
 import os
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
 from planfile.analysis.parsers.json_parser import analyze_json
@@ -127,8 +130,8 @@ class FileAnalyzer:
                         return issues, metrics, tasks
                     except TimeoutError:
                         raise
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        logger.debug("Native file analyzer failed for %s, falling back to text analysis: %s", file_path, exc)
                 # Default text analysis
                 issues, metrics, tasks = analyze_text(file_path)
             else:

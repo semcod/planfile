@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+import os
 from dataclasses import dataclass, field
 from typing import Any
 
 from planfile.dsl.parser import DSLCommand, DSLParser
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -306,7 +310,8 @@ class DSLExecutor:
             try:
                 tickets = self.pf.list_tickets(sprint="current")
                 all_tickets = self.pf.list_tickets(sprint="all")
-            except Exception:
+            except Exception as exc:
+                logger.debug("Failed to list tickets for blocked queries: %s", exc)
                 tickets, all_tickets = [], []
             seen = set()
             combined = []
@@ -336,7 +341,8 @@ class DSLExecutor:
         if any(p in normalized for p in ("nastepne", "co robic", "co dalej", "next task", "next ticket", "co teraz", "kolejne zadanie")):
             try:
                 tickets = self.pf.list_tickets(sprint="current")
-            except Exception:
+            except Exception as exc:
+                logger.debug("Failed to list tickets for next task queries: %s", exc)
                 tickets = []
             open_tickets = [t for t in tickets if getattr(t, "status", "") in ("todo", "open", "ready", "pending")]
             prio_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
@@ -366,7 +372,8 @@ class DSLExecutor:
             try:
                 tickets = self.pf.list_tickets(sprint="current")
                 all_tickets = self.pf.list_tickets(sprint="all")
-            except Exception:
+            except Exception as exc:
+                logger.debug("Failed to list tickets for sprint summary queries: %s", exc)
                 tickets, all_tickets = [], []
             seen = set()
             combined = []
@@ -400,7 +407,8 @@ class DSLExecutor:
         if any(p in normalized for p in ("wysoki priorytet", "krytyczne", "pilne", "high priority", "critical")):
             try:
                 tickets = self.pf.list_tickets(sprint="current")
-            except Exception:
+            except Exception as exc:
+                logger.debug("Failed to list tickets for high priority queries: %s", exc)
                 tickets = []
             high_prio = [t for t in tickets if getattr(t, "priority", "") in ("critical", "high") and getattr(t, "status", "") != "done"]
             if not high_prio:
@@ -420,7 +428,6 @@ class DSLExecutor:
 
     def _translate_with_llm(self, text: str) -> str | None:
         """Translate natural language text to canonical planfile DSL via LiteLLM if available."""
-        import os
         if not (os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY") or os.getenv("GEMINI_API_KEY")):
             return None
         prompt = (
@@ -446,7 +453,8 @@ class DSLExecutor:
             if cleaned.startswith("dsl "):
                 cleaned = cleaned[4:].strip()
             return cleaned
-        except Exception:
+        except Exception as exc:
+            logger.debug("Planfile LLM translation fallback failed for %r: %s", text, exc)
             return None
 
     def execute(self, cmd: DSLCommand) -> DSLResult:
