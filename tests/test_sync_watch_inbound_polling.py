@@ -159,3 +159,54 @@ def test_empty_remote_response_is_successful_and_preserves_local_ticket(incoming
     incoming["run"](once=True)
     assert incoming["calls"] == [0]
     assert incoming["pf"].get_ticket(incoming["local_id"]).model_dump(mode="json") == before
+
+
+def test_sync_watch_both_mode_polls_inbound_when_idle(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    remote = TicketState(
+        id="20", name="Tracked both issue", status="open",
+        url="https://github.com/fixture/watch/issues/20", key="fixture/watch#20",
+    )
+    pf.create_ticket(
+        remote.name, sprint="backlog", integration=["github"], backend="github",
+        sync={"github": {"id": remote.id, "url": remote.url, "key": remote.key}},
+    )
+    state = {
+        "clock": 0, "ticks": 0, "limit": 4, "directions": [], "calls": [],
+        "remote": [remote],
+    }
+
+    class Backend:
+        config = {"repo": "fixture/watch"}
+
+        def list_tickets(self):
+            return state["remote"]
+
+    # Reconcile initial state so store is aligned before starting watch
+    sync_from_external(Backend(), pf.store, False, "github")
+
+    def sync(integration, directory, dry_run, direction, **kwargs):
+        assert integration == "github" and directory == str(tmp_path)
+        assert dry_run is False
+        state["calls"].append(state["clock"])
+        state["directions"].append(direction)
+        if direction in ("from", "both"):
+            sync_from_external(Backend(), pf.store, False, "github")
+
+    def sleep(seconds):
+        state["clock"] += seconds
+        state["ticks"] += 1
+        if state["ticks"] >= state["limit"]:
+            raise KeyboardInterrupt
+
+    monkeypatch.setattr(IntegrationConfig, "load_configs", lambda self: None)
+    monkeypatch.setattr(commands, "sync_integration", sync)
+    monkeypatch.setattr(commands.time, "monotonic", lambda: state["clock"])
+    monkeypatch.setattr(commands.time, "sleep", sleep)
+
+    commands.watch_cmd(
+        str(tmp_path), 5, ["github"], "both", False,
+    )
+
+    assert state["calls"] == [0, 5, 10, 15]
+    assert state["directions"] == ["both", "from", "from", "from"]

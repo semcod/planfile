@@ -3,6 +3,8 @@ File analysis module for planfile generation.
 Extracts issues, metrics, and tasks from various file formats.
 """
 
+import os
+from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +15,8 @@ from planfile.analysis.parsers.toon_parser import analyze_toon
 from planfile.analysis.parsers.yaml_parser import analyze_yaml, extract_from_yaml_structure
 
 try:
-    from planfile_analyzer import analyze_file as _native_analyze_file, HAS_RUST_ANALYZER
+    from planfile_analyzer import HAS_RUST_ANALYZER
+    from planfile_analyzer import analyze_file as _native_analyze_file
 except ImportError:
     HAS_RUST_ANALYZER = False
     _native_analyze_file = None
@@ -21,6 +24,8 @@ except ImportError:
 
 class FileAnalyzer:
     """Analyzes YAML/JSON files to extract issues and metrics."""
+
+    DEFAULT_MAX_SINGLE_FILE_BYTES: int = 1_048_576  # 1 MB
 
     #: Directory names that never contain first-party source. Matched against the
     #: parts of each path, so a vendored tree is skipped wherever it is nested.
@@ -30,6 +35,8 @@ class FileAnalyzer:
         'dist', 'build', '.tox', '.nox', '.mypy_cache', '.ruff_cache',
         'htmlcov', '.coverage', 'coverage', '.cache', '.gradle', 'target',
         '.terraform', '.next', '.nuxt', '.svelte-kit', 'bower_components',
+        '.subactor', '.worktrees', '.planfile', '.governance', '.intent',
+        '.cursor', 'analyses',
     })
 
     #: Suffixes of directory names that never contain first-party source.
@@ -53,15 +60,44 @@ class FileAnalyzer:
 
     def __init__(self):
         self.extractors = {
+            '.toon.yaml': analyze_toon,
+            '.toon.yml': analyze_toon,
             '.yaml': analyze_yaml,
             '.yml': analyze_yaml,
             '.json': analyze_json,
-            '.toon.yaml': analyze_toon,
-            '.toon.yml': analyze_toon,
         }
 
-    def analyze_file(self, file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedMetric], list[ExtractedTask]]:
+    def analyze_file(
+        self,
+        file_path: Path,
+        *,
+        max_single_file_bytes: int | None = DEFAULT_MAX_SINGLE_FILE_BYTES,
+    ) -> tuple[list[ExtractedIssue], list[ExtractedMetric], list[ExtractedTask]]:
         """Analyze a single file and extract issues, metrics, and tasks."""
+        if max_single_file_bytes is not None:
+            try:
+                file_size = file_path.stat().st_size
+                if file_size > max_single_file_bytes:
+                    return (
+                        [
+                            ExtractedIssue(
+                                name=f"File exceeds analysis size limit in {file_path.name}",
+                                description=(
+                                    f"File {file_path.name} exceeds maximum single file analysis size "
+                                    f"of {max_single_file_bytes} bytes ({file_size} bytes) and was skipped."
+                                ),
+                                priority="medium",
+                                category="health",
+                                file_path=str(file_path),
+                                tags=["oversized", "skipped"],
+                            )
+                        ],
+                        [],
+                        [],
+                    )
+            except OSError:
+                pass
+
         issues = []
         metrics = []
         tasks = []
@@ -76,20 +112,25 @@ class FileAnalyzer:
                 analyzer = func
                 break
 
-        if not analyzer:
-            if HAS_RUST_ANALYZER and _native_analyze_file is not None:
-                try:
-                    raw_issues, raw_metrics, raw_tasks = _native_analyze_file(file_path)
-                    issues = [ExtractedIssue(**i) for i in raw_issues]
-                    metrics = [ExtractedMetric(**m) for m in raw_metrics]
-                    tasks = [ExtractedTask(**t) for t in raw_tasks]
-                    return issues, metrics, tasks
-                except Exception:
-                    pass
-            # Default text analysis
-            issues, metrics, tasks = analyze_text(file_path)
-        else:
-            issues, metrics, tasks = analyzer(file_path)
+        try:
+            if not analyzer:
+                if HAS_RUST_ANALYZER and _native_analyze_file is not None:
+                    try:
+                        raw_issues, raw_metrics, raw_tasks = _native_analyze_file(file_path)
+                        issues = [ExtractedIssue(**i) for i in raw_issues]
+                        metrics = [ExtractedMetric(**m) for m in raw_metrics]
+                        tasks = [ExtractedTask(**t) for t in raw_tasks]
+                        return issues, metrics, tasks
+                    except TimeoutError:
+                        raise
+                    except Exception:
+                        pass
+                # Default text analysis
+                issues, metrics, tasks = analyze_text(file_path)
+            else:
+                issues, metrics, tasks = analyzer(file_path)
+        except TimeoutError:
+            raise
 
         return issues, metrics, tasks
 
@@ -114,14 +155,15 @@ class FileAnalyzer:
     def analyze_directory(
         self,
         directory: Path,
-        patterns: list[str] = None,
+        patterns: list[str] | None = None,
         *,
         max_files: int | None = None,
         max_bytes: int | None = None,
+        max_single_file_bytes: int | None = DEFAULT_MAX_SINGLE_FILE_BYTES,
     ) -> dict[str, Any]:
         """Analyze matching files without exceeding optional read budgets.
 
-        The analyzer is read-only.  Limits are enforced before opening each
+        The analyzer is read-only. Limits are enforced before opening each
         file, and the result records whether the view was truncated so callers
         can fail closed instead of presenting a partial health report as
         complete.
@@ -130,8 +172,33 @@ class FileAnalyzer:
             raise ValueError("max_files must be positive")
         if max_bytes is not None and max_bytes < 1:
             raise ValueError("max_bytes must be positive")
+        if max_single_file_bytes is not None and max_single_file_bytes < 1:
+            raise ValueError("max_single_file_bytes must be positive")
 
         directory = Path(directory)
+        if directory.is_file():
+            issues, metrics, tasks = self.analyze_file(
+                directory, max_single_file_bytes=max_single_file_bytes
+            )
+            try:
+                f_size = directory.stat().st_size
+            except OSError:
+                f_size = 0
+            return {
+                'issues': issues,
+                'metrics': metrics,
+                'tasks': tasks,
+                'analyzed_files': [str(directory)],
+                'summary': self._generate_summary(issues, metrics, tasks),
+                'budget': {
+                    'max_files': max_files,
+                    'max_bytes': max_bytes,
+                    'files': 1,
+                    'bytes': f_size,
+                    'truncated': False,
+                },
+            }
+
         if patterns is None:
             patterns = ['*.yaml', '*.yml', '*.json', '*.toon.yaml', '*.toon.yml']
 
@@ -143,34 +210,64 @@ class FileAnalyzer:
         truncated = False
         seen: set[Path] = set()
 
-        for pattern in patterns:
-            for file_path in directory.rglob(pattern):
-                file_path = file_path.resolve()
+        for root, dirs, files in os.walk(directory):
+            # Prune excluded directories in-place before traversing into them
+            dirs[:] = [
+                d for d in dirs
+                if d not in self.EXCLUDED_DIRS
+                and not d.endswith(self.EXCLUDED_DIR_SUFFIXES)
+            ]
+            dirs.sort()
+            for file_name in sorted(files):
+                # Skip hidden files and self-analysis outputs
+                if file_name.startswith('.'):
+                    continue
+                if 'analysis_summary.json' in file_name or 'local-strategy.yaml' in file_name:
+                    continue
+
+                rel_path = os.path.relpath(os.path.join(root, file_name), directory)
+                if not any(fnmatch(file_name, pat) or fnmatch(rel_path, pat) for pat in patterns):
+                    continue
+
+                file_path = Path(root, file_name).resolve()
                 if file_path in seen:
                     continue
                 seen.add(file_path)
-                # Skip hidden files and anything inside a vendored/build directory.
-                # NOTE: rglob yields files, so a dot-prefixed *directory* such as
-                # .venv is only caught by the directory check below.
-                if file_path.name.startswith('.') or self.is_excluded(file_path, directory):
+
+                if self.is_excluded(file_path, directory):
                     continue
 
-                # Skip analysis files to prevent recursive analysis
-                if 'analysis_summary.json' in file_path.name or 'local-strategy.yaml' in file_path.name:
-                    continue
-
-                if max_files is not None and len(analyzed_files) >= max_files:
-                    truncated = True
-                    break
                 try:
                     file_size = file_path.stat().st_size
                 except OSError:
                     file_size = 0
+
+                if max_files is not None and len(analyzed_files) >= max_files:
+                    truncated = True
+                    break
                 if max_bytes is not None and analyzed_bytes + file_size > max_bytes:
                     truncated = True
                     break
 
-                issues, metrics, tasks = self.analyze_file(file_path)
+                if max_single_file_bytes is not None and file_size > max_single_file_bytes:
+                    all_issues.append(
+                        ExtractedIssue(
+                            name=f"File exceeds analysis size limit in {file_path.name}",
+                            description=(
+                                f"File {file_path.name} exceeds maximum single file analysis size "
+                                f"of {max_single_file_bytes} bytes ({file_size} bytes) and was skipped."
+                            ),
+                            priority="medium",
+                            category="health",
+                            file_path=str(file_path),
+                            tags=["oversized", "skipped"],
+                        )
+                    )
+                    continue
+
+                issues, metrics, tasks = self.analyze_file(
+                    file_path, max_single_file_bytes=max_single_file_bytes
+                )
 
                 all_issues.extend(issues)
                 all_metrics.extend(metrics)

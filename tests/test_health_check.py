@@ -95,3 +95,58 @@ def test_health_timeout_is_structured_and_nonzero(tmp_path, monkeypatch):
     assert payload["status"] == "timeout"
     assert payload["diagnostics"][0]["code"] == "HEALTH_TIMEOUT"
     assert str(tmp_path.resolve()) in payload["diagnostics"][0]["message"]
+
+
+def test_file_analyzer_excludes_operational_directories(tmp_path):
+    # Setup operational directories with yaml files
+    operational_dirs = [".subactor", ".worktrees", ".planfile", ".governance", ".intent", "analyses"]
+    for op_dir in operational_dirs:
+        nested = tmp_path / op_dir / "nested"
+        nested.mkdir(parents=True)
+        (nested / "item.yaml").write_text("TODO: operational issue\n", encoding="utf-8")
+
+    # Setup valid source directory
+    src = tmp_path / "src"
+    src.mkdir(parents=True)
+    (src / "app.yaml").write_text("TODO: source issue\n", encoding="utf-8")
+
+    analyzer = FileAnalyzer()
+    result = analyzer.analyze_directory(tmp_path)
+
+    analyzed = result["analyzed_files"]
+    assert any("app.yaml" in f for f in analyzed)
+    for op_dir in operational_dirs:
+        assert not any(op_dir in f for f in analyzed)
+
+
+def test_file_analyzer_skips_large_file_with_diagnostic(tmp_path):
+    large_file = tmp_path / "large.yaml"
+    large_file.write_text("data: " + ("x" * 200) + "\n", encoding="utf-8")
+
+    small_file = tmp_path / "small.yaml"
+    small_file.write_text("TODO: small task\n", encoding="utf-8")
+
+    analyzer = FileAnalyzer()
+    result = analyzer.analyze_directory(tmp_path, max_single_file_bytes=100)
+
+    # Large file should be skipped from analyzed_files
+    assert str(large_file.resolve()) not in result["analyzed_files"]
+    assert str(small_file.resolve()) in result["analyzed_files"]
+
+    # Large file should produce an ExtractedIssue diagnostic
+    diagnostic_issues = [
+        issue for issue in result["issues"]
+        if "File exceeds analysis size limit" in issue.name
+    ]
+    assert len(diagnostic_issues) == 1
+    assert "large.yaml" in diagnostic_issues[0].description
+    assert diagnostic_issues[0].priority == "medium"
+    assert "oversized" in diagnostic_issues[0].tags
+
+
+def test_health_check_local_project_runs_promptly():
+    result = CliRunner().invoke(app, ["health", "check", ".", "--format", "json"])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "ok"
+    assert payload["analysis"]["truncated"] is False

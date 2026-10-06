@@ -307,14 +307,22 @@ def watch_cmd(
     try:
         while True:
             current_states = _get_planfile_dir_states(planfile_dir)
+            local_changed = _detect_changes(last_states, current_states)
             pending = (
-                direction == "from" or failures > 0 or not synced_once
-                or _detect_changes(last_states, current_states)
+                direction in ("from", "both")
+                or failures > 0
+                or not synced_once
+                or local_changed
+            )
+            effective_direction = (
+                "from"
+                if (direction == "both" and synced_once and not local_changed)
+                else direction
             )
             if pending and time.monotonic() >= next_attempt:
                 console.print("[blue]📝 Reconciling configured integrations...[/blue]")
                 cooldowns: list[float] = []
-                if _run_sync_once(to_sync, directory, direction, cooldowns=cooldowns):
+                if _run_sync_once(to_sync, directory, effective_direction, cooldowns=cooldowns):
                     # Acknowledge the PRE-attempt snapshot. An edit during the
                     # provider call must remain visible to the next iteration.
                     last_states = current_states
