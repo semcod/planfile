@@ -48,11 +48,11 @@ def test_voice_digest_empty_sprint_polish(planfile_env):
 def test_voice_digest_populated_sprint(planfile_env):
     """Populated sprint computes accurate counts and natural-language overview."""
     # 2 done, 1 in-progress, 1 blocked, 1 todo
-    t1 = planfile_env.create_ticket(name="Task 1", sprint="sprint-1", status="done")
-    t2 = planfile_env.create_ticket(name="Task 2", sprint="sprint-1", status="completed")
-    t3 = planfile_env.create_ticket(name="Task 3", sprint="sprint-1", status="in_progress")
-    t4 = planfile_env.create_ticket(name="Task 4", sprint="sprint-1", status="blocked")
-    t5 = planfile_env.create_ticket(name="Task 5", sprint="sprint-1", status="open")
+    planfile_env.create_ticket(name="Task 1", sprint="sprint-1", status="done")
+    planfile_env.create_ticket(name="Task 2", sprint="sprint-1", status="completed")
+    planfile_env.create_ticket(name="Task 3", sprint="sprint-1", status="in_progress")
+    planfile_env.create_ticket(name="Task 4", sprint="sprint-1", status="blocked")
+    planfile_env.create_ticket(name="Task 5", sprint="sprint-1", status="open")
 
     client = TestClient(app)
     response = client.get("/api/voice-digest?sprint=sprint-1")
