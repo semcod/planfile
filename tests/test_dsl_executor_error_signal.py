@@ -1,7 +1,6 @@
 """Tests for error signaling and exception handling in Planfile DSL executor."""
 import logging
 from unittest.mock import MagicMock, patch
-import pytest
 
 from planfile.dsl.executor import DSLExecutor
 
