@@ -9,8 +9,6 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger(__name__)
-
 from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
 from planfile.analysis.parsers.json_parser import analyze_json
 from planfile.analysis.parsers.text_parser import analyze_text
@@ -23,6 +21,8 @@ try:
 except ImportError:
     HAS_RUST_ANALYZER = False
     _native_analyze_file = None
+
+logger = logging.getLogger(__name__)
 
 
 class FileAnalyzer:
