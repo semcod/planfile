@@ -486,11 +486,11 @@ class GitHubBackend(BasePMBackend):
         if status and expected is None:
             raise ValueError("sync_github_status_unsupported")
         reference = super().create_ticket(ticket, **kwargs)
+        self._clear_read_cache()
+        issue = self.repo.get_issue(int(reference.id))
+        if getattr(issue, "pull_request", None) is not None:
+            raise ValueError("sync_github_create_resolved_pull_request")
         if expected is not None:
-            self._clear_read_cache()
-            issue = self.repo.get_issue(int(reference.id))
-            if getattr(issue, "pull_request", None) is not None:
-                raise ValueError("sync_github_create_resolved_pull_request")
             self._update_issue_state(issue, status)
             self._clear_read_cache()
             reference = reference.model_copy(update={"status": issue.state})
@@ -515,6 +515,10 @@ class GitHubBackend(BasePMBackend):
         with self._creation_lock(dedup_key):
             existing = self._find_issue_by_markers(markers)
             if existing is not None:
+                if getattr(existing, "pull_request", None) is not None:
+                    raise ValueError(
+                        f"{self.repo.full_name}#{existing.number} is a pull request, not an issue"
+                    )
                 return self.build_ticket_ref(
                     id=str(existing.number),
                     url=existing.html_url,
@@ -586,6 +590,10 @@ class GitHubBackend(BasePMBackend):
             raise ValueError("sync_github_status_unsupported")
         self._clear_read_cache()
         issue = self.repo.get_issue(int(ticket_id))
+        if getattr(issue, "pull_request", None) is not None:
+            raise ValueError(
+                f"{self.repo.full_name}#{ticket_id} is a pull request, not an issue"
+            )
 
         # The title is set when the issue is created. Renaming it from a ticket
         # name silently shortened semcod/fixos#46 on 2026-09-16, so a rename is
