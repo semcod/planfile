@@ -1,0 +1,117 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-193",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: Validate and repair GitHub issues sync deduplication and projection (resolves semcod/planfile#87).",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-193/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store.py",
+    "planfile/sync/operations.py",
+    "tests/test_sync_routing.py",
+    "tests/test_sync_scope.py",
+    "tests/test_ticket_id_allocator.py",
+    "tests/test_store_tickets_id_fallback.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "307866f33f20c3333e1d0c80b0f89b083363802b",
+    "targetBranch": "main",
+    "outcome": "Deduplicate ticket allocation against published sync state/receipts/markers, project sync mappings in ticket projection, and guarantee id presence on imported and legacy backlog tickets without sync duplicates.",
+    "nonGoals": [
+      "No mass rewrite of historical yaml files",
+      "No new external runtime dependencies or authentication changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend _known_ticket_highwater to inspect sync state, receipts, and markers; project sync state in _project_ticket_sync; guarantee fallback id from dictionary key in store ticket lookups; resolve existing local tickets by deduplication marker in inbound sync.",
+      "components": [
+        {
+          "name": "ticket-store-allocation",
+          "paths": [
+            "planfile/core/store.py",
+            "tests/test_ticket_id_allocator.py",
+            "tests/test_store_tickets_id_fallback.py"
+          ]
+        },
+        {
+          "name": "sync-projection-and-deduplication",
+          "paths": [
+            "planfile/sync/operations.py",
+            "tests/test_sync_routing.py",
+            "tests/test_sync_scope.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit on ticket/193-github-sync-deduplication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv run --no-sync pytest tests/test_ticket_id_allocator.py -q"
+        ],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "uv run --no-sync pytest tests/test_store_tickets_id_fallback.py tests/test_sync_scope.py -q"
+        ],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "uv run --no-sync pytest tests/test_sync_scope.py -q"
+        ],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "uv run --no-sync pytest tests/test_sync_routing.py tests/test_sync_scope.py -q"
+        ],
+        "evidence": "Pending exact-head validation"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending exact-head validation"
+      }
+    ]
+  }
+}
