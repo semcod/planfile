@@ -1331,7 +1331,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
         """
         for sprint_id in (self._all_sprint_ids() if sprint == "all" else [sprint]):
             root = self.load_sprint(sprint_id)
-            for ticket_id, record in (root.get("tickets") or {}).items():
+            if not isinstance(root, dict):
+                continue
+            raw_tickets = root.get("tickets")
+            tickets_dict = raw_tickets if isinstance(raw_tickets, dict) else {}
+            for ticket_id, record in tickets_dict.items():
                 if isinstance(record, dict):
                     if "id" not in record:
                         record = dict(record, id=str(ticket_id))
@@ -1815,6 +1819,110 @@ class Store(StoreFileMixin, TicketStoreMixin):
             offset=offset,
             limit=limit,
         )
+
+    def migrate_legacy_sprint_tasks(
+        self,
+        sprint: str = "current",
+        *,
+        acquire_lock: bool = True,
+    ) -> dict:
+        """Explicitly and safely migrate legacy 'tasks' lists to 'sprint.tickets'.
+
+        Preserves existing ticket IDs, titles (mapped to name), statuses, descriptions,
+        and all custom fields. Idempotent: repeated runs will not duplicate or overwrite
+        existing tickets. Does not perform destructive deletion of unrelated keys.
+        """
+        self._sprint_file(sprint)  # validates sprint name
+        path = self._sprint_file(sprint)
+        if not path.exists():
+            return {"sprint": sprint, "migrated": False, "count": 0, "reason": "not_found"}
+
+        from contextlib import nullcontext
+
+        lock_ctx = self.mutation_lock() if acquire_lock else nullcontext()
+        with lock_ctx:
+            from planfile.core.fastio import read_yaml_fast
+
+            raw = read_yaml_fast(path)
+            if not isinstance(raw, dict):
+                raise ValueError(f"sprint_document_not_mapping:{sprint}")
+
+            tasks: list[dict] = []
+            has_tasks = False
+
+            if "tasks" in raw and isinstance(raw["tasks"], list):
+                tasks.extend(item for item in raw["tasks"] if isinstance(item, dict))
+                has_tasks = True
+
+            sprint_val = raw.get("sprint")
+            if (
+                isinstance(sprint_val, dict)
+                and "tasks" in sprint_val
+                and isinstance(sprint_val["tasks"], list)
+            ):
+                tasks.extend(item for item in sprint_val["tasks"] if isinstance(item, dict))
+                has_tasks = True
+
+            if not has_tasks and not tasks:
+                return {
+                    "sprint": sprint,
+                    "migrated": False,
+                    "count": 0,
+                    "reason": "no_legacy_tasks",
+                }
+
+            if not isinstance(sprint_val, dict):
+                sprint_val = {
+                    "id": sprint,
+                    "name": sprint.replace("-", " ").title(),
+                    "status": "active",
+                    "tickets": {},
+                }
+                raw["sprint"] = sprint_val
+
+            tickets_val = sprint_val.get("tickets")
+            if not isinstance(tickets_val, dict):
+                tickets_val = {}
+                sprint_val["tickets"] = tickets_val
+
+            sprint_val.setdefault("id", sprint)
+            sprint_val.setdefault("name", sprint.replace("-", " ").title())
+            sprint_val.setdefault("status", "active")
+
+            migrated_count = 0
+            for idx, task in enumerate(tasks):
+                task_data = dict(task)
+                ticket_id = str(task_data.get("id") or task_data.get("ticket_id") or "").strip()
+                if not ticket_id:
+                    ticket_id = f"task_{idx + 1}"
+                task_data["id"] = ticket_id
+
+                if "name" not in task_data and "title" in task_data:
+                    task_data["name"] = task_data.pop("title")
+
+                if task_data.get("status") == "cancelled":
+                    task_data["status"] = "canceled"
+
+                if ticket_id not in tickets_val:
+                    tickets_val[ticket_id] = task_data
+                    migrated_count += 1
+
+            raw.pop("tasks", None)
+            if "tasks" in sprint_val:
+                sprint_val.pop("tasks", None)
+
+            raw.setdefault("schema", "planfile.sprint/v1")
+
+            self._write_yaml_atomic(path, raw, allow_unicode=True)
+            if hasattr(self, "_yaml_cache"):
+                self._yaml_cache.pop(str(path), None)
+
+            return {
+                "sprint": sprint,
+                "migrated": True,
+                "count": migrated_count,
+                "total_tickets": len(tickets_val),
+            }
 
     def migrate_to_sharded_yaml(
         self,

@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-197",
+  "summary": "Safe legacy sprint YAML migration: detect legacy top-level tasks and prevent AttributeError",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-197/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/schema.py",
+    "planfile/core/store.py",
+    "planfile/core/store_tickets.py",
+    "tests/test_legacy_sprint_migration.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "06ae40df94a70fed1f831e35655a991411d9db83",
+    "targetBranch": "main",
+    "outcome": "Detect legacy top-level tasks lists before interpreting planfile.sprint/v1, provide safe explicit migration preserving IDs and data, and emit useful schema errors instead of AttributeError.",
+    "nonGoals": [
+      "No silent destructive rewrite of existing valid sprints or foreign formats"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add explicit detection of legacy tasks lists in schema validation and sprint loading; safely migrate tasks to tickets with full field preservation in store; guard ticket iteration against non-dict ticket mappings.",
+      "components": [
+        {
+          "name": "core-store",
+          "paths": [
+            "planfile/core/schema.py",
+            "planfile/core/store.py",
+            "planfile/core/store_tickets.py",
+            "tests/test_legacy_sprint_migration.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit on ticket/197-safe-legacy-sprint-migration."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_legacy_sprint_migration.py -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "All legacy migration tests pass and governance check exits 0"
+      }
+    ]
+  }
+}
