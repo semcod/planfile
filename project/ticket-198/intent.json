@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-198",
+  "summary": "Safe scalar sprint and legacy tasks ticket extraction",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-198/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store.py",
+    "planfile/core/store_tickets.py",
+    "tests/test_legacy_sprint_migration.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d2de69075d24c98881b1d658e0d01cfebff0c93c",
+    "targetBranch": "main",
+    "outcome": "Safely parse and extract tickets from legacy sprint documents with scalar sprints and top-level tasks lists, avoiding AttributeError and silent record loss during CLI and API listing.",
+    "nonGoals": [
+      "No silent destructive rewrite of existing valid sprints or foreign formats"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Guard all sprint root interpretations against scalar sprints; fallback to legacy tasks list in _tickets_from_sprint_data and _tickets_from_sprint_file to prevent AttributeError and record loss; protect ticket counting and delete iterations against non-dict sprint roots.",
+      "components": [
+        {
+          "name": "core-store",
+          "paths": [
+            "planfile/core/store.py",
+            "planfile/core/store_tickets.py",
+            "tests/test_legacy_sprint_migration.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit on ticket/198-safe-scalar-sprint-legacy-tasks."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/test_legacy_sprint_migration.py -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "All legacy migration and extraction tests pass and governance check exits 0"
+      }
+    ]
+  }
+}
