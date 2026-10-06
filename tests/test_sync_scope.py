@@ -265,3 +265,127 @@ def test_inbound_sprint_scope_imports_into_selected_sprint():
     assert (imported, updated) == (1, 0)
     assert "GITHUB-44" in sections["custom-review"]["tickets"]
     assert "GITHUB-44" not in sections["backlog"]["tickets"]
+
+
+def test_ticket_projection_reads_mapping_from_sync_state(tmp_path):
+    store = Store(tmp_path)
+    store.init()
+    ticket = {
+        "id": "STARTER-601",
+        "name": "Koru ticket without explicit sync section",
+        "description": "verify projection from backend state file",
+        "status": "open",
+        "sync": {},
+    }
+    store.save_sprint("current", {"tickets": {"STARTER-601": ticket}})
+
+    state = SyncState(store.base_dir, "github", repository="semcod/koru")
+    state.save_sync({"STARTER-601": "174"})
+
+    from planfile import Planfile
+    pf = Planfile(str(tmp_path))
+    projected = pf.get_ticket("STARTER-601")
+
+    assert projected is not None
+    assert projected.id == "STARTER-601"
+    assert projected.sync != {}
+    assert projected.sync.get("github") is not None
+    assert projected.sync["github"]["id"] == "174"
+    assert projected.sync["github"]["repository"] == "semcod/koru"
+    assert projected.sync["github"]["url"] == "https://github.com/semcod/koru/issues/174"
+
+    dumped = projected.model_dump(mode="json")
+    assert dumped["sync"]["github"]["id"] == "174"
+
+
+def test_inbound_sync_deduplicates_by_marker_and_updates_without_duplicate(tmp_path):
+    sections = {
+        "current": {
+            "tickets": {
+                "PLF-066": {
+                    "id": "PLF-066",
+                    "name": "Local ticket carrier",
+                    "description": "Original local text",
+                    "status": "open",
+                }
+            }
+        },
+        "backlog": {"tickets": {}},
+    }
+    state = FakeState()
+    external = SimpleNamespace(
+        id="86",
+        name="Published GitHub Issue 86",
+        description="<!-- planfile:deduplication-key=PLF-066 -->\nPublished remote body",
+        status="open",
+        assignee="alice",
+        labels=["managed"],
+        url="https://github.com/semcod/planfile/issues/86",
+        key="semcod/planfile#86",
+        metadata={"planfile_id": "semcod/planfile:PLF-066"},
+    )
+
+    # First pass: matches PLF-066 by marker, updates it, does NOT create GITHUB-86
+    imported, updated = _process_external_ticket(
+        external,
+        sections["current"],
+        sections["backlog"],
+        state,
+        "github",
+        False,
+        0,
+        0,
+        sections=sections,
+    )
+
+    assert (imported, updated) == (0, 1)
+    assert "GITHUB-86" not in sections["current"]["tickets"]
+    assert "GITHUB-86" not in sections["backlog"]["tickets"]
+    updated_ticket = sections["current"]["tickets"]["PLF-066"]
+    assert updated_ticket["name"] == "Published GitHub Issue 86"
+    assert updated_ticket["sync"]["github"]["id"] == "86"
+    assert state.mapping.get("PLF-066") == "86"
+
+    # Retry pass: state now has mapping PLF-066 -> 86; still updates, no duplicate
+    imported2, updated2 = _process_external_ticket(
+        external,
+        sections["current"],
+        sections["backlog"],
+        state,
+        "github",
+        False,
+        0,
+        0,
+        sections=sections,
+    )
+    assert (imported2, updated2) == (0, 1)
+    assert "GITHUB-86" not in sections["current"]["tickets"]
+    assert "GITHUB-86" not in sections["backlog"]["tickets"]
+
+
+def test_inbound_sync_into_legacy_backlog_retry(tmp_path):
+    from planfile import Planfile
+    pf = Planfile(str(tmp_path))
+    backlog = {"tickets": {}}
+    state = FakeState()
+    external = TicketState(
+        id="99",
+        key="owner/repo#99",
+        name="Legacy imported ticket",
+        description="test description",
+        status="open",
+        url="https://github.com/owner/repo/issues/99",
+    )
+
+    assert _import_new_ticket(backlog, external.model_dump(), "github", state, 0) == 1
+    imported = backlog["tickets"]["GITHUB-99"]
+    assert imported["id"] == "GITHUB-99"
+    assert imported["sprint"] == "backlog"
+
+    pf.store.save_backlog(backlog)
+    assert pf.get_ticket("GITHUB-99").name == "Legacy imported ticket"
+
+    # Retry import does not create duplicate
+    assert _import_new_ticket(backlog, external.model_dump(), "github", state, 0) == 0
+    assert len(backlog["tickets"]) == 1
+

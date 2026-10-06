@@ -426,8 +426,77 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 projected["updated_at"] = latest
         return projected
 
+    def _cached_sync_mappings(self) -> dict[str, dict]:
+        sync_dir = self.base_dir / "sync"
+        if not sync_dir.exists():
+            return {}
+        sig = []
+        try:
+            entries = sorted(os.scandir(sync_dir), key=lambda e: e.name)
+            for entry in entries:
+                if entry.name.endswith(".state.yaml") and entry.is_file():
+                    stat = entry.stat()
+                    sig.append((entry.name, stat.st_mtime_ns, stat.st_size))
+        except OSError:
+            return {}
+        sig_tuple = tuple(sig)
+        cached = getattr(self, "_sync_mappings_cache", None)
+        if cached is not None and cached[0] == sig_tuple:
+            return cached[1]
+
+        mappings: dict[str, dict] = {}
+        for item in sig:
+            file_name = item[0]
+            backend = file_name.removesuffix(".state.yaml")
+            file_path = sync_dir / file_name
+            try:
+                data = yaml.safe_load(file_path.read_text(encoding="utf-8")) or {}
+            except Exception:
+                continue
+            if isinstance(data, dict):
+                mappings[backend] = {
+                    "repository": data.get("repository"),
+                    "ticket_map": {str(k): str(v) for k, v in (data.get("ticket_map") or {}).items()},
+                }
+        self._sync_mappings_cache = (sig_tuple, mappings)
+        return mappings
+
+    def _project_ticket_sync(self, ticket_data: dict) -> dict:
+        ticket_id = str(ticket_data.get("id") or "")
+        if not ticket_id:
+            return ticket_data
+        sync_mappings = self._cached_sync_mappings()
+        if not sync_mappings:
+            return ticket_data
+        updated = None
+        for backend, info in sync_mappings.items():
+            t_map = info.get("ticket_map") or {}
+            remote_id = t_map.get(ticket_id)
+            if not remote_id:
+                continue
+            current_sync = (ticket_data.get("sync") or {}).get(backend) or {}
+            if not current_sync.get("id"):
+                if updated is None:
+                    updated = dict(ticket_data)
+                    updated["sync"] = dict(ticket_data.get("sync") or {})
+                repo = info.get("repository")
+                ref = dict(current_sync)
+                ref["id"] = str(remote_id)
+                if repo:
+                    ref.setdefault("repository", repo)
+                    if backend == "github" and "url" not in ref:
+                        ref["url"] = f"https://github.com/{repo}/issues/{remote_id}"
+                        ref.setdefault("key", f"{repo}#{remote_id}")
+                updated["sync"][backend] = ref
+                if not updated.get("external_id"):
+                    updated["external_id"] = str(remote_id)
+                if not updated.get("backend"):
+                    updated["backend"] = backend
+        return updated if updated is not None else ticket_data
+
     def _project_ticket_evidence(self, ticket_data: dict) -> dict:
         ticket_id = str(ticket_data.get("id") or "")
+        ticket_data = self._project_ticket_sync(ticket_data)
         return self._apply_ticket_evidence_events(
             ticket_data,
             self._ticket_evidence_events(ticket_id),
@@ -857,19 +926,29 @@ class Store(StoreFileMixin, TicketStoreMixin):
     def _known_ticket_highwater(self, prefix: str) -> int:
         """Return the highest numeric ID known to storage or its journal.
 
-        The allocator config is intended to be monotonic, but old branches and
-        replayed event journals can leave it behind a deleted ticket.  Looking
-        at the journal keeps deleted IDs reserved as well, so a later create
-        cannot silently reuse an identity that already exists in the audit
-        trail.
+        The allocator config is intended to be monotonic, but old branches,
+        replayed event journals, or external sync state can leave it behind a
+        published ticket. Scanning sync state maps, sync receipts, and
+        deduplication markers keeps published IDs reserved as well, so a later
+        create cannot reuse an identity that already exists on a remote issue
+        or in the audit trail.
         """
         pattern = re.compile(rf"^{re.escape(prefix)}-(\d+)$")
+        marker_pattern = re.compile(rf"{re.escape(prefix)}-(\d+)")
         highest = 0
 
         for record in self.ticket_records(sprint="all"):
             match = pattern.fullmatch(str(record.get("id") or ""))
             if match:
                 highest = max(highest, int(match.group(1)))
+            for label in (record.get("labels") or []):
+                m = marker_pattern.search(str(label))
+                if m:
+                    highest = max(highest, int(m.group(1)))
+            desc = record.get("description") or ""
+            if f"{prefix}-" in desc:
+                for m in marker_pattern.finditer(desc):
+                    highest = max(highest, int(m.group(1)))
 
         try:
             journal_size = self._operations_path.stat().st_size
@@ -885,6 +964,37 @@ class Store(StoreFileMixin, TicketStoreMixin):
             match = pattern.fullmatch(str(event.get("ticket_id") or ""))
             if match:
                 highest = max(highest, int(match.group(1)))
+
+        sync_dir = self.base_dir / "sync"
+        if sync_dir.exists():
+            try:
+                for entry in os.scandir(sync_dir):
+                    if entry.name.endswith(".state.yaml") and entry.is_file():
+                        try:
+                            data = yaml.safe_load(Path(entry.path).read_text(encoding="utf-8")) or {}
+                        except Exception:
+                            continue
+                        if isinstance(data, dict):
+                            ticket_map = data.get("ticket_map") or {}
+                            if isinstance(ticket_map, dict):
+                                for key in ticket_map.keys():
+                                    match = pattern.fullmatch(str(key))
+                                    if match:
+                                        highest = max(highest, int(match.group(1)))
+                    elif entry.name.endswith(".receipts.jsonl") and entry.is_file():
+                        try:
+                            with open(entry.path, encoding="utf-8") as f:
+                                for line in f:
+                                    line = line.strip()
+                                    if not line or f"{prefix}-" not in line:
+                                        continue
+                                    for m in marker_pattern.finditer(line):
+                                        highest = max(highest, int(m.group(1)))
+                        except Exception:
+                            continue
+            except OSError:
+                pass
+
         return highest
 
     def _reserve_ids_unlocked(self, count: int) -> list[str]:
@@ -1221,8 +1331,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
         """
         for sprint_id in (self._all_sprint_ids() if sprint == "all" else [sprint]):
             root = self.load_sprint(sprint_id)
-            for record in (root.get("tickets") or {}).values():
+            for ticket_id, record in (root.get("tickets") or {}).items():
                 if isinstance(record, dict):
+                    if "id" not in record:
+                        record = dict(record, id=str(ticket_id))
                     yield record
 
     def _sprint_storage_files(self, sprint: str) -> list[Path]:
@@ -1403,6 +1515,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     continue
                 if sprint_id != "current" and preferred.get(ticket_id, sprint_id) != sprint_id:
                     continue
+                if isinstance(raw, dict) and "id" not in raw:
+                    raw = dict(raw, id=str(ticket_id))
                 ticket = self._ticket_from_data(raw)
                 if ticket is None:
                     continue
@@ -1587,7 +1701,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
     def indexed_ticket(self, ticket_id: str, *, repair: bool = True) -> Ticket | None:
         (self.ensure_ticket_index if repair else self.require_current_ticket_index)()
         data = self._sqlite_ticket_index().get_ticket(ticket_id)
-        return self._ticket_from_data(data) if data is not None else None
+        if data is not None:
+            if "id" not in data:
+                data = dict(data, id=str(ticket_id))
+            return self._ticket_from_data(data)
+        return None
 
     def indexed_ticket_summaries(
         self,
@@ -2000,7 +2118,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 # not make an exact durable-source lookup unavailable.
                 pass
         located = self._locate_ticket_source(ticket_id)
-        return self._ticket_from_data(located[1]) if located is not None else None
+        if located is not None:
+            raw = located[1]
+            if isinstance(raw, dict) and "id" not in raw:
+                raw = dict(raw, id=str(ticket_id))
+            return self._ticket_from_data(raw)
+        return None
 
     def _ticket_lookup_sprints(self, ticket_id: str):
         """Use current, the durable history locator, then deterministic fallback."""

@@ -367,6 +367,7 @@ def _find_local_ticket(
     remote_id: str,
     sync_state,
     integration_name: str,
+    ext_data: dict | None = None,
 ) -> tuple[str | None, str | None, dict | None]:
     """Find an existing mapping even when the state ledger predates a repair."""
     planfile_id = sync_state.get_local_id(remote_id)
@@ -375,6 +376,35 @@ def _find_local_ticket(
             ticket = (section.get("tickets") or {}).get(planfile_id)
             if isinstance(ticket, dict):
                 return sprint_id, planfile_id, ticket
+
+    # Check deduplication markers from external ticket
+    if ext_data:
+        candidate_keys = []
+        desc = ext_data.get("description") or ""
+        marker_match = re.search(r"<!--\s*planfile:deduplication-key=([^>]+?)\s*-->", desc)
+        if marker_match:
+            candidate_keys.append(marker_match.group(1).strip())
+        meta = ext_data.get("metadata") or {}
+        if isinstance(meta, dict):
+            for k in ("planfile_id", "deduplication_key", "dedupe_key", "fingerprint"):
+                v = meta.get(k)
+                if v and str(v).strip():
+                    val = str(v).strip()
+                    if ":" in val:
+                        val = val.split(":")[-1].strip()
+                    candidate_keys.append(val)
+        for cand in candidate_keys:
+            for sprint_id, section in sections.items():
+                ticket = (section.get("tickets") or {}).get(cand)
+                if isinstance(ticket, dict):
+                    return sprint_id, cand, ticket
+                for lid, t in (section.get("tickets") or {}).items():
+                    if isinstance(t, dict):
+                        labels = t.get("labels") or []
+                        if f"dedupe:{cand}" in labels:
+                            return sprint_id, str(lid), t
+
+    synthetic_id = f"{integration_name.upper()}-{remote_id}"
     matches: list[tuple[str, str, dict]] = []
     for sprint_id, section in sections.items():
         for local_id, ticket in (section.get("tickets") or {}).items():
@@ -382,6 +412,10 @@ def _find_local_ticket(
                 continue
             reference = (ticket.get("sync") or {}).get(integration_name) or {}
             if isinstance(reference, dict) and str(reference.get("id")) == str(remote_id):
+                matches.append((str(sprint_id), str(local_id), ticket))
+            elif str(ticket.get("external_id") or "") == str(remote_id) and str(ticket.get("backend") or "") == integration_name:
+                matches.append((str(sprint_id), str(local_id), ticket))
+            elif str(local_id) == synthetic_id:
                 matches.append((str(sprint_id), str(local_id), ticket))
     if len(matches) > 1:
         unique_local_ids = {m[1] for m in matches}
@@ -496,7 +530,7 @@ def _process_external_ticket(
                 return imported_count, updated_count
 
     sprint_name, planfile_id, local_ticket = _find_local_ticket(
-        sections, ext_data["id"], sync_state, integration_name
+        sections, ext_data["id"], sync_state, integration_name, ext_data=ext_data
     )
     if local_ticket is None:
         planfile_id = None
@@ -780,7 +814,17 @@ def _import_new_ticket(
         },
     }
 
-    backlog["tickets"][new_id] = ticket_data
+    tickets = backlog.setdefault("tickets", {})
+    if not isinstance(tickets, dict):
+        tickets = {}
+        backlog["tickets"] = tickets
+    if new_id in tickets:
+        existing = tickets[new_id]
+        if isinstance(existing, dict):
+            existing.update(ticket_data)
+            sync_state.save_sync({new_id: ext_data["id"]})
+            return imported_count
+    tickets[new_id] = ticket_data
     sync_state.save_sync({new_id: ext_data["id"]})
 
     console.print(f"  ✓ Imported: {new_id} ← {ext_data['id']}")
