@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-200",
+  "summary": "NL URI ticket commands and shared compiler adapter",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-200/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/dsl/executor.py",
+    "planfile/dsl/parser.py",
+    "tests/test_dsl_uri_commands.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
