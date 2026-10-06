@@ -685,19 +685,29 @@ class Store(StoreFileMixin, TicketStoreMixin):
         """Load sprint data from YAML."""
         if self._uses_sharded_storage():
             data = self._sharded_storage().load_sprint(sprint)
-            return data.get("sprint") or data
-        path = self._sprint_file(sprint)
-        data = self._read_yaml_cached(path) or {}
-        return data.get("sprint") or data
+        else:
+            path = self._sprint_file(sprint)
+            data = self._read_yaml_cached(path) or {}
+        if not isinstance(data, dict):
+            return {}
+        sprint_data = data.get("sprint")
+        if isinstance(sprint_data, dict):
+            return sprint_data
+        return data
 
     def load_backlog(self) -> dict:
         """Load backlog data from YAML."""
         if self._uses_sharded_storage():
             data = self._sharded_storage().load_sprint("backlog")
-            return data.get("sprint") or data
-        path = self._sprint_file("backlog")
-        data = self._read_yaml_cached(path) or {}
-        return data.get("sprint") or data
+        else:
+            path = self._sprint_file("backlog")
+            data = self._read_yaml_cached(path) or {}
+        if not isinstance(data, dict):
+            return {}
+        sprint_data = data.get("sprint")
+        if isinstance(sprint_data, dict):
+            return sprint_data
+        return data
 
     def save_sprint(self, sprint: str, data: dict) -> None:
         """Merge sprint data back to YAML without dropping concurrent mutations.
@@ -1335,11 +1345,20 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 continue
             raw_tickets = root.get("tickets")
             tickets_dict = raw_tickets if isinstance(raw_tickets, dict) else {}
+            has_records = False
             for ticket_id, record in tickets_dict.items():
                 if isinstance(record, dict):
+                    has_records = True
                     if "id" not in record:
                         record = dict(record, id=str(ticket_id))
                     yield record
+            if not has_records and isinstance(root.get("tasks"), list):
+                for idx, task in enumerate(root["tasks"], 1):
+                    if isinstance(task, dict):
+                        rec = dict(task)
+                        if "id" not in rec:
+                            rec["id"] = f"TSK-{idx:03d}"
+                        yield rec
 
     def _sprint_storage_files(self, sprint: str) -> list[Path]:
         self._sprint_file(sprint)  # validate
@@ -2022,7 +2041,18 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 "custom_shards": custom_shards,
                 "sprints": len(snapshots),
                 "tickets": sum(
-                    len(snapshot.get("sprint", snapshot).get("tickets") or {})
+                    len(
+
+                            s.get("tickets")
+                            if isinstance(s := (snapshot.get("sprint", snapshot) if isinstance(snapshot, dict) else {}), dict)
+                            and isinstance(s.get("tickets"), (dict, list))
+                            else (
+                                snapshot.get("tasks")
+                                if isinstance(snapshot, dict) and isinstance(snapshot.get("tasks"), list)
+                                else {}
+                            )
+
+                    )
                     for snapshot in snapshots.values()
                 ),
                 "backup_dir": str(backup_dir),
@@ -2126,12 +2156,27 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 tickets.extend(entry[1])
                 continue
             snapshot = storage.load_sprint(sprint_id)
+            if not isinstance(snapshot, dict):
+                continue
             root = snapshot.get("sprint", snapshot)
-            ticket_data = root.get("tickets") or {}
-            evidence_revision = self._ticket_evidence_revision(ticket_data.keys())
-            models = tuple(self._tickets_from_sprint_data(root))
-            cache[key] = (signature, models, evidence_revision)
-            tickets.extend(models)
+            if not isinstance(root, dict):
+                root = snapshot
+            ticket_data = root.get("tickets") if isinstance(root, dict) else {}
+            tickets_dict = ticket_data if isinstance(ticket_data, dict) else {}
+            ticket_ids = list(tickets_dict.keys())
+            if not ticket_ids and isinstance(snapshot.get("tasks"), list):
+                ticket_ids = [
+                    str(t.get("id") or f"TSK-{i:03d}")
+                    for i, t in enumerate(snapshot["tasks"], 1)
+                    if isinstance(t, dict)
+                ]
+            evidence_revision = self._ticket_evidence_revision(ticket_ids)
+            models = self._tickets_from_sprint_data(root)
+            if not models and "tasks" in snapshot and isinstance(snapshot["tasks"], list):
+                models = self._tickets_from_sprint_data(snapshot)
+            model_tuple = tuple(models)
+            cache[key] = (signature, model_tuple, evidence_revision)
+            tickets.extend(model_tuple)
         return self._apply_filters(tickets, **filters)
 
     def _prepare_ticket_for_persistence(self, ticket: Ticket) -> None:
@@ -2841,9 +2886,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
             index_was_current = self._begin_index_mutation()
             for source_file in self._all_sprint_files():
                 source_data = read_yaml_fast(source_file) or {}
+                if not isinstance(source_data, dict):
+                    continue
                 source_root = source_data.get("sprint", source_data)
+                if not isinstance(source_root, dict):
+                    source_root = source_data
                 source_tickets = source_root.get("tickets", {})
-                if ticket_id not in source_tickets:
+                if not isinstance(source_tickets, dict) or ticket_id not in source_tickets:
                     continue
                 if source_file == destination_file:
                     return True
@@ -2966,7 +3015,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
             for ticket_id in ticket_ids:
                 found = False
                 for sprint_file, data in sprint_contents.items():
+                    if not isinstance(data, dict):
+                        continue
                     sprint_data = data.get("sprint", data)
+                    if not isinstance(sprint_data, dict):
+                        sprint_data = data
                     tickets = sprint_data.get("tickets", {})
                     if isinstance(tickets, dict) and ticket_id in tickets:
                         deleted_tickets[ticket_id] = dict(tickets[ticket_id])

@@ -46,7 +46,7 @@ class TicketStoreMixin:
             )
             return None
 
-    def _tickets_from_sprint_data(self, sprint_data: dict[str, Any]) -> list[Ticket]:
+    def _tickets_from_sprint_data(self, sprint_data: Any) -> list[Ticket]:
         if not isinstance(sprint_data, dict):
             return []
         raw_tickets = sprint_data.get('tickets')
@@ -60,6 +60,16 @@ class TicketStoreMixin:
             ticket = self._ticket_from_data(t_data)
             if ticket is not None:
                 tickets.append(ticket)
+        if not tickets and "tasks" in sprint_data and isinstance(sprint_data["tasks"], list):
+            for idx, task in enumerate(sprint_data["tasks"], 1):
+                if not isinstance(task, dict):
+                    continue
+                t_data = dict(task)
+                if "id" not in t_data:
+                    t_data["id"] = f"TSK-{idx:03d}"
+                ticket = self._ticket_from_data(t_data)
+                if ticket is not None:
+                    tickets.append(ticket)
         return tickets
 
     def _tickets_from_sprint_file(self, sprint_file) -> list[Ticket]:
@@ -73,9 +83,11 @@ class TicketStoreMixin:
         id reused by Python cannot return models belonging to old data.
         """
         data = self._read_yaml_cached(sprint_file)
-        if not data:
+        if not data or not isinstance(data, dict):
             return []
-        sprint_data = data.get('sprint') or data
+        sprint_data = data.get('sprint')
+        if not isinstance(sprint_data, dict):
+            sprint_data = data
         cache = getattr(self, '_ticket_model_cache', None)
         if cache is None:
             cache = {}
@@ -83,10 +95,19 @@ class TicketStoreMixin:
         key = str(sprint_file)
         if not self._yaml_file_cacheable(sprint_file):
             cache.pop(key, None)
-            return self._tickets_from_sprint_data(sprint_data)
+            tickets = self._tickets_from_sprint_data(sprint_data)
+            if not tickets and "tasks" in data and isinstance(data["tasks"], list):
+                tickets = self._tickets_from_sprint_data(data)
+            return tickets
         raw_tickets = sprint_data.get('tickets') if isinstance(sprint_data, dict) else None
         tickets_dict = raw_tickets if isinstance(raw_tickets, dict) else {}
-        ticket_ids = tickets_dict.keys()
+        ticket_ids = list(tickets_dict.keys())
+        if not ticket_ids and isinstance(data.get('tasks'), list):
+            ticket_ids = [
+                str(t.get('id') or f"TSK-{idx:03d}")
+                for idx, t in enumerate(data['tasks'], 1)
+                if isinstance(t, dict)
+            ]
         evidence_revision = (
             self._ticket_evidence_revision(ticket_ids)
             if hasattr(self, '_ticket_evidence_revision')
@@ -97,6 +118,8 @@ class TicketStoreMixin:
             return list(entry[1])
 
         tickets = self._tickets_from_sprint_data(sprint_data)
+        if not tickets and "tasks" in data and isinstance(data["tasks"], list):
+            tickets = self._tickets_from_sprint_data(data)
         cache[key] = (sprint_data, tuple(tickets), evidence_revision)
         return tickets
 

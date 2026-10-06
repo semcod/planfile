@@ -215,3 +215,90 @@ def test_migrate_to_sharded_yaml_preserves_legacy_tasks(tmp_path: Path):
     tickets = {t.id for t in pf.list_tickets(sprint="current")}
     assert "PLF-001" in tickets
     assert "task_legacy_shard" in tickets
+
+
+def test_list_tickets_scalar_sprint_with_tasks(tmp_path: Path):
+    pf = Planfile(str(tmp_path))
+    sprint_file = pf.store._sprint_file("current")
+    sprint_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Legacy format found in maskservice/update and displaynet: scalar sprint + tasks list
+    legacy_scalar = {
+        "sprint": "current",
+        "tasks": [
+            {
+                "id": "TSK-001",
+                "title": "Legacy first task",
+                "status": "completed",
+            },
+            {
+                "id": "TSK-002",
+                "title": "Legacy second task",
+                "status": "cancelled",
+            },
+        ],
+    }
+    pf.store._write_yaml_atomic(sprint_file, legacy_scalar, allow_unicode=True)
+
+    # list_tickets must succeed without AttributeError ('str' object has no attribute 'get')
+    tickets = pf.list_tickets(sprint="current")
+    assert len(tickets) == 2
+    t_map = {t.id: t for t in tickets}
+    assert "TSK-001" in t_map
+    assert t_map["TSK-001"].name == "Legacy first task"
+    assert t_map["TSK-001"].status == "done"  # normalized from completed
+    assert "TSK-002" in t_map
+    assert t_map["TSK-002"].name == "Legacy second task"
+    assert t_map["TSK-002"].status == "canceled"  # normalized from cancelled
+
+    # ticket_records must also yield the records without error
+    records = list(pf.store.ticket_records("current"))
+    assert len(records) == 2
+    rec_ids = {r["id"] for r in records}
+    assert rec_ids == {"TSK-001", "TSK-002"}
+
+
+def test_list_tickets_raw_scalar_file_does_not_crash(tmp_path: Path):
+    pf = Planfile(str(tmp_path))
+    sprint_file = pf.store._sprint_file("current")
+    sprint_file.parent.mkdir(parents=True, exist_ok=True)
+    sprint_file.write_text("just a scalar string\n", encoding="utf-8")
+
+    # Does not crash with AttributeError
+    tickets = pf.list_tickets(sprint="current")
+    assert tickets == []
+    records = list(pf.store.ticket_records("current"))
+    assert records == []
+
+
+def test_sharded_migration_with_unmigrated_scalar_sprint(tmp_path: Path):
+    pf = Planfile(str(tmp_path))
+    sprint_file = pf.store._sprint_file("current")
+    sprint_file.parent.mkdir(parents=True, exist_ok=True)
+
+    legacy_content = {
+        "sprint": "current",
+        "tasks": [
+            {
+                "id": "T-SCALAR-01",
+                "title": "Scalar sprint task",
+                "status": "in_progress",
+            }
+        ],
+    }
+    pf.store._write_yaml_atomic(sprint_file, legacy_content, allow_unicode=True)
+
+    # Explicitly migrate legacy tasks from scalar sprint
+    report_tasks = pf.store.migrate_legacy_sprint_tasks("current")
+    assert report_tasks["migrated"] is True
+    assert report_tasks["count"] == 1
+
+    # Sharded migration does not raise AttributeError on scalar sprint
+    report = pf.store.migrate_to_sharded_yaml()
+    assert report["tickets"] == 1
+    assert pf.store._uses_sharded_storage()
+    tickets = pf.list_tickets(sprint="current")
+    assert len(tickets) == 1
+    assert tickets[0].id == "T-SCALAR-01"
+    assert tickets[0].name == "Scalar sprint task"
+
