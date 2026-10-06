@@ -3,6 +3,7 @@ File analysis module for planfile generation.
 Extracts issues, metrics, and tasks from various file formats.
 """
 
+import logging
 import os
 from fnmatch import fnmatch
 from pathlib import Path
@@ -20,6 +21,8 @@ try:
 except ImportError:
     HAS_RUST_ANALYZER = False
     _native_analyze_file = None
+
+logger = logging.getLogger(__name__)
 
 
 class FileAnalyzer:
@@ -127,8 +130,8 @@ class FileAnalyzer:
                         return issues, metrics, tasks
                     except TimeoutError:
                         raise
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        logger.debug("Native file analyzer failed for %s, falling back to text analysis: %s", file_path, exc)
                 # Default text analysis
                 issues, metrics, tasks = analyze_text(file_path)
             else:
