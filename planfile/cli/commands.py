@@ -90,6 +90,12 @@ def __getattr__(name: str):
 
 def main() -> None:
     """Main CLI entry point."""
+    try:
+        from planfile.autoupdate import check_for_updates
+        check_for_updates("planfile")
+    except Exception:
+        pass
+
     # Options before the command and completion requests use the full parser.
     # Do not guess which positional token belongs to an unknown root option.
     ticket_only = sys.argv[1:2] == ["ticket"] and not any(
