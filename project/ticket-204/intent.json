@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-204",
+  "summary": "add autoupdate support",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-204/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/autoupdate.py",
+    "planfile/cli/commands.py",
+    "tests/test_autoupdate.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "74b12398ee77000cb4308475fcc3b5371d2da9eb",
+    "targetBranch": "main",
+    "outcome": "Finish existing nonblocking autoupdate support with bounded dispatch and genuine protected merge of PR248.",
+    "nonGoals": [
+      "No dependency upgrades in this repair session",
+      "No external cache or runtime profile changes",
+      "No other source/workspace ownership takeover"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reserve local check and upgrade attempts under an OS file lock before detached spawning. Coalesce cold-cache calls, bound pip child lifetime, atomically publish cache data, and degrade quietly for unavailable cache/locking. Retain user opt-in upgrade flags.",
+      "components": [
+        {
+          "name": "cli-autoupdate",
+          "paths": [
+            "planfile/autoupdate.py",
+            "planfile/cli/commands.py",
+            "tests/test_autoupdate.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this ticket change; preserve the original feature commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_autoupdate.py tests/test_cli_startup.py",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Offline coalescing, opt-in upgrade, malformed cache and process failure tests; authentic full current-base OneDev and trusted exact-head merge."
+      }
+    ]
+  }
+}
