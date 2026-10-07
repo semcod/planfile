@@ -10,12 +10,41 @@ If an update is available:
 from __future__ import annotations
 
 import json
+import math
 import os
 import subprocess
 import sys
 import time
 from importlib import metadata
 from pathlib import Path
+
+
+def _reserve_attempt(cache_dir: Path, operation: str, interval: float) -> bool:
+    """Coalesce processes without waiting for another CLI's local lock."""
+    import sqlite3
+
+    connection = None
+    try:
+        connection = sqlite3.connect(cache_dir / "update_dispatch.sqlite", timeout=0)
+        connection.execute("CREATE TABLE IF NOT EXISTS attempts (operation TEXT PRIMARY KEY, at REAL)")
+        connection.execute("BEGIN IMMEDIATE")
+        row = connection.execute("SELECT at FROM attempts WHERE operation = ?", (operation,)).fetchone()
+        now = time.time()
+        if not math.isfinite(now) or (row is not None and (
+                not isinstance(row[0], (int, float)) or not math.isfinite(row[0]))):
+            connection.rollback()
+            return False
+        if row is not None and now - row[0] < interval:
+            connection.rollback()
+            return False
+        connection.execute("INSERT OR REPLACE INTO attempts VALUES (?, ?)", (operation, now))
+        connection.commit()
+        return True
+    except (sqlite3.Error, OSError):
+        return False
+    finally:
+        if connection is not None:
+            connection.close()
 
 
 def _get_cache_dir(pkg_name: str) -> Path:
@@ -56,7 +85,7 @@ def _is_newer(latest: str, current: str) -> bool:
 def _spawn_detached_check(pkg_name: str, current_version: str, cache_file: Path) -> None:
     """Launch completely detached background worker process."""
     worker_code = f"""
-import json, sys, time
+import json, os, sys, time
 from urllib import request
 from pathlib import Path
 
@@ -81,9 +110,16 @@ cache_data = {{
     "latest_version": latest or current_version,
 }}
 try:
-    cache_file.write_text(json.dumps(cache_data), encoding="utf-8")
+    temporary = cache_file.with_name(f".update-check-{{os.getpid()}}.json")
+    temporary.write_text(json.dumps(cache_data), encoding="utf-8")
+    temporary.replace(cache_file)
 except Exception:
     pass
+finally:
+    try:
+        temporary.unlink(missing_ok=True)
+    except Exception:
+        pass
 """
     try:
         subprocess.Popen(
@@ -99,9 +135,18 @@ except Exception:
 
 def _spawn_background_upgrade(pkg_name: str) -> None:
     """Spawn background pip install --upgrade if auto-upgrade is enabled."""
+    worker_code = f"""
+import subprocess, sys
+try:
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '--upgrade', '--quiet',
+                    '--disable-pip-version-check', {pkg_name!r}],
+                   check=True, timeout=300)
+except (OSError, subprocess.SubprocessError):
+    sys.exit(1)
+"""
     try:
         subprocess.Popen(
-            [sys.executable, "-m", "pip", "install", "--upgrade", "--quiet", "--disable-pip-version-check", pkg_name],
+            [sys.executable, "-c", worker_code],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
@@ -131,7 +176,10 @@ def check_for_updates(
     except Exception:
         return
 
-    cache_dir = _get_cache_dir(pkg_name)
+    try:
+        cache_dir = _get_cache_dir(pkg_name)
+    except OSError:
+        return
     cache_file = cache_dir / "update_check.json"
 
     should_query = True
@@ -142,7 +190,10 @@ def check_for_updates(
             cached = json.loads(cache_file.read_text(encoding="utf-8"))
             last_check = cached.get("last_check", 0)
             cached_latest = cached.get("latest_version")
-            if time.time() - last_check < ttl_seconds:
+            if not isinstance(cached_latest, str):
+                cached_latest = None
+            if (isinstance(last_check, (int, float)) and not isinstance(last_check, bool)
+                    and math.isfinite(last_check) and time.time() - last_check < ttl_seconds):
                 should_query = False
         except Exception:
             pass
@@ -156,14 +207,14 @@ def check_for_updates(
                     os.environ.get("AUTO_UPGRADE") == "1" or
                     os.environ.get(env_pkg_key) == "1"
                 )
-                if auto_upgrade_enabled:
+                if auto_upgrade_enabled and _reserve_attempt(cache_dir, "upgrade", 3600):
                     sys.stderr.write(
                         "\n⚡ [" + pkg_name + "] Automatyczna aktualizacja w tle: "
                         + current_version + " → " + cached_latest + "...\n"
                     )
                     sys.stderr.flush()
                     _spawn_background_upgrade(pkg_name)
-                else:
+                elif not auto_upgrade_enabled:
                     sys.stderr.write(
                         "\n💡 [" + pkg_name + "] Nowa wersja dostępna: "
                         + current_version + " → " + cached_latest + "\n"
@@ -174,5 +225,5 @@ def check_for_updates(
         except Exception:
             pass
 
-    if should_query:
+    if should_query and _reserve_attempt(cache_dir, "check", max(1, min(ttl_seconds, 60))):
         _spawn_detached_check(pkg_name, current_version, cache_file)
