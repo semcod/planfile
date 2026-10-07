@@ -26,8 +26,8 @@ def _reserve_attempt(cache_dir: Path, operation: str, interval: float) -> bool:
     connection = None
     try:
         connection = sqlite3.connect(cache_dir / "update_dispatch.sqlite", timeout=0)
-        connection.execute("CREATE TABLE IF NOT EXISTS attempts (operation TEXT PRIMARY KEY, at REAL)")
         connection.execute("BEGIN IMMEDIATE")
+        connection.execute("CREATE TABLE IF NOT EXISTS attempts (operation TEXT PRIMARY KEY, at REAL)")
         row = connection.execute("SELECT at FROM attempts WHERE operation = ?", (operation,)).fetchone()
         now = time.time()
         if not math.isfinite(now) or (row is not None and (

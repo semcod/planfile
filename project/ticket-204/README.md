@@ -19,3 +19,5 @@ SESSION_EXECUTION_AUTHORIZATION: user requests continuation, tests and protected
 ## Validation
 
 14 focused autoupdate tests plus14 CLI startup tests pass (28 total). Offline20-call cold-cache reproduction now dispatches once; independent SQLite connections coalesce concurrent callers without waiting. Opt-in upgrade has hourly reservation and300s pip child timeout. Cache publication is atomic; corrupt/busy/unavailable caches skip quietly. Pinned scope and governance/Ruff pass. Full protected OneDev verification and independent exact-head PR248 merge remain pending. No package upgrade was executed in this repair session.
+
+Hosted3.13 found an overstrict concurrency assertion: optional nonwaiting callers may all skip a busy cache. Schema initialization now follows BEGIN IMMEDIATE; the regression asserts at most one concurrent dispatch and immediate serial recovery without consuming a failed cooldown. Explicit held-database recovery is also tested. Focused28 tests pass again; final head requires fresh full OneDev and hosted check reconciliation.

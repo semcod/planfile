@@ -35,7 +35,12 @@ def test_reservation_is_shared_and_nonblocking(cache):
     cache.mkdir()
     with ThreadPoolExecutor(max_workers=10) as pool:
         accepted = list(pool.map(lambda _: autoupdate._reserve_attempt(cache, "check", 60), range(20)))
-    assert sum(accepted) == 1
+    # Busy-cache callers may all skip rather than wait. No cooldown may be
+    # consumed by a failed reservation, and the next free caller must recover.
+    assert sum(accepted) <= 1
+    if not any(accepted):
+        assert autoupdate._reserve_attempt(cache, "check", 60)
+    assert not autoupdate._reserve_attempt(cache, "check", 60)
 
 
 def test_failed_launch_is_cooled_down_then_retried(cache, monkeypatch):
@@ -104,6 +109,7 @@ def test_unwritable_cache_and_busy_database_skip_quietly(cache, monkeypatch):
         with patch.object(autoupdate.subprocess, "Popen") as spawn:
             autoupdate.check_for_updates("planfile")
             spawn.assert_not_called()
+    assert autoupdate._reserve_attempt(cache, "check", 60)
 
 
 def test_corrupt_dispatch_database_skips_quietly(cache):
