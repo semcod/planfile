@@ -300,7 +300,7 @@ def test_github_preflight_filters_internal_dedupe_labels_and_rejects_long_labels
 
 @pytest.mark.parametrize(
     "status",
-    ["closed", "done", "completed", "blocked", "failed", "canceled", "cancelled"],
+    ["closed", "done", "completed", "failed", "canceled", "cancelled"],
 )
 def test_github_projects_all_terminal_planfile_statuses_to_closed(status):
     from planfile.sync.github import GitHubBackend
@@ -318,7 +318,7 @@ def test_github_projects_all_terminal_planfile_statuses_to_closed(status):
     assert issue.edits == [{"state": "closed"}]
 
 
-@pytest.mark.parametrize("status", ["open", "triage", "in_progress", "in-progress"])
+@pytest.mark.parametrize("status", ["open", "triage", "in_progress", "in-progress", "blocked"])
 def test_github_keeps_active_planfile_statuses_open(status):
     from planfile.sync.github import GitHubBackend
 

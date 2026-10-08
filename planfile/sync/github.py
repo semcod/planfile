@@ -472,9 +472,9 @@ class GitHubBackend(BasePMBackend):
     def project_remote_status(status: str) -> str | None:
         """Project the existing Planfile lifecycle onto GitHub's two states."""
         normalized = str(getattr(status, "value", status)).strip().lower().replace("-", "_")
-        if normalized in {"closed", "close", "resolved", "done", "completed", "blocked", "failed", "canceled", "cancelled"}:
+        if normalized in {"closed", "close", "resolved", "done", "completed", "failed", "canceled", "cancelled"}:
             return "closed"
-        if normalized in {"open", "triage", "in_progress", "inprogress", "doing", "active", "todo", "backlog", "review"}:
+        if normalized in {"open", "triage", "in_progress", "inprogress", "doing", "active", "todo", "backlog", "review", "blocked"}:
             return "open"
         return None
 

@@ -67,7 +67,7 @@ def run(b, t, store):
     return sync_to_external(b, [(t["id"], t)], False, store, "github")
 
 
-@pytest.mark.parametrize("status", ["done", "blocked", "failed", "canceled", "completed"])
+@pytest.mark.parametrize("status", ["done", "failed", "canceled", "completed"])
 def test_terminal_create_and_deduplicated_create_close_same_issue(status):
     b = backend()
     t = ticket(status)
@@ -81,7 +81,7 @@ def test_terminal_create_and_deduplicated_create_close_same_issue(status):
     assert b.repo.creates == 1
 
 
-@pytest.mark.parametrize("status", ["open", "in_progress", "review", "triage"])
+@pytest.mark.parametrize("status", ["open", "in_progress", "review", "triage", "blocked"])
 def test_active_create_and_dedup_project_to_open(status):
     b = backend()
     first = b.create_ticket(ticket(status))
@@ -109,6 +109,35 @@ def test_successful_receipt_retry_reconciles_drift_without_duplicate(tmp_path):
     assert run(b, t, store).reused == ("PLF-1",)
     assert b.repo.reads > reads
     assert len(b.repo.issue.edits) == edits
+
+
+def test_blocked_update_reopens_issue_and_retry_preserves_local_blocker(tmp_path):
+    store = Store(tmp_path)
+    store.init()
+    b, t = backend(), ticket("done")
+    assert run(b, t, store).succeeded == ("PLF-1",)
+    assert b.repo.issue.state == "closed"
+
+    t["status"] = "blocked"
+    t["description"] = "Waiting for the owner to hand off the active lease."
+    result = run(b, t, store)
+    assert result.updated == ("PLF-1",)
+    assert result.failed == ()
+    assert b.repo.issue.state == "open"
+    assert t["status"] == "blocked"
+    assert t["description"] in b.repo.issue.body
+    assert b.repo.creates == 1
+
+    edits = len(b.repo.issue.edits)
+    assert run(b, t, store).reused == ("PLF-1",)
+    assert b.repo.issue.state == "open"
+    assert len(b.repo.issue.edits) == edits
+
+
+@pytest.mark.parametrize("status", [" BLOCKED ", "Blocked"])
+def test_blocked_status_normalization_keeps_issue_open(status):
+    b = backend()
+    assert b.create_ticket(ticket(status)).status == "open"
 
 
 def test_receipt_retry_fails_on_unavailable_readback_and_records_failure(tmp_path):

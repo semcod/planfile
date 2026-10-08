@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-205",
+  "summary": "Keep blocked Planfile tickets open on GitHub",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-205/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "tests/test_sync_routing.py",
+    "tests/test_sync_lifecycle_readback.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a58442d7b4afb27b6f0a18aa8bfc5221cdc1d931",
+    "targetBranch": "main",
+    "outcome": "Publish and activate blocked-to-open GitHub projection with create/update/reopen regressions, then reconcile only own current operational tickets.",
+    "nonGoals": [
+      "No global issue reopening or cleanup of unowned workspaces",
+      "Preserve existing other status mappings and provider behavior"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use existing centralized GitHub lifecycle projection; blocked remains unfinished and projects to open.",
+      "components": [
+        {
+          "name": "github-sync",
+          "paths": [
+            "planfile/sync/github.py",
+            "tests/test_sync_lifecycle_readback.py",
+            "tests/test_sync_routing.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the scoped commit through protected publication; no migration or deletion."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest tests/test_sync_status_preflight.py tests/test_sync_routing.py tests/test_sync_lifecycle_readback.py tests/test_github_deduplication.py"
+        ],
+        "evidence": "Regression coverage: new blocked issue stays open and closed marker match or update reopens; terminal and unsupported mappings retained."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "python -m pytest"
+        ],
+        "evidence": "Managed checks and full stack suite; independently approved exact-head protected merge; actual active adapter/readback."
+      }
+    ]
+  }
+}
