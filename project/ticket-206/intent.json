@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-206",
+  "summary": "Import current code2llm health reports as actionable quality tickets",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-206/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/importers/code2llm_importer.py",
+    "tests/test_code2llm_importer.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a5bc9be973a2eca012590c65d271ac8286622e35",
+    "targetBranch": "main",
+    "outcome": "Validated current code2llm HEALTH import published through protected independent approval and merge, then observed in the installed primary checkout.",
+    "nonGoals": [
+      "No dispatcher activation, Koru quality editing, protected admission changes or version bump"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Parse only HEALTH alerts into named advisory records; preserve legacy evolution and CC fields.",
+      "components": [
+        {
+          "name": "code2llm-import",
+          "paths": [
+            "planfile/importers/code2llm_importer.py",
+            "tests/test_code2llm_importer.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket implementation commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "pytest -q tests/test_code2llm_importer.py tests/test_store_tickets_id_fallback.py",
+          "ruff check --no-cache planfile/importers/code2llm_importer.py tests/test_code2llm_importer.py",
+          "ruff format --check --no-cache planfile/importers/code2llm_importer.py tests/test_code2llm_importer.py",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "17 focused tests pass with managed governance 0 errors/0 warnings; lint and formatting pass. Actual workspace report produces and persists20 candidates:7 GOD,1 DUP,12 CYCLE. External receipt: .subactor/recovery/code2llm-health-206-20261008/current-report-import.json. Final standalone gate recorded there before commit."
+      }
+    ]
+  }
+}
