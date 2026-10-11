@@ -2059,9 +2059,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 "moved_files": moved,
             }
 
-    def create_ticket(self, ticket: Ticket) -> Ticket:
-        """Persist a ticket into the current sprint file."""
+    def create_ticket(self, ticket: Ticket, *, expected_absent: bool = False) -> Ticket:
+        """Persist a ticket, optionally requiring an unused ID under the lock."""
         with self.mutation_lock():
+            if expected_absent and self._locate_ticket_source(ticket.id) is not None:
+                raise ValueError(f"ticket_already_exists: {ticket.id}")
             return self._create_ticket_unlocked(ticket)
 
     def create_tickets_bulk(self, tickets: list[Ticket]) -> list[Ticket]:
@@ -2395,6 +2397,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         reason: str | None = None,
         actor: str | None = None,
         expected_updated_at: str | None = None,
+        expected_snapshot: dict | None = None,
         **updates,
     ) -> Ticket | None:
         """Update a ticket. If status (or execution state) changes, a structured history entry
@@ -2407,6 +2410,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 reason=reason,
                 actor=actor,
                 expected_updated_at=expected_updated_at,
+                expected_snapshot=expected_snapshot,
                 **updates,
             )
             if ticket is not None and ticket.status == "done":
@@ -2613,6 +2617,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         reason: str | None = None,
         actor: str | None = None,
         expected_updated_at: str | None = None,
+        expected_snapshot: dict | None = None,
         **updates,
     ) -> Ticket | None:
         index_was_current = self._begin_index_mutation()
@@ -2622,6 +2627,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 reason=reason,
                 actor=actor,
                 expected_updated_at=expected_updated_at,
+                expected_snapshot=expected_snapshot,
                 _index_was_current=index_was_current,
                 **updates,
             )
@@ -2635,6 +2641,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
             tickets = sprint_data.get("tickets", {})
             if ticket_id in tickets:
                 previous = dict(tickets[ticket_id])
+                if expected_snapshot is not None and previous != expected_snapshot:
+                    raise ValueError(f"stale_ticket_snapshot: {ticket_id}")
                 self._guard_expected_updated_at(previous, expected_updated_at)
                 # Extract history metadata (reason=why the change, actor/by=who performed it)
                 # Support both named params (from high-level methods) and _-prefixed or bare in updates
@@ -2704,6 +2712,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         reason: str | None = None,
         actor: str | None = None,
         expected_updated_at: str | None = None,
+        expected_snapshot: dict | None = None,
         _index_was_current: bool = False,
         **updates,
     ) -> Ticket | None:
@@ -2713,6 +2722,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return None
         sprint, ticket_data = located
         previous = dict(ticket_data)
+        if expected_snapshot is not None and previous != expected_snapshot:
+            raise ValueError(f"stale_ticket_snapshot: {ticket_id}")
         self._guard_expected_updated_at(previous, expected_updated_at)
         history_reason = reason or updates.pop("reason", None) or updates.pop("_reason", None)
         history_actor = actor or updates.pop("actor", None) or updates.pop("_actor", None)

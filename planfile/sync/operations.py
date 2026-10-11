@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 import re
 from pathlib import Path
 from typing import Any
@@ -513,6 +514,7 @@ def _process_external_ticket(
     ticket_ids: set[str] | None = None,
     import_target: dict | None = None,
     selected_remote_ids: set[str] | None = None,
+    store=None,
 ) -> tuple[int, int]:
     """Process a single external ticket. Returns updated (imported_count, updated_count)."""
     ext_data = _extract_ticket_data(ext_ticket)
@@ -556,7 +558,8 @@ def _process_external_ticket(
             if target is None:
                 return imported_count, updated_count
             result = _update_local_ticket(
-                target, {}, planfile_id, ext_data, updated_count, integration_name, publish_to
+                target, {}, planfile_id, ext_data, updated_count, integration_name, publish_to,
+                store=store,
             )
             if not dry_run:
                 # Backfill the durable reverse mapping when an old ticket only
@@ -571,9 +574,14 @@ def _process_external_ticket(
                 sync_state,
                 imported_count,
                 publish_to,
+                store=store,
+                target_sprint=next((name for name, section in sections.items()
+                                    if section is (import_target or backlog)), "backlog"),
             ), updated_count
     except Exception as e:
         console.print(f"  ✗ Failed to import {ext_data['id']}: {e}")
+        if store is not None:
+            raise
         return imported_count, updated_count
 
 
@@ -595,6 +603,8 @@ def sync_from_external(
     )
     imported_count = 0
     updated_count = 0
+    sdk_store = (store if not v1_source_file and callable(getattr(store, "update_ticket", None))
+                 and callable(getattr(store, "create_ticket", None)) else None)
 
     sprint, backlog = _load_sprint_and_backlog(store, v1_source_file, v1_data)
     sections = _load_sync_sections(store, v1_source_file, v1_data)
@@ -602,6 +612,12 @@ def sync_from_external(
     # the backlog are the same objects that are persisted below.
     sections["current"] = sprint
     sections["backlog"] = backlog
+    if sdk_store is not None:
+        # The compatibility loader may return mutable cached dictionaries.
+        # Freeze the observed records before fetching from the remote backend.
+        sections = deepcopy(sections)
+        sprint = sections["current"]
+        backlog = sections["backlog"]
     requested_sprints = list(
         dict.fromkeys(str(value).strip() for value in (sprint_ids or []) if str(value).strip())
     )
@@ -646,9 +662,10 @@ def sync_from_external(
             normalized_ticket_ids,
             import_target,
             selected_remote_ids,
+            store=sdk_store,
         )
 
-    if not dry_run and (imported_count > 0 or updated_count > 0):
+    if not dry_run and (imported_count > 0 or updated_count > 0) and sdk_store is None:
         _save_import_results(
             store,
             v1_source_file,
@@ -733,6 +750,7 @@ def _update_local_ticket(
     updated_count: int,
     integration_name: str,
     publish_to: list[str] | None,
+    store=None,
 ) -> int:
     """Update an existing local ticket from external data."""
     backend_ref = {
@@ -765,13 +783,33 @@ def _update_local_ticket(
         return updated_count
 
     update_fields["status"] = _inbound_status(ext_data, integration_name, ticket.get("status"))
-    ticket.update(update_fields)
-    ticket.setdefault("sprint", default_sprint)
     if ext_data.get("url") and "github.com/" in str(ext_data["url"]):
         backend_ref["repository"] = str(ext_data["url"]).split("github.com/", 1)[1].split(
             "/issues/", 1
         )[0]
-    ticket.setdefault("sync", {})[integration_name] = backend_ref
+    sync = deepcopy(ticket.get("sync") or {})
+    sync[integration_name] = backend_ref
+    update_fields["sync"] = sync
+    if store is not None:
+        changes = {key: value for key, value in update_fields.items()
+                   if key != "id" and ticket.get(key) != value}
+        if not changes:
+            return updated_count
+        execution = ticket.get("execution") or {}
+        if ("status" in changes and changes["status"] in {"done", "canceled", "blocked", "failed"}
+                and (execution.get("state") in {"running", "in_progress"}
+                     or execution.get("assigned_to") or execution.get("lease_expires_at"))):
+            raise ValueError("inbound_terminal_transition_requires_execution_reconciliation")
+        updated = store.update_ticket(
+            planfile_id, expected_updated_at=ticket.get("updated_at"),
+            expected_snapshot=deepcopy(ticket), actor=f"sync:{integration_name}",
+            reason=f"Inbound {integration_name} ticket {ext_data['id']}", **changes)
+        if updated is None:
+            raise ValueError(f"inbound_ticket_disappeared: {planfile_id}")
+        ticket.update(updated.model_dump(mode="json"))
+    else:
+        ticket.update(update_fields)
+        ticket.setdefault("sprint", default_sprint)
 
     console.print(f"  ✓ Updated: {planfile_id} from {ext_data['id']}")
     return updated_count + 1
@@ -784,6 +822,8 @@ def _import_new_ticket(
     sync_state,
     imported_count: int,
     publish_to: list[str] | None = None,
+    store=None,
+    target_sprint: str = "backlog",
 ) -> int:
     """Import a new ticket from external system."""
     new_id = f"{integration_name.upper()}-{ext_data['id']}"
@@ -796,7 +836,7 @@ def _import_new_ticket(
         "name": ext_data.get("name") or ext_data.get("title"),
         "description": ext_data["description"],
         "status": _inbound_status(ext_data, integration_name),
-        "sprint": "backlog",
+        "sprint": target_sprint,
         "assignee": ext_data["assignee"],
         "labels": ext_data["labels"],
         "external_id": ext_data["id"],
@@ -826,6 +866,10 @@ def _import_new_ticket(
             existing.update(ticket_data)
             sync_state.save_sync({new_id: ext_data["id"]})
             return imported_count
+    if store is not None:
+        from planfile.core.store import Ticket
+        created = store.create_ticket(Ticket.model_validate(ticket_data), expected_absent=True)
+        ticket_data = created.model_dump(mode="json")
     tickets[new_id] = ticket_data
     sync_state.save_sync({new_id: ext_data["id"]})
 
