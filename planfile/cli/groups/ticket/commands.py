@@ -772,11 +772,33 @@ def ticket_ready(ticket_id: str=typer.Argument(..., help='Ticket ID to make runn
     """Mark execution state as ready after human input or manual recovery."""
     from planfile import Planfile
     pf = Planfile.auto_discover()
-    ticket = pf.ready_ticket(ticket_id, note=note)
+    try:
+        ticket = pf.ready_ticket(ticket_id, note=note)
+    except ValueError as exc:
+        console.print(f'[red]✗[/red] Cannot ready {ticket_id}: {exc}')
+        raise typer.Exit(1)
     if not ticket:
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Ticket {ticket.id} is [green]ready[/green]')
+
+def ticket_resume(
+    ticket_id: str=typer.Argument(..., help='Ticket ID to resume from archive or failed state'),
+    note: str | None=typer.Option(None, '-n', '--note', help='Optional note explaining recovery/resumption'),
+) -> None:
+    """Resume an archived or failed ticket and restore it to the current runnable queue."""
+    from planfile import Planfile
+    pf = Planfile.auto_discover()
+    try:
+        ticket = pf.resume_ticket(ticket_id, note=note)
+    except ValueError as exc:
+        console.print(f'[red]✗[/red] Cannot resume {ticket_id}: {exc}')
+        raise typer.Exit(1)
+    if not ticket:
+        console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
+        raise typer.Exit(1)
+    console.print(f'[green]✓[/green] Resumed {ticket.id} → [green]current (ready)[/green]')
+
 
 def ticket_fail(
     ticket_id: str=typer.Argument(..., help='Ticket ID to mark as failed'),

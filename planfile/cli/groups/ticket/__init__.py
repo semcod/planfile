@@ -26,6 +26,7 @@ from planfile.cli.groups.ticket.commands import (
     ticket_next,
     ticket_prune_deps,
     ticket_ready,
+    ticket_resume,
     ticket_show,
     ticket_split,
     ticket_start,
@@ -65,6 +66,7 @@ def register_ticket_commands(app: typer.Typer) -> None:
     ticket_app.command("fail")(ticket_fail)
     ticket_app.command("input")(ticket_input)
     ticket_app.command("ready")(ticket_ready)
+    ticket_app.command("resume")(ticket_resume)
     ticket_app.command("start")(ticket_start)
     ticket_app.command("block")(ticket_block)
     ticket_app.command("validate")(ticket_validate)

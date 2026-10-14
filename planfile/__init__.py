@@ -36,7 +36,7 @@ from planfile.core.models import (
     TicketStatus,
     TicketUriProcess,
 )
-from planfile.core.store import PlanfileStore
+from planfile.core.store import ImmutableTerminalReopenError, PlanfileStore
 from planfile.delegation import DelegationActor, load_delegation_actors
 from planfile.delivery_plan import DeliveryPlanError, DeliveryPlanRepository
 from planfile.delivery_plan_contracts import (
@@ -681,6 +681,23 @@ class Planfile:
         if not ticket:
             return None
 
+        status_val = (
+            ticket.status.value
+            if hasattr(ticket.status, "value")
+            else str(ticket.status)
+        ).lower()
+        if status_val in ("done", "canceled", "cancelled"):
+            raise ImmutableTerminalReopenError("immutable_terminal_reopen")
+
+        located = self.store._locate_ticket_source(ticket_id)
+        if located is not None:
+            source_sprint, _ = located
+            if source_sprint.startswith(("history-", "archive-")):
+                self.store.move_ticket(ticket_id, "current")
+                ticket = self.get_ticket(ticket_id)
+                if not ticket:
+                    return None
+
         execution_data = (
             ticket.execution.model_dump(mode="python", exclude_none=False)
             if ticket.execution
@@ -707,6 +724,18 @@ class Planfile:
         if actor:
             updates["actor"] = actor
         return self.update_ticket(ticket_id, **updates)
+
+    def resume_ticket(
+        self,
+        ticket_id: str,
+        note: str | None = None,
+        *,
+        reason: str | None = "resumed",
+        actor: str | None = None,
+    ) -> Ticket | None:
+        """Resume an unfinished ticket (e.g. failed or archived) and restore it to the current runnable queue."""
+        return self.ready_ticket(ticket_id, note=note, reason=reason, actor=actor)
+
 
     def respond_ticket(
         self,
