@@ -125,4 +125,5 @@ This file indexes governance tickets without taking ownership of
 | **ticket-213** | [`README.md`](./ticket-213/README.md) | - | - | - | - | - |
 | **ticket-214** | [`README.md`](./ticket-214/README.md) | - | - | - | - | - |
 | **ticket-215** | [`README.md`](./ticket-215/README.md) | - | - | - | - | - |
+| **ticket-216** | [`README.md`](./ticket-216/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->

@@ -141,7 +141,11 @@ class Planfile:
             if dedupe_label:
                 if live:
                     oldest = min(live, key=lambda record: str(record.get("created_at") or ""))
-                    existing = self.store.get_ticket(str(oldest.get("id") or ""))
+                    # Rebuilding a stale projection here would decode every archive
+                    # while holding mutation_lock. Use the durable-source fallback.
+                    existing = self.store.get_ticket(
+                        str(oldest.get("id") or ""), repair_index=False,
+                    )
                     if existing:
                         if dedupe_note and dedupe_note.strip():
                             outputs = existing.outputs.model_dump(mode="json") if existing.outputs else {}

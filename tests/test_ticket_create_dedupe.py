@@ -68,6 +68,7 @@ def test_ordinary_tickets_are_not_deduplicated(pf):
 def test_http_reuse_returns_200_without_second_ticket(pf, monkeypatch):
     pytest.importorskip("fastapi.testclient")
     from fastapi.testclient import TestClient
+
     from planfile.api import server
 
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
@@ -84,3 +85,40 @@ def test_http_reuse_returns_200_without_second_ticket(pf, monkeypatch):
     assert first.status_code == 201
     assert second.status_code == 200
     assert second.json()["id"] == first.json()["id"]
+
+
+@pytest.mark.parametrize("projection", ["missing", "stale"])
+@pytest.mark.parametrize("archived", [False, True])
+@pytest.mark.parametrize("note", [None, "another occurrence"])
+def test_reuse_does_not_rebuild_projection_under_mutation_lock(
+    pf, monkeypatch, projection, archived, note,
+):
+    pf.store.configure_ticket_index(True)
+    first = pf.create_ticket("first", dedupe_key="shared")
+    sprint = "archive" if archived else "current"
+    if archived:
+        with pf.store.mutation_lock():
+            data = pf.store.load_sprint("current")
+            raw = data["tickets"].pop(first.id)
+            pf.store._write_yaml_atomic(pf.store._sprint_file("current"), data)
+            pf.store._write_yaml_atomic(
+                pf.store._sprint_file("archive"), {"tickets": {first.id: raw}},
+            )
+    pf.store.ensure_ticket_index()
+    if projection == "missing":
+        pf.store._ticket_index_path.unlink()
+    else:
+        path = pf.store._sprint_file(sprint)
+        path.write_text(path.read_text() + "\n# projection is stale\n")
+
+    def forbidden_rebuild(*args, **kwargs):
+        pytest.fail("dedupe must not repair the full SQLite projection")
+
+    monkeypatch.setattr(pf.store, "ensure_ticket_index", forbidden_rebuild)
+    reused, created = pf.create_ticket_deduplicated(
+        "again", dedupe_key="shared", dedupe_note=note,
+    )
+    assert not created and reused.id == first.id
+    if note:
+        assert reused.outputs.notes == [note]
+    assert not pf.store._sqlite_ticket_index().is_current(pf.store._ticket_index_signature())

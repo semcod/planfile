@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-216",
+  "summary": "Avoid SQLite projection rebuild inside deduplication mutation lock",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-216/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "tests/test_ticket_create_dedupe.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ca3f35c934f3b2cd06b369adf44c6863ac8f4712",
+    "targetBranch": "main",
+    "outcome": "Avoid unrelated full SQLite projection reconstruction under deduplication mutation lock",
+    "nonGoals": [
+      "No changes to index maintenance, storage schema or deduplication key semantics"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use existing nonrepairing lookup with authoritative-source fallback during dedupe",
+      "components": [
+        {
+          "name": "deduplication",
+          "paths": [
+            "planfile/__init__.py",
+            "tests/test_ticket_create_dedupe.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert lookup mode change; no data migration"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python -m pytest -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Full suite and independent protected CI receipts"
+      }
+    ]
+  }
+}
