@@ -651,6 +651,35 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return "unknown"
 
     @contextmanager
+    def deduplication_lock(self, label: str | None):
+        """Prepare live-key evidence, then select from revalidated sources under lock."""
+        from planfile.core.allocator_dedupe import live_records
+        from planfile.core.allocator_sprints import MAX_LOCKED_REBUILD_BYTES, signature
+
+        prepared = {}
+        if label and not self._uses_sharded_storage():
+            for source in self._all_sprint_files():
+                before = signature(source)
+                rows = live_records(source)
+                if signature(source) == before:
+                    prepared[str(source)] = (before, rows)
+        with self.allocation_lock():
+            live = []
+            if label:
+                if self._uses_sharded_storage():
+                    live = [row for row in self.ticket_records(sprint="all")
+                            if label in (row.get("labels") or [])
+                            and str(row.get("status") or "") not in {"done", "canceled"}]
+                else:
+                    # Enumerate again: newly created sources must participate too.
+                    for source in self._all_sprint_files():
+                        entry = prepared.get(str(source))
+                        rows = (entry[1] if entry is not None and signature(source) == entry[0]
+                                else live_records(source, max_rebuild_bytes=MAX_LOCKED_REBUILD_BYTES))
+                        live.extend(row for row in rows if label in row["labels"])
+            yield live
+
+    @contextmanager
     def allocation_lock(self):
         """Prepare identity evidence before locking, then revalidate on use.
 
