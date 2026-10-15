@@ -651,6 +651,36 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return "unknown"
 
     @contextmanager
+    def allocation_lock(self):
+        """Prepare identity evidence before locking, then revalidate on use.
+
+        Only allocation entry points use this context: ordinary updates never
+        wait for cold archive parsing. Concurrent source changes are checked
+        again by _known_ticket_highwater while the mutation lock is held.
+        """
+        from planfile.core.allocator_sprints import (
+            signature,
+            sprint_highwater,
+        )
+
+        prepared = {}
+        if not self._uses_sharded_storage():
+            prefix = self._read_config().get("prefix", "PLF")
+            for source in self._all_sprint_files():
+                before = signature(source)
+                highest = sprint_highwater(source, prefix)
+                if signature(source) == before:
+                    prepared[(str(source), prefix)] = (before, highest)
+        with self.mutation_lock():
+            # Scalar summaries also allow safe allocation when the optional
+            # persistent cache cannot be written. Publish only inside the lock.
+            self._prepared_allocator_evidence = prepared
+            try:
+                yield
+            finally:
+                self._prepared_allocator_evidence = {}
+
+    @contextmanager
     def mutation_lock(self, *, timeout_seconds: float | None = None):
         """Serialize YAML mutations, failing safely on prolonged contention."""
         with self._file_lock(self._lock_path, timeout_seconds=timeout_seconds):
@@ -953,13 +983,23 @@ class Store(StoreFileMixin, TicketStoreMixin):
         marker_pattern = re.compile(rf"{re.escape(prefix)}-(\d+)")
         highest = 0
 
-        from planfile.core.allocator_sprints import record_highwater, sprint_highwater
+        from planfile.core.allocator_sprints import (
+            MAX_LOCKED_REBUILD_BYTES,
+            record_highwater,
+            signature,
+            sprint_highwater,
+        )
 
         if self._uses_sharded_storage():
             highest = record_highwater(self.ticket_records(sprint="all"), prefix)
         else:
             for source in self._all_sprint_files():
-                highest = max(highest, sprint_highwater(source, prefix))
+                prepared = getattr(self, "_prepared_allocator_evidence", {}).get((str(source), prefix))
+                if prepared is not None and signature(source) == prepared[0]:
+                    value = prepared[1]
+                else:
+                    value = sprint_highwater(source, prefix, max_rebuild_bytes=MAX_LOCKED_REBUILD_BYTES)
+                highest = max(highest, value)
 
         from planfile.core.allocator_journal import JournalHighwater
 
@@ -1288,7 +1328,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return report
 
     def next_id(self) -> str:
-        with self.mutation_lock():
+        with self.allocation_lock():
             return self._next_id_unlocked()
 
     # --- Override base_dir for StoreFileMixin ---

@@ -436,7 +436,7 @@ class DeliveryPlanRepository:
 
         plan = CompiledWorkPlanV1.model_validate(compiled_plan)
         receipts = self._receipt_map(plan, terminal_receipts)
-        with self.store.mutation_lock():
+        with self.store.allocation_lock():
             current = self._read_unlocked(plan.plan_id)
             if current is not None:
                 return self._reconcile_unlocked(current, plan, receipts)

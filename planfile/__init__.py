@@ -137,7 +137,7 @@ class Planfile:
             labels.append(dedupe_label)
         if labels:
             kwargs["labels"] = labels
-        with self.store.mutation_lock():
+        with self.store.allocation_lock():
             if dedupe_label:
                 live = [
                     record for record in self.store.ticket_records(sprint="all")
@@ -835,7 +835,7 @@ class Planfile:
             )
         if not tickets_data:
             return []
-        with self.store.mutation_lock():
+        with self.store.allocation_lock():
             ticket_ids = self.store._reserve_ids_unlocked(len(tickets_data))
             tickets = []
             for ticket_id, original in zip(ticket_ids, tickets_data, strict=True):
