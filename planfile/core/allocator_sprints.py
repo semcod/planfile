@@ -57,6 +57,10 @@ def _digest(value: dict) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
 
+class SourceChangedError(RuntimeError):
+    """Authoritative source changed during optimistic preparation."""
+
+
 MAX_LOCKED_REBUILD_BYTES = 5_000_000
 
 
@@ -96,7 +100,7 @@ def sprint_highwater(source: Path, prefix: str, *, max_rebuild_bytes: int | None
     data = load_yaml_text(text)
     highest = record_highwater(records(data), prefix)
     if signature(source) != before:
-        raise RuntimeError("Sprint changed while rebuilding allocator identity evidence")
+        raise SourceChangedError("Sprint changed while rebuilding allocator identity evidence")
     value = {"version": 1, "signature": before, "prefix": prefix, "source": source.name, "highest": highest}
     value["checksum"] = _digest(value)
     temporary = None

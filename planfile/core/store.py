@@ -693,6 +693,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         again by _known_ticket_highwater while the mutation lock is held.
         """
         from planfile.core.allocator_sprints import (
+            SourceChangedError,
             signature,
             sprint_highwater,
         )
@@ -701,10 +702,15 @@ class Store(StoreFileMixin, TicketStoreMixin):
         if not self._uses_sharded_storage():
             prefix = self._read_config().get("prefix", "PLF")
             for source in self._all_sprint_files():
-                before = signature(source)
-                highest = sprint_highwater(source, prefix)
-                if signature(source) == before:
-                    prepared[(str(source), prefix)] = (before, highest)
+                try:
+                    before = signature(source)
+                    highest = sprint_highwater(source, prefix)
+                    if signature(source) == before:
+                        prepared[(str(source), prefix)] = (before, highest)
+                except (SourceChangedError, FileNotFoundError):
+                    # Re-enumerate and rebuild bounded authoritative evidence
+                    # under the lock; an optimistic race is not a reservation.
+                    continue
         with self.mutation_lock():
             # Scalar summaries also allow safe allocation when the optional
             # persistent cache cannot be written. Publish only inside the lock.
