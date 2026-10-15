@@ -137,13 +137,8 @@ class Planfile:
             labels.append(dedupe_label)
         if labels:
             kwargs["labels"] = labels
-        with self.store.allocation_lock():
+        with self.store.deduplication_lock(dedupe_label) as live:
             if dedupe_label:
-                live = [
-                    record for record in self.store.ticket_records(sprint="all")
-                    if dedupe_label in (record.get("labels") or [])
-                    and str(record.get("status") or "") not in {"done", "canceled"}
-                ]
                 if live:
                     oldest = min(live, key=lambda record: str(record.get("created_at") or ""))
                     existing = self.store.get_ticket(str(oldest.get("id") or ""))
