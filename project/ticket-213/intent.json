@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-213",
+  "summary": "Regression coverage for bounded allocator evidence",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-213/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "tests/test_allocator_preparation.py",
+    "tests/test_allocator_sprints.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "61644152797ce365fbc470200865c3ccd8f7d0a6",
+    "targetBranch": "main",
+    "outcome": "Deterministic regression coverage for allocator evidence and lock boundaries",
+    "nonGoals": [
+      "Runtime changes, protected control changes or deployment"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Exercise public allocation paths and deterministic source/cache fault injection in isolated temporary stores",
+      "components": [
+        {
+          "name": "allocator-tests",
+          "paths": [
+            "tests/test_allocator_sprints.py",
+            "tests/test_allocator_preparation.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert test changes; no runtime state changes"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python -m pytest -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Full suite and independent protected CI receipts"
+      }
+    ]
+  }
+}
