@@ -23,4 +23,4 @@ No runtime implementation changes, validator changes, deployment, or alteration 
 
 ## Validation
 
-18 new deterministic regression cases; 71 focused allocator, locking, concurrency and dedupe tests passed. Ruff and managed governance passed. Full suite and independent exact-head publication remain pending.
+Initial run: 18 new deterministic regression cases; 71 focused tests passed; full suite 1237 passed, 6 skipped. Added allocation-entry coverage is revalidated before publication. Ruff and managed governance passed. Independent exact-head publication remains pending.

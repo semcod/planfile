@@ -111,3 +111,32 @@ def test_sharded_allocation_does_not_prepare_archive_yaml(tmp_path, monkeypatch)
 
     monkeypatch.setattr(evidence, "sprint_highwater", unexpected)
     assert pf.create_ticket("next").id == "PLF-002"
+
+
+@pytest.mark.parametrize("entry", ["next_id", "create", "deduplicated", "bulk"])
+def test_allocation_entry_points_prepare_evidence(tmp_path, monkeypatch, entry):
+    pf = Planfile(tmp_path)
+    pf.store.init()
+    archive(pf.store)
+    original = pf.store.allocation_lock
+    preparations = []
+
+    @contextmanager
+    def observed():
+        with original():
+            preparations.append(bool(pf.store._prepared_allocator_evidence))
+            yield
+
+    monkeypatch.setattr(pf.store, "allocation_lock", observed)
+    if entry == "next_id":
+        allocated = [pf.store.next_id()]
+    elif entry == "create":
+        allocated = [pf.create_ticket("new").id]
+    elif entry == "deduplicated":
+        ticket, created = pf.create_ticket_deduplicated("new")
+        assert created
+        allocated = [ticket.id]
+    else:
+        allocated = [t.id for t in pf.create_tickets_bulk([{"name": "one"}, {"name": "two"}])]
+    assert preparations == [True]
+    assert allocated == (["PLF-901", "PLF-902"] if entry == "bulk" else ["PLF-901"])
