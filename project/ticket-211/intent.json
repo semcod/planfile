@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-211",
+  "summary": "Cache allocator sprint identity evidence",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-211/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/allocator_sprints.py",
+    "planfile/core/store.py",
+    "tests/test_allocator_sprints.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "436c3db122dbf40e835e76f076eda3de336d9e86",
+    "targetBranch": "main",
+    "outcome": "Cache per-sprint allocator identity evidence; preserve allocation semantics",
+    "nonGoals": [
+      "Change ticket identity or discard journal history"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Checksum and file identity bound per-sprint high-water cache, direct source rebuild, unchanged sharded path",
+      "components": [
+        {
+          "name": "store",
+          "paths": [
+            "planfile/core/store.py",
+            "planfile/core/allocator_sprints.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "store",
+          "description": "Rebuildable per-sprint allocator identity evidence"
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore previous accepted runtime; cache can be ignored by older code"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Protected OneDev and Validator receipts required before merge"
+      }
+    ]
+  }
+}

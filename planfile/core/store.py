@@ -953,18 +953,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
         marker_pattern = re.compile(rf"{re.escape(prefix)}-(\d+)")
         highest = 0
 
-        for record in self.ticket_records(sprint="all"):
-            match = pattern.fullmatch(str(record.get("id") or ""))
-            if match:
-                highest = max(highest, int(match.group(1)))
-            for label in (record.get("labels") or []):
-                m = marker_pattern.search(str(label))
-                if m:
-                    highest = max(highest, int(m.group(1)))
-            desc = record.get("description") or ""
-            if f"{prefix}-" in desc:
-                for m in marker_pattern.finditer(desc):
-                    highest = max(highest, int(m.group(1)))
+        from planfile.core.allocator_sprints import record_highwater, sprint_highwater
+
+        if self._uses_sharded_storage():
+            highest = record_highwater(self.ticket_records(sprint="all"), prefix)
+        else:
+            for source in self._all_sprint_files():
+                highest = max(highest, sprint_highwater(source, prefix))
 
         from planfile.core.allocator_journal import JournalHighwater
 
