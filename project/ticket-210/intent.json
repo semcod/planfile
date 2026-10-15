@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-210",
+  "summary": "Cache journal allocator high-water with validated file identity",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-210/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/allocator_journal.py",
+    "planfile/core/store.py",
+    "tests/test_allocator_journal.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a1dfdf27c363062eb190d877b801bee9c4e10ab8",
+    "targetBranch": "main",
+    "outcome": "Cache allocator journal high-water and publish verified repair",
+    "nonGoals": [
+      "Change ticket identity or discard journal history"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Derived stat-bound journal cache maintained under existing mutation lock",
+      "components": [
+        {
+          "name": "store",
+          "paths": [
+            "planfile/core/**",
+            "tests/test_allocator_journal.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "store",
+          "description": "Rebuildable journal counter cache"
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore previous accepted runtime; cache can be ignored by older code"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_allocator_journal.py tests/test_ticket_id_allocator.py tests/test_ticket_create_dedupe.py"
+        ],
+        "evidence": "17 tests passed"
+      }
+    ]
+  }
+}

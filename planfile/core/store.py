@@ -142,10 +142,16 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._ensure_forensic_log_projection_unlocked()
         self._append_forensic_events_unlocked(events)
         self._operations_path.parent.mkdir(parents=True, exist_ok=True)
+        from planfile.core.allocator_journal import JournalHighwater
+
+        journal_highwater = JournalHighwater(self._operations_path)
+        cached_highwater = journal_highwater.current()
+        payload = "".join(f"{row}\n" for row in rows)
         with self._operations_path.open("a", encoding="utf-8") as handle:
-            handle.write("".join(f"{row}\n" for row in rows))
+            handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
+        journal_highwater.appended(cached_highwater, events, len(payload.encode("utf-8")))
 
     @staticmethod
     def _forensic_event_date(event: dict) -> str:
@@ -960,20 +966,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 for m in marker_pattern.finditer(desc):
                     highest = max(highest, int(m.group(1)))
 
-        try:
-            journal_size = self._operations_path.stat().st_size
-        except OSError:
-            journal_size = 0
-        rows = read_jsonl_tail(
-            self._operations_path,
-            limit=1_000_000,
-            max_bytes=max(OPERATIONS_TAIL_MAX_BYTES, journal_size),
-        )
-        for row in rows:
-            event = row.get("event") or {}
-            match = pattern.fullmatch(str(event.get("ticket_id") or ""))
-            if match:
-                highest = max(highest, int(match.group(1)))
+        from planfile.core.allocator_journal import JournalHighwater
+
+        highest = max(highest, JournalHighwater(self._operations_path).highwater(prefix))
 
         sync_dir = self.base_dir / "sync"
         if sync_dir.exists():
