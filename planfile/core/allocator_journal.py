@@ -10,9 +10,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from pathlib import Path
 import re
 import tempfile
+from pathlib import Path
 
 _ID = re.compile(r"^(.+)-(\d+)$")
 _SCHEMA = "planfile.allocator-journal/v1"
