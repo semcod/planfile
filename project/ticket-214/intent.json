@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-214",
+  "summary": "Publish a machine-readable ticket status contract",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-214/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/schemas/ticket-status.v1.json",
+    "tests/test_ticket_status_contract.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a52495a84cd6ba90aca1ee012462731b5ff1521c",
+    "targetBranch": "main",
+    "outcome": "planfile ships planfile/schemas/ticket-status.v1.json: every TicketStatus value with a class (ready, claimed, awaiting_review, stalled, terminal_success, terminal_not_done) and a pending flag, guarded by a test against the enum, so queue consumers (monag resume, fleet admission) classify statuses from one source instead of private OPEN/CLOSED sets.",
+    "nonGoals": [
+      "No change to TicketStatus or any status behaviour.",
+      "No consumer change in this repository (monag adopts it separately)."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish a JSON contract next to the existing packaged schemas (package-data schemas/*.json already ships it) and test it against TicketStatus.",
+      "components": [
+        {
+          "name": "ticket-status-contract",
+          "paths": [
+            "planfile/schemas/ticket-status.v1.json",
+            "tests/test_ticket_status_contract.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "New packaged read-only contract planfile/schemas/ticket-status.v1.json (planfile.ticket-status/v1)"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git revert removes the contract file and its test."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_ticket_status_contract.py"
+        ],
+        "evidence": "project/ticket-214/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests"
+        ],
+        "evidence": "project/ticket-214/README.md"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-214/README.md"
+      }
+    ]
+  }
+}
