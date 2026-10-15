@@ -277,3 +277,32 @@ def test_without_key_does_not_prepare_dedupe_evidence(tmp_path, monkeypatch):
 
     monkeypatch.setattr(evidence, "live_records", unexpected)
     assert Planfile(tmp_path).create_ticket("ordinary").id == "PLF-001"
+
+
+@pytest.mark.parametrize("large", [False, True])
+def test_preparation_race_revalidated_under_lock(tmp_path, monkeypatch, large):
+    pf = Planfile(tmp_path)
+    pf.store.init()
+    path = pf.store._sprint_file("archive")
+    path.write_text("tickets: {}\n")
+    original = evidence.load_yaml_text
+    changed = False
+
+    def parse(text):
+        nonlocal changed
+        if not changed and text == "tickets: {}\n":
+            changed = True
+            path.write_text("tickets:\n  PLF-900: {status: open, labels: ['dedupe:key']}\n"
+                            + ("#" + "x" * 256 if large else ""))
+        return original(text)
+
+    monkeypatch.setattr(evidence, "load_yaml_text", parse)
+    monkeypatch.setattr(allocator_sprints, "MAX_LOCKED_REBUILD_BYTES", 128)
+    if large:
+        with pytest.raises(RuntimeError, match="dedupe_evidence_changed_retry"):
+            with pf.store.deduplication_lock("dedupe:key"):
+                pytest.fail("large changed source admitted")
+    else:
+        with pf.store.deduplication_lock("dedupe:key") as rows:
+            assert [row["id"] for row in rows] == ["PLF-900"]
+    assert changed

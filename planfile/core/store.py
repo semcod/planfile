@@ -653,16 +653,21 @@ class Store(StoreFileMixin, TicketStoreMixin):
     @contextmanager
     def deduplication_lock(self, label: str | None):
         """Prepare live-key evidence, then select from revalidated sources under lock."""
-        from planfile.core.allocator_dedupe import live_records
+        from planfile.core.allocator_dedupe import SourceChangedError, live_records
         from planfile.core.allocator_sprints import MAX_LOCKED_REBUILD_BYTES, signature
 
         prepared = {}
         if label and not self._uses_sharded_storage():
             for source in self._all_sprint_files():
-                before = signature(source)
-                rows = live_records(source)
-                if signature(source) == before:
-                    prepared[str(source)] = (before, rows)
+                try:
+                    before = signature(source)
+                    rows = live_records(source)
+                    if signature(source) == before:
+                        prepared[str(source)] = (before, rows)
+                except (SourceChangedError, FileNotFoundError):
+                    # An optimistic read may race a writer. Re-enumerate and
+                    # rebuild with the byte limit after acquiring the lock.
+                    continue
         with self.allocation_lock():
             live = []
             if label:

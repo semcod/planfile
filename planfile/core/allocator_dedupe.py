@@ -11,6 +11,10 @@ from planfile.core.allocator_sprints import records, signature
 from planfile.core.fastio import load_yaml_text
 
 
+class SourceChangedError(RuntimeError):
+    """Authoritative source changed during an optimistic evidence read."""
+
+
 def _digest(value: dict) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
@@ -59,7 +63,7 @@ def live_records(source: Path, *, max_rebuild_bytes: int | None = None) -> list[
             live.append({"id": str(row.get("id") or ""),
                          "created_at": str(row.get("created_at") or ""), "labels": labels})
     if signature(source) != before:
-        raise RuntimeError("Sprint changed while rebuilding dedupe identity evidence")
+        raise SourceChangedError("Sprint changed while rebuilding dedupe identity evidence")
     value = {"version": 1, "source": source.name, "signature": before, "records": live}
     value["checksum"] = _digest(value)
     temporary = None

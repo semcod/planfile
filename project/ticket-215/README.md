@@ -24,3 +24,7 @@ Run tests/test_allocator_dedupe.py, tests/test_ticket_create_dedupe.py, tests/te
 ### Local results
 
 Full suite: 1263 passed, 6 skipped (92.08s). Governance: zero errors/warnings; Ruff passed. Isolated HTTP snapshot: 73 sprint files, 456223022 YAML bytes, production mount read-only, journal/sync excluded. Baseline vs candidate mutation lock: create 4.155s vs 0.187s; first reuse 16.307s vs 12.270s; repeat reuse 2.288s vs 0.030s. Candidate cold request took 81.883s building authoritative evidence outside lock; first matching ticket retrieval still decodes existing storage. These concurrent-container measurements do not establish production throughput. Evidence: external planfile-dedupe-implementation logs. Protected CI and independent Validator remain required.
+
+### CI-discovered race correction
+
+OneDev rejected ae5a012: a concurrent CLI writer changed a sprint during optimistic dedupe preparation. The corrected preparation discards only source-change/disappearance evidence and uses bounded revalidation under the mutation lock. Two deterministic regressions cover small-source recovery and large-source rejection. Full rerun: 1265 passed, 6 skipped (94.00s); targeted dedupe/CLI tests: 31 passed. The rejected head is not approved or merged.
