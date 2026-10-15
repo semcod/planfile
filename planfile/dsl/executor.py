@@ -592,7 +592,7 @@ class DSLExecutor:
             labels = params.pop("labels", [])
             description = params.pop("description", "")
             if dry_run:
-                with self.pf.store.mutation_lock():
+                with self.pf.store.allocation_lock():
                     preview_id = self.pf.store._next_id_unlocked()
                 return DSLResult(
                     ok=True,

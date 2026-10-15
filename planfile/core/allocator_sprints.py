@@ -57,11 +57,15 @@ def _digest(value: dict) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
 
 
-def sprint_highwater(source: Path, prefix: str) -> int:
+MAX_LOCKED_REBUILD_BYTES = 5_000_000
+
+
+def sprint_highwater(source: Path, prefix: str, *, max_rebuild_bytes: int | None = None) -> int:
     """Read compact evidence; rebuild directly from source on any invalidation.
 
-    Call under the store mutation lock. Uncoordinated source changes during a
-    rebuild fail the allocation rather than publishing mismatched evidence.
+    Preparation may run outside the mutation lock. Allocation callers must
+    revalidate source identity under their lock and bound cold reconstruction.
+    Changes during a rebuild fail rather than publishing mismatched evidence.
     JSON mirrors and the store's object cache are deliberately not consulted.
     """
     before = signature(source)
@@ -77,7 +81,19 @@ def sprint_highwater(source: Path, prefix: str) -> int:
             return value["highest"]
     except (OSError, ValueError, TypeError, AttributeError, KeyError):
         pass
-    data = load_yaml_text(source.read_text(encoding="utf-8"))
+    if max_rebuild_bytes is not None and before[2] > max_rebuild_bytes:
+        raise RuntimeError("allocator_evidence_changed_retry: " + source.name)
+    if max_rebuild_bytes is None:
+        text = source.read_text(encoding="utf-8")
+    else:
+        # Bound the read too: an uncoordinated writer may grow or replace the
+        # source after stat, before open. Never read that large file under lock.
+        with source.open("rb") as stream:
+            raw = stream.read(max_rebuild_bytes + 1)
+        if len(raw) > max_rebuild_bytes:
+            raise RuntimeError("allocator_evidence_changed_retry: " + source.name)
+        text = raw.decode("utf-8")
+    data = load_yaml_text(text)
     highest = record_highwater(records(data), prefix)
     if signature(source) != before:
         raise RuntimeError("Sprint changed while rebuilding allocator identity evidence")
@@ -96,5 +112,8 @@ def sprint_highwater(source: Path, prefix: str) -> int:
         pass  # Derived cache failure must not prevent allocation.
     finally:
         if temporary is not None:
-            temporary.unlink(missing_ok=True)
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
     return highest

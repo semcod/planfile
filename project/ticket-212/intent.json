@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-212",
+  "summary": "Bound cold allocator evidence reconstruction",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-212/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/allocator_sprints.py",
+    "planfile/core/store.py",
+    "planfile/__init__.py",
+    "planfile/dsl/executor.py",
+    "planfile/delivery_plan.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e5e08fbe9750c4ab011d1506ba50b925d457f033",
+    "targetBranch": "main",
+    "outcome": "Rebuild large allocator evidence before the mutation lock; validate source again before allocation",
+    "nonGoals": [
+      "Change ticket identity or discard journal history"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Allocation-specific context warms large sources outside mutation lock, then revalidates exact signatures inside; size-bound rebuild for small sources",
+      "components": [
+        {
+          "name": "store",
+          "paths": [
+            "planfile/core/allocator_sprints.py",
+            "planfile/core/store.py",
+            "planfile/__init__.py",
+            "planfile/dsl/executor.py",
+            "planfile/delivery_plan.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore previous accepted runtime; cache can be ignored by older code"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Protected OneDev and Validator receipts required before merge"
+      }
+    ]
+  }
+}
