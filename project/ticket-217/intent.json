@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-217",
+  "summary": "Revalidate allocator preparation races under mutation lock",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-217/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/allocator_sprints.py",
+    "planfile/core/store.py",
+    "tests/test_allocator_preparation.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c0fcf9cb24c196e066946e133307c70863aeb9da",
+    "targetBranch": "main",
+    "outcome": "Revalidate optimistic allocator source races under the mutation lock",
+    "nonGoals": [
+      "No changes to allocation identity rules, cache format or rebuild limits"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Catch only typed source races during preparation and retain bounded authoritative locked fallback",
+      "components": [
+        {
+          "name": "allocation",
+          "paths": [
+            "planfile/core/allocator_sprints.py",
+            "planfile/core/store.py",
+            "tests/test_allocator_preparation.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert race handling; no data migration"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python -m pytest -q",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Full suite and independent protected CI receipts"
+      }
+    ]
+  }
+}

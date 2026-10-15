@@ -140,3 +140,48 @@ def test_allocation_entry_points_prepare_evidence(tmp_path, monkeypatch, entry):
         allocated = [t.id for t in pf.create_tickets_bulk([{"name": "one"}, {"name": "two"}])]
     assert preparations == [True]
     assert allocated == (["PLF-901", "PLF-902"] if entry == "bulk" else ["PLF-901"])
+
+
+@pytest.mark.parametrize("large", [False, True])
+def test_source_changed_during_preparation_is_revalidated(tmp_path, monkeypatch, large):
+    store = Planfile(tmp_path).store
+    store.init()
+    path = archive(store)
+    original = evidence.load_yaml_text
+    changed = False
+
+    def concurrent_parse(text):
+        nonlocal changed
+        result = original(text)
+        if "PLF-900" in text and not changed:
+            changed = True
+            path.write_text(text.replace("PLF-900", "PLF-999") +
+                            ("#" + "x" * 101 if large else ""))
+        return result
+
+    monkeypatch.setattr(evidence, "load_yaml_text", concurrent_parse)
+    monkeypatch.setattr(evidence, "MAX_LOCKED_REBUILD_BYTES", 100)
+    before = store._read_config()
+    if large:
+        with pytest.raises(RuntimeError, match="allocator_evidence_changed_retry"):
+            store.next_id()
+        assert store._read_config() == before
+    else:
+        assert store.next_id() == "PLF-1000"
+    assert changed
+    assert store._prepared_allocator_evidence == {}
+
+
+def test_preparation_preserves_unrelated_parser_failure(tmp_path, monkeypatch):
+    store = Planfile(tmp_path).store
+    store.init()
+    archive(store)
+
+    def invalid(text):
+        raise RuntimeError("invalid source")
+
+    monkeypatch.setattr(evidence, "load_yaml_text", invalid)
+    before = store._read_config()
+    with pytest.raises(RuntimeError, match="invalid source"):
+        store.next_id()
+    assert store._read_config() == before
