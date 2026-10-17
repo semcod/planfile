@@ -7,6 +7,7 @@ import re
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
@@ -16,6 +17,16 @@ from planfile.core.fastio import _atomic_write_text
 
 SYNC_STATE_SCHEMA = "planfile.sync-state/v2"
 _REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+
+
+@lru_cache(maxsize=256)
+def _load_yaml_cached(path_str: str, mtime_ns: int) -> object:
+    return yaml.safe_load(Path(path_str).read_text(encoding="utf-8"))
+
+
+def _read_yaml_file(path: Path) -> object:
+    stat = path.stat()
+    return _load_yaml_cached(str(path.resolve()), stat.st_mtime_ns)
 
 
 class SyncStateRepositoryMismatch(ValueError):
@@ -49,7 +60,7 @@ def _discover_repository(planfile_dir: Path, backend: str) -> str | None:
     )
     for path in candidates:
         try:
-            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            data = _read_yaml_file(path) or {}
         except (OSError, yaml.YAMLError):
             continue
         if not isinstance(data, dict):

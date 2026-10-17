@@ -1933,7 +1933,7 @@ async def _start_ticket_index_maintenance() -> None:
         or _ticket_index_maintenance_task.done()
     ):
         _ticket_index_maintenance_task = asyncio.create_task(
-            _maintain_ticket_index()
+            _maintain_ticket_index(interval_seconds=3.0)
         )
 
 
@@ -1954,7 +1954,9 @@ async def _start_archive_maintenance() -> None:
     if os.environ.get("PLANFILE_DISABLE_ARCHIVE_MAINTENANCE") == "1":
         return
     if _archive_maintenance_task is None or _archive_maintenance_task.done():
-        _archive_maintenance_task = asyncio.create_task(_archive_history_daily())
+        _archive_maintenance_task = asyncio.create_task(
+            _archive_history_daily(interval_seconds=300.0)
+        )
 
 
 async def _stop_archive_maintenance() -> None:
@@ -1989,7 +1991,9 @@ async def _start_planfile_watcher() -> None:
     if os.environ.get("PLANFILE_DISABLE_WATCHER") == "1":
         return
     if _watch_task is None or _watch_task.done():
-        _watch_task = asyncio.create_task(_watch_planfile_changes())
+        _watch_task = asyncio.create_task(
+            _watch_planfile_changes(interval_seconds=3.0)
+        )
 
 
 async def _stop_planfile_watcher() -> None:

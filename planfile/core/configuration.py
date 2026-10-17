@@ -10,6 +10,7 @@ import re
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -27,6 +28,16 @@ from planfile.runtime_context import (
 
 if TYPE_CHECKING:
     from planfile import Planfile
+
+
+@lru_cache(maxsize=256)
+def _load_yaml_cached(path_str: str, mtime_ns: int) -> Any:
+    return yaml.safe_load(Path(path_str).read_text(encoding="utf-8"))
+
+
+def _read_yaml_file(path: Path) -> Any:
+    stat = path.stat()
+    return _load_yaml_cached(str(path.resolve()), stat.st_mtime_ns)
 
 
 _SENSITIVE_PATH = re.compile(
@@ -393,7 +404,7 @@ class ConfigurationManager:
         # must neither mutate the process environment nor materialize secrets.
         values: dict[str, Any] = {}
         for path in self._integration_paths():
-            loaded = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            loaded = _read_yaml_file(path) or {}
             if isinstance(loaded, dict):
                 self._deep_merge(values, loaded)
         integrations = values.get("integrations", {}) if isinstance(values, dict) else {}
@@ -414,7 +425,7 @@ class ConfigurationManager:
         integration_sources = []
         for path in self._integration_paths():
             try:
-                document = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+                document = _read_yaml_file(path) or {}
             except FileNotFoundError:
                 continue
             integrations = (
@@ -819,7 +830,7 @@ class ConfigurationManager:
             if source == path:
                 continue
             try:
-                data = yaml.safe_load(source.read_text(encoding="utf-8")) or {}
+                data = _read_yaml_file(source) or {}
             except FileNotFoundError:
                 continue
             for setting_path in changes:

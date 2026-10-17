@@ -1,0 +1,126 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-218",
+  "summary": "Fix SQLite FD leaks, N+1 queries, uncached YAML loop parses, and unwired parameters",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-218/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".governance/standard-adoption.json",
+    "planfile/analysis/generator.py",
+    "planfile/api/server.py",
+    "planfile/core/configuration.py",
+    "planfile/core/sqlite_index.py",
+    "planfile/core/store.py",
+    "planfile/dsl/executor.py",
+    "planfile/importers/code2llm_importer.py",
+    "planfile/integrations/config.py",
+    "planfile/project_paths.py",
+    "planfile/runner.py",
+    "planfile/sync/retry.py",
+    "planfile/sync/state.py",
+    "tests/test_sqlite_index_and_retry_perf.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fcf0cbf6e21a318e009989f5b0a1b6403b5f68f2",
+    "targetBranch": "main",
+    "outcome": "Close SQLite connections in RetryQueue, batch SQLite index rebuild/apply operations outside loops, cache YAML parsing across loops with mtime-keyed lru_cache, wire compact/interval_seconds/sprint/backend parameters, and record baseline standard adoption.",
+    "nonGoals": [
+      "Do not change SQLite schema definitions or external CLI subcommands."
+    ],
+    "complexity": "L",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 5,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Wrap sqlite3.connect with contextlib.closing in RetryQueue, batch SQLiteTicketIndex rebuild and apply statements outside loops, introduce mtime-keyed lru_cache YAML file loaders for loop scans, wire compact/interval_seconds/sprint/backend parameters, and record baseline standard adoption.",
+      "components": [
+        {
+          "name": "sqlite-and-sync",
+          "paths": [
+            "planfile/sync/retry.py",
+            "planfile/sync/state.py",
+            "planfile/core/sqlite_index.py"
+          ]
+        },
+        {
+          "name": "core-and-paths",
+          "paths": [
+            "planfile/core/configuration.py",
+            "planfile/core/store.py",
+            "planfile/project_paths.py",
+            "planfile/integrations/config.py"
+          ]
+        },
+        {
+          "name": "dsl-and-runner",
+          "paths": [
+            "planfile/dsl/executor.py",
+            "planfile/runner.py"
+          ]
+        },
+        {
+          "name": "analysis-api-importers",
+          "paths": [
+            "planfile/analysis/generator.py",
+            "planfile/api/server.py",
+            "planfile/importers/code2llm_importer.py"
+          ]
+        },
+        {
+          "name": "tests",
+          "paths": [
+            "tests/test_sqlite_index_and_retry_perf.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-218 commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_index_and_retry_perf.py"
+        ],
+        "evidence": "project/ticket-218/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 .governance/standard_pack_check.py --root .",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-218/README.md"
+      }
+    ]
+  }
+}

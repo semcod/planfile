@@ -3,11 +3,22 @@
 from __future__ import annotations
 
 import subprocess
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
 
 PLANFILE_DIRNAME = ".planfile"
+
+
+@lru_cache(maxsize=256)
+def _load_yaml_cached(path_str: str, mtime_ns: int) -> object:
+    return yaml.safe_load(Path(path_str).read_text(encoding="utf-8"))
+
+
+def _read_yaml_file(path: Path) -> object:
+    stat = path.stat()
+    return _load_yaml_cached(str(path.resolve()), stat.st_mtime_ns)
 
 
 class RepositoryRoutingError(RuntimeError):
@@ -48,7 +59,7 @@ def _configured_github_repository(project_path: Path) -> str | None:
         project_path / ".planfile" / "integrations.oql.planfile.yaml",
     ):
         try:
-            data = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+            data = _read_yaml_file(config_path) or {}
         except (OSError, yaml.YAMLError):
             continue
         if not isinstance(data, dict):

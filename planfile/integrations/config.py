@@ -1,12 +1,24 @@
 """Configuration management for integrations with support for multiple config files."""
 
+import copy
 import os
 import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 import yaml
 from dotenv import load_dotenv
+
+
+@lru_cache(maxsize=256)
+def _load_yaml_cached(path_str: str, mtime_ns: int) -> Any:
+    return yaml.safe_load(Path(path_str).read_text(encoding="utf-8"))
+
+
+def _read_yaml_file(path: Path) -> Any:
+    stat = path.stat()
+    return copy.deepcopy(_load_yaml_cached(str(path.resolve()), stat.st_mtime_ns))
 
 
 class IntegrationConfig:
@@ -67,10 +79,9 @@ class IntegrationConfig:
         self.config = {}
 
         for config_file in self._ordered_configs():
-            with open(config_file) as f:
-                file_config = yaml.safe_load(f) or {}
-                file_config = self._expand_env_vars(file_config)
-                self._deep_merge(self.config, file_config)
+            file_config = _read_yaml_file(config_file) or {}
+            file_config = self._expand_env_vars(file_config)
+            self._deep_merge(self.config, file_config)
 
         return self.config
 

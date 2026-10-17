@@ -106,6 +106,32 @@ class SQLiteTicketIndex:
         except sqlite3.DatabaseError:
             return False
 
+    @staticmethod
+    def _insert_rebuild_batch(
+        connection: sqlite3.Connection,
+        batch: list[dict[str, Any]],
+    ) -> None:
+        connection.executemany(
+            """
+            INSERT INTO tickets(
+                id, sprint, status, priority, source, queue,
+                created_at, updated_at, position, ticket_json, summary_json
+            ) VALUES(
+                :id, :sprint, :status, :priority, :source, :queue,
+                :created_at, :updated_at, :position, :ticket_json, :summary_json
+            )
+            """,
+            batch,
+        )
+        connection.executemany(
+            "INSERT INTO dependencies(ticket_id, blocked_by) VALUES(?, ?)",
+            (
+                (row["id"], dependency)
+                for row in batch
+                for dependency in row.get("blocked_by", [])
+            ),
+        )
+
     def rebuild(
         self,
         records: Iterable[dict[str, Any]],
@@ -132,26 +158,7 @@ class SQLiteTicketIndex:
                 batch = list(islice(rows, batch_size))
                 if not batch:
                     break
-                connection.executemany(
-                    """
-                    INSERT INTO tickets(
-                        id, sprint, status, priority, source, queue,
-                        created_at, updated_at, position, ticket_json, summary_json
-                    ) VALUES(
-                        :id, :sprint, :status, :priority, :source, :queue,
-                        :created_at, :updated_at, :position, :ticket_json, :summary_json
-                    )
-                    """,
-                    batch,
-                )
-                connection.executemany(
-                    "INSERT INTO dependencies(ticket_id, blocked_by) VALUES(?, ?)",
-                    (
-                        (row["id"], dependency)
-                        for row in batch
-                        for dependency in row.get("blocked_by", [])
-                    ),
-                )
+                self._insert_rebuild_batch(connection, batch)
                 count += len(batch)
                 # Release record graphs before constructing the next batch.
                 batch.clear()
@@ -197,22 +204,37 @@ class SQLiteTicketIndex:
                     "DELETE FROM tickets WHERE id=?",
                     [(ticket_id,) for ticket_id in deleted_ids],
                 )
-            next_position = int(
-                connection.execute(
-                    "SELECT COALESCE(MAX(position), -1) + 1 AS value FROM tickets"
-                ).fetchone()["value"]
-            )
-            for row in rows:
-                existing = connection.execute(
-                    "SELECT position FROM tickets WHERE id=?",
-                    (row["id"],),
-                ).fetchone()
-                position = existing["position"] if existing is not None else next_position
-                if existing is None:
-                    next_position += 1
-                values = dict(row)
-                values["position"] = position
-                connection.execute(
+            if rows:
+                next_position = int(
+                    connection.execute(
+                        "SELECT COALESCE(MAX(position), -1) + 1 AS value FROM tickets"
+                    ).fetchone()["value"]
+                )
+                position_rows = connection.execute(
+                    "SELECT id, position FROM tickets"
+                ).fetchall()
+                existing_positions = {
+                    row["id"]: int(row["position"])
+                    for row in position_rows
+                }
+                upsert_values: list[dict[str, Any]] = []
+                dep_delete_ids: list[tuple[str]] = []
+                dep_insert_rows: list[tuple[str, Any]] = []
+                for row in rows:
+                    ticket_id = row["id"]
+                    if ticket_id in existing_positions:
+                        position = existing_positions[ticket_id]
+                    else:
+                        position = next_position
+                        existing_positions[ticket_id] = position
+                        next_position += 1
+                    values = dict(row)
+                    values["position"] = position
+                    upsert_values.append(values)
+                    dep_delete_ids.append((ticket_id,))
+                    for dependency in row.get("blocked_by", []):
+                        dep_insert_rows.append((ticket_id, dependency))
+                connection.executemany(
                     """
                     INSERT INTO tickets(
                         id, sprint, status, priority, source, queue,
@@ -232,16 +254,17 @@ class SQLiteTicketIndex:
                         ticket_json=excluded.ticket_json,
                         summary_json=excluded.summary_json
                     """,
-                    values,
-                )
-                connection.execute(
-                    "DELETE FROM dependencies WHERE ticket_id=?",
-                    (row["id"],),
+                    upsert_values,
                 )
                 connection.executemany(
-                    "INSERT INTO dependencies(ticket_id, blocked_by) VALUES(?, ?)",
-                    [(row["id"], dependency) for dependency in row.get("blocked_by", [])],
+                    "DELETE FROM dependencies WHERE ticket_id=?",
+                    dep_delete_ids,
                 )
+                if dep_insert_rows:
+                    connection.executemany(
+                        "INSERT INTO dependencies(ticket_id, blocked_by) VALUES(?, ?)",
+                        dep_insert_rows,
+                    )
             connection.execute(
                 """
                 INSERT INTO meta(key, value) VALUES('source_signature', ?)

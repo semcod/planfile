@@ -25,6 +25,8 @@ def import_code2llm(
         return []
     for ticket in tickets:
         ticket["name"] = ticket["title"]
+        if sprint:
+            ticket.setdefault("sprint", sprint)
     return tickets
 
 

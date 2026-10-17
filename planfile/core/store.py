@@ -10,6 +10,7 @@ import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from enum import Enum
+from functools import lru_cache
 from pathlib import Path
 from threading import RLock
 
@@ -22,6 +23,20 @@ from .jsonl_tail import OPERATIONS_TAIL_MAX_BYTES, read_jsonl_tail
 from .models import TICKET_CONTRACT_VERSION, Ticket
 from .store_files import StoreFileMixin
 from .store_tickets import TicketStoreMixin
+
+
+@lru_cache(maxsize=256)
+def _load_yaml_cached(path_str: str, mtime_ns: int) -> object:
+    return yaml.safe_load(Path(path_str).read_text(encoding="utf-8"))
+
+
+def _read_yaml_file(path: Path) -> object:
+    stat = path.stat()
+    return _load_yaml_file_cached(path, stat.st_mtime_ns)
+
+
+def _load_yaml_file_cached(path: Path, mtime_ns: int) -> object:
+    return _load_yaml_cached(str(path.resolve()), mtime_ns)
 
 
 class ImmutableTerminalReopenError(RuntimeError):
@@ -456,7 +471,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
             backend = file_name.removesuffix(".state.yaml")
             file_path = sync_dir / file_name
             try:
-                data = yaml.safe_load(file_path.read_text(encoding="utf-8")) or {}
+                data = _load_yaml_file_cached(file_path, item[1]) or {}
             except Exception:
                 continue
             if isinstance(data, dict):
@@ -1051,7 +1066,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 for entry in os.scandir(sync_dir):
                     if entry.name.endswith(".state.yaml") and entry.is_file():
                         try:
-                            data = yaml.safe_load(Path(entry.path).read_text(encoding="utf-8")) or {}
+                            data = _read_yaml_file(Path(entry.path)) or {}
                         except Exception:
                             continue
                         if isinstance(data, dict):
