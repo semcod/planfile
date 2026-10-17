@@ -1,15 +1,3 @@
-
-TIMEOUT_5 = 5
-CONSTANT_16 = 16
-TIMEOUT_30 = 30
-MAX_32 = 32
-CONSTANT_50 = 50
-CONSTANT_80 = 80
-CONSTANT_90 = 90
-MIN_300 = 300
-
-
-
 """
 Strategy validation and runner for LLX.
 """
@@ -24,17 +12,26 @@ from typing import Any
 from planfile.integrations.base import PMBackend
 from planfile.models import Strategy
 
+TIMEOUT_5 = 5
+CONSTANT_16 = 16
+TIMEOUT_30 = 30
+MAX_32 = 32
+CONSTANT_50 = 50
+CONSTANT_80 = 80
+CONSTANT_90 = 90
+MIN_300 = 300
+
 
 def load_valid_strategy(path: str) -> Strategy:
     """
     Load and validate strategy from YAML file.
-    
+
     Args:
         path: Path to strategy YAML file
-        
+
     Returns:
         Validated Strategy object
-        
+
     Raises:
         ValidationError: If strategy is invalid
     """
@@ -60,12 +57,12 @@ def verify_strategy_post_execution(
 ) -> dict[str, list[str]]:
     """
     Verify strategy after execution.
-    
+
     Args:
         strategy: Strategy to verify
         project_path: Path to project
         backend: Backend type (github, jira, etc.)
-        
+
     Returns:
         Dictionary of issues found
     """
@@ -136,10 +133,10 @@ def _get_project_hash(project_path: str) -> str:
 def analyze_project_metrics(project_path: str) -> dict[str, Any]:
     """
     Analyze project metrics using available tools.
-    
+
     Args:
         project_path: Path to project
-        
+
     Returns:
         Dictionary with metrics
     """
@@ -218,13 +215,13 @@ def apply_strategy_to_tickets(
 ) -> dict[str, Any]:
     """
     Apply strategy to create tickets in PM system.
-    
+
     Args:
         strategy: Strategy to apply
         project_path: Project path
         backend: Backend type
         dry_run: If True, only simulate
-        
+
     Returns:
         Results dictionary
     """
@@ -232,6 +229,7 @@ def apply_strategy_to_tickets(
         "created": [],
         "updated": [],
         "errors": [],
+        "backend": backend,
         "dry_run": dry_run
     }
 
@@ -244,7 +242,7 @@ def apply_strategy_to_tickets(
             # Find task pattern
             pattern = None
             for p in strategy.get_task_patterns():
-                if p.id == task_id:
+                if p == task_id or getattr(p, "id", getattr(p, "name", None)) == task_id:
                     pattern = p
                     break
 
@@ -255,10 +253,11 @@ def apply_strategy_to_tickets(
             # Create ticket
             ticket_info = {
                 "sprint": sprint.id,
-                "pattern": pattern.id,
+                "pattern": getattr(pattern, "id", getattr(pattern, "name", str(task_id))),
                 "name": pattern.name,
-                "type": pattern.type.value,
-                "priority": pattern.priority
+                "type": pattern.type.value if hasattr(pattern.type, "value") else str(pattern.type),
+                "priority": pattern.priority,
+                "backend": backend,
             }
 
             if dry_run:
@@ -281,7 +280,7 @@ def review_strategy(
 ) -> dict[str, Any]:
     """
     Review strategy execution by checking ticket statuses.
-    
+
     This is a convenience function that reviews the planfile
     using the provided backends.
     """
@@ -370,7 +369,7 @@ def run_strategy(
 ):
     """
     Run strategy: load, validate, and apply.
-    
+
     Args:
         strategy_path: Path to strategy YAML
         project_path: Project path

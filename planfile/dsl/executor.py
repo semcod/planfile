@@ -559,7 +559,7 @@ class DSLExecutor:
             step_cmd = self._parser.parse(step_cmd_text)
             if dry_run:
                 step_cmd.params["dry_run"] = True
-            step_res = self.execute(step_cmd)
+            step_res = self._run_sequence_step(step_cmd)
             step_results.append(step_res.to_dict())
             if not step_res.ok:
                 return DSLResult(
@@ -576,6 +576,9 @@ class DSLExecutor:
             message=f"Executed sequence of {len(calls)} call(s)",
             source_layer="nl_plan_v1",
         )
+
+    def _run_sequence_step(self, step_cmd: DSLCommand) -> DSLResult:
+        return self.execute(step_cmd)
 
     def _exec_create(self, cmd: DSLCommand) -> DSLResult:
         obj = cmd.object_type or "ticket"

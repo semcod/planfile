@@ -198,6 +198,8 @@ class PlanfileGenerator:
         tickets = self.generator.generate_tickets(analysis_result)
 
         metrics = self._extract_key_metrics(analysis_result, external_metrics)
+        if compact:
+            metrics.pop('high_cc_functions', None)
         project_name = project_name or Path(analysis_path).resolve().name
 
         strategy_data = {

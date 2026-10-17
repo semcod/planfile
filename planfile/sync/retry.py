@@ -7,7 +7,7 @@ import re
 import sqlite3
 import time
 import uuid
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 
 from planfile.sync.receipts import publish_intent
@@ -23,25 +23,26 @@ class RetryQueue:
     @contextmanager
     def _write(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(self.path, timeout=5) as db:
-            db.row_factory = sqlite3.Row
-            db.execute('''CREATE TABLE IF NOT EXISTS retry_jobs (
-                repository TEXT NOT NULL, ticket_id TEXT NOT NULL,
-                payload_digest TEXT NOT NULL, revision INTEGER NOT NULL,
-                state TEXT NOT NULL, attempts INTEGER NOT NULL,
-                next_attempt_at REAL NOT NULL, lease_until REAL,
-                worker_token TEXT, last_error TEXT,
-                PRIMARY KEY(repository, ticket_id))''')
-            db.execute('''CREATE TABLE IF NOT EXISTS retry_pauses (
-                repository TEXT PRIMARY KEY, next_attempt_at REAL NOT NULL)''')
-            db.execute('BEGIN IMMEDIATE')
-            yield db
+        with closing(sqlite3.connect(self.path, timeout=5)) as db:
+            with db:
+                db.row_factory = sqlite3.Row
+                db.execute('''CREATE TABLE IF NOT EXISTS retry_jobs (
+                    repository TEXT NOT NULL, ticket_id TEXT NOT NULL,
+                    payload_digest TEXT NOT NULL, revision INTEGER NOT NULL,
+                    state TEXT NOT NULL, attempts INTEGER NOT NULL,
+                    next_attempt_at REAL NOT NULL, lease_until REAL,
+                    worker_token TEXT, last_error TEXT,
+                    PRIMARY KEY(repository, ticket_id))''')
+                db.execute('''CREATE TABLE IF NOT EXISTS retry_pauses (
+                    repository TEXT PRIMARY KEY, next_attempt_at REAL NOT NULL)''')
+                db.execute('BEGIN IMMEDIATE')
+                yield db
 
     def entries(self, ticket_id: str | None = None) -> list[dict]:
         """Read status without creating a database or modifying its contents."""
         if not self.path.exists():
             return []
-        with sqlite3.connect(self.path.as_uri() + '?mode=ro', uri=True, timeout=5) as db:
+        with closing(sqlite3.connect(self.path.as_uri() + '?mode=ro', uri=True, timeout=5)) as db:
             db.row_factory = sqlite3.Row
             query = 'SELECT * FROM retry_jobs'
             args = ()
@@ -81,7 +82,7 @@ class RetryQueue:
         """Read repository deadlines without migrating an old journal."""
         if not self.path.exists():
             return {}
-        with sqlite3.connect(self.path.as_uri() + '?mode=ro', uri=True, timeout=5) as db:
+        with closing(sqlite3.connect(self.path.as_uri() + '?mode=ro', uri=True, timeout=5)) as db:
             if not db.execute("SELECT 1 FROM sqlite_master WHERE name='retry_pauses'").fetchone():
                 return {}
             return dict(db.execute('SELECT repository, next_attempt_at FROM retry_pauses'))
