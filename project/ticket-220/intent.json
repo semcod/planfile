@@ -1,0 +1,75 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-220",
+  "summary": "Release v0.1.127 and publish to PyPI via goal",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-220/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b2403356000539fd715acf44b0b697832fb6cba0",
+    "targetBranch": "main",
+    "outcome": "Synchronize VERSION, pyproject.toml, and uv.lock to 0.1.127 for PyPI release.",
+    "nonGoals": [
+      "Do not modify runtime modules"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 5,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update package version in VERSION, pyproject.toml, and uv.lock to 0.1.127.",
+      "components": [
+        {
+          "name": "core-and-paths",
+          "paths": [
+            "VERSION",
+            "pyproject.toml",
+            "uv.lock"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit for ticket-220."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-220/README.md"
+      }
+    ]
+  }
+}
