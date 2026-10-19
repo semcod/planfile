@@ -206,10 +206,29 @@ class Planfile:
             return "autonomy-frontier"
         if "actor:human" in labels:
             return "actor:human"
+        executor_kind = (
+            str(ticket.executor.kind or "").strip().lower()
+            if getattr(ticket, "executor", None)
+            else ""
+        )
+        exec_queue = (
+            str(ticket.execution.queue or "default").strip().lower()
+            if getattr(ticket, "execution", None)
+            else "default"
+        )
+        if executor_kind == "human" and (exec_queue == "operator" or "operator" in labels):
+            return "actor:human"
         for label in labels:
             if label.startswith("waiting:") or label.startswith("needs-human"):
                 return label
         return ""
+
+    @staticmethod
+    def _is_human_or_missing_executor(ticket: "Ticket") -> int:
+        """Return 0 for machine-runnable executors, 1 for human or unspecified executors."""
+        executor = getattr(ticket, "executor", None)
+        kind = str(getattr(executor, "kind", None) or "").strip().lower() if executor else ""
+        return 1 if kind in {"", "human"} else 0
 
     @staticmethod
     def _autonomy_blocked(ticket: "Ticket") -> bool:
@@ -248,7 +267,7 @@ class Planfile:
         if exec_state not in self._RUNNABLE_EXEC_STATES:
             return f"exec_state:{exec_state}"
         autonomy = self._autonomy_skip(ticket)
-        if autonomy:
+        if autonomy and not (queue == "operator" and autonomy == "actor:human"):
             return autonomy
         if self._goal_frozen(ticket):
             return "goal-frozen"
@@ -307,7 +326,7 @@ class Planfile:
                 ticket_by_id=ticket_by_id,
             )
             (skipped.append({"id": ticket.id, "reason": reason}) if reason else servable.append(ticket))
-        servable.sort(key=self._ticket_sort_key)
+        servable.sort(key=lambda t: (self._is_human_or_missing_executor(t), *self._ticket_sort_key(t)))
         return {"selected": servable[0].id if servable else None,
                 "servable": [t.id for t in servable], "skipped": skipped}
 
@@ -328,7 +347,11 @@ class Planfile:
                 ticket_by_id=ticket_by_id,
             )
         )
-        return min(runnable, key=self._ticket_sort_key, default=None)
+        return min(
+            runnable,
+            key=lambda t: (self._is_human_or_missing_executor(t), *self._ticket_sort_key(t)),
+            default=None,
+        )
 
     def next_tickets(
         self,
@@ -370,7 +393,14 @@ class Planfile:
         def sort_key(t: Ticket):
             base_key = self._ticket_sort_key(t)
             crit_weight = -weights.get(t.id, 0)
-            return (base_key[0], base_key[1], crit_weight, base_key[2], base_key[3])
+            return (
+                self._is_human_or_missing_executor(t),
+                base_key[0],
+                base_key[1],
+                crit_weight,
+                base_key[2],
+                base_key[3],
+            )
 
         runnable.sort(key=sort_key)
 

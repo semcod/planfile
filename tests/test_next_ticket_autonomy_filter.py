@@ -133,3 +133,47 @@ def test_next_ticket_resolves_dependencies_from_one_loaded_snapshot(monkeypatch)
     monkeypatch.setattr(pf, "get_ticket", unexpected_lookup)
 
     assert pf.next_ticket().id == "RUN"
+
+
+def test_operator_human_ticket_skipped_in_default_autonomy_drain(monkeypatch):
+    monkeypatch.delenv("PLANFILE_NO_AUTONOMY_FILTER", raising=False)
+    monkeypatch.delenv("CURRENT_GOAL", raising=False)
+    op_ticket = _mk(
+        id="PLF-255",
+        name="Project discovery",
+        priority="high",
+        executor={"kind": "human", "mode": "interactive"},
+        execution={"queue": "operator", "state": "ready"},
+    )
+    pf = Planfile.__new__(Planfile)
+    monkeypatch.setattr(pf, "list_tickets", lambda **kwargs: [op_ticket])
+    monkeypatch.setattr(pf, "get_ticket", lambda _i: None)
+
+    assert pf.runnability_skip_reason(op_ticket) == "actor:human"
+    assert pf.next_ticket() is None
+    assert pf.runnability_skip_reason(op_ticket, queue="operator") == ""
+    assert pf.next_ticket(queue="operator").id == "PLF-255"
+
+
+def test_next_ticket_defers_human_and_unspecified_executor_behind_machine_work(monkeypatch):
+    monkeypatch.delenv("PLANFILE_NO_AUTONOMY_FILTER", raising=False)
+    monkeypatch.delenv("CURRENT_GOAL", raising=False)
+    human_bug = _mk(
+        id="PLF-17307",
+        name="Manual audit bug",
+        priority="high",
+        labels=["bug"],
+    )
+    llm_task = _mk(
+        id="PLF-104",
+        name="Shotgun surgery refactor",
+        priority="normal",
+        executor={"kind": "llm", "mode": "automatic"},
+    )
+    pf = Planfile.__new__(Planfile)
+    monkeypatch.setattr(pf, "list_tickets", lambda **kwargs: [human_bug, llm_task])
+    monkeypatch.setattr(pf, "get_ticket", lambda _i: None)
+
+    assert pf.next_ticket().id == "PLF-104"
+    assert [t.id for t in pf.next_tickets(count=2, disjoint_files=False)] == ["PLF-104", "PLF-17307"]
+

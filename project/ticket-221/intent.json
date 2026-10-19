@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-221",
+  "summary": "Defer human and skip operator tickets in Planfile next_ticket and next_tickets",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-221/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "tests/test_next_ticket_autonomy_filter.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7354b47dcb60a8f040c1811d3ec9e981fe0c61f5",
+    "targetBranch": "main",
+    "outcome": "Skip operator-queue human tickets during default autonomous queue drain and defer human/unspecified executor tickets behind machine-runnable tickets in Planfile.next_ticket and Planfile.next_tickets.",
+    "nonGoals": [
+      "Do not alter _ticket_sort_key priority tuple order or explicit queue='operator' queries."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Skip operator-queue human tickets in Planfile._autonomy_skip unless queue=='operator', and rank machine-runnable executors ahead of human/unspecified executors in Planfile.next_ticket, Planfile.next_tickets, and Planfile.runnable_report.",
+      "components": [
+        {
+          "name": "core-and-paths",
+          "paths": [
+            "planfile/__init__.py"
+          ]
+        },
+        {
+          "name": "tests",
+          "paths": [
+            "tests/test_next_ticket_autonomy_filter.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit for ticket-221."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest -q tests/test_next_ticket_autonomy_filter.py tests/test_priority_weighting.py",
+          "ruff check planfile/__init__.py tests/test_next_ticket_autonomy_filter.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-221/README.md"
+      }
+    ]
+  }
+}
