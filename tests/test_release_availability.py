@@ -4,6 +4,11 @@ import importlib.util
 import json
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 uses the locked tomli dependency.
+    import tomli as tomllib
+
 SPEC = importlib.util.spec_from_file_location("release_availability", Path(__file__).parents[1] / "planfile/release_availability.py")
 CHECKER = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
@@ -11,9 +16,12 @@ SPEC.loader.exec_module(CHECKER)
 
 
 def test_release_metadata_matches_published_offline_snapshot():
-    result = CHECKER.check(Path(__file__).parents[1], offline=True)
-    assert result["ok"] is True
-    assert result["source_version"] == "0.1.126"
+    root = Path(__file__).parents[1]
+    result = CHECKER.check(root, offline=True)
+    assert result["ok"] is True, result["errors"]
+    # The release number belongs to pyproject.toml; a test that repeats it breaks on every bump.
+    declared = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
+    assert result["source_version"] == declared
 
 
 def test_newer_source_version_is_rejected(tmp_path):
