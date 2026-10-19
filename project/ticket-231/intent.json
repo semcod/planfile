@@ -15,6 +15,7 @@
     "planfile/project_paths.py",
     "planfile/sync/state.py",
     "planfile/utils/repository.py",
+    "planfile/utils/uri.py",
     "planfile/utils/yaml_cache.py",
     "tests/test_foundation_helpers.py",
     "tests/test_sqlite_index_and_retry_perf.py"
