@@ -288,8 +288,8 @@ def _save_yaml(path: Path, data: dict[str, Any], dry_run: bool) -> None:
         path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
 
 
-def _build_process_entry(target_uri: str, params: dict[str, Any]) -> dict[str, Any]:
-    run_cmd = params.get("run") or ["echo", f"Executed {target_uri}"]
+def _build_process_entry(target_uri: str, params: dict[str, Any], default_run: list[str] | None = None) -> dict[str, Any]:
+    run_cmd = params.get("run") or default_run or ["echo", f"Executed {target_uri}"]
     entry: dict[str, Any] = {
         "uri": target_uri,
         "name": str(params.get("name") or target_uri.split("://")[-1].replace("/", "-")),
@@ -307,11 +307,12 @@ def _build_process_entry(target_uri: str, params: dict[str, Any]) -> dict[str, A
 def _upsert_process(target_uri: str, manifest_path: Path, params: dict[str, Any]) -> dict[str, Any]:
     data = _load_proc_manifest(manifest_path)
     processes: list[dict[str, Any]] = data["processes"]
-    entry = _build_process_entry(target_uri, params)
     existing_idx = next(
         (i for i, p in enumerate(processes) if isinstance(p, dict) and p.get("uri") == target_uri),
         None,
     )
+    prev_run = processes[existing_idx].get("run") if existing_idx is not None else None
+    entry = _build_process_entry(target_uri, params, default_run=prev_run)
     if existing_idx is not None:
         processes[existing_idx] = {**processes[existing_idx], **entry}
         act = "modified"

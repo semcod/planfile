@@ -186,137 +186,53 @@ class Setting:
     description: str
 
 
+_CFG_SRC = ".planfile/config.yaml"
+_RT_SRC = ".koru/runtime-context.json"
+_INT_SRC = f".planfile/{_INTEGRATION_CONFIG_NAME}"
+
 STORE_SETTINGS: dict[str, Setting] = {
-    "store.project": Setting(_text, ".planfile/config.yaml", "Project display name"),
-    "store.prefix": Setting(
-        _prefix,
-        ".planfile/config.yaml",
-        "Prefix for newly allocated ticket IDs",
-    ),
-    "store.archive.enabled": Setting(_boolean, ".planfile/config.yaml", "Automatic archive switch"),
-    "store.archive.max_current_tickets": Setting(
-        _nonnegative_integer,
-        ".planfile/config.yaml",
-        "Current-sprint ticket threshold; 0 disables it",
-    ),
-    "store.archive.max_current_bytes": Setting(
-        _nonnegative_integer,
-        ".planfile/config.yaml",
-        "Current-sprint byte threshold; 0 disables it",
-    ),
-    "store.archive.retain_terminal_tickets": Setting(
-        _nonnegative_integer, ".planfile/config.yaml", "Terminal tickets retained in current sprint"
-    ),
+    "store.project": Setting(_text, _CFG_SRC, "Project display name"),
+    "store.prefix": Setting(_prefix, _CFG_SRC, "Prefix for newly allocated ticket IDs"),
+    "store.archive.enabled": Setting(_boolean, _CFG_SRC, "Automatic archive switch"),
+    "store.archive.max_current_tickets": Setting(_nonnegative_integer, _CFG_SRC, "Current-sprint ticket threshold; 0 disables it"),
+    "store.archive.max_current_bytes": Setting(_nonnegative_integer, _CFG_SRC, "Current-sprint byte threshold; 0 disables it"),
+    "store.archive.retain_terminal_tickets": Setting(_nonnegative_integer, _CFG_SRC, "Terminal tickets retained in current sprint"),
     "store.archive.retain_terminal_days": Setting(
-        _nonnegative_integer,
-        ".planfile/config.yaml",
-        "UTC calendar dates retained before terminal tickets move to daily history",
+        _nonnegative_integer, _CFG_SRC, "UTC calendar dates retained before terminal tickets move to daily history"
     ),
-    "store.archive.terminal_statuses": Setting(
-        _terminal_statuses, ".planfile/config.yaml", "Statuses eligible for archiving"
-    ),
-    "store.storage.backend": Setting(
-        _choice("single-yaml", "sharded-yaml"), ".planfile/config.yaml", "Physical ticket backend"
-    ),
-    "store.storage.shard_size": Setting(
-        _positive_integer, ".planfile/config.yaml", "Sequential tickets per YAML shard"
-    ),
-    "store.storage.custom_shards": Setting(
-        _custom_shards, ".planfile/config.yaml", "Hash buckets for custom ticket IDs"
-    ),
-    "store.storage.index": Setting(
-        _choice("none", "sqlite"), ".planfile/config.yaml", "Rebuildable ticket query index"
-    ),
+    "store.archive.terminal_statuses": Setting(_terminal_statuses, _CFG_SRC, "Statuses eligible for archiving"),
+    "store.storage.backend": Setting(_choice("single-yaml", "sharded-yaml"), _CFG_SRC, "Physical ticket backend"),
+    "store.storage.shard_size": Setting(_positive_integer, _CFG_SRC, "Sequential tickets per YAML shard"),
+    "store.storage.custom_shards": Setting(_custom_shards, _CFG_SRC, "Hash buckets for custom ticket IDs"),
+    "store.storage.index": Setting(_choice("none", "sqlite"), _CFG_SRC, "Rebuildable ticket query index"),
 }
 
 RUNTIME_ENABLED_SETTINGS: dict[str, Setting] = {
-    f"runtime.enabled.{name}": Setting(
-        _boolean,
-        ".koru/runtime-context.json",
-        f"Include {name} in generated runtime context",
-    )
+    f"runtime.enabled.{name}": Setting(_boolean, _RT_SRC, f"Include {name} in generated runtime context")
     for name in DEFAULT_RUNTIME_CONFIG["enabled"]
 }
 RUNTIME_SETTINGS: dict[str, Setting] = {
     **RUNTIME_ENABLED_SETTINGS,
-    "runtime.overrides": Setting(
-        _runtime_overrides,
-        ".koru/runtime-context.json",
-        "Complete runtime context override mapping",
-    ),
+    "runtime.overrides": Setting(_runtime_overrides, _RT_SRC, "Complete runtime context override mapping"),
 }
 
 INTEGRATION_SETTINGS: dict[str, Setting] = {
     "integrations.github.sync.enqueue_on_done": Setting(
-        _boolean,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "Queue completed GitHub tickets locally; an authorized retry worker delivers",
+        _boolean, _INT_SRC, "Queue completed GitHub tickets locally; an authorized retry worker delivers"
     ),
-    "integrations.github.repo": Setting(
-        _text,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "GitHub owner/repository",
-    ),
-    "integrations.github.default_labels": Setting(
-        _string_list,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "Default labels for GitHub issues",
-    ),
-    "integrations.github.issue_template": Setting(
-        _text,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "GitHub issue body template",
-    ),
-    "integrations.gitlab.url": Setting(
-        _url,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "GitLab HTTP(S) base URL",
-    ),
-    "integrations.gitlab.project_id": Setting(
-        _identifier,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "GitLab project identifier",
-    ),
-    "integrations.jira.url": Setting(
-        _url,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "Jira HTTP(S) base URL",
-    ),
-    "integrations.jira.project": Setting(
-        _text,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "Jira project key",
-    ),
-    "integrations.onedev.url": Setting(
-        _url,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "OneDev HTTP(S) base URL",
-    ),
-    "integrations.onedev.project": Setting(
-        _text,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "OneDev project path",
-    ),
-    "integrations.onedev.publish_to": Setting(
-        _string_list,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "OneDev publication targets",
-    ),
-    "integrations.markdown.todo_file": Setting(
-        _text,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "Markdown TODO output path",
-    ),
-    "integrations.markdown.changelog_file": Setting(
-        _text,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "Markdown changelog output path",
-    ),
-    "integrations.markdown.sync_on_plan_run": Setting(
-        _boolean,
-        f".planfile/{_INTEGRATION_CONFIG_NAME}",
-        "Synchronize Markdown during a plan run",
-    ),
+    "integrations.github.repo": Setting(_text, _INT_SRC, "GitHub owner/repository"),
+    "integrations.github.default_labels": Setting(_string_list, _INT_SRC, "Default labels for GitHub issues"),
+    "integrations.github.issue_template": Setting(_text, _INT_SRC, "GitHub issue body template"),
+    "integrations.gitlab.url": Setting(_url, _INT_SRC, "GitLab HTTP(S) base URL"),
+    "integrations.gitlab.project_id": Setting(_identifier, _INT_SRC, "GitLab project identifier"),
+    "integrations.jira.url": Setting(_url, _INT_SRC, "Jira HTTP(S) base URL"),
+    "integrations.jira.project": Setting(_text, _INT_SRC, "Jira project key"),
+    "integrations.onedev.url": Setting(_url, _INT_SRC, "OneDev HTTP(S) base URL"),
+    "integrations.onedev.project": Setting(_text, _INT_SRC, "OneDev project path"),
+    "integrations.onedev.publish_to": Setting(_string_list, _INT_SRC, "OneDev publication targets"),
+    "integrations.markdown.todo_file": Setting(_text, _INT_SRC, "Markdown TODO output path"),
+    "integrations.markdown.changelog_file": Setting(_text, _INT_SRC, "Markdown changelog output path"),
+    "integrations.markdown.sync_on_plan_run": Setting(_boolean, _INT_SRC, "Synchronize Markdown during a plan run"),
 }
 
 
@@ -552,38 +468,33 @@ class ConfigurationManager:
         return normalized
 
     def _setting(self, path: str) -> Setting:
-        if path in STORE_SETTINGS:
-            return STORE_SETTINGS[path]
-        if path in RUNTIME_SETTINGS:
-            return RUNTIME_SETTINGS[path]
-        if path in INTEGRATION_SETTINGS:
-            return INTEGRATION_SETTINGS[path]
+        static_setting = STORE_SETTINGS.get(path) or RUNTIME_SETTINGS.get(path) or INTEGRATION_SETTINGS.get(path)
+        if static_setting is not None:
+            return static_setting
         if path.startswith("runtime.overrides."):
-            override_path = path.removeprefix("runtime.overrides.")
-            if not override_path:
-                raise ValueError("config_override_path_required")
-            if _SENSITIVE_PATH.search(override_path):
-                raise ValueError("config_sensitive_path_forbidden")
-            return Setting(
-                self._json_value,
-                ".koru/runtime-context.json",
-                "Runtime context override",
-            )
+            return self._override_setting(path)
         if path == "store.next_id":
             raise ValueError("config_path_allocator_owned")
         if path.startswith("integrations."):
-            if _SENSITIVE_PATH.search(path):
-                raise ValueError("config_sensitive_path_forbidden")
-            if self._is_integration_sync_path(path):
-                return Setting(
-                    self._json_value,
-                    f".planfile/{_INTEGRATION_CONFIG_NAME}",
-                    "Integration synchronization setting",
-                )
-            raise ValueError("config_integration_path_not_writable")
+            return self._integration_sync_setting(path)
         if path.startswith(("environment.", "sync.", "leases.", "evidence.")):
             raise ValueError("config_path_not_configuration")
         raise ValueError("config_path_not_writable")
+
+    def _override_setting(self, path: str) -> Setting:
+        override_path = path.removeprefix("runtime.overrides.")
+        if not override_path:
+            raise ValueError("config_override_path_required")
+        if _SENSITIVE_PATH.search(override_path):
+            raise ValueError("config_sensitive_path_forbidden")
+        return Setting(self._json_value, _RT_SRC, "Runtime context override")
+
+    def _integration_sync_setting(self, path: str) -> Setting:
+        if _SENSITIVE_PATH.search(path):
+            raise ValueError("config_sensitive_path_forbidden")
+        if self._is_integration_sync_path(path):
+            return Setting(self._json_value, _INT_SRC, "Integration synchronization setting")
+        raise ValueError("config_integration_path_not_writable")
 
     @staticmethod
     def _is_integration_sync_path(path: str) -> bool:
@@ -608,6 +519,34 @@ class ConfigurationManager:
             raise ValueError("config_value_not_json") from exc
         return value
 
+    def _normalize_changes(self, changes: dict[str, Any]) -> tuple[dict[str, Any], set[str]]:
+        normalized: dict[str, Any] = {}
+        for raw_path, value in changes.items():
+            path = self._normalize_path(raw_path)
+            if path in normalized:
+                raise ValueError(f"config_path_duplicate:{path}")
+            normalized[path] = self._setting(path).validator(value)
+        scopes = {path.split(".", 1)[0] for path in normalized}
+        if len(scopes) != 1:
+            raise ValueError("config_mixed_scope_not_atomic")
+        return normalized, scopes
+
+    def _apply_scope_mutation(self, normalized: dict[str, Any], scopes: set[str], before_revision: str) -> dict[str, Any] | None:
+        if "store.storage.backend" in normalized:
+            return self._set_storage_backend(normalized, expected_revision=before_revision)
+        if "store.storage.index" in normalized:
+            return self.store.configure_ticket_index(
+                normalized["store.storage.index"] == "sqlite",
+                before_mutation=lambda: self._check_revision(before_revision),
+            )
+        if scopes == {"store"}:
+            self._set_store_values(normalized, expected_revision=before_revision)
+            return None
+        if scopes == {"runtime"}:
+            self._set_runtime_values(normalized, expected_revision=before_revision)
+            return None
+        return self._set_integration_values(normalized, expected_revision=before_revision)
+
     def set_many(
         self,
         changes: dict[str, Any],
@@ -623,18 +562,7 @@ class ConfigurationManager:
         if not changes:
             raise ValueError("config_changes_required")
         before_revision = self._check_revision(expected_revision)
-
-        normalized: dict[str, Any] = {}
-        for raw_path, value in changes.items():
-            path = self._normalize_path(raw_path)
-            if path in normalized:
-                raise ValueError(f"config_path_duplicate:{path}")
-            setting = self._setting(path)
-            normalized[path] = setting.validator(value)
-
-        scopes = {path.split(".", 1)[0] for path in normalized}
-        if len(scopes) != 1:
-            raise ValueError("config_mixed_scope_not_atomic")
+        normalized, scopes = self._normalize_changes(changes)
 
         before = {path: self._current_value(path) for path in normalized}
         changed = [
@@ -646,79 +574,42 @@ class ConfigurationManager:
             "mode": mode,
             "revision": before_revision,
             "changed": changed,
-            "unchanged": sorted(
-                path for path, value in normalized.items() if before[path] == value
-            ),
+            "unchanged": sorted(path for path, value in normalized.items() if before[path] == value),
         }
         self._validate_operation(normalized)
         if mode == "dry-run" or not changed:
             return result
 
-        if "store.storage.backend" in normalized:
-            result["operation"] = self._set_storage_backend(
-                normalized,
-                expected_revision=before_revision,
-            )
-        elif "store.storage.index" in normalized:
-            if len(normalized) != 1:
-                raise ValueError("config_storage_index_must_be_isolated")
-            result["operation"] = self.store.configure_ticket_index(
-                normalized["store.storage.index"] == "sqlite",
-                before_mutation=lambda: self._check_revision(before_revision),
-            )
-        elif scopes == {"store"}:
-            self._set_store_values(normalized, expected_revision=before_revision)
-        elif scopes == {"runtime"}:
-            self._set_runtime_values(normalized, expected_revision=before_revision)
-        else:
-            result["operation"] = self._set_integration_values(
-                normalized,
-                expected_revision=before_revision,
-            )
-
+        op = self._apply_scope_mutation(normalized, scopes, before_revision)
+        if op is not None:
+            result["operation"] = op
         after_revision = self.revision()
         result["revision"] = after_revision
         result["previous_revision"] = before_revision
-        self._record_change(
-            normalized,
-            actor=actor,
-            reason=reason,
-            before_revision=before_revision,
-            after_revision=after_revision,
-        )
+        self._record_change(normalized, actor=actor, reason=reason, before_revision=before_revision, after_revision=after_revision)
         return result
+
+    def _validate_backend_transition(self, changes: dict[str, Any]) -> None:
+        allowed = {"store.storage.backend", "store.storage.shard_size", "store.storage.custom_shards"}
+        if unexpected := set(changes) - allowed:
+            raise ValueError(f"config_storage_transition_must_be_isolated:{sorted(unexpected)[0]}")
+        current = self.store._storage_config()
+        if current["backend"] != "sharded-yaml":
+            return
+        if changes["store.storage.backend"] == "single-yaml":
+            raise ValueError("config_storage_rollback_not_implemented")
+        shard_size = changes.get("store.storage.shard_size", current["shard_size"])
+        custom_shards = changes.get("store.storage.custom_shards", current["custom_shards"])
+        if shard_size != current["shard_size"] or custom_shards != current["custom_shards"]:
+            raise ValueError("config_storage_reshard_required")
 
     def _validate_operation(self, changes: dict[str, Any]) -> None:
         if "store.storage.backend" in changes:
-            allowed = {
-                "store.storage.backend",
-                "store.storage.shard_size",
-                "store.storage.custom_shards",
-            }
-            if unexpected := set(changes) - allowed:
-                raise ValueError(
-                    f"config_storage_transition_must_be_isolated:{sorted(unexpected)[0]}"
-                )
-            current = self.store._storage_config()
-            target = changes["store.storage.backend"]
-            shard_size = changes.get("store.storage.shard_size", current["shard_size"])
-            custom_shards = changes.get("store.storage.custom_shards", current["custom_shards"])
-            if current["backend"] == "sharded-yaml":
-                if target == "single-yaml":
-                    raise ValueError("config_storage_rollback_not_implemented")
-                if (
-                    shard_size != current["shard_size"]
-                    or custom_shards != current["custom_shards"]
-                ):
-                    raise ValueError("config_storage_reshard_required")
+            self._validate_backend_transition(changes)
         if "store.storage.index" in changes and len(changes) != 1:
             raise ValueError("config_storage_index_must_be_isolated")
-        if (
-            self.store.storage_backend() == "sharded-yaml"
-            and "store.storage.backend" not in changes
-            and set(changes)
-            & {"store.storage.shard_size", "store.storage.custom_shards"}
-        ):
+        routing_keys = {"store.storage.shard_size", "store.storage.custom_shards"}
+        if "store.storage.backend" not in changes and (set(changes) & routing_keys) and self.store.storage_backend() == "sharded-yaml":
             raise ValueError("config_storage_reshard_required")
 
     def _current_value(self, path: str) -> Any:
@@ -726,10 +617,7 @@ class ConfigurationManager:
             return _nested_get(self._store_values(), path.split(".")[1:])
         if path.startswith("integrations."):
             try:
-                return _nested_get(
-                    {"integrations": self._integration_values()},
-                    path.split("."),
-                )
+                return _nested_get({"integrations": self._integration_values()}, path.split("."))
             except ValueError:
                 return None
         runtime = load_runtime_context_config(self.project_dir)
@@ -743,20 +631,9 @@ class ConfigurationManager:
             return node
         return _nested_get(runtime, path.split(".")[1:])
 
-    def _set_store_values(
-        self,
-        changes: dict[str, Any],
-        *,
-        expected_revision: str,
-    ) -> None:
-        current_backend = self.store.storage_backend()
-        routing_changes = {
-            path for path in changes if path in {
-                "store.storage.shard_size",
-                "store.storage.custom_shards",
-            }
-        }
-        if current_backend == "sharded-yaml" and routing_changes:
+    def _set_store_values(self, changes: dict[str, Any], *, expected_revision: str) -> None:
+        routing_changes = set(changes) & {"store.storage.shard_size", "store.storage.custom_shards"}
+        if self.store.storage_backend() == "sharded-yaml" and routing_changes:
             raise ValueError("config_storage_reshard_required")
         with self.store.mutation_lock():
             self._check_revision(expected_revision)
@@ -765,12 +642,7 @@ class ConfigurationManager:
                 _nested_set(config, path.split(".")[1:], copy.deepcopy(value))
             self.store._write_config(config)
 
-    def _set_storage_backend(
-        self,
-        changes: dict[str, Any],
-        *,
-        expected_revision: str,
-    ) -> dict[str, Any]:
+    def _set_storage_backend(self, changes: dict[str, Any], *, expected_revision: str) -> dict[str, Any]:
         target = changes["store.storage.backend"]
         current = self.store._storage_config()
         shard_size = changes.get("store.storage.shard_size", current["shard_size"])
@@ -786,12 +658,7 @@ class ConfigurationManager:
             before_mutation=lambda: self._check_revision(expected_revision),
         )
 
-    def _set_runtime_values(
-        self,
-        changes: dict[str, Any],
-        *,
-        expected_revision: str,
-    ) -> None:
+    def _set_runtime_values(self, changes: dict[str, Any], *, expected_revision: str) -> None:
         with self.store.mutation_lock():
             self._check_revision(expected_revision)
             config = load_runtime_context_config(self.project_dir)
@@ -799,46 +666,33 @@ class ConfigurationManager:
                 _nested_set(config, path.split(".")[1:], copy.deepcopy(value))
             save_runtime_context_config(self.project_dir, config)
 
-    def _set_integration_values(
-        self,
-        changes: dict[str, Any],
-        *,
-        expected_revision: str,
-    ) -> dict[str, Any]:
+    def _find_shadowed_integration_paths(self, canonical_path: Path, setting_paths: Any) -> list[dict[str, str]]:
+        shadowed: list[dict[str, str]] = []
+        for source in self._integration_paths():
+            if source == canonical_path or not source.is_file():
+                continue
+            data = _read_yaml_file(source) or {}
+            for setting_path in setting_paths:
+                try:
+                    _nested_get(data, setting_path.split("."))
+                    shadowed.append({"path": setting_path, "source": str(source.relative_to(self.project_dir))})
+                except ValueError:
+                    continue
+        return shadowed
+
+    def _set_integration_values(self, changes: dict[str, Any], *, expected_revision: str) -> dict[str, Any]:
         path = self._integration_config_path
         with self.store.mutation_lock():
             self._check_revision(expected_revision)
-            try:
-                config = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-            except FileNotFoundError:
-                config = {}
+            config = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.is_file() else {}
             if not isinstance(config, dict):
                 raise ValueError("config_integration_document_invalid")
             for setting_path, value in changes.items():
                 _nested_set(config, setting_path.split("."), copy.deepcopy(value))
             self._write_yaml_document_atomic(path, config)
-        shadowed = []
-        for source in self._integration_paths():
-            if source == path:
-                continue
-            try:
-                data = _read_yaml_file(source) or {}
-            except FileNotFoundError:
-                continue
-            for setting_path in changes:
-                try:
-                    _nested_get(data, setting_path.split("."))
-                except ValueError:
-                    continue
-                shadowed.append(
-                    {
-                        "path": setting_path,
-                        "source": str(source.relative_to(self.project_dir)),
-                    }
-                )
         return {
             "source": str(path.relative_to(self.project_dir)),
-            "shadowed": shadowed,
+            "shadowed": self._find_shadowed_integration_paths(path, changes),
         }
 
     @staticmethod
