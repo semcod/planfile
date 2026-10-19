@@ -187,3 +187,50 @@ def test_uri_main_cli_execution(capsys):
     out = capsys.readouterr().out.strip()
     assert '"repository": "semcod/planfile"' in out
 
+
+def test_decompose_imports_models_from_foundation_not_root_package():
+    assert "planfile" not in _planfile_imports(ROOT / "planfile/core/decompose.py")
+    assert "planfile.models" in _planfile_imports(ROOT / "planfile/core/decompose.py")
+
+
+def test_configuration_reuses_foundation_yaml_cache():
+    from planfile.core import configuration
+
+    assert configuration._read_yaml_file is read_yaml_file
+
+
+def test_uri_urirun_task_routes_list_next_show(tmp_path: Path):
+    sprints_dir = tmp_path / ".planfile" / "sprints"
+    sprints_dir.mkdir(parents=True)
+    (sprints_dir / "current.yaml").write_text(
+        "sprint:\n"
+        "  id: sprint-001\n"
+        "  tickets:\n"
+        "    PLF-010:\n"
+        "      title: Low priority task\n"
+        "      priority: low\n"
+        "      status: open\n"
+        "    PLF-011:\n"
+        "      title: Critical task\n"
+        "      priority: p0\n"
+        "      status: open\n"
+        "    PLF-012:\n"
+        "      title: Done task\n"
+        "      priority: high\n"
+        "      status: done\n",
+        encoding="utf-8",
+    )
+    listed = uri("task://host/tickets/query/list", {"project": str(tmp_path), "status": "open"})
+    assert listed["ok"] is True
+    assert len(listed["tickets"]) == 2
+
+    nxt = uri("task://host/ticket/query/next", {"project": str(tmp_path)})
+    assert nxt["ok"] is True
+    assert nxt["ticket"]["id"] == "PLF-011"
+    assert nxt["ticket"]["name"] == "Critical task"
+
+    shown = uri("task://host/ticket/query/show", {"project": str(tmp_path), "ticket_id": "PLF-010"})
+    assert shown["ok"] is True
+    assert shown["ticket"]["name"] == "Low priority task"
+
+

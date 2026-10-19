@@ -12,6 +12,8 @@
     "project/ticket-231/**",
     "TODO.md",
     "project/TICKETS.md",
+    "planfile/core/configuration.py",
+    "planfile/core/decompose.py",
     "planfile/project_paths.py",
     "planfile/sync/state.py",
     "planfile/utils/repository.py",
