@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-227",
+  "summary": "Sync release metadata with the 0.1.127 release and stop hardcoding the version in its test",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-227/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/release-metadata.json",
+    "tests/test_release_availability.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
