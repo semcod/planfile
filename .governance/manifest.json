@@ -94,7 +94,9 @@
           "events/**",
           "error/**",
           "models/**",
-          "proto/**"
+          "proto/**",
+          "planfile/release-metadata.json",
+          "tests/test_release_availability.py"
         ]
       }
     },
