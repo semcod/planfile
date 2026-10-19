@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-228",
+  "summary": "Refresh stale internal dependencies in uv.lock (clickmd, costs, goal) and drop orphaned lock entries",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-228/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "uv.lock"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7354b47dcb60a8f040c1811d3ec9e981fe0c61f5",
+    "targetBranch": "main",
+    "outcome": "uv.lock pins the published stable targets of the internal dependencies (clickmd 1.1.16, costs 0.2.1, goal 2.2.1), so the scheduled and pull-request dependency-freshness check passes, and no longer carries entries for the removed pfix dependency and its transitive packages.",
+    "nonGoals": [
+      "Do not change pyproject.toml or any declared dependency range.",
+      "Do not change the protected local verifier pins; that control lives in another repository."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Run the command reported by `goal dependencies --check` (`uv lock --upgrade-package ...`) and commit only the resulting uv.lock after the locked CI recipe passes.",
+      "components": [
+        {
+          "name": "dependency-lock",
+          "paths": [
+            "uv.lock"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket-228 commit; uv.lock returns to the previous resolution."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "goal dependencies --catalog .github/internal-dependencies.json --check"
+        ],
+        "evidence": "project/ticket-228/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "uv sync --locked --extra dev --python 3.13",
+          "uv run --no-sync python -m pytest -q"
+        ],
+        "evidence": "project/ticket-228/README.md"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-228/README.md"
+      }
+    ]
+  }
+}
