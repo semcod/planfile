@@ -72,17 +72,35 @@ def _json_safe(value: Any) -> Any:
     return value
 
 
+def _normalize(value: Any) -> Any:
+    """``_json_safe`` through the native kernel when active (same result, same types)."""
+    from planfile.core import native
+
+    normalized = native.normalize(value)
+    return _json_safe(value) if normalized is None else normalized
+
+
 def load_yaml_text(text: str) -> Any:
-    return _json_safe(yaml.load(text, Loader=FastLoader))
+    return _normalize(yaml.load(text, Loader=FastLoader))
 
 
-def dump_yaml(data: Any, *, allow_unicode: bool = False) -> str:
+def dump_yaml_python(data: Any, *, allow_unicode: bool = False) -> str:
+    """Reference serializer; the native kernel must reproduce this output byte for byte."""
     return yaml.dump(
         data,
         default_flow_style=False,
         allow_unicode=allow_unicode,
         Dumper=FastDumper,
     )
+
+
+def dump_yaml(data: Any, *, allow_unicode: bool = False) -> str:
+    from planfile.core import native
+
+    text = native.dump_yaml(data, allow_unicode=allow_unicode)
+    if text is not None:
+        return text
+    return dump_yaml_python(data, allow_unicode=allow_unicode)
 
 
 def _stat_mtime_ns(path: Path) -> int | None:
@@ -130,7 +148,7 @@ def write_mirror(yaml_path: Path, data: Any, *, mtime_ns: int | None = None) -> 
     payload = {
         "version": _MIRROR_VERSION,
         "yaml_mtime_ns": mtime_ns,
-        "data": _json_safe(data),
+        "data": _normalize(data),
     }
     try:
         _atomic_write_text(mirror_path(yaml_path), json.dumps(payload, ensure_ascii=False))
@@ -138,12 +156,40 @@ def write_mirror(yaml_path: Path, data: Any, *, mtime_ns: int | None = None) -> 
         # The mirror is an optimization only; a failed write must never break
         # a ticket mutation. It must remain observable, otherwise a permanent
         # full-YAML fallback looks like unexplained API latency.
-        warnings.warn(
-            f"planfile: JSON mirror for {yaml_path.name} not written "
-            f"({type(exc).__name__}: {exc}); reads fall back to full YAML parsing",
-            RuntimeWarning,
-            stacklevel=2,
-        )
+        _warn_mirror_failure(yaml_path, f"{type(exc).__name__}: {exc}", stacklevel=3)
+
+
+def _warn_mirror_failure(yaml_path: Path, reason: str, *, stacklevel: int = 2) -> None:
+    warnings.warn(
+        f"planfile: JSON mirror for {yaml_path.name} not written "
+        f"({reason}); reads fall back to full YAML parsing",
+        RuntimeWarning,
+        stacklevel=stacklevel,
+    )
+
+
+def write_sprint_native(yaml_path: Path, data: Any, *, allow_unicode: bool) -> bool:
+    """Write ``yaml_path`` and its mirror with the native kernel.
+
+    Returns False without touching the filesystem when the kernel is disabled, missing or
+    refuses the value; the caller must then use the Python writer. The mirror is stamped with the
+    mtime the kernel read right after its own rename, as ``Store._write_yaml_atomic`` does.
+    """
+    from planfile.core import native
+
+    outcome = native.write_sprint(
+        yaml_path,
+        data,
+        allow_unicode=allow_unicode,
+        mirror_version=_MIRROR_VERSION,
+        mirror_suffix=_MIRROR_SUFFIX,
+    )
+    if outcome is None:
+        return False
+    _mtime_ns, mirror_error = outcome
+    if mirror_error is not None:
+        _warn_mirror_failure(yaml_path, f"OSError: {mirror_error}", stacklevel=3)
+    return True
 
 
 def read_mirror(yaml_path: Path, yaml_mtime_ns: int) -> Any | None:

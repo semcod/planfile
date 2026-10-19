@@ -1,0 +1,26 @@
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "planfile-native"
+version = "0.1.0"
+description = "Native storage kernel for planfile (YAML dump, JSON mirror, atomic sprint writes)"
+authors = [{ name = "Tom Sapletta", email = "tom@sapletta.com" }]
+license = { text = "Apache-2.0" }
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0", "pyyaml>=6.0"]
+
+[tool.maturin]
+features = ["extension-module"]
+module-name = "planfile_native._native"
+python-source = "python"
+binding = "pyo3"

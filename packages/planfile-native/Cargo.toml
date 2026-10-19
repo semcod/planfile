@@ -1,0 +1,27 @@
+[package]
+name = "planfile-native"
+version = "0.1.0"
+edition = "2021"
+authors = ["Tom Sapletta <tom@sapletta.com>"]
+description = "Native storage kernel for planfile: libyaml-compatible YAML dump, JSON mirror and atomic sprint writes"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+name = "_native"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# `extension-module` must be off for `cargo test` (links libpython); maturin turns it on.
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["abi3-py310"] }
+regex = { version = "1", default-features = false, features = ["std", "perf"] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"

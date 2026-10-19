@@ -746,7 +746,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 self._invalidate_ticket_index_signature_cache()
 
     def _write_yaml_atomic(self, path: Path, data: dict, *, allow_unicode: bool = False) -> None:
-        from planfile.core.fastio import dump_yaml, write_mirror
+        from planfile.core.fastio import dump_yaml, write_mirror, write_sprint_native
+
+        # Native kernel: one call renders YAML + mirror and writes both atomically. It returns
+        # False (touching nothing) whenever PyYAML must handle the value, so the path below
+        # remains the reference implementation.
+        if write_sprint_native(path, data, allow_unicode=allow_unicode):
+            return
 
         path.parent.mkdir(parents=True, exist_ok=True)
         content = dump_yaml(data, allow_unicode=allow_unicode)
