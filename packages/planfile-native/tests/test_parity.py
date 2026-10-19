@@ -13,13 +13,13 @@ import pytest
 import yaml
 
 native = pytest.importorskip("planfile_native")
-if not native.AVAILABLE:  # pragma: no cover
-    pytest.skip("compiled extension missing", allow_module_level=True)
 
-try:
-    Dumper = yaml.CSafeDumper
-except AttributeError:  # pragma: no cover
-    pytest.skip("PyYAML without libyaml: reference output differs", allow_module_level=True)
+# The reference output is libyaml's; PyYAML's pure-Python dumper formats a few cases differently.
+Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+pytestmark = pytest.mark.skipif(
+    not (native.AVAILABLE and hasattr(yaml, "CSafeDumper")),
+    reason="needs the compiled extension and PyYAML built with libyaml",
+)
 
 
 def reference(data, allow_unicode=False):
