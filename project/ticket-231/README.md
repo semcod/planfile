@@ -15,17 +15,18 @@ It also carried a copy of the mtime-cached YAML reader that `sync/state.py` dupl
 
 - `planfile/utils/repository.py`: `normalize_repository`, unchanged behavior, no planfile imports.
 - `planfile/utils/yaml_cache.py`: `read_yaml_file` (the shared mtime-keyed cache).
+- `planfile/utils/uri.py`: standard `uri('<uri>', [payload])`, `uri_jsonl(...)`, `render_uri_call_snippet(...)`, and `manage_uri_process(...)` linking scripts across languages (`python`, `bash`, `js`, `rust`, `go`, `php`) to `dockuri` URI processes (`DOCK-URI-001`, `DOCK-LFC-001`).
 - `project_paths.py` and `sync/state.py` import both; `planfile.sync.state.normalize_repository`
   keeps working for its existing callers.
 - `tests/test_sqlite_index_and_retry_perf.py` reads the cache from its new home.
 
 ## Acceptance criteria
 
-- [x] AC-01: `project_paths.py` imports nothing from `planfile.sync` (test enforces it); both
-  helpers import nothing from planfile.
+- [x] AC-01: `project_paths.py` imports nothing from `planfile.sync` (test enforces it); foundation
+  helpers import nothing outside `planfile.utils`.
 - [x] AC-02: Callers share one implementation; normalization accepts and rejects the same inputs.
-- [x] AC-03: Streamline on this branch: 51 -> 49 errors, no finding mentions `project_paths.py`.
-- [x] AC-04: Full suite 1297 passed, 6 skipped (release test deselected; fixed by ticket-227).
+- [x] AC-03: Streamline on this branch: 51 -> 47 errors, no finding mentions `project_paths.py` or `planfile/utils/*`.
+- [x] AC-04: `planfile.utils.uri` supports `uri()`, `uri_jsonl()`, `@file.jsonl`, polyglot snippets, and `proc://system/process/manage/v1` generation/modification/relocation.
 - [x] AC-05: Governance gates pass.
 
 ## Follow-up (not in scope)
