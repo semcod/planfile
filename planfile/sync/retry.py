@@ -243,13 +243,13 @@ def drain_retries(pf, *, max_tickets: int = 2, dry_run: bool = False,
                 result['refreshed'].append(ident)
                 continue
             if deliver is None:
-                from planfile.cli.groups.sync.core import _initialize_backend
                 from planfile.sync.outbound import sync_to_external
+                from planfile.utils.uri import initialize_sync_backend
 
                 if backend is None:
                     if repository_override:
                         config.config.setdefault('integrations', {}).setdefault('github', {})['repo'] = repository
-                    backend = _initialize_backend('github', config, False)
+                    backend = initialize_sync_backend('github', config, False)
                 outcome = sync_to_external(backend, [(ident, payload)], False, pf.store, 'github')
             else:
                 outcome = deliver(pf, ticket, repository)

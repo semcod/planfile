@@ -73,8 +73,8 @@ class CIRunner:
         self.pf = planfile_instance
         if self.pf is None:
             try:
-                from planfile import Planfile
-                self.pf = Planfile.auto_discover(str(self.project_path))
+                from planfile.utils.uri import load_planfile_instance
+                self.pf = load_planfile_instance(str(self.project_path), discover=True)
             except Exception:
                 self.pf = None
 
@@ -241,7 +241,7 @@ Respond in JSON format:
         # Create local planfile ticket
         if self.pf:
             try:
-                from planfile import TicketSource
+                from planfile.models import TicketSource
                 ticket = self.pf.create_ticket(
                     name=bug_report.name,
                     priority="critical" if bug_report.severity in ("high", "critical") else "normal",

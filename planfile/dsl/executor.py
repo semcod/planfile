@@ -44,11 +44,8 @@ class DSLExecutor:
     @property
     def pf(self):
         if self._pf is None:
-            from planfile import Planfile
-            self._pf = (
-                Planfile.auto_discover(self._project_path)
-                if self._discover_project else Planfile(self._project_path)
-            )
+            from planfile.utils.uri import load_planfile_instance
+            self._pf = load_planfile_instance(self._project_path, discover=self._discover_project)
         return self._pf
 
     def run(self, text: str, *, allow_llm_fallback: bool = True, dry_run: bool = False) -> DSLResult:
@@ -115,9 +112,181 @@ class DSLExecutor:
         res.command["source_layer"] = "nl_plan_v1"
         return res
 
+    @staticmethod
+    def _parse_prio_word(p_word: str) -> str:
+        w = p_word.lower()
+        if "krytycz" in w or "critical" in w:
+            return "critical"
+        if "wysok" in w or "high" in w:
+            return "high"
+        if "nisk" in w or "low" in w:
+            return "low"
+        return "normal"
+
+    @staticmethod
+    def _proposal_result(intent: str, action: dict[str, Any], message: str, data_action: dict[str, Any] | None = None) -> DSLResult:
+        return DSLResult(
+            ok=True,
+            command={"verb": "action_proposal", "action": action, "conversational_intent": intent},
+            data={"proposal": True, "action": data_action or action},
+            message=message,
+            source_layer="conversational_fast_path",
+        )
+
+    def _propose_conversational_mutation(self, normalized: str, raw_text: str) -> DSLResult | None:
+        import re
+
+        m_create = re.search(r"^(?:dodaj|stworz|utworz|nowe)\s+(?:zadanie|ticket|task)\s+(.+)$", normalized, re.IGNORECASE)
+        if m_create:
+            m_orig = re.search(r"^(?:dodaj|stworz|utworz|stwórz|utwórz|nowe)\s+(?:zadanie|ticket|task)\s+(.+)$", raw_text, re.IGNORECASE)
+            raw_title = (m_orig.group(1) if m_orig else m_create.group(1)).strip()
+            prio = "normal"
+            m_prio = re.search(
+                r"(?:z\s+priorytetem|priorytet|priority)\s*[:=]?\s*(krytyczn\w*|wysok\w*|normaln\w*|nisk\w*|critical|high|normal|low)",
+                m_create.group(1).strip(),
+                re.IGNORECASE,
+            )
+            if m_prio:
+                prio = self._parse_prio_word(m_prio.group(1))
+                raw_title = raw_title[:m_prio.start()].strip().rstrip("-,;:")
+            title = raw_title.strip().strip('"\'')
+            if title:
+                act = {"type": "create_ticket", "name": title, "priority": prio, "sprint": "current"}
+                return self._proposal_result("create_ticket", act, f"Czy chcesz utworzyć zadanie '{title}' z priorytetem '{prio}'?")
+
+        m_done = re.search(
+            r"^(?:oznacz|zamknij|ukoncz)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+jako\s+(?:zrobione|done|ukonczone|wykonane))?$",
+            normalized,
+            re.IGNORECASE,
+        )
+        if m_done:
+            t_id = m_done.group(1).upper()
+            act = {"type": "update_status", "ticket_id": t_id, "status": "done"}
+            return self._proposal_result("close_ticket", act, f"Czy chcesz oznaczyć zadanie {t_id} jako wykonane (done)?")
+
+        m_prio_change = (
+            re.search(
+                r"^(?:zmien|ustaw|zwieksz|zmniejsz|change|set)\s+priorytet\s+(?:zadania\s+|ticketu\s+)?([A-Za-z0-9_-]+)\s+na\s+(krytyczn\w*|wysok\w*|normaln\w*|nisk\w*|critical|high|normal|low)$",
+                normalized,
+                re.IGNORECASE,
+            )
+            or re.search(r"^(?:set|change)\s+priority\s+(?:of\s+)?([A-Za-z0-9_-]+)\s+to\s+(critical|high|normal|low)$", normalized, re.IGNORECASE)
+        )
+        if m_prio_change:
+            t_id = m_prio_change.group(1).upper()
+            prio = self._parse_prio_word(m_prio_change.group(2))
+            act = {"type": "change_priority", "ticket_id": t_id, "priority": prio}
+            return self._proposal_result("change_priority", act, f"Czy chcesz zmienić priorytet zadania {t_id} na '{prio}'?")
+
+        m_block = re.search(r"^(?:zablokuj)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+(?:z powodu|powod:?)\s+(.+))?$", raw_text, re.IGNORECASE)
+        if m_block:
+            t_id = m_block.group(1).upper()
+            reason = m_block.group(2).strip() if m_block.group(2) else None
+            cmd_act = {"type": "block_ticket", "ticket_id": t_id, "reason": reason or "Zablokowane przez asystenta głosowego"}
+            data_act = {"type": "block_ticket", "ticket_id": t_id, "reason": reason}
+            msg = f"Czy chcesz zablokować zadanie {t_id}" + (f" z powodu: '{reason}'?" if reason else "?")
+            return self._proposal_result("block_ticket", cmd_act, msg, data_action=data_act)
+        return None
+
+    def _combined_sprint_tickets(self) -> list[Any]:
+        try:
+            tickets = self.pf.list_tickets(sprint="current") + self.pf.list_tickets(sprint="all")
+        except Exception as exc:
+            logger.debug("Failed to list combined sprint tickets: %s", exc)
+            return []
+        seen: set[str] = set()
+        out = []
+        for t in tickets:
+            if t.id not in seen:
+                seen.add(t.id)
+                out.append(t)
+        return out
+
+    @staticmethod
+    def _is_blocked_ticket(t: Any) -> bool:
+        exec_obj = getattr(t, "execution", None)
+        return getattr(t, "status", "") == "blocked" or bool(exec_obj and getattr(exec_obj, "state", None) in ("failed", "waiting_input", "blocked"))
+
+    def _query_blocked_tickets(self) -> DSLResult:
+        blocked = [t for t in self._combined_sprint_tickets() if self._is_blocked_ticket(t)]
+        msg = (
+            "Wszystkie zadania postępują prawidłowo. Brak zablokowanych zadań w bieżącym sprincie."
+            if not blocked
+            else f"Znaleziono {len(blocked)} zablokowane zadanie(a): " + "; ".join(f"{t.id}: {t.name}" for t in blocked)
+        )
+        return DSLResult(
+            ok=True,
+            command={"verb": "list", "object_type": "ticket", "params": {"status": "blocked"}, "conversational_intent": "blocked_tickets"},
+            data=[t.model_dump(mode="json", exclude_none=True) for t in blocked],
+            message=msg,
+            source_layer="conversational_fast_path",
+        )
+
+    def _query_next_ticket(self) -> DSLResult:
+        try:
+            tickets = self.pf.list_tickets(sprint="current")
+        except Exception as exc:
+            logger.debug("Failed to list tickets for next task queries: %s", exc)
+            tickets = []
+        open_tickets = [t for t in tickets if getattr(t, "status", "") in ("todo", "open", "ready", "pending")]
+        prio_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
+        open_tickets.sort(key=lambda t: prio_order.get(getattr(t, "priority", "normal"), 2))
+        if not open_tickets:
+            return DSLResult(
+                ok=True,
+                command={"verb": "show", "conversational_intent": "next_ticket"},
+                data=None,
+                message="Brak oczekujących zadań do podjęcia w bieżącym sprincie.",
+                source_layer="conversational_fast_path",
+            )
+        nxt = open_tickets[0]
+        q_name = getattr(nxt.execution, "queue", "default") if getattr(nxt, "execution", None) else "default"
+        return DSLResult(
+            ok=True,
+            command={"verb": "show", "object_type": "ticket", "target": nxt.id, "conversational_intent": "next_ticket"},
+            data=nxt.model_dump(mode="json", exclude_none=True),
+            message=f"Następne rekomendowane zadanie to {nxt.id}: '{nxt.name}' (priorytet: {nxt.priority}, kolejka: {q_name}).",
+            source_layer="conversational_fast_path",
+        )
+
+    def _query_sprint_summary(self) -> DSLResult:
+        combined = self._combined_sprint_tickets()
+        total = len(combined)
+        done = sum(1 for t in combined if getattr(t, "status", "") == "done")
+        running = sum(1 for t in combined if getattr(t, "execution", None) and getattr(t.execution, "state", None) == "running")
+        blocked = sum(1 for t in combined if self._is_blocked_ticket(t))
+        open_cnt = max(0, total - done - running - blocked)
+        pct = round((done / total * 100), 1) if total > 0 else 0.0
+        return DSLResult(
+            ok=True,
+            command={"verb": "summary", "object_type": "sprint", "conversational_intent": "sprint_summary"},
+            data={"total": total, "done": done, "running": running, "open": open_cnt, "blocked": blocked, "completion_rate_pct": pct},
+            message=f"Stan sprintu: {total} zadań (Ukończone: {done} [{pct}%], W toku: {running}, Otwarte: {open_cnt}, Zablokowane: {blocked}).",
+            source_layer="conversational_fast_path",
+        )
+
+    def _query_high_priority(self) -> DSLResult:
+        try:
+            tickets = self.pf.list_tickets(sprint="current")
+        except Exception as exc:
+            logger.debug("Failed to list tickets for high priority queries: %s", exc)
+            tickets = []
+        high_prio = [t for t in tickets if getattr(t, "priority", "") in ("critical", "high") and getattr(t, "status", "") != "done"]
+        msg = (
+            "Brak aktywnych zadań o wysokim lub krytycznym priorytecie."
+            if not high_prio
+            else f"Aktywne zadania o wysokim priorytecie ({len(high_prio)}): " + "; ".join(f"{t.id}: {t.name} ({t.priority})" for t in high_prio)
+        )
+        return DSLResult(
+            ok=True,
+            command={"verb": "list", "object_type": "ticket", "params": {"priority": "high"}, "conversational_intent": "high_priority"},
+            data=[t.model_dump(mode="json", exclude_none=True) for t in high_prio],
+            message=msg,
+            source_layer="conversational_fast_path",
+        )
+
     def _handle_conversational_query(self, text: str) -> DSLResult | None:
         """Handle natural conversation questions about plans, tickets, blockers, and next actions."""
-        import re
         import unicodedata
 
         clean = text.strip().lower().rstrip("?!.,")
@@ -128,302 +297,18 @@ class DSLExecutor:
         )):
             return None
 
-        normalized = "".join(
-            c for c in unicodedata.normalize("NFD", clean)
-            if unicodedata.category(c) != "Mn"
-        )
+        normalized = "".join(c for c in unicodedata.normalize("NFD", clean) if unicodedata.category(c) != "Mn")
         raw_text = text.strip().rstrip("?!.,")
-
-        # ── Safe Conversational Mutation Proposals (Human-In-The-Loop) ──
-        # A. Create ticket proposal
-        m_create = re.search(
-            r"^(?:dodaj|stworz|utworz|nowe)\s+(?:zadanie|ticket|task)\s+(.+)$",
-            normalized,
-            re.IGNORECASE,
-        )
-        if m_create:
-            m_create_orig = re.search(
-                r"^(?:dodaj|stworz|utworz|stwórz|utwórz|nowe)\s+(?:zadanie|ticket|task)\s+(.+)$",
-                raw_text,
-                re.IGNORECASE,
-            )
-            raw_title_part = m_create_orig.group(1).strip() if m_create_orig else m_create.group(1).strip()
-            norm_title_part = m_create.group(1).strip()
-
-            prio = "normal"
-            m_prio = re.search(
-                r"(?:z\s+priorytetem|priorytet|priority)\s*[:=]?\s*(krytyczn\w*|wysok\w*|normaln\w*|nisk\w*|critical|high|normal|low)",
-                norm_title_part,
-                re.IGNORECASE,
-            )
-            if m_prio:
-                p_word = m_prio.group(1).lower()
-                if "krytycz" in p_word or "critical" in p_word:
-                    prio = "critical"
-                elif "wysok" in p_word or "high" in p_word:
-                    prio = "high"
-                elif "nisk" in p_word or "low" in p_word:
-                    prio = "low"
-                else:
-                    prio = "normal"
-                raw_title_part = raw_title_part[:m_prio.start()].strip().rstrip("-,;:")
-
-            title = raw_title_part.strip().strip('"\'')
-            if title:
-                return DSLResult(
-                    ok=True,
-                    command={
-                        "verb": "action_proposal",
-                        "action": {
-                            "type": "create_ticket",
-                            "name": title,
-                            "priority": prio,
-                            "sprint": "current",
-                        },
-                        "conversational_intent": "create_ticket",
-                    },
-                    data={
-                        "proposal": True,
-                        "action": {
-                            "type": "create_ticket",
-                            "name": title,
-                            "priority": prio,
-                            "sprint": "current",
-                        },
-                    },
-                    message=f"Czy chcesz utworzyć zadanie '{title}' z priorytetem '{prio}'?",
-                    source_layer="conversational_fast_path",
-                )
-
-        # B. Close / Done proposal
-        m_done = re.search(
-            r"^(?:oznacz|zamknij|ukoncz)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+jako\s+(?:zrobione|done|ukonczone|wykonane))?$",
-            normalized,
-            re.IGNORECASE,
-        )
-        if m_done:
-            t_id = m_done.group(1).upper()
-            return DSLResult(
-                ok=True,
-                command={
-                    "verb": "action_proposal",
-                    "action": {
-                        "type": "update_status",
-                        "ticket_id": t_id,
-                        "status": "done",
-                    },
-                    "conversational_intent": "close_ticket",
-                },
-                data={
-                    "proposal": True,
-                    "action": {
-                        "type": "update_status",
-                        "ticket_id": t_id,
-                        "status": "done",
-                    },
-                },
-                message=f"Czy chcesz oznaczyć zadanie {t_id} jako wykonane (done)?",
-                source_layer="conversational_fast_path",
-            )
-
-        # C. Change priority proposal
-        m_prio_change = re.search(
-            r"^(?:zmien|ustaw|zwieksz|zmniejsz|change|set)\s+priorytet\s+(?:zadania\s+|ticketu\s+)?([A-Za-z0-9_-]+)\s+na\s+(krytyczn\w*|wysok\w*|normaln\w*|nisk\w*|critical|high|normal|low)$",
-            normalized,
-            re.IGNORECASE,
-        )
-        if not m_prio_change:
-            m_prio_change = re.search(
-                r"^(?:set|change)\s+priority\s+(?:of\s+)?([A-Za-z0-9_-]+)\s+to\s+(critical|high|normal|low)$",
-                normalized,
-                re.IGNORECASE,
-            )
-        if m_prio_change:
-            t_id = m_prio_change.group(1).upper()
-            p_word = m_prio_change.group(2).lower()
-            if "krytycz" in p_word or "critical" in p_word:
-                prio = "critical"
-            elif "wysok" in p_word or "high" in p_word:
-                prio = "high"
-            elif "nisk" in p_word or "low" in p_word:
-                prio = "low"
-            else:
-                prio = "normal"
-            return DSLResult(
-                ok=True,
-                command={
-                    "verb": "action_proposal",
-                    "action": {
-                        "type": "change_priority",
-                        "ticket_id": t_id,
-                        "priority": prio,
-                    },
-                    "conversational_intent": "change_priority",
-                },
-                data={
-                    "proposal": True,
-                    "action": {
-                        "type": "change_priority",
-                        "ticket_id": t_id,
-                        "priority": prio,
-                    },
-                },
-                message=f"Czy chcesz zmienić priorytet zadania {t_id} na '{prio}'?",
-                source_layer="conversational_fast_path",
-            )
-
-        # D. Block ticket proposal
-        m_block = re.search(
-            r"^(?:zablokuj)\s+(?:zadanie\s+|ticket\s+)?([A-Za-z0-9_-]+)(?:\s+(?:z powodu|powod:?)\s+(.+))?$",
-            raw_text,
-            re.IGNORECASE,
-        )
-        if m_block:
-            t_id = m_block.group(1).upper()
-            reason = m_block.group(2).strip() if m_block.group(2) else None
-            return DSLResult(
-                ok=True,
-                command={
-                    "verb": "action_proposal",
-                    "action": {
-                        "type": "block_ticket",
-                        "ticket_id": t_id,
-                        "reason": reason or "Zablokowane przez asystenta głosowego",
-                    },
-                    "conversational_intent": "block_ticket",
-                },
-                data={
-                    "proposal": True,
-                    "action": {
-                        "type": "block_ticket",
-                        "ticket_id": t_id,
-                        "reason": reason,
-                    },
-                },
-                message=f"Czy chcesz zablokować zadanie {t_id}" + (f" z powodu: '{reason}'?" if reason else "?"),
-                source_layer="conversational_fast_path",
-            )
-
-        # ── Conversational Read / Status Queries ──
-        # 1. Blocked / waiting queries
+        if proposal := self._propose_conversational_mutation(normalized, raw_text):
+            return proposal
         if any(p in normalized for p in ("co jest zablokowane", "zablokowane", "blokuj", "blocked", "czeka na", "co blokuje")):
-            try:
-                tickets = self.pf.list_tickets(sprint="current")
-                all_tickets = self.pf.list_tickets(sprint="all")
-            except Exception as exc:
-                logger.debug("Failed to list tickets for blocked queries: %s", exc)
-                tickets, all_tickets = [], []
-            seen = set()
-            combined = []
-            for t in tickets + all_tickets:
-                if t.id not in seen:
-                    seen.add(t.id)
-                    combined.append(t)
-            blocked = [
-                t for t in combined
-                if getattr(t, "status", "") == "blocked"
-                or (getattr(t, "execution", None) and getattr(t.execution, "state", None) in ("failed", "waiting_input", "blocked"))
-            ]
-            if not blocked:
-                msg = "Wszystkie zadania postępują prawidłowo. Brak zablokowanych zadań w bieżącym sprincie."
-            else:
-                items = [f"{t.id}: {t.name}" for t in blocked]
-                msg = f"Znaleziono {len(blocked)} zablokowane zadanie(a): " + "; ".join(items)
-            return DSLResult(
-                ok=True,
-                command={"verb": "list", "object_type": "ticket", "params": {"status": "blocked"}, "conversational_intent": "blocked_tickets"},
-                data=[t.model_dump(mode="json", exclude_none=True) for t in blocked],
-                message=msg,
-                source_layer="conversational_fast_path",
-            )
-
-        # 2. Next task queries
+            return self._query_blocked_tickets()
         if any(p in normalized for p in ("nastepne", "co robic", "co dalej", "next task", "next ticket", "co teraz", "kolejne zadanie")):
-            try:
-                tickets = self.pf.list_tickets(sprint="current")
-            except Exception as exc:
-                logger.debug("Failed to list tickets for next task queries: %s", exc)
-                tickets = []
-            open_tickets = [t for t in tickets if getattr(t, "status", "") in ("todo", "open", "ready", "pending")]
-            prio_order = {"critical": 0, "high": 1, "normal": 2, "low": 3}
-            open_tickets.sort(key=lambda t: prio_order.get(getattr(t, "priority", "normal"), 2))
-            if open_tickets:
-                nxt = open_tickets[0]
-                q_name = getattr(nxt.execution, "queue", "default") if getattr(nxt, "execution", None) else "default"
-                msg = f"Następne rekomendowane zadanie to {nxt.id}: '{nxt.name}' (priorytet: {nxt.priority}, kolejka: {q_name})."
-                return DSLResult(
-                    ok=True,
-                    command={"verb": "show", "object_type": "ticket", "target": nxt.id, "conversational_intent": "next_ticket"},
-                    data=nxt.model_dump(mode="json", exclude_none=True),
-                    message=msg,
-                    source_layer="conversational_fast_path",
-                )
-            else:
-                return DSLResult(
-                    ok=True,
-                    command={"verb": "show", "conversational_intent": "next_ticket"},
-                    data=None,
-                    message="Brak oczekujących zadań do podjęcia w bieżącym sprincie.",
-                    source_layer="conversational_fast_path",
-                )
-
-        # 3. Sprint / Plan summary
+            return self._query_next_ticket()
         if any(p in normalized for p in ("stan sprintu", "status planu", "podsumuj sprint", "podsumowanie", "jak idzie", "sprint summary", "plan status")):
-            try:
-                tickets = self.pf.list_tickets(sprint="current")
-                all_tickets = self.pf.list_tickets(sprint="all")
-            except Exception as exc:
-                logger.debug("Failed to list tickets for sprint summary queries: %s", exc)
-                tickets, all_tickets = [], []
-            seen = set()
-            combined = []
-            for t in tickets + all_tickets:
-                if t.id not in seen:
-                    seen.add(t.id)
-                    combined.append(t)
-            total = len(combined)
-            done = sum(1 for t in combined if getattr(t, "status", "") == "done")
-            running = sum(1 for t in combined if getattr(t, "execution", None) and getattr(t.execution, "state", None) == "running")
-            blocked = sum(1 for t in combined if getattr(t, "status", "") == "blocked" or (getattr(t, "execution", None) and getattr(t.execution, "state", None) in ("failed", "waiting_input", "blocked")))
-            open_cnt = max(0, total - done - running - blocked)
-            pct = round((done / total * 100), 1) if total > 0 else 0.0
-            msg = f"Stan sprintu: {total} zadań (Ukończone: {done} [{pct}%], W toku: {running}, Otwarte: {open_cnt}, Zablokowane: {blocked})."
-            return DSLResult(
-                ok=True,
-                command={"verb": "summary", "object_type": "sprint", "conversational_intent": "sprint_summary"},
-                data={
-                    "total": total,
-                    "done": done,
-                    "running": running,
-                    "open": open_cnt,
-                    "blocked": blocked,
-                    "completion_rate_pct": pct,
-                },
-                message=msg,
-                source_layer="conversational_fast_path",
-            )
-
-        # 4. High priority queries
+            return self._query_sprint_summary()
         if any(p in normalized for p in ("wysoki priorytet", "krytyczne", "pilne", "high priority", "critical")):
-            try:
-                tickets = self.pf.list_tickets(sprint="current")
-            except Exception as exc:
-                logger.debug("Failed to list tickets for high priority queries: %s", exc)
-                tickets = []
-            high_prio = [t for t in tickets if getattr(t, "priority", "") in ("critical", "high") and getattr(t, "status", "") != "done"]
-            if not high_prio:
-                msg = "Brak aktywnych zadań o wysokim lub krytycznym priorytecie."
-            else:
-                items = [f"{t.id}: {t.name} ({t.priority})" for t in high_prio]
-                msg = f"Aktywne zadania o wysokim priorytecie ({len(high_prio)}): " + "; ".join(items)
-            return DSLResult(
-                ok=True,
-                command={"verb": "list", "object_type": "ticket", "params": {"priority": "high"}, "conversational_intent": "high_priority"},
-                data=[t.model_dump(mode="json", exclude_none=True) for t in high_prio],
-                message=msg,
-                source_layer="conversational_fast_path",
-            )
-
+            return self._query_high_priority()
         return None
 
     def _translate_with_llm(self, text: str) -> str | None:
@@ -585,8 +470,7 @@ class DSLExecutor:
         if obj == "ticket":
             params = dict(cmd.params)
             params.pop("title", None)
-            params_name = params.pop("name", None)
-            name = cmd.target or params_name
+            name = cmd.target or params.pop("name", None)
             if not name:
                 return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket name required.")
             dry_run = bool(params.pop("dry_run", False)) or params.get("mode") == "dry-run"
@@ -597,32 +481,19 @@ class DSLExecutor:
             if dry_run:
                 with self.pf.store.allocation_lock():
                     preview_id = self.pf.store._next_id_unlocked()
+                preview = {
+                    "id": preview_id, "name": name, "priority": priority,
+                    "sprint": sprint, "status": "todo", "labels": labels, "description": description,
+                }
                 return DSLResult(
-                    ok=True,
-                    command=cmd.to_dict(),
-                    data={
-                        "dry_run": True,
-                        "ticket": {
-                            "id": preview_id,
-                            "name": name,
-                            "priority": priority,
-                            "sprint": sprint,
-                            "status": "todo",
-                            "labels": labels,
-                            "description": description,
-                        },
-                    },
+                    ok=True, command=cmd.to_dict(),
+                    data={"dry_run": True, "ticket": preview},
                     message=f"[dry-run] Would create ticket {preview_id}: {name}",
                 )
-            from planfile import TicketSource
+            from planfile.models import TicketSource
             ticket = self.pf.create_ticket(
-                name=name,
-                priority=priority,
-                sprint=sprint,
-                description=description,
-                labels=labels,
-                source=TicketSource(tool="dsl"),
-                **params,
+                name=name, priority=priority, sprint=sprint,
+                description=description, labels=labels, source=TicketSource(tool="dsl"), **params,
             )
             return DSLResult(
                 ok=True, command=cmd.to_dict(),
@@ -639,8 +510,7 @@ class DSLExecutor:
         import yaml
         name = cmd.target or cmd.params.get("name", "Sprint")
         days = int(cmd.params.get("days", 14))
-        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
-        if dry_run:
+        if bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run":
             return DSLResult(
                 ok=True, command=cmd.to_dict(),
                 data={"dry_run": True, "name": name, "length_days": days},
@@ -668,9 +538,7 @@ class DSLExecutor:
         if obj == "config":
             data = self._configuration().list()
             return DSLResult(
-                ok=True,
-                command=cmd.to_dict(),
-                data=data,
+                ok=True, command=cmd.to_dict(), data=data,
                 message=f"Found {len(data['writable'])} writable configuration path(s)",
             )
         if obj == "ticket":
@@ -697,27 +565,19 @@ class DSLExecutor:
             data = yaml.safe_load(f) or {}
         sprints = data.get("sprints", [])
         return DSLResult(
-            ok=True, command=cmd.to_dict(),
-            data=sprints,
-            message=f"Found {len(sprints)} sprint(s)",
+            ok=True, command=cmd.to_dict(), data=sprints, message=f"Found {len(sprints)} sprint(s)",
         )
 
     def _exec_show(self, cmd: DSLCommand) -> DSLResult:
         if cmd.object_type == "config":
-            return DSLResult(
-                ok=True,
-                command=cmd.to_dict(),
-                data=self._configuration().show(cmd.target),
-            )
-        ticket_id = cmd.target
-        if not ticket_id:
+            return DSLResult(ok=True, command=cmd.to_dict(), data=self._configuration().show(cmd.target))
+        if not cmd.target:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
-        ticket = self.pf.get_ticket(ticket_id)
+        ticket = self.pf.get_ticket(cmd.target)
         if not ticket:
-            return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
+            return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {cmd.target} not found.")
         return DSLResult(
-            ok=True, command=cmd.to_dict(),
-            data=ticket.model_dump(mode="json", exclude_none=True),
+            ok=True, command=cmd.to_dict(), data=ticket.model_dump(mode="json", exclude_none=True),
         )
 
     def _exec_update(self, cmd: DSLCommand) -> DSLResult:
@@ -731,12 +591,10 @@ class DSLExecutor:
         if not params:
             return DSLResult(ok=False, command=cmd.to_dict(), error="No fields to update.")
         if dry_run:
-            ticket = self.pf.get_ticket(ticket_id)
-            if not ticket:
+            if not self.pf.get_ticket(ticket_id):
                 return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
             return DSLResult(
-                ok=True,
-                command=cmd.to_dict(),
+                ok=True, command=cmd.to_dict(),
                 data={"dry_run": True, "ticket_id": ticket_id, "updates": params},
                 message=f"[dry-run] Would update {ticket_id}",
             )
@@ -745,8 +603,7 @@ class DSLExecutor:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
         return DSLResult(
             ok=True, command=cmd.to_dict(),
-            data=ticket.model_dump(mode="json", exclude_none=True),
-            message=f"Updated {ticket.id}",
+            data=ticket.model_dump(mode="json", exclude_none=True), message=f"Updated {ticket.id}",
         )
 
     def _configuration(self):
@@ -755,8 +612,7 @@ class DSLExecutor:
     def _exec_update_config(self, cmd: DSLCommand) -> DSLResult:
         if cmd.target:
             return DSLResult(
-                ok=False,
-                command=cmd.to_dict(),
+                ok=False, command=cmd.to_dict(),
                 error="Use PATH=VALUE syntax: set config store.archive.enabled=false",
             )
         params = dict(cmd.params)
@@ -765,29 +621,15 @@ class DSLExecutor:
         reason = str(params.pop("reason", ""))
         expected_revision = params.pop("if_revision", None)
         if not params:
-            return DSLResult(
-                ok=False,
-                command=cmd.to_dict(),
-                error="No configuration values to update.",
-            )
+            return DSLResult(ok=False, command=cmd.to_dict(), error="No configuration values to update.")
         data = self._configuration().set_many(
-            params,
-            mode=mode,
-            actor=actor,
-            reason=reason,
-            expected_revision=(
-                str(expected_revision) if expected_revision is not None else None
-            ),
+            params, mode=mode, actor=actor, reason=reason,
+            expected_revision=str(expected_revision) if expected_revision is not None else None,
         )
+        action_verb = "Validated" if mode == "dry-run" else "Applied"
         return DSLResult(
-            ok=True,
-            command=cmd.to_dict(),
-            data=data,
-            message=(
-                f"Validated {len(data['changed'])} configuration change(s)"
-                if mode == "dry-run"
-                else f"Applied {len(data['changed'])} configuration change(s)"
-            ),
+            ok=True, command=cmd.to_dict(), data=data,
+            message=f"{action_verb} {len(data['changed'])} configuration change(s)",
         )
 
     def _exec_move(self, cmd: DSLCommand) -> DSLResult:
@@ -799,16 +641,14 @@ class DSLExecutor:
         if not to_sprint:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Target sprint required: move ticket ID to=sprint_id")
         if dry_run:
-            ticket = self.pf.get_ticket(ticket_id)
-            if not ticket:
+            if not self.pf.get_ticket(ticket_id):
                 return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
             return DSLResult(
                 ok=True, command=cmd.to_dict(),
                 data={"dry_run": True, "ticket_id": ticket_id, "to_sprint": to_sprint},
                 message=f"[dry-run] Would move {ticket_id} → sprint {to_sprint}",
             )
-        ok = self.pf.store.move_ticket(ticket_id, str(to_sprint))
-        if not ok:
+        if not self.pf.store.move_ticket(ticket_id, str(to_sprint)):
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
         return DSLResult(
             ok=True, command=cmd.to_dict(),
@@ -816,50 +656,36 @@ class DSLExecutor:
             message=f"Moved {ticket_id} → sprint {to_sprint}",
         )
 
-    def _exec_done(self, cmd: DSLCommand) -> DSLResult:
+    def _exec_status_transition(self, cmd: DSLCommand, status: str, dry_msg: str, ok_msg: str) -> DSLResult:
         ticket_id = cmd.target
         dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
         if dry_run:
-            ticket = self.pf.get_ticket(ticket_id)
-            if not ticket:
+            if not self.pf.get_ticket(ticket_id):
                 return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
             return DSLResult(
                 ok=True, command=cmd.to_dict(),
-                data={"dry_run": True, "ticket_id": ticket_id, "status": "done"},
-                message=f"[dry-run] Would mark {ticket_id} as done",
+                data={"dry_run": True, "ticket_id": ticket_id, "status": status},
+                message=dry_msg.format(ticket_id=ticket_id),
             )
-        ticket = self.pf.update_ticket(ticket_id, status="done")
+        ticket = self.pf.update_ticket(ticket_id, status=status)
         if not ticket:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
         return DSLResult(
             ok=True, command=cmd.to_dict(),
             data=ticket.model_dump(mode="json", exclude_none=True),
-            message=f"Marked {ticket_id} as done",
+            message=ok_msg.format(ticket_id=ticket_id),
+        )
+
+    def _exec_done(self, cmd: DSLCommand) -> DSLResult:
+        return self._exec_status_transition(
+            cmd, "done", "[dry-run] Would mark {ticket_id} as done", "Marked {ticket_id} as done"
         )
 
     def _exec_start(self, cmd: DSLCommand) -> DSLResult:
-        ticket_id = cmd.target
-        dry_run = bool(cmd.params.get("dry_run", False)) or cmd.params.get("mode") == "dry-run"
-        if not ticket_id:
-            return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
-        if dry_run:
-            ticket = self.pf.get_ticket(ticket_id)
-            if not ticket:
-                return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
-            return DSLResult(
-                ok=True, command=cmd.to_dict(),
-                data={"dry_run": True, "ticket_id": ticket_id, "status": "in_progress"},
-                message=f"[dry-run] Would start {ticket_id}",
-            )
-        ticket = self.pf.update_ticket(ticket_id, status="in_progress")
-        if not ticket:
-            return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
-        return DSLResult(
-            ok=True, command=cmd.to_dict(),
-            data=ticket.model_dump(mode="json", exclude_none=True),
-            message=f"Started {ticket_id}",
+        return self._exec_status_transition(
+            cmd, "in_progress", "[dry-run] Would start {ticket_id}", "Started {ticket_id}"
         )
 
     def _exec_block(self, cmd: DSLCommand) -> DSLResult:
@@ -869,8 +695,7 @@ class DSLExecutor:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
         reason = cmd.params.get("reason")
         if dry_run:
-            ticket = self.pf.get_ticket(ticket_id)
-            if not ticket:
+            if not self.pf.get_ticket(ticket_id):
                 return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
             return DSLResult(
                 ok=True, command=cmd.to_dict(),
@@ -882,8 +707,7 @@ class DSLExecutor:
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
         return DSLResult(
             ok=True, command=cmd.to_dict(),
-            data=ticket.model_dump(mode="json", exclude_none=True),
-            message=f"Blocked {ticket_id}",
+            data=ticket.model_dump(mode="json", exclude_none=True), message=f"Blocked {ticket_id}",
         )
 
     def _exec_delete(self, cmd: DSLCommand) -> DSLResult:
@@ -892,36 +716,27 @@ class DSLExecutor:
         if not ticket_id:
             return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket ID required.")
         if dry_run:
-            ticket = self.pf.get_ticket(ticket_id)
-            if not ticket:
+            if not self.pf.get_ticket(ticket_id):
                 return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
             return DSLResult(
                 ok=True, command=cmd.to_dict(),
                 data={"dry_run": True, "ticket_id": ticket_id, "deleted": True},
                 message=f"[dry-run] Would delete {ticket_id}",
             )
-        ok = self.pf.delete_ticket(ticket_id)
-        if not ok:
+        if not self.pf.delete_ticket(ticket_id):
             return DSLResult(ok=False, command=cmd.to_dict(), error=f"Ticket {ticket_id} not found.")
         return DSLResult(
-            ok=True, command=cmd.to_dict(),
-            data={"deleted": ticket_id},
-            message=f"Deleted {ticket_id}",
+            ok=True, command=cmd.to_dict(), data={"deleted": ticket_id}, message=f"Deleted {ticket_id}",
         )
 
     def _exec_validate(self, cmd: DSLCommand) -> DSLResult:
-
-        from planfile import validate_planfile_tickets
+        from planfile.ticket_validation import validate_planfile_tickets
         strategy_path = cmd.params.get("strategy", "planfile.yaml")
         project_path = cmd.params.get("project", self._project_path)
         report = validate_planfile_tickets(strategy_path=strategy_path, project_path=project_path)
         return DSLResult(
-            ok=True, command=cmd.to_dict(),
-            data=report,
-            message=(
-                f"Validation: total={report.get('total', 0)} "
-                f"current={report.get('current', 0)} stale={report.get('stale', 0)}"
-            ),
+            ok=True, command=cmd.to_dict(), data=report,
+            message=f"Validation: total={report.get('total', 0)} current={report.get('current', 0)} stale={report.get('stale', 0)}",
         )
 
     def _exec_sync(self, cmd: DSLCommand) -> DSLResult:
@@ -929,28 +744,23 @@ class DSLExecutor:
         directory = cmd.params.get("directory", self._project_path)
         dry_run = bool(cmd.params.get("dry_run", False))
         try:
-            from planfile.cli.groups.sync.core import sync_integration
+            from planfile.utils.uri import invoke_sync_integration
             if integration == "all":
                 from planfile.integrations.config import IntegrationConfig
                 cfg = IntegrationConfig(directory)
                 cfg.load_configs()
                 integrations = list(cfg.config.get("integrations", {}).keys()) or ["markdown"]
-                results = []
                 for intg in integrations:
-                    sync_integration(intg, directory, dry_run, "to", show_header=False)
-                    results.append(intg)
+                    invoke_sync_integration(intg, directory, dry_run, "to", show_header=False)
                 return DSLResult(
-                    ok=True, command=cmd.to_dict(),
-                    data={"synced": results},
-                    message=f"Synced: {', '.join(results)}",
+                    ok=True, command=cmd.to_dict(), data={"synced": integrations},
+                    message=f"Synced: {', '.join(integrations)}",
                 )
-            else:
-                sync_integration(integration, directory, dry_run, "to", show_header=False)
-                return DSLResult(
-                    ok=True, command=cmd.to_dict(),
-                    data={"synced": integration},
-                    message=f"Synced {integration}",
-                )
+            invoke_sync_integration(integration, directory, dry_run, "to", show_header=False)
+            return DSLResult(
+                ok=True, command=cmd.to_dict(), data={"synced": integration},
+                message=f"Synced {integration}",
+            )
         except Exception as exc:
             return DSLResult(ok=False, command=cmd.to_dict(), error=str(exc))
 

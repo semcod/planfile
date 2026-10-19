@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from filelock import Timeout as FileLockTimeout
 from pydantic import BaseModel, ConfigDict, Field
 
-from planfile import Planfile
 from planfile.core.models import Ticket
+from planfile.utils.uri import load_planfile_instance
+
+if TYPE_CHECKING:
+    from planfile import Planfile
 
 TICKET_TRANSITION_RESULT_SCHEMA_ID = "planfile.ticket-transition-result.v1"
 
@@ -79,7 +82,7 @@ class PlanfileClient:
             raise ValueError("lock_retry_attempts must be at least 1")
         if lock_retry_delay_seconds < 0:
             raise ValueError("lock_retry_delay_seconds cannot be negative")
-        self._backend = backend or Planfile(project_path)
+        self._backend = backend or load_planfile_instance(project_path, discover=False)
         self._lock_retry_attempts = lock_retry_attempts
         self._lock_retry_delay_seconds = lock_retry_delay_seconds
         self._sleep = sleep

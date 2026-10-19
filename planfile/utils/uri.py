@@ -8,6 +8,7 @@ modify, and relocate `dockuri` and `urirun` URI processes without duplicating he
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import os
 import shutil
@@ -398,6 +399,52 @@ def _handle_process_manage(params: dict[str, Any]) -> dict[str, Any]:
     return {"status": "error", "error": f"Unsupported action: {action}"}
 
 
+def load_planfile_instance(project_path: str | Path = ".", *, discover: bool = False) -> Any:
+    """Resolve and instantiate `Planfile` dynamically without upward static imports into `interfaces`."""
+    cls = getattr(importlib.import_module("planfile"), "Planfile")
+    return cls.auto_discover(str(project_path)) if discover else cls(str(project_path))
+
+
+def initialize_sync_backend(integration_name: str, config: Any, show_header: bool = False) -> Any:
+    """Resolve and initialize an external sync backend without static upward imports into `interfaces`."""
+    sync_core = importlib.import_module("planfile.cli.groups.sync.core")
+    return sync_core._initialize_backend(integration_name, config, show_header)
+
+
+def invoke_sync_integration(
+    integration_name: str,
+    directory: str = ".",
+    dry_run: bool = False,
+    direction: str = "to",
+    *,
+    show_header: bool = False,
+) -> None:
+    """Invoke `sync_integration` via dynamic bridge without static upward imports into `interfaces`."""
+    sync_core = importlib.import_module("planfile.cli.groups.sync.core")
+    sync_core.sync_integration(integration_name, directory, dry_run, direction, show_header=show_header)
+
+
+def _handle_sync_integration(params: dict[str, Any]) -> dict[str, Any]:
+    integration = str(params.get("integration") or params.get("name") or "markdown")
+    directory = str(params.get("directory") or params.get("project") or ".")
+    dry_run = bool(params.get("dry_run", False))
+    direction = str(params.get("direction") or "to")
+    show_header = bool(params.get("show_header", False))
+    invoke_sync_integration(integration, directory, dry_run, direction, show_header=show_header)
+    return {"status": "ok", "service": "proc://planfile/sync/integration/v1", "integration": integration, "direction": direction}
+
+
+def _handle_configuration(params: dict[str, Any]) -> dict[str, Any]:
+    project = str(params.get("project") or ".")
+    action = str(params.get("action") or "show").strip().lower()
+    pf = load_planfile_instance(project, discover=False)
+    if action == "revision":
+        return {"status": "ok", "service": "proc://planfile/storage/configuration/v1", "revision": pf.config.revision()}
+    if action == "list":
+        return {"status": "ok", "service": "proc://planfile/storage/configuration/v1", "config": pf.config.list()}
+    return {"status": "ok", "service": "proc://planfile/storage/configuration/v1", "config": pf.config.show(params.get("path"))}
+
+
 _BUILTIN_HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "proc://planfile/repo/normalize/v1": _handle_repo_normalize,
     "proc://planfile/yaml/read/v1": _handle_yaml_read,
@@ -407,6 +454,9 @@ _BUILTIN_HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "task://host/ticket/query/next": _handle_ticket_next,
     "proc://planfile/ticket/show/v1": _handle_ticket_show,
     "task://host/ticket/query/show": _handle_ticket_show,
+    "proc://planfile/sync/integration/v1": _handle_sync_integration,
+    "task://host/sync/command/run": _handle_sync_integration,
+    "proc://planfile/storage/configuration/v1": _handle_configuration,
 }
 
 _PROCESS_MANAGE_URIS = {

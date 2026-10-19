@@ -5,7 +5,8 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
-from planfile import Planfile, Ticket, TicketSource
+from planfile.models import Ticket, TicketSource
+from planfile.utils.uri import load_planfile_instance
 
 
 class TicketLogger:
@@ -29,7 +30,7 @@ class TicketLogger:
 
     def __init__(self, tool_name: str, auto_create: bool = True):
         self.tool_name = tool_name
-        self.pf = Planfile.auto_discover()
+        self.pf = load_planfile_instance(discover=True)
         self.auto_create = auto_create
 
     def error(
