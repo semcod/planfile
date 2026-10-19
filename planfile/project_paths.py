@@ -93,6 +93,18 @@ def _outermost_planfile_ancestor(path: Path) -> Path | None:
     return ancestors[-1] if ancestors else None
 
 
+def _walk_for_repo_store(path: Path, start_root: Path) -> Path:
+    cursor = path
+    while True:
+        candidate = cursor / PLANFILE_DIRNAME
+        candidate_root = _git_root(cursor)
+        if candidate.is_dir() and candidate_root in {None, start_root}:
+            return cursor
+        if cursor == cursor.parent or cursor == start_root:
+            return path
+        cursor = cursor.parent
+
+
 def canonical_project_root(start: str | Path) -> Path:
     """Resolve a path inside a Planfile store to its owning project root.
 
@@ -107,32 +119,14 @@ def canonical_project_root(start: str | Path) -> Path:
         candidate
         for candidate in (path, *path.parents)
         if candidate.name == PLANFILE_DIRNAME
-        and (
-            not start_root
-            or _git_root(candidate) in {None, start_root}
-        )
+        and (not start_root or _git_root(candidate) in {None, start_root})
     ]
     if same_repo_stores:
         project_root = same_repo_stores[-1].parent
     elif not start_root:
-        # Without a Git boundary, an ancestor .planfile may belong to a
-        # different project (for example /tmp/.planfile or ~/.planfile).
-        # Only an explicit store path handled above is safe to adopt.
         project_root = path
     else:
-        project_root = path
-        cursor = path
-        while True:
-            candidate = cursor / PLANFILE_DIRNAME
-            candidate_root = _git_root(cursor)
-            if candidate.is_dir() and (
-                not start_root or candidate_root in {None, start_root}
-            ):
-                project_root = cursor
-                break
-            if cursor == cursor.parent or (start_root and cursor == start_root):
-                break
-            cursor = cursor.parent
+        project_root = _walk_for_repo_store(path, start_root)
     if (project_root / PLANFILE_DIRNAME).is_dir():
         _validate_repository_origin(project_root)
     return project_root

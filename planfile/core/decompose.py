@@ -77,7 +77,7 @@ def _child_data(parent: Any, parent_id: str, sub: dict, index: int,
                 agent_labels: list[str], source: str) -> dict:
     """Assemble the create-kwargs for one subtask: inherit parent priority/sprint/labels,
     tag ``parent:<id>`` (+ agent), carry optional file scope + single-owner executor."""
-    from planfile import TicketSource
+    from planfile.models import TicketSource
     labels = _dedup([*(parent.labels or []), f"parent:{parent_id}", *agent_labels, *(sub.get("labels") or [])])
     data: dict[str, Any] = {
         "priority": priority or parent.priority,
@@ -119,7 +119,7 @@ def split_ticket(
     is always a single subtask, which is how you orchestrate dependent steps without conflict.
     Returns the created child Tickets (in order).
     """
-    from planfile import TicketExecutor  # local import: avoid cycle at module load
+    from planfile.models import TicketExecutor
 
     parent = pf.get_ticket(parent_id)
     if not parent:
@@ -376,7 +376,7 @@ def tree_progress(pf: Any, root_id: str) -> dict:
 
 def _absorb_outputs(target: Any, child: Any) -> tuple[Any, list[str], int]:
     """Fold child's notes + files onto the target. Returns (outputs, files, note_count)."""
-    from planfile import TicketOutputs
+    from planfile.models import TicketOutputs
     notes = list((target.outputs.notes if target.outputs else []) or [])
     notes.extend((child.outputs.notes if child.outputs else []) or [])
     notes.append(f"merged from {child.id}: {child.name}")

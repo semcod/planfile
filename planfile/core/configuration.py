@@ -26,18 +26,10 @@ from planfile.runtime_context import (
     save_runtime_context_config,
 )
 
+from planfile.utils.yaml_cache import read_yaml_file as _read_yaml_file
+
 if TYPE_CHECKING:
     from planfile import Planfile
-
-
-@lru_cache(maxsize=256)
-def _load_yaml_cached(path_str: str, mtime_ns: int) -> Any:
-    return yaml.safe_load(Path(path_str).read_text(encoding="utf-8"))
-
-
-def _read_yaml_file(path: Path) -> Any:
-    stat = path.stat()
-    return _load_yaml_cached(str(path.resolve()), stat.st_mtime_ns)
 
 
 _SENSITIVE_PATH = re.compile(
