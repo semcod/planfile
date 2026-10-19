@@ -22,6 +22,16 @@ class SyncStateRepositoryMismatch(ValueError):
     """Raised when a state file belongs to a different external repository."""
 
 
+def _extract_repo_from_config(data: dict, backend: str) -> str | None:
+    for section in (data.get("integrations", {}).get(backend), data.get(backend)):
+        if isinstance(section, dict) and section.get("repo"):
+            try:
+                return normalize_repository(str(section["repo"]))
+            except ValueError:
+                return None
+    return None
+
+
 def _discover_repository(planfile_dir: Path, backend: str) -> str | None:
     """Read the repository target from the project-local integration config."""
     project_dir = planfile_dir.parent
@@ -34,20 +44,8 @@ def _discover_repository(planfile_dir: Path, backend: str) -> str | None:
             data = _read_yaml_file(path) or {}
         except (OSError, yaml.YAMLError):
             continue
-        if not isinstance(data, dict):
-            continue
-        section = data.get("integrations", {}).get(backend, {})
-        if isinstance(section, dict) and section.get("repo"):
-            try:
-                return normalize_repository(str(section["repo"]))
-            except ValueError:
-                return None
-        section = data.get(backend, {})
-        if isinstance(section, dict) and section.get("repo"):
-            try:
-                return normalize_repository(str(section["repo"]))
-            except ValueError:
-                return None
+        if isinstance(data, dict) and (repo := _extract_repo_from_config(data, backend)) is not None:
+            return repo
     return None
 
 
@@ -95,6 +93,62 @@ class SyncState:
         }
 
     @classmethod
+    def _verify_candidate_list(
+        cls, backend, resolver, candidates: object, canonical: str, identity: dict, aliases: set[str]
+    ) -> None:
+        if not isinstance(candidates, list) or len(candidates) > 16:
+            raise SyncStateRepositoryMismatch("invalid repository alias inventory")
+        for candidate in candidates:
+            normalized = normalize_repository(candidate) if isinstance(candidate, str) else None
+            if normalized and normalized != canonical and normalized not in aliases:
+                if cls._probe_candidate_alias(backend, resolver, normalized) == identity:
+                    aliases.add(normalized)
+        if len(aliases) > 16:
+            raise SyncStateRepositoryMismatch("verified repository alias inventory exceeds bound")
+
+    @classmethod
+    def _collect_verified_aliases(cls, backend, resolver, initial: dict, canonical: str, identity: dict) -> set[str]:
+        aliases: set[str] = set()
+        configured = normalize_repository(backend.config.get("repo"))
+        if configured and configured != canonical:
+            aliases.add(configured)
+        recorded = normalize_repository(initial.get("repository"))
+        if recorded and recorded != canonical:
+            if resolver(backend, recorded) != identity:
+                raise SyncStateRepositoryMismatch("previous repository route is not the same GitHub repository")
+            aliases.add(recorded)
+        cls._verify_candidate_list(backend, resolver, initial.get("repository_aliases") or [], canonical, identity, aliases)
+        return aliases
+
+    @staticmethod
+    def _probe_candidate_alias(backend, resolver, normalized: str):
+        try:
+            return resolver(backend, normalized)
+        except Exception as error:
+            if getattr(error, "status", None) == 404:
+                return None
+            raise
+
+    def _persist_verified_identity(
+        self, initial: dict, backend_name: str, canonical: str, repository_id: str, aliases: set[str]
+    ) -> None:
+        with self._locked():
+            current = self._read_unlocked()
+            binding = (current.get("repository"), current.get("repository_id"))
+            if binding != (initial.get("repository"), initial.get("repository_id")):
+                raise SyncStateRepositoryMismatch("sync state binding changed during identity verification")
+            clean = self._safe_state(current)
+            clean.update(
+                schema=SYNC_STATE_SCHEMA,
+                backend=backend_name,
+                repository=canonical,
+                repository_id=repository_id,
+                repository_aliases=sorted(aliases),
+            )
+            if clean != current:
+                _atomic_write_text(self.state_file, yaml.safe_dump(clean, sort_keys=False))
+
+    @classmethod
     def from_backend(
         cls, planfile_dir: Path, backend_name: str, backend,
         *, dry_run: bool = False, persist: bool = True,
@@ -120,38 +174,12 @@ class SyncState:
             return state
         canonical = normalize_repository(identity["repository"])
         repository_id = identity["repository_id"]
-        recorded = normalize_repository(initial.get("repository"))
         recorded_id = initial.get("repository_id")
         if recorded_id is not None and str(recorded_id) != repository_id:
             raise SyncStateRepositoryMismatch("sync state numeric repository identity disagrees")
         # A v2 binding without a numeric ID needs a fresh observation of its
         # original route. Local alias strings cannot waive this check.
-        aliases = set()
-        configured = normalize_repository(backend.config.get("repo"))
-        if configured and configured != canonical:
-            aliases.add(configured)
-        if recorded and recorded != canonical:
-            previous = resolver(backend, recorded)
-            if previous != identity:
-                raise SyncStateRepositoryMismatch("previous repository route is not the same GitHub repository")
-            aliases.add(recorded)
-        candidates = initial.get("repository_aliases") or []
-        if not isinstance(candidates, list) or len(candidates) > 16:
-            raise SyncStateRepositoryMismatch("invalid repository alias inventory")
-        for candidate in candidates:
-            normalized = normalize_repository(candidate) if isinstance(candidate, str) else None
-            if not normalized or normalized == canonical or normalized in aliases:
-                continue
-            try:
-                observed = resolver(backend, normalized)
-            except Exception as error:
-                if getattr(error, "status", None) == 404:
-                    continue
-                raise
-            if observed == identity:
-                aliases.add(normalized)
-        if len(aliases) > 16:
-            raise SyncStateRepositoryMismatch("verified repository alias inventory exceeds bound")
+        aliases = cls._collect_verified_aliases(backend, resolver, initial, canonical, identity)
         state.repository = canonical
         state.repository_id = repository_id
         state._verified_aliases = aliases
@@ -159,17 +187,7 @@ class SyncState:
         if callable(binder):
             binder(backend, identity)
         if persist:
-            with state._locked():
-                current = state._read_unlocked()
-                binding = (current.get("repository"), current.get("repository_id"))
-                if binding != (initial.get("repository"), initial.get("repository_id")):
-                    raise SyncStateRepositoryMismatch("sync state binding changed during identity verification")
-                clean = state._safe_state(current)
-                clean.update(schema=SYNC_STATE_SCHEMA, backend=backend_name,
-                             repository=canonical, repository_id=repository_id,
-                             repository_aliases=sorted(aliases))
-                if clean != current:
-                    _atomic_write_text(state.state_file, yaml.safe_dump(clean, sort_keys=False))
+            state._persist_verified_identity(initial, backend_name, canonical, repository_id, aliases)
         backend._verified_repository = canonical
         backend._verified_repository_aliases = tuple(sorted(aliases))
         return state
@@ -185,6 +203,17 @@ class SyncState:
             raise ValueError("invalid sync state: expected mapping")
         return value
 
+    @staticmethod
+    def _parse_state_aliases(raw_aliases: object) -> set[str]:
+        aliases: set[str] = set()
+        for alias in (raw_aliases if isinstance(raw_aliases, list) else []):
+            if isinstance(alias, str):
+                try:
+                    aliases.add(normalize_repository(alias))
+                except ValueError:
+                    continue
+        return aliases
+
     def _validate_repository(self, state: dict) -> None:
         if (self.repository_id is not None and state.get("repository_id") is not None
                 and str(state["repository_id"]) != self.repository_id):
@@ -196,14 +225,7 @@ class SyncState:
             normalized = normalize_repository(str(recorded))
         except ValueError as exc:
             raise SyncStateRepositoryMismatch("sync state has invalid repository identity") from exc
-        aliases: set[str] = set()
-        for alias in state.get("repository_aliases") or []:
-            if not isinstance(alias, str):
-                continue
-            try:
-                aliases.add(normalize_repository(alias))
-            except ValueError:
-                continue
+        aliases = self._parse_state_aliases(state.get("repository_aliases"))
         accepted_alias = (normalized in self._verified_aliases if self.repository_id is not None
                           else self.repository in aliases)
         if normalized != self.repository and not accepted_alias:

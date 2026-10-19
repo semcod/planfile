@@ -196,6 +196,15 @@ def validate_ticket_dag(pf: Any, sprint: str = "current") -> tuple[bool, list[st
     return _validate_dag_python(edges, all_nodes=ticket_ids)
 
 
+def _check_dag_edges(edges: list[tuple[str, str]], all_nodes: list[str]) -> tuple[bool, list[str]]:
+    if HAS_RUST_GRAPH and _native_validate_dag is not None:
+        try:
+            return _native_validate_dag(edges, all_nodes=all_nodes, prerequisite_first=True)
+        except Exception as exc:
+            logger.debug("Native DAG validation failed in add_dependency, falling back to python: %s", exc)
+    return _validate_dag_python(edges, all_nodes=all_nodes)
+
+
 def add_dependency(pf: Any, ticket_id: str, *, after: list[str] | None = None,
                    before: list[str] | None = None) -> dict:
     """Declare ordering between EXISTING tickets (git-like sequencing primitive).
@@ -211,27 +220,13 @@ def add_dependency(pf: Any, ticket_id: str, *, after: list[str] | None = None,
 
     # Validate against dependency cycles using native validate_dag or Python fallback
     existing_tickets = list(pf.list_tickets()) if hasattr(pf, "list_tickets") else []
-    edges: list[tuple[str, str]] = []
     all_nodes = [ticket.id for ticket in existing_tickets]
-    for other in existing_tickets:
-        for dep in (other.blocked_by or []):
-            edges.append((other.id, dep))
-    for a in after:
-        edges.append((ticket_id, a))
-    for b in before:
-        edges.append((b, ticket_id))
-
-    is_dag = True
-    cycle_nodes: list[str] = []
-    if HAS_RUST_GRAPH and _native_validate_dag is not None:
-        try:
-            is_dag, cycle_nodes = _native_validate_dag(edges, all_nodes=all_nodes, prerequisite_first=True)
-        except Exception as exc:
-            logger.debug("Native DAG validation failed in add_dependency, falling back to python: %s", exc)
-            is_dag, cycle_nodes = _validate_dag_python(edges, all_nodes=all_nodes)
-    else:
-        is_dag, cycle_nodes = _validate_dag_python(edges, all_nodes=all_nodes)
-
+    edges = [
+        *[(other.id, dep) for other in existing_tickets for dep in (other.blocked_by or [])],
+        *[(ticket_id, a) for a in after],
+        *[(b, ticket_id) for b in before],
+    ]
+    is_dag, cycle_nodes = _check_dag_edges(edges, all_nodes)
     if not is_dag:
         raise DecomposeError(f"dependency cycle detected: {cycle_nodes}")
 
@@ -301,36 +296,44 @@ def group_tickets(pf: Any, group_name: str, ticket_ids: list[str]) -> list[str]:
     return updated
 
 
+def _extract_dict_item_fields(item: Any) -> tuple[str, str, list[str]]:
+    if isinstance(item, dict):
+        name = item.get("name", "")
+        st = item.get("status", "")
+        children_raw = item.get("children") or []
+    else:
+        name = getattr(item, "name", "")
+        st = getattr(item, "status", "")
+        children_raw = getattr(item, "children", None) or []
+    st_str = st.value if hasattr(st, "value") else str(st)
+    return name, st_str, list(children_raw)
+
+
+def _build_tree_from_dict(pf: dict, root_id: str) -> dict:
+    if HAS_RUST_GRAPH and _native_build_tree is not None:
+        return _native_build_tree(pf, root_id)
+    if root_id not in pf:
+        raise DecomposeError(f"ticket {root_id} not found")
+    seen: set[str] = set()
+
+    def _node_from_dict(cid: str) -> dict | None:
+        if cid in seen or cid not in pf:
+            return None
+        seen.add(cid)
+        name, st_str, children_raw = _extract_dict_item_fields(pf[cid])
+        children = [cn for child_id in children_raw if (cn := _node_from_dict(child_id)) is not None]
+        return {"id": cid, "name": name, "status": st_str, "children": children}
+
+    res = _node_from_dict(root_id)
+    if res is None:
+        raise DecomposeError(f"ticket {root_id} not found")
+    return res
+
+
 def build_tree(pf: Any, root_id: str) -> dict:
     """Nested ``{id, name, status, children:[...]}`` decomposition tree (cycle-safe)."""
     if isinstance(pf, dict):
-        if HAS_RUST_GRAPH and _native_build_tree is not None:
-            return _native_build_tree(pf, root_id)
-        if root_id not in pf:
-            raise DecomposeError(f"ticket {root_id} not found")
-        seen: set[str] = set()
-
-        def _node_from_dict(cid: str) -> dict | None:
-            if cid in seen or cid not in pf:
-                return None
-            seen.add(cid)
-            item = pf[cid]
-            name = item.get("name") if isinstance(item, dict) else getattr(item, "name", "")
-            st = item.get("status") if isinstance(item, dict) else getattr(item, "status", "")
-            st_str = st.value if hasattr(st, "value") else str(st)
-            children_raw = item.get("children") if isinstance(item, dict) else getattr(item, "children", [])
-            children = []
-            for child_id in (children_raw or []):
-                child_node = _node_from_dict(child_id)
-                if child_node is not None:
-                    children.append(child_node)
-            return {"id": cid, "name": name, "status": st_str, "children": children}
-
-        res = _node_from_dict(root_id)
-        if res is None:
-            raise DecomposeError(f"ticket {root_id} not found")
-        return res
-
+        return _build_tree_from_dict(pf, root_id)
     root = pf.get_ticket(root_id) if hasattr(pf, "get_ticket") else None
     if not root:
         raise DecomposeError(f"ticket {root_id} not found")
@@ -420,6 +423,27 @@ def merge_ticket(pf: Any, child_id: str, into_id: str) -> dict:
     return {"merged": child_id, "into": into_id, "files": len(files), "notes": note_count}
 
 
+def _kahn_execution_waves(ticket_ids: list[str], edges: list[tuple[str, str]]) -> list[list[str]]:
+    in_degree = dict.fromkeys(ticket_ids, 0)
+    adj: dict[str, list[str]] = {tid: [] for tid in ticket_ids}
+    for tid, dep in edges:
+        adj[dep].append(tid)
+        in_degree[tid] += 1
+
+    waves: list[list[str]] = []
+    current_wave = [tid for tid, deg in in_degree.items() if deg == 0]
+    while current_wave:
+        waves.append(current_wave)
+        next_wave: list[str] = []
+        for u in current_wave:
+            for v in adj[u]:
+                in_degree[v] -= 1
+                if in_degree[v] == 0:
+                    next_wave.append(v)
+        current_wave = next_wave
+    return waves
+
+
 def execution_waves(
     pf: Any,
     sprint: str = "current",
@@ -436,38 +460,15 @@ def execution_waves(
     tickets = list(pf.list_tickets(**filters)) if hasattr(pf, "list_tickets") else []
     ticket_ids = [t.id for t in tickets]
     id_set = set(ticket_ids)
-
-    edges: list[tuple[str, str]] = []
-    for t in tickets:
-        for dep in (t.blocked_by or []):
-            if dep in id_set:
-                edges.append((t.id, dep))
+    edges = [(t.id, dep) for t in tickets for dep in (t.blocked_by or []) if dep in id_set]
 
     if HAS_RUST_GRAPH and _native_execution_layers is not None:
         try:
             return _native_execution_layers(edges, all_nodes=ticket_ids, prerequisite_first=True)
         except Exception as exc:
             logger.debug("Native execution layers failed in execution_waves, falling back to python: %s", exc)
+    return _kahn_execution_waves(ticket_ids, edges)
 
-    # Python fallback (Kahn's layer traversal)
-    in_degree = dict.fromkeys(ticket_ids, 0)
-    adj: dict[str, list[str]] = {tid: [] for tid in ticket_ids}
-    for tid, dep in edges:
-        adj[dep].append(tid)
-        in_degree[tid] += 1
-
-    waves: list[list[str]] = []
-    current_wave = [tid for tid, deg in in_degree.items() if deg == 0]
-    while current_wave:
-        waves.append(current_wave)
-        next_wave = []
-        for u in current_wave:
-            for v in adj[u]:
-                in_degree[v] -= 1
-                if in_degree[v] == 0:
-                    next_wave.append(v)
-        current_wave = next_wave
-    return waves
 
 
 def calculate_critical_priority(tickets: list[Any]) -> dict[str, int]:
