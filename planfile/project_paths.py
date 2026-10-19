@@ -3,22 +3,14 @@
 from __future__ import annotations
 
 import subprocess
-from functools import lru_cache
 from pathlib import Path
 
 import yaml
 
+from planfile.utils.repository import normalize_repository
+from planfile.utils.yaml_cache import read_yaml_file as _read_yaml_file
+
 PLANFILE_DIRNAME = ".planfile"
-
-
-@lru_cache(maxsize=256)
-def _load_yaml_cached(path_str: str, mtime_ns: int) -> object:
-    return yaml.safe_load(Path(path_str).read_text(encoding="utf-8"))
-
-
-def _read_yaml_file(path: Path) -> object:
-    stat = path.stat()
-    return _load_yaml_cached(str(path.resolve()), stat.st_mtime_ns)
 
 
 class RepositoryRoutingError(RuntimeError):
@@ -50,8 +42,6 @@ def _git_root(path: Path) -> Path | None:
 
 def _configured_github_repository(project_path: Path) -> str | None:
     """Read the repository binding from the project-local integration config."""
-    from planfile.sync.state import normalize_repository
-
     for config_path in (
         project_path / "github.planfile.yaml",
         project_path / "integrations.oql.planfile.yaml",
@@ -85,8 +75,6 @@ def _validate_repository_origin(project_path: Path) -> None:
     origin = _git_value(project_path, "remote", "get-url", "origin")
     if not configured or not origin:
         return
-    from planfile.sync.state import normalize_repository
-
     try:
         actual = normalize_repository(origin)
     except ValueError:

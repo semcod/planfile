@@ -3,52 +3,23 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from functools import lru_cache
 from pathlib import Path
 
 import yaml
 from filelock import FileLock
 
 from planfile.core.fastio import _atomic_write_text
+from planfile.utils.repository import normalize_repository
+from planfile.utils.yaml_cache import read_yaml_file as _read_yaml_file
 
 SYNC_STATE_SCHEMA = "planfile.sync-state/v2"
-_REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
-
-
-@lru_cache(maxsize=256)
-def _load_yaml_cached(path_str: str, mtime_ns: int) -> object:
-    return yaml.safe_load(Path(path_str).read_text(encoding="utf-8"))
-
-
-def _read_yaml_file(path: Path) -> object:
-    stat = path.stat()
-    return _load_yaml_cached(str(path.resolve()), stat.st_mtime_ns)
 
 
 class SyncStateRepositoryMismatch(ValueError):
     """Raised when a state file belongs to a different external repository."""
-
-
-def normalize_repository(value: str | None) -> str | None:
-    """Return a stable ``owner/name`` identity for GitHub-style repositories."""
-    if value is None:
-        return None
-    candidate = str(value).strip()
-    if candidate.lower().startswith("git@github.com:"):
-        candidate = candidate[len("git@github.com:") :]
-    for prefix in ("https://github.com/", "http://github.com/", "ssh://git@github.com/"):
-        if candidate.lower().startswith(prefix):
-            candidate = candidate[len(prefix) :]
-            break
-    candidate = candidate.removesuffix("/").removesuffix(".git")
-    if not _REPOSITORY.fullmatch(candidate):
-        raise ValueError("invalid repository identity; expected owner/name")
-    owner, name = candidate.split("/", 1)
-    return f"{owner.lower()}/{name.lower()}"
 
 
 def _discover_repository(planfile_dir: Path, backend: str) -> str | None:

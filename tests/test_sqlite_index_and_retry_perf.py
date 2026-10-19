@@ -15,7 +15,7 @@ from planfile.importers.code2llm_importer import import_code2llm
 from planfile.integrations import config as integrations_config_mod
 from planfile.models import Sprint, Strategy, TaskPattern, TaskType
 from planfile.project_paths import _configured_github_repository
-from planfile.project_paths import _load_yaml_cached as paths_yaml_cache
+from planfile.utils.yaml_cache import _load_yaml_cached as paths_yaml_cache
 from planfile.runner import apply_strategy_to_tickets
 from planfile.sync import state as sync_state_mod
 from planfile.sync.retry import RetryQueue
