@@ -10,6 +10,8 @@ from planfile.core.models import (
     TaskPattern,
     TaskType,
     Ticket,
+    TicketExecutor,
+    TicketOutputs,
     TicketSource,
     TicketStatus,
 )
@@ -17,5 +19,5 @@ from planfile.core.models import (
 __all__ = [
     "TaskType", "ModelTier", "ModelHints", "Task", "TaskPattern",
     "Sprint", "Goal", "QualityGate", "Strategy",
-    "Ticket", "TicketStatus", "TicketSource",
+    "Ticket", "TicketStatus", "TicketSource", "TicketExecutor", "TicketOutputs",
 ]

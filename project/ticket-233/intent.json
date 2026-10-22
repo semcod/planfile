@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-233",
+  "summary": "Restore execution and output model compatibility exports",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-233/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/models.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7c593332be1a1b26fce9a0ea6ecbba8bf8d75cbe",
+    "targetBranch": "main",
+    "outcome": "Restore canonical TicketExecutor and TicketOutputs legacy imports consumed by ticket decomposition, fixing the reproduced ImportError in issue282.",
+    "nonGoals": [
+      "No edits to foreign ticket231 paths or lease",
+      "No model schema or execution-policy changes",
+      "No dependency manifests or test bypasses"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "The existing compatibility facade already forwards Ticket and TicketSource. Forward the existing canonical executor/output classes through the same facade, preserving class identity.",
+      "components": [
+        {
+          "name": "model-compatibility",
+          "paths": [
+            "planfile/models.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Restore two canonical aliases in the existing legacy model interface"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded alias addition; the reproduced imports fail again."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_decompose.py tests/test_semantic.py"
+        ],
+        "evidence": "project/ticket-233/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "project/governance-check.sh",
+          "protected OneDev and independent Validator exact-head delivery"
+        ],
+        "evidence": "project/ticket-233/README.md"
+      }
+    ]
+  }
+}
