@@ -75,8 +75,9 @@ def test_ticket_dsl_redacts_nested_credentials(tmp_path, monkeypatch, radar_avai
     else:
         assert description == "https://founder.test/#token=[REDACTED]"
     assert event["data"]["payload"]["sync"]["password"] == "[REDACTED]"
-    assert "abc" not in serialize(event)
-    assert "hidden" not in serialize(event)
+    # Inspect decoded data, since a random event digest may contain short text.
+    assert "#token=abc" not in json.dumps(event["data"])
+    assert '"hidden"' not in json.dumps(event["data"])
 
 
 def test_move_and_delete_are_journaled_but_delete_is_not_replayable(tmp_path):
