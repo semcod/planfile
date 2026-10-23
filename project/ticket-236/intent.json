@@ -1,1 +1,128 @@
-{"allowedPaths": ["project/ticket-236/**", "TODO.md", "project/TICKETS.md", "planfile/core/store.py", "planfile/core/ticket_radar.py", "tests/test_ticket_radar.py"], "classification": {"kind": "FEATURE", "origin": "requested", "priority": "P2"}, "conflictsWith": [], "delivery": {"acceptedBaseSha": "2c48561341b9d120af170e00acd1b5fe7b809025", "architecture": {"components": [{"name": "planfile", "paths": ["planfile/core/store.py", "planfile/core/ticket_radar.py"]}, {"name": "tests", "paths": ["tests/test_ticket_radar.py"]}], "dataChanges": [{"component": "planfile", "description": "New tickets may contain an appended advisory description block, persisted through existing storage and journal formats; no schema migration or historical rewrite.", "kind": "component-local-state"}], "decision": "Add a private adapter and integrate it through Store's shared persistence preparation path, which also covers Planfile callers using unlocked creation methods. Assess before constructing new journal payloads. Invoke ticket-radar through an argument vector and JSON stdin without a shell, network operations or output artifacts. Limit each assessment to one second, aggregate radar work to five seconds per bulk call, and captured output to 65536 bytes. Validate the bundle and assessment schemas, matching ticket identity, XS/S/M/L complexity, integer score 0\u2013100, integer minutes 1\u2013240 and strict boolean split recommendation. Render only these scalar metrics and an advisory-authority disclaimer. Existing advisory blocks are preserved. Current read-only admission reports NEW_TICKET_CANDIDATE with no clone-local blockers; this grants no write authority and must be refreshed before future implementation alongside ownership and fencing checks.", "interfaceChanges": [], "responsibilityChanges": false, "rollback": "Revert the creation hook and private adapter. Existing descriptions remain valid ordinary ticket content; no data migration, dependency removal or historical cleanup is required.", "status": "accepted", "ui": {"evidence": ["Offline tests verify bounded Markdown metrics, the advisory disclaimer and unchanged human text through existing tracker payload construction."], "impact": "single-state", "states": ["success"]}}, "budgets": {"maxAffectedComponents": 2, "maxImplementationFiles": 3, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 1}, "complexity": "M", "estimatedMinutes": 45, "nonGoals": ["No implementation, ticket allocation, file edits, commits, pushes, pull requests, merges or deployment during this planning session.", "No adoption migration, dependency manifest changes, new repository, credentials or external coordination.", "No Monag changes, tracker adapter changes, image attachments, historical ticket backfill or radar-driven execution decisions.", "No takeover, cleanup or import of ticket-231's preserved work; future implementation requires fresh admission, verified ownership and controller fencing."], "outcome": "Direct ticket creation optionally appends a bounded advisory assessment using the existing local ticket-radar executable, while ticket persistence remains independent of radar availability and validity.", "runtimeDependencies": ["Optional existing ticket-radar executable on PATH, producing subactor.ticket-radar-bundle/v1 with a subactor.ticket-radar/v1 assessment; absence is supported and requires no installation."], "targetBranch": "main", "validation": [{"commands": ["python3 -m pytest -q tests/test_ticket_radar.py -k creation"], "criterion": "AC-01", "evidence": "Exercise public Planfile and Store single/bulk entry points with a fake executable; compare returned tickets, persisted records and newly generated journal descriptions."}, {"commands": ["python3 -m pytest -q tests/test_ticket_radar.py -k description"], "criterion": "AC-02", "evidence": "Verify Unicode and Markdown preservation, empty descriptions, existing producer blocks, repeated preparation and the 512-character advisory limit."}, {"commands": ["python3 -m pytest -q tests/test_ticket_radar.py -k failure"], "criterion": "AC-03", "evidence": "Cover absent tools, nonzero exits, timeouts, bounded output capture, malformed and mismatched assessments, strict scalar validation and bulk deadline exhaustion."}, {"commands": ["python3 -m pytest -q tests/test_ticket_radar.py -k authority"], "criterion": "AC-04", "evidence": "Compare non-description ticket fields before and after enrichment and inspect existing outbound tracker payloads with mocked transports; perform no external publication."}, {"commands": ["python3 -m pytest -q tests/test_ticket_radar.py tests/test_sharded_yaml_storage.py tests/test_operational_dsl.py tests/test_ticket_create_dedupe.py tests/test_ticket_create_auto_sync.py", "python3 -m ruff check planfile/core/store.py planfile/core/ticket_radar.py tests/test_ticket_radar.py", "python3 -m pytest -q", "./project/governance-check.sh"], "criterion": "AC-05", "evidence": "Retain successful test and gate reports and verify that the material diff contains exactly the three frozen implementation paths with no public interface or dependency manifest changes."}]}, "dependsOn": [], "forbiddenPaths": ["project/ticket-*/user-*.md"], "integrationTicket": null, "schema": "new-project.intent/v3", "stacks": [], "summary": "Enable bounded, fail-open advisory ticket-radar enrichment for single and bulk direct ticket creation in issue #279.", "ticket": "ticket-236", "workstream": "application"}
+{
+  "allowedPaths": [
+    "project/ticket-236/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store.py",
+    "planfile/core/ticket_radar.py",
+    "tests/test_ticket_radar.py",
+    "tests/test_operational_dsl.py"
+  ],
+  "classification": {
+    "kind": "FEATURE",
+    "origin": "requested",
+    "priority": "P2"
+  },
+  "conflictsWith": [],
+  "delivery": {
+    "acceptedBaseSha": "2c48561341b9d120af170e00acd1b5fe7b809025",
+    "architecture": {
+      "components": [
+        {
+          "name": "planfile",
+          "paths": [
+            "planfile/core/store.py",
+            "planfile/core/ticket_radar.py"
+          ]
+        },
+        {
+          "name": "tests",
+          "paths": [
+            "tests/test_ticket_radar.py",
+            "tests/test_operational_dsl.py"
+          ]
+        }
+      ],
+      "dataChanges": [
+        {
+          "component": "planfile",
+          "description": "New tickets may contain an appended advisory description block, persisted through existing storage and journal formats; no schema migration or historical rewrite.",
+          "kind": "component-local-state"
+        }
+      ],
+      "decision": "Add a private adapter and integrate it through Store's shared persistence preparation path, which also covers Planfile callers using unlocked creation methods. Assess before constructing new journal payloads. Invoke ticket-radar through an argument vector and JSON stdin without a shell, network operations or output artifacts. Limit each assessment to one second, aggregate radar work to five seconds per bulk call, and captured output to 65536 bytes. Validate the bundle and assessment schemas, matching ticket identity, XS/S/M/L complexity, integer score 0–100, integer minutes 1–240 and strict boolean split recommendation. Render only these scalar metrics and an advisory-authority disclaimer. Existing advisory blocks are preserved. Current read-only admission reports NEW_TICKET_CANDIDATE with no clone-local blockers; this grants no write authority and must be refreshed before future implementation alongside ownership and fencing checks.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Revert the creation hook and private adapter. Existing descriptions remain valid ordinary ticket content; no data migration, dependency removal or historical cleanup is required.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [
+          "Offline tests verify bounded Markdown metrics, the advisory disclaimer and unchanged human text through existing tracker payload construction."
+        ],
+        "impact": "single-state",
+        "states": [
+          "success"
+        ]
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 4,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 1
+    },
+    "complexity": "M",
+    "estimatedMinutes": 45,
+    "nonGoals": [
+      "No implementation, ticket allocation, file edits, commits, pushes, pull requests, merges or deployment during this planning session.",
+      "No adoption migration, dependency manifest changes, new repository, credentials or external coordination.",
+      "No Monag changes, tracker adapter changes, image attachments, historical ticket backfill or radar-driven execution decisions.",
+      "No takeover, cleanup or import of ticket-231's preserved work; future implementation requires fresh admission, verified ownership and controller fencing."
+    ],
+    "outcome": "Direct ticket creation optionally appends a bounded advisory assessment using the existing local ticket-radar executable, while ticket persistence remains independent of radar availability and validity.",
+    "runtimeDependencies": [
+      "Optional existing ticket-radar executable on PATH, producing subactor.ticket-radar-bundle/v1 with a subactor.ticket-radar/v1 assessment; absence is supported and requires no installation."
+    ],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_radar.py -k creation"
+        ],
+        "criterion": "AC-01",
+        "evidence": "Exercise public Planfile and Store single/bulk entry points with a fake executable; compare returned tickets, persisted records and newly generated journal descriptions."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_radar.py -k description"
+        ],
+        "criterion": "AC-02",
+        "evidence": "Verify Unicode and Markdown preservation, empty descriptions, existing producer blocks, repeated preparation and the 512-character advisory limit."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_radar.py -k failure"
+        ],
+        "criterion": "AC-03",
+        "evidence": "Cover absent tools, nonzero exits, timeouts, bounded output capture, malformed and mismatched assessments, strict scalar validation and bulk deadline exhaustion."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_radar.py -k authority"
+        ],
+        "criterion": "AC-04",
+        "evidence": "Compare non-description ticket fields before and after enrichment and inspect existing outbound tracker payloads with mocked transports; perform no external publication."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_radar.py tests/test_sharded_yaml_storage.py tests/test_operational_dsl.py tests/test_ticket_create_dedupe.py tests/test_ticket_create_auto_sync.py",
+          "python3 -m ruff check planfile/core/store.py planfile/core/ticket_radar.py tests/test_ticket_radar.py",
+          "python3 -m pytest -q",
+          "./project/governance-check.sh"
+        ],
+        "criterion": "AC-05",
+        "evidence": "Retain successful test and gate reports and verify that the material diff contains exactly the three frozen implementation paths with no public interface or dependency manifest changes."
+      }
+    ]
+  },
+  "dependsOn": [],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "integrationTicket": null,
+  "schema": "new-project.intent/v3",
+  "stacks": [],
+  "summary": "Enable bounded, fail-open advisory ticket-radar enrichment for single and bulk direct ticket creation in issue #279.",
+  "ticket": "ticket-236",
+  "workstream": "application"
+}

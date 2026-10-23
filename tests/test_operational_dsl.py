@@ -1,3 +1,7 @@
+import json
+
+import pytest
+
 from planfile import Planfile
 from planfile.core.operational_dsl import line, parse, serialize
 
@@ -36,12 +40,43 @@ def test_ticket_creation_and_history_have_replayable_dsl(tmp_path):
     assert (entry["reason"], entry["actor"]) == ("triage", "bot:test")
 
 
-def test_ticket_dsl_redacts_nested_credentials(tmp_path):
+@pytest.mark.parametrize("radar_available", [False, True])
+def test_ticket_dsl_redacts_nested_credentials(tmp_path, monkeypatch, radar_available):
+    from planfile.core import ticket_radar
+
+    def assessment(payload, root, deadline):
+        if not radar_available:
+            raise FileNotFoundError("optional radar unavailable")
+        result = {
+            "schema": "subactor.ticket-radar/v1",
+            "ticket_ref": json.loads(payload)["id"],
+            "complexity": "S",
+            "score": 12,
+            "estimate": {"minutes": 10},
+            "split": {"recommended": False},
+        }
+        return json.dumps({
+            "schema": "subactor.ticket-radar-bundle/v1", "jsonl": json.dumps(result),
+        }).encode()
+
+    monkeypatch.setattr(ticket_radar, "_bundle", assessment)
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(name="Secret-safe", description="https://founder.test/#token=abc", sync={"password": "hidden"})
+    # Journal redaction must preserve the original model values and human text.
+    assert ticket.description.split("\n\n", 1)[0] == "https://founder.test/#token=abc"
+    assert ticket.sync["password"] == "hidden"
     event = parse(ticket.dsl)
-    assert event["data"]["payload"]["description"] == "https://founder.test/#token=[REDACTED]"
+    description = event["data"]["payload"]["description"]
+    assert description.split("\n\n", 1)[0] == "https://founder.test/#token=[REDACTED]"
+    if radar_available:
+        assert "**Ticket impact radar (advisory)**" in description
+        assert "Score: `12/100`" in description
+        assert "does not grant execution, review or merge authority" in description
+    else:
+        assert description == "https://founder.test/#token=[REDACTED]"
     assert event["data"]["payload"]["sync"]["password"] == "[REDACTED]"
+    assert "abc" not in serialize(event)
+    assert "hidden" not in serialize(event)
 
 
 def test_move_and_delete_are_journaled_but_delete_is_not_replayable(tmp_path):
