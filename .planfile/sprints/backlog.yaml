@@ -27,7 +27,7 @@ sprint:
     GITHUB-14:
       title: No title
       description: ''
-      status: open
+      status: done
       assignee: null
       labels:
       - setup
@@ -38,10 +38,27 @@ sprint:
       external_id: '14'
       backend: github
       integration: github
+      id: GITHUB-14
+      updated_at: '2026-10-23T18:05:26.281115+00:00'
+      history:
+      - action: status_change
+        actor: codex
+        by: codex
+        previous_status: open
+        status: done
+        timestamp: '2026-10-23T18:05:26.281115+00:00'
+        reason: Repository-authoritative queue reconciled to qualified GitHub terminal state; no remote mutation
+          or identity change.
+        metadata:
+          repository: semcod/planfile
+          issue: 14
+          observed_closed_at: '2026-10-22T21:25:50Z'
+          state_reason: completed
+          source_observation_sha256: 008105af8c50dd5fcc7178a30fc4d8266c88f977228e89117bdc9a029369ee43
     GITHUB-13:
       title: No title
       description: ''
-      status: open
+      status: canceled
       assignee: null
       labels:
       - setup
@@ -52,6 +69,23 @@ sprint:
       external_id: '13'
       backend: github
       integration: github
+      id: GITHUB-13
+      updated_at: '2026-10-23T18:05:26.281115+00:00'
+      history:
+      - action: status_change
+        actor: codex
+        by: codex
+        previous_status: open
+        status: canceled
+        timestamp: '2026-10-23T18:05:26.281115+00:00'
+        reason: Repository-authoritative queue reconciled to qualified GitHub terminal state; no remote mutation
+          or identity change.
+        metadata:
+          repository: semcod/planfile
+          issue: 13
+          observed_closed_at: '2026-10-22T21:25:44Z'
+          state_reason: not_planned
+          source_observation_sha256: 008105af8c50dd5fcc7178a30fc4d8266c88f977228e89117bdc9a029369ee43
     GITHUB-11:
       title: No title
       description: ''
@@ -69,7 +103,7 @@ sprint:
     GITHUB-9:
       title: No title
       description: ''
-      status: open
+      status: canceled
       assignee: null
       labels:
       - setup
@@ -80,6 +114,23 @@ sprint:
       external_id: '9'
       backend: github
       integration: github
+      id: GITHUB-9
+      updated_at: '2026-10-23T18:05:26.281115+00:00'
+      history:
+      - action: status_change
+        actor: codex
+        by: codex
+        previous_status: open
+        status: canceled
+        timestamp: '2026-10-23T18:05:26.281115+00:00'
+        reason: Repository-authoritative queue reconciled to qualified GitHub terminal state; no remote mutation
+          or identity change.
+        metadata:
+          repository: semcod/planfile
+          issue: 9
+          observed_closed_at: '2026-10-22T21:26:03Z'
+          state_reason: not_planned
+          source_observation_sha256: 008105af8c50dd5fcc7178a30fc4d8266c88f977228e89117bdc9a029369ee43
     GITHUB-8:
       title: No title
       description: ''
@@ -156,7 +207,7 @@ sprint:
     GITHUB-3:
       title: No title
       description: ''
-      status: open
+      status: done
       assignee: null
       labels:
       - planfile
@@ -167,6 +218,23 @@ sprint:
       external_id: '3'
       backend: github
       integration: github
+      id: GITHUB-3
+      updated_at: '2026-10-23T18:05:26.281115+00:00'
+      history:
+      - action: status_change
+        actor: codex
+        by: codex
+        previous_status: open
+        status: done
+        timestamp: '2026-10-23T18:05:26.281115+00:00'
+        reason: Repository-authoritative queue reconciled to qualified GitHub terminal state; no remote mutation
+          or identity change.
+        metadata:
+          repository: semcod/planfile
+          issue: 3
+          observed_closed_at: '2026-10-22T21:25:57Z'
+          state_reason: completed
+          source_observation_sha256: 008105af8c50dd5fcc7178a30fc4d8266c88f977228e89117bdc9a029369ee43
     GITHUB-2:
       title: No title
       description: ''

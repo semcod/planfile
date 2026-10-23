@@ -216,7 +216,21 @@ sprint:
       blocks: []
       created_at: '2026-04-01T16:37:59.891340'
       description: ''
-      history: []
+      history:
+      - action: status_change
+        actor: codex
+        by: codex
+        previous_status: open
+        status: done
+        timestamp: '2026-10-23T18:05:26.281115+00:00'
+        reason: Repository-authoritative queue reconciled to qualified GitHub terminal state; no remote mutation
+          or identity change.
+        metadata:
+          repository: semcod/planfile
+          issue: 15
+          observed_closed_at: '2026-10-22T21:26:08Z'
+          state_reason: completed
+          source_observation_sha256: 008105af8c50dd5fcc7178a30fc4d8266c88f977228e89117bdc9a029369ee43
       id: PLF-036
       integration:
       - github
@@ -230,10 +244,10 @@ sprint:
         timestamp: '2026-04-01T16:37:59.888815'
         tool: human
       sprint: current
-      status: open
+      status: done
       sync: {}
       title: GitHub sync test
-      updated_at: '2026-04-01T16:37:59.891344'
+      updated_at: '2026-10-23T18:05:26.281115+00:00'
     PLF-037:
       acceptance_criteria: []
       blocked_by: []

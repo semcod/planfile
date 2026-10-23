@@ -1,0 +1,133 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-235",
+  "summary": "Reconcile qualified terminal records and restore read-only scheduled GitHub observation",
+  "workstream": "infrastructure",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-235/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/scripts/observe_planfile_terminal_issues.py",
+    ".github/workflows/planfile-github-sync.yml",
+    ".github/workflows/planfile-sync-readonly.yml",
+    ".planfile/sprints/backlog.yaml",
+    ".planfile/sprints/current.yaml",
+    "tests/test_scheduled_github_sync_workflow.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-234"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8e6a798f8f62f44dc8096e4026f6c70c5aa7b341",
+    "targetBranch": "main",
+    "outcome": "Reconcile only five qualified canonical queue records and restore the paused repository-specific GitHub schedule as bounded read-only observation, qualified by actual no-reopen canaries before activation.",
+    "nonGoals": [
+      "No changes to generic/manual bidirectional sync semantics or its reusable template",
+      "No host operational queue/cache import, schema migration, renumbering or changes to unqualified records/history/mappings",
+      "Preserve blocked231and allunknownwork; no reopening authority or providerwrites",
+      "No schedule enablement until protected source merge and actual fresh read-only canary; only workflow373307624 may be enabled"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the same protected Git source and unchanged lock for the adapter. The two infrastructure-owned queue inputs get only the five qualified terminal record repairs with explicit stable IDs and audit. Separate caller/callee use read-only GitHub authority and a disposable local store; fixed inbound-only selection cannot reopen or overwrite Issues. Existing bidirectional behavior stays unchanged.",
+      "components": [
+        {
+          "name": "scheduled-queue-state",
+          "paths": [
+            ".planfile/sprints/backlog.yaml",
+            ".planfile/sprints/current.yaml"
+          ]
+        },
+        {
+          "name": "scheduled-observer",
+          "paths": [
+            ".github/workflows/planfile-github-sync.yml",
+            ".github/workflows/planfile-sync-readonly.yml",
+            ".github/scripts/observe_planfile_terminal_issues.py"
+          ]
+        },
+        {
+          "name": "scheduled-validation",
+          "paths": [
+            "tests/test_scheduled_github_sync_workflow.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional observation-id dispatch input on the existing repository-specific caller for exact run correlation",
+        "Optional observation-id input on the new read-only reusable/manual workflow; legacy reusable unchanged"
+      ],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "scheduled-queue-state",
+          "description": "Exactly GITHUB-3/9/13/14 and PLF-036: explicit id from existing stable key, qualified done/canceled state and bounded audit; no movement, new identities, schema or cross-component migration."
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Keep or disable only existing workflow373307624, preserve remote terminal Issues and primary operational data; revert this bounded source delta through protected publication if required. No registry release."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "Exact accepted-base/raw-row reconciliation proof; all unrelated records/history/mappings/cachemirrors unchanged"
+        ],
+        "evidence": "project/ticket-235/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest -q tests/test_scheduled_github_sync_workflow.py; original adapter with denying fake provider, dryrun/real/repeat/stale/exactselection"
+        ],
+        "evidence": "project/ticket-235/README.md"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Workflow read-only permissions/source+lock/correlation contract and helper lint checks"
+        ],
+        "evidence": "project/ticket-235/README.md"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "project/governance-check.sh; original hosted/native checks; independent exact-head Validator protected merge"
+        ],
+        "evidence": "project/ticket-235/README.md"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "Actual new manual read-only workflow canary on exact merged main; observe states/metadigests/results; enable only373307624; actual caller dispatch/readback"
+        ],
+        "evidence": "project/ticket-235/README.md"
+      }
+    ],
+    "runtimeDependencies": []
+  }
+}

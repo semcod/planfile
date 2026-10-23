@@ -1,0 +1,50 @@
+name: Planfile read-only terminal observation
+run-name: "Planfile read-only observation ${{ inputs.observation-id || github.run_id }}"
+
+on:
+  workflow_call:
+    inputs:
+      observation-id:
+        description: Correlation identifier for the observation receipt
+        required: false
+        type: string
+        default: scheduled
+  workflow_dispatch:
+    inputs:
+      observation-id:
+        description: Correlation identifier for this no-reopen canary
+        required: false
+        type: string
+        default: manual
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: read
+    steps:
+      - name: Check out the exact workflow subject
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Set up supported Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+      - name: Install the qualified dependency tool
+        run: python -m pip install --disable-pip-version-check uv==0.11.30
+      - name: Install the same source and locked runtime dependencies
+        run: uv sync --locked --no-dev --python 3.13
+      - name: Observe only qualified terminal records
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLANFILE_OBSERVATION_ID: ${{ inputs.observation-id }}
+        run: >-
+          uv run --no-sync python
+          .github/scripts/observe_planfile_terminal_issues.py
