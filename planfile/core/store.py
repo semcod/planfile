@@ -2165,9 +2165,12 @@ class Store(StoreFileMixin, TicketStoreMixin):
             return self._create_tickets_bulk_unlocked(tickets)
 
     def _create_tickets_bulk_unlocked(self, tickets: list[Ticket]) -> list[Ticket]:
+        from planfile.core.ticket_radar import BULK_SECONDS
+
         index_was_current = self._begin_index_mutation()
+        radar_deadline = time.monotonic() + BULK_SECONDS
         for ticket in tickets:
-            self._prepare_ticket_for_persistence(ticket)
+            self._prepare_ticket_for_persistence(ticket, radar_deadline=radar_deadline)
         grouped: dict[str, list[Ticket]] = {}
         for ticket in tickets:
             grouped.setdefault(ticket.sprint or "current", []).append(ticket)
@@ -2272,12 +2275,16 @@ class Store(StoreFileMixin, TicketStoreMixin):
             tickets.extend(model_tuple)
         return self._apply_filters(tickets, **filters)
 
-    def _prepare_ticket_for_persistence(self, ticket: Ticket) -> None:
+    def _prepare_ticket_for_persistence(
+        self, ticket: Ticket, *, radar_deadline: float | None = None,
+    ) -> None:
         from planfile.core.operational_dsl import line as operational_line
+        from planfile.core.ticket_radar import _enrich_description
 
         if ticket.contract_version is None:
             ticket.contract_version = TICKET_CONTRACT_VERSION
         if not ticket.dsl:
+            _enrich_description(ticket, self.project_dir, deadline=radar_deadline)
             payload = ticket.model_dump(mode="json", exclude_none=True, exclude={"dsl", "history"})
             ticket.dsl = operational_line(
                 timestamp=ticket.created_at,
