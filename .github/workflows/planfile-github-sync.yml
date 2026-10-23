@@ -1,18 +1,19 @@
-# Caller workflow for Planfile GitHub Issues synchronization.
-# To enable in a member repository:
-# 1. Copy this file to .github/workflows/planfile-github-sync.yml
-# 2. Ensure repository settings allow GitHub Actions with:
-#    - Read access to repository contents
-#    - Read and write access to Issues
-# 3. Runs hourly (at :17), on manual workflow_dispatch, and on push to main
-#    when .planfile or ticket files change.
-
+# Repository-specific, read-only observation of five qualified terminal records.
+# The general bidirectional member template/reusable workflow stays separate.
+# Disposable inbound state is never pushed back into the repository or Issues.
 name: Planfile GitHub sync
+run-name: "Planfile GitHub sync ${{ inputs.observation-id || github.run_id }}"
 
 on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
+    inputs:
+      observation-id:
+        description: Correlation identifier for this read-only canary
+        required: false
+        type: string
+        default: manual
   push:
     branches: [main]
     paths:
@@ -29,13 +30,13 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
+  issues: read
 
 jobs:
   sync:
-    uses: semcod/planfile/.github/workflows/planfile-sync-reusable.yml@v0.1.126
+    uses: ./.github/workflows/planfile-sync-readonly.yml
     with:
-      planfile-version: "0.1.126"
+      observation-id: ${{ inputs.observation-id || format('scheduled-{0}', github.run_id) }}
     permissions:
       contents: read
-      issues: write
+      issues: read
