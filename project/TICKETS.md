@@ -129,6 +129,12 @@ This file indexes governance tickets without taking ownership of
 | **ticket-217** | [`README.md`](./ticket-217/README.md) | - | - | - | - | - |
 | **ticket-218** | [`README.md`](./ticket-218/README.md) | - | - | - | - | - |
 | **ticket-220** | [`README.md`](./ticket-220/README.md) | - | - | - | - | - |
+| **ticket-226** | [`README.md`](./ticket-226/README.md) | - | - | - | - | - |
+| **ticket-227** | [`README.md`](./ticket-227/README.md) | - | - | - | - | - |
+| **ticket-228** | [`README.md`](./ticket-228/README.md) | - | - | - | - | - |
+| **ticket-229** | [`README.md`](./ticket-229/README.md) | - | - | - | - | - |
+| **ticket-230** | [`README.md`](./ticket-230/README.md) | - | - | - | - | - |
+| **ticket-231** | [`README.md`](./ticket-231/README.md) | - | - | - | - | - |
 | **ticket-233** | [`README.md`](./ticket-233/README.md) | - | - | - | - | - |
 | **ticket-234** | [`README.md`](./ticket-234/README.md) | - | - | - | - | - |
 | **ticket-235** | [`README.md`](./ticket-235/README.md) | - | - | - | - | - |
