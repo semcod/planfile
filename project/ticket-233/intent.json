@@ -1,0 +1,90 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-233",
+  "summary": "Restore model compatibility and canonical DSL ticket creation diagnostics",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-233/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/models.py",
+    "planfile/dsl/executor.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7c593332be1a1b26fce9a0ea6ecbba8bf8d75cbe",
+    "targetBranch": "main",
+    "outcome": "Restore canonical model compatibility exports and repair the three reproduced DSL creation/blocked-query regressions so ordinary full-matrix Planfile publication can pass.",
+    "nonGoals": [
+      "No import of the broad blocked231 refactor or edits in its preserved checkout",
+      "No model schemas, execution policy, dependencies or test bypasses",
+      "No historical approval fabrication or main merge before all protected checks pass"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the existing canonical class aliases, consume the payload name independently of command-target precedence, and retain blocked-query diagnostic context in the private shared listing helper. Previously reserved executor scope is free after authenticated owner-free recovery and blocked preservation of231.",
+      "components": [
+        {
+          "name": "model-compatibility",
+          "paths": [
+            "planfile/models.py"
+          ]
+        },
+        {
+          "name": "dsl-ticket-integration",
+          "paths": [
+            "planfile/dsl/executor.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Restore two canonical aliases in the existing legacy model interface"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded alias addition; the reproduced imports fail again."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "Existing decomposition/semantic and DSL URI/error-signal regressions; unchanged full Python3.10/3.11/3.13 matrix"
+        ],
+        "evidence": "project/ticket-233/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "project/governance-check.sh",
+          "protected OneDev and independent Validator exact-head delivery"
+        ],
+        "evidence": "project/ticket-233/README.md"
+      }
+    ]
+  }
+}
