@@ -42,7 +42,10 @@
           "compose*.yml",
           "compose*.yaml",
           "infra/**",
-          ".github/**"
+          ".github/**",
+          ".planfile/sprints/backlog.yaml",
+          ".planfile/sprints/current.yaml",
+          "tests/test_scheduled_github_sync_workflow.py"
         ]
       },
       "governance": {
