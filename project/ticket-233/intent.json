@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-233",
-  "summary": "Restore execution and output model compatibility exports",
+  "summary": "Restore model compatibility and canonical DSL ticket creation diagnostics",
   "workstream": "application",
   "classification": {
     "kind": "BUG",
@@ -12,7 +12,8 @@
     "project/ticket-233/**",
     "TODO.md",
     "project/TICKETS.md",
-    "planfile/models.py"
+    "planfile/models.py",
+    "planfile/dsl/executor.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -24,28 +25,34 @@
   "delivery": {
     "acceptedBaseSha": "7c593332be1a1b26fce9a0ea6ecbba8bf8d75cbe",
     "targetBranch": "main",
-    "outcome": "Restore canonical TicketExecutor and TicketOutputs legacy imports consumed by ticket decomposition, fixing the reproduced ImportError in issue282.",
+    "outcome": "Restore canonical model compatibility exports and repair the three reproduced DSL creation/blocked-query regressions so ordinary full-matrix Planfile publication can pass.",
     "nonGoals": [
-      "No edits to foreign ticket231 paths or lease",
-      "No model schema or execution-policy changes",
-      "No dependency manifests or test bypasses"
+      "No import of the broad blocked231 refactor or edits in its preserved checkout",
+      "No model schemas, execution policy, dependencies or test bypasses",
+      "No historical approval fabrication or main merge before all protected checks pass"
     ],
     "complexity": "S",
-    "estimatedMinutes": 20,
+    "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 1,
-      "maxAffectedComponents": 1,
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "The existing compatibility facade already forwards Ticket and TicketSource. Forward the existing canonical executor/output classes through the same facade, preserving class identity.",
+      "decision": "Keep the existing canonical class aliases, consume the payload name independently of command-target precedence, and retain blocked-query diagnostic context in the private shared listing helper. Previously reserved executor scope is free after authenticated owner-free recovery and blocked preservation of231.",
       "components": [
         {
           "name": "model-compatibility",
           "paths": [
             "planfile/models.py"
+          ]
+        },
+        {
+          "name": "dsl-ticket-integration",
+          "paths": [
+            "planfile/dsl/executor.py"
           ]
         }
       ],
@@ -66,7 +73,7 @@
       {
         "criterion": "AC-01",
         "commands": [
-          "pytest tests/test_decompose.py tests/test_semantic.py"
+          "Existing decomposition/semantic and DSL URI/error-signal regressions; unchanged full Python3.10/3.11/3.13 matrix"
         ],
         "evidence": "project/ticket-233/README.md"
       },

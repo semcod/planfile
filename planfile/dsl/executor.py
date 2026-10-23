@@ -188,11 +188,11 @@ class DSLExecutor:
             return self._proposal_result("block_ticket", cmd_act, msg, data_action=data_act)
         return None
 
-    def _combined_sprint_tickets(self) -> list[Any]:
+    def _combined_sprint_tickets(self, *, error_context: str = "combined sprint tickets") -> list[Any]:
         try:
             tickets = self.pf.list_tickets(sprint="current") + self.pf.list_tickets(sprint="all")
         except Exception as exc:
-            logger.debug("Failed to list combined sprint tickets: %s", exc)
+            logger.debug("Failed to list %s: %s", error_context, exc)
             return []
         seen: set[str] = set()
         out = []
@@ -208,7 +208,8 @@ class DSLExecutor:
         return getattr(t, "status", "") == "blocked" or bool(exec_obj and getattr(exec_obj, "state", None) in ("failed", "waiting_input", "blocked"))
 
     def _query_blocked_tickets(self) -> DSLResult:
-        blocked = [t for t in self._combined_sprint_tickets() if self._is_blocked_ticket(t)]
+        tickets = self._combined_sprint_tickets(error_context="tickets for blocked queries")
+        blocked = [t for t in tickets if self._is_blocked_ticket(t)]
         msg = (
             "Wszystkie zadania postępują prawidłowo. Brak zablokowanych zadań w bieżącym sprincie."
             if not blocked
@@ -470,7 +471,8 @@ class DSLExecutor:
         if obj == "ticket":
             params = dict(cmd.params)
             params.pop("title", None)
-            name = cmd.target or params.pop("name", None)
+            payload_name = params.pop("name", None)
+            name = cmd.target or payload_name
             if not name:
                 return DSLResult(ok=False, command=cmd.to_dict(), error="Ticket name required.")
             dry_run = bool(params.pop("dry_run", False)) or params.get("mode") == "dry-run"
