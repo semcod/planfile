@@ -61,22 +61,24 @@ def test_ticket_dsl_redacts_nested_credentials(tmp_path, monkeypatch, radar_avai
 
     monkeypatch.setattr(ticket_radar, "_bundle", assessment)
     pf = Planfile(str(tmp_path))
-    ticket = pf.create_ticket(name="Secret-safe", description="https://founder.test/#token=abc", sync={"password": "hidden"})
+    human_description = "https://founder.test/#token=placeholder-redaction-example"
+    redacted_description = human_description.replace("placeholder-redaction-example", "[REDACTED]")
+    ticket = pf.create_ticket(name="Secret-safe", description=human_description, sync={"password": "hidden"})
     # Journal redaction must preserve the original model values and human text.
-    assert ticket.description.split("\n\n", 1)[0] == "https://founder.test/#token=abc"
+    assert ticket.description.split("\n\n", 1)[0] == human_description
     assert ticket.sync["password"] == "hidden"
     event = parse(ticket.dsl)
     description = event["data"]["payload"]["description"]
-    assert description.split("\n\n", 1)[0] == "https://founder.test/#token=[REDACTED]"
+    assert description.split("\n\n", 1)[0] == redacted_description
     if radar_available:
         assert "**Ticket impact radar (advisory)**" in description
         assert "Score: `12/100`" in description
         assert "does not grant execution, review or merge authority" in description
     else:
-        assert description == "https://founder.test/#token=[REDACTED]"
+        assert description == redacted_description
     assert event["data"]["payload"]["sync"]["password"] == "[REDACTED]"
     # Inspect decoded data, since a random event digest may contain short text.
-    assert "#token=abc" not in json.dumps(event["data"])
+    assert "placeholder-redaction-example" not in json.dumps(event["data"])
     assert '"hidden"' not in json.dumps(event["data"])
 
 

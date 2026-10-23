@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import selectors
+import signal
 import sys
 import textwrap
 import time
@@ -244,38 +247,62 @@ def test_failure_valid_bundle_exceeding_output_limit_is_rejected(tmp_path, fake_
     assert ticket.description == DESCRIPTION
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="Linux process-state observation")
 def test_failure_timeout_stops_descendants_holding_pipes(tmp_path, fake_radar, monkeypatch):
     child_path = tmp_path / "child.pid"
-    fake_radar(
+    script = fake_radar(
         prelude=f"""
-        if os.fork() == 0:
-            with open({str(child_path)!r}, 'w') as stream:
-                stream.write(str(os.getpid()))
-            time.sleep(30)
-            os._exit(0)
-        sys.exit(0)
+        if os.name == 'posix':
+            if os.fork() == 0:
+                with open({str(child_path)!r}, 'w') as stream:
+                    stream.write(str(os.getpid()))
+                time.sleep(30)
+                os._exit(0)
+            sys.exit(0)
+        time.sleep(30)
     """
     )
-    monkeypatch.setattr(radar, "ASSESSMENT_SECONDS", 0.3)
-    ticket = Ticket(id="PLF-001", name="Inherited pipes", description=DESCRIPTION)
-    started = time.monotonic()
-    radar._enrich_description(ticket, tmp_path)
-    assert time.monotonic() - started < 2
-    assert ticket.description == DESCRIPTION
-    # A killed child may remain a zombie briefly until the host reaps it.
-    from pathlib import Path
+    processes = []
+    spawn = radar.subprocess.Popen
 
-    status = Path(f"/proc/{child_path.read_text()}/stat")
-    for _ in range(50):
-        try:
-            if status.read_text().split()[2] == "Z":
-                break
-        except FileNotFoundError:
-            break
-        time.sleep(0.01)
-    else:
-        pytest.fail("radar descendant survived the deadline")
+    def capture_pipe(command, **kwargs):
+        assert command[0] == "ticket-radar"
+        if os.name == "posix":
+            assert kwargs["start_new_session"]
+        # Start the same fixture explicitly so the test needs no platform launcher.
+        process = spawn([sys.executable, str(script), *command[1:]], **kwargs)
+        processes.append((process, os.dup(process.stdout.fileno())))
+        return process
+
+    monkeypatch.setattr(radar.subprocess, "Popen", capture_pipe)
+    monkeypatch.setattr(radar, "ASSESSMENT_SECONDS", 0.6)
+    try:
+        ticket = Ticket(id="PLF-001", name="Inherited pipes", description=DESCRIPTION)
+        started = time.monotonic()
+        radar._enrich_description(ticket, tmp_path)
+        assert time.monotonic() - started < 2
+        assert ticket.description == DESCRIPTION
+        assert len(processes) == 1
+        process, pipe = processes[0]
+        assert process.poll() is not None
+        if os.name == "posix":
+            assert child_path.is_file()
+            # EOF proves every writer closed, including a killed, unreaped child.
+            # This avoids Linux-specific process-state files and omitted cases.
+            with selectors.DefaultSelector() as selector:
+                selector.register(pipe, selectors.EVENT_READ)
+                assert selector.select(0.5), "radar descendant still owns stdout"
+                assert os.read(pipe, 1) == b""
+    finally:
+        for process, pipe in processes:
+            if os.name == "posix":
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            elif process.poll() is None:
+                process.kill()
+                process.wait(timeout=1)
+            os.close(pipe)
 
 
 def test_failure_bulk_deadline_preserves_remaining_tickets(tmp_path, fake_radar, monkeypatch):

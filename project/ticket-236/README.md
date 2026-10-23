@@ -25,6 +25,8 @@ The private adapter invokes the existing optional ticket-radar executable withou
 
 The required operational-journal regression now exercises both an unavailable radar and a valid assessment, checking that appended advisory text preserves nested credential redaction. This adds one existing test file to the accepted scope and raises the implementation-file budget from three to four, within the unchanged S profile. No new runtime dependency or product objective is introduced.
 
+Process cleanup is verified through closure of real pipes, including inherited writer handles, without Linux-specific process-state files or an omitted platform case. Credential examples use explicit inert placeholders.
+
 ## Validation and continuation
 
 The original native attempt recorded 63 passing radar tests, one incompatible legacy description assertion, and a governance refusal caused by machine-local paths in its ticket README. Original logs and the previous README remain in external continuation receipts. Those historical results do not establish publication readiness.
