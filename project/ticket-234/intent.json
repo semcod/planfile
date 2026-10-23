@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-234",
+  "summary": "Declare infrastructure ownership for scheduled sync queue inputs",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-234/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".governance/manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d67ca0728d0c6d98807a298acfc39ee92fae884a",
+    "targetBranch": "main",
+    "outcome": "Declare the three exact infrastructure-owned inputs needed by the separately reviewed scheduled GitHub sync repair for issue280.",
+    "nonGoals": [
+      "No queue record changes, workflow edits, runtime deployment or schedule enablement in this preparatory ownership ticket",
+      "Preserve all unknown dirty231source and the host operationalqueue",
+      "Do not widen ownership retroactively in an implementation ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Infrastructure already owns .github/**; declare two committed scheduled reconciliation queue inputs and the exact behavior-test path before a subsequent infrastructure delivery. Existing application and integration ownership remain unchanged. This is additive coordination permission for future infrastructure inputs, not movement of product-module responsibilities or persistent records: the exact current diff adds3strings, removes no owners, moves no files and changes no queue data. No implementation budget changes.",
+      "components": [
+        {
+          "name": "scheduled-sync-ownership",
+          "paths": [
+            ".governance/manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the exact three ownedPaths additions; no runtime or queue data changes in this preparatory ticket."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "ExactJSONdelta verification against accepted base: onlythreeinfrastructureownedPaths added"
+        ],
+        "evidence": "project/ticket-234/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "OriginalrequiredCIand independentValidator protectedexacthead merge"
+        ],
+        "evidence": "project/ticket-234/README.md"
+      }
+    ],
+    "runtimeDependencies": []
+  }
+}
