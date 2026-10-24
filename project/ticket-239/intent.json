@@ -1,0 +1,105 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-239",
+  "summary": "Keep ticket lifecycle writes independent of background index repair",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-239/**",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "planfile/api/server.py",
+    "tests/test_sqlite_ticket_index.py",
+    "tests/test_ticket_execution.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f24f8dea50d528fdf69d0b1a4b91c561410dfb15",
+    "targetBranch": "main",
+    "outcome": "Prevent background disposable projection repair from blocking authoritative ready/complete/fail writes; test and publish through native OneDev and independent Validator. Activate reviewed runtime separately.",
+    "nonGoals": [
+      "Change synchronization paths owned by ticket-238",
+      "Change CAS, canonical receipt, terminal immutability or attempt semantics",
+      "Delete locks or terminate unknown owners"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use existing independent cross-process index lock and optimistic source-signature retries; lifecycle exact reads fall back to durable records instead of rebuilding the disposable index.",
+      "components": [
+        {
+          "name": "Planfile API and lifecycle",
+          "paths": [
+            "planfile/api/server.py",
+            "planfile/__init__.py"
+          ]
+        },
+        {
+          "name": "Regression coverage",
+          "paths": [
+            "tests/test_sqlite_ticket_index.py",
+            "tests/test_ticket_execution.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert scoped source through protected delivery; preserve operational tickets, receipts and attempts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_ticket_execution.py tests/test_store_lock_timeout.py"
+        ],
+        "evidence": "Paused background rebuild permits concurrent canonical lifecycle commit before release"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_ticket_execution.py tests/test_store_lock_timeout.py"
+        ],
+        "evidence": "Source race rebuilds and coalescing tests pass"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_ticket_execution.py tests/test_store_lock_timeout.py"
+        ],
+        "evidence": "Current and sharded stale-index lifecycle tests preserve states and counters"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "./project/governance-check.sh",
+          "python -m ruff check --no-cache planfile/__init__.py planfile/api/server.py tests/test_sqlite_ticket_index.py tests/test_ticket_execution.py"
+        ],
+        "evidence": "Exact frozen head released before protected native OneDev and independent Validator publication"
+      }
+    ]
+  }
+}

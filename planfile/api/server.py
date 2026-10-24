@@ -1886,13 +1886,14 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
 
 
 def _repair_ticket_index_if_unchanged(expected_signature: tuple) -> dict:
-    """Repair one stale projection from a mutation-stable durable snapshot."""
+    """Repair a settled candidate without blocking authoritative lifecycle writes."""
     store = get_planfile().store
-    with store.mutation_lock():
-        current_signature = store._ticket_index_signature()
-        if current_signature != expected_signature:
-            return {"rebuilt": False, "deferred": True}
-        return store.ensure_ticket_index()
+    if store._ticket_index_signature() != expected_signature:
+        return {"rebuilt": False, "deferred": True}
+    # ensure_ticket_index coalesces rebuilders with its own cross-process lock
+    # and retries source-signature races. A disposable projection must never
+    # hold the YAML mutation lock while scanning the entire ticket history.
+    return store.ensure_ticket_index()
 
 
 async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:

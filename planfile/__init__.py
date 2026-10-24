@@ -507,7 +507,7 @@ class Planfile:
         actor: str | None = None,
         expected_updated_at: str | None = None,
     ) -> Ticket | None:
-        ticket = self.get_ticket(ticket_id)
+        ticket = self.get_ticket(ticket_id, repair_index=False)
         if not ticket:
             return None
 
@@ -547,7 +547,7 @@ class Planfile:
         actor: str | None = None,
         expected_updated_at: str | None = None,
     ) -> Ticket | None:
-        ticket = self.get_ticket(ticket_id)
+        ticket = self.get_ticket(ticket_id, repair_index=False)
         if not ticket:
             return None
 
@@ -676,7 +676,7 @@ class Planfile:
         return self.update_ticket(ticket_id, reason=reason, actor=actor, **updates)
 
     def ready_ticket(self, ticket_id: str, note: str | None = None, *, reason: str | None = None, actor: str | None = None) -> Ticket | None:
-        ticket = self.get_ticket(ticket_id)
+        ticket = self.get_ticket(ticket_id, repair_index=False)
         if not ticket:
             return None
 
@@ -693,7 +693,7 @@ class Planfile:
             source_sprint, _ = located
             if source_sprint.startswith(("history-", "archive-")):
                 self.store.move_ticket(ticket_id, "current")
-                ticket = self.get_ticket(ticket_id)
+                ticket = self.get_ticket(ticket_id, repair_index=False)
                 if not ticket:
                     return None
 

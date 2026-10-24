@@ -40,30 +40,6 @@ def test_legacy_completed_terminal_is_projected_as_done_without_rewriting_yaml(t
     assert authoritative["sprint"]["tickets"][ticket.id]["execution"]["state"] == "completed"
 
 
-def test_legacy_completed_terminal_is_projected_as_done_without_rewriting_yaml(tmp_path):
-    pf = Planfile(str(tmp_path))
-    ticket = pf.create_ticket(
-        name="Historical completed terminal",
-        execution=TicketExecution(state="running"),
-    )
-    sprint_path = tmp_path / ".planfile" / "sprints" / "current.yaml"
-    stored = yaml.safe_load(sprint_path.read_text(encoding="utf-8"))
-    raw_ticket = stored["sprint"]["tickets"][ticket.id]
-    raw_ticket["status"] = "completed"
-    raw_ticket["execution"]["state"] = "completed"
-    sprint_path.write_text(yaml.safe_dump(stored, sort_keys=False), encoding="utf-8")
-
-    loaded = pf.get_ticket(ticket.id)
-
-    assert loaded is not None
-    assert loaded.status == "done"
-    assert loaded.execution is not None
-    assert loaded.execution.state == "done"
-    authoritative = yaml.safe_load(sprint_path.read_text(encoding="utf-8"))
-    assert authoritative["sprint"]["tickets"][ticket.id]["status"] == "completed"
-    assert authoritative["sprint"]["tickets"][ticket.id]["execution"]["state"] == "completed"
-
-
 def test_ticket_round_trip_with_execution_fields(tmp_path):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(
@@ -374,7 +350,7 @@ def test_immutable_terminal_ticket_rejects_ordinary_reopen(tmp_path, terminal_st
         name="Immutable terminal lifecycle",
         execution=TicketExecution(state="running", assigned_to="bot:test"),
     )
-    terminal = pf.update_ticket(ticket.id, status=terminal_status)
+    pf.update_ticket(ticket.id, status=terminal_status)
 
     with pytest.raises(ImmutableTerminalReopenError, match="immutable_terminal_reopen"):
         pf.update_ticket(
@@ -671,3 +647,36 @@ def test_annotate_blockers_is_noop_when_no_blockers(tmp_path):
     _annotate_blockers(pf, data)
     assert "blocker_states" not in data
     assert "resolved_blockers" not in data
+
+
+@pytest.mark.parametrize("operation", ["ready", "complete", "fail"])
+@pytest.mark.parametrize("sharded", [False, True])
+def test_lifecycle_write_does_not_repair_stale_projection(tmp_path, monkeypatch, operation, sharded):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Durable lifecycle despite stale projection",
+        execution=TicketExecution(state="running", max_attempts=2),
+    )
+    if sharded:
+        pf.store.migrate_to_sharded_yaml(shard_size=5)
+    pf.store.configure_ticket_index(True)
+    pf.store._sqlite_ticket_index().reset()
+
+    def unexpected_rebuild(*args, **kwargs):
+        raise AssertionError("lifecycle mutation must not rebuild the projection")
+
+    monkeypatch.setattr(pf.store, "ensure_ticket_index", unexpected_rebuild)
+    if operation == "ready":
+        updated = pf.ready_ticket(ticket.id)
+        assert updated.execution.state == "ready"
+        assert updated.execution.attempt == 0
+    elif operation == "complete":
+        updated = pf.complete_ticket(ticket.id, result={"ok": True})
+        assert updated.status == "done"
+        assert updated.outputs.result == {"ok": True}
+        assert updated.execution.attempt == 0
+    else:
+        updated = pf.fail_ticket(ticket.id, error="failed query")
+        assert updated.execution.state == "ready"
+        assert updated.execution.attempt == 1
+    assert pf.get_ticket(ticket.id, repair_index=False).model_dump(exclude={"sprint"}) == updated.model_dump(exclude={"sprint"})
