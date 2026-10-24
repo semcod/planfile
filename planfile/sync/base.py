@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_serializer
+
+_PRIORITY_UNSET = object()
 
 
 class TicketRef(BaseModel):
@@ -25,8 +27,17 @@ class TicketState(BaseModel):
     status: str
     assignee: str | None = None
     labels: list[str] = []
+    # Keep malformed supplied evidence intact for the inbound diagnostic boundary.
+    priority: Any = None
     updated_at: str | None = None
     metadata: dict[str, Any] = {}
+
+    @model_serializer(mode="wrap")
+    def serialize_state(self, handler):
+        data = handler(self)
+        if "priority" not in self.model_fields_set:
+            data.pop("priority", None)
+        return data
 
 
 class PMBackend(Protocol):
@@ -236,6 +247,7 @@ class BasePMBackend(ABC):
         labels: list[str] | None = None,
         updated_at: str | None = None,
         metadata: dict[str, Any] | None = None,
+        priority: Any = _PRIORITY_UNSET,
     ) -> TicketState:
         """Build a TicketState with consistent defaults."""
         return TicketState(
@@ -249,4 +261,5 @@ class BasePMBackend(ABC):
             labels=labels or [],
             updated_at=updated_at,
             metadata=self.prepare_metadata(metadata),
+            **({"priority": priority} if priority is not _PRIORITY_UNSET else {}),
         )

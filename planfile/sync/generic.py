@@ -22,7 +22,7 @@ class GenericBackend(BasePMBackend):
     ):
         """
         Initialize generic backend.
-        
+
         Args:
             base_url: Base URL for the API
             api_key: API key for authentication
@@ -237,4 +237,5 @@ class GenericBackend(BasePMBackend):
             assignee=ticket_data.get("assignee"),
             labels=ticket_data.get("labels", []),
             updated_at=ticket_data.get("updated_at"),
+            **({"priority": ticket_data["priority"]} if "priority" in ticket_data else {}),
         )
