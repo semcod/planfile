@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import selectors
 import signal
 import subprocess
@@ -16,6 +17,28 @@ ASSESSMENT_SECONDS = 1.0
 BULK_SECONDS = 5.0
 MAX_OUTPUT_BYTES = 65536
 ADVISORY_HEADING = "**Ticket impact radar (advisory)**"
+_ADVISORY_TRAILER = re.compile(
+    r"\n\n" + re.escape(ADVISORY_HEADING) + r"\n\n"
+    r"- Complexity: `(?:XS|S|M|L)`\n"
+    r"- Score: `(?:100|[1-9]?[0-9])/100`\n"
+    r"- Estimated effort: `(?:[1-9]|[1-9][0-9]|1[0-9]{2}|2[0-3][0-9]|240) min`\n"
+    r"- Split recommended: `(?:yes|no)`\n\n"
+    r"This estimate does not grant execution, review or merge authority\.\Z"
+)
+
+
+def _human_description(description: str) -> str:
+    """Project task text without the complete bounded generated radar suffix.
+
+    Match the existing formatter exactly, including scalar bounds and the final
+    disclaimer. Headings, incomplete lookalikes and non-trailing blocks remain
+    human content. The stored description is never changed by this projection.
+    """
+    tail = description[-512:]
+    match = _ADVISORY_TRAILER.search(tail)
+    if match is None:
+        return description
+    return description[:len(description) - len(tail) + match.start()]
 
 
 def _bundle(payload: bytes, root: Path, deadline: float) -> bytes:

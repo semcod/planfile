@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import time
+from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from planfile.analysis.file_analyzer import FileAnalyzer
@@ -97,26 +99,29 @@ def test_health_timeout_is_structured_and_nonzero(tmp_path, monkeypatch):
     assert str(tmp_path.resolve()) in payload["diagnostics"][0]["message"]
 
 
-def test_file_analyzer_excludes_operational_directories(tmp_path):
+@pytest.mark.parametrize("parent", ["", ".worktrees", ".subactor", "analyses"])
+def test_file_analyzer_excludes_operational_directories(tmp_path, parent):
+    project = tmp_path / parent / "project" if parent else tmp_path
+    project.mkdir(parents=True, exist_ok=True)
     # Setup operational directories with yaml files
     operational_dirs = [".subactor", ".worktrees", ".planfile", ".governance", ".intent", "analyses"]
     for op_dir in operational_dirs:
-        nested = tmp_path / op_dir / "nested"
+        nested = project / op_dir / "nested"
         nested.mkdir(parents=True)
         (nested / "item.yaml").write_text("TODO: operational issue\n", encoding="utf-8")
 
     # Setup valid source directory
-    src = tmp_path / "src"
+    src = project / "src"
     src.mkdir(parents=True)
     (src / "app.yaml").write_text("TODO: source issue\n", encoding="utf-8")
 
     analyzer = FileAnalyzer()
-    result = analyzer.analyze_directory(tmp_path)
+    result = analyzer.analyze_directory(project)
 
-    analyzed = result["analyzed_files"]
-    assert any("app.yaml" in f for f in analyzed)
+    analyzed = [Path(f).relative_to(project.resolve()) for f in result["analyzed_files"]]
+    assert set(analyzed) == {Path("src/app.yaml")}
     for op_dir in operational_dirs:
-        assert not any(op_dir in f for f in analyzed)
+        assert not any(op_dir in f.parts for f in analyzed)
 
 
 def test_file_analyzer_skips_large_file_with_diagnostic(tmp_path):
@@ -167,11 +172,11 @@ def test_file_analyzer_excludes_all_hidden_directories_except_github(tmp_path):
 
     analyzer = FileAnalyzer()
     result = analyzer.analyze_directory(tmp_path)
-    analyzed = result["analyzed_files"]
+    analyzed = [Path(f).relative_to(tmp_path.resolve()) for f in result["analyzed_files"]]
 
-    assert any("ci.yml" in f for f in analyzed)
+    assert set(analyzed) == {Path(".github/workflows/ci.yml")}
     for hd in hidden_dirs:
-        assert not any(hd in f for f in analyzed)
+        assert not any(hd in f.parts for f in analyzed)
 
 
 def test_file_analyzer_prioritizes_single_file_bounding_over_repo_byte_budget(tmp_path):
