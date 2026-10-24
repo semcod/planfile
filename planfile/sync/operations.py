@@ -10,6 +10,7 @@ from typing import Any
 
 from rich.console import Console
 
+from planfile.sync.priority import normalize_inbound_priority
 from planfile.sync.state import SyncState, normalize_repository
 
 logger = logging.getLogger(__name__)
@@ -548,11 +549,12 @@ def _process_external_ticket(
         if not (matches_local or matches_remote):
             return imported_count, updated_count
 
-    if dry_run:
-        _print_dry_run_action(planfile_id, ext_data)
-        return imported_count, updated_count
-
     try:
+        if dry_run:
+            if not planfile_id:
+                normalize_inbound_priority(ext_data)
+            _print_dry_run_action(planfile_id, ext_data)
+            return imported_count, updated_count
         if planfile_id:
             target = sections.get(sprint_name or "")
             if target is None:
@@ -681,7 +683,14 @@ def sync_from_external(
 def _extract_ticket_data(ext_ticket) -> dict:
     """Extract standardized ticket data from external ticket (dict or Pydantic model)."""
     if hasattr(ext_ticket, "id"):
+        fields_set = getattr(ext_ticket, "model_fields_set", None)
+        priority = (
+            {"priority": ext_ticket.priority}
+            if hasattr(ext_ticket, "priority")
+            and (fields_set is None or "priority" in fields_set) else {}
+        )
         return {
+            **priority,
             "id": str(ext_ticket.id),
             "name": ext_ticket.name
             if hasattr(ext_ticket, "name") and ext_ticket.name
@@ -696,6 +705,7 @@ def _extract_ticket_data(ext_ticket) -> dict:
         }
     else:
         return {
+            **({"priority": ext_ticket["priority"]} if "priority" in ext_ticket else {}),
             "id": str(ext_ticket.get("id", "")),
             "name": ext_ticket.get("name") or ext_ticket.get("title", "No title"),
             "status": ext_ticket.get("status", "open"),
@@ -828,6 +838,16 @@ def _import_new_ticket(
     """Import a new ticket from external system."""
     new_id = f"{integration_name.upper()}-{ext_data['id']}"
 
+    existing = (backlog.get("tickets") or {}).get(new_id)
+    if isinstance(existing, dict):
+        # Duplicate identity is an update, never authority to reschedule it.
+        _update_local_ticket(backlog, {}, new_id, ext_data, 0,
+                             integration_name, publish_to, store=store)
+        sync_state.save_sync({new_id: ext_data["id"]})
+        return imported_count
+
+    priority = normalize_inbound_priority(ext_data)
+
     ticket_data = {
         # Legacy importers omitted this field, making the record invisible to
         # the typed store and ``ticket list/show``. Keep the generated local ID
@@ -839,6 +859,7 @@ def _import_new_ticket(
         "sprint": target_sprint,
         "assignee": ext_data["assignee"],
         "labels": ext_data["labels"],
+        "priority": priority,
         "external_id": ext_data["id"],
         "backend": integration_name,
         "integration": _integration_routes(integration_name, publish_to),
@@ -860,12 +881,6 @@ def _import_new_ticket(
     if not isinstance(tickets, dict):
         tickets = {}
         backlog["tickets"] = tickets
-    if new_id in tickets:
-        existing = tickets[new_id]
-        if isinstance(existing, dict):
-            existing.update(ticket_data)
-            sync_state.save_sync({new_id: ext_data["id"]})
-            return imported_count
     if store is not None:
         from planfile.core.store import Ticket
         created = store.create_ticket(Ticket.model_validate(ticket_data), expected_absent=True)
