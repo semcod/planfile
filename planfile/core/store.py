@@ -2659,7 +2659,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
         with self.mutation_lock():
             index_was_current = self._begin_index_mutation()
-            current = self.get_ticket(ticket_id)
+            # Do not wait for a disposable-index rebuild while holding the
+            # authoritative writer lock. A stale index has a durable-source
+            # fallback; evidence serialization and replay still use this lock.
+            current = self.get_ticket(ticket_id, repair_index=False)
             if current is None:
                 return None, False
             outputs = (
