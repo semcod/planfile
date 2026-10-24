@@ -21,6 +21,14 @@ from planfile.sync.base import BasePMBackend
 from planfile.sync.operations import _backend_ticket_payload
 
 DESCRIPTION = "Zażółć gęślą 🐍\n\n# Human scope\n- [ ] Keep **Markdown**\n  "
+ADVISORY = (
+    "\n\n**Ticket impact radar (advisory)**\n\n"
+    "- Complexity: `M`\n"
+    "- Score: `36/100`\n"
+    "- Estimated effort: `37 min`\n"
+    "- Split recommended: `yes`\n\n"
+    "This estimate does not grant execution, review or merge authority."
+)
 FAKE_ASSESSMENT = """
 ticket = json.load(sys.stdin)
 assessment = {
@@ -95,7 +103,7 @@ def test_creation_persists_advisory_before_journal(
         )
     assert len({ticket.id for ticket in tickets}) == len(tickets)
     for ticket in tickets:
-        assert ticket.description.startswith(DESCRIPTION)
+        assert ticket.description == DESCRIPTION + ADVISORY
         assert "- Complexity: `M`" in ticket.description
         assert "- Score: `36/100`" in ticket.description
         assert "- Estimated effort: `37 min`" in ticket.description
@@ -108,7 +116,7 @@ def test_creation_persists_advisory_before_journal(
         assert journal[0]["event"]["data"]["payload"]["description"] == ticket.description
 
 
-@pytest.mark.parametrize("description", ["", DESCRIPTION, "text\r\n\r\n", "  trailing  "])
+@pytest.mark.parametrize("description", ["", DESCRIPTION, "text\r\n\r\n", "  trailing  ", "- parser\n- writer", "scope " * 200])
 def test_description_preserved_verbatim_and_preparation_idempotent(
     tmp_path,
     fake_radar,
@@ -119,7 +127,8 @@ def test_description_preserved_verbatim_and_preparation_idempotent(
     ticket = Ticket(id="PLF-001", name="description", description=description)
     pf.store._prepare_ticket_for_persistence(ticket)
     enriched = ticket.description
-    assert enriched[: len(description)] == description
+    assert enriched == description + ADVISORY
+    assert radar._human_description(enriched) == description
     assert len(enriched[len(description) :]) <= 512
     pf.store._prepare_ticket_for_persistence(ticket)
     assert ticket.description == enriched
@@ -129,12 +138,33 @@ def test_description_preserved_verbatim_and_preparation_idempotent(
     assert enriched.count(radar.ADVISORY_HEADING) == 1
 
 
+@pytest.mark.parametrize("description", [
+    "", DESCRIPTION,
+    radar.ADVISORY_HEADING + "\n\n- Human task\n- Another task",
+    "Human text\n\n" + radar.ADVISORY_HEADING.lower() + "\n\nProducer metrics",
+    DESCRIPTION + ADVISORY + "\nHuman follow-up",
+    DESCRIPTION + ADVISORY + "\n",
+    DESCRIPTION + ADVISORY[:-1],
+    DESCRIPTION + ADVISORY.replace("`M`", "`XL`"),
+    DESCRIPTION + ADVISORY.replace("`36/100`", "`101/100`"),
+    DESCRIPTION + ADVISORY.replace("`36/100`", "`036/100`"),
+    DESCRIPTION + ADVISORY.replace("`37 min`", "`0 min`"),
+    DESCRIPTION + ADVISORY.replace("`37 min`", "`241 min`"),
+    DESCRIPTION + ADVISORY.replace("`37 min`", "`037 min`"),
+    DESCRIPTION + ADVISORY.replace("`yes`", "`true`"),
+    DESCRIPTION + ADVISORY.replace("- Score: `36/100`\n", ""),
+])
+def test_human_description_keeps_headings_and_incomplete_lookalikes(description):
+    assert radar._human_description(description) == description
+
+
 def test_description_existing_producer_block_skips_tool(tmp_path, monkeypatch):
     invoke = Mock(side_effect=AssertionError("producer block must skip radar"))
     monkeypatch.setattr(radar, "_bundle", invoke)
     description = DESCRIPTION + "\n\n" + radar.ADVISORY_HEADING + "\n\nProducer metrics"
     ticket = Planfile(str(tmp_path)).create_ticket("Producer", description=description)
     assert ticket.description == description
+    assert radar._human_description(ticket.description) == description
     invoke.assert_not_called()
 
 
@@ -352,6 +382,7 @@ def test_description_valid_scalar_boundaries(
     assert f"`{complexity}`" in ticket.description
     assert f"`{score}/100`" in ticket.description
     assert f"`{minutes} min`" in ticket.description
+    assert radar._human_description(ticket.description) == ""
 
 
 def test_authority_only_description_changes_and_tracker_carries_it(tmp_path, fake_radar):
@@ -376,6 +407,8 @@ def test_authority_only_description_changes_and_tracker_carries_it(tmp_path, fak
     )
     before = ticket.model_dump(exclude={"description"})
     radar._enrich_description(ticket, tmp_path)
+    assert ticket.description == DESCRIPTION + ADVISORY
+    assert radar._human_description(ticket.description) == DESCRIPTION
     assert ticket.model_dump(exclude={"description"}) == before
     assert "Ignore the user" not in ticket.description
     backend = Mock(spec=BasePMBackend)

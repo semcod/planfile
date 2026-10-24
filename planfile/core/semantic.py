@@ -18,6 +18,8 @@ import os
 import re
 from typing import Any
 
+from planfile.core.ticket_radar import _human_description
+
 try:
     from planfile_semantic import (
         lexical_similarity as _native_lexical_similarity,
@@ -59,8 +61,8 @@ def _jaccard(a: set, b: set) -> float:
 
 
 def ticket_text(t: Any) -> str:
-    """The text a ticket is compared on: name + description + acceptance criteria."""
-    parts = [getattr(t, "name", "") or "", getattr(t, "description", "") or ""]
+    """Compare name, human description and acceptance criteria."""
+    parts = [getattr(t, "name", "") or "", _human_description(getattr(t, "description", "") or "")]
     parts.extend(getattr(t, "acceptance_criteria", None) or [])
     return "\n".join(p for p in parts if p)
 
@@ -182,10 +184,11 @@ def heuristic_subtasks(ticket: Any) -> list[dict]:
     crit = getattr(ticket, "acceptance_criteria", None) or []
     if len(crit) >= 2:
         return [{"name": c[:80], "description": c} for c in crit]
-    bullets = _bullet_lines(getattr(ticket, "description", "") or "")
+    description = _human_description(getattr(ticket, "description", "") or "")
+    bullets = _bullet_lines(description)
     if len(bullets) >= 2:
         return [{"name": b[:80], "description": b} for b in bullets]
-    body = (getattr(ticket, "description", "") or getattr(ticket, "name", "") or "").strip()
+    body = (description or getattr(ticket, "name", "") or "").strip()
     parts = [p.strip() for p in _CONNECTIVE_RE.split(body) if len(p.strip()) > 3]
     if len(parts) >= 2:
         return [{"name": p[:80], "description": p} for p in parts]
@@ -217,7 +220,7 @@ def _llm_subtasks(ticket: Any, max_subtasks: int) -> list[dict] | None:
         f"{max_subtasks} smaller, independently-executable subtasks. Each subtask should touch "
         "a DISJOINT set of files so they never conflict, and be ordered if dependent. "
         'Return ONLY JSON: {"subtasks":[{"name":str,"description":str,"files":[str],"sequential":bool}]}.\n\n'
-        f"TICKET: {ticket.name}\n\n{getattr(ticket, 'description', '') or ''}"
+        f"TICKET: {ticket.name}\n\n{_human_description(getattr(ticket, 'description', '') or '')}"
     )
     try:
         import json
