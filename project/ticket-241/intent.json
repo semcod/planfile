@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-241",
+  "summary": "Update internal dependency goal to 2.2.2",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-241/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "uv.lock"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e4b46fda131e4facf6c3945bc96633b3a6582939",
+    "targetBranch": "main",
+    "outcome": "uv.lock pins the published stable target of the internal dependency goal (2.2.2), so the scheduled and pull-request dependency-freshness check passes cleanly.",
+    "nonGoals": [
+      "Do not change pyproject.toml or any declared dependency range.",
+      "Do not change the protected local verifier pins."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Run uv lock --upgrade-package goal==2.2.2 and commit only the resulting uv.lock after verification.",
+      "components": [
+        {
+          "name": "dependency-lock",
+          "paths": [
+            "uv.lock"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket-241 commit; uv.lock returns to the previous resolution."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "goal dependencies --catalog .github/internal-dependencies.json --check"
+        ],
+        "evidence": "project/ticket-241/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-241/README.md"
+      }
+    ]
+  }
+}
