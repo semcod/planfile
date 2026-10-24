@@ -484,7 +484,7 @@ def test_full_and_operational_api_views_use_sqlite_without_model_cache(
 
     assert full.status_code == 200
     assert full.json()[0]["id"] == ticket.id
-    assert full.json()[0]["description"] == "details"
+    assert full.json()[0]["description"] == ticket.description
     assert operational.status_code == 200
     assert operational.json()[0]["id"] == ticket.id
     assert "history" not in operational.json()[0]
@@ -956,3 +956,61 @@ def test_evidence_revision_matches_glob_and_stat_listing(tmp_path):
     with (evidence_dir / "PLF-2.jsonl").open("a", encoding="utf-8") as stream:
         stream.write('{"b": 2}\n')
     assert pf.store._evidence_revision() != tuple(expected)
+
+
+def test_background_repair_does_not_block_lifecycle_write(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Completes during projection repair")
+    pf.store.configure_ticket_index(True)
+    pf.store._sqlite_ticket_index().reset()
+    writer = Planfile(str(tmp_path))
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    signature = pf.store._ticket_index_signature()
+    entered = threading.Event()
+    resume = threading.Event()
+    original_records = pf.store._ticket_index_records
+    calls = 0
+
+    def paused_records():
+        nonlocal calls
+        calls += 1
+        records = list(original_records())
+        if calls == 1:
+            entered.set()
+            assert resume.wait(5), "test did not release projection repair"
+        return records
+
+    monkeypatch.setattr(pf.store, "_ticket_index_records", paused_records)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        repair = pool.submit(server._repair_ticket_index_if_unchanged, signature)
+        try:
+            assert entered.wait(2), "projection repair did not start"
+            write = pool.submit(writer.complete_ticket, ticket.id, result={"ok": True})
+            completed = write.result(timeout=2)
+            assert completed.status == "done"
+        finally:
+            resume.set()
+        repair.result(timeout=3)
+
+    assert calls == 2  # The first snapshot raced the durable lifecycle write.
+    assert pf.store.ticket_index_status()["current"] is True
+    assert pf.get_ticket(ticket.id).status == "done"
+    assert pf.get_ticket(ticket.id).outputs.result == {"ok": True}
+
+
+def test_background_repair_defers_when_candidate_sources_changed(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Candidate changed")
+    pf.store.configure_ticket_index(True)
+    signature = pf.store._ticket_index_signature()
+    pf.update_ticket(ticket.id, priority="critical")
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+
+    def unexpected_repair():
+        raise AssertionError("outdated maintenance candidate must defer")
+
+    monkeypatch.setattr(pf.store, "ensure_ticket_index", unexpected_repair)
+    assert server._repair_ticket_index_if_unchanged(signature) == {
+        "rebuilt": False, "deferred": True,
+    }
