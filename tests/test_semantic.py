@@ -80,7 +80,6 @@ def test_detect_duplicates_finds_near_identical(tmp_path):
     pf.create_ticket(name="Add dark mode", description="Provide a dark theme toggle")
     rep = sem.detect_duplicates(pf, threshold=0.4)
     assert rep["method"] == "lexical"
-    ids = {frozenset((d["a"], d["b"])) for d in rep["duplicates"]}
     # the two login tickets pair up; dark mode is not flagged
     assert any("Add dark mode" not in (d["a_name"] + d["b_name"]) for d in rep["duplicates"])
     assert len(rep["duplicates"]) >= 1

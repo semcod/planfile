@@ -22,9 +22,13 @@ from planfile.core.ticket_radar import _human_description
 
 try:
     from planfile_semantic import (
-        lexical_similarity as _native_lexical_similarity,
-        similarity_matrix as _native_similarity_matrix,
         HAS_RUST_SEMANTIC,
+    )
+    from planfile_semantic import (
+        lexical_similarity as _native_lexical_similarity,
+    )
+    from planfile_semantic import (
+        similarity_matrix as _native_similarity_matrix,
     )
 except ImportError:
     HAS_RUST_SEMANTIC = False
@@ -37,7 +41,7 @@ _STOP = {
     "the", "a", "an", "and", "or", "to", "of", "in", "on", "for", "with", "is", "are", "be",
     "this", "that", "it", "as", "by", "at", "from", "into",
     "i", "oraz", "lub", "do", "na", "w", "we", "z", "ze", "o", "po", "przez", "dla", "aby",
-    "jest", "sa", "to", "ten", "ta", "te", "jako", "gdy", "sie",
+    "jest", "sa", "ten", "ta", "te", "jako", "gdy", "sie",
 }
 
 
@@ -103,7 +107,7 @@ def embed_texts(texts: list[str], model: str | None = None) -> list[list[float]]
 
 
 def cosine(a: list[float], b: list[float]) -> float:
-    dot = sum(x * y for x, y in zip(a, b))
+    dot = sum(x * y for x, y in zip(a, b, strict=True))
     na = math.sqrt(sum(x * x for x in a))
     nb = math.sqrt(sum(y * y for y in b))
     return dot / (na * nb) if na and nb else 0.0
@@ -224,6 +228,7 @@ def _llm_subtasks(ticket: Any, max_subtasks: int) -> list[dict] | None:
     )
     try:
         import json
+
         import litellm
         resp = litellm.completion(model=_llm_model(),
                                   messages=[{"role": "user", "content": prompt}],
