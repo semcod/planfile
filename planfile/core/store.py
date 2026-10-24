@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import time
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from functools import lru_cache
@@ -1000,6 +1001,35 @@ class Store(StoreFileMixin, TicketStoreMixin):
             },
             allow_unicode=True,
         )
+
+    def _move_history_location_unlocked(self, ticket_id: str, to_sprint: str) -> None:
+        """Persist relocation ownership; restore the locator if its write fails."""
+        from planfile.core.fastio import mirror_path, read_yaml_fast
+
+        path = self._history_locations_path
+        before = deepcopy(read_yaml_fast(path)) if path.exists() else None
+        locations = self._history_locations()
+        updated = dict(locations)
+        if to_sprint.startswith(("history-", "archive-")):
+            updated[ticket_id] = to_sprint
+        else:
+            updated.pop(ticket_id, None)
+        if updated == locations:
+            return
+        data = dict(before or {"schema": "planfile.history-locations/v1"})
+        data["tickets"] = updated
+        try:
+            self._write_yaml_atomic(path, data, allow_unicode=True)
+        except Exception:
+            if before is not None:
+                self._write_yaml_atomic(path, before, allow_unicode=True)
+            else:
+                path.unlink(missing_ok=True)
+                mirror_path(path).unlink(missing_ok=True)
+            raise
+        finally:
+            if hasattr(self, "_yaml_cache"):
+                self._yaml_cache.pop(str(path), None)
 
     def _exclude_tickets_owned_by_history(self, sprint: str, data: dict) -> dict:
         """Prevent a stale bulk snapshot from resurrecting archived tickets."""
@@ -2940,7 +2970,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         return False
 
     def move_ticket(self, ticket_id: str, to_sprint: str) -> bool:
-        """Move a ticket under one lock, rolling back if source removal fails."""
+        """Move a ticket and its history locator under one lock, with rollback."""
         self._sprint_file(to_sprint)  # validate
         if self._uses_sharded_storage():
             with self.mutation_lock():
@@ -2969,16 +2999,20 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 history.append(entry)
                 moved_ticket["history"] = history[-200:]
 
-                storage.upsert_ticket(to_sprint, ticket_id, moved_ticket)
                 try:
+                    storage.upsert_ticket(to_sprint, ticket_id, moved_ticket)
                     removed = storage.delete_ticket(source_sprint, ticket_id)
                     if removed is None:
                         raise RuntimeError(f"ticket_disappeared_during_move:{ticket_id}")
+                    self._move_history_location_unlocked(ticket_id, to_sprint)
                 except Exception:
+                    # Keep the destination copy if restoring the source also fails.
+                    storage.upsert_ticket(source_sprint, ticket_id, previous_ticket)
                     storage.delete_ticket(to_sprint, ticket_id)
                     raise
-                self._invalidate_sharded_cache(source_sprint)
-                self._invalidate_sharded_cache(to_sprint)
+                finally:
+                    self._invalidate_sharded_cache(source_sprint)
+                    self._invalidate_sharded_cache(to_sprint)
                 self._append_operational_line(operational_dsl)
                 model = self._ticket_from_data(moved_ticket)
                 if model is not None:
@@ -2988,7 +3022,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     )
                 return True
 
-        from planfile.core.fastio import read_yaml_fast
+        from planfile.core.fastio import mirror_path, read_yaml_fast
 
         destination_file = self._sprint_file(to_sprint)
         with self.mutation_lock():
@@ -3006,6 +3040,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 if source_file == destination_file:
                     return True
 
+                source_before = deepcopy(source_data)
                 previous_ticket = dict(source_tickets[ticket_id])
                 moved_ticket = dict(previous_ticket)
                 moved_ticket["sprint"] = to_sprint
@@ -3023,7 +3058,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
                 destination_existed = destination_file.exists()
                 destination_before = read_yaml_fast(destination_file) if destination_existed else None
-                destination_data = destination_before or {
+                destination_data = deepcopy(destination_before) or {
                     "sprint": {
                         "id": to_sprint,
                         "name": to_sprint.replace("-", " ").title(),
@@ -3038,19 +3073,24 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 destination_tickets[ticket_id] = moved_ticket
                 destination_data["sprint"] = destination_root
 
-                self._write_yaml_atomic(destination_file, destination_data, allow_unicode=True)
                 try:
+                    self._write_yaml_atomic(destination_file, destination_data, allow_unicode=True)
                     del source_tickets[ticket_id]
                     self._write_yaml_atomic(source_file, source_data, allow_unicode=True)
+                    self._move_history_location_unlocked(ticket_id, to_sprint)
                 except Exception:
+                    # Never discard the destination until the source is durable again.
+                    self._write_yaml_atomic(source_file, source_before, allow_unicode=True)
                     if destination_existed and destination_before is not None:
                         self._write_yaml_atomic(destination_file, destination_before, allow_unicode=True)
                     else:
                         destination_file.unlink(missing_ok=True)
+                        mirror_path(destination_file).unlink(missing_ok=True)
                     raise
-                if hasattr(self, "_yaml_cache"):
-                    self._yaml_cache.pop(str(source_file), None)
-                    self._yaml_cache.pop(str(destination_file), None)
+                finally:
+                    if hasattr(self, "_yaml_cache"):
+                        self._yaml_cache.pop(str(source_file), None)
+                        self._yaml_cache.pop(str(destination_file), None)
                 self._append_operational_line(operational_dsl)
                 model = self._ticket_from_data(moved_ticket)
                 if model is not None:
