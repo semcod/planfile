@@ -1,0 +1,118 @@
+{
+  "allowedPaths": [
+    "project/ticket-237/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store.py",
+    "tests/test_ticket_resume_archived.py"
+  ],
+  "classification": {
+    "kind": "FEATURE",
+    "origin": "requested",
+    "priority": "P2"
+  },
+  "conflictsWith": [],
+  "delivery": {
+    "acceptedBaseSha": "4eaa4050c95a3c322e836bb30f09fafc2344f479",
+    "architecture": {
+      "components": [
+        {
+          "name": "ticket-storage-and-restoration",
+          "paths": [
+            "planfile/core/store.py",
+            "tests/test_ticket_resume_archived.py"
+          ]
+        }
+      ],
+      "dataChanges": [
+        {
+          "component": "ticket-storage-and-restoration",
+          "description": "Maintain existing history-location mappings and their JSON mirror during supported moves; preserve the current schema, unrelated mappings and ticket history.",
+          "kind": "component-local-state"
+        }
+      ],
+      "decision": "Keep relocation ownership in Store.move_ticket, which already serves resume, ready, CLI, API and DSL callers. Add bounded private locator maintenance for both storage branches: set the destination owner for history/archive destinations and remove the ticket mapping for active destinations. Preserve unrelated mappings and use the existing YAML-plus-mirror writer under mutation_lock. Include locator persistence in relocation error handling, retaining original source, destination and locator snapshots for rollback and invalidating affected caches. Seed legacy locator entries explicitly in regression fixtures so tests reproduce the reported defect independently of the new move behavior. Clone-local admission currently reports zero active application tickets and no blockers; existing lease records are released. Future implementation must refresh admission, verify ownership and controller fencing, and serialize against any newly observed overlapping writer.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Revert the two implementation files. Existing locator and ticket formats remain readable; preserve user data and perform no automatic historical rewrite or cleanup.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 1,
+      "maxImplementationFiles": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "nonGoals": [
+      "No new repository, credentials, external coordination, dependency changes or governance adoption changes.",
+      "No Monag or fleet-admission changes, production data repair, lock-file cleanup or general reconciliation tooling from the broader issue #268.",
+      "No public API, CLI syntax, storage schema or terminal-ticket reopening policy changes."
+    ],
+    "outcome": "Supported ticket moves and archived-ticket restoration maintain the canonical history locator and its cache alongside ticket persistence, preventing stale ownership from triggering Monag's canonical history owner unavailable error.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_resume_archived.py -k history_locations"
+        ],
+        "criterion": "AC-01",
+        "evidence": "Cover active-to-history, history-to-history and history-to-active moves, an empty resulting locator map, and preservation of an unrelated archived ticket's mapping."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_resume_archived.py"
+        ],
+        "criterion": "AC-02",
+        "evidence": "Seed an unfinished archived ticket with an existing locator and mirror, then exercise resume, ready and CLI resume; verify current membership, runnable state and immutable terminal rejection."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_resume_archived.py -k cache"
+        ],
+        "criterion": "AC-03",
+        "evidence": "Assert locator mutation occurs while the store lock is held; compare durable YAML with mirror data and its YAML timestamp, then verify warmed and fresh Store readers observe the updated ownership."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_resume_archived.py -k rollback"
+        ],
+        "criterion": "AC-04",
+        "evidence": "Inject bounded source-removal and locator-write failures in both backends; inspect source, destination, locator and fresh reads after exceptions, then verify a subsequent retry succeeds."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_ticket_resume_archived.py tests/test_ticket_archiving.py tests/test_ticket_archive_force.py tests/test_sharded_yaml_storage.py"
+        ],
+        "criterion": "AC-05",
+        "evidence": "Parameterize restoration across monolithic and sharded storage. Read persisted YAML independently and assert every remaining locator entry identifies a history source containing that ticket, matching the inspected Monag ownership check."
+      },
+      {
+        "commands": [
+          "python3 -m pytest -q tests/test_store_concurrency.py tests/test_yaml_cache_invalidation.py tests/test_sqlite_ticket_index.py",
+          "python3 -m ruff check planfile/core/store.py tests/test_ticket_resume_archived.py",
+          "./project/governance-check.sh"
+        ],
+        "criterion": "AC-06",
+        "evidence": "Retain passing regression, lint and governance reports for the implementation head; verify the material diff contains exactly the frozen paths and introduces no public interface or runtime dependency changes."
+      }
+    ]
+  },
+  "dependsOn": [],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "integrationTicket": null,
+  "schema": "new-project.intent/v3",
+  "stacks": [],
+  "summary": "Fix issue #288 by keeping history ownership and its JSON mirror consistent when tickets move or resume out of history.",
+  "ticket": "ticket-237",
+  "workstream": "application"
+}
