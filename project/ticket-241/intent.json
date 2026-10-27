@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-241",
-  "summary": "Update internal dependency goal to 2.2.2",
+  "summary": "Update internal dependency goal to 2.2.4",
   "workstream": "integration",
   "classification": {
     "kind": "SERVICE",
@@ -26,7 +26,7 @@
   "delivery": {
     "acceptedBaseSha": "e4b46fda131e4facf6c3945bc96633b3a6582939",
     "targetBranch": "main",
-    "outcome": "uv.lock pins the published stable target of the internal dependency goal (2.2.2), so the scheduled and pull-request dependency-freshness check passes cleanly.",
+    "outcome": "uv.lock pins the published stable target of the internal dependency goal (2.2.4), so the scheduled and pull-request dependency-freshness check passes cleanly.",
     "nonGoals": [
       "Do not change pyproject.toml or any declared dependency range.",
       "Do not change the protected local verifier pins."
@@ -41,7 +41,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Run uv lock --upgrade-package goal==2.2.2 and commit only the resulting uv.lock after verification.",
+      "decision": "Run uv lock --upgrade-package goal==2.2.4 and commit only the resulting uv.lock after verification.",
       "components": [
         {
           "name": "dependency-lock",
