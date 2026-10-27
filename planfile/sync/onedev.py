@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-import os
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
 import requests
-from procache import SQLiteResponseCache, is_rate_limit_error
+from procache import is_rate_limit_error
 
+from planfile.sync._read_cache import ScopedReadCache, session_identity
 from planfile.sync.base import BasePMBackend, TicketRef, TicketState
 
 
@@ -82,7 +83,10 @@ class OneDevBackend(BasePMBackend):
         else:
             cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
             cache_path = os.environ.get("SUBACTOR_PROCACHE_PATH", str(cache_root / "subactor" / "planfile-onedev.sqlite3"))
-            self._read_cache = SQLiteResponseCache(cache_path, namespace="planfile-onedev")
+            self._read_cache = ScopedReadCache(
+                cache_path, namespace="planfile-onedev",
+                identity=lambda: session_identity(self.config["url"], self.session),
+            )
 
     @property
     def publish_to(self) -> list[str]:
@@ -120,12 +124,16 @@ class OneDevBackend(BasePMBackend):
                 response.raise_for_status()
             except requests.RequestException as exc:
                 detail = getattr(response, "text", "")[-2000:]
-                raise OneDevError(f"OneDev {method} {path} failed: {detail or exc}") from exc
+                error = OneDevError(f"OneDev {method} {path} failed: {detail or exc}")
+                error.status_code = response.status_code
+                error.headers = dict(getattr(response, "headers", {}))
+                raise error from exc
             if not getattr(response, "content", b""):
                 return b""
             return json.dumps(response.json(), separators=(",", ":")).encode("utf-8")
 
-        if method.upper() == "GET" and self._read_cache is not None:
+        if (method.upper() == "GET" and payload is None and raw_payload is None
+                and self._read_cache is not None):
             key = self._read_cache.key("onedev", self.config["url"], path, params)
             raw, _ = self._read_cache.get_or_set(
                 key,
@@ -136,9 +144,13 @@ class OneDevBackend(BasePMBackend):
                 is_rate_limit=is_rate_limit_error,
             )
         else:
-            raw = fetch()
-        if method.upper() != "GET" and self._read_cache is not None:
-            self._read_cache.clear()
+            try:
+                raw = fetch()
+            finally:
+                if method.upper() not in {"GET", "HEAD", "OPTIONS"}:
+                    self._project_cache = None
+                    if self._read_cache is not None:
+                        self._read_cache.clear()
         return json.loads(raw) if raw else None
 
     def _projects(self) -> list[dict[str, Any]]:

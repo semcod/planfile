@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Any
 
 import requests
-from procache import SQLiteResponseCache, is_rate_limit_error
+from procache import is_rate_limit_error
 
+from planfile.sync._read_cache import ScopedReadCache, session_identity
 from planfile.sync.base import BasePMBackend, TicketRef, TicketState
 
 
@@ -56,7 +57,10 @@ class GenericBackend(BasePMBackend):
             cache_path = os.environ.get(
                 "SUBACTOR_PROCACHE_PATH", str(cache_root / "subactor" / "planfile-generic.sqlite3")
             )
-            self._read_cache = SQLiteResponseCache(cache_path, namespace="planfile-generic")
+            self._read_cache = ScopedReadCache(
+                cache_path, namespace="planfile-generic",
+                identity=lambda: session_identity(self.config["base_url"], self.session),
+            )
 
     def _validate_config(self) -> None:
         """Validate generic backend configuration."""
@@ -76,10 +80,16 @@ class GenericBackend(BasePMBackend):
         def fetch() -> bytes:
             response = self.session.request(method=method, url=url, json=data, params=params)
             if not response.ok:
-                raise RuntimeError(f"API request failed: {response.status_code} - {response.text}")
+                error = RuntimeError(f"API request failed: {response.status_code} - {response.text}")
+                error.status_code = response.status_code
+                error.headers = dict(getattr(response, "headers", {}))
+                raise error
+            # Decode before insertion so malformed provider output cannot
+            # poison a repeatable read for the duration of its TTL.
+            json.loads(response.content)
             return response.content
 
-        if method.upper() == "GET" and self._read_cache is not None:
+        if method.upper() == "GET" and data is None and self._read_cache is not None:
             key = self._read_cache.key("generic", method.upper(), url, params)
             raw, _ = self._read_cache.get_or_set(
                 key,
@@ -90,9 +100,11 @@ class GenericBackend(BasePMBackend):
                 is_rate_limit=is_rate_limit_error,
             )
         else:
-            raw = fetch()
-        if method.upper() != "GET" and self._read_cache is not None:
-            self._read_cache.clear()
+            try:
+                raw = fetch()
+            finally:
+                if method.upper() not in {"GET", "HEAD", "OPTIONS"} and self._read_cache is not None:
+                    self._read_cache.clear()
         return json.loads(raw)
 
     def _create_ticket(
