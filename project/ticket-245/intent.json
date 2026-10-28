@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-245",
+  "summary": "Scope provider read caches and fence mutations",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-245/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/_read_cache.py",
+    "planfile/sync/generic.py",
+    "planfile/sync/github_projects.py",
+    "planfile/sync/onedev.py",
+    "tests/test_scoped_provider_cache.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e4b46fda131e4facf6c3945bc96633b3a6582939",
+    "targetBranch": "main",
+    "outcome": "Reuse procache for isolated repeatable provider records and invalidate previous generations after mutations",
+    "nonGoals": [
+      "Dependency pin changes",
+      "Caching authorization or publication decisions"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Wrap the canonical SQLite cache with credential identity and generation fencing shared by REST, OneDev and GraphQL consumers",
+      "components": [
+        {
+          "name": "provider-sync",
+          "paths": [
+            "planfile/sync/_read_cache.py",
+            "planfile/sync/generic.py",
+            "planfile/sync/onedev.py",
+            "planfile/sync/github_projects.py"
+          ]
+        },
+        {
+          "name": "regressions",
+          "paths": [
+            "tests/test_scoped_provider_cache.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the exact implementation through protected delivery"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -B -m pytest -q tests/test_scoped_provider_cache.py tests/test_generic_cache.py tests/test_onedev_backend.py tests/test_github_projects.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Account separation, repeated-read transport counts, post-write fencing, GraphQL mutation bypass and error regressions"
+      }
+    ]
+  }
+}

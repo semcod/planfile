@@ -11,13 +11,15 @@ GitHub App token.
 """
 from __future__ import annotations
 
-import os
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 import requests
-from procache import SQLiteResponseCache, is_rate_limit_error
+from procache import CachedReadCommand, is_rate_limit_error
+
+from planfile.sync._read_cache import ScopedReadCache, session_identity
 
 GRAPHQL_URL = "https://api.github.com/graphql"
 
@@ -37,11 +39,17 @@ class GitHubProjectsBackend:
         self._timeout = timeout
         cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
         cache_path = os.environ.get("SUBACTOR_PROCACHE_PATH", str(cache_root / "subactor" / "planfile-github.sqlite3"))
-        self._read_cache = SQLiteResponseCache(cache_path, namespace="planfile-github-projects")
+        def identity() -> object | None:
+            context = session_identity(GRAPHQL_URL, self._session)
+            return (self.token, context) if context is not None else None
+
+        self._read_cache = (ScopedReadCache(
+            cache_path, namespace="planfile-github-projects",
+            identity=identity,
+        ) if session is None else None)
 
     def _graphql(self, query: str, variables: dict[str, Any]) -> dict[str, Any]:
-        read_only = not query.lstrip().startswith("mutation")
-        key = self._read_cache.key("graphql", GRAPHQL_URL, query, variables)
+        read_only = CachedReadCommand.is_read(["gh", "api", "graphql", "-f", "query=" + query])
 
         def fetch() -> bytes:
             response = self._session.post(
@@ -56,7 +64,8 @@ class GitHubProjectsBackend:
                 raise GitHubProjectsError(str(payload["errors"]))
             return json.dumps(payload.get("data", {}), separators=(",", ":")).encode("utf-8")
 
-        if read_only:
+        if read_only and self._read_cache is not None:
+            key = self._read_cache.key("graphql", GRAPHQL_URL, query, variables)
             raw, _ = self._read_cache.get_or_set(
                 key,
                 fetch,
@@ -66,7 +75,11 @@ class GitHubProjectsBackend:
                 is_rate_limit=is_rate_limit_error,
             )
             return json.loads(raw)
-        return json.loads(fetch())
+        try:
+            return json.loads(fetch())
+        finally:
+            if not read_only and self._read_cache is not None:
+                self._read_cache.clear()
 
     def project_id(self, owner: str, number: int) -> str:
         data = self._graphql(
@@ -93,7 +106,6 @@ class GitHubProjectsBackend:
             "mutation($p:ID!,$c:ID!){ addProjectV2ItemById(input:{projectId:$p,contentId:$c}){ item{ id } } }",
             {"p": project_id, "c": content_node_id},
         )
-        self._read_cache.clear()
         return data["addProjectV2ItemById"]["item"]["id"]
 
     def single_select_field(self, project_id: str, name: str) -> dict[str, Any] | None:
@@ -114,7 +126,6 @@ class GitHubProjectsBackend:
             "projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){ projectV2Item{ id } } }",
             {"p": project_id, "i": item_id, "f": field_id, "o": option_id},
         )
-        self._read_cache.clear()
 
     def add_issue(
         self,

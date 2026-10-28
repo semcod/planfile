@@ -10,6 +10,8 @@ from itertools import islice
 from pathlib import Path
 from typing import Any
 
+from planfile.utils.repository import normalize_repository
+
 SQLITE_INDEX_SCHEMA = "planfile.sqlite-ticket-index/v1"
 _SCHEMA_VERSION = 1
 _REBUILD_BATCH_SIZE = 128
@@ -44,6 +46,7 @@ class SQLiteTicketIndex:
         ).fetchone()
         if initialized is None:
             self._initialize(connection)
+        self._ensure_routes(connection)
         return connection
 
     @staticmethod
@@ -71,6 +74,7 @@ class SQLiteTicketIndex:
                 ON tickets(sprint, position);
             CREATE INDEX IF NOT EXISTS tickets_sprint_status_priority
                 ON tickets(sprint, status, priority, position);
+            CREATE INDEX IF NOT EXISTS tickets_position ON tickets(position);
             CREATE INDEX IF NOT EXISTS tickets_source
                 ON tickets(source, position);
             CREATE TABLE IF NOT EXISTS dependencies (
@@ -92,6 +96,124 @@ class SQLiteTicketIndex:
             (str(_SCHEMA_VERSION),),
         )
         connection.commit()
+
+    @staticmethod
+    def _route(row: dict[str, Any]) -> dict[str, Any]:
+        payload = json.loads(row["ticket_json"])
+        execution = payload.get("execution") or {}
+        inputs = payload.get("inputs") or {}
+        task = inputs.get("api_body") or {}
+        source = task.get("source") if isinstance(task, dict) else None
+        reference = (payload.get("sync") or {}).get("github") or {}
+        identities = set()
+        for candidate in (source, reference):
+            if not isinstance(candidate, dict):
+                continue
+            repository = candidate.get("repository") or candidate.get("repo")
+            issue = candidate.get("issue")
+            try:
+                repository = normalize_repository(repository)
+                if repository and not isinstance(issue, bool) and str(issue).isdigit() and int(issue) > 0:
+                    identities.add((repository, int(issue)))
+            except ValueError:
+                continue
+        # Conflicting references cannot choose a repository on the caller's behalf.
+        repository, issue = next(iter(identities)) if len(identities) == 1 else (None, None)
+        return {
+            "id": row["id"], "repository": repository, "issue": issue,
+            "queue": row["queue"], "state": execution.get("state") or "pending",
+            "active": int(row["status"] not in ("done", "canceled")),
+            "position": row["position"],
+        }
+
+    @classmethod
+    def _write_routes(cls, connection: sqlite3.Connection, rows) -> None:
+        connection.executemany(
+            """INSERT OR REPLACE INTO ticket_routes
+               (id, repository, issue, queue, state, active, position)
+               VALUES (:id, :repository, :issue, :queue, :state, :active, :position)""",
+            (cls._route(row) for row in rows),
+        )
+
+    @classmethod
+    def _ensure_routes(cls, connection: sqlite3.Connection) -> None:
+        if connection.execute("SELECT 1 FROM meta WHERE key='routes_version' AND value='1'").fetchone():
+            return
+        # Upgrade the disposable projection once, atomically, including concurrent opens.
+        connection.execute("BEGIN IMMEDIATE")
+        try:
+            if connection.execute("SELECT 1 FROM meta WHERE key='routes_version' AND value='1'").fetchone():
+                connection.commit()
+                return
+            connection.execute("""CREATE TABLE IF NOT EXISTS ticket_routes (
+                id TEXT PRIMARY KEY REFERENCES tickets(id) ON DELETE CASCADE,
+                repository TEXT, issue INTEGER, queue TEXT NOT NULL,
+                state TEXT NOT NULL, active INTEGER NOT NULL, position INTEGER NOT NULL
+            )""")
+            connection.execute("CREATE INDEX IF NOT EXISTS tickets_position ON tickets(position)")
+            for name, columns in (
+                ("identity", "repository, issue, position, id"),
+                ("queue", "queue, state, active, position, id"),
+                ("repository_queue", "queue, state, active, repository, position, id"),
+            ):
+                connection.execute(f"CREATE INDEX IF NOT EXISTS routes_{name} ON ticket_routes({columns})")
+            cursor = connection.execute("SELECT id, queue, status, position, ticket_json FROM tickets")
+            while batch := cursor.fetchmany(_REBUILD_BATCH_SIZE):
+                cls._write_routes(connection, batch)
+            connection.execute("INSERT OR REPLACE INTO meta VALUES ('routes_version', '1')")
+            connection.commit()
+        except BaseException:
+            connection.rollback()
+            connection.close()
+            raise
+
+    def lookup_issue(self, repository: str, issue: int, *, limit: int = 100,
+                     after: tuple[int, str] = (-1, "")) -> list[dict[str, Any]]:
+        """Return a bounded page of all revisions, including historical tickets.
+
+        The next cursor is the last result's (position, id). No COUNT or OFFSET
+        is needed; callers must not infer uniqueness from a single revision.
+        """
+        repository = normalize_repository(repository)
+        if not repository or type(issue) is not int or issue < 1:
+            raise ValueError("ticket_index_issue_identity_invalid")
+        return self._route_page("repository=? AND issue=?", [repository, issue], limit, after)
+
+    def queue_page(self, queue: str, state: str, *, repository: str | None = None,
+                   limit: int = 100, after: tuple[int, str] = (-1, "")) -> list[dict[str, Any]]:
+        """Select operational work by exact execution state without reading history.
+
+        Waiting, blocked and failed work stays discoverable by its explicit state.
+        This is discovery, not a claim or authorization to run a ticket.
+        """
+        if not queue or not state:
+            raise ValueError("ticket_index_queue_filter_required")
+        where, values = "queue=? AND state=? AND active=1", [queue, state]
+        if repository is not None:
+            repository = normalize_repository(repository)
+            if not repository:
+                raise ValueError("ticket_index_repository_required")
+            where += " AND repository=?"
+            values.append(repository)
+        return self._route_page(where, values, limit, after)
+
+    def _route_page(self, where: str, values: list, limit: int,
+                    after: tuple[int, str]) -> list[dict[str, Any]]:
+        if type(limit) is not int or not 1 <= limit <= 5000:
+            raise ValueError("ticket_index_page_limit_invalid")
+        if (not isinstance(after, tuple) or len(after) != 2
+                or type(after[0]) is not int or not isinstance(after[1], str)):
+            raise ValueError("ticket_index_cursor_invalid")
+        with self._connect() as connection:
+            rows = connection.execute(
+                f"SELECT id, position FROM ticket_routes WHERE {where} "
+                "AND (position, id) > (?, ?) ORDER BY position, id LIMIT ?",
+                [*values, *after, limit],
+            ).fetchall()
+            return [{"id": row["id"], "position": row["position"],
+                     "ticket": json.loads(connection.execute(
+                         "SELECT ticket_json FROM tickets WHERE id=?", (row["id"],)
+                     ).fetchone()[0])} for row in rows]
 
     def is_current(self, signature: tuple) -> bool:
         if not self.path.exists():
@@ -159,6 +281,7 @@ class SQLiteTicketIndex:
                 if not batch:
                     break
                 self._insert_rebuild_batch(connection, batch)
+                self._write_routes(connection, batch)
                 count += len(batch)
                 # Release record graphs before constructing the next batch.
                 batch.clear()
@@ -210,13 +333,13 @@ class SQLiteTicketIndex:
                         "SELECT COALESCE(MAX(position), -1) + 1 AS value FROM tickets"
                     ).fetchone()["value"]
                 )
-                position_rows = connection.execute(
-                    "SELECT id, position FROM tickets"
-                ).fetchall()
-                existing_positions = {
-                    row["id"]: int(row["position"])
-                    for row in position_rows
-                }
+                existing_positions = {}
+                for row in rows:
+                    found = connection.execute(
+                        "SELECT position FROM tickets WHERE id=?", (row["id"],)
+                    ).fetchone()
+                    if found is not None:
+                        existing_positions[row["id"]] = int(found["position"])
                 upsert_values: list[dict[str, Any]] = []
                 dep_delete_ids: list[tuple[str]] = []
                 dep_insert_rows: list[tuple[str, Any]] = []
@@ -256,6 +379,7 @@ class SQLiteTicketIndex:
                     """,
                     upsert_values,
                 )
+                self._write_routes(connection, upsert_values)
                 connection.executemany(
                     "DELETE FROM dependencies WHERE ticket_id=?",
                     dep_delete_ids,

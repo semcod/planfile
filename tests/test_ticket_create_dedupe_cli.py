@@ -1,11 +1,12 @@
 """CLI occurrence capture must share the store's atomic dedupe boundary."""
 
+import json
 import os
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 import typer
@@ -13,12 +14,14 @@ from typer.testing import CliRunner
 
 from planfile import Planfile
 from planfile.cli.groups.ticket import register_ticket_commands
+from planfile.core import ticket_radar as radar
 from planfile.sync.retry import RetryQueue
 
 
 @pytest.fixture()
 def cli(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(radar, '_bundle', Mock(side_effect=FileNotFoundError('optional producer absent')))
     pf = Planfile(str(tmp_path))
     root = typer.Typer()
     register_ticket_commands(root)
@@ -29,18 +32,57 @@ def create(root, name, *options):
     return CliRunner().invoke(root, ['ticket', 'create', name, *options])
 
 
-def test_reuse_appends_description_without_overwriting_original(cli):
+@pytest.mark.parametrize('producer_present', [False, True], ids=['producer-absent', 'producer-present'])
+def test_reuse_appends_description_without_overwriting_original(cli, monkeypatch, producer_present):
     pf, root = cli
+    advisory = (
+        '\n\n**Ticket impact radar (advisory)**\n\n'
+        '- Complexity: `M`\n'
+        '- Score: `36/100`\n'
+        '- Estimated effort: `37 min`\n'
+        '- Split recommended: `yes`\n\n'
+        'This estimate does not grant execution, review or merge authority.'
+    )
+
+    def bundle(payload, repository, deadline):
+        ticket = json.loads(payload)
+        assert ticket['description'] == 'First'
+        assessment = {
+            'schema': 'subactor.ticket-radar/v1', 'ticket_ref': ticket['id'],
+            'complexity': 'M', 'score': 36, 'estimate': {'minutes': 37},
+            'split': {'recommended': True},
+        }
+        return json.dumps({
+            'schema': 'subactor.ticket-radar-bundle/v1', 'jsonl': json.dumps(assessment),
+        }).encode()
+
+    if producer_present:
+        monkeypatch.setattr(radar, '_bundle', Mock(side_effect=bundle))
     assert create(root, 'Original', '--dedupe-key', 'gate:build', '-d', 'First', '--no-sync').exit_code == 0
+    original = pf.get_ticket('PLF-001').model_dump()
     result = create(root, 'Another occurrence', '--dedupe-key', 'gate:build', '-d', 'Second failure', '--no-sync')
     assert result.exit_code == 0, result.output
     assert 'Reused PLF-001' in result.output
     ticket = pf.get_ticket('PLF-001')
     assert ticket.name == 'Original'
-    assert ticket.description == 'First'
+    if producer_present:
+        assert ticket.description == 'First' + advisory
+        assert ticket.description.count(radar.ADVISORY_HEADING) == 1
+    else:
+        assert ticket.description == 'First'
     assert ticket.labels == ['dedupe:gate:build']
     assert ticket.outputs.notes == ['Second failure']
     assert len(pf.list_tickets(sprint='all')) == 1
+    radar._bundle.assert_called_once()
+    after = ticket.model_dump()
+    assert after['history'][:-1] == original['history']
+    assert after['history'][-1]['reason'] == 'Append deduplicated occurrence'
+    assert after['history'][-1]['by'] == 'planfile.dedupe'
+    assert after['updated_at'] >= original['updated_at']
+    for field in ('outputs', 'history', 'updated_at'):
+        after.pop(field, None)
+        original.pop(field, None)
+    assert after == original
 
 
 def test_reuse_uses_name_when_description_is_empty(cli):
