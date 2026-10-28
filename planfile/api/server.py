@@ -47,6 +47,7 @@ from planfile.core.models import (
 )
 from planfile.core.store import (
     ImmutableTerminalReopenError,
+    StoreLockTimeoutError,
     TicketIndexContentionError,
     TicketUpdatedAtConflictError,
 )
@@ -87,7 +88,10 @@ API_CAPABILITIES = [
     "ticket.create.dag_relationships",
     "ticket.update.dag_relationships",
     "findings.comparative.admit",
+    "ticket.store_lock_timeout.retryable_503",
 ]
+
+STORE_LOCK_RETRY_AFTER_SECONDS = 5
 
 
 @app.exception_handler(ImmutableTerminalReopenError)
@@ -106,6 +110,26 @@ async def ticket_updated_at_conflict_handler(
     return JSONResponse(
         status_code=409,
         content={"detail": "ticket_updated_at_precondition_failed"},
+    )
+
+
+@app.exception_handler(StoreLockTimeoutError)
+async def store_lock_timeout_handler(
+    _: Request,
+    __: StoreLockTimeoutError,
+):
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": "ticket_store_lock_timeout",
+            "code": "ticket_store_lock_timeout",
+            "retryable": True,
+            "retry_after_seconds": STORE_LOCK_RETRY_AFTER_SECONDS,
+        },
+        headers={
+            **NO_STORE_HEADERS,
+            "Retry-After": str(STORE_LOCK_RETRY_AFTER_SECONDS),
+        },
     )
 
 _cors_origins = [
@@ -1549,6 +1573,8 @@ def get_voice_sprint_digest(
     pf = get_planfile()
     try:
         tickets = pf.list_tickets(sprint=sprint)
+    except StoreLockTimeoutError:
+        raise
     except Exception:
         tickets = []
 
@@ -1640,17 +1666,18 @@ def patch_yaml(body: YAMLPatchRequest):
     pf_path = Path(pf.store.project_dir) / "planfile.yaml"
     if not pf_path.exists():
         raise HTTPException(404, "planfile.yaml not found")
-    with open(pf_path) as f:
-        data = yaml.safe_load(f) or {}
-    keys = body.path.split(".")
-    node = data
-    for key in keys[:-1]:
-        if key not in node or not isinstance(node[key], dict):
-            node[key] = {}
-        node = node[key]
-    node[keys[-1]] = body.value
-    with open(pf_path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+    with pf.store.mutation_lock():
+        with open(pf_path) as f:
+            data = yaml.safe_load(f) or {}
+        keys = body.path.split(".")
+        node = data
+        for key in keys[:-1]:
+            if key not in node or not isinstance(node[key], dict):
+                node[key] = {}
+            node = node[key]
+        node[keys[-1]] = body.value
+        with open(pf_path, "w") as f:
+            yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
     return {"patched": body.path, "value": body.value}
 
 
@@ -1714,6 +1741,8 @@ def dsl_command(body: DSLRequest) -> DSLResponse:
     from planfile.dsl import DSLExecutor
     executor = DSLExecutor(project_path=body.project_path)
     result = executor.run(body.command)
+    if result.error and str(result.error).startswith("planfile_store_lock_timeout"):
+        raise StoreLockTimeoutError("planfile_store_lock_timeout")
     return DSLResponse(**result.to_dict())
 
 
@@ -1723,6 +1752,8 @@ def query_command(body: QueryRequest) -> DSLResponse:
     from planfile.dsl import DSLExecutor
     executor = DSLExecutor(project_path=body.project_path)
     result = executor.run(body.query, allow_llm_fallback=body.allow_llm_fallback)
+    if result.error and str(result.error).startswith("planfile_store_lock_timeout"):
+        raise StoreLockTimeoutError("planfile_store_lock_timeout")
     return DSLResponse(**result.to_dict())
 
 
