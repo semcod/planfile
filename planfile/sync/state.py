@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -12,6 +13,7 @@ import yaml
 from filelock import FileLock
 
 from planfile.core.fastio import _atomic_write_text
+from planfile.project_paths import OPERATIONAL_RECEIPT_FILENAME
 from planfile.utils.repository import normalize_repository
 from planfile.utils.yaml_cache import read_yaml_file as _read_yaml_file
 
@@ -32,14 +34,48 @@ def _extract_repo_from_config(data: dict, backend: str) -> str | None:
     return None
 
 
+def _read_operational_receipt(planfile_dir: Path) -> dict:
+    receipt_path = planfile_dir / OPERATIONAL_RECEIPT_FILENAME
+    if not receipt_path.is_file():
+        return {}
+    try:
+        data = json.loads(receipt_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _canonical_identity_path(planfile_dir: Path) -> Path:
+    receipt = _read_operational_receipt(planfile_dir)
+    canonical = receipt.get("canonical_planfile_dir")
+    if isinstance(canonical, str) and canonical.strip():
+        return Path(canonical).resolve()
+    return planfile_dir.resolve()
+
+
 def _discover_repository(planfile_dir: Path, backend: str) -> str | None:
     """Read the repository target from the project-local integration config."""
-    project_dir = planfile_dir.parent
-    candidates = (
-        project_dir / ".planfile" / f"{backend}.planfile.yaml",
-        project_dir / ".planfile" / "integrations.oql.planfile.yaml",
-    )
-    for path in candidates:
+    receipt = _read_operational_receipt(planfile_dir)
+    project_dirs = [planfile_dir.parent]
+    for key in ("project_dir", "canonical_project_dir"):
+        val = receipt.get(key)
+        if isinstance(val, str) and val.strip():
+            project_dirs.append(Path(val).resolve())
+
+    candidates: list[Path] = [
+        planfile_dir / f"{backend}.planfile.yaml",
+        planfile_dir / "integrations.oql.planfile.yaml",
+    ]
+    for project_dir in dict.fromkeys(project_dirs):
+        candidates.extend(
+            (
+                project_dir / ".planfile" / f"{backend}.planfile.yaml",
+                project_dir / ".planfile" / "integrations.oql.planfile.yaml",
+                project_dir / f"{backend}.planfile.yaml",
+                project_dir / "integrations.oql.planfile.yaml",
+            )
+        )
+    for path in dict.fromkeys(candidates):
         try:
             data = _read_yaml_file(path) or {}
         except (OSError, yaml.YAMLError):
@@ -73,10 +109,10 @@ class SyncState:
         )
         # A clone-local, non-secret namespace prevents two Planfile stores
         # using the same local ticket number from claiming one another's issue.
-        # It is deliberately derived from the store path and never persisted as
-        # a credential or a user-facing path.
+        # It is deliberately derived from the canonical store path and never
+        # persisted as a credential or a user-facing path.
         self.store_identity = hashlib.sha256(
-            str(self.planfile_dir.resolve()).encode("utf-8")
+            str(_canonical_identity_path(self.planfile_dir)).encode("utf-8")
         ).hexdigest()[:16]
         self.state_file = self.planfile_dir / "sync" / f"{self.backend}.state.yaml"
         self.lock_file = self.state_file.with_suffix(self.state_file.suffix + ".lock")

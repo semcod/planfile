@@ -1,0 +1,106 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-248",
+  "summary": "Keep operational ticket intake and sync from blocking clean-primary execution",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-248/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/project_paths.py",
+    "planfile/core/store.py",
+    "planfile/sync/state.py",
+    "tests/test_operational_intake_store.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "fb992335e47488fe973e7042dbc276f04203ea89",
+    "outcome": "Provide a repository-bound operational intake store mode that persists tickets, allocator high-water state, and sync state outside tracked working-tree files while preserving project identity, GitHub bindings, CAS, deduplication, cross-worktree visibility, and rollback.",
+    "complexity": "M",
+    "estimatedMinutes": 54,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "Never automatically reset, stash, delete, or commit unknown primary checkout changes.",
+      "Do not weaken Coding Agent or governance dirty-source admission checks."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Resolve repository-bound operational store paths under the canonical Git common directory (or configured operationalStoreRoot) and seed/recover state non-destructively from any tracked .planfile directory while binding SyncState.store_identity to the canonical primary .planfile path.",
+      "components": [
+        {
+          "name": "Operational store routing and sync state binding",
+          "paths": [
+            "planfile/project_paths.py",
+            "planfile/core/store.py",
+            "planfile/sync/state.py",
+            "tests/test_operational_intake_store.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Store(directory, operational=...) plus Store.enable_operational_intake and Store.rollback_operational_intake",
+        "Operational store discovery helpers in planfile.project_paths"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the operational store routing helpers and Store/SyncState bindings via an independent publication PR, or call Store.rollback_operational_intake()."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_operational_intake_store.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Disposable tracked-Planfile fixture creates and syncs a ticket in operational mode while git status --porcelain stays empty."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q tests/test_operational_intake_store.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Dirty tracked source file in the primary checkout still reports dirty working tree and fails clean-primary admission."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 -m pytest -q tests/test_operational_intake_store.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Interrupted migration recovery and rollback preserve ticket IDs, allocator highwater, store_identity, and GitHub sync mappings."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 -m pytest -q tests/test_operational_intake_store.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Round-trip across primary checkout, linked delivery worktree, and FastAPI app shares the same operational store and ticket state."
+      }
+    ]
+  }
+}
