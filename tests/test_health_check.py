@@ -198,3 +198,45 @@ def test_file_analyzer_prioritizes_single_file_bounding_over_repo_byte_budget(tm
     assert result["budget"]["truncated"] is False
     assert str(oversized.resolve()) not in result["analyzed_files"]
     assert str(normal.resolve()) in result["analyzed_files"]
+
+
+def test_yaml_parser_deadline_cannot_be_reported_as_healthy(tmp_path, monkeypatch):
+    import yaml
+
+    from planfile.cli.groups.health.commands import HealthAnalysisTimeout
+
+    (tmp_path / "sample.yaml").write_text("message: ordinary\n", encoding="utf-8")
+
+    def timed_out(*args, **kwargs):
+        raise HealthAnalysisTimeout
+
+    monkeypatch.setattr(yaml, "load", timed_out)
+    result = CliRunner().invoke(app, ["health", "check", str(tmp_path), "--format", "json"])
+    payload = json.loads(result.stdout)
+    assert result.exit_code == 1
+    assert payload["status"] == "timeout"
+    assert payload["diagnostics"][0]["code"] == "HEALTH_TIMEOUT"
+
+
+def test_text_parser_deadline_cannot_be_reported_as_healthy(tmp_path, monkeypatch):
+    import builtins
+
+    from planfile.analysis import file_analyzer
+    from planfile.cli.groups.health.commands import HealthAnalysisTimeout
+
+    source = tmp_path / "sample.py"
+    source.write_text("print('ordinary')\n", encoding="utf-8")
+    original_open = builtins.open
+
+    def timed_out(file, *args, **kwargs):
+        if Path(file) == source:
+            raise HealthAnalysisTimeout
+        return original_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(file_analyzer, "HAS_RUST_ANALYZER", False)
+    monkeypatch.setattr(builtins, "open", timed_out)
+    result = CliRunner().invoke(app, ["health", "check", str(tmp_path), "--format", "json"])
+    payload = json.loads(result.stdout)
+    assert result.exit_code == 1
+    assert payload["status"] == "timeout"
+    assert payload["diagnostics"][0]["code"] == "HEALTH_TIMEOUT"

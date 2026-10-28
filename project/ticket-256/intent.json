@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-256",
+  "summary": "Accelerate bounded YAML health analysis with safe loader parity",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-256/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/analysis/parsers/text_parser.py",
+    "planfile/analysis/parsers/yaml_parser.py",
+    "tests/test_health_check.py",
+    "tests/test_yaml_analysis_loader.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Keep bounded health analysis responsive using safe accelerated YAML parsing with equivalent diagnostics; preserve deadlines and propagate timeouts instead of reporting partial success.",
+    "targetBranch": "main",
+    "acceptedBaseSha": "959224a9cc95fe0a73a0d26b285c6b17b7c55561",
+    "complexity": "S",
+    "estimatedMinutes": 35,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "No change to8second health deadline, required CI, protected profiles or foreign scope.",
+      "No runtime deployment, remote ticket selection edits or test quarantine."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use existing safe libyaml loader with pure-Python fallback; qualify output parity and let TimeoutError propagate from both YAML and text parsing.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "analysis-parsers",
+          "paths": [
+            "planfile/analysis/parsers/yaml_parser.py",
+            "planfile/analysis/parsers/text_parser.py"
+          ]
+        },
+        {
+          "name": "health-contract",
+          "paths": [
+            "tests/test_health_check.py",
+            "tests/test_yaml_analysis_loader.py"
+          ]
+        }
+      ],
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected corrective/revert source change; preserve deadlines, authoritative tickets and CI history."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_health_check.py tests/test_health_analysis.py tests/test_yaml_analysis_loader.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Compare safe loader outputs on realistic YAML fixtures and whole-repository health summary; prove TimeoutError cannot become partial success; retain exact current-head/base protected verification."
+      }
+    ]
+  }
+}
