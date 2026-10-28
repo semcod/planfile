@@ -18,7 +18,14 @@ from threading import RLock
 import yaml
 from pydantic import BaseModel
 
-from planfile.project_paths import ensure_project_root
+from planfile.project_paths import (
+    OPERATIONAL_RECEIPT_FILENAME,
+    ensure_project_root,
+    is_operational_store_enabled,
+    resolve_git_common_dir,
+    resolve_operational_base_dir,
+    resolve_primary_project_root,
+)
 
 from .jsonl_tail import OPERATIONS_TAIL_MAX_BYTES, read_jsonl_tail
 from .models import TICKET_CONTRACT_VERSION, Ticket
@@ -78,9 +85,28 @@ class Store(StoreFileMixin, TicketStoreMixin):
     TERMINAL_STATUSES = {"done", "canceled", "failed", "blocked"}
     LOCK_TIMEOUT_SECONDS = 10.0
 
-    def __init__(self, directory: str | Path):
+    def __init__(self, directory: str | Path, *, operational: bool | None = None):
         self.project_dir = ensure_project_root(directory)
-        self.base_dir = self.project_dir / ".planfile"
+        self.primary_project_dir = resolve_primary_project_root(self.project_dir)
+        self.tracked_base_dir = self.primary_project_dir / ".planfile"
+        self.operational_mode = (
+            bool(operational)
+            if operational is not None
+            else is_operational_store_enabled(self.project_dir)
+        )
+        self._ticket_index_rebuild_deferred_until = 0.0
+        self._ticket_index_signature_cache: tuple[float, tuple, tuple] | None = None
+        self._ticket_index_signature_cache_lock = RLock()
+        self._bind_base_dir(
+            resolve_operational_base_dir(self.project_dir)
+            if self.operational_mode
+            else (self.project_dir / ".planfile")
+        )
+        if self.operational_mode:
+            self._ensure_operational_store_bootstrapped()
+
+    def _bind_base_dir(self, base_dir: Path) -> None:
+        self.base_dir = Path(base_dir).resolve()
         self._config_path = self.base_dir / "config.yaml"
         self._sprints_dir = self.base_dir / "sprints"
         self._lock_path = self.base_dir / ".store.lock"
@@ -92,10 +118,239 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._evidence_dir = self.base_dir / "evidence"
         self._ticket_index_path = self.base_dir / "index" / "tickets.sqlite3"
         self._ticket_index_rebuild_lock_path = self.base_dir / "index" / ".rebuild.lock"
-        self._ticket_index_rebuild_deferred_until = 0.0
-        self._ticket_index_signature_cache: tuple[float, tuple, tuple] | None = None
-        self._ticket_index_signature_cache_lock = RLock()
         self._history_locations_path = self.base_dir / "index" / "history-locations.yaml"
+        self._operational_receipt_path = self.base_dir / OPERATIONAL_RECEIPT_FILENAME
+
+    def _ensure_operational_store_bootstrapped(self, *, force_reconcile: bool = False) -> dict:
+        """Non-destructively seed and recover operational state from tracked .planfile."""
+        from filelock import FileLock
+
+        from planfile.core.fastio import _atomic_write_text
+
+        self.base_dir.parent.mkdir(parents=True, exist_ok=True)
+        migration_lock = self.base_dir.parent / ".operational-migration.lock"
+        with FileLock(str(migration_lock), timeout=self.LOCK_TIMEOUT_SECONDS):
+            self.base_dir.mkdir(parents=True, exist_ok=True)
+            staging_marker = self.base_dir / ".migration-staging"
+            existing_receipt: dict = {}
+            if self._operational_receipt_path.is_file():
+                try:
+                    loaded = json.loads(self._operational_receipt_path.read_text(encoding="utf-8"))
+                    if isinstance(loaded, dict):
+                        existing_receipt = loaded
+                except (OSError, ValueError):
+                    existing_receipt = {}
+
+            recovered_interrupted = staging_marker.exists() or (
+                bool(existing_receipt) and existing_receipt.get("status") != "ready"
+            )
+            if (
+                not force_reconcile
+                and not recovered_interrupted
+                and existing_receipt.get("status") == "ready"
+                and existing_receipt.get("enabled") is True
+                and self._config_path.exists()
+            ):
+                return existing_receipt
+
+            _atomic_write_text(
+                staging_marker,
+                json.dumps(
+                    {
+                        "started_at": datetime.now(timezone.utc).isoformat(),
+                        "project_dir": str(self.project_dir),
+                    }
+                ),
+            )
+            source_dirs = [
+                candidate.resolve()
+                for candidate in dict.fromkeys((self.project_dir / ".planfile", self.tracked_base_dir))
+                if candidate.is_dir() and candidate.resolve() != self.base_dir
+            ]
+            backup_dir = self.base_dir / "storage-backups" / "operational-migration"
+            for source_dir in source_dirs:
+                if not backup_dir.exists():
+                    backup_dir.mkdir(parents=True, exist_ok=True)
+                    for rel_sub in ("config.yaml", "sprints", "sync"):
+                        src_item = source_dir / rel_sub
+                        dst_item = backup_dir / rel_sub
+                        if src_item.is_file():
+                            shutil.copy2(src_item, dst_item)
+                        elif src_item.is_dir():
+                            shutil.copytree(src_item, dst_item, dirs_exist_ok=True)
+
+                for pattern in ("*.planfile.yaml", "*.planfile.yml"):
+                    for cfg_file in source_dir.glob(pattern):
+                        dest_cfg = self.base_dir / cfg_file.name
+                        if not dest_cfg.exists():
+                            shutil.copy2(cfg_file, dest_cfg)
+
+                src_config_path = source_dir / "config.yaml"
+                if src_config_path.is_file():
+                    src_cfg = yaml.safe_load(src_config_path.read_text(encoding="utf-8")) or {}
+                    if not isinstance(src_cfg, dict):
+                        src_cfg = {}
+                    if not self._config_path.exists():
+                        self._write_yaml_atomic(self._config_path, src_cfg, allow_unicode=True)
+                    else:
+                        dst_cfg = self._read_config()
+                        src_next = int(src_cfg.get("next_id", 1) or 1)
+                        dst_next = int(dst_cfg.get("next_id", 1) or 1)
+                        merged_cfg = {**src_cfg, **dst_cfg}
+                        merged_cfg["next_id"] = max(src_next, dst_next)
+                        if merged_cfg != dst_cfg:
+                            self._write_yaml_atomic(self._config_path, merged_cfg, allow_unicode=True)
+
+                src_sprints = source_dir / "sprints"
+                if src_sprints.is_dir():
+                    self._sprints_dir.mkdir(parents=True, exist_ok=True)
+                    for sprint_file in sorted(src_sprints.glob("*.yaml")):
+                        dst_sprint = self._sprints_dir / sprint_file.name
+                        if not dst_sprint.exists():
+                            shutil.copy2(sprint_file, dst_sprint)
+                        else:
+                            try:
+                                src_data = yaml.safe_load(sprint_file.read_text(encoding="utf-8")) or {}
+                                dst_data = yaml.safe_load(dst_sprint.read_text(encoding="utf-8")) or {}
+                            except Exception:
+                                continue
+                            src_root = src_data.get("sprint", src_data) if isinstance(src_data, dict) else {}
+                            dst_root = dst_data.get("sprint", dst_data) if isinstance(dst_data, dict) else {}
+                            src_tickets = src_root.get("tickets") if isinstance(src_root, dict) else None
+                            dst_tickets = dst_root.get("tickets") if isinstance(dst_root, dict) else None
+                            if isinstance(src_tickets, dict) and isinstance(dst_tickets, dict):
+                                missing = {k: v for k, v in src_tickets.items() if k not in dst_tickets}
+                                if missing:
+                                    dst_tickets.update(missing)
+                                    self._write_yaml_atomic(dst_sprint, dst_data, allow_unicode=True)
+
+                src_sync = source_dir / "sync"
+                if src_sync.is_dir():
+                    dst_sync = self.base_dir / "sync"
+                    dst_sync.mkdir(parents=True, exist_ok=True)
+                    for item in sorted(src_sync.iterdir()):
+                        if not item.is_file() or item.name.endswith(".lock"):
+                            continue
+                        dst_item = dst_sync / item.name
+                        if not dst_item.exists():
+                            shutil.copy2(item, dst_item)
+                        elif item.name.endswith(".state.yaml"):
+                            try:
+                                src_state = yaml.safe_load(item.read_text(encoding="utf-8")) or {}
+                                dst_state = yaml.safe_load(dst_item.read_text(encoding="utf-8")) or {}
+                            except Exception:
+                                continue
+                            if isinstance(src_state, dict) and isinstance(dst_state, dict):
+                                src_map = src_state.get("ticket_map") or {}
+                                dst_map = dst_state.get("ticket_map") or {}
+                                if isinstance(src_map, dict) and isinstance(dst_map, dict):
+                                    merged_map = {**src_map, **dst_map}
+                                    if merged_map != dst_map:
+                                        dst_state["ticket_map"] = merged_map
+                                        for k in ("schema", "backend", "repository", "repository_id", "repository_aliases"):
+                                            if k not in dst_state and k in src_state:
+                                                dst_state[k] = src_state[k]
+                                        _atomic_write_text(
+                                            dst_item,
+                                            yaml.safe_dump(dst_state, default_flow_style=False, sort_keys=False),
+                                        )
+
+                for rel_file in ("events/operations.jsonl", "index/history-locations.yaml"):
+                    src_rel = source_dir / rel_file
+                    dst_rel = self.base_dir / rel_file
+                    if src_rel.is_file() and not dst_rel.exists():
+                        dst_rel.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copy2(src_rel, dst_rel)
+
+            staging_marker.unlink(missing_ok=True)
+            receipt = {
+                "schema": "planfile.operational-store/v1",
+                "enabled": True,
+                "status": "ready",
+                "project_dir": str(self.project_dir),
+                "canonical_project_dir": str(self.primary_project_dir),
+                "canonical_planfile_dir": str(self.tracked_base_dir),
+                "operational_base_dir": str(self.base_dir),
+                "recovered_interrupted": bool(recovered_interrupted),
+                "backup_dir": str(backup_dir) if backup_dir.exists() else None,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            _atomic_write_text(
+                self._operational_receipt_path,
+                json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+            )
+            return receipt
+
+    def enable_operational_intake(self, *, persist_git_config: bool = True) -> dict:
+        """Enable repository-bound operational store routing without mutating tracked files."""
+        import subprocess
+
+        self.operational_mode = True
+        self._bind_base_dir(resolve_operational_base_dir(self.project_dir))
+        receipt = self._ensure_operational_store_bootstrapped(force_reconcile=True)
+        if not self.is_initialized():
+            self.init()
+        if persist_git_config and resolve_git_common_dir(self.project_dir) is not None:
+            subprocess.run(
+                ["git", "-C", str(self.project_dir), "config", "--local", "planfile.operationalStore", "true"],
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=5,
+            )
+        return receipt
+
+    def rollback_operational_intake(
+        self,
+        *,
+        restore_tracked_files: bool = False,
+        persist_git_config: bool = True,
+    ) -> dict:
+        """Disable operational store routing and optionally export state back to .planfile."""
+        import subprocess
+
+        from planfile.core.fastio import _atomic_write_text
+
+        operational_dir = resolve_operational_base_dir(self.project_dir)
+        receipt_path = operational_dir / OPERATIONAL_RECEIPT_FILENAME
+        if restore_tracked_files and operational_dir.is_dir():
+            target_dir = self.project_dir / ".planfile"
+            target_dir.mkdir(parents=True, exist_ok=True)
+            if (operational_dir / "config.yaml").is_file():
+                shutil.copy2(operational_dir / "config.yaml", target_dir / "config.yaml")
+            for sub in ("sprints", "sync"):
+                src_sub = operational_dir / sub
+                if src_sub.is_dir():
+                    dst_sub = target_dir / sub
+                    dst_sub.mkdir(parents=True, exist_ok=True)
+                    for item in sorted(src_sub.iterdir()):
+                        if item.is_file() and not item.name.endswith(".lock"):
+                            shutil.copy2(item, dst_sub / item.name)
+
+        receipt = {
+            "schema": "planfile.operational-store/v1",
+            "enabled": False,
+            "status": "rolled_back",
+            "project_dir": str(self.project_dir),
+            "canonical_project_dir": str(self.primary_project_dir),
+            "canonical_planfile_dir": str(self.tracked_base_dir),
+            "operational_base_dir": str(operational_dir),
+            "restored_tracked_files": bool(restore_tracked_files),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        if operational_dir.is_dir():
+            _atomic_write_text(receipt_path, json.dumps(receipt, indent=2, sort_keys=True) + "\n")
+        if persist_git_config and resolve_git_common_dir(self.project_dir) is not None:
+            subprocess.run(
+                ["git", "-C", str(self.project_dir), "config", "--local", "planfile.operationalStore", "false"],
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=5,
+            )
+        self.operational_mode = False
+        self._bind_base_dir(self.project_dir / ".planfile")
+        return receipt
 
     def _storage_config(self) -> dict:
         configured = self._read_config().get("storage") or {}
@@ -1096,8 +1351,35 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
         highest = max(highest, JournalHighwater(self._operations_path).highwater(prefix))
 
-        sync_dir = self.base_dir / "sync"
-        if sync_dir.exists():
+        sync_dirs = [self.base_dir / "sync"]
+        if (
+            getattr(self, "operational_mode", False)
+            and getattr(self, "tracked_base_dir", None) is not None
+            and self.tracked_base_dir.is_dir()
+            and self.tracked_base_dir != self.base_dir
+        ):
+            tracked_cfg_path = self.tracked_base_dir / "config.yaml"
+            if tracked_cfg_path.is_file():
+                try:
+                    tracked_cfg = _read_yaml_file(tracked_cfg_path) or {}
+                    if isinstance(tracked_cfg, dict) and tracked_cfg.get("prefix", "PLF") == prefix:
+                        highest = max(highest, int(tracked_cfg.get("next_id", 1) or 1) - 1)
+                except Exception:
+                    pass
+            tracked_sprints = self.tracked_base_dir / "sprints"
+            if tracked_sprints.is_dir():
+                for pattern_glob in ("*.yaml", "archive/*.yaml"):
+                    for source in sorted(tracked_sprints.glob(pattern_glob)):
+                        try:
+                            for match in marker_pattern.finditer(source.read_text(encoding="utf-8")):
+                                highest = max(highest, int(match.group(1)))
+                        except Exception:
+                            pass
+            sync_dirs.append(self.tracked_base_dir / "sync")
+
+        for sync_dir in sync_dirs:
+            if not sync_dir.exists():
+                continue
             try:
                 for entry in os.scandir(sync_dir):
                     if entry.name.endswith(".state.yaml") and entry.is_file():

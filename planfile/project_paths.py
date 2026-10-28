@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -11,6 +13,11 @@ from planfile.utils.repository import normalize_repository
 from planfile.utils.yaml_cache import read_yaml_file as _read_yaml_file
 
 PLANFILE_DIRNAME = ".planfile"
+OPERATIONAL_STORE_DIRNAME = "planfile-operational"
+OPERATIONAL_RECEIPT_FILENAME = ".operational-store.json"
+
+_TRUTHY_MODES = {"1", "true", "yes", "on", "operational"}
+_FALSY_MODES = {"0", "false", "no", "off", "tracked"}
 
 
 class RepositoryRoutingError(RuntimeError):
@@ -40,14 +47,122 @@ def _git_root(path: Path) -> Path | None:
     return Path(value).resolve() if value else None
 
 
+def resolve_git_common_dir(path: str | Path) -> Path | None:
+    """Resolve the shared Git common directory across primary and linked worktrees."""
+    target = Path(path).resolve()
+    value = _git_value(target, "rev-parse", "--git-common-dir")
+    if not value:
+        return None
+    candidate = Path(value)
+    return candidate.resolve() if candidate.is_absolute() else (target / candidate).resolve()
+
+
+def resolve_primary_project_root(path: str | Path) -> Path:
+    """Return the canonical primary checkout root owning *path*."""
+    target = Path(path).resolve()
+    common_dir = resolve_git_common_dir(target)
+    if common_dir is not None and common_dir.name == ".git":
+        return common_dir.parent.resolve()
+    return _git_root(target) or target
+
+
+def _configured_operational_root_from_yaml(project_dir: Path) -> str | None:
+    for root in dict.fromkeys((project_dir, resolve_primary_project_root(project_dir))):
+        config_path = root / PLANFILE_DIRNAME / "config.yaml"
+        try:
+            data = _read_yaml_file(config_path) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        storage = data.get("storage")
+        if isinstance(storage, dict) and storage.get("operational_store_root"):
+            return str(storage["operational_store_root"]).strip()
+    return None
+
+
+def resolve_operational_base_dir(project_dir: str | Path) -> Path:
+    """Return the repository-bound operational ``.planfile`` directory outside tracked source."""
+    target = Path(project_dir).resolve()
+    primary_root = resolve_primary_project_root(target)
+    configured_root = (
+        os.environ.get("PLANFILE_OPERATIONAL_STORE_ROOT", "").strip()
+        or (_git_value(target, "config", "--get", "planfile.operationalStoreRoot") or "").strip()
+        or _configured_operational_root_from_yaml(target)
+    )
+    if configured_root:
+        raw = Path(configured_root).expanduser()
+        resolved = raw.resolve() if raw.is_absolute() else (primary_root / raw).resolve()
+        return resolved if resolved.name == PLANFILE_DIRNAME else resolved / PLANFILE_DIRNAME
+    common_dir = resolve_git_common_dir(target)
+    if common_dir is not None:
+        return (common_dir / OPERATIONAL_STORE_DIRNAME / PLANFILE_DIRNAME).resolve()
+    return (primary_root / ".subactor" / OPERATIONAL_STORE_DIRNAME / PLANFILE_DIRNAME).resolve()
+
+
+def is_operational_store_enabled(project_dir: str | Path) -> bool:
+    """Determine whether *project_dir* routes operational state outside tracked files."""
+    target = Path(project_dir).resolve()
+    for env_key in ("PLANFILE_OPERATIONAL_STORE", "PLANFILE_STORE_MODE"):
+        env_val = os.environ.get(env_key, "").strip().lower()
+        if env_val in _TRUTHY_MODES:
+            return True
+        if env_val in _FALSY_MODES:
+            return False
+
+    for git_key in ("planfile.operationalStore", "planfile.storeMode"):
+        git_val = (_git_value(target, "config", "--get", git_key) or "").strip().lower()
+        if git_val in _TRUTHY_MODES:
+            return True
+        if git_val in _FALSY_MODES:
+            return False
+
+    operational_dir = resolve_operational_base_dir(target)
+    receipt_path = operational_dir / OPERATIONAL_RECEIPT_FILENAME
+    if receipt_path.is_file():
+        try:
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            receipt = None
+        if isinstance(receipt, dict) and isinstance(receipt.get("enabled"), bool):
+            return bool(receipt["enabled"])
+
+    for root in dict.fromkeys((target, resolve_primary_project_root(target))):
+        config_path = root / PLANFILE_DIRNAME / "config.yaml"
+        try:
+            data = _read_yaml_file(config_path) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        storage = data.get("storage")
+        if isinstance(storage, dict):
+            if storage.get("operational_store") is True:
+                return True
+            if str(storage.get("mode") or "").strip().lower() == "operational":
+                return True
+    return False
+
+
 def _configured_github_repository(project_path: Path) -> str | None:
     """Read the repository binding from the project-local integration config."""
-    for config_path in (
+    primary_root = resolve_primary_project_root(project_path)
+    candidates = [
         project_path / "github.planfile.yaml",
         project_path / "integrations.oql.planfile.yaml",
         project_path / ".planfile" / "github.planfile.yaml",
         project_path / ".planfile" / "integrations.oql.planfile.yaml",
-    ):
+    ]
+    if primary_root != project_path:
+        candidates.extend(
+            [
+                primary_root / "github.planfile.yaml",
+                primary_root / "integrations.oql.planfile.yaml",
+                primary_root / ".planfile" / "github.planfile.yaml",
+                primary_root / ".planfile" / "integrations.oql.planfile.yaml",
+            ]
+        )
+    for config_path in candidates:
         try:
             data = _read_yaml_file(config_path) or {}
         except (OSError, yaml.YAMLError):
@@ -127,7 +242,9 @@ def canonical_project_root(start: str | Path) -> Path:
         project_root = path
     else:
         project_root = _walk_for_repo_store(path, start_root)
-    if (project_root / PLANFILE_DIRNAME).is_dir():
+        if project_root == path and start_root != path and is_operational_store_enabled(start_root):
+            project_root = start_root
+    if (project_root / PLANFILE_DIRNAME).is_dir() or is_operational_store_enabled(project_root):
         _validate_repository_origin(project_root)
     return project_root
 
@@ -143,8 +260,14 @@ def ensure_project_root(directory: str | Path) -> Path:
 
 
 __all__ = [
+    "OPERATIONAL_RECEIPT_FILENAME",
+    "OPERATIONAL_STORE_DIRNAME",
     "PLANFILE_DIRNAME",
     "RepositoryRoutingError",
     "canonical_project_root",
     "ensure_project_root",
+    "is_operational_store_enabled",
+    "resolve_git_common_dir",
+    "resolve_operational_base_dir",
+    "resolve_primary_project_root",
 ]
