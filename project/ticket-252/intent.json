@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-252",
+  "summary": "Untrack generated fastio sidecar mirrors from Git",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-252/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".governance/manifest.json",
+    ".governance/standard-adoption.json",
+    ".planfile/**/*.fast.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "4adc9a21c3ee03fd11fa4d83ecdccd8dde701147",
+    "outcome": "Assign .planfile/**/*.fast.json to governance.ownedPaths in .governance/manifest.json and untrack the generated .planfile/*.fast.json sidecar mirrors from the Git index while keeping *.fast.json ignored.",
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "Do not modify runtime Python code or dependency lockfiles."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add .planfile/**/*.fast.json to governance.ownedPaths in .governance/manifest.json, refresh .governance/standard-adoption.json manifest digest, and untrack the three .planfile/**/*.fast.json files from Git.",
+      "components": [
+        {
+          "name": "governance manifest and fastio mirror index cleanup",
+          "paths": [
+            ".governance/manifest.json",
+            ".governance/standard-adoption.json",
+            ".planfile/config.yaml.fast.json",
+            ".planfile/sprints/backlog.yaml.fast.json",
+            ".planfile/sprints/current.yaml.fast.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git revert of the governance fastio mirror untracking commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": ".governance/manifest.json includes .planfile/**/*.fast.json under governance.ownedPaths and .governance/standard-adoption.json digest matches."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q tests/test_fastio.py tests/test_fastio_cli.py",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "git ls-files '*.fast.json' is empty and fastio tests pass."
+      }
+    ]
+  }
+}
