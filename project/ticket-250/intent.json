@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-250",
+  "summary": "Prevent fastio reads from rewriting tracked mirrors and add PLANFILE_MIRROR_WRITE",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-250/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/fastio.py",
+    "planfile/project_paths.py",
+    "tests/test_fastio.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "c14396fd977a52aae5d358d091afff2771c6b7d4",
+    "outcome": "Prevent fastio reads and writes from dirtying Git-tracked .fast.json mirrors, surface tracked mirrors in audit_mirror, and support PLANFILE_MIRROR_WRITE=0 for side-effect-free reads.",
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "Do not modify dependency manifests or lockfiles."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Guard write_mirror, write_sprint_native, and read_yaml_native with mirror_write_enabled() and cached Git index inspection (is_tracked_mirror), and report tracked mirrors in audit_mirror.",
+      "components": [
+        {
+          "name": "fastio mirror write guard",
+          "paths": [
+            "planfile/core/fastio.py",
+            "planfile/project_paths.py",
+            "tests/test_fastio.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "mirror_write_enabled, find_tracked_mirrors, and is_tracked_mirror helpers in planfile.core.fastio"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git revert of the fastio mirror write guard commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_fastio.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Git repository fixture with tracked .fast.json mirror remains clean (git status --porcelain empty) after read_yaml_fast."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q tests/test_fastio.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "PLANFILE_MIRROR_WRITE=0 prevents mirror file creation while returning parsed YAML."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 -m pytest -q tests/test_fastio.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "audit_mirror reports ok=False and healed=False when a mirror is tracked in git."
+      }
+    ]
+  }
+}

@@ -170,3 +170,64 @@ class TestStoreIntegration:
         assert mirror.read_text() != first, "update must refresh the mirror"
         got = store.get_ticket("PLF-001")
         assert str(getattr(got, "status", "")).endswith("done")
+
+
+class TestMirrorWriteControlsAndGitTracking:
+    def test_planfile_mirror_write_env_disables_mirror_creation(self, tmp_path, monkeypatch):
+        y = tmp_path / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets:\n    PLF-1:\n      name: a\n")
+        monkeypatch.setenv("PLANFILE_MIRROR_WRITE", "0")
+
+        assert fastio.mirror_write_enabled() is False
+        data = fastio.read_yaml_fast(y)
+        assert data["sprint"]["tickets"]["PLF-1"]["name"] == "a"
+        assert not fastio.mirror_path(y).exists()
+
+        fastio.write_mirror(y, data)
+        assert not fastio.mirror_path(y).exists()
+        assert fastio.write_sprint_native(y, data, allow_unicode=True) is False
+
+    def test_tracked_mirror_is_not_rewritten_by_reads_and_keeps_worktree_clean(self, tmp_path):
+        import os
+        import subprocess
+
+        subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=tmp_path, check=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=tmp_path, check=True)
+        (tmp_path / ".gitignore").write_text(".planfile/\n", encoding="utf-8")
+
+        sprints = tmp_path / ".planfile" / "sprints"
+        sprints.mkdir(parents=True)
+        y = sprints / "current.yaml"
+        _write_yaml(y, "sprint:\n  tickets:\n    PLF-1:\n      name: clean\n")
+        mirror = fastio.mirror_path(y)
+        stale_mirror = {"version": 1, "yaml_mtime_ns": 1, "data": {"sprint": {"tickets": {}}}}
+        mirror.write_text(json.dumps(stale_mirror), encoding="utf-8")
+
+        subprocess.run(["git", "add", ".gitignore"], cwd=tmp_path, check=True)
+        subprocess.run(["git", "add", "-f", str(y.relative_to(tmp_path)), str(mirror.relative_to(tmp_path))], cwd=tmp_path, check=True)
+        subprocess.run(["git", "commit", "-q", "-m", "initial"], cwd=tmp_path, check=True)
+
+        # Simulate fresh checkout where mtimes do not match the committed mirror
+        os.utime(y, ns=(y.stat().st_atime_ns, y.stat().st_mtime_ns + 5_000_000))
+
+        assert fastio.find_tracked_mirrors(tmp_path) == [".planfile/sprints/current.yaml.fast.json"]
+        assert fastio.is_tracked_mirror(mirror) is True
+
+        data = fastio.read_yaml_fast(y)
+        assert data["sprint"]["tickets"]["PLF-1"]["name"] == "clean"
+
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        assert status == "", f"read must not dirty tracked mirror, got: {status!r}"
+
+        audit = fastio.audit_mirror(y)
+        assert audit["ok"] is False
+        assert audit["healed"] is False
+        assert "tracked in git" in (audit["reason"] or "")
+

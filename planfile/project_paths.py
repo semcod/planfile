@@ -24,15 +24,30 @@ class RepositoryRoutingError(RuntimeError):
     """Raised when discovery would cross or misidentify a Git repository."""
 
 
+def _has_git_marker(path: Path) -> bool:
+    try:
+        resolved = path.resolve()
+    except OSError:
+        resolved = path
+    current = resolved if resolved.is_dir() else resolved.parent
+    for candidate in (current, *current.parents):
+        if (candidate / ".git").exists():
+            return True
+        if candidate.name == ".ci-home" or candidate.name.startswith("pytest-"):
+            return False
+    return False
+
+
 def _git_value(path: Path, *args: str) -> str | None:
     """Read one Git value without changing the checkout."""
+    if not _has_git_marker(path):
+        return None
     try:
         result = subprocess.run(
             ["git", "-C", str(path), *args],
             capture_output=True,
             check=False,
             text=True,
-            timeout=5,
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
