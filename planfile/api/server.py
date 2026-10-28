@@ -84,6 +84,9 @@ API_CAPABILITIES = [
     "ticket.fail.expected_updated_at",
     "ticket.update.expected_updated_at",
     "ticket.complete.expected_updated_at",
+    "ticket.create.dag_relationships",
+    "ticket.update.dag_relationships",
+    "findings.comparative.admit",
 ]
 
 
@@ -134,7 +137,15 @@ class TicketCreate(BaseModel):
     priority: str = "normal"
     sprint: str = Field("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
     description: str = ""
+    acceptance_criteria: list[str] = Field(default_factory=list)
     labels: list[str] = Field(default_factory=list)
+    blocked_by: list[str] = Field(default_factory=list)
+    blocks: list[str] = Field(default_factory=list)
+    parent: str | None = None
+    children: list[str] = Field(default_factory=list)
+    group: str | None = None
+    files: list[str] = Field(default_factory=list)
+    sync: dict[str, Any] = Field(default_factory=dict)
     executor: TicketExecutor | None = None
     execution: TicketExecution | None = None
     inputs: TicketInputs | None = None
@@ -148,17 +159,33 @@ class TicketUpdate(BaseModel):
     priority: str | None = None
     name: str | None = None
     description: str | None = None
+    acceptance_criteria: list[str] | None = None
     labels: list[str] | None = None
+    blocked_by: list[str] | None = None
+    blocks: list[str] | None = None
+    parent: str | None = None
+    children: list[str] | None = None
+    group: str | None = None
+    files: list[str] | None = None
+    sync: dict[str, Any] | None = None
     executor: TicketExecutor | None = None
     execution: TicketExecution | None = None
     inputs: TicketInputs | None = None
     outputs: TicketOutputs | None = None
+    expected_updated_at: str | None = None
     reason: str | None = None
     actor: str | None = None
 
 
 class TicketUpdateIfCurrentRequest(TicketUpdate):
     expected_updated_at: str = Field(..., min_length=1, pattern=r"\S")
+
+
+class ComparativeFindingsAdmitRequest(BaseModel):
+    findings: list[dict[str, Any]]
+    current_target_heads: dict[str, str] | None = None
+    sprint: str = Field("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
+    dry_run: bool = False
 
 
 class TicketEvidenceAppendRequest(BaseModel):
@@ -900,16 +927,74 @@ def list_tickets(
     )
 
 
+def _validate_api_dag_relations(
+    pf,
+    *,
+    subject_id: str,
+    blocked_by: list[str] | None = None,
+    blocks: list[str] | None = None,
+    parent: str | None = None,
+    children: list[str] | None = None,
+) -> None:
+    """Validate existence and DAG acyclicity for blocked_by/blocks/parent/children."""
+    from planfile.core.decompose import _check_dag_edges
+
+    for ref in [*(blocked_by or []), *(blocks or []), *(children or []), *([parent] if parent else [])]:
+        if ref == subject_id:
+            raise HTTPException(409, f"self_dependency_or_hierarchy_forbidden:{subject_id}")
+        if pf.get_ticket(ref, repair_index=False) is None:
+            raise HTTPException(422, f"related_ticket_not_found:{ref}")
+
+    existing_tickets = list(pf.list_tickets(sprint="all"))
+    all_nodes = list({*(t.id for t in existing_tickets), subject_id})
+    edges: list[tuple[str, str]] = [
+        (t.id, dep)
+        for t in existing_tickets
+        if t.id != subject_id
+        for dep in (t.blocked_by or [])
+    ]
+    current_ticket = next((t for t in existing_tickets if t.id == subject_id), None)
+    effective_blocked_by = (
+        blocked_by
+        if blocked_by is not None
+        else (list(current_ticket.blocked_by or []) if current_ticket else [])
+    )
+    for dep in effective_blocked_by:
+        edges.append((subject_id, dep))
+    for dep_target in blocks or []:
+        edges.append((dep_target, subject_id))
+    is_dag, cycle_nodes = _check_dag_edges(edges, all_nodes)
+    if not is_dag:
+        raise HTTPException(409, f"dependency_cycle_detected:{cycle_nodes}")
+
+
 @app.post("/tickets", status_code=201, tags=["tickets"])
 async def create_ticket(body: TicketCreate, response: Response):
     pf = get_planfile()
     _validate_process_envelope(body.labels, body.inputs)
+    if body.blocked_by or body.blocks or body.parent or body.children:
+        _validate_api_dag_relations(
+            pf,
+            subject_id="__new_ticket__",
+            blocked_by=body.blocked_by,
+            blocks=body.blocks,
+            parent=body.parent,
+            children=body.children,
+        )
     ticket, created = pf.create_ticket_deduplicated(
         name=body.name,
         priority=body.priority,
         sprint=body.sprint,
         description=body.description,
+        acceptance_criteria=body.acceptance_criteria,
         labels=body.labels,
+        blocked_by=body.blocked_by,
+        blocks=body.blocks,
+        parent=body.parent,
+        children=body.children,
+        group=body.group,
+        files=body.files,
+        sync=body.sync,
         executor=body.executor,
         execution=body.execution,
         inputs=body.inputs,
@@ -922,6 +1007,38 @@ async def create_ticket(body: TicketCreate, response: Response):
         return ticket.model_dump(mode="json", exclude_none=True)
     await _broadcast_ticket_event("ticket.changed", "create", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
+
+
+@app.post("/findings/comparative/admit", tags=["tickets"])
+async def admit_comparative_findings_endpoint(body: ComparativeFindingsAdmitRequest):
+    """Admit comparative improvement findings as idempotent repository-scoped ticket DAGs."""
+    from planfile.core.comparative_findings import (
+        ComparativeDependencyError,
+        ComparativeFindingError,
+        ObsoleteTargetHeadError,
+        admit_comparative_findings,
+    )
+
+    pf = get_planfile()
+    try:
+        report = admit_comparative_findings(
+            pf,
+            body.findings,
+            current_target_heads=body.current_target_heads,
+            sprint=body.sprint,
+            dry_run=body.dry_run,
+        )
+    except (ObsoleteTargetHeadError, ComparativeDependencyError) as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except (ComparativeFindingError, ValueError) as exc:
+        raise HTTPException(422, str(exc)) from exc
+    if not body.dry_run:
+        for decision in report.get("decisions", []):
+            if decision.get("mutated") and decision.get("ticket_id"):
+                admitted = pf.get_ticket(str(decision["ticket_id"]), repair_index=False)
+                if admitted is not None:
+                    await _broadcast_ticket_event("ticket.changed", "comparative_admit", admitted)
+    return report
 
 
 @app.get("/tickets/next", tags=["tickets"])
@@ -1063,6 +1180,20 @@ async def update_ticket(ticket_id: str, body: TicketUpdate):
         body.inputs if body.inputs is not None else current.inputs,
         require_for_legacy=False,
     )
+    if (
+        body.blocked_by is not None
+        or body.blocks is not None
+        or body.parent is not None
+        or body.children is not None
+    ):
+        _validate_api_dag_relations(
+            pf,
+            subject_id=ticket_id,
+            blocked_by=body.blocked_by,
+            blocks=body.blocks,
+            parent=body.parent,
+            children=body.children,
+        )
     updates = _merged_ticket_updates(body, current)
     if body.status is not None and str(body.status) != str(current.status.value):
         updates["actor"] = body.actor or "unknown:api"
