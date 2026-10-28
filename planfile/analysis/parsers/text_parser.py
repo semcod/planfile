@@ -35,7 +35,6 @@ def analyze_text(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
     try:
         with open(file_path, encoding='utf-8', errors='ignore') as f:
             content = f.read()
-            lines = content.split('\n')
 
         # Extract issues from patterns
         for pattern_name, pattern in ISSUE_PATTERNS.items():
@@ -111,6 +110,8 @@ def analyze_text(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
                         file_path=str(file_path)
                     ))
 
+    except TimeoutError:
+        raise
     except Exception:
         # Skip files that can't be read as text
         pass
