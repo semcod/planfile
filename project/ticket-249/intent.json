@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-249",
+  "summary": "Return typed retryable API refusal on real ticket-store lock contention",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-249/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/api/server.py",
+    "tests/test_store_lock_timeout.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-243"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "b5e525c941c21cafda3c74b915f6fcace9f1c48c",
+    "outcome": "Fix semcod/planfile#299 by translating pre-commit StoreLockTimeoutError contention into a sanitized, typed retryable HTTP 503 response with Retry-After while preserving writer ownership, ticket state, CAS preconditions, and evidence idempotency.",
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "Do not delete locks, interrupt active writer processes, or alter lock timeout thresholds.",
+      "Do not silently replay non-idempotent ticket creation, claim, or update mutations.",
+      "Do not duplicate disposable-index contention changes from ticket-243."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Register a FastAPI StoreLockTimeoutError exception handler returning HTTP 503 with Retry-After and sanitized typed JSON, propagate StoreLockTimeoutError from DSL/YAML API endpoints, and verify with real separate-process flock contention tests.",
+      "components": [
+        {
+          "name": "FastAPI store-lock contention handling and regression tests",
+          "paths": [
+            "planfile/api/server.py",
+            "tests/test_store_lock_timeout.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "HTTP 503 ticket_store_lock_timeout response with Retry-After header on pre-commit store-lock contention"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the FastAPI StoreLockTimeoutError handler and associated tests through governed publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_store_lock_timeout.py tests/test_ticket_evidence.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Real separate-process lock contention across API mutation endpoints returns bounded HTTP 503 with Retry-After: 5 and sanitized JSON without host paths or PIDs."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q tests/test_store_lock_timeout.py tests/test_ticket_evidence.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Lock inode, holder process, ticket state, execution.attempt, sprint YAML, and evidence journals remain unchanged during contention."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 -m pytest -q tests/test_store_lock_timeout.py tests/test_ticket_evidence.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Subsequent operations, CAS/terminal/idempotency guards, and unexpected HTTP 500 error propagation work normally after lock release."
+      }
+    ]
+  }
+}
