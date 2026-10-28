@@ -13,6 +13,7 @@ from procache import CachedPyGithubRequester, SQLiteResponseCache
 from rich.console import Console
 
 from planfile.sync.base import BasePMBackend, TicketRef, TicketState
+from planfile.sync.state import normalize_repository
 
 try:
     from github import Github
@@ -668,6 +669,42 @@ class GitHubBackend(BasePMBackend):
             updated_at=updated_at_str,
             metadata=metadata,
         )
+
+    def list_selected_tickets(
+        self, ticket_ids: set[str], labels: list[str] | None = None,
+    ) -> list[TicketState]:
+        """Read only resolved issue numbers, retaining exact provider bindings."""
+        repository = normalize_repository(
+            getattr(self, "_verified_repository", None) or self.repo.full_name
+        )
+        numbers = set()
+        for reference in ticket_ids:
+            number = str(reference).strip()
+            if "#" in number:
+                prefix, number = number.rsplit("#", 1)
+                if prefix and normalize_repository(prefix) != repository:
+                    continue
+            if (number.isascii() and number.isdecimal() and int(number) > 0
+                    and str(int(number)) == number):
+                numbers.add(number)
+        tickets = []
+        for number in sorted(numbers, key=int):
+            ticket = self.get_ticket(number)
+            key_repository, separator, key_number = str(ticket.key or "").rpartition("#")
+            url_repository, url_separator, url_number = str(ticket.url or "").removeprefix(
+                "https://github.com/"
+            ).rpartition("/issues/")
+            if (str(ticket.id) != number
+                    or not separator or key_number != number
+                    or normalize_repository(key_repository) != repository
+                    or not str(ticket.url or "").startswith("https://github.com/")
+                    or not url_separator or url_number != number
+                    or normalize_repository(url_repository) != repository):
+                raise ValueError("sync_selected_provider_binding_mismatch")
+            if labels and not set(labels).issubset(ticket.labels):
+                continue
+            tickets.append(ticket)
+        return tickets
 
     def _list_tickets(
         self,

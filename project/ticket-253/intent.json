@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-253",
+  "summary": "Read only mapped issues during scoped GitHub inbound sync",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-253/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "planfile/sync/operations.py",
+    "tests/test_sync_selected_provider_reads.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Read only canonical mapped GitHub issues for selected inbound sync while retaining full/unmapped provider compatibility, repository identity, labels, CAS and execution guards.",
+    "targetBranch": "main",
+    "acceptedBaseSha": "8e2b18637514adac380018f5ffb840a87f3e05a8",
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "No change to merge policy, lease ownership, provider credentials, full sync or runtime promotion.",
+      "This slice does not close every deadline/transport requirement in issue256."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Resume existing qualified unapplied256 proposal against current source; resolve canonical selections before fetch and use a provider capability for exact issue reads.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "scoped-sync",
+          "paths": [
+            "planfile/sync/operations.py",
+            "planfile/sync/github.py",
+            "tests/test_sync_selected_provider_reads.py"
+          ]
+        }
+      ],
+      "interfaceChanges": [
+        "GitHubBackend.list_selected_tickets capability; existing CLI unchanged."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert of the source change; retain authoritative ticket records and remote terminal state."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sync_selected_provider_reads.py",
+          "python -m pytest -q tests/test_sync*.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Baseline desired contract fails; candidate exact/unmapped/sprint/identity/label/PR/failure/CAS/live-owner controls pass before full required current-head verification and independent publication."
+      }
+    ]
+  }
+}
