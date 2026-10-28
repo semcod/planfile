@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import tempfile
 import warnings
 from datetime import date, datetime, time
@@ -29,11 +30,11 @@ from typing import Any
 import yaml
 
 try:  # libyaml (10x faster); graceful fallback to pure python
-    from yaml import CSafeLoader as FastLoader
     from yaml import CSafeDumper as FastDumper
+    from yaml import CSafeLoader as FastLoader
 except ImportError:  # pragma: no cover - environment without libyaml
-    from yaml import SafeLoader as FastLoader
     from yaml import SafeDumper as FastDumper
+    from yaml import SafeLoader as FastLoader
 
 try:  # planfile-io native Rust acceleration (60x faster)
     import planfile_io_rs as _native_io
@@ -48,10 +49,86 @@ except ImportError:
 
 _MIRROR_SUFFIX = ".fast.json"
 _MIRROR_VERSION = 1
+_TRACKED_MIRRORS_CACHE: dict[str, tuple[int | None, frozenset[str]]] = {}
 
 
 def mirror_path(path: Path) -> Path:
     return path.with_name(path.name + _MIRROR_SUFFIX)
+
+
+def mirror_write_enabled() -> bool:
+    """Return False when PLANFILE_MIRROR_WRITE disables .fast.json writes."""
+    raw = os.environ.get("PLANFILE_MIRROR_WRITE")
+    if raw is None:
+        return True
+    return raw.strip().lower() not in {"0", "false", "no", "off"}
+
+
+def _find_git_root(path: Path) -> Path | None:
+    try:
+        resolved = path.resolve()
+    except OSError:
+        resolved = path
+    current = resolved if resolved.is_dir() else resolved.parent
+    for candidate in (current, *current.parents):
+        git_entry = candidate / ".git"
+        if (git_entry.is_dir() and (git_entry / "HEAD").is_file()) or git_entry.is_file():
+            return candidate
+    return None
+
+
+def _git_index_mtime_ns(repo_root: Path) -> int | None:
+    git_entry = repo_root / ".git"
+    try:
+        if git_entry.is_dir():
+            return (git_entry / "index").stat().st_mtime_ns
+        if git_entry.is_file():
+            raw = git_entry.read_text(encoding="utf-8").strip()
+            if raw.startswith("gitdir:"):
+                gitdir = (repo_root / raw.split(":", 1)[1].strip()).resolve()
+                return (gitdir / "index").stat().st_mtime_ns
+    except OSError:
+        return None
+    return None
+
+
+def find_tracked_mirrors(repo_root: Path) -> list[str]:
+    """Return repository-relative paths of any tracked ``*.fast.json`` mirrors."""
+    root = _find_git_root(Path(repo_root))
+    if root is None:
+        return []
+    key = str(root)
+    idx_mtime = _git_index_mtime_ns(root)
+    cached = _TRACKED_MIRRORS_CACHE.get(key)
+    if cached is not None and cached[0] == idx_mtime:
+        return sorted(cached[1])
+    try:
+        proc = subprocess.run(
+            ["git", "-C", key, "ls-files", "-z"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
+        )
+        tracked = frozenset(
+            entry for entry in proc.stdout.split("\0") if entry.endswith(_MIRROR_SUFFIX)
+        )
+    except Exception:
+        tracked = frozenset()
+    _TRACKED_MIRRORS_CACHE[key] = (idx_mtime, tracked)
+    return sorted(tracked)
+
+
+def is_tracked_mirror(mirror_file: Path) -> bool:
+    """Return True when ``mirror_file`` is tracked in its enclosing Git index."""
+    root = _find_git_root(mirror_file)
+    if root is None:
+        return False
+    try:
+        rel = mirror_file.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return False
+    return rel in find_tracked_mirrors(root)
 
 
 def _json_safe(value: Any) -> Any:
@@ -138,6 +215,11 @@ def write_mirror(yaml_path: Path, data: Any, *, mtime_ns: int | None = None) -> 
     stamp ``data`` (a snapshot from before that replace) with the mtime of
     the file AFTER it — a mismatched pair every later reader would trust.
     """
+    if not mirror_write_enabled():
+        return
+    target_mirror = mirror_path(yaml_path)
+    if is_tracked_mirror(target_mirror):
+        return
     if mtime_ns is None:
         mtime_ns = _stat_mtime_ns(yaml_path)
     if mtime_ns is None:
@@ -151,7 +233,7 @@ def write_mirror(yaml_path: Path, data: Any, *, mtime_ns: int | None = None) -> 
         "data": _normalize(data),
     }
     try:
-        _atomic_write_text(mirror_path(yaml_path), json.dumps(payload, ensure_ascii=False))
+        _atomic_write_text(target_mirror, json.dumps(payload, ensure_ascii=False))
     except Exception as exc:
         # The mirror is an optimization only; a failed write must never break
         # a ticket mutation. It must remain observable, otherwise a permanent
@@ -175,6 +257,8 @@ def write_sprint_native(yaml_path: Path, data: Any, *, allow_unicode: bool) -> b
     refuses the value; the caller must then use the Python writer. The mirror is stamped with the
     mtime the kernel read right after its own rename, as ``Store._write_yaml_atomic`` does.
     """
+    if not mirror_write_enabled() or is_tracked_mirror(mirror_path(yaml_path)):
+        return False
     from planfile.core import native
 
     outcome = native.write_sprint(
@@ -246,12 +330,18 @@ def read_yaml_fast(path: Path) -> Any | None:
 
 def read_yaml_native(path: Path | str) -> Any | None:
     """Direct high-performance read via native Rust engine (planfile-io)."""
-    if HAS_RUST_IO and _native_io is not None:
+    target_path = Path(path)
+    if (
+        HAS_RUST_IO
+        and _native_io is not None
+        and mirror_write_enabled()
+        and not is_tracked_mirror(mirror_path(target_path))
+    ):
         try:
             return _native_io.read_yaml_fast(str(path))
         except Exception:
             pass
-    return read_yaml_fast(Path(path))
+    return read_yaml_fast(target_path)
 
 
 def audit_mirror(path: Path) -> dict[str, Any]:
@@ -277,6 +367,13 @@ def audit_mirror(path: Path) -> dict[str, Any]:
     mirror_file = mirror_path(path)
     if not mirror_file.exists():
         return result  # nothing cached yet — nothing to audit
+    if is_tracked_mirror(mirror_file):
+        result.update(
+            ok=False,
+            healed=False,
+            reason="mirror is tracked in git (run git rm --cached)",
+        )
+        return result
     reason: str | None = None
     cached: Any = None
     try:
