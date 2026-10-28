@@ -1368,11 +1368,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
                     pass
             tracked_sprints = self.tracked_base_dir / "sprints"
             if tracked_sprints.is_dir():
-                for source in sorted(tracked_sprints.glob("*.yaml")):
-                    highest = max(
-                        highest,
-                        sprint_highwater(source, prefix, max_rebuild_bytes=MAX_LOCKED_REBUILD_BYTES),
-                    )
+                for pattern_glob in ("*.yaml", "archive/*.yaml"):
+                    for source in sorted(tracked_sprints.glob(pattern_glob)):
+                        try:
+                            for match in marker_pattern.finditer(source.read_text(encoding="utf-8")):
+                                highest = max(highest, int(match.group(1)))
+                        except Exception:
+                            pass
             sync_dirs.append(self.tracked_base_dir / "sync")
 
         for sync_dir in sync_dirs:
