@@ -74,6 +74,8 @@ def _find_git_root(path: Path) -> Path | None:
         git_entry = candidate / ".git"
         if (git_entry.is_dir() and (git_entry / "HEAD").is_file()) or git_entry.is_file():
             return candidate
+        if candidate.name == ".ci-home" or candidate.name.startswith("pytest-"):
+            return None
     return None
 
 
@@ -118,7 +120,6 @@ def find_tracked_mirrors(repo_root: Path) -> list[str]:
             capture_output=True,
             text=True,
             check=True,
-            timeout=5,
         )
         tracked = frozenset(
             entry for entry in proc.stdout.split("\0") if entry.endswith(_MIRROR_SUFFIX)

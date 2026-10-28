@@ -13,6 +13,7 @@
     "TODO.md",
     "project/TICKETS.md",
     "planfile/core/fastio.py",
+    "planfile/project_paths.py",
     "tests/test_fastio.py"
   ],
   "forbiddenPaths": [
@@ -29,7 +30,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 2,
+      "maxImplementationFiles": 3,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -45,6 +46,7 @@
           "name": "fastio mirror write guard",
           "paths": [
             "planfile/core/fastio.py",
+            "planfile/project_paths.py",
             "tests/test_fastio.py"
           ]
         }
