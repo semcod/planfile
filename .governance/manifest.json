@@ -59,6 +59,7 @@
           ".github/workflows/planfile-github-sync.yml",
           ".gitignore",
           ".governance/**",
+          ".planfile/**/*.fast.json",
           ".subactor/**",
           "AGENTS.md",
           "CLAUDE.md",
