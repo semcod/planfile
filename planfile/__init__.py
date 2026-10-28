@@ -885,6 +885,25 @@ class Planfile:
 
         return self.delivery_plans.resume(plan_id)
 
+    def admit_comparative_findings(
+        self,
+        findings: list,
+        *,
+        current_target_heads: dict[str, str] | None = None,
+        sprint: str = "current",
+        dry_run: bool = False,
+    ) -> dict:
+        """Admit comparative improvement findings as idempotent repository-scoped ticket DAGs."""
+        from planfile.core.comparative_findings import admit_comparative_findings
+
+        return admit_comparative_findings(
+            self,
+            findings,
+            current_target_heads=current_target_heads,
+            sprint=sprint,
+            dry_run=dry_run,
+        )
+
 
 def quick_ticket(name: str, tool: str = "unknown", **kwargs) -> Ticket:
     """One-liner ticket creation for tools."""
@@ -905,6 +924,10 @@ __all__ = [
     "CompiledWorkPlanV1", "DeliveryCheckpointV1", "DeliveryPlanError",
     "DeliveryPlanRepository", "DeliveryPlanSplitV1", "TicketCandidateV1",
     "WorkPlanTerminalReceiptV1",
+    "ComparativeDependencyError", "ComparativeFindingError",
+    "ComparativeFindingProposal", "ExecutorOwnershipSpec",
+    "ObsoleteTargetHeadError", "admit_comparative_findings",
+    "compute_comparative_dedupe_key", "compute_requirement_fingerprint",
     # Store & API
     "PlanfileStore", "Planfile", "quick_ticket",
     # Executors (lazy loaded)
@@ -922,6 +945,17 @@ __all__ = [
     "DSLParser", "DSLExecutor", "DSLResult",
 ]
 
+_COMPARATIVE_FINDING_EXPORTS = frozenset({
+    "ComparativeDependencyError",
+    "ComparativeFindingError",
+    "ComparativeFindingProposal",
+    "ExecutorOwnershipSpec",
+    "ObsoleteTargetHeadError",
+    "admit_comparative_findings",
+    "compute_comparative_dedupe_key",
+    "compute_requirement_fingerprint",
+})
+
 _TESTQL_EXPORTS = frozenset({
     "run_testql_validation",
     "build_testql_tickets",
@@ -938,6 +972,12 @@ def __dir__():
 # Lazy loading functions for optional integrations and executors
 def __getattr__(name):
     """Lazy import optional modules when their public exports are accessed."""
+    if name in _COMPARATIVE_FINDING_EXPORTS:
+        from planfile.core import comparative_findings
+
+        value = getattr(comparative_findings, name)
+        globals()[name] = value
+        return value
     if name in _TESTQL_EXPORTS:
         from planfile import testql_integration
 

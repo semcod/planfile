@@ -1,0 +1,114 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-247",
+  "summary": "Admit comparative improvement findings as idempotent repository-scoped ticket DAGs",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-247/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "planfile/api/server.py",
+    "planfile/core/comparative_findings.py",
+    "tests/test_comparative_findings.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "e30c7e0fcc4629ddf49a55af549af2e5fbed23d5",
+    "outcome": "Deliver idempotent repository-scoped comparative finding admission and first-class ticket DAG dependency persistence in Planfile.",
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "Do not allocate target repository governance worktrees directly inside Planfile before admission.",
+      "Do not modify external sync provider caches or unrelated store internals."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Implement ComparativeFindingsAdapter over Planfile.create_ticket_deduplicated, Store.update_ticket with expected_updated_at CAS, and planfile_graph DAG validation and execution layering.",
+      "components": [
+        {
+          "name": "Comparative findings lifecycle adapter",
+          "paths": [
+            "planfile/core/comparative_findings.py",
+            "planfile/__init__.py",
+            "planfile/api/server.py",
+            "tests/test_comparative_findings.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Planfile.admit_comparative_findings and POST /findings/comparative/admit",
+        "TicketCreate and TicketUpdate expose blocked_by, blocks, parent, children, group, acceptance_criteria, and files"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the comparative findings module and API model extensions through an independent publication PR."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/test_comparative_findings.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Adapter reuses create_ticket_deduplicated, current store allocation, GitHub sync mapping, and expected_updated_at CAS."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q tests/test_comparative_findings.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Stable dedupe key binds repository, capability, intent, policy_version, and requirement fingerprint; refreshed evidence appends an occurrence while changed requirements create a distinct ticket."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 -m pytest -q tests/test_comparative_findings.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "blocked_by, blocks, parent, and children persist via Python and REST APIs and validate DAG acyclicity and layers through planfile_graph."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 -m pytest -q tests/test_comparative_findings.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Proposals require SERVICE/FEATURE/BUGFIX classification with reason, target scope, prerequisites, acceptance test, fresh target HEAD, rollback, and deferred governance ticket allocation."
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "python3 -m pytest -q tests/test_comparative_findings.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Tests verify twice-imported finding, concurrent refresh CAS conflict, obsolete target HEAD rejection, terminal recurrence, sync idempotency, dependency failure, no-change, and dry-run."
+      }
+    ]
+  }
+}

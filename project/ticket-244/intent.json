@@ -1,0 +1,107 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-244",
+  "summary": "Add intent-scoped indexed ticket lookups without history scans",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-244/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/sqlite_index.py",
+    "tests/test_sqlite_ticket_index.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "e4b46fda131e4facf6c3945bc96633b3a6582939",
+    "outcome": "Deliver bounded indexed identity and queue query primitives for large Planfile stores through independent publication.",
+    "complexity": "S",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "Store/API integration and production history migration require the next owned slice.",
+      "Do not change leases, credentials or publication policy."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Maintain a transactional disposable routing projection with composite indexes and keyset pages. Upgrade legacy indexes once; preserve YAML/JSONL authority.",
+      "components": [
+        {
+          "name": "SQLite ticket index",
+          "paths": [
+            "planfile/core/sqlite_index.py",
+            "tests/test_sqlite_ticket_index.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material source change through independent publication; the disposable SQLite index can be rebuilt from unchanged authoritative sources."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_sqlite_index_and_retry_perf.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "38 scoped tests passed including 50000 records, query plans, bounded payload reads, upgrade, reopen and delete; publication remains pending."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_sqlite_index_and_retry_perf.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "38 scoped tests passed including 50000 records, query plans, bounded payload reads, upgrade, reopen and delete; publication remains pending."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_sqlite_index_and_retry_perf.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "38 scoped tests passed including 50000 records, query plans, bounded payload reads, upgrade, reopen and delete; publication remains pending."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_sqlite_index_and_retry_perf.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "38 scoped tests passed including 50000 records, query plans, bounded payload reads, upgrade, reopen and delete; publication remains pending."
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_sqlite_index_and_retry_perf.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "38 scoped tests passed including 50000 records, query plans, bounded payload reads, upgrade, reopen and delete; publication remains pending."
+      }
+    ]
+  }
+}

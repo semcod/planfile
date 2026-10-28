@@ -40,7 +40,14 @@ class GitHubReadCache:
         self.ttl = max(0.0, float(config.get("cache_ttl_seconds", 600)))
         configured_dir = config.get("cache_dir") or os.environ.get("PLANFILE_GITHUB_CACHE_DIR")
         root = Path(configured_dir or Path.home() / ".cache" / "planfile" / "github")
-        self.path = root / f"{hashlib.sha256(repository.encode()).hexdigest()[:24]}.sqlite3"
+        # A hit in this metadata layer skips the account-scoped HTTP requester.
+        # Keep it isolated by the same principal and provider origin.
+        identity = json.dumps([
+            "github-metadata-v2", repository,
+            config.get("token") or os.environ.get("GITHUB_TOKEN"),
+            config.get("base_url") or config.get("api_url") or "https://api.github.com",
+        ], separators=(",", ":"))
+        self.path = root / f"{hashlib.sha256(identity.encode()).hexdigest()[:24]}.sqlite3"
         self.lock = FileLock(str(self.path) + ".lock")
 
     def _connect(self) -> sqlite3.Connection:

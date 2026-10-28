@@ -1014,3 +1014,91 @@ def test_background_repair_defers_when_candidate_sources_changed(tmp_path, monke
     assert server._repair_ticket_index_if_unchanged(signature) == {
         "rebuilt": False, "deferred": True,
     }
+
+
+def _routing_record(number, *, repository="semcod/planfile", issue=244,
+                    status="open", state="ready", position=None):
+    payload = {"id": f"PLF-{number}", "status": status,
+               "execution": {"queue": "coding-agent", "state": state},
+               "inputs": {"api_body": {"source": {
+                   "repository": repository, "issue": issue, "revision": str(number)}}}}
+    return {"id": payload["id"], "sprint": "current" if status != "done" else "history",
+            "status": status, "priority": "normal", "source": None, "queue": "coding-agent",
+            "created_at": None, "updated_at": None,
+            "position": number if position is None else position,
+            "ticket_json": json.dumps(payload), "summary_json": json.dumps({"id": payload["id"]})}
+
+
+def test_intent_queries_bound_history_work_at_50000_records(tmp_path):
+    index = SQLiteTicketIndex(tmp_path / "routing.sqlite3")
+    index.rebuild((_routing_record(n, status="done" if n < 49900 else "open")
+                   for n in range(50000)), ("routing", 1))
+    with index._connect() as connection:
+        plans = [connection.execute("EXPLAIN QUERY PLAN " + sql).fetchall() for sql in (
+            "SELECT id, position FROM ticket_routes WHERE queue='coding-agent' AND state='ready' "
+            "AND active=1 AND (position,id)>(-1,'') ORDER BY position,id LIMIT 10",
+            "SELECT id, position FROM ticket_routes WHERE queue='coding-agent' AND state='ready' "
+            "AND active=1 AND repository='semcod/planfile' AND (position,id)>(-1,'') "
+            "ORDER BY position,id LIMIT 10",
+            "SELECT id, position FROM ticket_routes WHERE repository='semcod/planfile' AND issue=244 "
+            "AND (position,id)>(49000,'') ORDER BY position,id LIMIT 10",
+        )]
+        for plan in plans:
+            details = " ".join(row["detail"] for row in plan)
+            assert "SEARCH" in details and "SCAN" not in details and "TEMP B-TREE" not in details
+    calls = []
+    connect = index._connect
+
+    def traced_connect():
+        connection = connect()
+        connection.set_trace_callback(calls.append)
+        return connection
+
+    index._connect = traced_connect
+    first = index.queue_page("coding-agent", "ready", limit=10)
+    assert [r["id"] for r in first] == [f"PLF-{n}" for n in range(49900, 49910)]
+    second = index.queue_page("coding-agent", "ready", repository="SEMCOD/Planfile",
+                              limit=10, after=(first[-1]["position"], first[-1]["id"]))
+    assert second[0]["id"] == "PLF-49910"
+    assert len([sql for sql in calls if "SELECT ticket_json" in sql]) == 20
+    assert not any("COUNT(" in sql.upper() or "OFFSET" in sql.upper() for sql in calls)
+    assert len(index.lookup_issue("semcod/planfile", 244, limit=3)) == 3
+    assert index.lookup_issue("other/project", 244) == []
+    assert index.get_ticket("missing") is None
+
+
+def test_routing_upgrade_reopen_delete_and_same_position_cursor(tmp_path):
+    index = SQLiteTicketIndex(tmp_path / "routing.sqlite3")
+    records = [_routing_record(1, status="done", position=0),
+               _routing_record(2, status="blocked", state="waiting_dependency", position=0),
+               _routing_record(3, status="failed", state="failed", position=0)]
+    index.rebuild(records, ("before",))
+    with index._connect() as connection:
+        connection.execute("DROP TABLE ticket_routes")
+        connection.execute("DELETE FROM meta WHERE key='routes_version'")
+    # Opening the old projection upgrades without changing source signature or payloads.
+    index = SQLiteTicketIndex(index.path)
+    assert index.is_current(("before",))
+    assert index.queue_page("coding-agent", "ready") == []
+    assert index.queue_page("coding-agent", "waiting_dependency")[0]["id"] == "PLF-2"
+    assert index.queue_page("coding-agent", "failed")[0]["id"] == "PLF-3"
+    first = index.lookup_issue("semcod/planfile", 244, limit=1)
+    second = index.lookup_issue("semcod/planfile", 244, limit=1,
+                                after=(first[0]["position"], first[0]["id"]))
+    assert first[0]["id"] != second[0]["id"]
+    index.apply(upserts=[_routing_record(1)], deletes=["PLF-2"], signature=("after",))
+    assert index.queue_page("coding-agent", "ready")[0]["id"] == "PLF-1"
+    assert {r["id"] for r in index.lookup_issue("semcod/planfile", 244)} == {"PLF-1", "PLF-3"}
+    assert index.get_ticket("PLF-2") is None
+
+
+def test_conflicting_issue_identity_is_not_routed(tmp_path):
+    index = SQLiteTicketIndex(tmp_path / "routing.sqlite3")
+    record = _routing_record(1)
+    payload = json.loads(record["ticket_json"])
+    payload["sync"] = {"github": {"repository": "other/repository", "issue": 244}}
+    record["ticket_json"] = json.dumps(payload)
+    index.rebuild([record], ("conflict",))
+    assert index.lookup_issue("semcod/planfile", 244) == []
+    assert index.lookup_issue("other/repository", 244) == []
+    assert index.get_ticket("PLF-1") == payload
