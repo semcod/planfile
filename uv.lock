@@ -2355,7 +2355,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.31" },
     { name = "rich", specifier = ">=13.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
-    { name = "subactor-procache", git = "https://github.com/subactor/procache.git?rev=f1548ef488c133617b181005e8fd083eba2cc84b" },
+    { name = "subactor-procache", git = "https://github.com/dockuri/procache.git?rev=94cb3118ede4a448a3cb2517e66a152687ff0af5" },
     { name = "typer", specifier = ">=0.12" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'all'", specifier = ">=0.30" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'api'", specifier = ">=0.30" },
@@ -3538,7 +3538,7 @@ wheels = [
 [[package]]
 name = "subactor-procache"
 version = "0.1.0"
-source = { git = "https://github.com/subactor/procache.git?rev=f1548ef488c133617b181005e8fd083eba2cc84b#f1548ef488c133617b181005e8fd083eba2cc84b" }
+source = { git = "https://github.com/dockuri/procache.git?rev=94cb3118ede4a448a3cb2517e66a152687ff0af5#94cb3118ede4a448a3cb2517e66a152687ff0af5" }
 
 [[package]]
 name = "tiktoken"
