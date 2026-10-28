@@ -466,8 +466,10 @@ def _resolve_selected_remote_ids(
     sections: dict[str, dict] | None,
     sync_state,
     integration_name: str,
+    *,
+    strict_local: bool = False,
 ) -> set[str] | None:
-    """Pre-resolve candidate remote IDs from ticket filters to avoid ambiguous lookups."""
+    """Resolve filters, optionally giving local identities precedence over aliases."""
     if not ticket_ids:
         return None
     normalized = {str(value).strip() for value in ticket_ids if str(value).strip()}
@@ -476,20 +478,24 @@ def _resolve_selected_remote_ids(
 
     remote_ids: set[str] = set()
     for tid in normalized:
-        clean = tid.lstrip("#")
-        if clean.isdigit():
-            remote_ids.add(clean)
-        remote_ids.add(tid)
-        remote_ids.add(clean)
+        # Explicit GitHub references always name remote issues. A bare numeric
+        # selector can instead be a real local ID, mapped to a different issue.
+        if strict_local and "#" in tid:
+            remote_ids.add(tid)
+            continue
+        mapped_ids: set[str] = set()
+        local_found = False
 
         # Look up in sync_state (local -> remote mapping)
         if sync_state is not None and hasattr(sync_state, "get_remote_id"):
             try:
                 mapped_remote = sync_state.get_remote_id(tid)
                 if mapped_remote:
-                    remote_ids.add(str(mapped_remote).strip())
+                    mapped_ids.add(str(mapped_remote).strip())
             except Exception as exc:
                 logger.debug("sync_state remote id lookup failed for ticket %s: %s", tid, exc)
+                if strict_local:
+                    raise
 
         # Look up in sections (section tickets -> sync.<integration>.id)
         if sections:
@@ -498,11 +504,22 @@ def _resolve_selected_remote_ids(
                     continue
                 ticket = (section.get("tickets") or {}).get(tid)
                 if isinstance(ticket, dict):
+                    local_found = True
                     ref = (ticket.get("sync") or {}).get(integration_name) or {}
                     if isinstance(ref, dict):
                         rid = ref.get("id")
                         if rid is not None and str(rid).strip():
-                            remote_ids.add(str(rid).strip())
+                            mapped_ids.add(str(rid).strip())
+
+        if strict_local:
+            if len(mapped_ids) > 1:
+                raise ValueError(f"conflicting selected remote mapping for local ticket {tid}")
+            if local_found or mapped_ids:
+                remote_ids.update(mapped_ids)
+                continue
+        clean = tid.lstrip("#")
+        remote_ids.update((tid, clean))
+        remote_ids.update(mapped_ids)
 
     return remote_ids
 
@@ -649,7 +666,8 @@ def sync_from_external(
                 if local_id in normalized_ticket_ids:
                     _validate_ticket_binding(ticket, integration_name, backend)
     selected_remote_ids = _resolve_selected_remote_ids(
-        normalized_ticket_ids, lookup_sections, sync_state, integration_name
+        normalized_ticket_ids, lookup_sections, sync_state, integration_name,
+        strict_local=integration_name == "github",
     )
     external_tickets = _fetch_external_tickets(
         backend, integration_name, remote_labels, selected_remote_ids

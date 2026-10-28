@@ -1,0 +1,75 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-254",
+  "summary": "Disambiguate local numeric selectors from GitHub issue IDs",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-254/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/operations.py",
+    "tests/test_sync_selected_provider_reads.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Prevent a selected numeric local ticket ID from reading or updating an unrelated GitHub issue; reject conflicting local remote mappings before provider I/O.",
+    "targetBranch": "main",
+    "acceptedBaseSha": "959224a9cc95fe0a73a0d26b285c6b17b7c55561",
+    "complexity": "S",
+    "estimatedMinutes": 35,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "No provider credential, lease policy, runtime promotion or whole-operation deadline changes."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Resolve local selectors before remote aliases; preserve explicit remote references and non-GitHub compatibility, fail closed on conflicting selected mappings.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "inbound-selection",
+          "paths": [
+            "planfile/sync/operations.py",
+            "tests/test_sync_selected_provider_reads.py"
+          ]
+        }
+      ],
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert of the correction without changing authoritative ticket data."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sync_selected_provider_reads.py",
+          "python -m pytest -q tests/test_sync*.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Numeric local selector collision regression must fail on PR312 and pass after correction, preserving unrelated snapshots and explicit remote selections."
+      }
+    ]
+  }
+}

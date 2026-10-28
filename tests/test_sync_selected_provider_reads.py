@@ -323,3 +323,83 @@ def test_unknown_sprint_does_not_read_selected_issue(sample):
     before = unchanged(store)
     pull(sample, sprint_ids=["missing-sprint"])
     assert not calls and unchanged(store) == before
+
+
+@pytest.mark.parametrize(
+    "selectors,expected_reads,expected_local",
+    [
+        (["554"], [999], {"554"}),
+        (["#554"], [554], {"PLF-002"}),
+        (["fixture/repo#554"], [554], {"PLF-002"}),
+        (["554", "#554"], [554, 999], {"554", "PLF-002"}),
+    ],
+)
+def test_numeric_local_selector_has_one_meaning(sample, selectors, expected_reads, expected_local):
+    store, _, calls, _ = sample
+    store.create_ticket(
+        Ticket(
+            id="554",
+            name="numeric local",
+            status="open",
+            sprint="backlog",
+            integration=["github"],
+            sync={"github": {"id": "999", "repository": "fixture/repo"}},
+        )
+    )
+    before = {
+        tid: store.get_ticket(tid).model_dump(mode="json") for tid in ["PLF-001", "PLF-002", "554"]
+    }
+    pull(sample, selectors)
+    assert calls == [("get", number) for number in expected_reads]
+    for tid, snapshot in before.items():
+        current = store.get_ticket(tid)
+        if tid in expected_local:
+            assert current.status == "done"
+        else:
+            assert current.model_dump(mode="json") == snapshot
+
+
+def test_unmapped_numeric_local_selector_does_not_select_a_remote_issue(sample):
+    store, _, calls, _ = sample
+    store.create_ticket(Ticket(id="554", name="unmapped local", status="open", sprint="backlog"))
+    before = unchanged(store)
+    numeric_before = store.get_ticket("554").model_dump(mode="json")
+    pull(sample, ["554"])
+    assert not calls
+    assert unchanged(store) == before
+    assert store.get_ticket("554").model_dump(mode="json") == numeric_before
+
+
+@pytest.mark.parametrize("state_id", ["553", "554"])
+def test_selected_local_mapping_conflict_is_rejected_before_fetch(sample, state_id):
+    from planfile.sync.state import SyncState
+
+    store, _, calls, _ = sample
+    state = SyncState(store.base_dir, "github", repository="fixture/repo")
+    state.save_sync({"PLF-001": state_id})
+    before = unchanged(store)
+    state_before = state.state_file.read_bytes()
+    if state_id == "553":
+        pull(sample)
+        assert calls == [("get", 553)]
+        assert store.get_ticket("PLF-001").status == "done"
+    else:
+        with pytest.raises(ValueError, match="conflicting.*mapping"):
+            pull(sample)
+        assert not calls and unchanged(store) == before
+        assert state.state_file.read_bytes() == state_before
+
+
+def test_selected_state_lookup_failure_cannot_fall_back_to_a_remote_alias(sample, monkeypatch):
+    from planfile.sync.state import SyncState
+
+    store, _, calls, _ = sample
+    before = unchanged(store)
+
+    def failed_lookup(self, local_id):
+        raise RuntimeError("mapping store unavailable")
+
+    monkeypatch.setattr(SyncState, "get_remote_id", failed_lookup)
+    with pytest.raises(RuntimeError, match="mapping store unavailable"):
+        pull(sample)
+    assert not calls and unchanged(store) == before
