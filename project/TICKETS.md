@@ -153,6 +153,7 @@ This file indexes governance tickets without taking ownership of
 | **ticket-248** | [`README.md`](./ticket-248/README.md) | - | - | - | - | - |
 | **ticket-249** | [`README.md`](./ticket-249/README.md) | - | - | - | - | - |
 | **ticket-250** | [`README.md`](./ticket-250/README.md) | - | - | - | - | - |
+| **ticket-251** | [`README.md`](./ticket-251/README.md) | - | - | - | - | - |
 | **ticket-252** | [`README.md`](./ticket-252/README.md) | - | - | - | - | - |
 | **ticket-253** | [`README.md`](./ticket-253/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
