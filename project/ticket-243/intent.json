@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-243",
+  "summary": "Keep atomic evidence independent of index rebuilds",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-243/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store.py",
+    "tests/test_ticket_evidence.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "e4b46fda131e4facf6c3945bc96633b3a6582939",
+    "outcome": "Fix semcod/planfile#297 by avoiding disposable-index repair inside the atomic evidence write transaction while preserving all mutation and evidence guards.",
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "No API/package runtime deployment, dependency, governance, index configuration or credential changes.",
+      "No lock removal, unknown-process interruption, stale CAS bypass, source ticket takeover or modification of native Reflex19955 inputs/attempt/budget.",
+      "Do not restart expired campaigns or change Validator findings."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use existing Store.get_ticket(repair_index=False) for the exact authoritative lookup already inside append_ticket_evidence mutation_lock. Add real separate-process index/mutation lock contention tests, preserving journal, duplicate/conflict and state semantics. Do not alter general read/rebuild behavior or bypass locks.",
+      "components": [
+        {
+          "name": "Atomic ticket evidence store",
+          "paths": [
+            "planfile/core/store.py",
+            "tests/test_ticket_evidence.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded material source change through governed publication; preserve all evidence journals, lock files and native task history."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests/test_ticket_evidence.py tests/test_store_lock_timeout.py tests/test_sqlite_ticket_index.py tests/test_store_concurrency.py -q",
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests -q",
+          "python3 .governance/governance_check.py --root . --actor agent --base e4b46fda131e4facf6c3945bc96633b3a6582939",
+          "git diff --check"
+        ],
+        "evidence": "A stale disposable ticket index held by another live process does not prevent atomic evidence append from reading authoritative ticket data."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests/test_ticket_evidence.py tests/test_store_lock_timeout.py tests/test_sqlite_ticket_index.py tests/test_store_concurrency.py -q",
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests -q",
+          "python3 .governance/governance_check.py --root . --actor agent --base e4b46fda131e4facf6c3945bc96633b3a6582939",
+          "git diff --check"
+        ],
+        "evidence": "Duplicate and conflicting evidence keys, preserved outputs/input/execution and restart replay retain exactly-once semantics under index contention."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests/test_ticket_evidence.py tests/test_store_lock_timeout.py tests/test_sqlite_ticket_index.py tests/test_store_concurrency.py -q",
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests -q",
+          "python3 .governance/governance_check.py --root . --actor agent --base e4b46fda131e4facf6c3945bc96633b3a6582939",
+          "git diff --check"
+        ],
+        "evidence": "The real mutation lock remains required; contention refuses boundedly without writing evidence or modifying another owner lock."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests/test_ticket_evidence.py tests/test_store_lock_timeout.py tests/test_sqlite_ticket_index.py tests/test_store_concurrency.py -q",
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests -q",
+          "python3 .governance/governance_check.py --root . --actor agent --base e4b46fda131e4facf6c3945bc96633b3a6582939",
+          "git diff --check"
+        ],
+        "evidence": "Scoped and full regression suites, governance and unchanged exact-head/base OneDev pass; independent Validator publishes the material fix."
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests/test_ticket_evidence.py tests/test_store_lock_timeout.py tests/test_sqlite_ticket_index.py tests/test_store_concurrency.py -q",
+          "approved Wellman run --root checkout --allow-primary-venv -- python -m pytest tests -q",
+          "python3 .governance/governance_check.py --root . --actor agent --base e4b46fda131e4facf6c3945bc96633b3a6582939",
+          "git diff --check"
+        ],
+        "evidence": "Native deployment remains separate; preserve existing API process and evidence outbox until protected runtime integration qualification."
+      }
+    ]
+  }
+}
