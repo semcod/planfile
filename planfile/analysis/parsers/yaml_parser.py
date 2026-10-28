@@ -6,6 +6,18 @@ import yaml
 from planfile.analysis.models import ExtractedIssue, ExtractedMetric, ExtractedTask
 from planfile.analysis.parsers.text_parser import analyze_text
 from planfile.analysis.parsers.toon_parser import analyze_toon
+from planfile.core.fastio import FastLoader
+
+
+def _load_safe_yaml(content: str):
+    try:
+        return yaml.load(content, Loader=FastLoader)
+    except yaml.YAMLError:
+        if FastLoader is yaml.SafeLoader:
+            raise
+        # libyaml formats parser errors differently. Reuse the original safe
+        # parser on the error path to retain diagnostic text and compatibility.
+        return yaml.safe_load(content)
 
 
 def _is_issue_content(value: str) -> bool:
@@ -93,7 +105,9 @@ def analyze_yaml(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
 
         parsed = False
         try:
-            data = yaml.safe_load(content)
+            # Reuse the safe libyaml loader (or SafeLoader fallback) already
+            # selected by the storage layer; retain YAML 1.1 semantics.
+            data = _load_safe_yaml(content)
             parsed = True
         except yaml.YAMLError as error:
             if 'toon' in str(file_path):
@@ -135,6 +149,8 @@ def analyze_yaml(file_path: Path) -> tuple[list[ExtractedIssue], list[ExtractedM
             metrics.extend(text_metrics)
             tasks.extend(text_tasks)
 
+    except TimeoutError:
+        raise
     except Exception as e:
         issues.append(ExtractedIssue(
             name=f"Failed to parse {file_path.name}",
