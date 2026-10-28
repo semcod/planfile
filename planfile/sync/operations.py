@@ -440,11 +440,17 @@ def _fetch_external_tickets(
     backend,
     integration_name: str,
     labels: list[str] | None = None,
+    selected_remote_ids: set[str] | None = None,
 ) -> list | None:
     """Fetch tickets; preserve provider failures for caller retry and cooldown."""
     try:
         kwargs = {"labels": labels} if labels else {}
-        external_tickets = backend.list_tickets(**kwargs)
+        selected_reader = getattr(backend, "list_selected_tickets", None)
+        if (integration_name == "github" and selected_remote_ids is not None
+                and callable(selected_reader)):
+            external_tickets = selected_reader(selected_remote_ids, **kwargs)
+        else:
+            external_tickets = backend.list_tickets(**kwargs)
         if external_tickets is None:
             console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
             return None
@@ -634,20 +640,25 @@ def sync_from_external(
             return
         import_target = sections[target_id]
         lookup_sections = {target_id: import_target}
-    external_tickets = _fetch_external_tickets(backend, integration_name, remote_labels)
-
+    normalized_ticket_ids = (
+        {str(value).strip() for value in (ticket_ids or []) if str(value).strip()} or None
+    )
+    if normalized_ticket_ids:
+        for section in lookup_sections.values():
+            for local_id, ticket in (section.get("tickets") or {}).items():
+                if local_id in normalized_ticket_ids:
+                    _validate_ticket_binding(ticket, integration_name, backend)
+    selected_remote_ids = _resolve_selected_remote_ids(
+        normalized_ticket_ids, lookup_sections, sync_state, integration_name
+    )
+    external_tickets = _fetch_external_tickets(
+        backend, integration_name, remote_labels, selected_remote_ids
+    )
     if external_tickets is None:
         return
     if not external_tickets:
         console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
         return
-
-    normalized_ticket_ids = (
-        {str(value).strip() for value in (ticket_ids or []) if str(value).strip()} or None
-    )
-    selected_remote_ids = _resolve_selected_remote_ids(
-        normalized_ticket_ids, lookup_sections, sync_state, integration_name
-    )
 
     for ext_ticket in external_tickets:
         imported_count, updated_count = _process_external_ticket(
