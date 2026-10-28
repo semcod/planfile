@@ -336,8 +336,21 @@ def test_failure_timeout_stops_descendants_holding_pipes(tmp_path, fake_radar, m
 
 
 def test_failure_bulk_deadline_preserves_remaining_tickets(tmp_path, fake_radar, monkeypatch):
-    fake_radar("time.sleep(0.2)\n")
-    monkeypatch.setattr(radar, "BULK_SECONDS", 0.35)
+    # Deterministic under host load: the first radar call answers immediately and
+    # every later call blocks until the bulk deadline, so no outcome depends on
+    # how long a Python subprocess takes to start.
+    marker = tmp_path / "radar-called"
+    fake_radar(
+        prelude=f"""
+        marker = {str(marker)!r}
+        if os.path.exists(marker):
+            time.sleep(60)
+        open(marker, 'w').close()
+        """
+    )
+    bulk_seconds = 2.0
+    monkeypatch.setattr(radar, "BULK_SECONDS", bulk_seconds)
+    monkeypatch.setattr(radar, "ASSESSMENT_SECONDS", bulk_seconds)
     elapsed = []
     original_bundle = radar._bundle
 
@@ -353,11 +366,11 @@ def test_failure_bulk_deadline_preserves_remaining_tickets(tmp_path, fake_radar,
     tickets = pf.create_tickets_bulk(
         [{"name": f"Bulk {index}", "description": DESCRIPTION} for index in range(12)]
     )
-    assert sum(elapsed) < 1.5
+    assert sum(elapsed) < bulk_seconds + 1.5
     assert len(elapsed) <= 2
     assert len(tickets) == 12
     assert radar.ADVISORY_HEADING in tickets[0].description
-    assert all(ticket.description == DESCRIPTION for ticket in tickets[2:])
+    assert all(ticket.description == DESCRIPTION for ticket in tickets[1:])
     assert len(pf.list_tickets()) == 12
     assert len(pf.store.operational_events()) == 12
 
