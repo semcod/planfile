@@ -77,16 +77,16 @@ def _find_git_root(path: Path) -> Path | None:
     return None
 
 
-def _git_index_mtime_ns(repo_root: Path) -> int | None:
+def _git_index_path(repo_root: Path) -> Path | None:
     git_entry = repo_root / ".git"
     try:
         if git_entry.is_dir():
-            return (git_entry / "index").stat().st_mtime_ns
+            return git_entry / "index"
         if git_entry.is_file():
             raw = git_entry.read_text(encoding="utf-8").strip()
             if raw.startswith("gitdir:"):
                 gitdir = (repo_root / raw.split(":", 1)[1].strip()).resolve()
-                return (gitdir / "index").stat().st_mtime_ns
+                return gitdir / "index"
     except OSError:
         return None
     return None
@@ -98,11 +98,21 @@ def find_tracked_mirrors(repo_root: Path) -> list[str]:
     if root is None:
         return []
     key = str(root)
-    idx_mtime = _git_index_mtime_ns(root)
+    idx_path = _git_index_path(root)
+    try:
+        idx_mtime = idx_path.stat().st_mtime_ns if idx_path is not None else None
+    except OSError:
+        idx_mtime = None
+    if idx_mtime is None:
+        _TRACKED_MIRRORS_CACHE[key] = (None, frozenset())
+        return []
     cached = _TRACKED_MIRRORS_CACHE.get(key)
     if cached is not None and cached[0] == idx_mtime:
         return sorted(cached[1])
     try:
+        if b".fast.json" not in idx_path.read_bytes():  # type: ignore[union-attr]
+            _TRACKED_MIRRORS_CACHE[key] = (idx_mtime, frozenset())
+            return []
         proc = subprocess.run(
             ["git", "-C", key, "ls-files", "-z"],
             capture_output=True,
