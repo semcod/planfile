@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-251",
+  "summary": "Migrate the existing cache dependency to independently merged dockuri/procache94cb311 with no other dependency changes",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-251/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c14396fd977a52aae5d358d091afff2771c6b7d4",
+    "targetBranch": "main",
+    "outcome": "Replace the retired subactor/procache Git URL with canonical dockuri/procache at independently merged94cb311, retain dependency closure compatibility and publish through exact-head protected three-interpreter verification.",
+    "nonGoals": [
+      "No unrelated dependency upgrades, product behavior, provider credential, TTL, governance or CI policy changes.",
+      "Do not alter foreign fastio ticket250 or bypass missing protected input qualification."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Change only the existing Procache requirement and its uv.lock package provenance. Reuse current canonical backend and existing read-cache regressions. Coordinate exact new dependency-input qualification in the OneDev owner before target merge.",
+      "components": [
+        {
+          "name": "canonical-cache-dependency",
+          "paths": [
+            "pyproject.toml",
+            "uv.lock"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert to the previous pinned requirement; existing cache database schema remains compatible."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv lock --check",
+          "python -m pytest -q tests/test_scoped_provider_cache.py tests/test_github_metadata_cache_scope.py",
+          "project/governance-check.sh"
+        ],
+        "evidence": "Validate only intended manifest/lock provenance changes, VCS resolution, cache regression behavior, full protected Python3.10/3.11/3.13 matrix and independent exact-head publication."
+      }
+    ]
+  }
+}
