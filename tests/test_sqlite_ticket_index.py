@@ -2,11 +2,17 @@ from __future__ import annotations
 
 import gc
 import json
+import selectors
 import sqlite3
+import subprocess
+import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from pathlib import Path
 
+import pytest
 import yaml
 from fastapi.testclient import TestClient
 from typer.testing import CliRunner
@@ -16,6 +22,7 @@ from planfile.api import server
 from planfile.cli.commands import app
 from planfile.core.fastio import mirror_path
 from planfile.core.sqlite_index import SQLiteTicketIndex
+from planfile.core.store import TicketIndexContentionError, TicketUpdatedAtConflictError
 
 
 def _disable_archive(pf: Planfile) -> None:
@@ -1102,3 +1109,305 @@ def test_conflicting_issue_identity_is_not_routed(tmp_path):
     assert index.lookup_issue("semcod/planfile", 244) == []
     assert index.lookup_issue("other/repository", 244) == []
     assert index.get_ticket("PLF-1") == payload
+
+
+@contextmanager
+def _held_index_writer(pf, monkeypatch):
+    """Hold a real WAL writer while keeping test contention waits bounded."""
+    original_connect = SQLiteTicketIndex._connect
+
+    def short_wait(index):
+        connection = original_connect(index)
+        connection.execute("PRAGMA busy_timeout=10")
+        return connection
+
+    with monkeypatch.context() as patch:
+        patch.setattr(SQLiteTicketIndex, "_connect", short_wait)
+        connection = sqlite3.connect(pf.store._ticket_index_path)
+        connection.execute("BEGIN IMMEDIATE")
+        try:
+            yield
+        finally:
+            connection.rollback()
+            connection.close()
+
+
+def _evidence(pf, ticket_id, key="receipt-1"):
+    return pf.append_ticket_evidence(
+        ticket_id, idempotency_key=key, collection="receipts", evidence={"verified": True},
+        actor="bot:test", reason="Observed external result",
+    )
+
+
+@pytest.mark.parametrize("sharded", [False, True])
+@pytest.mark.parametrize("operation", ["create", "bulk-create", "update", "delete", "bulk-delete", "move", "evidence"])
+def test_committed_mutation_survives_real_index_writer_contention(
+    tmp_path, monkeypatch, caplog, sharded, operation,
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before")
+    if sharded:
+        pf.store.migrate_to_sharded_yaml(shard_size=5)
+    pf.store.configure_ticket_index(True)
+    before = pf.store._ticket_index_signature()
+
+    with _held_index_writer(pf, monkeypatch):
+        if operation == "create":
+            ticket = pf.create_ticket(name="After")
+        elif operation == "bulk-create":
+            ticket = pf.create_tickets_bulk([{"name": "After"}])[0]
+        elif operation == "update":
+            assert pf.update_ticket(ticket.id, name="After").name == "After"
+        elif operation == "delete":
+            assert pf.store.delete_ticket(ticket.id)
+        elif operation == "bulk-delete":
+            assert pf.delete_tickets([ticket.id]) == ([ticket.id], [])
+        elif operation == "move":
+            assert pf.store.move_ticket(ticket.id, "backlog")
+        else:
+            updated, recorded = _evidence(pf, ticket.id)
+            assert recorded and updated.outputs.result["receipts"][0]["verified"]
+        assert "ticket_index_update_deferred" in caplog.text
+        assert not pf.store._sqlite_ticket_index().is_current(pf.store._ticket_index_signature())
+        assert pf.store._ticket_index_signature() != before
+        with pytest.raises(TicketIndexContentionError, match="ticket_index_stale"):
+            pf.store.require_current_ticket_index()
+        # An exact read must observe authoritative files, without repairing
+        # the locked disposable index or claiming its snapshot is current.
+        current = pf.get_ticket(ticket.id, repair_index=False)
+        if operation in ("delete", "bulk-delete"):
+            assert current is None
+        elif operation == "move":
+            assert current.sprint == "backlog"
+        elif operation == "evidence":
+            assert current.outputs.result["receipts"][0]["verified"]
+        else:
+            assert current.name == "After"
+
+    assert pf.store.ensure_ticket_index()["current"] is True
+    assert pf.get_ticket(ticket.id, repair_index=False) == current
+    # A later incremental edit must not bless a projection missing the first.
+    pf.create_ticket(name="Unrelated later mutation")
+    assert pf.get_ticket(ticket.id, repair_index=False) == current
+
+
+@pytest.mark.parametrize("operation", ["update", "evidence", "input-required"])
+def test_api_acknowledges_committed_write_during_index_contention(
+    tmp_path, monkeypatch, operation,
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+    with _held_index_writer(pf, monkeypatch):
+        if operation == "update":
+            response = client.post(f"/tickets/{ticket.id}/update-if-current", json={
+                "name": "After", "expected_updated_at": str(ticket.updated_at),
+            })
+        elif operation == "evidence":
+            payload = {"idempotency_key": "api-receipt", "collection": "receipts",
+                       "evidence": {"verified": True}, "actor": "bot:test", "reason": "Observed"}
+            response = client.post(f"/tickets/{ticket.id}/evidence", json=payload)
+            replay = client.post(f"/tickets/{ticket.id}/evidence", json=payload)
+            assert replay.status_code == 200 and replay.json()["deduplicated"]
+            payload["evidence"] = {"verified": False}
+            assert client.post(f"/tickets/{ticket.id}/evidence", json=payload).status_code == 409
+        else:
+            response = client.post(f"/tickets/{ticket.id}/input-required", json={
+                "prompt": "Which runtime is admitted?", "actor": "bot:test", "reason": "Missing binding",
+            })
+        assert response.status_code == 200, response.text
+        current = pf.get_ticket(ticket.id, repair_index=False)
+        if operation == "update":
+            assert current.name == "After"
+            # A committed write's old CAS must not be replayed as fresh work.
+            assert client.post(f"/tickets/{ticket.id}/update-if-current", json={
+                "name": "Replay", "expected_updated_at": str(ticket.updated_at),
+            }).status_code == 409
+        elif operation == "evidence":
+            assert response.json()["recorded"]
+            assert len(current.outputs.result["receipts"]) == 1
+        else:
+            assert current.execution.state == "waiting_input"
+
+
+@pytest.mark.parametrize("edit", ["history", "existing-evidence"])
+def test_failed_index_update_invalidates_another_process_cached_signature(
+    tmp_path, monkeypatch, edit,
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before", sprint="backlog")
+    _evidence(pf, ticket.id, "existing")
+    pf.store.configure_ticket_index(True)
+    code = '''
+import json, sys
+from pathlib import Path
+import planfile
+from planfile import Planfile
+from planfile.core.store import TicketIndexContentionError
+assert Path(planfile.__file__).resolve() == Path(sys.argv[3]).resolve()
+store = Planfile(sys.argv[1]).store
+store._ticket_index_signature_cache_seconds = lambda: 3600
+store.require_current_ticket_index()
+print("ready", flush=True)
+sys.stdin.readline()
+try:
+    store.require_current_ticket_index()
+except TicketIndexContentionError as exc:
+    print(json.dumps({"state": str(exc), "name": store.get_ticket(sys.argv[2], repair_index=False).name}), flush=True)
+else:
+    raise AssertionError("another process served stale projection as current")
+'''
+    source_root = Path(__file__).resolve().parents[1]
+    process = subprocess.Popen([sys.executable, "-u", "-c", code, str(tmp_path), ticket.id,
+                                str(source_root / "planfile/__init__.py")],
+                               cwd=source_root,
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               text=True)
+    try:
+        with selectors.DefaultSelector() as ready:
+            ready.register(process.stdout, selectors.EVENT_READ)
+            assert ready.select(timeout=30), "reader failed to warm cache"
+        assert process.stdout.readline().strip() == "ready", process.stderr.read()
+        probe_before = pf.store._ticket_index_signature_cache_probe()
+        with _held_index_writer(pf, monkeypatch):
+            if edit == "history":
+                pf.update_ticket(ticket.id, name="After")
+            else:
+                _evidence(pf, ticket.id, "second")
+            probe_after = pf.store._ticket_index_signature_cache_probe()
+            # Neither edit changes the old cheap probe; only the new token
+            # prevents a worker with a warmed signature from returning stale.
+            assert probe_before[:-1] == probe_after[:-1]
+            assert probe_before[-1] != probe_after[-1]
+            output, error = process.communicate("check\n", timeout=15)
+            assert process.returncode == 0, error
+            assert json.loads(output)["state"] == "ticket_index_stale"
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.communicate(timeout=15)
+    assert pf.store.ensure_ticket_index()["current"] is True
+
+
+@pytest.mark.parametrize("message", ["disk I/O error", "no such table: tickets", "database disk image is malformed"])
+def test_non_contention_index_errors_still_propagate(tmp_path, monkeypatch, message):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+
+    def broken_apply(*args, **kwargs):
+        raise sqlite3.OperationalError(message)
+
+    monkeypatch.setattr(SQLiteTicketIndex, "apply", broken_apply)
+    with pytest.raises(sqlite3.OperationalError, match=message):
+        pf.update_ticket(ticket.id, name="After")
+    assert pf.store._locate_ticket_source(ticket.id)[1]["name"] == "After"
+    assert not pf.store._ticket_index_invalidation_path.exists()
+
+
+def test_pre_write_sqlite_failure_preserves_authoritative_ticket(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+
+    def unavailable_source(*args, **kwargs):
+        raise sqlite3.OperationalError("database is locked")
+
+    monkeypatch.setattr(pf.store, "_write_yaml_atomic", unavailable_source)
+    with pytest.raises(sqlite3.OperationalError, match="database is locked"):
+        pf.update_ticket(ticket.id, name="After")
+    assert pf.store._locate_ticket_source(ticket.id)[1]["name"] == "Before"
+    assert pf.store.require_current_ticket_index()["current"] is True
+    assert not pf.store._ticket_index_invalidation_path.exists()
+    with pytest.raises(TicketUpdatedAtConflictError):
+        pf.update_ticket(ticket.id, name="Stale", expected_updated_at="2000-01-01T00:00:00Z")
+
+
+def test_actual_sqlite_locked_error_defers_only_post_commit_index(tmp_path, monkeypatch):
+    # SQLITE_LOCKED differs from SQLITE_BUSY: produce it with an unfinished
+    # statement in SQLite itself, rather than relying on exception text.
+    connection = sqlite3.connect(":memory:")
+    connection.execute("CREATE TABLE held(value)")
+    connection.execute("INSERT INTO held VALUES(1)")
+    cursor = connection.execute("SELECT * FROM held")
+    with pytest.raises(sqlite3.OperationalError) as captured:
+        connection.execute("DROP TABLE held")
+    cursor.close()
+    connection.close()
+    error = captured.value
+    if hasattr(error, "sqlite_errorcode"):
+        assert error.sqlite_errorcode & 0xFF == 6
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+
+    def locked_apply(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(SQLiteTicketIndex, "apply", locked_apply)
+    assert pf.update_ticket(ticket.id, name="After").name == "After"
+    assert pf.get_ticket(ticket.id, repair_index=False).name == "After"
+    assert pf.store.ensure_ticket_index()["current"] is True
+
+
+@pytest.mark.parametrize("code", [5 | (2 << 8), 6 | (1 << 8)])
+def test_extended_contention_codes_are_classified_by_primary_code(tmp_path, monkeypatch, code):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+    error = sqlite3.OperationalError("localized or version-specific description")
+    error.sqlite_errorcode = code
+
+    def fail_apply(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(SQLiteTicketIndex, "apply", fail_apply)
+    assert pf.update_ticket(ticket.id, name="After").name == "After"
+    assert pf.store._ticket_index_invalidation_path.exists()
+
+
+def test_non_contention_error_code_overrides_lock_like_message(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+    error = sqlite3.OperationalError("database is locked")
+    error.sqlite_errorcode = 10  # SQLITE_IOERR must never be suppressed.
+
+    def fail_apply(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(SQLiteTicketIndex, "apply", fail_apply)
+    with pytest.raises(sqlite3.OperationalError):
+        pf.update_ticket(ticket.id, name="After")
+    assert not pf.store._ticket_index_invalidation_path.exists()
+
+
+def test_failure_to_persist_invalidation_is_not_hidden(tmp_path, monkeypatch):
+    from planfile.core import fastio
+
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+    original = fastio._atomic_write_text
+
+    def no_marker(path, content):
+        if path == pf.store._ticket_index_invalidation_path:
+            raise OSError("invalidation filesystem unavailable")
+        return original(path, content)
+
+    monkeypatch.setattr(fastio, "_atomic_write_text", no_marker)
+    with _held_index_writer(pf, monkeypatch):
+        with pytest.raises(OSError, match="invalidation filesystem unavailable"):
+            pf.update_ticket(ticket.id, name="After")
+    assert pf.store._locate_ticket_source(ticket.id)[1]["name"] == "After"

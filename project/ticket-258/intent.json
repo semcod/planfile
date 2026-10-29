@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-258",
+  "summary": "Avoid ambiguous post-commit SQLite index contention (issue316)",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-258/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store.py",
+    "tests/test_sqlite_ticket_index.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ee8d113322ffa8cf58f96cd676aec14c38258cdc",
+    "targetBranch": "main",
+    "outcome": "A durable ticket mutation succeeds despite SQLite BUSY/LOCKED during projection update; a durable invalidation token prevents stale caches being current in another process. Preserve CAS and idempotency and propagate unrelated failures.",
+    "nonGoals": [
+      "No pre-write lock retry, live lock deletion, runtime hotpatch, managed adoption changes, or other retained worktree takeover.",
+      "Index rebuild liveness and native deployment remain with existing owner issues313/317."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Handle contention at the existing post-commit projection boundary. Use a SQLite-independent atomic invalidation token in full and cached-signature probes; the normal rebuild reconciles it.",
+      "components": [
+        {
+          "name": "ticket-store-index",
+          "paths": [
+            "planfile/core/store.py",
+            "tests/test_sqlite_ticket_index.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "ticket-store-index",
+          "description": "Disposable index signature includes an atomic invalidation token; authoritative ticket format remains compatible."
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the source slice through protected publication; index is disposable and rebuilt from authoritative tickets. Reinstate the prior immutable runtime if a qualified rollout fails."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py"
+        ],
+        "evidence": "Real SQLite writer contention, API acknowledgement, cross-process stale guard, eventual rebuild and upsert/delete paths."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_store_lock_timeout.py tests/test_store_concurrency.py tests/test_ticket_api_events.py"
+        ],
+        "evidence": "Pre-write failures, unrelated index errors, CAS and evidence replay remain correct."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Scoped Testless, protected exact-head/current-base OneDev and independent Validator publication; runtime deployment is a separate receipt."
+      }
+    ]
+  }
+}
