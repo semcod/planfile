@@ -42,6 +42,12 @@ assessment = {
 @pytest.fixture(autouse=True)
 def fake_radar(tmp_path, monkeypatch):
     """Never invoke a developer's installed radar in these tests."""
+    # Success contracts test persistence and validation, not interpreter startup
+    # speed under a loaded CI host. Keep their finite fixture budgets separate
+    # from production's 1s/5s policy. Timing/cleanup tests below explicitly set
+    # their own short assessment and bulk deadlines.
+    monkeypatch.setattr(radar, "ASSESSMENT_SECONDS", 10.0)
+    monkeypatch.setattr(radar, "BULK_SECONDS", 20.0)
     executable_dir = tmp_path / "bin"
     executable_dir.mkdir()
     monkeypatch.setenv("PATH", str(executable_dir))
