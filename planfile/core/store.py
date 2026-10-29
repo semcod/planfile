@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import os
 import re
 import shutil
+import sqlite3
 import tempfile
 import time
 from contextlib import contextmanager
@@ -117,6 +119,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
         self._forensic_log_receipt_path = self.base_dir / "events" / ".logs.dsl.v1"
         self._evidence_dir = self.base_dir / "evidence"
         self._ticket_index_path = self.base_dir / "index" / "tickets.sqlite3"
+        self._ticket_index_invalidation_path = self.base_dir / "index" / "tickets.invalidated"
         self._ticket_index_rebuild_lock_path = self.base_dir / "index" / ".rebuild.lock"
         self._history_locations_path = self.base_dir / "index" / "history-locations.yaml"
         self._operational_receipt_path = self.base_dir / OPERATIONAL_RECEIPT_FILENAME
@@ -1854,7 +1857,15 @@ class Store(StoreFileMixin, TicketStoreMixin):
             self.sprint_signature("all"),
             self._evidence_revision(),
             self._history_locations_signature(),
+            self._ticket_index_invalidation_revision(),
         )
+
+    def _ticket_index_invalidation_revision(self) -> str | None:
+        """Read the cross-process token without opening the contended database."""
+        try:
+            return self._ticket_index_invalidation_path.read_text(encoding="ascii")
+        except FileNotFoundError:
+            return None
 
     @staticmethod
     def _ticket_index_signature_cache_seconds() -> float:
@@ -1901,6 +1912,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
             self.sprint_signature("current"),
             evidence_dir_mtime,
             self._history_locations_signature(),
+            self._ticket_index_invalidation_revision(),
         )
 
     def _invalidate_ticket_index_signature_cache(self) -> None:
@@ -2024,11 +2036,41 @@ class Store(StoreFileMixin, TicketStoreMixin):
             self._ticket_index_record(ticket, sprint)
             for ticket, sprint in (upserts or [])
         ]
-        self._sqlite_ticket_index().apply(
-            upserts=records,
-            deletes=deletes or [],
-            signature=self._ticket_index_signature(),
-        )
+        try:
+            self._sqlite_ticket_index().apply(
+                upserts=records,
+                deletes=deletes or [],
+                signature=self._ticket_index_signature(),
+            )
+        except sqlite3.OperationalError as exc:
+            # All callers have already committed authoritative files. Only
+            # BUSY/LOCKED in this disposable projection may be deferred; other
+            # errors and failures before the source write still propagate.
+            code = getattr(exc, "sqlite_errorcode", None)
+            if code is not None:
+                contention = code & 0xFF in (5, 6)  # SQLITE_BUSY / SQLITE_LOCKED
+            else:
+                # Python 3.10 lacks sqlite_errorcode. Match SQLite's own
+                # messages exactly (or its table/schema-qualified variants).
+                message = str(exc).lower()
+                contention = message in {
+                    "database is locked", "database table is locked", "database schema is locked"
+                } or message.startswith(("database table is locked: ", "database schema is locked: "))
+            if not contention:
+                raise
+            from planfile.core.fastio import _atomic_write_text
+
+            # A process-local cache reset alone leaves another worker's cached
+            # signature looking current until its TTL expires. This atomic
+            # token invalidates every worker, even for historical/evidence
+            # edits that do not change the cheap current-sprint probe. Never
+            # advance SQLite metadata or delete another writer's lock.
+            _atomic_write_text(self._ticket_index_invalidation_path, os.urandom(16).hex())
+            self._invalidate_ticket_index_signature_cache()
+            logging.getLogger(__name__).warning(
+                "ticket_index_update_deferred: durable mutation committed; "
+                "SQLite projection stale (%s)", exc,
+            )
 
     def ensure_ticket_index(self, *, force: bool = False) -> dict:
         """Ensure the disposable SQLite projection matches durable sources."""
