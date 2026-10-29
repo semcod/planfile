@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-259",
+  "summary": "Bound success-fixture patience independently of radar timeout policy",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-259/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "tests/test_ticket_radar.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6b3ec5f54e1945d5d7f6695ab3cea33db4fe7180",
+    "targetBranch": "main",
+    "outcome": "Success fixtures for advisory persistence use a generous bounded test budget so host scheduling does not decide semantic assertions; explicit timeout, process cleanup and bulk deadline cases retain their own short budgets. Production1s/5s policy remains unchanged.",
+    "nonGoals": [
+      "No production timeout or transport change, skipped tests, check waivers or source258 edits.",
+      "This is a technical CI dependency of existing Planfile316 / native258 PR319."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Adjust only the shared fake-radar fixture defaults; contract tests that target timing continue to override both constants explicitly. Verify under current loaded host and protected matrix.",
+      "components": [
+        {
+          "name": "radar-contract-fixtures",
+          "paths": [
+            "tests/test_ticket_radar.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this isolated test-only slice through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_ticket_radar.py"
+        ],
+        "evidence": "All success/failure/authority fixtures pass without altering production budgets or dropping deadline assertions."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Native governance, protected exact-head/current-base matrix and independent publication; rerun frozen dependent319 after this base change."
+      }
+    ]
+  }
+}
