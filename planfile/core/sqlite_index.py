@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import closing, contextmanager
 from itertools import islice
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,17 @@ SQLITE_INDEX_SCHEMA = "planfile.sqlite-ticket-index/v1"
 _SCHEMA_VERSION = 1
 _REBUILD_BATCH_SIZE = 128
 _SOURCE_INDEXED_AT_NS_KEY = "source_indexed_at_ns"
+
+
+def _is_sqlite_contention(error: sqlite3.DatabaseError) -> bool:
+    code = getattr(error, "sqlite_errorcode", None)
+    if code is not None:
+        return isinstance(code, int) and code & 0xFF in (5, 6)
+    # Python 3.10 lacks sqlite_errorcode; do not classify arbitrary messages.
+    message = str(error).lower()
+    return message in {
+        "database is locked", "database table is locked", "database schema is locked"
+    } or message.startswith(("database table is locked: ", "database schema is locked: "))
 
 
 class SQLiteTicketIndex:
@@ -35,19 +47,30 @@ class SQLiteTicketIndex:
     def _connect(self) -> sqlite3.Connection:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         connection = sqlite3.connect(self.path, timeout=10)
-        connection.row_factory = sqlite3.Row
-        journal_mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
-        if str(journal_mode).lower() != "wal":
-            connection.execute("PRAGMA journal_mode=WAL")
-        connection.execute("PRAGMA synchronous=NORMAL")
-        connection.execute("PRAGMA foreign_keys=ON")
-        initialized = connection.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='meta'"
-        ).fetchone()
-        if initialized is None:
-            self._initialize(connection)
-        self._ensure_routes(connection)
+        try:
+            connection.row_factory = sqlite3.Row
+            journal_mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
+            if str(journal_mode).lower() != "wal":
+                connection.execute("PRAGMA journal_mode=WAL")
+            connection.execute("PRAGMA synchronous=NORMAL")
+            connection.execute("PRAGMA foreign_keys=ON")
+            initialized = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='meta'"
+            ).fetchone()
+            if initialized is None:
+                self._initialize(connection)
+            self._ensure_routes(connection)
+        except BaseException:
+            connection.close()
+            raise
         return connection
+
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        # SQLite's own context manager commits/rolls back but does not close.
+        with closing(self._connect()) as connection:
+            with connection:
+                yield connection
 
     @staticmethod
     def _initialize(connection: sqlite3.Connection) -> None:
@@ -204,7 +227,7 @@ class SQLiteTicketIndex:
         if (not isinstance(after, tuple) or len(after) != 2
                 or type(after[0]) is not int or not isinstance(after[1], str)):
             raise ValueError("ticket_index_cursor_invalid")
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 f"SELECT id, position FROM ticket_routes WHERE {where} "
                 "AND (position, id) > (?, ?) ORDER BY position, id LIMIT ?",
@@ -220,7 +243,7 @@ class SQLiteTicketIndex:
             return False
         expected = self.serialize_signature(signature)
         try:
-            with self._connect() as connection:
+            with self._connection() as connection:
                 row = connection.execute(
                     "SELECT value FROM meta WHERE key='source_signature'"
                 ).fetchone()
@@ -272,7 +295,7 @@ class SQLiteTicketIndex:
             raise ValueError("ticket_index_rebuild_batch_size_invalid")
         rows = iter(records)
         count = 0
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.execute("BEGIN IMMEDIATE")
             connection.execute("DELETE FROM dependencies")
             connection.execute("DELETE FROM tickets")
@@ -303,7 +326,7 @@ class SQLiteTicketIndex:
         return count
 
     def get_ticket(self, ticket_id: str) -> dict[str, Any] | None:
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 "SELECT ticket_json FROM tickets WHERE id=?",
                 (ticket_id,),
@@ -320,7 +343,7 @@ class SQLiteTicketIndex:
         """Apply a known-complete store mutation and advance its source signature."""
         rows = list(upserts)
         deleted_ids = list(deletes)
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.execute("BEGIN IMMEDIATE")
             if deleted_ids:
                 connection.executemany(
@@ -415,7 +438,7 @@ class SQLiteTicketIndex:
         if max_age_seconds < 0 or not self.path.exists():
             return False
         try:
-            with self._connect() as connection:
+            with self._connection() as connection:
                 rows = connection.execute(
                     "SELECT key, value FROM meta WHERE key IN ('source_signature', ?)",
                     (_SOURCE_INDEXED_AT_NS_KEY,),
@@ -449,7 +472,7 @@ class SQLiteTicketIndex:
             conditions.append(f"{key}=?")
             parameters.append(str(getattr(value, "value", value)))
         where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
-        with self._connect() as connection:
+        with self._connection() as connection:
             total = int(
                 connection.execute(
                     f"SELECT COUNT(*) AS count FROM tickets{where}",
@@ -488,7 +511,7 @@ class SQLiteTicketIndex:
             conditions.append(f"{key}=?")
             parameters.append(str(getattr(value, "value", value)))
         where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
-        with self._connect() as connection:
+        with self._connection() as connection:
             total = int(
                 connection.execute(
                     f"SELECT COUNT(*) AS count FROM tickets{where}",
@@ -527,7 +550,7 @@ class SQLiteTicketIndex:
             conditions.append(f"{key}=?")
             parameters.append(str(getattr(value, "value", value)))
         where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
-        with self._connect() as connection:
+        with self._connection() as connection:
             total = int(
                 connection.execute(
                     f"SELECT COUNT(*) AS count FROM tickets{where}",
@@ -582,7 +605,7 @@ class SQLiteTicketIndex:
         elif offset:
             page_sql += " LIMIT -1 OFFSET ?"
             page_parameters.append(offset)
-        with self._connect() as connection:
+        with self._connection() as connection:
             total = int(
                 connection.execute(
                     f"SELECT COUNT(*) AS count FROM tickets{where}",
@@ -647,7 +670,7 @@ class SQLiteTicketIndex:
             conditions.append(f"{key}=?")
             parameters.append(str(getattr(value, "value", value)))
         where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
-        with self._connect() as connection:
+        with self._connection() as connection:
             total = int(
                 connection.execute(
                     f"SELECT COUNT(*) AS count FROM tickets{where}",
@@ -683,7 +706,7 @@ class SQLiteTicketIndex:
                 "path": str(self.path),
             }
         try:
-            with self._connect() as connection:
+            with self._connection() as connection:
                 count = int(
                     connection.execute("SELECT COUNT(*) AS count FROM tickets").fetchone()[
                         "count"
