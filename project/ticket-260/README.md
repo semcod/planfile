@@ -19,3 +19,5 @@ SESSION_EXECUTION_AUTHORIZATION: continue the user's autonomous repair, testing 
 ## Delivery boundary
 
 Never remove a live lock/index, kill a writer, forge a historical publication receipt, hotpatch the live package or equate source tests with deployment. Preserve existing313/316/317 and Validator593 evidence. Allocation uses the installed ID-only allocator; delivery uses the adopted v5 planner and canonical relative worktree.
+
+Independent Validator review correction: the repeated-read regression now retains all 200 real SQLite connections and proves each is closed on every platform. Linux additionally measures `/proc/self/fd`; no regression is skipped. The same 78 affected tests pass with the updated test, and pinned Ruff 0.15.11 reports no findings. Source behavior and the installed artifact bytes are unchanged; fresh exact-head CI and independent approval remain required.

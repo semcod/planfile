@@ -32,21 +32,34 @@ def _disable_archive(pf: Planfile) -> None:
     pf.store._write_config(config)
 
 
-def test_index_reads_release_descriptors_without_cyclic_gc(tmp_path):
-    if not Path("/proc/self/fd").is_dir():
-        pytest.skip("Descriptor observation requires procfs")
+def test_index_reads_release_descriptors_without_cyclic_gc(tmp_path, monkeypatch):
     index = SQLiteTicketIndex(tmp_path / "index.sqlite")
     signature = ("source", 1)
     index.rebuild([], signature)
+    connect = sqlite3.connect
+    opened = []
+
+    def capture(*args, **kwargs):
+        connection = connect(*args, **kwargs)
+        opened.append(connection)
+        return connection
+
+    monkeypatch.setattr(sqlite3, "connect", capture)
     gc.collect()
     was_enabled = gc.isenabled()
     gc.disable()
+    descriptor_root = Path("/proc/self/fd")
     try:
-        before = len(os.listdir("/proc/self/fd"))
+        before = len(os.listdir(descriptor_root)) if descriptor_root.is_dir() else None
         for _ in range(100):
             assert index.status(signature)["current"]
             assert index.is_current(signature)
-        assert len(os.listdir("/proc/self/fd")) <= before + 2
+        assert len(opened) == 200
+        for connection in opened:
+            with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                connection.execute("SELECT 1")
+        if before is not None:
+            assert len(os.listdir(descriptor_root)) <= before + 2
     finally:
         if was_enabled:
             gc.enable()
