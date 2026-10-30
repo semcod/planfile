@@ -10,7 +10,7 @@
   "created": "2026-10-30",
   "updated": "2026-10-30",
   "review_after": "2026-11-30",
-  "source_revision": "57d0856",
+  "source_revision": "57d085698cd2a92f6da7bf69a4e6a270571aec0e",
   "affected_repositories": [
     "semcod/planfile"
   ],
