@@ -7,6 +7,7 @@
   "title": "Planfile #321 activation and the SQLite index finding",
   "status": "implemented",
   "owner": "semcod/planfile",
+  "scope": "repository",
   "created": "2026-10-30",
   "updated": "2026-10-30",
   "review_after": "2026-11-30",
@@ -24,10 +25,13 @@
 
 # Planfile #321 activation and the SQLite index finding
 
-<!-- docs:section purpose -->
-## Purpose
+<!-- docs:section question -->
+## Question
 
-Record, in the owning repository, what was observed when planfile PR #321 was
+Did activating #321 stop the planfile resource problem, and what did?
+
+
+Purpose: record, in the owning repository, what was observed when planfile PR #321 was
 activated in production and what actually reduced the resource use. Moved from
 an operator-local note; it grants no deployment authority.
 
@@ -39,6 +43,13 @@ retryable store-lock refusals), the SQLite ticket index and the later Compose
 deployment. Out of scope: PR #322 (status-position index), whose native
 migration is recorded separately in
 `/home/tom/.local/state/ecosystem-throughput-20261030/planfile262-live-migration-receipt.json`.
+
+<!-- docs:section method -->
+## Method
+
+Live measurements of request latency, container CPU and memory, a canary on a
+copy of the data with and without the index, a soak test, and a read of the
+index-enable code path. Production was not modified by this analysis.
 
 <!-- docs:section evidence -->
 ## Evidence
@@ -70,8 +81,8 @@ migration is recorded separately in
   config-change record). Measured afterwards: `sprint=all` 0.15-0.33 s,
   container about 29% CPU and 2.2 GiB, 21,016 tickets, index current.
 
-<!-- docs:section content -->
-## Content
+<!-- docs:section facts -->
+## Facts
 
 The large drop in CPU, memory and read latency followed enabling the SQLite
 index, not #321 alone. #321 supplies the connection handling and the retryable
@@ -82,6 +93,14 @@ projection `.planfile/index/tickets.sqlite3`, rebuilt from the YAML and evidence
 journals. Ticket, sprint and evidence YAML, the container, image, network and
 volumes are untouched. Undo: `python -m planfile storage index-disable --project /workspace`
 (sets the key back to `none`, keeps the database file).
+
+<!-- docs:section hypotheses -->
+## Hypotheses
+
+- The drop in CPU and memory came from the index being enabled; #321 alone was
+  not shown to resolve it. Not proven: whether a long-running leak existed.
+- The unidentified actor was probably an owner-side operation; no record
+  confirms it.
 
 <!-- docs:section limitations -->
 ## Limitations
@@ -96,8 +115,8 @@ volumes are untouched. Undo: `python -m planfile storage index-disable --project
   retired (it refuses a Compose-managed container); its original note is
   operator-local and is not reproduced here.
 
-<!-- docs:section next_actions -->
-## Next actions
+<!-- docs:section recommendations -->
+## Recommendations
 
 - Owners decide whether to summarize this in planfile#317 and #313; nothing was
   posted there.
