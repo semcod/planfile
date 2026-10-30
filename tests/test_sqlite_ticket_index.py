@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gc
 import json
+import os
 import selectors
 import sqlite3
 import subprocess
@@ -29,6 +30,150 @@ def _disable_archive(pf: Planfile) -> None:
     config = pf.store._read_config()
     config["archive"]["enabled"] = False
     pf.store._write_config(config)
+
+
+def test_index_reads_release_descriptors_without_cyclic_gc(tmp_path, monkeypatch):
+    index = SQLiteTicketIndex(tmp_path / "index.sqlite")
+    signature = ("source", 1)
+    index.rebuild([], signature)
+    connect = sqlite3.connect
+    opened = []
+
+    def capture(*args, **kwargs):
+        connection = connect(*args, **kwargs)
+        opened.append(connection)
+        return connection
+
+    monkeypatch.setattr(sqlite3, "connect", capture)
+    gc.collect()
+    was_enabled = gc.isenabled()
+    gc.disable()
+    descriptor_root = Path("/proc/self/fd")
+    try:
+        before = len(os.listdir(descriptor_root)) if descriptor_root.is_dir() else None
+        for _ in range(100):
+            assert index.status(signature)["current"]
+            assert index.is_current(signature)
+        assert len(opened) == 200
+        for connection in opened:
+            with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                connection.execute("SELECT 1")
+        if before is not None:
+            assert len(os.listdir(descriptor_root)) <= before + 2
+    finally:
+        if was_enabled:
+            gc.enable()
+
+
+@pytest.mark.parametrize("fail", [False, True])
+def test_index_operation_commits_or_rolls_back_then_closes(tmp_path, fail):
+    index = SQLiteTicketIndex(tmp_path / "index.sqlite")
+    index.rebuild([], ("source", 1))
+    connection = None
+    try:
+        with index._connection() as connection:
+            connection.execute("INSERT INTO meta VALUES('lifetime-test', 'present')")
+            if fail:
+                raise RuntimeError("abort transaction")
+    except RuntimeError:
+        assert fail
+    with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+        connection.execute("SELECT 1")
+    with index._connection() as observer:
+        row = observer.execute("SELECT value FROM meta WHERE key='lifetime-test'").fetchone()
+    assert (row is None) == fail
+
+
+@pytest.mark.parametrize("hook", ["_initialize", "_ensure_routes"])
+def test_failed_index_setup_closes_its_connection(tmp_path, monkeypatch, hook):
+    connect = sqlite3.connect
+    opened = []
+
+    def capture(*args, **kwargs):
+        connection = connect(*args, **kwargs)
+        opened.append(connection)
+        return connection
+
+    def fail(*args):
+        raise RuntimeError("setup refused")
+
+    monkeypatch.setattr(sqlite3, "connect", capture)
+    monkeypatch.setattr(SQLiteTicketIndex, hook, staticmethod(fail))
+    with pytest.raises(RuntimeError, match="setup refused"):
+        SQLiteTicketIndex(tmp_path / "index.sqlite")._connect()
+    assert len(opened) == 1
+    with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+        opened[0].execute("SELECT 1")
+
+
+def test_busy_rebuild_preserves_independent_writer_and_index(tmp_path, monkeypatch):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Committed before rebuild")
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    inode = index.path.stat().st_ino
+    code = (
+        "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); "
+        "c.execute('BEGIN IMMEDIATE'); print('held',flush=True); "
+        "sys.stdin.readline(); c.rollback(); c.close()"
+    )
+    holder = subprocess.Popen([sys.executable, "-u", "-c", code, str(index.path)],
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, text=True)
+    connect = SQLiteTicketIndex._connect
+
+    def short_wait(self):
+        connection = connect(self)
+        connection.execute("PRAGMA busy_timeout=10")
+        return connection
+
+    try:
+        with selectors.DefaultSelector() as ready:
+            ready.register(holder.stdout, selectors.EVENT_READ)
+            assert ready.select(10), "Independent writer did not start"
+        assert holder.stdout.readline().strip() == "held"
+        monkeypatch.setattr(SQLiteTicketIndex, "_connect", short_wait)
+        with pytest.raises(TicketIndexContentionError, match="ticket_index_rebuild_busy"):
+            pf.store.ensure_ticket_index(force=True)
+        assert holder.poll() is None
+        assert index.path.stat().st_ino == inode
+        assert index.get_ticket(ticket.id)["name"] == "Committed before rebuild"
+        assert pf.store._locate_ticket_source(ticket.id)[1]["name"] == "Committed before rebuild"
+    finally:
+        _, error = holder.communicate("release\n", timeout=10)
+        assert holder.returncode == 0, error
+    assert pf.store.ensure_ticket_index(force=True)["current"]
+
+
+@pytest.mark.parametrize("code,message", [
+    (5, "localized"), (6, "localized"), (5 | (2 << 8), "localized"),
+    (6 | (1 << 8), "localized"), (None, "database is locked"),
+    (None, "database table is locked: tickets"),
+])
+def test_busy_rebuild_never_resets_or_replays(tmp_path, monkeypatch, code, message):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.create_ticket(name="Retained")
+    pf.store.configure_ticket_index(True)
+    error = sqlite3.OperationalError(message)
+    if code is not None:
+        error.sqlite_errorcode = code
+    attempts = []
+
+    def busy(*args, **kwargs):
+        attempts.append(True)
+        raise error
+
+    def forbidden(*args):
+        raise AssertionError("A busy index must not be reset")
+
+    monkeypatch.setattr(SQLiteTicketIndex, "rebuild", busy)
+    monkeypatch.setattr(SQLiteTicketIndex, "reset", forbidden)
+    with pytest.raises(TicketIndexContentionError, match="ticket_index_rebuild_busy") as raised:
+        pf.store.ensure_ticket_index(force=True)
+    assert raised.value.__cause__ is error
+    assert len(attempts) == 1
 
 
 def test_sqlite_rebuild_streams_records_in_bounded_batches(tmp_path):

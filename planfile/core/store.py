@@ -2046,17 +2046,9 @@ class Store(StoreFileMixin, TicketStoreMixin):
             # All callers have already committed authoritative files. Only
             # BUSY/LOCKED in this disposable projection may be deferred; other
             # errors and failures before the source write still propagate.
-            code = getattr(exc, "sqlite_errorcode", None)
-            if code is not None:
-                contention = code & 0xFF in (5, 6)  # SQLITE_BUSY / SQLITE_LOCKED
-            else:
-                # Python 3.10 lacks sqlite_errorcode. Match SQLite's own
-                # messages exactly (or its table/schema-qualified variants).
-                message = str(exc).lower()
-                contention = message in {
-                    "database is locked", "database table is locked", "database schema is locked"
-                } or message.startswith(("database table is locked: ", "database schema is locked: "))
-            if not contention:
+            from planfile.core.sqlite_index import _is_sqlite_contention
+
+            if not _is_sqlite_contention(exc):
                 raise
             from planfile.core.fastio import _atomic_write_text
 
@@ -2119,6 +2111,11 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
                 if not isinstance(exc, sqlite3.DatabaseError):
                     raise
+                from planfile.core.sqlite_index import _is_sqlite_contention
+
+                if _is_sqlite_contention(exc):
+                    self._ticket_index_rebuild_deferred_until = time.monotonic() + 5.0
+                    raise TicketIndexContentionError("ticket_index_rebuild_busy") from exc
                 index.reset()
                 count = index.rebuild(self._ticket_index_records(), signature_before)
             signature_after = self._ticket_index_signature()

@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-260",
+  "summary": "Close SQLite index connections and preserve busy rebuild owners",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-260/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/sqlite_index.py",
+    "planfile/core/store.py",
+    "tests/test_sqlite_ticket_index.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "9a221c92dc42a104c2347ad5b507128ded696648",
+    "targetBranch": "main",
+    "outcome": "Close every internal SQLite index connection deterministically on success, failure and connection setup exceptions; treat SQLite BUSY/LOCKED rebuild failures as bounded contention without resetting another writer's index, while retaining genuine corruption recovery.",
+    "nonGoals": [
+      "No live database/lock deletion, live package hotpatch, owner termination, lease takeover or automatic reservation release.",
+      "No claim that a source fix or isolated canary is native runtime activation; prior publication exceptions remain separate."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Give the existing SQLiteTicketIndex internal operation context deterministic transaction exit and close, close failed setup connections, and share exact SQLite contention classification with the store rebuild/post-commit paths.",
+      "components": [
+        {
+          "name": "sqlite-index-projection",
+          "paths": [
+            "planfile/core/sqlite_index.py",
+            "planfile/core/store.py",
+            "tests/test_sqlite_ticket_index.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the source commit; native artifacts/activation require separate exact-target operator receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "testless scan -s planfile tests/test_sqlite_ticket_index.py"
+        ],
+        "evidence": "Repeated reads release connections without cyclic GC; successful transaction/rollback/setup failures release resources."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "testless scan -s planfile tests/test_sqlite_ticket_index.py"
+        ],
+        "evidence": "Independent SQLite writer retains PID/inode/data on BUSY/LOCKED; extended SQLite codes and Python3.10 fallback handled; real corruption recovery retained."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "project/governance-check.sh",
+          "protected OneDev exact-head/current-base verification and independent Validator publication",
+          "isolated installed-wheel canary on live native base image without live volume/network"
+        ],
+        "evidence": "Genuine source publication and content-bound runtime candidate; native rollout remains separate."
+      }
+    ]
+  }
+}
