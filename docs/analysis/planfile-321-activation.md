@@ -5,7 +5,7 @@
   "kind": "analysis",
   "version": 1,
   "title": "Planfile #321 activation and the SQLite index finding",
-  "status": "final",
+  "status": "implemented",
   "owner": "semcod/planfile",
   "created": "2026-10-30",
   "updated": "2026-10-30",
