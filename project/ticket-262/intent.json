@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-262",
+  "summary": "Index cross-sprint status reads for autonomous queue snapshots",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-262/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/sqlite_index.py",
+    "tests/test_sqlite_status_index.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "57d085698cd2a92f6da7bf69a4e6a270571aec0e",
+    "outcome": "Status-filtered cross-sprint queue reads use an ordered SQLite index, including databases created before this change, without altering ticket data or admission decisions.",
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Ensure one additive status-position index when opening the disposable ticket projection. Already upgraded databases keep the read path; no source-data rewrite or ticket-state change. Regression evidence checks query plans, bounded SQLite work, unchanged payload order and concurrent migration.",
+      "components": [
+        {
+          "name": "sqlite-ticket-projection",
+          "paths": [
+            "planfile/core/sqlite_index.py",
+            "tests/test_sqlite_status_index.py"
+          ]
+        }
+      ],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "dataChanges": [],
+      "rollback": "Revert the bounded source change through independent publication. The additive index remains harmless and ticket sources are unchanged.",
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      }
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "No queue gate bypass, status change, execution grant, unbounded concurrency increase or runtime rewrite."
+    ],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_status_index.py"
+        ],
+        "evidence": "Fresh and existing databases use indexed ordered status reads and retain exact ticket payloads."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_sqlite_ticket_index.py tests/test_sqlite_index_and_retry_perf.py"
+        ],
+        "evidence": "Connections close correctly, concurrent migration is idempotent and existing ticket index behavior is preserved."
+      }
+    ]
+  }
+}

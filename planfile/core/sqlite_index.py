@@ -59,11 +59,25 @@ class SQLiteTicketIndex:
             ).fetchone()
             if initialized is None:
                 self._initialize(connection)
+            self._ensure_status_index(connection)
             self._ensure_routes(connection)
         except BaseException:
             connection.close()
             raise
         return connection
+
+    @staticmethod
+    def _ensure_status_index(connection: sqlite3.Connection) -> None:
+        # Cross-sprint controllers filter by status, then paginate by position.
+        # A sprint-leading index cannot serve that query; scanning position can
+        # read the entire archive even when the requested status has no rows.
+        if connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='index' AND name='tickets_status_position'"
+        ).fetchone():
+            return
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS tickets_status_position ON tickets(status, position)"
+        )
 
     @contextmanager
     def _connection(self) -> Iterator[sqlite3.Connection]:
