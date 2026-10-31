@@ -2107,8 +2107,6 @@ class Store(StoreFileMixin, TicketStoreMixin):
             try:
                 count = index.rebuild(self._ticket_index_records(), signature_before)
             except Exception as exc:
-                import sqlite3
-
                 if not isinstance(exc, sqlite3.DatabaseError):
                     raise
                 from planfile.core.sqlite_index import _is_sqlite_contention
@@ -2120,6 +2118,19 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 count = index.rebuild(self._ticket_index_records(), signature_before)
             signature_after = self._ticket_index_signature()
             if signature_before != signature_after:
+                from planfile.core.index_repair import reconcile_index
+
+                try:
+                    reconciled = reconcile_index(self, index, signature_before)
+                except sqlite3.OperationalError as exc:
+                    from planfile.core.sqlite_index import _is_sqlite_contention
+
+                    if not _is_sqlite_contention(exc):
+                        raise
+                    reconciled = None
+                if reconciled is not None:
+                    self._ticket_index_rebuild_deferred_until = 0.0
+                    return reconciled
                 force = True
                 continue
             self._ticket_index_rebuild_deferred_until = 0.0

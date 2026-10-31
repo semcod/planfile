@@ -922,7 +922,6 @@ def test_concurrent_background_repairs_coalesce_to_one_rebuild(tmp_path, monkeyp
     sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     mirror_path(sprint_file).unlink(missing_ok=True)
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
-    expected_signature = pf.store._ticket_index_signature()
     original_records = pf.store._ticket_index_records
     calls = 0
     calls_lock = threading.Lock()
@@ -938,9 +937,7 @@ def test_concurrent_background_repairs_coalesce_to_one_rebuild(tmp_path, monkeyp
     with ThreadPoolExecutor(max_workers=6) as pool:
         reports = list(
             pool.map(
-                lambda _number: server._repair_ticket_index_if_unchanged(
-                    expected_signature
-                ),
+                lambda _number: server._repair_ticket_index(),
                 range(6),
             )
         )
@@ -1118,7 +1115,6 @@ def test_background_repair_does_not_block_lifecycle_write(tmp_path, monkeypatch)
     pf.store._sqlite_ticket_index().reset()
     writer = Planfile(str(tmp_path))
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
-    signature = pf.store._ticket_index_signature()
     entered = threading.Event()
     resume = threading.Event()
     original_records = pf.store._ticket_index_records
@@ -1135,7 +1131,7 @@ def test_background_repair_does_not_block_lifecycle_write(tmp_path, monkeypatch)
 
     monkeypatch.setattr(pf.store, "_ticket_index_records", paused_records)
     with ThreadPoolExecutor(max_workers=2) as pool:
-        repair = pool.submit(server._repair_ticket_index_if_unchanged, signature)
+        repair = pool.submit(server._repair_ticket_index)
         try:
             assert entered.wait(2), "projection repair did not start"
             write = pool.submit(writer.complete_ticket, ticket.id, result={"ok": True})
@@ -1145,27 +1141,23 @@ def test_background_repair_does_not_block_lifecycle_write(tmp_path, monkeypatch)
             resume.set()
         repair.result(timeout=3)
 
-    assert calls == 2  # The first snapshot raced the durable lifecycle write.
+    assert calls == 1  # Changed sources are reconciled without rescanning history.
     assert pf.store.ticket_index_status()["current"] is True
     assert pf.get_ticket(ticket.id).status == "done"
     assert pf.get_ticket(ticket.id).outputs.result == {"ok": True}
 
 
-def test_background_repair_defers_when_candidate_sources_changed(tmp_path, monkeypatch):
+def test_background_repair_uses_latest_sources_without_quiet_interval(tmp_path, monkeypatch):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(name="Candidate changed")
     pf.store.configure_ticket_index(True)
-    signature = pf.store._ticket_index_signature()
+    pf.store._sqlite_ticket_index().reset()
     pf.update_ticket(ticket.id, priority="critical")
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
 
-    def unexpected_repair():
-        raise AssertionError("outdated maintenance candidate must defer")
-
-    monkeypatch.setattr(pf.store, "ensure_ticket_index", unexpected_repair)
-    assert server._repair_ticket_index_if_unchanged(signature) == {
-        "rebuilt": False, "deferred": True,
-    }
+    assert server._repair_ticket_index()["rebuilt"] is True
+    assert pf.store.require_current_ticket_index()["current"] is True
+    assert pf.get_ticket(ticket.id).priority == "critical"
 
 
 def _routing_record(number, *, repository="semcod/planfile", issue=244,

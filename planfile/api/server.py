@@ -2047,11 +2047,9 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
         await asyncio.sleep(interval_seconds)
 
 
-def _repair_ticket_index_if_unchanged(expected_signature: tuple) -> dict:
-    """Repair a settled candidate without blocking authoritative lifecycle writes."""
+def _repair_ticket_index() -> dict:
+    """Repair the newest state without requiring a quiet writer interval."""
     store = get_planfile().store
-    if store._ticket_index_signature() != expected_signature:
-        return {"rebuilt": False, "deferred": True}
     # ensure_ticket_index coalesces rebuilders with its own cross-process lock
     # and retries source-signature races. A disposable projection must never
     # hold the YAML mutation lock while scanning the entire ticket history.
@@ -2060,27 +2058,16 @@ def _repair_ticket_index_if_unchanged(expected_signature: tuple) -> dict:
 
 async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
     """Coalesce stale-index repair away from latency-sensitive API requests."""
-    candidate_signature: tuple | None = None
     while True:
         await asyncio.sleep(interval_seconds)
         try:
             store = get_planfile().store
             if not store.ticket_index_enabled():
-                candidate_signature = None
                 continue
             signature = await asyncio.to_thread(store._ticket_index_signature)
             if await asyncio.to_thread(store._sqlite_ticket_index().is_current, signature):
-                candidate_signature = None
                 continue
-            if signature != candidate_signature:
-                candidate_signature = signature
-                continue
-            report = await asyncio.to_thread(
-                _repair_ticket_index_if_unchanged,
-                signature,
-            )
-            if report.get("rebuilt"):
-                candidate_signature = None
+            await asyncio.to_thread(_repair_ticket_index)
         except Exception as exc:  # pragma: no cover - defensive runtime telemetry
             __import__("logging").getLogger("planfile.api").warning(
                 "ticket index background repair failed: %s", exc

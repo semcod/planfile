@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-264",
+  "summary": "Converge SQLite projection under concurrent ticket writes",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-264/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/api/server.py",
+    "planfile/core/index_repair.py",
+    "planfile/core/store.py",
+    "tests/test_index_repair.py",
+    "tests/test_sqlite_ticket_index.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "61fff3404719caf90b9f5aa9b7e120acc113b65a",
+    "targetBranch": "main",
+    "outcome": "Repair existing PLF-21260: converge the derived SQLite index despite concurrent canonical ticket/evidence writes, without scanning the archive under the mutation lock or requiring a quiet interval.",
+    "nonGoals": [
+      "No live database deletion, lock takeover, index disable or authoritative active/history migration.",
+      "No relaxing full-view freshness or treating source publication as native activation."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Build outside the canonical writer lock. Reconcile only changed sprint and evidence sources in a bounded final writer-lock section. Refuse oversized or ambiguous locator drift, preserve existing contention/corruption handling, and let maintenance attempt the newest source state without waiting for quiescence.",
+      "components": [
+        {
+          "name": "index-projection",
+          "paths": [
+            "planfile/core/store.py",
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py",
+            "tests/test_sqlite_ticket_index.py"
+          ]
+        },
+        {
+          "name": "api-maintenance",
+          "paths": [
+            "planfile/api/server.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "index-projection",
+          "description": "Reconcile the existing disposable SQLite projection; authoritative YAML/evidence ownership, formats and storage remain unchanged."
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the published source; preserve all canonical data, index files and live owner locks."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "testless scan -s planfile tests/test_index_repair.py tests/test_sqlite_ticket_index.py"
+        ],
+        "evidence": "Barrier-controlled independent canonical writes during a full scan converge in one build; new, updated and evidence-projected payloads are exact and subsequent writes remain incrementally current. Oversized/locator races remain fail-closed."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "project/governance-check.sh",
+          "protected OneDev exact-head/current-base verification and independent Validator publication"
+        ],
+        "evidence": "Existing contention, descriptor, freshness, lifecycle and sharded regressions remain covered; source merge and native qualification recorded separately."
+      }
+    ]
+  }
+}
