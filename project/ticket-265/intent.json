@@ -1,0 +1,90 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-265",
+  "summary": "Keep legacy dependency-wait tickets visible in read projections",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-265/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/store_tickets.py",
+    "tests/test_legacy_dependency_status.py",
+    "planfile/core/store.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fc52ccf61c81c70570042d77e775a94b123be686",
+    "targetBranch": "main",
+    "outcome": "Continue existing PLF-21260: keep the observed legacy waiting_dependency records PLF-21505/21507 visible in canonical read and SQLite projections as open tickets with execution.state waiting_dependency and preserved dependency edges. Version the disposable read projection so a previously current index is rebuilt for the repaired parser even when canonical files are unchanged.",
+    "nonGoals": [
+      "Do not expand the canonical TicketStatus command enum, grant execution authority, clear dependencies or reactivate contradictory terminal execution states.",
+      "No canonical YAML/evidence rewrite during reads, data migration or unqualified Native activation."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Normalize the narrowly observed legacy queue status only at Store read ingestion: preserve the wait in execution metadata, preserve existing executor/queue/blocked_by fields, and reject conflicting or malformed execution records through existing validation. Keep the write model strict. Include a private read-projection revision in the existing source signature; the maintenance guard rejects an old-generation index without modifying canonical sources.",
+      "components": [
+        {
+          "name": "legacy-ticket-read",
+          "paths": [
+            "planfile/core/store_tickets.py",
+            "tests/test_legacy_dependency_status.py",
+            "planfile/core/store.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        {
+          "kind": "component-local-state",
+          "component": "legacy-ticket-read",
+          "description": "The existing disposable SQLite projection gains the legacy records; canonical source bytes remain unchanged during reads."
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert source; retain every canonical source record and history journal."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "testless scan -s planfile tests/test_legacy_dependency_status.py tests/test_ticket_status_normalization.py"
+        ],
+        "evidence": "Point/list/API/index read visibility, dependency/queue preservation, no source rewrites or invented executor; contradictory terminal records remain fail-closed and command enum stays strict. A preexisting4-part source signature is stale under the new read generation and one automatic repair restores omitted IDs."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "project/governance-check.sh",
+          "protected OneDev exact-head/current-base verification and independent Validator publication"
+        ],
+        "evidence": "Independent source merge plus a separately qualified installed candidate restores full copied-source ID coverage before one Native rollout."
+      }
+    ]
+  }
+}

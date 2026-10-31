@@ -1858,6 +1858,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
             self._evidence_revision(),
             self._history_locations_signature(),
             self._ticket_index_invalidation_revision(),
+            self._TICKET_READ_PROJECTION_REVISION,
         )
 
     def _ticket_index_invalidation_revision(self) -> str | None:
