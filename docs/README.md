@@ -3,6 +3,7 @@
 Current maintained [Python API](information/python-api.md).
 Optional executor context: [metrics diagnostics](information/executor-metrics.md).
 Production analysis: [#321 activation and the SQLite index](analysis/planfile-321-activation.md).
+GitHub sync policy: [Main store sync architecture and campaign opt-in policy](analysis/planfile-github-sync-policy.md).
 
 For maintained documentation navigation, start with
 [`NAVIGATION.md`](information/navigation.md). The content below is a generated
