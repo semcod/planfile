@@ -186,3 +186,141 @@ def test_external_source_race_never_publishes_a_false_current_signature(tmp_path
     monkeypatch.setattr(pf.store, "_ticket_index_signature", racing_signature)
     assert index_repair.reconcile_index(pf.store, pf.store._sqlite_ticket_index(), built) is None
     assert pf.store._sqlite_ticket_index().get_ticket(ticket.id)["name"] == "Before"
+
+
+@pytest.mark.parametrize("sharded", [False, True])
+@pytest.mark.parametrize("return_to_current", [False, True])
+def test_rebuild_converges_across_independent_archive_locator_moves(
+    tmp_path, monkeypatch, sharded, return_to_current
+):
+    pf = setup_store(tmp_path)
+    ticket = pf.create_ticket(name="Before relocation")
+    if return_to_current:
+        assert pf.store.move_ticket(ticket.id, "history-2026-10-31")
+    if sharded:
+        pf.store.migrate_to_sharded_yaml(shard_size=2)
+    pf.store.configure_ticket_index(True)
+    pf.store._sqlite_ticket_index().reset()
+    original = pf.store._ticket_index_records
+    scans = 0
+    destination = "current" if return_to_current else "history-2026-10-31"
+
+    def records():
+        nonlocal scans
+        scans += 1
+        before = list(original())
+        subprocess.run([
+            sys.executable, "-c", """
+import sys
+from planfile import Planfile
+pf = Planfile(sys.argv[1])
+assert pf.store.move_ticket(sys.argv[2], sys.argv[3])
+pf.update_ticket(sys.argv[2], name='Canonical relocated payload')
+""", str(tmp_path), ticket.id, destination,
+        ], check=True, capture_output=True, text=True, timeout=10)
+        yield from before
+
+    monkeypatch.setattr(pf.store, "_ticket_index_records", records)
+    report = pf.store.ensure_ticket_index()
+    assert scans == 1 and report["current"] and report["tickets"] == 1
+    payload = pf.store._sqlite_ticket_index().get_ticket(ticket.id)
+    assert payload["name"] == "Canonical relocated payload"
+    assert payload["sprint"] == destination
+    assert pf.store.get_ticket(ticket.id, repair_index=False).name == payload["name"]
+
+
+@pytest.mark.parametrize("remove_mapping", [False, True])
+def test_locator_only_delta_reselects_canonical_duplicate_without_archive_scan(
+    tmp_path, monkeypatch, remove_mapping
+):
+    pf = setup_store(tmp_path)
+    ticket = pf.create_ticket(name="First history", sprint="history-a")
+    raw = ticket.model_dump(mode="json", exclude_none=True)
+    raw.update(name="Preferred history", sprint="history-b")
+    pf.store._write_yaml_atomic(pf.store._sprint_file("history-b"), {
+        "sprint": {"id": "history-b", "tickets": {ticket.id: raw}},
+    })
+    initial = "history-b" if remove_mapping else "history-a"
+    with pf.store.mutation_lock():
+        pf.store._record_history_locations_unlocked({ticket.id: initial})
+    pf.store.configure_ticket_index(True)
+    built = pf.store._ticket_index_signature()
+    baseline = index_repair.capture_locator_snapshot(pf.store, built)
+    assert baseline is not None
+    locations = {} if remove_mapping else {ticket.id: "history-b"}
+    with pf.store.mutation_lock():
+        pf.store._write_yaml_atomic(pf.store._history_locations_path, {"tickets": locations})
+    expected = pf.store.get_ticket(ticket.id, repair_index=False)
+    read = index_repair.read_yaml_fast
+
+    def bounded_read(path):
+        assert path.stem in {"current", "backlog", expected.sprint}, "scanned unrelated history"
+        return read(path)
+
+    monkeypatch.setattr(index_repair, "read_yaml_fast", bounded_read)
+    report = index_repair.reconcile_index(
+        pf.store, pf.store._sqlite_ticket_index(), built, locator_snapshot=baseline,
+    )
+    assert report["current"] and report["tickets"] == 1 and report["reconciled"] == 1
+    actual = pf.store._sqlite_ticket_index().get_ticket(ticket.id)
+    assert (actual["name"], actual["sprint"]) == (expected.name, expected.sprint)
+
+
+@pytest.mark.parametrize("failure", ["bytes", "time", "shape", "race", "signature"])
+def test_locator_baseline_is_bounded_and_generation_matched(tmp_path, monkeypatch, failure):
+    pf = setup_store(tmp_path)
+    path = pf.store._history_locations_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("tickets: {PLF-1: history-a}\n")
+    if failure == "shape":
+        path.write_text("tickets: {PLF-1: ../outside}\n")
+    built = pf.store._ticket_index_signature()
+    if failure == "bytes":
+        monkeypatch.setattr(index_repair, "MAX_REPAIR_BYTES", 1)
+    elif failure == "time":
+        monkeypatch.setattr(index_repair, "MAX_REPAIR_SECONDS", -1)
+    elif failure == "signature":
+        built = (*built[:2], None, *built[3:])
+    elif failure == "race":
+        load = index_repair.load_yaml_text
+
+        def replace_after_read(text):
+            path.write_text("tickets: {PLF-1: history-different}\n")
+            return load(text)
+
+        monkeypatch.setattr(index_repair, "load_yaml_text", replace_after_read)
+    assert index_repair.capture_locator_snapshot(pf.store, built) is None
+
+
+@pytest.mark.parametrize("failure", ["tickets", "bytes", "time", "race"])
+def test_locator_delta_retains_budgets_and_external_race_refusal(
+    tmp_path, monkeypatch, failure
+):
+    pf = setup_store(tmp_path)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+    built = pf.store._ticket_index_signature()
+    baseline = index_repair.capture_locator_snapshot(pf.store, built)
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    assert pf.store.move_ticket(ticket.id, "history-new")
+    if failure == "tickets":
+        monkeypatch.setattr(index_repair, "MAX_REPAIR_TICKETS", 0)
+    elif failure == "bytes":
+        monkeypatch.setattr(index_repair, "MAX_REPAIR_BYTES", 1)
+    elif failure == "time":
+        monkeypatch.setattr(index_repair, "MAX_REPAIR_SECONDS", -1)
+    else:
+        signature = pf.store._ticket_index_signature
+        calls = 0
+
+        def external_signature():
+            nonlocal calls
+            calls += 1
+            current = signature()
+            return current if calls == 1 else (*current[:3], "external-editor")
+
+        monkeypatch.setattr(pf.store, "_ticket_index_signature", external_signature)
+    assert index_repair.reconcile_index(
+        pf.store, pf.store._sqlite_ticket_index(), built, locator_snapshot=baseline,
+    ) is None
+    assert pf.store._sqlite_ticket_index().get_ticket(ticket.id)["sprint"] == "current"

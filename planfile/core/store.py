@@ -2104,10 +2104,13 @@ class Store(StoreFileMixin, TicketStoreMixin):
 
     def _rebuild_ticket_index_unlocked(self, index, *, force: bool) -> dict:
         """Rebuild while the caller holds the cross-process index lock."""
+        from planfile.core.index_repair import capture_locator_snapshot, reconcile_index
+
         for _attempt in range(2):
             signature_before = self._ticket_index_signature()
             if not force and index.is_current(signature_before):
                 return index.status(signature_before) | {"rebuilt": False}
+            locator_snapshot = capture_locator_snapshot(self, signature_before)
             try:
                 count = index.rebuild(self._ticket_index_records(), signature_before)
             except Exception as exc:
@@ -2122,10 +2125,10 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 count = index.rebuild(self._ticket_index_records(), signature_before)
             signature_after = self._ticket_index_signature()
             if signature_before != signature_after:
-                from planfile.core.index_repair import reconcile_index
-
                 try:
-                    reconciled = reconcile_index(self, index, signature_before)
+                    reconciled = reconcile_index(
+                        self, index, signature_before, locator_snapshot=locator_snapshot,
+                    )
                 except sqlite3.OperationalError as exc:
                     from planfile.core.sqlite_index import _is_sqlite_contention
 
