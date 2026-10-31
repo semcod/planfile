@@ -10,6 +10,10 @@ logger = logging.getLogger("planfile.store")
 
 
 class TicketStoreMixin:
+    # Parsing changes also change derived payloads when source bytes do not.
+    # Bump this private revision when an old current index needs regeneration.
+    _TICKET_READ_PROJECTION_REVISION = 'planfile.ticket-read/dependency-wait-v1'
+
     def _ticket_from_data(self, t_data: dict[str, Any]) -> Ticket | None:
         try:
             if 'id' not in t_data:
@@ -27,6 +31,16 @@ class TicketStoreMixin:
             # YAML or its audit history merely because it was read.
             if t_data.get('status') == 'completed':
                 t_data['status'] = 'done'
+            # Historical queue writers put the dependency wait in the ticket
+            # status, which is not a canonical TicketStatus. Keep that record
+            # visible without making it runnable or rewriting its source.
+            if t_data.get('status') == 'waiting_dependency':
+                execution = t_data.get('execution')
+                if execution is None or isinstance(execution, dict):
+                    execution = execution or {}
+                    if execution.get('state') in (None, '', 'waiting_dependency'):
+                        t_data['status'] = 'open'
+                        t_data['execution'] = {**execution, 'state': 'waiting_dependency'}
             execution = t_data.get('execution')
             if isinstance(execution, dict) and execution.get('state') == 'completed':
                 t_data['execution'] = {**execution, 'state': 'done'}
