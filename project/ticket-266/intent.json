@@ -1,0 +1,107 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-266",
+  "summary": "Expose bounded indexed ticket discovery through Store and API",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-266/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "planfile/api/server.py",
+    "planfile/core/sqlite_index.py",
+    "planfile/core/store.py",
+    "tests/test_sqlite_ticket_index.py",
+    "tests/test_ticket_discovery.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e6f497a0319eae5331ad6020125cd3a1d6ba8534",
+    "targetBranch": "main",
+    "outcome": "Continue PLF-20292 by exposing bounded, strictly current indexed identity/queue discovery through the public Planfile Store/Python and HTTP API, without decoding or counting historical payloads. Publish independently and qualify installed Native before declaring delivery.",
+    "nonGoals": [
+      "No execution admission/claim or dependency promotion; discovery only.",
+      "No physical active/history migration, source rewrites, lock deletion, global page-cap increase, unrelated release/version edits or publication-policy changes."
+    ],
+    "complexity": "L",
+    "estimatedMinutes": 90,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Expose one bounded discovery page contract for exact repository/issue or exact queue/state. Reuse indexed primitives, use summary projection by default, preserve one SQLite read transaction per page, and bind cursors to normalized query and current source generation. Reject stale/unavailable projection without foreground rebuild, full archive fallback or COUNT. A positive discovery result grants no execution authority.",
+      "components": [
+        {
+          "name": "indexed-discovery",
+          "paths": [
+            "planfile/core/store.py",
+            "planfile/core/sqlite_index.py",
+            "planfile/__init__.py",
+            "tests/test_ticket_discovery.py",
+            "tests/test_sqlite_ticket_index.py"
+          ]
+        },
+        {
+          "name": "discovery-http-query",
+          "paths": [
+            "planfile/api/server.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Public Planfile/Store discovery page contract with opaque generation/query-bound keyset cursors.",
+        "GET /tickets/discovery query endpoint registered before the ticket-ID route.",
+        "Backward-compatible optional summary projection on the indexed routing primitives."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material source through independent publication; retain all canonical YAML/evidence and existing disposable index. Any Native replacement requires a fresh exact-target operator plan."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_ticket_discovery.py tests/test_sqlite_ticket_index.py"
+        ],
+        "evidence": "SDK/API parity, repository isolation, explicit terminal/history lookup, retry/wait discovery, bounded materialization/no COUNT or archive loading; continuation pagination."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest tests/test_ticket_discovery.py"
+        ],
+        "evidence": "Changed-generation and cross-query cursors reject; stale/disabled/contended index returns explicit retryable refusal without rebuilding; concurrent index reads retain one coherent page."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "project/governance-check.sh",
+          "protected OneDev exact-head/current-base verification and independent Validator publication",
+          "isolated installed-package discovery qualification, then freshly fenced Native rollout"
+        ],
+        "evidence": "Independent source merge and immutable artifact/Native readback are distinct; preserve canonical records, peers and automation."
+      }
+    ]
+  }
+}

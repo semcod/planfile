@@ -166,6 +166,10 @@ class Planfile:
     def list_tickets(self, **filters):
         return self.store.list_tickets(**filters)
 
+    def discover_tickets(self, **query) -> dict:
+        """Return a bounded current identity/queue page, without claiming work."""
+        return self.store.discover_tickets(**query)
+
     # ── Planfile runnability contract ─────────────────────────────────────────
     # A ticket may be handed to an autonomous queue only when ALL hold:
     #   status == open · execution.state ∈ {pending, ready, ""} · every blocked_by is done/canceled

@@ -89,6 +89,7 @@ API_CAPABILITIES = [
     "ticket.update.dag_relationships",
     "findings.comparative.admit",
     "ticket.store_lock_timeout.retryable_503",
+    "ticket.discovery.current_scoped_pages",
 ]
 
 STORE_LOCK_RETRY_AFTER_SECONDS = 5
@@ -949,6 +950,31 @@ def list_tickets(
         allow_stale=browser_client,
         allow_index_stale=legacy_unbounded_request,
     )
+
+
+@app.get("/tickets/discovery", tags=["tickets"])
+def discover_tickets(
+    mode: Literal["issue", "queue"],
+    repository: str | None = Query(None, max_length=500),
+    issue: int | None = Query(None, ge=1),
+    queue: str | None = Query(None, min_length=1, max_length=240),
+    state: str | None = Query(None, min_length=1, max_length=240),
+    limit: int = Query(50, ge=1, le=500),
+    cursor: str | None = Query(None, max_length=1024),
+    view: Literal["summary", "full"] = Query("summary"),
+):
+    """Discover one current indexed scope; this does not admit or claim work."""
+    try:
+        page = get_planfile().discover_tickets(
+            mode=mode, repository=repository, issue=issue, queue=queue,
+            state=state, limit=limit, cursor=cursor, view=view,
+        )
+    except TicketIndexContentionError as error:
+        raise HTTPException(503, str(error), headers={"Retry-After": "2", **NO_STORE_HEADERS}) from error
+    except ValueError as error:
+        code = 409 if str(error) == "ticket_discovery_cursor_expired" else 422
+        raise HTTPException(code, str(error), headers=NO_STORE_HEADERS) from error
+    return JSONResponse(content=page, headers=NO_STORE_HEADERS)
 
 
 def _validate_api_dag_relations(
