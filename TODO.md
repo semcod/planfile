@@ -10,6 +10,7 @@ generated findings are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
+- [ ] ticket-264 - Converge the derived SQLite projection during concurrent canonical writes (PLF-21260); native qualification and authoritative active/history migration remain separate.
 - [x] ticket-200 - NL URI ticket commands and shared compiler adapter (PLF-099 / #203).
 - [x] ticket-162 - Production alerts triage and automated handling in current sprint.
 - [ ] ticket-136 - Integrate NL-DSL-LLM pattern with multilingual parser, CLI ask/mcp commands, and MCP tools.
