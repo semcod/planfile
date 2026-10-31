@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 
-from planfile.core.fastio import read_yaml_fast
+from yaml import YAMLError
+
+from planfile.core.fastio import load_yaml_text, read_yaml_fast
 
 # Never turn finalization into a second archive scan under the writer lock.
 MAX_REPAIR_BYTES = 16 * 1024 * 1024
@@ -16,24 +19,71 @@ class _RepairBudgetExceeded(Exception):
     pass
 
 
-def reconcile_index(store, index, built_signature: tuple) -> dict | None:
+@dataclass(frozen=True)
+class _LocatorSnapshot:
+    signature: tuple | None
+    locations: dict[str, str]
+    byte_count: int
+
+
+def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot | None:
+    """Retain bounded locator metadata matching the generation before a scan.
+
+    Read directly with a size cap: a cached/mirrored map or a stat-only size
+    check must not qualify a different file version during an atomic replace.
+    This preparation runs outside the writer lock; finalization rechecks it.
+    """
+    started = time.monotonic()
+    expected = built_signature[2]
+    if store._history_locations_signature() != expected:
+        return None
+    try:
+        try:
+            with store._history_locations_path.open("rb") as stream:
+                raw = stream.read(MAX_REPAIR_BYTES + 1)
+        except FileNotFoundError:
+            raw = b""
+        if len(raw) > MAX_REPAIR_BYTES:
+            return None
+        data = load_yaml_text(raw.decode("utf-8")) or {}
+        locations = data.get("tickets", {}) if isinstance(data, dict) else None
+        if not isinstance(locations, dict) or any(
+            not isinstance(key, str) or not key or not isinstance(value, str)
+            or not store.SPRINT_ID_PATTERN.fullmatch(value)
+            for key, value in locations.items()
+        ):
+            return None
+        if (store._history_locations_signature() != expected
+                or time.monotonic() - started > MAX_REPAIR_SECONDS):
+            return None
+        return _LocatorSnapshot(expected, dict(locations), len(raw))
+    except (OSError, UnicodeError, YAMLError):
+        return None
+
+
+def reconcile_index(store, index, built_signature: tuple, *,
+                    locator_snapshot: _LocatorSnapshot | None = None) -> dict | None:
     """Make a scanned projection current using only a small changed-source set.
 
     A rebuild may have observed either version of any changed source. Refresh
     every ID in those sprints (including IDs no longer present) and every
     changed evidence journal, resolving canonical location precedence again.
     Writers use the same mutation lock, so the final signature and payloads
-    describe one state. Unknown locator drift or a large delta stays stale.
+    describe one state. Locator changes require a matching captured baseline;
+    an unknown baseline or a large delta stays stale.
     """
     with store.mutation_lock():
         started = time.monotonic()
         target = store._ticket_index_signature()
         if target == built_signature:
             return index.status(target) | {"rebuilt": True}
-        if target[2] != built_signature[2]:
+        locator_changed = target[2] != built_signature[2]
+        if locator_changed and (
+            locator_snapshot is None or locator_snapshot.signature != built_signature[2]
+        ):
             return None
 
-        consumed = 0
+        consumed = locator_snapshot.byte_count if locator_snapshot is not None else 0
         charged = set()
         snapshots = {}
 
@@ -78,6 +128,15 @@ def reconcile_index(store, index, built_signature: tuple) -> dict | None:
             after_evidence = {row[0]: row[1:] for row in target[1]}
             ids = {name.removesuffix(".jsonl")
                    for name in changed_keys(before_evidence, after_evidence)}
+            charge(store._history_locations_path)
+            if locator_changed:
+                latest = capture_locator_snapshot(store, target)
+                if latest is None:
+                    return None
+                locations = latest.locations
+                ids.update(changed_keys(locator_snapshot.locations, locations))
+            else:
+                locations = store._history_locations()
             for sprint in sorted(changed_sprints):
                 ids.update(tickets(sprint))
                 # Read identities only, never deserialize historical payloads.
@@ -91,8 +150,6 @@ def reconcile_index(store, index, built_signature: tuple) -> dict | None:
                     raise _RepairBudgetExceeded
             if len(ids) > MAX_REPAIR_TICKETS:
                 raise _RepairBudgetExceeded
-            charge(store._history_locations_path)
-            locations = store._history_locations()
             all_sprints = store._all_sprint_ids()
             records = []
             deleted = []

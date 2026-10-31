@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-267",
+  "summary": "Converge the current ticket index across bounded archive locator changes",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-267/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "planfile/core/store.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "57d391969680e5a60a9585599ef78143bc2e3bea",
+    "targetBranch": "main",
+    "outcome": "Continue existing PLF-20292 by making bounded current-index finalization converge across canonical archive/locator changes during rebuild. Independently publish and qualify sustained installed/runtime writer behavior before claiming resolution.",
+    "nonGoals": [
+      "No physical active/history authority migration, larger repair budgets, foreground full scan, weakened freshness or lock deletion.",
+      "No unrelated metadata/version, execution/admission, publication policy or preserved foreign ticket263 changes."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Capture a bounded locator map only when its source signature is stable and matches the pre-scan generation. During existing locked finalization, include exact locator-delta identities alongside changed canonical sources/evidence and resolve canonical current/locator/fallback precedence under unchanged byte/time/ticket budgets. Missing or ambiguous baseline, malformed/oversize locator, external races and excessive work remain stale. Do not turn an observation into an execution claim.",
+      "components": [
+        {
+          "name": "bounded-index-reconciliation",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "planfile/core/store.py",
+            "tests/test_index_repair.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert governed source and replace only independently approved exact Native target if required; retain authoritative YAML/evidence, locator, current owners and disposable index."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_index_repair.py"
+        ],
+        "evidence": "Independent canonical writer rotates/reopens and changes locator during every scan; one bounded rebuild converges for flat/sharded stores, preserving canonical payload and exact-once index IDs."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest tests/test_index_repair.py tests/test_sqlite_ticket_index.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "Ambiguous/missing locator baseline, excessive bytes/identities/time, invalid locator and source races fail closed; unrelated history is not parsed; indexed discovery remains current/readonly."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "project/governance-check.sh",
+          "protected exact-head/current-base OneDev and independent Validator",
+          "installed artifact qualification and separately fenced Native readback"
+        ],
+        "evidence": "Source merge, installed candidate and live sustained currentness are separately recorded; peers, automation and authoritative data are preserved."
+      }
+    ]
+  }
+}
