@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
 import json
 import logging
 import math
@@ -2174,6 +2177,84 @@ class Store(StoreFileMixin, TicketStoreMixin):
         index = self._sqlite_ticket_index()
         signature = self._ticket_index_signature() if index.path.exists() else None
         return index.status(signature) | {"enabled": self.ticket_index_enabled()}
+
+    def discover_tickets(
+        self, *, mode: str, repository: str | None = None, issue: int | None = None,
+        queue: str | None = None, state: str | None = None, limit: int = 50,
+        cursor: str | None = None, view: str = "summary",
+    ) -> dict:
+        """Read an explicit indexed scope; discovery grants no execution claim.
+
+        This query never repairs the index, loads the archive or counts tickets.
+        Continuations belong to one normalized query and source generation.
+        """
+        from planfile.utils.repository import normalize_repository
+
+        from .sqlite_index import RoutingSnapshotUnavailableError
+
+        if type(limit) is not int or not 1 <= limit <= 500 or view not in ("summary", "full"):
+            raise ValueError("ticket_discovery_page_invalid")
+        repository = normalize_repository(repository)
+        if mode == "issue":
+            if not repository or type(issue) is not int or issue < 1 or queue is not None or state is not None:
+                raise ValueError("ticket_discovery_issue_scope_required")
+        elif mode == "queue":
+            if issue is not None or not isinstance(queue, str) or not queue.strip() or not isinstance(state, str) or not state.strip():
+                raise ValueError("ticket_discovery_queue_scope_required")
+        else:
+            raise ValueError("ticket_discovery_mode_invalid")
+        scope = {"mode": mode, "repository": repository, "issue": issue,
+                 "queue": queue, "state": state, "view": view}
+        query = hashlib.sha256(json.dumps(scope, sort_keys=True).encode()).hexdigest()
+        continuation = None
+        after = (-1, "")
+        if cursor is not None:
+            try:
+                if not isinstance(cursor, str) or not cursor or len(cursor) > 1024:
+                    raise ValueError
+                continuation = json.loads(base64.b64decode(cursor, altchars=b"-_", validate=True))
+                if (not isinstance(continuation, dict)
+                        or set(continuation) != {"v", "query", "generation", "after"}
+                        or type(continuation["v"]) is not int or continuation["v"] != 1
+                        or continuation["query"] != query
+                        or not isinstance(continuation["generation"], str)):
+                    raise ValueError
+                position, ticket_id = continuation["after"]
+                if type(position) is not int or position < 0 or not isinstance(ticket_id, str) or not ticket_id:
+                    raise ValueError
+                after = (position, ticket_id)
+            except (ValueError, TypeError, KeyError, binascii.Error):
+                raise ValueError("ticket_discovery_cursor_invalid") from None
+        if not self.ticket_index_enabled() or not self._ticket_index_path.exists():
+            raise TicketIndexContentionError("ticket_index_unavailable")
+        signature = self._ticket_index_signature()
+        index = self._sqlite_ticket_index()
+        generation = hashlib.sha256(index.serialize_signature(signature).encode()).hexdigest()
+        try:
+            with index._routing_connection(signature):
+                pass
+            if continuation is not None and continuation["generation"] != generation:
+                raise ValueError("ticket_discovery_cursor_expired")
+            options = {"limit": limit + 1, "after": after, "summary": view == "summary",
+                       "signature": signature}
+            rows = (index.lookup_issue(repository, issue, **options) if mode == "issue"
+                    else index.queue_page(queue, state, repository=repository, **options))
+            if signature != self._ticket_index_signature():
+                raise TicketIndexContentionError("ticket_index_changed_during_discovery")
+            with index._routing_connection(signature):
+                pass
+        except RoutingSnapshotUnavailableError as error:
+            raise TicketIndexContentionError(str(error)) from error
+        next_cursor = None
+        if len(rows) > limit:
+            last = rows[limit - 1]
+            next_cursor = base64.urlsafe_b64encode(json.dumps({
+                "v": 1, "query": query, "generation": generation,
+                "after": [last["position"], last["id"]],
+            }, separators=(",", ":")).encode()).decode()
+        return {"schema": "planfile.ticket-discovery/v1", "scope": scope,
+                "generation": generation, "tickets": [row["ticket"] for row in rows[:limit]],
+                "next_cursor": next_cursor}
 
     def indexed_ticket(self, ticket_id: str, *, repair: bool = True) -> Ticket | None:
         (self.ensure_ticket_index if repair else self.require_current_ticket_index)()

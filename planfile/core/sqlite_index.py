@@ -30,6 +30,10 @@ def _is_sqlite_contention(error: sqlite3.DatabaseError) -> bool:
     } or message.startswith(("database table is locked: ", "database schema is locked: "))
 
 
+class RoutingSnapshotUnavailableError(RuntimeError):
+    """Bounded discovery requires an already current routing projection."""
+
+
 class SQLiteTicketIndex:
     """Indexed projection of YAML/JSONL sources.
 
@@ -85,6 +89,34 @@ class SQLiteTicketIndex:
         with closing(self._connect()) as connection:
             with connection:
                 yield connection
+
+    def _connect_routing(self) -> sqlite3.Connection:
+        uri = self.path.resolve().as_uri() + "?mode=ro"
+        return sqlite3.connect(uri, uri=True, timeout=0.25)
+
+    @contextmanager
+    def _routing_connection(self, signature: tuple) -> Iterator[sqlite3.Connection]:
+        """Open a current read-only snapshot without initialization or upgrades."""
+        try:
+            with closing(self._connect_routing()) as connection:
+                connection.row_factory = sqlite3.Row
+                connection.execute("BEGIN")
+                metadata = dict(connection.execute(
+                    "SELECT key,value FROM meta WHERE key IN ('source_signature','routes_version')"
+                ).fetchall())
+                if (metadata.get("source_signature") != self.serialize_signature(signature)
+                        or metadata.get("routes_version") != "1"):
+                    raise RoutingSnapshotUnavailableError("ticket_index_stale")
+                required = {"routes_identity", "routes_queue", "routes_repository_queue"}
+                present = {row[0] for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='index' "
+                    "AND name IN ('routes_identity','routes_queue','routes_repository_queue')"
+                )}
+                if present != required:
+                    raise RoutingSnapshotUnavailableError("ticket_index_routes_unavailable")
+                yield connection
+        except (sqlite3.DatabaseError, json.JSONDecodeError) as error:
+            raise RoutingSnapshotUnavailableError("ticket_index_unavailable") from error
 
     @staticmethod
     def _initialize(connection: sqlite3.Connection) -> None:
@@ -205,7 +237,8 @@ class SQLiteTicketIndex:
             raise
 
     def lookup_issue(self, repository: str, issue: int, *, limit: int = 100,
-                     after: tuple[int, str] = (-1, "")) -> list[dict[str, Any]]:
+                     after: tuple[int, str] = (-1, ""), summary: bool = False,
+                     signature: tuple | None = None) -> list[dict[str, Any]]:
         """Return a bounded page of all revisions, including historical tickets.
 
         The next cursor is the last result's (position, id). No COUNT or OFFSET
@@ -214,10 +247,12 @@ class SQLiteTicketIndex:
         repository = normalize_repository(repository)
         if not repository or type(issue) is not int or issue < 1:
             raise ValueError("ticket_index_issue_identity_invalid")
-        return self._route_page("repository=? AND issue=?", [repository, issue], limit, after)
+        return self._route_page("repository=? AND issue=?", [repository, issue], limit, after,
+                                summary=summary, signature=signature)
 
     def queue_page(self, queue: str, state: str, *, repository: str | None = None,
-                   limit: int = 100, after: tuple[int, str] = (-1, "")) -> list[dict[str, Any]]:
+                   limit: int = 100, after: tuple[int, str] = (-1, ""),
+                   summary: bool = False, signature: tuple | None = None) -> list[dict[str, Any]]:
         """Select operational work by exact execution state without reading history.
 
         Waiting, blocked and failed work stays discoverable by its explicit state.
@@ -232,16 +267,22 @@ class SQLiteTicketIndex:
                 raise ValueError("ticket_index_repository_required")
             where += " AND repository=?"
             values.append(repository)
-        return self._route_page(where, values, limit, after)
+        return self._route_page(where, values, limit, after, summary=summary, signature=signature)
 
     def _route_page(self, where: str, values: list, limit: int,
-                    after: tuple[int, str]) -> list[dict[str, Any]]:
+                    after: tuple[int, str], *, summary: bool = False,
+                    signature: tuple | None = None) -> list[dict[str, Any]]:
         if type(limit) is not int or not 1 <= limit <= 5000:
             raise ValueError("ticket_index_page_limit_invalid")
         if (not isinstance(after, tuple) or len(after) != 2
                 or type(after[0]) is not int or not isinstance(after[1], str)):
             raise ValueError("ticket_index_cursor_invalid")
-        with self._connection() as connection:
+        context = self._connection() if signature is None else self._routing_connection(signature)
+        with context as connection:
+            # Keep the routing rows and their payloads in one WAL read snapshot.
+            # A concurrent delete/rebuild must not split these SELECTs.
+            if signature is None:
+                connection.execute("BEGIN")
             rows = connection.execute(
                 f"SELECT id, position FROM ticket_routes WHERE {where} "
                 "AND (position, id) > (?, ?) ORDER BY position, id LIMIT ?",
@@ -249,7 +290,8 @@ class SQLiteTicketIndex:
             ).fetchall()
             return [{"id": row["id"], "position": row["position"],
                      "ticket": json.loads(connection.execute(
-                         "SELECT ticket_json FROM tickets WHERE id=?", (row["id"],)
+                         "SELECT " + ("summary_json" if summary else "ticket_json")
+                         + " FROM tickets WHERE id=?", (row["id"],)
                      ).fetchone()[0])} for row in rows]
 
     def is_current(self, signature: tuple) -> bool:
