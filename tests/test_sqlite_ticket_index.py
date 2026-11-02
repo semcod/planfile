@@ -841,6 +841,50 @@ def test_stale_archive_queue_reads_use_recent_index_without_query_cache(
     assert pf.store.ticket_index_status()["current"] is False
 
 
+def test_stale_index_survives_a_repair_longer_than_five_minutes_but_never_lies(
+    tmp_path, monkeypatch
+):
+    """A repair takes 5-9 minutes, so a 300 s window handed machine callers a 503 mid-repair."""
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Last known good after a long repair")
+    pf.store.configure_ticket_index(True)
+
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "New durable value"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+
+    index = pf.store._sqlite_ticket_index()
+    aged_ns = time.time_ns() - 20 * 60 * 1_000_000_000
+    with sqlite3.connect(index.path) as connection:
+        connection.execute(
+            "UPDATE meta SET value = ? WHERE key = 'source_indexed_at_ns'",
+            (str(aged_ns),),
+        )
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(
+        pf.store,
+        "_ticket_index_records",
+        lambda: (_ for _ in ()).throw(AssertionError("request-triggered rebuild")),
+    )
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    stale = client.get("/tickets?sprint=all&view=summary&limit=100")
+
+    assert stale.status_code == 200
+    assert stale.json()[0]["name"] == "Last known good after a long repair"
+    assert stale.headers["X-Planfile-Index-State"] == "stale"
+
+    fresh = client.get("/tickets?sprint=all&view=summary&limit=100&require_fresh=true")
+
+    assert fresh.status_code == 503
+
+
 def test_legacy_archive_dashboard_uses_recent_current_index_without_cache(
     tmp_path, monkeypatch
 ):

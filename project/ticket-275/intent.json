@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-275",
+  "summary": "Keep the stale index window longer than a real rebuild so the API stops flapping with 503",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-275/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/api/server.py",
+    "tests/test_sqlite_ticket_index.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

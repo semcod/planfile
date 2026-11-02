@@ -467,7 +467,13 @@ _TICKET_LIST_RESPONSE_DEFAULT_MAX_BYTES = 64 * 1024 * 1024
 _TICKET_LIST_RESPONSE_MIN_MAX_BYTES = 1024 * 1024
 _TICKET_LIST_RESPONSE_MAX_MAX_BYTES = 512 * 1024 * 1024
 _DASHBOARD_STALE_WINDOW_SECONDS = 30.0
-_INDEX_REPAIR_STALE_WINDOW_SECONDS = 300.0
+# A repair on the production store (about 22k tickets, 517 MB) takes 5-9 minutes, so a
+# five-minute window expires in the middle of it: the projection is still a coherent
+# last-known-good snapshot, yet machine callers were answered with 503 and clients saw an
+# API that flapped on every write. The window stays bounded - a permanently broken index
+# must still fail closed, and `require_fresh` never accepts stale data - but it now covers
+# a real repair rather than a guess at one.
+_INDEX_REPAIR_STALE_WINDOW_SECONDS = 3600.0
 _SPRINT_SUMMARY_CACHE: dict[str, tuple[tuple[int, int], dict[str, Any]]] = {}
 _SPRINT_SUMMARY_CACHE_LOCK = RLock()
 
@@ -666,8 +672,13 @@ def _bounded_stale_index_response(
     limit: int | None,
     view: Literal["full", "operational", "summary"],
     allow_unbounded_summary: bool = False,
+    require_fresh: bool = False,
 ) -> Response | None:
     """Serve a recent, coherent projection while its source index is repaired."""
+    if require_fresh:
+        # The caller asked for freshness, not for availability: a marked-stale body is
+        # still stale data, so it must fall through to the explicit 503 instead.
+        return None
     archive_queue = sprint == "all" and limit is not None
     legacy_summary = allow_unbounded_summary and view == "summary"
     if view == "full" or not (archive_queue or legacy_summary):
@@ -862,6 +873,7 @@ def _ticket_list_response(
                         limit=limit,
                         view=view,
                         allow_unbounded_summary=allow_stale or allow_index_stale,
+                        require_fresh=require_fresh,
                     )
                     if stale_index_response is not None:
                         return stale_index_response
