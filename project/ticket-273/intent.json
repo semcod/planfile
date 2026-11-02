@@ -1,0 +1,73 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-273",
+  "summary": "bump goal to 2.2.10 to resolve dependency freshness gate",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-273/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "uv.lock"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8d41d24beeb185579beb1f0ca445868877d18995",
+    "targetBranch": "main",
+    "outcome": "Upgrade goal in uv.lock from 2.2.9 to 2.2.10 to resolve repository-wide internal-dependency-freshness check failure.",
+    "nonGoals": [
+      "No source code modification",
+      "No breaking dependency changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Upgrade locked goal to published PyPI version 2.2.10 via uv lock --upgrade-package goal==2.2.10.",
+      "components": [
+        {
+          "name": "dependencies",
+          "paths": [
+            "uv.lock"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore uv.lock from base commit 8d41d24beeb1."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "goal dependencies --catalog .github/internal-dependencies.json --check",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "receipt:planfile:PLF-20366"
+      }
+    ]
+  }
+}
