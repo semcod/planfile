@@ -739,28 +739,17 @@ def _ticket_list_response(
     ):
         with _TICKET_LIST_RESPONSE_CACHE_LOCK:
             latest = _TICKET_LIST_LATEST.get(query_key)
-        # A full view has no durable fallback, so its last complete answer may be reused for
-        # as long as a repaired projection would have been acceptable to serve. Past the short
-        # dashboard window the response says so, and a require_fresh caller is refused instead.
-        stale_window = (
-            _INDEX_REPAIR_STALE_WINDOW_SECONDS
-            if view == "full" and allow_stale
-            else _DASHBOARD_STALE_WINDOW_SECONDS
-        )
-        if allow_stale and latest is not None and time.monotonic() - latest[0] < stale_window:
+        if allow_stale and latest is not None and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS:
             _, body, total, count = latest
-            headers = {
-                **NO_STORE_HEADERS,
-                "X-Planfile-View": view,
-                "X-Total-Count": str(total),
-                "X-Result-Count": str(count),
-            }
-            if time.monotonic() - latest[0] >= _DASHBOARD_STALE_WINDOW_SECONDS:
-                headers["X-Planfile-Index-State"] = "stale"
             return Response(
                 content=body,
                 media_type="application/json",
-                headers=headers,
+                headers={
+                    **NO_STORE_HEADERS,
+                    "X-Planfile-View": view,
+                    "X-Total-Count": str(total),
+                    "X-Result-Count": str(count),
+                },
             )
         signature = _ticket_snapshot_signature(pf, sprint)
         key = query_key + (signature,)
@@ -847,7 +836,7 @@ def _ticket_list_response(
                         count = len(payload)
                 except TicketIndexContentionError:
                     if (
-                        allow_stale
+                        (allow_stale or (view == "full" and not require_fresh))
                         and not require_fresh
                         and latest is not None
                         and time.monotonic() - latest[0]
@@ -964,12 +953,7 @@ def list_tickets(
         offset=offset,
         limit=limit,
         view=effective_view,
-        # A full view has no durable fallback, so a machine caller used to get 503 whenever
-        # the projection was being repaired - the same query succeeding for a browser and
-        # failing for everyone else. Serve the last complete index marked as stale instead,
-        # unless the caller explicitly requires freshness. Summary and operational views keep
-        # their fresh durable fallback.
-        allow_stale=browser_client or (effective_view == "full" and not require_fresh),
+        allow_stale=browser_client,
         allow_index_stale=legacy_unbounded_request,
         require_fresh=require_fresh,
     )
