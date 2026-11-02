@@ -11,7 +11,7 @@ from typing import Any
 from rich.console import Console
 
 from planfile.sync.priority import normalize_inbound_priority
-from planfile.sync.state import SyncState, normalize_repository
+from planfile.sync.state import SyncState, SyncStateRepositoryMismatch, normalize_repository
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -610,6 +610,28 @@ def _process_external_ticket(
         return imported_count, updated_count
 
 
+def _bind_sync_state(
+    base_dir: Path, integration_name: str, backend, *, dry_run: bool
+) -> SyncState:
+    """Bind sync state, reconciling renamed provider routes read-only during dry-run."""
+    sync_state = SyncState.from_backend(
+        base_dir, integration_name, backend, dry_run=dry_run
+    )
+    if not dry_run or not sync_state.state_file.exists():
+        return sync_state
+    try:
+        raw = sync_state.get_last_sync()
+    except SyncStateRepositoryMismatch:
+        return SyncState.from_backend(
+            base_dir, integration_name, backend, dry_run=False, persist=False
+        )
+    if raw.get("repository_aliases"):
+        return SyncState.from_backend(
+            base_dir, integration_name, backend, dry_run=False, persist=False
+        )
+    return sync_state
+
+
 def sync_from_external(
     backend,
     store,
@@ -623,7 +645,7 @@ def sync_from_external(
     remote_labels: list[str] | None = None,
 ) -> None:
     """Sync tickets from external system to planfile."""
-    sync_state = SyncState.from_backend(
+    sync_state = _bind_sync_state(
         Path(store.base_dir), integration_name, backend, dry_run=dry_run
     )
     imported_count = 0

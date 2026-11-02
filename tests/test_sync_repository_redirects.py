@@ -8,7 +8,11 @@ import yaml
 
 from planfile import Planfile
 from planfile.sync.github import GitHubBackend
-from planfile.sync.operations import _backend_repository, _validate_ticket_binding
+from planfile.sync.operations import (
+    _backend_repository,
+    _validate_ticket_binding,
+    sync_from_external,
+)
 from planfile.sync.outbound import sync_to_external
 from planfile.sync.state import SyncState, SyncStateRepositoryMismatch
 
@@ -268,3 +272,39 @@ def test_sdk_issue_lookup_uses_verified_numeric_route(tmp_path):
     assert issue.number == 42
     assert issue.title == 'Original'
     assert b._identity_requester.calls[-1] == 'https://api.github.com/repositories/123/issues/42'
+
+
+def test_dry_run_sync_reconciles_renamed_repo_read_only_without_rewriting_state(tmp_path):
+    pf = Planfile(str(tmp_path))
+    t = pf.create_ticket(
+        'Original',
+        integration=['github'],
+        sync={'github': {'id': '42', 'repository': 'owner/old', 'url': 'https://github.com/owner/old/issues/42'}},
+    )
+    old = bound_state(tmp_path)
+    old.save_sync({t.id: '42'})
+    before = old.state_file.read_bytes()
+
+    b = RedirectBackend(configured='owner/new')
+    b.list_tickets = lambda **kwargs: [b.get_ticket('42')]
+
+    sync_from_external(b, pf.store, True, 'github', ticket_ids=[t.id])
+    assert old.state_file.read_bytes() == before
+    assert '/repos/owner/old' in b._identity_requester.calls
+
+    b2 = RedirectBackend(configured='owner/new')
+    res = sync_to_external(b2, [(t.id, t.model_dump(mode='json'))], True, pf.store, 'github')
+    assert res.planned == (t.id,)
+    assert old.state_file.read_bytes() == before
+
+
+def test_dry_run_sync_rejects_unrelated_repo_mismatch(tmp_path):
+    pf = Planfile(str(tmp_path))
+    old = bound_state(tmp_path)
+    before = old.state_file.read_bytes()
+    b = RedirectBackend(configured='other/repo')
+    b.list_tickets = lambda **kwargs: []
+    with pytest.raises(SyncStateRepositoryMismatch):
+        sync_from_external(b, pf.store, True, 'github')
+    assert old.state_file.read_bytes() == before
+
