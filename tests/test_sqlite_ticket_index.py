@@ -1548,3 +1548,49 @@ def test_failure_to_persist_invalidation_is_not_hidden(tmp_path, monkeypatch):
         with pytest.raises(OSError, match="invalidation filesystem unavailable"):
             pf.update_ticket(ticket.id, name="After")
     assert pf.store._locate_ticket_source(ticket.id)[1]["name"] == "After"
+
+
+def test_full_view_serves_the_last_complete_index_to_a_machine_caller(tmp_path, monkeypatch):
+    """A full view has no durable fallback: a stale projection used to answer 503.
+
+    The same query succeeded for a browser (which was allowed to read the last complete
+    index) and failed for every other client, which is why the ticket API looked available
+    half of the time. It now serves the stale projection with an explicit marker, and only
+    an explicit `require_fresh` request is refused.
+    """
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    ticket = pf.create_ticket(name="Ticket before external edit")
+    pf.store.configure_ticket_index(True)
+    pf.store.ensure_ticket_index()
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    warm = client.get("/tickets?sprint=current&view=full&limit=10")
+    assert warm.status_code == 200
+
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][ticket.id]["name"] = "Ticket after external edit"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+
+    # pretend the cached answer is older than the short dashboard window but still within
+    # the window a repairing projection is allowed to be served from
+    with server._TICKET_LIST_RESPONSE_CACHE_LOCK:
+        for key, (_, body, total, count) in list(server._TICKET_LIST_LATEST.items()):
+            server._TICKET_LIST_LATEST[key] = (time.monotonic() - 60.0, body, total, count)
+
+    stale = client.get("/tickets?sprint=current&view=full&limit=10")
+    fresh = client.get("/tickets?sprint=current&view=full&limit=10&require_fresh=true")
+
+    assert stale.status_code == 200
+    assert stale.headers.get("X-Planfile-Index-State") == "stale"
+    # a caller that demands freshness is never served the stale projection: it is either
+    # asked to wait (503) or answered from the live sources, never marked as stale
+    assert fresh.headers.get("X-Planfile-Index-State") != "stale"
+    assert fresh.status_code in (200, 503)
+    if fresh.status_code == 503:
+        assert fresh.json() == {"detail": "ticket_index_repair_pending"}

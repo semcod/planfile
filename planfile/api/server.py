@@ -725,6 +725,7 @@ def _ticket_list_response(
     view: Literal["full", "operational", "summary"] = "full",
     allow_stale: bool = False,
     allow_index_stale: bool = False,
+    require_fresh: bool = False,
 ) -> Response:
     # FastAPI runs this sync endpoint in a worker pool. Serialize cache misses so
     # a burst of websocket-driven dashboard refreshes builds one 5+ MB response,
@@ -738,22 +739,35 @@ def _ticket_list_response(
     ):
         with _TICKET_LIST_RESPONSE_CACHE_LOCK:
             latest = _TICKET_LIST_LATEST.get(query_key)
-        if allow_stale and latest is not None and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS:
+        # A full view has no durable fallback, so its last complete answer may be reused for
+        # as long as a repaired projection would have been acceptable to serve. Past the short
+        # dashboard window the response says so, and a require_fresh caller is refused instead.
+        stale_window = (
+            _INDEX_REPAIR_STALE_WINDOW_SECONDS
+            if view == "full" and allow_stale
+            else _DASHBOARD_STALE_WINDOW_SECONDS
+        )
+        if allow_stale and latest is not None and time.monotonic() - latest[0] < stale_window:
             _, body, total, count = latest
+            headers = {
+                **NO_STORE_HEADERS,
+                "X-Planfile-View": view,
+                "X-Total-Count": str(total),
+                "X-Result-Count": str(count),
+            }
+            if time.monotonic() - latest[0] >= _DASHBOARD_STALE_WINDOW_SECONDS:
+                headers["X-Planfile-Index-State"] = "stale"
             return Response(
                 content=body,
                 media_type="application/json",
-                headers={
-                    **NO_STORE_HEADERS,
-                    "X-Planfile-View": view,
-                    "X-Total-Count": str(total),
-                    "X-Result-Count": str(count),
-                },
+                headers=headers,
             )
         signature = _ticket_snapshot_signature(pf, sprint)
         key = query_key + (signature,)
-        with _TICKET_LIST_RESPONSE_CACHE_LOCK:
-            cached = _TICKET_LIST_RESPONSE_CACHE.get(key)
+        cached = None
+        if not require_fresh:
+            with _TICKET_LIST_RESPONSE_CACHE_LOCK:
+                cached = _TICKET_LIST_RESPONSE_CACHE.get(key)
         if cached is not None:
             body, total, count = cached
         else:
@@ -833,7 +847,9 @@ def _ticket_list_response(
                         count = len(payload)
                 except TicketIndexContentionError:
                     if (
-                        latest is not None
+                        allow_stale
+                        and not require_fresh
+                        and latest is not None
                         and time.monotonic() - latest[0]
                         < _INDEX_REPAIR_STALE_WINDOW_SECONDS
                     ):
@@ -860,7 +876,7 @@ def _ticket_list_response(
                     )
                     if stale_index_response is not None:
                         return stale_index_response
-                    if view == "full" or sprint == "all":
+                    if require_fresh or view == "full" or sprint == "all":
                         return JSONResponse(
                             status_code=503,
                             content={"detail": "ticket_index_repair_pending"},
@@ -913,6 +929,7 @@ def list_tickets(
     offset: int = Query(0, ge=0),
     limit: int | None = Query(None, ge=1, le=5000),
     view: Literal["full", "operational", "summary"] = Query("full"),
+    require_fresh: bool = Query(False),
 ):
     response.headers.update(NO_STORE_HEADERS)
     pf = get_planfile()
@@ -947,8 +964,14 @@ def list_tickets(
         offset=offset,
         limit=limit,
         view=effective_view,
-        allow_stale=browser_client,
+        # A full view has no durable fallback, so a machine caller used to get 503 whenever
+        # the projection was being repaired - the same query succeeding for a browser and
+        # failing for everyone else. Serve the last complete index marked as stale instead,
+        # unless the caller explicitly requires freshness. Summary and operational views keep
+        # their fresh durable fallback.
+        allow_stale=browser_client or (effective_view == "full" and not require_fresh),
         allow_index_stale=legacy_unbounded_request,
+        require_fresh=require_fresh,
     )
 
 
