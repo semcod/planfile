@@ -7,7 +7,6 @@ import os
 import re
 import tempfile
 from pathlib import Path
-
 from typing import Any
 
 from planfile.core.fastio import load_yaml_text
