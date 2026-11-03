@@ -95,7 +95,7 @@ def save_sprint_highwater(source: Path, prefix: str, highest: int, sig: list[int
                 pass
 
 
-def update_sprint_highwater_cache(source: Path, tickets: list[Any] | Any) -> None:
+def update_sprint_highwater_cache(source: Path, tickets: list[Any] | Any = ()) -> None:
     """Update on-disk allocator highwater cache after writing sprint file.
 
     Preserves valid cached prefixes with the new file signature and updates
@@ -105,17 +105,25 @@ def update_sprint_highwater_cache(source: Path, tickets: list[Any] | Any) -> Non
         sig = signature(source)
     except OSError:
         return
-    ticket_list = tickets if isinstance(tickets, list) else [tickets]
-    pattern = re.compile(r"^([A-Za-z0-9_-]+)-(\d+)$")
-    added_prefixes: dict[str, int] = {}
+    ticket_list = tickets if isinstance(tickets, list) else ([tickets] if tickets else [])
+    recs = []
     for item in ticket_list:
-        tid = getattr(item, "id", None) if hasattr(item, "id") else (item.get("id") if isinstance(item, dict) else str(item))
-        if tid:
-            m = pattern.fullmatch(str(tid))
-            if m:
-                pfx, num = m.group(1), int(m.group(2))
-                added_prefixes[pfx] = max(added_prefixes.get(pfx, 0), num)
+        if isinstance(item, dict):
+            recs.append(item)
+        elif hasattr(item, "model_dump"):
+            recs.append(item.model_dump(mode="json", exclude_none=True))
+        elif hasattr(item, "__dict__"):
+            recs.append(item.__dict__)
 
+    marker = re.compile(r"([A-Za-z0-9_-]+)-(\d+)")
+    all_prefixes: set[str] = set()
+    for r in recs:
+        for val in (r.get("id"), *(r.get("labels") or []), r.get("description")):
+            if val and isinstance(val, str):
+                for m in marker.finditer(val):
+                    all_prefixes.add(m.group(1))
+
+    updated_prefixes: set[str] = set()
     index_dir = source.parent / "index" / "allocator-sprints"
     if index_dir.is_dir():
         for cache_path in index_dir.glob("*.json"):
@@ -124,13 +132,16 @@ def update_sprint_highwater_cache(source: Path, tickets: list[Any] | Any) -> Non
                 if content.get("source") == source.name and "prefix" in content and "highest" in content:
                     pfx = content["prefix"]
                     cur_highest = content["highest"]
-                    new_highest = max(cur_highest, added_prefixes.pop(pfx, 0))
+                    added_high = record_highwater(recs, pfx) if recs else 0
+                    new_highest = max(cur_highest, added_high)
                     save_sprint_highwater(source, pfx, new_highest, sig)
+                    updated_prefixes.add(pfx)
             except (OSError, ValueError, TypeError, KeyError):
                 continue
 
-    for pfx, highest in added_prefixes.items():
-        save_sprint_highwater(source, pfx, highest, sig)
+    for pfx in all_prefixes - updated_prefixes:
+        high = record_highwater(recs, pfx)
+        save_sprint_highwater(source, pfx, high, sig)
 
 
 def sprint_highwater(source: Path, prefix: str, *, max_rebuild_bytes: int | None = None) -> int:

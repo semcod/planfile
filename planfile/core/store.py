@@ -3611,7 +3611,7 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
                 from planfile.core.allocator_sprints import update_sprint_highwater_cache
-                update_sprint_highwater_cache(sprint_file, sprint_tickets)
+                update_sprint_highwater_cache(sprint_file)
 
             from planfile.core.operational_dsl import line as operational_line
             for ticket_id in deleted:
