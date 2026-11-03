@@ -2654,6 +2654,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
+                from planfile.core.allocator_sprints import update_sprint_highwater_cache
+                update_sprint_highwater_cache(sprint_file, sprint_tickets)
 
         self._append_operational_lines(
             [str(ticket.dsl) for ticket in tickets if ticket.dsl]
@@ -2795,6 +2797,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
         # Invalidate yaml cache
         if hasattr(self, "_yaml_cache"):
             self._yaml_cache.pop(str(sprint_file), None)
+        from planfile.core.allocator_sprints import update_sprint_highwater_cache
+        update_sprint_highwater_cache(sprint_file, ticket)
 
         archive_report = (
             self._archive_completed_unlocked()
@@ -3606,6 +3610,8 @@ class Store(StoreFileMixin, TicketStoreMixin):
                 self._write_yaml_atomic(sprint_file, data, allow_unicode=True)
                 if hasattr(self, "_yaml_cache"):
                     self._yaml_cache.pop(str(sprint_file), None)
+                from planfile.core.allocator_sprints import update_sprint_highwater_cache
+                update_sprint_highwater_cache(sprint_file, sprint_tickets)
 
             from planfile.core.operational_dsl import line as operational_line
             for ticket_id in deleted:
