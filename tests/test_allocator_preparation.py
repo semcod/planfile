@@ -185,3 +185,19 @@ def test_preparation_preserves_unrelated_parser_failure(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="invalid source"):
         store.next_id()
     assert store._read_config() == before
+
+
+def test_sequential_ticket_creation_on_large_sprint_succeeds_without_retry(tmp_path, monkeypatch):
+    pf = Planfile(tmp_path)
+    pf.store.init()
+    t1 = pf.create_ticket("First ticket")
+    assert t1.id == "PLF-001"
+    sprint_file = pf.store._sprint_file("current")
+    sprint_file.write_text(sprint_file.read_text() + "\n# " + "x" * 200)
+    evidence.sprint_highwater(sprint_file, "PLF")
+    monkeypatch.setattr(evidence, "MAX_LOCKED_REBUILD_BYTES", 100)
+    t2 = pf.create_ticket("Second ticket")
+    assert t2.id == "PLF-002"
+    t3 = pf.create_ticket("Third ticket")
+    assert t3.id == "PLF-003"
+    assert pf.store.next_id() == "PLF-004"

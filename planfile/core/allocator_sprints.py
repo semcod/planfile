@@ -7,6 +7,7 @@ import os
 import re
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from planfile.core.fastio import load_yaml_text
 
@@ -61,7 +62,85 @@ class SourceChangedError(RuntimeError):
     """Authoritative source changed during optimistic preparation."""
 
 
-MAX_LOCKED_REBUILD_BYTES = 5_000_000
+MAX_LOCKED_REBUILD_BYTES = 50_000_000
+
+
+def save_sprint_highwater(source: Path, prefix: str, highest: int, sig: list[int] | None = None) -> None:
+    if sig is None:
+        try:
+            sig = signature(source)
+        except OSError:
+            return
+    key = hashlib.sha256((source.name + "\0" + prefix).encode()).hexdigest()
+    cache = source.parent / "index" / "allocator-sprints" / f"{key}.json"
+    value = {"version": 1, "signature": sig, "prefix": prefix, "source": source.name, "highest": highest}
+    value["checksum"] = _digest(value)
+    temporary = None
+    try:
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(mode="w", dir=cache.parent, delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(value, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, cache)
+    except OSError:
+        pass  # Derived cache failure must not prevent allocation.
+    finally:
+        if temporary is not None:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
+def update_sprint_highwater_cache(source: Path, tickets: list[Any] | Any = ()) -> None:
+    """Update on-disk allocator highwater cache after writing sprint file.
+
+    Preserves valid cached prefixes with the new file signature and updates
+    the highwater mark for prefixes contained in the added tickets.
+    """
+    try:
+        sig = signature(source)
+    except OSError:
+        return
+    ticket_list = tickets if isinstance(tickets, list) else ([tickets] if tickets else [])
+    recs = []
+    for item in ticket_list:
+        if isinstance(item, dict):
+            recs.append(item)
+        elif hasattr(item, "model_dump"):
+            recs.append(item.model_dump(mode="json", exclude_none=True))
+        elif hasattr(item, "__dict__"):
+            recs.append(item.__dict__)
+
+    marker = re.compile(r"([A-Za-z0-9_-]+)-(\d+)")
+    all_prefixes: set[str] = set()
+    for r in recs:
+        for val in (r.get("id"), *(r.get("labels") or []), r.get("description")):
+            if val and isinstance(val, str):
+                for m in marker.finditer(val):
+                    all_prefixes.add(m.group(1))
+
+    updated_prefixes: set[str] = set()
+    index_dir = source.parent / "index" / "allocator-sprints"
+    if index_dir.is_dir():
+        for cache_path in index_dir.glob("*.json"):
+            try:
+                content = json.loads(cache_path.read_text(encoding="utf-8"))
+                if content.get("source") == source.name and "prefix" in content and "highest" in content:
+                    pfx = content["prefix"]
+                    cur_highest = content["highest"]
+                    added_high = record_highwater(recs, pfx) if recs else 0
+                    new_highest = max(cur_highest, added_high)
+                    save_sprint_highwater(source, pfx, new_highest, sig)
+                    updated_prefixes.add(pfx)
+            except (OSError, ValueError, TypeError, KeyError):
+                continue
+
+    for pfx in all_prefixes - updated_prefixes:
+        high = record_highwater(recs, pfx)
+        save_sprint_highwater(source, pfx, high, sig)
 
 
 def sprint_highwater(source: Path, prefix: str, *, max_rebuild_bytes: int | None = None) -> int:
@@ -101,23 +180,5 @@ def sprint_highwater(source: Path, prefix: str, *, max_rebuild_bytes: int | None
     highest = record_highwater(records(data), prefix)
     if signature(source) != before:
         raise SourceChangedError("Sprint changed while rebuilding allocator identity evidence")
-    value = {"version": 1, "signature": before, "prefix": prefix, "source": source.name, "highest": highest}
-    value["checksum"] = _digest(value)
-    temporary = None
-    try:
-        cache.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(mode="w", dir=cache.parent, delete=False) as stream:
-            temporary = Path(stream.name)
-            json.dump(value, stream)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(temporary, cache)
-    except OSError:
-        pass  # Derived cache failure must not prevent allocation.
-    finally:
-        if temporary is not None:
-            try:
-                temporary.unlink(missing_ok=True)
-            except OSError:
-                pass
+    save_sprint_highwater(source, prefix, highest, before)
     return highest
