@@ -11,6 +11,20 @@ import typer
 
 from planfile.cli.core import console
 from planfile.cli.groups.sync.core import sync_integration
+from planfile.cli.groups.sync.fleet import fleet_cmd
+
+__all__ = [
+    "all_cmd",
+    "fleet_cmd",
+    "github_cmd",
+    "gitlab_cmd",
+    "jira_cmd",
+    "markdown_cmd",
+    "onedev_cmd",
+    "publish_cmd",
+    "retry_cmd",
+    "watch_cmd",
+]
 
 
 def retry_cmd(

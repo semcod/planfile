@@ -643,6 +643,7 @@ def sync_from_external(
     ticket_ids: list[str] | None = None,
     sprint_ids: list[str] | None = None,
     remote_labels: list[str] | None = None,
+    exclude_incident_noise: bool = False,
 ) -> None:
     """Sync tickets from external system to planfile."""
     sync_state = _bind_sync_state(
@@ -701,6 +702,8 @@ def sync_from_external(
         return
 
     for ext_ticket in external_tickets:
+        if exclude_incident_noise and is_incident_noise(ext_ticket):
+            continue
         imported_count, updated_count = _process_external_ticket(
             ext_ticket,
             sprint,
@@ -729,6 +732,34 @@ def sync_from_external(
             updated_count,
             sections=sections,
         )
+
+
+_INCIDENT_NAME_PATTERN = re.compile(
+    r"^(\[(?:autocontrol|computer-use)[^\]]*\]|Runtime crash:|Auto-detected degradation:|Failed to run action:)",
+    re.IGNORECASE,
+)
+_INCIDENT_LABEL_KEYWORDS = {
+    "incident",
+    "crash",
+    "auto-detected",
+    "degradation",
+    "runtime-crash",
+    "incident-report",
+}
+
+
+def is_incident_noise(ext_ticket) -> bool:
+    """Return True if an external ticket represents raw runtime crash or degradation noise."""
+    data = _extract_ticket_data(ext_ticket)
+    name = (data.get("name") or "").strip()
+    if _INCIDENT_NAME_PATTERN.search(name):
+        return True
+    labels = data.get("labels") or []
+    for lbl in labels:
+        clean_lbl = str(lbl).strip().lower()
+        if clean_lbl in _INCIDENT_LABEL_KEYWORDS or clean_lbl.startswith("incident:"):
+            return True
+    return False
 
 
 def _extract_ticket_data(ext_ticket) -> dict:
