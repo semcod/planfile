@@ -79,6 +79,34 @@ def _auto_sync(
         )
         raise typer.Exit(1) from last_failure
 
+
+def _inbound_sync_before_create(
+    directory: str,
+    integrations: list[str],
+    dry_run: bool = False,
+    exclude_incident_noise: bool = True,
+) -> None:
+    """Sync remote records into local planfile before ticket creation."""
+    from planfile.cli.groups.sync.core import sync_integration
+
+    for integration in integrations:
+        try:
+            sync_integration(
+                integration,
+                directory,
+                dry_run,
+                "from",
+                show_header=False,
+                exclude_incident_noise=exclude_incident_noise,
+            )
+        except typer.Exit:
+            pass
+        except Exception as exc:
+            console.print(
+                f"[yellow]⚠️ Inbound sync from {integration} skipped: {exc}; proceeding with local ticket creation.[/yellow]"
+            )
+
+
 def format_markdown_tickets(tickets: list, details: bool = False, gh_repo: str = "") -> str:
     """Format ticket list as a markdown summary table, optionally with full details."""
     lines = []
@@ -302,6 +330,11 @@ def ticket_create(
     sync_dry_run: bool = typer.Option(
         False, "--sync-dry-run", help="Preview sync without making changes"
     ),
+    inbound_sync: bool | None = typer.Option(
+        None,
+        "--inbound-sync/--no-inbound-sync",
+        help="Inspect and sync remote issues from configured integrations before creating the ticket (defaults to true when remote integrations are configured)",
+    ),
     force: bool = typer.Option(
         False,
         "--force",
@@ -348,6 +381,17 @@ def ticket_create(
         for k in configured_integrations
         if k != "markdown" and integration_config.validate_integration(k)
     ]
+
+    # Reconcile inbound tickets from remote integrations before creating the new ticket
+    should_inbound_sync = inbound_sync if inbound_sync is not None else bool(valid_remote_integrations)
+    if should_inbound_sync and valid_remote_integrations:
+        _inbound_sync_before_create(
+            str(pf.store.project_dir),
+            valid_remote_integrations,
+            dry_run=sync_dry_run,
+        )
+        # Reload planfile store so newly fetched remote tickets/dedupe keys are in memory
+        pf = Planfile.auto_discover()
 
     target_integrations: list[str] = []
     if integration:
@@ -776,7 +820,7 @@ def ticket_ready(ticket_id: str=typer.Argument(..., help='Ticket ID to make runn
         ticket = pf.ready_ticket(ticket_id, note=note)
     except ValueError as exc:
         console.print(f'[red]✗[/red] Cannot ready {ticket_id}: {exc}')
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
     if not ticket:
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
@@ -793,7 +837,7 @@ def ticket_resume(
         ticket = pf.resume_ticket(ticket_id, note=note)
     except ValueError as exc:
         console.print(f'[red]✗[/red] Cannot resume {ticket_id}: {exc}')
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
     if not ticket:
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)

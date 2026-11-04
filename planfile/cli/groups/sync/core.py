@@ -242,6 +242,7 @@ def _execute_sync_with_progress(
     ticket_ids: list[str] | None = None,
     sprint_ids: list[str] | None = None,
     remote_labels: list[str] | None = None,
+    exclude_incident_noise: bool = False,
 ) -> None:
     """Execute sync with progress bar."""
     with Progress(
@@ -267,6 +268,7 @@ def _execute_sync_with_progress(
                 ticket_ids=ticket_ids,
                 sprint_ids=sprint_ids,
                 remote_labels=remote_labels,
+                exclude_incident_noise=exclude_incident_noise,
             )
             progress.update(task, description="[green]✓ Synced from external system[/green]")
 
@@ -284,6 +286,7 @@ def sync_integration(
     managed_only: bool = False,
     incremental: bool = False,
     max_tickets: int = 2,
+    exclude_incident_noise: bool = False,
 ) -> None:
     """Sync with a specific integration."""
     if show_header:
@@ -383,6 +386,7 @@ def sync_integration(
             ticket_ids,
             sprint_ids,
             remote_labels,
+            exclude_incident_noise=exclude_incident_noise,
         )
         delivered_comments = []
         if integration_name == "github" and direction in {"to", "both"} and not dry_run:

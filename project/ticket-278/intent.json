@@ -1,0 +1,27 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-278",
+  "summary": "Fleet sync and inbound GitHub sync on ticket creation",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-278/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/**",
+    "planfile/cli/groups/ticket/**",
+    "planfile/sync/**",
+    "tests/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

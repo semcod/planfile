@@ -4,6 +4,7 @@ import typer
 
 from planfile.cli.groups.sync.commands import (
     all_cmd,
+    fleet_cmd,
     github_cmd,
     gitlab_cmd,
     jira_cmd,
@@ -28,5 +29,6 @@ def register_sync_commands(app: typer.Typer) -> None:
     sync_app.command("all")(all_cmd)
     sync_app.command("watch")(watch_cmd)
     sync_app.command("retry")(retry_cmd)
+    sync_app.command("fleet")(fleet_cmd)
 
     app.add_typer(sync_app, name="sync")
