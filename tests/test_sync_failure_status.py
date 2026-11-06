@@ -1,5 +1,6 @@
 """Offline regression coverage for outbound sync failures and safe retries."""
 
+from copy import deepcopy
 from dataclasses import asdict
 from types import SimpleNamespace
 
@@ -200,7 +201,7 @@ def app():
 
 
 @pytest.mark.parametrize("direction", ["to", "both"])
-def test_cli_partial_failure_is_nonzero_without_success_or_inbound(
+def test_cli_partial_failure_is_nonzero_without_success(
     tmp_path, monkeypatch, direction
 ):
     source(tmp_path)
@@ -210,7 +211,7 @@ def test_cli_partial_failure_is_nonzero_without_success_or_inbound(
     assert result.exit_code == 1, result.output
     assert "completed successfully" not in result.output
     assert "Synced to external system" not in result.output
-    assert not backend.fetched
+    assert backend.fetched is (direction == "both")
     assert backend.created == ["good", "bad", "later"]
 
 
@@ -266,3 +267,60 @@ def test_watch_once_reflects_failure_without_stopping_continuous_helper(
         app(), ["watch", str(tmp_path), "--integration", "github", "--once"]
     )
     assert result.exit_code == int(fail), result.output
+
+
+@pytest.mark.parametrize("mixed", [False, True])
+def test_cli_deferred_lifecycle_is_nonzero_and_keeps_other_receipts(tmp_path, monkeypatch, mixed):
+    from planfile.cli.groups.sync import core
+    from planfile.sync.base import TicketState
+
+    names = ("bad", "good") if mixed else ("bad",)
+    path, data, store = source(tmp_path, names)
+    for name, remote_id in [("bad", "42"), ("good", "43")]:
+        if name in names:
+            data["backlog"]["tickets"][name].update(
+                name=name, status="blocked" if name == "bad" else "open",
+                description="accepted " + name,
+                sync={"github": {"id": remote_id, "repository": "fixture/isolated"}},
+            )
+    path.write_text(yaml.safe_dump(data))
+
+    class ReconciliationBackend:
+        config = {"repo": "fixture/isolated"}
+
+        def __init__(self):
+            self.updated = []
+            self.remote = {remote_id: TicketState(id=remote_id, name=name,
+                description="remote text", status="closed",
+                url=f"https://github.com/fixture/isolated/issues/{remote_id}",
+                metadata={"state_reason": "completed"})
+                for name, remote_id in [("bad", "42"), ("good", "43")] if name in names}
+
+        def list_tickets(self, **kwargs):
+            return deepcopy(list(self.remote.values()))
+
+        def get_ticket(self, remote_id):
+            return deepcopy(self.remote[remote_id])
+
+        def update_ticket(self, remote_id, **changes):
+            assert "status" not in changes
+            self.updated.append(remote_id)
+            self.remote[remote_id].description = changes["body"]
+
+    backend = ReconciliationBackend()
+    monkeypatch.setattr(IntegrationConfig, "get_integration_backend", lambda *args: backend)
+    comments = []
+    monkeypatch.setattr(core, "sync_pending_comments", lambda *args: comments.append(args))
+    result = CliRunner().invoke(app(), ["github", str(tmp_path), "--direction", "both"])
+    assert result.exit_code == 2, result.output
+    assert "Deferred" in result.output
+    assert "completed successfully" not in result.output
+    assert backend.updated == (["43"] if mixed else [])
+    assert comments == []
+    saved = yaml.safe_load(path.read_text())
+    assert saved["backlog"]["tickets"]["bad"]["status"] == "blocked"
+    assert saved["backlog"]["tickets"]["bad"]["description"] == "accepted bad"
+    assert backend.remote["42"].status == "closed"
+    if mixed:
+        assert saved["backlog"]["tickets"]["good"]["status"] == "done"
+        assert '"outcome": "succeeded"' in (store.base_dir / "sync/github.receipts.jsonl").read_text()
