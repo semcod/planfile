@@ -532,7 +532,7 @@ def test_block_ticket_clears_running_execution_claim(tmp_path):
     blocked = pf.block_ticket(ticket.id, reason="external precondition missing")
     assert blocked is not None
     assert blocked.status == "blocked"
-    assert blocked.description == "BLOCKED: external precondition missing"
+    assert blocked.description == started.description
     assert blocked.execution is not None
     assert blocked.execution.state == "blocked"
     assert blocked.execution.assigned_to is None
@@ -680,3 +680,85 @@ def test_lifecycle_write_does_not_repair_stale_projection(tmp_path, monkeypatch,
         assert updated.execution.state == "ready"
         assert updated.execution.attempt == 1
     assert pf.get_ticket(ticket.id, repair_index=False).model_dump(exclude={"sprint"}) == updated.model_dump(exclude={"sprint"})
+
+
+@pytest.mark.parametrize("description", [
+    "## Accepted scope\n\n- Preserve the deployment contract.\n",
+    "Zaakceptowany zakres: zachowaj dane i uprawnienia.",
+    " ",
+])
+def test_block_ticket_preserves_nonempty_accepted_description(tmp_path, description):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Preserve accepted intent", description=description)
+
+    blocked = pf.block_ticket(ticket.id, reason="waiting for an external prerequisite")
+
+    assert ticket.description.startswith(description)
+    assert blocked.description == ticket.description
+    assert pf.get_ticket(ticket.id).description == ticket.description
+    assert blocked.history[-1]["reason"] == "waiting for an external prerequisite"
+
+
+def test_repeated_block_preserves_intent_outputs_and_reason_history(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(
+        name="Resume the accepted work",
+        description="Accepted implementation and acceptance criteria must survive.",
+        inputs=TicketInputs(env_keys=["EXISTING_SETTING"], script="scripts/run.sh"),
+        outputs=TicketOutputs(notes=["Prior evidence"], artifacts=["proof.json"],
+                              result={"accepted": True}),
+        execution=TicketExecution(state="pending"),
+    )
+    started = pf.start_ticket(ticket.id, assigned_to="worker-1")
+    assert started.execution.state == "running"
+
+    for reason, note in [("dependency unavailable", "First blocker"),
+                         ("dependency still unavailable", "Second blocker")]:
+        blocked = pf.block_ticket(ticket.id, reason=reason, note=note, actor="worker-1")
+        assert blocked.description == ticket.description
+        assert blocked.inputs == ticket.inputs
+        assert blocked.outputs.artifacts == ["proof.json"]
+        assert blocked.outputs.result == {"accepted": True}
+        assert blocked.history[-1]["reason"] == reason
+        assert blocked.history[-1]["actor"] == "worker-1"
+        assert blocked.execution.state == "blocked"
+        assert blocked.execution.assigned_to is None
+        assert blocked.execution.lease_expires_at is None
+        assert blocked.execution.finished_at is not None
+    assert blocked.outputs.notes == ["Prior evidence", "First blocker", "Second blocker"]
+    assert [entry["reason"] for entry in blocked.history
+            if (entry.get("reason") or "").startswith("dependency")] == [
+        "dependency unavailable", "dependency still unavailable"]
+
+
+def test_ticket_block_command_preserves_accepted_description(tmp_path, monkeypatch):
+    from typer.testing import CliRunner
+
+    from planfile.cli.commands import app
+
+    monkeypatch.chdir(tmp_path)
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="CLI blocking", description="## Accepted scope\nKeep this plan.")
+    runner = CliRunner()
+    for reason in ["not yet available", "still not available"]:
+        result = runner.invoke(app, ["ticket", "block", ticket.id, "--reason", reason])
+        assert result.exit_code == 0, result.output
+        assert pf.get_ticket(ticket.id).description == ticket.description
+        assert pf.get_ticket(ticket.id).history[-1]["reason"] == reason
+
+
+def test_block_ticket_keeps_legacy_empty_description_presentation(tmp_path):
+    pf = Planfile(str(tmp_path))
+    ticket = pf.create_ticket(name="Legacy empty description")
+    # Current creation adds advisory radar prose. Load a real legacy empty
+    # record so this exercises the empty-description compatibility boundary.
+    sprint_path = tmp_path / ".planfile" / "sprints" / "current.yaml"
+    stored = yaml.safe_load(sprint_path.read_text(encoding="utf-8"))
+    stored["sprint"]["tickets"][ticket.id]["description"] = ""
+    sprint_path.write_text(yaml.safe_dump(stored, sort_keys=False), encoding="utf-8")
+    assert pf.get_ticket(ticket.id).description == ""
+
+    blocked = pf.block_ticket(ticket.id, reason="external precondition missing")
+
+    assert blocked.description == "BLOCKED: external precondition missing"
+    assert blocked.history[-1]["reason"] == "external precondition missing"

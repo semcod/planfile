@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-282",
+  "summary": "Preserve accepted description when blocking a ticket while retaining reason history and clearing active execution claims",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-282/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "tests/test_ticket_execution.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "edfa131b22ae8f6081d9c90489d9689f5075337a",
+    "targetBranch": "main",
+    "outcome": "Blocking a ticket preserves every nonempty accepted description and existing inputs/outputs, retains block reasons in history and explicit notes, clears active execution claims, and preserves legacy empty-description presentation.",
+    "nonGoals": [
+      "No API signature/schema/dependency changes",
+      "No global GitHub managed-body roundtrip redesign; existing issue341 owns it",
+      "No foreign allocator280 changes or migration"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep block_ticket as the shared SDK lifecycle transition; write synthetic blocker description only when no accepted description exists and preserve existing update/history/note machinery.",
+      "components": [
+        {
+          "name": "Ticket execution lifecycle",
+          "paths": [
+            "planfile/__init__.py",
+            "tests/test_ticket_execution.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded source change through independent protected delivery; never overwrite already recovered ticket descriptions."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest tests/test_ticket_execution.py -q"
+        ],
+        "evidence": "Pending native verification of nonempty and repeated blocking, reason history, output preservation and existing empty-description behavior."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending required governance, all8protected checks and independent exact-head review/merge."
+      }
+    ]
+  }
+}

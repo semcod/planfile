@@ -585,7 +585,8 @@ class Planfile:
         already started, that leaves ``execution.state="running"`` behind, which watchdogs read as
         an active but idle claim. Blocking is a lifecycle transition, so it must clear the running
         execution state too.
-        The `reason` here is the block reason (used for description + history "reason").
+        The `reason` is retained in history. A synthetic description is only used
+        when the ticket has no accepted description to preserve.
         `actor` records who performed the block.
         """
         ticket = self.get_ticket(ticket_id)
@@ -601,7 +602,8 @@ class Planfile:
         })
         updates: dict = {"status": "blocked", "execution": TicketExecution(**data)}
         if reason:
-            updates["description"] = f"BLOCKED: {reason}"
+            if not ticket.description:
+                updates["description"] = f"BLOCKED: {reason}"
             updates["reason"] = reason  # for history
         if note:
             updates["outputs"] = self._append_note(ticket, note)
