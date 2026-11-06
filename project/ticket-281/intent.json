@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-281",
+  "summary": "Refresh the Goal automation lock required by dependency freshness",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-281/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "uv.lock"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "edfa131b22ae8f6081d9c90489d9689f5075337a",
+    "targetBranch": "main",
+    "outcome": "Refresh only Goal2.2.10 to2.2.11 in uv.lock so existing required dependency freshness passes and unblocks native279/PR342.",
+    "nonGoals": [
+      "No dependency/catalog/workflow/check waiver",
+      "No native279 code change or unmerged-work discard",
+      "No other package update or Python minimum change"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use existing uv resolver for the automation dependency and preserve all other123package records and Python>=3.12 automation group.",
+      "components": [
+        {
+          "name": "Automation dependency lock",
+          "paths": [
+            "uv.lock"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "A separately validated revert of the lock delta; preserve native279 candidate and prior package metadata."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "uv lock --check",
+          "goal dependencies --catalog .github/internal-dependencies.json --check"
+        ],
+        "evidence": "Isolated exact-base proposal resolves123packages and freshness=true; actual source validation pending own fenced grant."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending canonical native281 source check and independent required CI."
+      }
+    ]
+  }
+}
