@@ -127,6 +127,7 @@ class GitHubBackend(BasePMBackend):
 
     # Sync owns the managed description, not deliberate tracker titles.
     preserves_remote_titles = True
+    _managed_description_projection = True
 
     MAX_LABEL_LENGTH = 50
     DEFAULT_MUTATION_INTERVAL = 1.0
@@ -354,6 +355,29 @@ class GitHubBackend(BasePMBackend):
     DESCRIPTION_END = "<!-- planfile:description:end -->"
 
     @classmethod
+    def _description_bounds(cls, body: str) -> tuple[int, int] | None:
+        """Accept only an absent or unique, well ordered owned region."""
+        starts, ends = body.count(cls.DESCRIPTION_START), body.count(cls.DESCRIPTION_END)
+        if not starts and not ends:
+            return None
+        if starts != 1 or ends != 1:
+            raise ValueError("sync_github_description_markers_ambiguous")
+        start, end = body.index(cls.DESCRIPTION_START), body.index(cls.DESCRIPTION_END)
+        if end < start:
+            raise ValueError("sync_github_description_markers_ambiguous")
+        return start, end + len(cls.DESCRIPTION_END)
+
+    @classmethod
+    def _description_text(cls, body: str | None) -> str:
+        """Import owned text; unmarked legacy issues retain whole-body imports."""
+        current = body or ""
+        bounds = cls._description_bounds(current)
+        if bounds is None:
+            return current
+        start, end = bounds
+        return current[start + len(cls.DESCRIPTION_START):end - len(cls.DESCRIPTION_END)].strip()
+
+    @classmethod
     def _merge_description(cls, existing: str | None, description: str) -> str:
         """Write the description into its own section and keep the rest.
 
@@ -362,17 +386,17 @@ class GitHubBackend(BasePMBackend):
         Replacing the body with the description deletes the former, so own a
         delimited section and leave every other line untouched.
         """
+        if cls.DESCRIPTION_START in description or cls.DESCRIPTION_END in description:
+            raise ValueError("sync_github_description_contains_reserved_marker")
         section = f"{cls.DESCRIPTION_START}\n{description.strip()}\n{cls.DESCRIPTION_END}"
         current = existing or ""
-        owned = re.compile(
-            re.escape(cls.DESCRIPTION_START) + r".*?" + re.escape(cls.DESCRIPTION_END),
-            re.DOTALL,
-        )
-        if owned.search(current):
-            return owned.sub(lambda _match: section, current, count=1)
-        if not current.strip():
+        bounds = cls._description_bounds(current)
+        if bounds is not None:
+            start, end = bounds
+            return current[:start] + section + current[end:]
+        if not current:
             return section
-        return f"{current.rstrip()}\n\n{section}"
+        return f"{current}\n\n{section}"
 
     @staticmethod
     def _deduplication_markers(body: str | None) -> list[str]:
@@ -493,11 +517,19 @@ class GitHubBackend(BasePMBackend):
         expected = self.project_remote_status(status) if status else None
         if status and expected is None:
             raise ValueError("sync_github_status_unsupported")
-        reference = super().create_ticket(ticket, **kwargs)
+        payload = dict(ticket)
+        description = ticket.get("description") if "description" in ticket else ticket.get("body")
+        if description is not None:
+            payload["description"] = self._merge_description(None, description)
+        reference = super().create_ticket(payload, **kwargs)
         self._clear_read_cache()
         issue = self.repo.get_issue(int(reference.id))
         if getattr(issue, "pull_request", None) is not None:
             raise ValueError("sync_github_create_resolved_pull_request")
+        if description is not None:
+            # A durable marker may resolve to an older issue. Repair that same
+            # issue's owned region and preserve its independently written prose.
+            self._update_ticket(str(reference.id), body=description)
         if expected is not None:
             self._update_issue_state(issue, status)
             self._clear_read_cache()
@@ -515,8 +547,8 @@ class GitHubBackend(BasePMBackend):
         metadata: dict[str, Any] | None = None,
     ) -> TicketRef:
         """Create a new GitHub issue."""
-        issue_labels = self._prepare_labels(labels, priority)
         body = self._build_metadata_body(body, metadata)
+        self._description_bounds(body)
         markers = self._deduplication_markers(body)
         dedup_key = markers[0] if markers else None
 
@@ -527,6 +559,7 @@ class GitHubBackend(BasePMBackend):
                     raise ValueError(
                         f"{self.repo.full_name}#{existing.number} is a pull request, not an issue"
                     )
+                self._description_bounds(getattr(existing, "body", "") or "")
                 return self.build_ticket_ref(
                     id=str(existing.number),
                     url=existing.html_url,
@@ -538,7 +571,7 @@ class GitHubBackend(BasePMBackend):
             create_kwargs = {
                 "title": name,
                 "body": body,
-                "labels": issue_labels,
+                "labels": self._prepare_labels(labels, priority),
             }
             if assignee:
                 create_kwargs["assignee"] = assignee
@@ -606,7 +639,7 @@ class GitHubBackend(BasePMBackend):
         # The title is set when the issue is created. Renaming it from a ticket
         # name silently shortened semcod/fixos#46 on 2026-09-16, so a rename is
         # a deliberate action on the issue, not a side effect of a sync.
-        if body:
+        if body is not None:
             merged = self._merge_description(issue.body, body)
             markers = self._deduplication_markers(issue.body)
             missing_markers = [marker for marker in markers if marker not in merged]
@@ -661,7 +694,7 @@ class GitHubBackend(BasePMBackend):
             id=str(number),
             key=f"{repo_name}#{number}",
             name=getattr(issue, "title", ""),
-            description=body,
+            description=self._description_text(body),
             url=getattr(issue, "html_url", ""),
             status=getattr(issue, "state", ""),
             assignee=assignee_login,

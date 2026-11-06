@@ -283,7 +283,7 @@ def test_preserved_title_policy_cannot_waive_create_readback(tmp_path):
     assert caught.value.result.created == ()
 
 
-def test_missing_mapping_replacement_still_checks_create_title(tmp_path):
+def test_missing_mapping_fails_without_creating_replacement(tmp_path):
     class MissingUpdateBackend(ReadbackBackend):
         preserves_remote_titles = True
 
@@ -300,7 +300,8 @@ def test_missing_mapping_replacement_still_checks_create_title(tmp_path):
     assert caught.value.result.succeeded == ()
     assert caught.value.result.updated == ()
     assert caught.value.result.created == ()
-    assert len(backend.created) == 1
+    assert backend.created == []
+    assert ticket['sync']['github']['id'] == '19'
 
 
 def test_preserved_title_update_still_rejects_wrong_remote_identity(tmp_path):

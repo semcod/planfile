@@ -141,6 +141,12 @@ def _verify_remote_readback(
         actual_name = getattr(remote, "name", None) or getattr(remote, "title", None)
     if check_title and expected_name and actual_name and str(expected_name) != str(actual_name):
         raise RuntimeError("sync_readback_title_mismatch")
+    if getattr(backend, "_managed_description_projection", False) is True:
+        desired = ticket.get("description") if "description" in ticket else ticket.get("body")
+        if desired is not None:
+            actual = remote.get("description") if isinstance(remote, dict) else getattr(remote, "description", None)
+            if str(actual or "").strip() != str(desired).strip():
+                raise RuntimeError("sync_readback_description_mismatch")
     # Only backends declaring a lifecycle projection opt into this contract.
     # Looking it up on the class avoids fabricating a capability on mocks.
     projector = getattr(type(backend), "project_remote_status", None)
@@ -255,7 +261,7 @@ def sync_to_external(
                         check_title=not getattr(backend, "preserves_remote_titles", False),
                     )
                 except RuntimeError as exc:
-                    if str(exc) not in {"sync_readback_status_mismatch", "sync_receipt_payload_superseded"}:
+                    if str(exc) not in {"sync_readback_status_mismatch", "sync_readback_description_mismatch", "sync_receipt_payload_superseded"}:
                         raise
                     # The receipt binds identity, not current payload/lifecycle. Reuse
                     # that exact issue for repair and verify the update below.

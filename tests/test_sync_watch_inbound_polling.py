@@ -1,5 +1,7 @@
 """Inbound polling exercises the actual watch loop, store and import adapter."""
 
+from types import SimpleNamespace
+
 import pytest
 import typer
 
@@ -50,8 +52,9 @@ def incoming(tmp_path, monkeypatch):
 
     monkeypatch.setattr(IntegrationConfig, "load_configs", lambda self: None)
     monkeypatch.setattr(commands, "sync_integration", sync)
-    monkeypatch.setattr(commands.time, "monotonic", lambda: state["clock"])
-    monkeypatch.setattr(commands.time, "sleep", sleep)
+    # Patch only the watch dependency. Store locks and provider caches also
+    # use stdlib time; their waits must not advance this fixture's poll ticks.
+    monkeypatch.setattr(commands, "time", SimpleNamespace(monotonic=lambda: state["clock"], sleep=sleep))
     state.update(pf=pf, local_id=local.id)
     state["run"] = lambda once=False: commands.watch_cmd(
         str(tmp_path), 5, ["github"], "from", once,
@@ -201,8 +204,7 @@ def test_sync_watch_both_mode_polls_inbound_when_idle(tmp_path, monkeypatch):
 
     monkeypatch.setattr(IntegrationConfig, "load_configs", lambda self: None)
     monkeypatch.setattr(commands, "sync_integration", sync)
-    monkeypatch.setattr(commands.time, "monotonic", lambda: state["clock"])
-    monkeypatch.setattr(commands.time, "sleep", sleep)
+    monkeypatch.setattr(commands, "time", SimpleNamespace(monotonic=lambda: state["clock"], sleep=sleep))
 
     commands.watch_cmd(
         str(tmp_path), 5, ["github"], "both", False,

@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-283",
+  "summary": "Preserve managed GitHub description ownership and verify outbound body projection",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-283/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/github.py",
+    "planfile/sync/outbound.py",
+    "planfile/sync/operations.py",
+    "tests/test_github*.py",
+    "tests/test_sync*.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "9abfd11f9d0c22c11ec2c5888d4c364682eb7885",
+    "targetBranch": "main",
+    "outcome": "Managed GitHub descriptions round-trip without nesting or importing remote-only discussion; explicit empty descriptions clear the owned region, ambiguous markers fail before mutation, and fresh/reused outbound receipts verify the managed description without weakening identity, lifecycle, snapshot or live-execution guards.",
+    "nonGoals": [
+      "No mass rewrite of historical issue bodies",
+      "No schema, dependency or public signature changes",
+      "No foreign280coreStore/allocator changes",
+      "Existing339CLIplanning/snapshotguards remain authoritative"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep ownership parsing/projection in GitHubBackend, verify opt-in managed descriptions in existing outbound readbacks and receipt reuse, and fail closed for missing mapped issues instead of allocating replacements. Preserve unmarked legacy imports, all unowned prose, and existing339snapshot/live execution safeguards.",
+      "components": [
+        {
+          "name": "GitHub synchronization description ownership",
+          "paths": [
+            "planfile/sync/github.py",
+            "planfile/sync/outbound.py",
+            "planfile/sync/operations.py",
+            "tests/test_github*.py",
+            "tests/test_sync*.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert bounded code through independent publication; keep provider/local data and all existing receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest tests/test_github_description_roundtrip.py tests/test_github_sync_preserves_issue.py tests/test_github_deduplication.py tests/test_sync_receipts.py -q"
+        ],
+        "evidence": "Pending admitted native projection, stable roundtrip, empty, ambiguity, receipt reuse, identity/legacy/live-execution regressions."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending native gate, all8protectedchecks and independent exact-head merge."
+      }
+    ]
+  }
+}

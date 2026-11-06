@@ -46,15 +46,18 @@ class RedirectBackend(GitHubBackend):
         self._identity_requester = MetadataRequester()
         self.repo = SimpleNamespace(full_name='owner/new')
         self.mutations = []
+        self.descriptions = {}
 
     def update_ticket(self, ticket_id, **kwargs):
         self.mutations.append(str(ticket_id))
+        self.descriptions[str(ticket_id)] = kwargs.get('body', '')
 
     def create_ticket(self, ticket):
         raise AssertionError('A renamed repository must retain its existing mapping')
 
     def get_ticket(self, remote_id):
         return SimpleNamespace(id=str(remote_id), name='Original', status='open',
+                               description=self.descriptions.get(str(remote_id), ''),
                                key=f'owner/new#{remote_id}', url=f'https://github.com/owner/new/issues/{remote_id}')
 
 

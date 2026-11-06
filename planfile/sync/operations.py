@@ -115,11 +115,14 @@ def _update_existing_ticket(
     backend, ticket, ticket_id: str, external_id: str, integration_name: str, sync_state
 ) -> str:
     """Update an existing ticket in the external system."""
+    body = ticket.get("description", "") or ticket.get("body", "")
+    if getattr(backend, "_managed_description_projection", False) is True:
+        body = ticket.get("description") if "description" in ticket else ticket.get("body")
     try:
         backend.update_ticket(
             external_id,
             name=ticket.get("name") or ticket.get("title"),
-            body=ticket.get("description", "") or ticket.get("body", ""),
+            body=body,
             status=ticket.get("status"),
             labels=ticket.get("labels"),
             priority=ticket.get("priority"),
@@ -144,28 +147,7 @@ def _update_existing_ticket(
             # Keep status and retry headers available to the outbound scheduler.
             raise
         elif "404" in str(e) or "Not Found" in str(e):
-            console.print(f"  ⚠️  Issue not found, creating new: {external_id}")
-            external_ticket = backend.create_ticket(
-                _backend_ticket_payload(
-                    ticket,
-                    ticket_id,
-                    _backend_repository(backend),
-                    getattr(sync_state, "store_identity", None),
-                )
-            )
-            new_id = (
-                external_ticket.id
-                if hasattr(external_ticket, "id")
-                else str(external_ticket.get("id"))
-            )
-            sync_state.save_sync({ticket_id: new_id})
-            _record_backend_ref(ticket, integration_name, external_ticket, new_id)
-            console.print(f"  ✓ Created: {ticket_id} → {new_id}")
-            return "created"
-        elif _is_rate_limit_error(e):
-            _print_rate_limit_error(ticket_id, e)
-            # Keep status and retry headers available to the outbound scheduler.
-            raise
+            raise RuntimeError("sync_mapped_ticket_unavailable") from e
         elif _is_permission_error(e):
             _print_permission_error(ticket_id)
             raise RuntimeError(
