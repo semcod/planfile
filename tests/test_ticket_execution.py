@@ -522,6 +522,7 @@ def test_block_ticket_clears_running_execution_claim(tmp_path):
     pf = Planfile(str(tmp_path))
     ticket = pf.create_ticket(
         name="Run external task",
+        description="Accepted external task scope.",
         source=TicketSource(tool="shell"),
         execution=TicketExecution(state="pending"),
     )

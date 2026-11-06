@@ -20,3 +20,5 @@ Preserve nonempty accepted descriptions through first and repeated block transit
 ## Validation and delivery
 
 Native ticket execution regressions:40passed,0skipped. Ruff and managed governance pass. Tests preserve full accepted snapshots including advisory radar, reason history, repeated CLI blocking, outputs/artifacts and an actual legacy empty-description record. Existing #340 is the producer request. Independent8check PR publication remains pending; source279 PR342 is undergoing fresh CI at ee37a21e0118.
+
+CI fixture correction: the running-claim test declares its accepted description explicitly, independent of advisory generation. The separate legacy-empty-record test remains. Native40tests, Python3.10.20 SDK lifecycle smoke, Ruff and governance pass; fresh protected matrix remains required.
