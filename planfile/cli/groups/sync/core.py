@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import glob
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -12,7 +13,13 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from planfile.cli.core import console, print_error, print_warning
 from planfile.integrations.config import IntegrationConfig
-from planfile.sync.operations import sync_from_external
+from planfile.sync.github import GitHubBackend
+from planfile.sync.operations import (
+    _bind_sync_state,
+    _extract_ticket_data,
+    _ticket_external_id,
+    sync_from_external,
+)
 from planfile.sync.outbound import OutboundSyncError, sync_to_external
 from planfile.sync.ticket_comments import sync_pending_comments
 
@@ -229,6 +236,182 @@ def _load_tickets_for_sync(
     return all_tickets, tickets_source, v1_source_file, v1_data
 
 
+class _InboundObservation:
+    """Retain this pass's provider states without changing backend capabilities."""
+
+    project_remote_status = staticmethod(GitHubBackend.project_remote_status)
+
+    def __init__(self, backend, legacy_plans=None):
+        self.backend = backend
+        self.states = {}
+        self.legacy_plans = legacy_plans or {}
+        self.guard = None
+
+    def resolve_repository_identity(self, *args, **kwargs):
+        resolver = getattr(type(self.backend), "resolve_repository_identity", None)
+        return resolver(self.backend, *args, **kwargs) if callable(resolver) else None
+
+    def _bind_repository_identity(self, identity):
+        binder = getattr(type(self.backend), "_bind_repository_identity", None)
+        if callable(binder):
+            binder(self.backend, identity)
+
+    def update_ticket(self, remote_id, **changes):
+        if self.guard is not None:
+            self.guard()
+        # Lifecycle belongs to inbound in both. A closure after that read
+        # must survive a later metadata edit; normal readback reports drift.
+        changes.pop("status", None)
+        return self.backend.update_ticket(remote_id, **changes)
+
+    def create_ticket(self, ticket):
+        if self.guard is not None:
+            self.guard()
+        return self.backend.create_ticket(ticket)
+
+    def __getattr__(self, name):
+        value = getattr(self.backend, name)
+        if name not in {"list_tickets", "list_selected_tickets"} or not callable(value):
+            return value
+
+        def observe(*args, **kwargs):
+            result = value(*args, **kwargs)
+            if result is None:
+                return None
+            tickets = deepcopy(list(result))
+            for ticket in tickets:
+                data = _extract_ticket_data(ticket)
+                previous = self.states.setdefault(data["id"], data["status"])
+                if previous != data["status"]:
+                    raise ValueError("sync_inbound_conflicting_remote_states")
+                if data["id"] in self.legacy_plans:
+                    description = self.legacy_plans[data["id"]]
+                    if isinstance(ticket, dict):
+                        ticket["description"] = description
+                    else:
+                        ticket.description = description
+            return tickets
+
+        return observe
+
+
+class _LocalPlanningStore:
+    """Preserve this SDK snapshot's planning text while retaining normal CAS."""
+
+    def __init__(self, store):
+        self.store = store
+
+    def __getattr__(self, name):
+        return getattr(self.store, name)
+
+    def update_ticket(self, ticket_id, **changes):
+        snapshot = changes.get("expected_snapshot")
+        if not isinstance(snapshot, dict):
+            raise ValueError("sync_planning_requires_snapshot")
+        if "description" in changes:
+            changes["description"] = snapshot.get("description", "")
+        return self.store.update_ticket(ticket_id, **changes)
+
+
+
+class _OutboundSnapshotStore:
+    """Persist only backend references under exact native snapshot preconditions."""
+
+    def __init__(self, store, tickets):
+        self.store, self.payloads = store, dict(tickets)
+        self.snapshots, self.rejected = {}, set()
+        for key, payload in tickets:
+            located = store._locate_ticket_source(key)
+            if located is None or located[1] != payload:
+                raise ValueError("sync_outbound_snapshot_changed")
+            self.snapshots[key] = (located[0], deepcopy(located[1]))
+
+    def __getattr__(self, name):
+        return getattr(self.store, name)
+
+    def check(self, key):
+        located = self.store._locate_ticket_source(key)
+        if located is None or located != self.snapshots[key]:
+            raise ValueError("sync_outbound_snapshot_changed")
+
+    def check_all(self):
+        for key in self.snapshots:
+            self.check(key)
+
+    def _all_sprint_ids(self):
+        return list(dict.fromkeys(section for section, _ in self.snapshots.values()))
+
+    def load_sprint(self, section):
+        return {"tickets": {key: deepcopy(data) for key, (physical, data) in self.snapshots.items()
+                            if physical == section}}
+
+    def save_sprint(self, section, data):
+        pending = [(key, payload) for key, payload in data.get("tickets", {}).items()
+                   if key in self.payloads and payload is self.payloads[key]]
+        if not pending:
+            raise ValueError("sync_outbound_payload_required")
+        for key, payload in pending:
+            if key in self.rejected:
+                continue
+            try:
+                self.check(key)
+                physical, snapshot = self.snapshots[key]
+                if physical != section:
+                    raise ValueError("sync_outbound_section_changed")
+                reference = deepcopy(payload.get("sync") or {})
+                if reference != (snapshot.get("sync") or {}):
+                    saved = self.store.update_ticket(key, sync=reference, expected_snapshot=snapshot)
+                    located, current = self.store._locate_ticket_source(key), self.store.get_ticket(key)
+                    if (saved is None or current is None or located is None
+                            or saved.model_dump(mode="json") != current.model_dump(mode="json")
+                            or any(located[1].get(k) != snapshot.get(k)
+                                   for k in set(located[1]) | set(snapshot)
+                                   if k not in {"sync", "updated_at", "history"})):
+                        raise ValueError("sync_outbound_snapshot_changed")
+                    self.snapshots[key] = (located[0], deepcopy(located[1]))
+            except Exception:
+                self.rejected.add(key)
+                raise
+
+    def save_backlog(self, data):
+        self.save_sprint("backlog", data)
+
+
+def _legacy_planning_descriptions(backend, store, tickets):
+    state = _bind_sync_state(Path(store.base_dir), "github", backend, dry_run=True)
+    plans = {}
+    for ticket_id, ticket in tickets:
+        remote_id = _ticket_external_id(ticket, ticket_id, "github", state)
+        if remote_id is not None:
+            description = ticket.get("description", "")
+            if remote_id in plans and plans[remote_id] != description:
+                raise ValueError("sync_ambiguous_local_planning")
+            plans[remote_id] = description
+    return plans
+
+
+def _github_reconciled_outbound(backend, store, tickets, observed):
+    """Leave native lifecycle conflicts and unobserved mappings for explicit sync."""
+    state = _bind_sync_state(Path(store.base_dir), "github", backend, dry_run=True)
+    eligible = []
+    deferred = []
+    for ticket_id, ticket in tickets:
+        remote_id = _ticket_external_id(ticket, ticket_id, "github", state)
+        if remote_id is not None and (
+            remote_id not in observed
+            or GitHubBackend.project_remote_status(ticket.get("status")) != observed[remote_id]
+        ):
+            deferred.append(ticket_id)
+        else:
+            eligible.append((ticket_id, ticket))
+    if deferred:
+        print_warning(
+            f"Deferred {len(deferred)} mapped ticket(s): lifecycle conflict or no inbound "
+            "observation. Reconcile intent before explicit --direction to."
+        )
+    return eligible, deferred
+
+
 def _execute_sync_with_progress(
     backend: Any,
     all_tickets: list[tuple[str, dict]],
@@ -244,22 +427,23 @@ def _execute_sync_with_progress(
     remote_labels: list[str] | None = None,
     exclude_incident_noise: bool = False,
 ) -> None:
-    """Execute sync with progress bar."""
+    """Execute sync; GitHub both observes inbound before outbound mutation."""
+    inbound_first = integration_name == "github" and direction == "both"
+    legacy_plans = (
+        _legacy_planning_descriptions(backend, store, all_tickets)
+        if inbound_first and v1_source_file else None
+    )
+    observer = _InboundObservation(backend, legacy_plans) if inbound_first else None
+    inbound_store = _LocalPlanningStore(store) if inbound_first and not v1_source_file else store
+    deferred = []
     with Progress(
         SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
     ) as progress:
-        if direction in ["to", "both"]:
-            task = progress.add_task("Syncing to external system...", total=None)
-            sync_to_external(
-                backend, all_tickets, dry_run, store, integration_name, v1_source_file, v1_data
-            )
-            progress.update(task, description="[green]✓ Synced to external system[/green]")
-
-        if direction in ["from", "both"]:
+        def pull():
             task = progress.add_task("Syncing from external system...", total=None)
             sync_from_external(
-                backend,
-                store,
+                observer if inbound_first else backend,
+                inbound_store,
                 dry_run,
                 integration_name,
                 v1_source_file,
@@ -271,6 +455,45 @@ def _execute_sync_with_progress(
                 exclude_incident_noise=exclude_incident_noise,
             )
             progress.update(task, description="[green]✓ Synced from external system[/green]")
+
+        if inbound_first:
+            pull()
+            if dry_run:
+                console.print(
+                    "[dim]Outbound preview deferred: inbound dry-run is not persisted. "
+                    "Use --direction to for a local-only outbound preview.[/dim]"
+                )
+                return
+            all_tickets, _, v1_source_file, v1_data = _load_tickets_for_sync(
+                store, str(store.project_dir), integration_name,
+                ticket_ids=ticket_ids, sprint_ids=sprint_ids,
+            )
+            all_tickets, deferred = _github_reconciled_outbound(
+                backend, store, all_tickets, observer.states
+            )
+
+        outbound_store = store
+        if inbound_first and not v1_source_file:
+            all_tickets = deepcopy(all_tickets)
+            outbound_store = _OutboundSnapshotStore(store, all_tickets)
+            observer.guard = outbound_store.check_all
+        if direction in ["to", "both"] and (all_tickets or not inbound_first):
+            task = progress.add_task("Syncing to external system...", total=None)
+            sync_to_external(
+                observer if inbound_first else backend, all_tickets, dry_run, outbound_store,
+                integration_name, v1_source_file, v1_data
+            )
+            if inbound_first and not v1_source_file:
+                outbound_store.check_all()
+            progress.update(task, description="[green]✓ Synced to external system[/green]")
+
+        if deferred:
+            # Keep successful receipts, but do not claim the full selection is
+            # synchronized or deliver queued comments for unresolved work.
+            raise typer.Exit(2)
+
+        if direction in ["from", "both"] and not inbound_first:
+            pull()
 
 
 def sync_integration(
