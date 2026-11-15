@@ -910,6 +910,48 @@ class Planfile:
             dry_run=dry_run,
         )
 
+    def reconcile_in_progress(
+        self,
+        *,
+        apply: bool = False,
+        sprint: str = "active",
+        workspace_root: str | Path | None = None,
+        now: datetime | None = None,
+        actor: str = "planfile.reconcile",
+    ) -> dict:
+        """Reconcile ``in_progress`` tickets against live leases, worktrees, and merge receipts."""
+        from planfile.reconcile import reconcile_in_progress
+
+        return reconcile_in_progress(
+            self,
+            apply=apply,
+            sprint=sprint,
+            workspace_root=workspace_root,
+            now=now,
+            actor=actor,
+        )
+
+    reconcile = reconcile_in_progress
+
+    def executable_queue(
+        self,
+        *,
+        sprint: str = "active",
+        workspace_root: str | Path | None = None,
+        queue: str | None = None,
+        now: datetime | None = None,
+    ) -> dict:
+        """Return the canonical ``planfile.executable-queue/v1`` summary for this repository."""
+        from planfile.executable_queue import executable_queue
+
+        return executable_queue(
+            self,
+            sprint=sprint,
+            workspace_root=workspace_root,
+            queue=queue,
+            now=now,
+        )
+
 
 def quick_ticket(name: str, tool: str = "unknown", **kwargs) -> Ticket:
     """One-liner ticket creation for tools."""
@@ -934,6 +976,12 @@ __all__ = [
     "ComparativeFindingProposal", "ExecutorOwnershipSpec",
     "ObsoleteTargetHeadError", "admit_comparative_findings",
     "compute_comparative_dedupe_key", "compute_requirement_fingerprint",
+    # Reconciliation & Executable Queue
+    "EXECUTABLE_QUEUE_SCHEMA", "RECONCILE_REPORT_SCHEMA",
+    "CandidateEvaluation", "evaluate_executable_candidate",
+    "executable_queue", "executable_skip_reason",
+    "fleet_executable_queue", "is_executable_candidate",
+    "reconcile", "reconcile_fleet_in_progress", "reconcile_in_progress",
     # Store & API
     "PlanfileStore", "Planfile", "quick_ticket",
     # Executors (lazy loaded)
@@ -962,6 +1010,23 @@ _COMPARATIVE_FINDING_EXPORTS = frozenset({
     "compute_requirement_fingerprint",
 })
 
+_RECONCILE_EXPORTS = frozenset({
+    "RECONCILE_REPORT_SCHEMA",
+    "reconcile",
+    "reconcile_fleet_in_progress",
+    "reconcile_in_progress",
+})
+
+_EXECUTABLE_QUEUE_EXPORTS = frozenset({
+    "EXECUTABLE_QUEUE_SCHEMA",
+    "CandidateEvaluation",
+    "evaluate_executable_candidate",
+    "executable_queue",
+    "executable_skip_reason",
+    "fleet_executable_queue",
+    "is_executable_candidate",
+})
+
 _TESTQL_EXPORTS = frozenset({
     "run_testql_validation",
     "build_testql_tickets",
@@ -982,6 +1047,24 @@ def __getattr__(name):
         from planfile.core import comparative_findings
 
         value = getattr(comparative_findings, name)
+        globals()[name] = value
+        return value
+    if name in _RECONCILE_EXPORTS:
+        import importlib
+
+        reconcile_mod = importlib.import_module("planfile.reconcile")
+        if name == "reconcile":
+            return reconcile_mod
+        value = getattr(reconcile_mod, name)
+        globals()[name] = value
+        return value
+    if name in _EXECUTABLE_QUEUE_EXPORTS:
+        import importlib
+
+        executable_queue_mod = importlib.import_module("planfile.executable_queue")
+        if name == "executable_queue":
+            return executable_queue_mod
+        value = getattr(executable_queue_mod, name)
         globals()[name] = value
         return value
     if name in _TESTQL_EXPORTS:

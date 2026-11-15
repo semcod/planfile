@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from planfile.core.models import TicketSource
 
-TICKET_PROPOSAL_SCHEMA_ID = "planfile.ticket-proposal.v1"
+TICKET_PROPOSAL_SCHEMA_ID: Final = "planfile.ticket-proposal.v1"
+EXECUTABLE_QUEUE_SCHEMA: Final = "planfile.executable-queue/v1"
+RECONCILE_REPORT_SCHEMA: Final = "planfile.in-progress-reconciliation/v1"
+RECONCILE_MERGE_EVIDENCE_SCHEMA: Final = "planfile.reconcile-merge-evidence/v1"
 
 
-def _canonical_json(payload: dict) -> str:
+def _canonical_json(payload: dict[str, Any]) -> str:
     return json.dumps(
         payload,
         ensure_ascii=False,
@@ -109,7 +112,7 @@ class TicketProposalV1(BaseModel):
     def proposal_hash(self) -> str:
         return hashlib.sha256(self.canonical_json().encode("utf-8")).hexdigest()
 
-    def to_ticket_kwargs(self) -> dict:
+    def to_ticket_kwargs(self) -> dict[str, Any]:
         """Return safe Ticket constructor fields; Koru still chooses queue/sprint/executor."""
 
         context: dict[str, Any] = {
@@ -136,8 +139,84 @@ class TicketProposalV1(BaseModel):
         }
 
 
+class ExecutableCandidateV1(BaseModel):
+    """Canonical executable candidate entry shared by Planfile, Heyasa, and monag."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(min_length=1)
+    name: str
+    priority: str = "normal"
+    sprint: str = "current"
+    queue: str = "default"
+    repository: str | None = None
+    repo_path: str
+    labels: list[str] = Field(default_factory=list)
+    files: list[str] = Field(default_factory=list)
+    blocked_by: list[str] = Field(default_factory=list)
+    created_at: str | None = None
+
+
+class ExecutableSkippedItemV1(BaseModel):
+    """Ticket excluded from the executable pending queue with machine-readable reason."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(min_length=1)
+    status: str
+    sprint: str = "current"
+    reason: str = Field(min_length=1)
+    category: str = Field(min_length=1)
+    repository: str | None = None
+
+
+class ExecutableQueueCountsV1(BaseModel):
+    """Aggregate backlog status and executable queue counts."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    total_scanned: int = 0
+    open: int = 0
+    in_progress: int = 0
+    blocked: int = 0
+    done: int = 0
+    canceled: int = 0
+    failed: int = 0
+    review: int = 0
+    executable: int = 0
+    excluded: int = 0
+
+
+class ExecutableQueueSummaryV1(BaseModel):
+    """Canonical ``planfile.executable-queue/v1`` summary contract."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True)
+
+    schema_id: Literal["planfile.executable-queue/v1"] = Field(
+        default=EXECUTABLE_QUEUE_SCHEMA,
+        alias="schema",
+    )
+    generated_at: str
+    project_dir: str
+    repository: str | None = None
+    sprint: str = "active"
+    queue: str | None = None
+    counts: ExecutableQueueCountsV1
+    excluded_by_reason: dict[str, int] = Field(default_factory=dict)
+    candidate_ids: list[str] = Field(default_factory=list)
+    candidates: list[ExecutableCandidateV1] = Field(default_factory=list)
+    skipped: list[ExecutableSkippedItemV1] = Field(default_factory=list)
+
+
 __all__ = [
+    "EXECUTABLE_QUEUE_SCHEMA",
+    "RECONCILE_MERGE_EVIDENCE_SCHEMA",
+    "RECONCILE_REPORT_SCHEMA",
     "TICKET_PROPOSAL_SCHEMA_ID",
+    "ExecutableCandidateV1",
+    "ExecutableQueueCountsV1",
+    "ExecutableQueueSummaryV1",
+    "ExecutableSkippedItemV1",
     "TicketProposalSourceV1",
     "TicketProposalV1",
 ]

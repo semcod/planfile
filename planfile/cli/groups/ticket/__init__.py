@@ -35,6 +35,10 @@ from planfile.cli.groups.ticket.commands import (
     ticket_validate,
     ticket_waves,
 )
+from planfile.cli.groups.ticket.reconcile import (
+    ticket_executable_queue,
+    ticket_reconcile,
+)
 
 
 def register_ticket_commands(app: typer.Typer) -> None:
@@ -81,5 +85,7 @@ def register_ticket_commands(app: typer.Typer) -> None:
     ticket_app.command("decompose")(ticket_decompose)
     ticket_app.command("coverage")(ticket_coverage)
     ticket_app.command("prune-deps")(ticket_prune_deps)
+    ticket_app.command("reconcile")(ticket_reconcile)
+    ticket_app.command("executable-queue")(ticket_executable_queue)
 
     app.add_typer(ticket_app, name="ticket")
