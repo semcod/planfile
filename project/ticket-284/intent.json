@@ -1,0 +1,32 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-284",
+  "summary": "Reconcile in_progress status with live leases/worktrees and export canonical executable queue",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-284/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/__init__.py",
+    "planfile/cli/extra_commands.py",
+    "planfile/cli/groups/ticket/__init__.py",
+    "planfile/cli/groups/ticket/reconcile.py",
+    "planfile/contracts.py",
+    "planfile/executable_queue.py",
+    "planfile/reconcile.py",
+    "tests/test_executable_queue.py",
+    "tests/test_reconcile_in_progress.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
