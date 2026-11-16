@@ -17,6 +17,7 @@ SQLITE_INDEX_SCHEMA = "planfile.sqlite-ticket-index/v1"
 _SCHEMA_VERSION = 1
 _REBUILD_BATCH_SIZE = 128
 _SOURCE_INDEXED_AT_NS_KEY = "source_indexed_at_ns"
+_WAL_JOURNAL_SIZE_LIMIT_BYTES = 64 * 1024 * 1024
 
 
 def _is_sqlite_contention(error: sqlite3.DatabaseError) -> bool:
@@ -379,6 +380,14 @@ class SQLiteTicketIndex:
                 (_SOURCE_INDEXED_AT_NS_KEY, str(time.time_ns())),
             )
             connection.commit()
+            try:
+                connection.execute("PRAGMA busy_timeout=0")
+                connection.execute(
+                    f"PRAGMA journal_size_limit={_WAL_JOURNAL_SIZE_LIMIT_BYTES}"
+                )
+                connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            except sqlite3.DatabaseError:
+                pass
         return count
 
     def get_ticket(self, ticket_id: str) -> dict[str, Any] | None:

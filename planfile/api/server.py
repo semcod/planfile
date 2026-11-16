@@ -2095,10 +2095,26 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
 def _repair_ticket_index() -> dict:
     """Repair the newest state without requiring a quiet writer interval."""
     store = get_planfile().store
-    # ensure_ticket_index coalesces rebuilders with its own cross-process lock
-    # and retries source-signature races. A disposable projection must never
-    # hold the YAML mutation lock while scanning the entire ticket history.
-    return store.ensure_ticket_index()
+    index = store._sqlite_ticket_index()
+    if not store.ticket_index_enabled():
+        return index.status()
+    if time.monotonic() < store._ticket_index_rebuild_deferred_until:
+        raise TicketIndexContentionError(
+            "ticket_index_rebuild_deferred_after_source_contention"
+        )
+    signature = store._ticket_index_signature()
+    if index.is_current(signature):
+        return index.status(signature) | {"rebuilt": False}
+    # Non-blocking lock probe coalesces multi-worker background loops without
+    # pinning an AnyIO worker thread for LOCK_TIMEOUT_SECONDS.
+    try:
+        with store.ticket_index_rebuild_lock(timeout_seconds=0.0):
+            signature = store._ticket_index_signature()
+            if index.is_current(signature):
+                return index.status(signature) | {"rebuilt": False}
+            return store._rebuild_ticket_index_unlocked(index, force=False)
+    except StoreLockTimeoutError:
+        return {"rebuilt": False, "coalesced": True}
 
 
 async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
@@ -2113,6 +2129,10 @@ async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
             if await asyncio.to_thread(store._sqlite_ticket_index().is_current, signature):
                 continue
             await asyncio.to_thread(_repair_ticket_index)
+        except (StoreLockTimeoutError, TicketIndexContentionError):
+            # Another worker or request already owns .rebuild.lock or deferred
+            # rebuilds after contention; retry quietly on the next tick.
+            continue
         except Exception as exc:  # pragma: no cover - defensive runtime telemetry
             __import__("logging").getLogger("planfile.api").warning(
                 "ticket index background repair failed: %s", exc
@@ -4404,7 +4424,7 @@ async def websocket_dsl(websocket: WebSocket, project_path: str = "."):
 # ── Health ─────────────────────────────────────────────────────────────────────
 
 @app.get("/health", tags=["system"])
-def health():
+async def health() -> dict[str, Any]:
     import planfile
     return {
         "status": "ok",
