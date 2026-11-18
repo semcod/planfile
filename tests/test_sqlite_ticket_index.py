@@ -1760,6 +1760,21 @@ def test_operational_poller_serves_last_complete_index_and_coalesces_without_mod
     assert poll_2.headers.get("X-Planfile-Index-State") == "stale"
     assert poll_2.content == poll_1.content
 
+    browser_stale = client.get(
+        "/tickets?limit=1000&view=operational",
+        headers={"user-agent": "Mozilla/5.0"},
+    )
+    assert browser_stale.status_code == 200
+    assert browser_stale.headers.get("X-Planfile-Index-State") == "stale"
+    assert browser_stale.content == poll_1.content
+
+    browser_fresh = client.get(
+        "/tickets?limit=1000&view=operational&require_fresh=true",
+        headers={"user-agent": "Mozilla/5.0"},
+    )
+    assert browser_fresh.status_code == 503
+    assert browser_fresh.json() == {"detail": "ticket_index_repair_pending"}
+
     fresh = client.get("/tickets?limit=1000&view=operational&require_fresh=true")
     assert fresh.status_code == 503
     assert fresh.json() == {"detail": "ticket_index_repair_pending"}
@@ -1783,7 +1798,7 @@ def test_operational_poller_serves_last_complete_index_and_coalesces_without_mod
         delattr(pf.store, "_ticket_model_cache")
     large = client.post(
         "/tickets",
-        json={"name": "Large operational", "description": "x" * (1024 * 1024 + 1024)},
+        json={"name": "Large operational", "description": "ą" * (512 * 1024 + 1024)},
     )
     assert large.status_code == 201
     server._TICKET_LIST_RESPONSE_CACHE.clear()

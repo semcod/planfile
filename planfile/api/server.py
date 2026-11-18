@@ -722,6 +722,7 @@ _TICKET_LIST_RESPONSE_BUILD_LOCKS = {
 }
 _TICKET_ARCHIVE_OPERATIONAL_BUILD_SLOTS = BoundedSemaphore(4)
 _TICKET_LIST_LATEST: dict[tuple, tuple[float, bytes, int, int]] = {}
+_TICKET_LIST_LATEST_STALE_KEYS: set[tuple] = set()
 _TICKET_LIST_RESPONSE_CACHE_DEFAULT_BYTES = 256 * 1024 * 1024
 _TICKET_LIST_RESPONSE_CACHE_MIN_BYTES = 1024 * 1024
 _TICKET_LIST_RESPONSE_CACHE_MAX_BYTES = 512 * 1024 * 1024
@@ -903,13 +904,16 @@ def _evict_ticket_list_cache_locked(*, byte_limit: int, incoming_bytes: int) -> 
     ):
         oldest_key = next(iter(_TICKET_LIST_RESPONSE_CACHE))
         _TICKET_LIST_RESPONSE_CACHE.pop(oldest_key, None)
-        _TICKET_LIST_LATEST.pop(oldest_key[:-1], None)
+        evicted_query = oldest_key[:-1]
+        _TICKET_LIST_LATEST.pop(evicted_query, None)
+        _TICKET_LIST_LATEST_STALE_KEYS.discard(evicted_query)
     while _TICKET_LIST_LATEST and (
         len(_TICKET_LIST_LATEST) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT
         or _ticket_list_response_cached_bytes() + incoming_bytes > byte_limit
     ):
         oldest_query = next(iter(_TICKET_LIST_LATEST))
         _TICKET_LIST_LATEST.pop(oldest_query, None)
+        _TICKET_LIST_LATEST_STALE_KEYS.discard(oldest_query)
 
 
 def _cache_ticket_list_response(
@@ -926,6 +930,7 @@ def _cache_ticket_list_response(
             if existing_key[:-1] == query_key:
                 _TICKET_LIST_RESPONSE_CACHE.pop(existing_key, None)
         _TICKET_LIST_LATEST.pop(query_key, None)
+        _TICKET_LIST_LATEST_STALE_KEYS.discard(query_key)
 
         byte_limit = _ticket_list_response_cache_byte_limit()
         if len(body) > byte_limit:
@@ -945,11 +950,13 @@ def _cache_stale_latest_response(
     """Record a bounded stale snapshot in _TICKET_LIST_LATEST for repeated repair polls."""
     with _TICKET_LIST_RESPONSE_CACHE_LOCK:
         _TICKET_LIST_LATEST.pop(query_key, None)
+        _TICKET_LIST_LATEST_STALE_KEYS.discard(query_key)
         byte_limit = _ticket_list_response_cache_byte_limit()
         if len(body) > byte_limit:
             return
         _evict_ticket_list_cache_locked(byte_limit=byte_limit, incoming_bytes=len(body))
         _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
+        _TICKET_LIST_LATEST_STALE_KEYS.add(query_key)
 
 
 def _oversized_ticket_response(
@@ -1163,17 +1170,26 @@ def _ticket_list_response(
     ):
         with _TICKET_LIST_RESPONSE_CACHE_LOCK:
             latest = _TICKET_LIST_LATEST.get(query_key)
-        if allow_stale and latest is not None and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS:
+            latest_is_stale = query_key in _TICKET_LIST_LATEST_STALE_KEYS
+        if (
+            allow_stale
+            and not require_fresh
+            and latest is not None
+            and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS
+        ):
             _, body, total, count = latest
+            headers = {
+                **NO_STORE_HEADERS,
+                "X-Planfile-View": view,
+                "X-Total-Count": str(total),
+                "X-Result-Count": str(count),
+            }
+            if latest_is_stale:
+                headers["X-Planfile-Index-State"] = "stale"
             return Response(
                 content=body,
                 media_type="application/json",
-                headers={
-                    **NO_STORE_HEADERS,
-                    "X-Planfile-View": view,
-                    "X-Total-Count": str(total),
-                    "X-Result-Count": str(count),
-                },
+                headers=headers,
             )
         signature = _ticket_snapshot_signature(pf, sprint)
         key = query_key + (signature,)
