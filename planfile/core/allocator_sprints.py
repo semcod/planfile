@@ -114,7 +114,8 @@ def update_sprint_highwater_cache(source: Path, tickets: list[Any] | Any = ()) -
         elif hasattr(item, "__dict__"):
             recs.append(item.__dict__)
 
-    marker = re.compile(r"([A-Za-z0-9_-]+)-(\d+)")
+    # Try each identifier run once, including runs without a numeric suffix.
+    marker = re.compile(r"(?<![A-Za-z0-9_-])([A-Za-z0-9_-]+)-(\d+)")
     all_prefixes: set[str] = set()
     for r in recs:
         for val in (r.get("id"), *(r.get("labels") or []), r.get("description")):

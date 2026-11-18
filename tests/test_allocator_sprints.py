@@ -1,4 +1,6 @@
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -60,6 +62,25 @@ def test_prefix_and_published_markers_are_reserved(tmp_path):
     assert evidence.sprint_highwater(path, "PLF") == 89
     assert evidence.sprint_highwater(path, "ALT") == 100
     assert evidence.sprint_highwater(path, "PLF") == 89
+
+
+def test_cache_update_handles_large_description_and_saves_markers(tmp_path):
+    path = source_file(tmp_path)
+    script = """
+from pathlib import Path
+import sys
+
+from planfile.core.allocator_sprints import update_sprint_highwater_cache
+
+update_sprint_highwater_cache(
+    Path(sys.argv[1]),
+    {"id": "PLF-42", "description": "x" * (1024 * 1024) + " published as ALT-88"},
+)
+"""
+    subprocess.run([sys.executable, "-B", "-c", script, str(path)], check=True, timeout=15)
+
+    assert evidence.sprint_highwater(path, "PLF") == 42
+    assert evidence.sprint_highwater(path, "ALT") == 88
 
 
 def test_task_fallback_identity(tmp_path):
