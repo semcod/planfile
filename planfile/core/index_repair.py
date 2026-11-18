@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import re
+import sqlite3
 import time
+from contextlib import closing
 from dataclasses import dataclass
 
 from yaml import YAMLError
@@ -61,7 +65,83 @@ def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot 
         return None
 
 
-def reconcile_index(store, index, built_signature: tuple, *,
+def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
+    """Recover stamps for known sources from an existing, committed projection.
+
+    Only the current sprint layout and locator can be interpreted without an
+    older locator snapshot. Recover deferred writes from their contention token,
+    or a single changed sprint when a full rebuild would also scan other tickets.
+    """
+    from planfile.core.sqlite_index import _SCHEMA_VERSION, RoutingSnapshotUnavailableError
+
+    current_token = target[3]
+    if current_token is not None and (not isinstance(current_token, str)
+                                      or not re.fullmatch("[0-9a-f]{32}", current_token)):
+        return None
+    try:
+        with closing(index._connect_routing()) as connection:
+            row = connection.execute(
+                "SELECT value, length(CAST(value AS BLOB)) FROM meta WHERE key='source_signature' "
+                "AND typeof(value)='text' AND length(CAST(value AS BLOB)) BETWEEN 1 AND ? "
+                "AND EXISTS (SELECT 1 FROM meta WHERE key='schema_version' AND value=?)",
+                (MAX_REPAIR_BYTES, str(_SCHEMA_VERSION)),
+            ).fetchone()
+        if row is None:
+            return None
+        saved = json.loads(row[0])
+        if not isinstance(saved, list) or len(saved) != len(target):
+            return None
+        sprints, journals, locator, token, revision = saved
+        if revision != target[4] or locator != (list(target[2]) if target[2] else None):
+            return None
+        if current_token is None and token is not None:
+            return None
+        if token is not None and (not isinstance(token, str) or not re.fullmatch("[0-9a-f]{32}", token)):
+            return None
+        if not isinstance(sprints, list) or not isinstance(journals, list):
+            return None
+
+        def valid_stamps(row, width):
+            return (isinstance(row, list) and len(row) == width
+                    and all(type(n) is int and n >= -1 for n in row[-2:]))
+
+        if len(sprints) != len(target[0]) or any(
+            not valid_stamps(old, 4) or old[:2] != list(current[:2])
+            for old, current in zip(sprints, target[0], strict=True)
+        ):
+            return None
+        current_names = {row[0] for row in target[1]}
+        if any(not valid_stamps(old, 3) or not isinstance(old[0], str)
+               or old[0] not in current_names for old in journals):
+            return None
+        names = [row[0] for row in journals]
+        if names != sorted(set(names)):
+            return None
+        baseline = (tuple(map(tuple, sprints)), tuple(map(tuple, journals)), target[2], token, revision)
+        if baseline[:2] == target[:2]:
+            return None
+        # Verify the routing generation and its required objects on a
+        # read-only connection. Never initialize metadata to qualify a delta.
+        with index._routing_connection(baseline) as connection:
+            if token == current_token:
+                changed = {old[0] for old, new in zip(baseline[0], target[0], strict=True) if old != new}
+                if len(changed) != 1 or baseline[1] != target[1]:
+                    return None
+                sprint = changed.pop()
+                # Two indexed range probes avoid counting or loading archive rows.
+                # With only this sprint populated the existing rebuild is sufficient.
+                other_tickets = connection.execute(
+                    "SELECT EXISTS(SELECT 1 FROM tickets WHERE sprint < ?) "
+                    "OR EXISTS(SELECT 1 FROM tickets WHERE sprint > ?)", (sprint, sprint),
+                ).fetchone()[0]
+                if not other_tickets:
+                    return None
+            return baseline, row[1]
+    except (ValueError, RecursionError, sqlite3.DatabaseError, RoutingSnapshotUnavailableError):
+        return None
+
+
+def reconcile_index(store, index, built_signature: tuple | None = None, *,
                     locator_snapshot: _LocatorSnapshot | None = None) -> dict | None:
     """Make a scanned projection current using only a small changed-source set.
 
@@ -75,6 +155,12 @@ def reconcile_index(store, index, built_signature: tuple, *,
     with store.mutation_lock():
         started = time.monotonic()
         target = store._ticket_index_signature()
+        stored_bytes = 0
+        if built_signature is None:
+            prior = _stored_baseline(index, target)
+            if prior is None:
+                return None
+            built_signature, stored_bytes = prior
         if target == built_signature:
             return index.status(target) | {"rebuilt": True}
         locator_changed = target[2] != built_signature[2]
@@ -83,7 +169,7 @@ def reconcile_index(store, index, built_signature: tuple, *,
         ):
             return None
 
-        consumed = locator_snapshot.byte_count if locator_snapshot is not None else 0
+        consumed = stored_bytes + (locator_snapshot.byte_count if locator_snapshot is not None else 0)
         charged = set()
         snapshots = {}
 
@@ -128,6 +214,8 @@ def reconcile_index(store, index, built_signature: tuple, *,
             after_evidence = {row[0]: row[1:] for row in target[1]}
             ids = {name.removesuffix(".jsonl")
                    for name in changed_keys(before_evidence, after_evidence)}
+            if any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", ticket_id) for ticket_id in ids):
+                return None
             charge(store._history_locations_path)
             if locator_changed:
                 latest = capture_locator_snapshot(store, target)

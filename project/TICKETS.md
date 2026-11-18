@@ -176,4 +176,5 @@ This file indexes governance tickets without taking ownership of
 | **ticket-275** | [`README.md`](./ticket-275/README.md) | - | - | - | - | - |
 | **ticket-277** | [`README.md`](./ticket-277/README.md) | - | - | - | - | - |
 | **ticket-279** | [`README.md`](./ticket-279/README.md) | Prevent stale bidirectional sync and owner overwrites | BUG | P1 | health | application |
+| **ticket-287** | [`README.md`](./ticket-287/README.md) | Reconcile a bounded stale index before an archive rebuild | BUG | P1 | requested | application |
 <!-- AUTO:TICKET_INDEX:END -->
