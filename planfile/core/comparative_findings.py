@@ -35,7 +35,7 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
 
 from planfile.core.decompose import _check_dag_edges, _dedup, execution_waves
 from planfile.core.models import (
@@ -107,18 +107,22 @@ class ComparativeDependencyError(ComparativeFindingError):
 class ExecutorOwnershipSpec(BaseModel):
     """Executor ownership and post-admission governance allocation contract."""
 
+    model_config = ConfigDict(extra="forbid")
+
     kind: str = "llm"
     mode: str = "automatic"
     handler: str = "subactor/coding-agent"
     workstream: str = "application"
     queue: str = "default"
-    allocate_governance_ticket_after_admission: bool = True
-    preallocated_governance_ticket: str | None = None
+    allocate_governance_ticket_after_admission: StrictBool = True
+    preallocated_governance_ticket: StrictStr | None = None
 
     @field_validator("kind", "mode", "handler", "workstream", "queue", mode="before")
     @classmethod
     def _require_non_empty_text(cls, value: Any) -> str:
-        text = str(value or "").strip()
+        if not isinstance(value, str):
+            raise ValueError("executor_ownership_string_required")
+        text = value.strip()
         if not text:
             raise ValueError("executor_ownership_field_empty")
         return text
@@ -127,39 +131,41 @@ class ExecutorOwnershipSpec(BaseModel):
 class ComparativeFindingProposal(BaseModel):
     """Normalized comparative improvement proposal admitted into Planfile."""
 
-    schema_version: str = Field(default=COMPARATIVE_FINDING_SCHEMA, alias="schema")
+    schema_version: StrictStr = Field(default=COMPARATIVE_FINDING_SCHEMA, alias="schema")
     finding_id: str
     target_repository: str
     capability: str
     intent: str
-    policy_version: str = "v1"
-    verdict: str = "actionable_gap"
+    policy_version: StrictStr = "v1"
+    verdict: StrictStr = "actionable_gap"
     classification: Literal["SERVICE", "FEATURE", "BUGFIX"] = "FEATURE"
     classification_reason: str
     target_scope: list[str] = Field(default_factory=list)
     prerequisites: list[str] = Field(default_factory=list)
-    parent_finding_id: str | None = None
-    parent_ticket_id: str | None = None
+    parent_finding_id: StrictStr | None = None
+    parent_ticket_id: StrictStr | None = None
     acceptance_test: list[str] = Field(default_factory=list)
     evidence_hash: str
     target_head_sha: str
-    evidence_fresh: bool = True
+    evidence_fresh: StrictBool = True
     rollback: str
     executor_ownership: ExecutorOwnershipSpec = Field(default_factory=ExecutorOwnershipSpec)
-    priority: str = "normal"
-    sprint: str = "current"
+    priority: StrictStr = "normal"
+    sprint: StrictStr = "current"
     labels: list[str] = Field(default_factory=list)
     github_issue: dict[str, Any] | None = None
-    source_tool: str = "subactor-search"
+    source_tool: StrictStr = "subactor-search"
     source_context: dict[str, Any] = Field(default_factory=dict)
-    expected_updated_at: str | None = None
+    expected_updated_at: StrictStr | None = None
 
-    model_config = {"populate_by_name": True}
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     @field_validator("schema_version", mode="before")
     @classmethod
     def _validate_schema(cls, value: Any) -> str:
-        text = str(value or COMPARATIVE_FINDING_SCHEMA).strip()
+        if not isinstance(value, str):
+            raise ValueError("unsupported_finding_schema_type")
+        text = value.strip()
         if text not in ACCEPTED_FINDING_SCHEMAS:
             raise ValueError(f"unsupported_finding_schema:{text}")
         return text
@@ -172,11 +178,17 @@ class ComparativeFindingProposal(BaseModel):
         "classification_reason",
         "evidence_hash",
         "rollback",
+        "priority",
+        "sprint",
+        "source_tool",
+        "verdict",
         mode="before",
     )
     @classmethod
     def _require_non_empty(cls, value: Any) -> str:
-        text = str(value or "").strip()
+        if not isinstance(value, str):
+            raise ValueError("comparative_finding_string_required")
+        text = value.strip()
         if not text:
             raise ValueError("comparative_finding_required_field_empty")
         return text
@@ -184,7 +196,9 @@ class ComparativeFindingProposal(BaseModel):
     @field_validator("target_repository", mode="before")
     @classmethod
     def _validate_repo(cls, value: Any) -> str:
-        text = str(value or "").strip()
+        if not isinstance(value, str):
+            raise ValueError("invalid_target_repository_type")
+        text = value.strip()
         if not REPO_SLUG_RE.fullmatch(text):
             raise ValueError(f"invalid_target_repository:{text}")
         return text
@@ -192,7 +206,9 @@ class ComparativeFindingProposal(BaseModel):
     @field_validator("target_head_sha", mode="before")
     @classmethod
     def _validate_head_sha(cls, value: Any) -> str:
-        text = str(value or "").strip()
+        if not isinstance(value, str):
+            raise ValueError("invalid_target_head_sha_type")
+        text = value.strip()
         if not GIT_SHA_RE.fullmatch(text):
             raise ValueError(f"invalid_target_head_sha:{text}")
         return text.lower()
@@ -200,38 +216,35 @@ class ComparativeFindingProposal(BaseModel):
     @field_validator("classification", mode="before")
     @classmethod
     def _validate_classification(cls, value: Any) -> str:
-        text = str(value or "").strip().upper()
+        if not isinstance(value, str):
+            raise ValueError("invalid_classification_type")
+        text = value.strip().upper()
         if text not in CLASSIFICATION_KINDS:
             raise ValueError(f"invalid_classification:{value}")
         return text
 
-    @field_validator("target_scope", "acceptance_test", mode="before")
+    @field_validator("parent_finding_id", "parent_ticket_id", "expected_updated_at")
+    @classmethod
+    def _validate_optional_non_empty(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("comparative_finding_optional_field_empty")
+        return value
+
+    @field_validator("target_scope", "acceptance_test", "prerequisites", "labels", mode="before")
     @classmethod
     def _normalize_string_list(cls, value: Any) -> list[str]:
-        if isinstance(value, str):
-            items = [value.strip()] if value.strip() else []
-        elif isinstance(value, (list, tuple, set)):
-            items = [str(item).strip() for item in value if str(item or "").strip()]
-        else:
-            items = []
+        if not isinstance(value, (list, tuple, set)):
+            raise ValueError("comparative_finding_string_list_required")
+        items: list[str] = []
+        for item in value:
+            if not isinstance(item, str) or not item.strip():
+                raise ValueError("comparative_finding_string_list_item_invalid")
+            items.append(item.strip())
         return _dedup(items)
-
-    @field_validator("prerequisites", "labels", mode="before")
-    @classmethod
-    def _normalize_optional_list(cls, value: Any) -> list[str]:
-        if value is None:
-            return []
-        if isinstance(value, str):
-            return [value.strip()] if value.strip() else []
-        if isinstance(value, (list, tuple, set)):
-            return _dedup([str(item).strip() for item in value if str(item or "").strip()])
-        return []
 
     @field_validator("executor_ownership", mode="before")
     @classmethod
     def _normalize_executor_ownership(cls, value: Any) -> Any:
-        if value is None:
-            return ExecutorOwnershipSpec()
         if isinstance(value, ExecutorOwnershipSpec):
             return value
         if isinstance(value, str):

@@ -1,0 +1,132 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-292",
+  "summary": "Unify version identity and close autonomy payload validation (#384)",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-292/**",
+    "planfile/version_identity.py",
+    "planfile/__init__.py",
+    "planfile/release_availability.py",
+    "planfile/api/server.py",
+    "planfile/core/comparative_findings.py",
+    "planfile/delivery_plan_contracts.py",
+    "planfile/delivery_plan.py",
+    "tests/test_release_availability.py",
+    "tests/test_autonomy_version_and_payloads.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "813734021549bf39dc9ce8126061ab0215aed463",
+    "architecture": {
+      "components": [
+        {
+          "name": "version-and-release-identity",
+          "paths": [
+            "planfile/version_identity.py",
+            "planfile/__init__.py",
+            "planfile/release_availability.py",
+            "tests/test_release_availability.py"
+          ]
+        },
+        {
+          "name": "strict-autonomy-api-and-findings",
+          "paths": [
+            "planfile/api/server.py",
+            "planfile/core/comparative_findings.py"
+          ]
+        },
+        {
+          "name": "delivery-plan-import-separation",
+          "paths": [
+            "planfile/delivery_plan_contracts.py",
+            "planfile/delivery_plan.py",
+            "tests/test_autonomy_version_and_payloads.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Resolve runtime version from declared constant in checkout mode and matched distribution metadata in installed wheels without breaking lazy CLI/testql imports; inspect runtime version constants via AST and surface explicit #303/#329 distribution blockers in release_availability; enforce extra=forbid, strict field validation, schema versions, and machine-readable field_path 422 errors on autonomy mutation/admission payloads while preserving legacy PATCH partial semantics and legacy Strategy YAML reader; and explicitly separate autodo.planfile-import/v1 from subactor.compiled-work-plan/v1.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Revert the commit on main; persistent ticket YAML/SQLite storage formats and legacy Strategy YAML loader remain unchanged.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 4,
+      "maxImplementationFiles": 9,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "L",
+    "estimatedMinutes": 90,
+    "nonGoals": [
+      "Modifying planfile/cli/commands.py reserved by ticket-286",
+      "Modifying pyproject.toml or planfile/release-metadata.json already at 0.1.127",
+      "Faking or guessing procache PyPI releases tracked in #303 and #329"
+    ],
+    "outcome": "Package version, runtime /health, CLI --version, and OpenAPI report unified 0.1.127 identity with build SHA and capability metadata, and autonomy mutation, comparative admission, and delivery-plan boundaries fail closed on invalid fields or import envelopes.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "pytest -q tests/test_autonomy_version_and_payloads.py -k version_identity"
+        ],
+        "criterion": "AC-01",
+        "evidence": "Verified consistent 0.1.127 version and source identity across checkout and distribution wheel layouts, CLI --version, /health, and /openapi.json, plus lazy TestQL import preservation."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_release_availability.py"
+        ],
+        "criterion": "AC-02",
+        "evidence": "Verified AST detection of stale runtime __version__ constants in __init__.py and version_identity.py while keeping minimal synthetic fixtures passing (tests/test_release_availability.py + tests/test_ci_readiness.py passed)."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_autonomy_version_and_payloads.py -k payload"
+        ],
+        "criterion": "AC-03",
+        "evidence": "Verified 422 pre-write refusal with machine-readable field_path on extra fields, typos, nested section extras, wrong dependency/boolean types, and unsupported schema versions; partial PATCH semantics and 150 total regression tests passed."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_autonomy_version_and_payloads.py -k legacy_strategy"
+        ],
+        "criterion": "AC-04",
+        "evidence": "Verified load_strategy_yaml and SchemaValidator.validate_yaml_file retain explicit legacy Strategy support while native materialize/preflight/admit refuse legacy payloads with zero writes."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_autonomy_version_and_payloads.py -k import_envelope"
+        ],
+        "criterion": "AC-05",
+        "evidence": "Verified preflight_delivery_plan, POST /delivery-plans/preflight, and materialize_delivery_plan isolate autodo.planfile-import/v1 from subactor.compiled-work-plan/v1 and enforce extra=forbid on both."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_release_availability.py -k qualify"
+        ],
+        "criterion": "AC-06",
+        "evidence": "Verified qualify_distribution_install reports qualified_full_offline_install=False and [#303, #329] blockers for subactor-procache VCS dependency and never equates minimal SDK import with offline install qualification; ruff check passed."
+      }
+    ]
+  }
+}

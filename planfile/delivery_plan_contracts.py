@@ -13,9 +13,10 @@ import re
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 COMPILED_WORK_PLAN_SCHEMA = "subactor.compiled-work-plan/v1"
+AUTODO_PLANFILE_IMPORT_SCHEMA = "autodo.planfile-import/v1"
 TICKET_CANDIDATE_SCHEMA = "subactor.ticket-candidate/v1"
 TERMINAL_RECEIPT_SCHEMA = "subactor.work-plan-terminal-receipt/v1"
 DELIVERY_CHECKPOINT_SCHEMA = "planfile.delivery-checkpoint/v1"
@@ -413,7 +414,140 @@ class DeliveryPlanSplitV1(_ClosedContract):
         return tuple(sorted(result))
 
 
+class AutodoPlanfileImportMetadataV1(_ClosedContract):
+    """Explicit external import envelope kept separate from native compiled work plans."""
+
+    schema_id: Literal["autodo.planfile-import/v1"] = Field(
+        default="autodo.planfile-import/v1",
+        alias="schema",
+    )
+    campaign_id: str = Field(min_length=1)
+    importer: str = Field(min_length=1)
+    imported_at: datetime
+    source_digest: str = Field(pattern=r"^sha256:[a-f0-9]{64}$")
+    proposal_keys: tuple[str, ...] = ()
+    compiled_plan: CompiledWorkPlanV1 | None = None
+
+    @field_validator("imported_at", mode="before")
+    @classmethod
+    def _imported_timestamp(cls, value: object) -> datetime:
+        return _timestamp(value)
+
+    @field_validator("proposal_keys", mode="before")
+    @classmethod
+    def _normalize_proposal_keys(cls, value: object) -> tuple[str, ...]:
+        if not isinstance(value, (list, tuple)) or any(
+            not isinstance(item, str) or not item.strip() for item in value
+        ):
+            raise ValueError("delivery_plan_import_proposal_keys_invalid")
+        result = tuple(value)
+        if len(set(result)) != len(result):
+            raise ValueError("delivery_plan_import_proposal_keys_invalid")
+        return result
+
+
+def _validation_errors_with_paths(exc: ValidationError) -> list[dict[str, object]]:
+    formatted: list[dict[str, object]] = []
+    for err in exc.errors():
+        loc = err.get("loc", ())
+        formatted.append(
+            {
+                "field_path": ".".join(str(part) for part in loc),
+                "type": str(err.get("type") or "validation_error"),
+                "message": str(err.get("msg") or "Validation failed"),
+            }
+        )
+    return formatted
+
+
+def preflight_delivery_plan_payload(payload: object) -> dict[str, object]:
+    """Classify and validate a delivery-plan or external import envelope without mutating storage."""
+    if not isinstance(payload, dict):
+        return {
+            "ok": False,
+            "kind": "invalid_payload",
+            "materialize_allowed": False,
+            "code": "delivery_plan_payload_not_mapping",
+            "errors": [
+                {
+                    "field_path": "",
+                    "type": "dict_type",
+                    "message": "Expected mapping payload",
+                }
+            ],
+        }
+    schema = payload.get("schema")
+    if schema == AUTODO_PLANFILE_IMPORT_SCHEMA:
+        try:
+            AutodoPlanfileImportMetadataV1.model_validate(payload)
+        except ValidationError as exc:
+            return {
+                "ok": False,
+                "kind": "external_import_envelope",
+                "schema": AUTODO_PLANFILE_IMPORT_SCHEMA,
+                "materialize_allowed": False,
+                "code": "delivery_plan_import_envelope_invalid",
+                "errors": _validation_errors_with_paths(exc),
+            }
+        return {
+            "ok": False,
+            "kind": "external_import_envelope",
+            "schema": AUTODO_PLANFILE_IMPORT_SCHEMA,
+            "materialize_allowed": False,
+            "code": "delivery_plan_import_envelope_not_native",
+            "errors": [
+                {
+                    "field_path": "schema",
+                    "type": "import_envelope_not_native",
+                    "message": (
+                        "autodo.planfile-import/v1 is import metadata and cannot be "
+                        "materialized as native subactor.compiled-work-plan/v1"
+                    ),
+                }
+            ],
+        }
+    if schema == COMPILED_WORK_PLAN_SCHEMA:
+        try:
+            plan = CompiledWorkPlanV1.model_validate(payload)
+        except ValidationError as exc:
+            return {
+                "ok": False,
+                "kind": "native_compiled_work_plan",
+                "schema": COMPILED_WORK_PLAN_SCHEMA,
+                "materialize_allowed": False,
+                "code": "delivery_plan_validation_failed",
+                "errors": _validation_errors_with_paths(exc),
+            }
+        return {
+            "ok": True,
+            "kind": "native_compiled_work_plan",
+            "schema": COMPILED_WORK_PLAN_SCHEMA,
+            "materialize_allowed": True,
+            "plan_id": plan.plan_id,
+            "repository": plan.repository,
+            "candidate_count": plan.candidate_count,
+            "authority": plan.authority,
+            "execution": plan.execution,
+            "errors": [],
+        }
+    return {
+        "ok": False,
+        "kind": "unsupported_schema",
+        "schema": schema,
+        "materialize_allowed": False,
+        "code": "delivery_plan_schema_unsupported",
+        "errors": [
+            {
+                "field_path": "schema",
+                "type": "unsupported_schema",
+                "message": f"Unsupported delivery plan schema: {schema!r}",
+            }
+        ],
+    }
+
+
 __all__ = [
+    "AUTODO_PLANFILE_IMPORT_SCHEMA",
     "COMPILED_WORK_PLAN_SCHEMA",
     "DELIVERY_CHECKPOINT_SCHEMA",
     "DELIVERY_PLAN_RESUME_SCHEMA",
@@ -421,9 +555,11 @@ __all__ = [
     "DELIVERY_SPLIT_SCHEMA",
     "TERMINAL_RECEIPT_SCHEMA",
     "TICKET_CANDIDATE_SCHEMA",
+    "AutodoPlanfileImportMetadataV1",
     "CompiledWorkPlanV1",
     "DeliveryCheckpointV1",
     "DeliveryPlanSplitV1",
     "TicketCandidateV1",
     "WorkPlanTerminalReceiptV1",
+    "preflight_delivery_plan_payload",
 ]
