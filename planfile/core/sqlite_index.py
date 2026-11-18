@@ -18,6 +18,15 @@ _SCHEMA_VERSION = 1
 _REBUILD_BATCH_SIZE = 128
 _SOURCE_INDEXED_AT_NS_KEY = "source_indexed_at_ns"
 _WAL_JOURNAL_SIZE_LIMIT_BYTES = 64 * 1024 * 1024
+_OPERATIONAL_STRIPPED_FIELDS = (
+    "history",
+    "dsl",
+    "file",
+    "files",
+    "integration",
+    "llm_hints",
+    "sync",
+)
 
 
 def _is_sqlite_contention(error: sqlite3.DatabaseError) -> bool:
@@ -66,6 +75,7 @@ class SQLiteTicketIndex:
                 self._initialize(connection)
             self._ensure_status_index(connection)
             self._ensure_routes(connection)
+            self._ensure_operational(connection)
         except BaseException:
             connection.close()
             raise
@@ -262,6 +272,125 @@ class SQLiteTicketIndex:
             connection.close()
             raise
 
+    @staticmethod
+    def project_operational_record(record: dict[str, Any]) -> dict[str, Any]:
+        """Strip unbounded history, sync, and context fields for operational queue views."""
+        payload = dict(record)
+        for field in _OPERATIONAL_STRIPPED_FIELDS:
+            payload.pop(field, None)
+        source = payload.get("source")
+        if isinstance(source, dict):
+            source_copy = dict(source)
+            source_copy.pop("context", None)
+            if source_copy:
+                payload["source"] = source_copy
+            else:
+                payload.pop("source", None)
+        outputs = payload.get("outputs")
+        if isinstance(outputs, dict):
+            outputs_copy = dict(outputs)
+            outputs_copy.pop("notes", None)
+            outputs_copy.pop("artifacts", None)
+            if outputs_copy:
+                payload["outputs"] = outputs_copy
+            else:
+                payload.pop("outputs", None)
+        return payload
+
+    @classmethod
+    def _operational_row(cls, row: dict[str, Any] | sqlite3.Row) -> dict[str, Any]:
+        payload = cls.project_operational_record(json.loads(row["ticket_json"]))
+        return {
+            "id": row["id"],
+            "sprint": row["sprint"],
+            "status": row["status"],
+            "priority": row["priority"],
+            "source": row["source"],
+            "position": row["position"],
+            "operational_json": json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+        }
+
+    @classmethod
+    def _write_operational(cls, connection: sqlite3.Connection, rows) -> None:
+        connection.executemany(
+            """INSERT OR REPLACE INTO ticket_operational
+               (id, sprint, status, priority, source, position, operational_json)
+               VALUES (:id, :sprint, :status, :priority, :source, :position, :operational_json)""",
+            (cls._operational_row(row) for row in rows),
+        )
+
+    @classmethod
+    def _ensure_operational(cls, connection: sqlite3.Connection) -> None:
+        if connection.execute("SELECT 1 FROM meta WHERE key='operational_version' AND value='1'").fetchone():
+            return
+        connection.execute("BEGIN IMMEDIATE")
+        try:
+            if connection.execute("SELECT 1 FROM meta WHERE key='operational_version' AND value='1'").fetchone():
+                connection.commit()
+                return
+            connection.execute("""CREATE TABLE IF NOT EXISTS ticket_operational (
+                id TEXT PRIMARY KEY REFERENCES tickets(id) ON DELETE CASCADE,
+                sprint TEXT NOT NULL,
+                status TEXT NOT NULL,
+                priority TEXT NOT NULL,
+                source TEXT,
+                position INTEGER NOT NULL,
+                operational_json TEXT NOT NULL
+            )""")
+            for name, columns in (
+                ("sprint_position", "sprint, position"),
+                ("sprint_status_priority", "sprint, status, priority, position"),
+                ("status_position", "status, position"),
+                ("position", "position"),
+                ("source", "source, position"),
+            ):
+                connection.execute(f"CREATE INDEX IF NOT EXISTS operational_{name} ON ticket_operational({columns})")
+            cursor = connection.execute(
+                "SELECT id, sprint, status, priority, source, position, ticket_json FROM tickets"
+            )
+            while batch := cursor.fetchmany(_REBUILD_BATCH_SIZE):
+                cls._write_operational(connection, batch)
+            connection.execute("INSERT OR REPLACE INTO meta VALUES ('operational_version', '1')")
+            connection.commit()
+        except BaseException:
+            connection.rollback()
+            connection.close()
+            raise
+
+    @contextmanager
+    def _operational_read_connection(self) -> Iterator[sqlite3.Connection]:
+        """Open a consistent read-only WAL snapshot of ticket_operational when ready."""
+        if self.path.exists():
+            connection: sqlite3.Connection | None = None
+            use_ro = False
+            try:
+                connection = self._connect_routing()
+                connection.row_factory = sqlite3.Row
+                connection.execute("BEGIN")
+                has_meta = connection.execute(
+                    "SELECT 1 FROM meta WHERE key='operational_version' AND value='1'"
+                ).fetchone()
+                has_table = connection.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='ticket_operational'"
+                ).fetchone()
+                use_ro = bool(has_meta and has_table)
+            except sqlite3.DatabaseError:
+                if connection is not None:
+                    connection.close()
+                connection = None
+                use_ro = False
+            if use_ro and connection is not None:
+                try:
+                    yield connection
+                finally:
+                    connection.close()
+                return
+            if connection is not None:
+                connection.close()
+        with self._connection() as connection:
+            connection.execute("BEGIN")
+            yield connection
+
     def lookup_issue(self, repository: str, issue: int, *, limit: int = 100,
                      after: tuple[int, str] = (-1, ""), summary: bool = False,
                      signature: tuple | None = None) -> list[dict[str, Any]]:
@@ -380,6 +509,7 @@ class SQLiteTicketIndex:
         with self._connection() as connection:
             connection.execute("BEGIN IMMEDIATE")
             connection.execute("DELETE FROM dependencies")
+            connection.execute("DELETE FROM ticket_operational")
             connection.execute("DELETE FROM tickets")
             while True:
                 batch = list(islice(rows, batch_size))
@@ -387,6 +517,7 @@ class SQLiteTicketIndex:
                     break
                 self._insert_rebuild_batch(connection, batch)
                 self._write_routes(connection, batch)
+                self._write_operational(connection, batch)
                 count += len(batch)
                 # Release record graphs before constructing the next batch.
                 batch.clear()
@@ -552,6 +683,7 @@ class SQLiteTicketIndex:
                     upsert_values,
                 )
                 self._write_routes(connection, upsert_values)
+                self._write_operational(connection, upsert_values)
                 connection.executemany(
                     "DELETE FROM dependencies WHERE ticket_id=?",
                     dep_delete_ids,
@@ -733,7 +865,7 @@ class SQLiteTicketIndex:
         offset: int,
         limit: int | None,
     ) -> tuple[bytes, int, int]:
-        """Project and render queue payloads inside SQLite's JSON runtime."""
+        """Serve pre-projected queue payloads without scanning ticket_json."""
         conditions = []
         parameters: list[Any] = []
         if sprint != "all":
@@ -746,7 +878,7 @@ class SQLiteTicketIndex:
             conditions.append(f"{key}=?")
             parameters.append(str(getattr(value, "value", value)))
         where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
-        page_sql = f"SELECT position, ticket_json FROM tickets{where} ORDER BY position"
+        page_sql = f"SELECT operational_json FROM ticket_operational{where} ORDER BY position"
         page_parameters = list(parameters)
         if limit is not None:
             page_sql += " LIMIT ? OFFSET ?"
@@ -754,46 +886,20 @@ class SQLiteTicketIndex:
         elif offset:
             page_sql += " LIMIT -1 OFFSET ?"
             page_parameters.append(offset)
-        with self._connection() as connection:
+        with self._operational_read_connection() as connection:
             total = int(
                 connection.execute(
-                    f"SELECT COUNT(*) AS count FROM tickets{where}",
+                    f"SELECT COUNT(*) AS count FROM ticket_operational{where}",
                     parameters,
                 ).fetchone()["count"]
             )
-            cursor = connection.execute(
-                """
-                WITH page AS (
-                    """ + page_sql + """
-                ), stripped AS (
-                    SELECT position, json_remove(
-                        ticket_json,
-                        '$.history', '$.dsl', '$.file', '$.files',
-                        '$.integration', '$.llm_hints', '$.sync',
-                        '$.source.context', '$.outputs.notes', '$.outputs.artifacts'
-                    ) AS payload
-                    FROM page
-                ), without_empty_source AS (
-                    SELECT position,
-                        CASE WHEN json_extract(payload, '$.source') = '{}'
-                            THEN json_remove(payload, '$.source') ELSE payload END AS payload
-                    FROM stripped
-                ), normalized AS (
-                    SELECT position,
-                        CASE WHEN json_extract(payload, '$.outputs') = '{}'
-                            THEN json_remove(payload, '$.outputs') ELSE payload END AS payload
-                    FROM without_empty_source
-                )
-                SELECT payload FROM normalized ORDER BY position
-                """,
-                page_parameters,
-            )
+            cursor = connection.execute(page_sql, page_parameters)
             body = bytearray(b"[")
             count = 0
             for row in cursor:
                 if count:
                     body.extend(b",")
-                body.extend(row["payload"].encode("utf-8"))
+                body.extend(row["operational_json"].encode("utf-8"))
                 count += 1
             body.extend(b"]")
         return bytes(body), total, count

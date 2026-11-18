@@ -1638,3 +1638,260 @@ def test_full_view_serves_the_last_complete_index_to_a_machine_caller(tmp_path, 
     assert fresh.status_code in (200, 503)
     if fresh.status_code == 503:
         assert fresh.json() == {"detail": "ticket_index_repair_pending"}
+
+
+def test_operational_projection_table_parity_and_legacy_upgrade(tmp_path):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    first = pf.create_ticket(name="Operational one", description="body one")
+    second = pf.create_ticket(
+        name="Operational two",
+        description="body two",
+        outputs={"notes": ["skip note"], "artifacts": ["skip.txt"], "result": {"ok": True}},
+    )
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+
+    body, total, count = index.render_operational_payloads(
+        sprint="all", filters={}, offset=0, limit=100
+    )
+    assert total == 2
+    assert count == 2
+    assert json.loads(body) == [
+        server._ticket_operational_payload(first),
+        server._ticket_operational_payload(second),
+    ]
+
+    # Incremental apply (update + insert + delete cascade) updates ticket_operational.
+    updated_first = pf.update_ticket(first.id, name="Operational one updated")
+    third = pf.create_ticket(name="Operational three")
+    body, total, count = index.render_operational_payloads(
+        sprint="all", filters={}, offset=0, limit=100
+    )
+    assert total == 3
+    assert count == 3
+    assert json.loads(body) == [
+        server._ticket_operational_payload(updated_first),
+        server._ticket_operational_payload(second),
+        server._ticket_operational_payload(third),
+    ]
+
+    index.apply(deletes=[second.id], signature=("manual-delete", 1))
+    body, total, count = index.render_operational_payloads(
+        sprint="all", filters={}, offset=0, limit=100
+    )
+    assert total == 2
+    assert [row["id"] for row in json.loads(body)] == [first.id, third.id]
+
+    # Legacy DB upgrade backfills ticket_operational automatically without losing rows.
+    with sqlite3.connect(index.path) as conn:
+        conn.execute("DROP TABLE ticket_operational")
+        conn.execute("DELETE FROM meta WHERE key='operational_version'")
+        conn.commit()
+    reopened = SQLiteTicketIndex(index.path)
+    upgraded_body, upgraded_total, upgraded_count = reopened.render_operational_payloads(
+        sprint="all", filters={}, offset=0, limit=100
+    )
+    assert upgraded_total == 2
+    assert upgraded_count == 2
+    assert json.loads(upgraded_body) == json.loads(body)
+
+    # Read-only WAL snapshots serve render_operational_payloads without blocking on a writer lock.
+    writer = sqlite3.connect(index.path, timeout=0.25)
+    try:
+        writer.execute("BEGIN IMMEDIATE")
+        locked_body, locked_total, locked_count = SQLiteTicketIndex(
+            index.path
+        ).render_operational_payloads(sprint="all", filters={}, offset=0, limit=100)
+        assert locked_total == 2
+        assert locked_count == 2
+        assert locked_body == upgraded_body
+    finally:
+        writer.rollback()
+        writer.close()
+
+
+def test_operational_poller_serves_last_complete_index_and_coalesces_without_model_cache(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    first = pf.create_ticket(name="Polled one")
+    second = pf.create_ticket(name="Polled two")
+    if hasattr(pf.store, "_ticket_model_cache"):
+        delattr(pf.store, "_ticket_model_cache")
+    pf.store.configure_ticket_index(True)
+
+    sprint_file = pf.store._sprint_file("current")
+    data = yaml.safe_load(sprint_file.read_text(encoding="utf-8"))
+    data["sprint"]["tickets"][first.id]["name"] = "Edited while index busy"
+    sprint_file.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    mirror_path(sprint_file).unlink(missing_ok=True)
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(
+        pf,
+        "list_tickets",
+        lambda **_filters: (_ for _ in ()).throw(
+            AssertionError("indexed/stale operational poller must not call list_tickets")
+        ),
+    )
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    client = TestClient(server.app)
+
+    poll_1 = client.get("/tickets?limit=1000&view=operational")
+    assert poll_1.status_code == 200
+    assert poll_1.headers.get("X-Planfile-Index-State") == "stale"
+    assert [row["id"] for row in poll_1.json()] == [first.id, second.id]
+    assert all("history" not in row for row in poll_1.json())
+    assert getattr(pf.store, "_ticket_model_cache", None) is None
+
+    # Subsequent poll within stale repair window hits _TICKET_LIST_LATEST in memory.
+    monkeypatch.setattr(
+        SQLiteTicketIndex,
+        "render_operational_payloads",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("repeated poller must hit cached stale latest response")
+        ),
+    )
+    poll_2 = client.get("/tickets?limit=1000&view=operational")
+    assert poll_2.status_code == 200
+    assert poll_2.headers.get("X-Planfile-Index-State") == "stale"
+    assert poll_2.content == poll_1.content
+
+    browser_stale = client.get(
+        "/tickets?limit=1000&view=operational",
+        headers={"user-agent": "Mozilla/5.0"},
+    )
+    assert browser_stale.status_code == 200
+    assert browser_stale.headers.get("X-Planfile-Index-State") == "stale"
+    assert browser_stale.content == poll_1.content
+
+    browser_fresh = client.get(
+        "/tickets?limit=1000&view=operational&require_fresh=true",
+        headers={"user-agent": "Mozilla/5.0"},
+    )
+    assert browser_fresh.status_code == 503
+    assert browser_fresh.json() == {"detail": "ticket_index_repair_pending"}
+
+    fresh = client.get("/tickets?limit=1000&view=operational&require_fresh=true")
+    assert fresh.status_code == 503
+    assert fresh.json() == {"detail": "ticket_index_repair_pending"}
+
+    # Durable non-indexed fallback streams pages without retaining _ticket_model_cache.
+    monkeypatch.undo()
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    pf.store.configure_ticket_index(False)
+    if hasattr(pf.store, "_ticket_model_cache"):
+        delattr(pf.store, "_ticket_model_cache")
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    durable = client.get("/tickets?sprint=all&limit=1000&view=operational")
+    assert durable.status_code == 200
+    assert durable.json()[0]["name"] == "Edited while index busy"
+    assert getattr(pf.store, "_ticket_model_cache", None) is None
+
+    # Oversized operational responses fail closed with 413 without polluting cache.
+    monkeypatch.setenv("PLANFILE_TICKET_RESPONSE_MAX_BYTES", str(1024 * 1024))
+    if hasattr(pf.store, "_ticket_model_cache"):
+        delattr(pf.store, "_ticket_model_cache")
+    large = client.post(
+        "/tickets",
+        json={"name": "Large operational", "description": "ą" * (512 * 1024 + 1024)},
+    )
+    assert large.status_code == 201
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+    too_large = client.get("/tickets?sprint=all&limit=1000&view=operational")
+    assert too_large.status_code == 413
+    assert too_large.json()["detail"] == "ticket_response_too_large"
+    assert server._TICKET_LIST_RESPONSE_CACHE == {}
+    assert server._TICKET_LIST_LATEST == {}
+
+
+def test_concurrent_operational_list_misses_coalesce_single_build(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.create_ticket(name="Coalesced operational query")
+    pf.store.configure_ticket_index(True)
+    server._TICKET_LIST_RESPONSE_CACHE.clear()
+    server._TICKET_LIST_LATEST.clear()
+
+    first_started = threading.Event()
+    finish_first = threading.Event()
+    calls = 0
+    calls_lock = threading.Lock()
+    original = pf.store.indexed_ticket_operational_response
+
+    def slow_once(**kwargs):
+        nonlocal calls
+        with calls_lock:
+            calls += 1
+            current_call = calls
+        if current_call == 1:
+            first_started.set()
+            assert finish_first.wait(timeout=5)
+        return original(**kwargs)
+
+    monkeypatch.setattr(pf.store, "indexed_ticket_operational_response", slow_once)
+
+    def fetch():
+        return server._ticket_list_response(
+            pf,
+            sprint="current",
+            filters={},
+            offset=0,
+            limit=1000,
+            view="operational",
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        first = pool.submit(fetch)
+        assert first_started.wait(timeout=5)
+        others = [pool.submit(fetch) for _ in range(7)]
+        time.sleep(0.1)
+        try:
+            assert calls == 1
+        finally:
+            finish_first.set()
+        results = [first.result(timeout=5)] + [fut.result(timeout=5) for fut in others]
+
+    assert all(res.status_code == 200 for res in results)
+    assert calls == 1
+
+
+def test_post_tickets_degrades_cleanly_on_index_contention_without_500(
+    tmp_path, monkeypatch
+):
+    pf = Planfile(str(tmp_path))
+    _disable_archive(pf)
+    pf.store.configure_ticket_index(True)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+
+    original_finish = pf.store._finish_index_mutation
+
+    def contention_after_write(*args, **kwargs):
+        raise TicketIndexContentionError("simulated rebuild contention after commit")
+
+    monkeypatch.setattr(pf.store, "_finish_index_mutation", contention_after_write)
+    degraded = client.post("/tickets", json={"name": "Created despite index contention"})
+    assert degraded.status_code == 201
+    assert degraded.headers.get("X-Planfile-Mutation-Stage") == "derived_index_degraded"
+    assert degraded.headers.get("X-Planfile-Index-State") == "degraded"
+    assert pf.store.get_ticket(degraded.json()["id"], repair_index=False) is not None
+
+    monkeypatch.setattr(pf.store, "_finish_index_mutation", original_finish)
+
+    def pre_write_contention(*_args, **_kwargs):
+        raise TicketIndexContentionError("simulated pre-write contention")
+
+    monkeypatch.setattr(pf.store, "_next_id_unlocked", pre_write_contention)
+    retryable = client.post("/tickets", json={"name": "Blocked before canonical write"})
+    assert retryable.status_code == 503
+    assert retryable.headers.get("Retry-After") == str(server.STORE_LOCK_RETRY_AFTER_SECONDS)
+    assert retryable.json()["code"] == "ticket_index_repair_pending"
+

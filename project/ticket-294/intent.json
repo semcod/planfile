@@ -1,0 +1,117 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-294",
+  "summary": "Bound operational list views with pre-built SQLite projections and crash-safe DAG wiring (#335)",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-294/**",
+    "planfile/core/sqlite_index.py",
+    "planfile/api/server.py",
+    "planfile/delivery_plan.py",
+    "tests/test_sqlite_ticket_index.py",
+    "tests/test_delivery_plan_multi_repo_bundle.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d898e834155cb07d6e7e70d701773658943f4491",
+    "architecture": {
+      "components": [
+        {
+          "name": "sqlite-operational-projection",
+          "paths": [
+            "planfile/core/sqlite_index.py",
+            "tests/test_sqlite_ticket_index.py"
+          ]
+        },
+        {
+          "name": "bounded-list-api-and-contention-safety",
+          "paths": [
+            "planfile/api/server.py"
+          ]
+        },
+        {
+          "name": "delivery-plan-crash-safe-edges",
+          "paths": [
+            "planfile/delivery_plan.py",
+            "tests/test_delivery_plan_multi_repo_bundle.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Materialize stripped operational JSON payloads eagerly in SQLite ticket_operational during rebuild/apply, read via non-blocking WAL RO snapshots, add incremental cache eviction plus coalescing and byte limits for operational queries, avoid _ticket_model_cache growth on durable streaming, handle post-write TicketIndexContentionError cleanly, and reconcile external inverse edges across all plan candidates.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Revert the commit on main; disposable ticket_operational index table and API cache/fallback helpers cleanly revert with zero durable YAML/store schema impact.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 3,
+      "maxImplementationFiles": 5,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "nonGoals": [
+      "Modifying planfile/core/store.py (owned by active ticket-286)",
+      "Changing canonical YAML/JSONL ticket storage formats",
+      "Returning unmasked stale projections when require_fresh=true"
+    ],
+    "outcome": "Repeated 1000-row operational pollers serve pre-built indexed projections with bounded memory/CPU without 500s on concurrent ticket creation, and interrupted bundle materializations cleanly repair inverse blocker edges.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "pytest -q -p no:cacheprovider tests/test_sqlite_ticket_index.py -k operational_projection_table_parity_and_legacy_upgrade"
+        ],
+        "criterion": "AC-01",
+        "evidence": "Verified ticket_operational parity across rebuild, apply, legacy upgrade, and non-blocking RO reads under concurrent write lock."
+      },
+      {
+        "commands": [
+          "pytest -q -p no:cacheprovider tests/test_sqlite_ticket_index.py -k 'operational_poller or concurrent_operational'"
+        ],
+        "criterion": "AC-02",
+        "evidence": "Verified operational poller serves stale last complete index, coalesces 8 concurrent misses into one build, populates bounded _TICKET_LIST_LATEST, and respects require_fresh=true and 413 byte caps."
+      },
+      {
+        "commands": [
+          "pytest -q -p no:cacheprovider tests/test_sqlite_ticket_index.py tests/test_ticket_api_events.py"
+        ],
+        "criterion": "AC-03",
+        "evidence": "Verified durable streaming path serves paged operational/summary/full views without populating store._ticket_model_cache."
+      },
+      {
+        "commands": [
+          "pytest -q -p no:cacheprovider tests/test_sqlite_ticket_index.py -k post_tickets_degrades_cleanly"
+        ],
+        "criterion": "AC-04",
+        "evidence": "Verified POST /tickets returns 201 derived_index_degraded on post-write TicketIndexContentionError and 503 on pre-write contention."
+      },
+      {
+        "commands": [
+          "pytest -q -p no:cacheprovider tests/test_delivery_plan.py tests/test_delivery_plan_multi_repo_bundle.py"
+        ],
+        "criterion": "AC-05",
+        "evidence": "Verified interrupted materialize_bundle replay repairs inverse blocks edges without duplicate tickets."
+      }
+    ]
+  }
+}
