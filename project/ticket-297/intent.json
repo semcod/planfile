@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-297",
+  "summary": "Isolate ambiguous GitHub description markers per issue during inbound list_tickets",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-297/**",
+    "planfile/sync/github.py",
+    "tests/test_github_sync_description_markers.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "93d519a8ad0309bed6c3113cb03595768a3dad95",
+    "targetBranch": "main",
+    "outcome": "GitHubBackend._list_tickets quarantines individual issues raising sync_github_description_markers_ambiguous with bounded body-free diagnostics so inbound sync processes valid issues cleanly, while direct reads, selected reads, search recovery, and mutations remain fail-closed.",
+    "nonGoals": [
+      "Do not unwrap or guess ambiguous nested planfile:description sections",
+      "Do not mutate historical GitHub issue bodies automatically",
+      "Do not weaken single-issue get_ticket, update_ticket, create_ticket, list_selected_tickets, or search_tickets guards",
+      "Do not edit foreign-owned sync or store files"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 35,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Quarantine only ValueError('sync_github_description_markers_ambiguous') per issue in GitHubBackend._list_tickets, recording bounded body-free diagnostics and skipping limit starvation, while keeping _description_bounds and all targeted read/write/search methods unchanged and fail-closed.",
+      "components": [
+        {
+          "name": "GitHub inbound ticket listing isolation",
+          "paths": [
+            "planfile/sync/github.py",
+            "tests/test_github_sync_description_markers.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded single-file commit in planfile/sync/github.py through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m ruff check planfile/sync/github.py tests/test_github_sync_description_markers.py",
+          "python -m pytest tests/test_github_sync_description_markers.py tests/test_github_description_roundtrip.py tests/test_github_sync_preserves_issue.py tests/test_github_deduplication.py tests/test_sync_receipts.py tests/test_sync_bidirectional_order.py tests/test_sync_inbound_deadlines.py tests/test_sync_watch_inbound_polling.py -q"
+        ],
+        "evidence": "Passed locally after last source/test edit: ruff check passed cleanly and pytest passed 148/148 tests in 299.07s (including 6 new cases in tests/test_github_sync_description_markers.py)."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --base origin/main",
+          "wellman check"
+        ],
+        "evidence": "Pending governance gate, CI, OneDev, and independent Validator merge."
+      }
+    ]
+  }
+}
