@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import json
+import sqlite3
 import subprocess
 import sys
+from contextlib import closing
 from types import SimpleNamespace
 
 import pytest
@@ -165,13 +168,15 @@ def test_removed_source_ticket_does_not_survive_finalization(tmp_path, monkeypat
     assert pf.store._sqlite_ticket_index().get_ticket(ticket.id) is None
 
 
-def test_external_source_race_never_publishes_a_false_current_signature(tmp_path, monkeypatch):
+@pytest.mark.parametrize("stored", [False, True])
+def test_external_source_race_never_publishes_a_false_current_signature(tmp_path, monkeypatch, stored):
     pf = setup_store(tmp_path)
     ticket = pf.create_ticket(name="Before")
     pf.store.configure_ticket_index(True)
     built = pf.store._ticket_index_signature()
     monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
     pf.update_ticket(ticket.id, name="After")
+    pf.store._ticket_index_invalidation_path.write_text("b" * 32)
     original = pf.store._ticket_index_signature
     calls = 0
 
@@ -184,7 +189,9 @@ def test_external_source_race_never_publishes_a_false_current_signature(tmp_path
         return signature
 
     monkeypatch.setattr(pf.store, "_ticket_index_signature", racing_signature)
-    assert index_repair.reconcile_index(pf.store, pf.store._sqlite_ticket_index(), built) is None
+    baseline = None if stored else built
+    assert index_repair.reconcile_index(pf.store, pf.store._sqlite_ticket_index(), baseline) is None
+    assert calls >= 2
     assert pf.store._sqlite_ticket_index().get_ticket(ticket.id)["name"] == "Before"
 
 
@@ -324,3 +331,142 @@ def test_locator_delta_retains_budgets_and_external_race_refusal(
         pf.store, pf.store._sqlite_ticket_index(), built, locator_snapshot=baseline,
     ) is None
     assert pf.store._sqlite_ticket_index().get_ticket(ticket.id)["sprint"] == "current"
+
+
+@pytest.mark.parametrize("change", ["update", "delete", "evidence"])
+def test_background_repairs_stored_generation_without_archive_scan(tmp_path, monkeypatch, change):
+    pf = setup_store(tmp_path)
+    old = pf.create_ticket(name="Cold history", sprint="history-old")
+    ticket = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    if change == "delete":
+        pf.store.delete_ticket(ticket.id)
+    elif change == "update":
+        pf.update_ticket(ticket.id, name="After")
+    else:
+        pf.store.append_ticket_evidence(ticket.id, idempotency_key="proof", collection="checks",
+                                        evidence={"passed": True}, actor="test", reason="record outcome")
+    pf.store._ticket_index_invalidation_path.write_text("b" * 32)
+    with pytest.raises(TicketIndexContentionError):
+        pf.store.require_current_ticket_index()
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(pf.store, "_ticket_index_records", lambda: pytest.fail("full archive scan"))
+    result = server._repair_ticket_index()
+    assert result["current"] and result["reconciled"] == 1
+    assert index.get_ticket(old.id)["name"] == "Cold history"
+    row = index.get_ticket(ticket.id)
+    if change == "delete":
+        assert row is None
+    elif change == "update":
+        assert row["name"] == "After"
+    else:
+        assert row["outputs"]["result"]["checks"][0]["passed"]
+    assert pf.store.require_current_ticket_index()["current"]
+
+
+@pytest.mark.parametrize("token", [None, "c" * 32])
+def test_background_repairs_one_changed_sprint_without_a_new_token(tmp_path, monkeypatch, token):
+    pf = setup_store(tmp_path)
+    cold = pf.create_ticket(name="Unchanged archive ticket", sprint="history-old")
+    ticket = pf.create_ticket(name="Before")
+    if token is not None:
+        pf.store._ticket_index_invalidation_path.parent.mkdir(exist_ok=True, parents=True)
+        pf.store._ticket_index_invalidation_path.write_text(token)
+    pf.store.configure_ticket_index(True)
+    before = pf.store._ticket_index_signature()
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    pf.update_ticket(ticket.id, name="Changed current sprint")
+    after = pf.store._ticket_index_signature()
+    assert before[0] != after[0] and before[1:] == after[1:]
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(pf.store, "_ticket_index_records", lambda: pytest.fail("full archive scan"))
+    result = server._repair_ticket_index()
+    index = pf.store._sqlite_ticket_index()
+    assert result["current"] and result["reconciled"] == 1
+    assert index.get_ticket(cold.id)["name"] == "Unchanged archive ticket"
+    assert index.get_ticket(ticket.id)["name"] == "Changed current sprint"
+
+
+@pytest.mark.parametrize("damage", [
+    "invalid_json", "wrong_projection", "invalid_stamp", "unknown_source",
+    "duplicate_journal", "invalid_token", "token_only", "schema", "locator",
+    "ticket_budget", "byte_budget", "time_budget",
+])
+def test_background_falls_back_for_unknown_generations(tmp_path, monkeypatch, damage):
+    pf = setup_store(tmp_path)
+    ticket = pf.create_ticket(name="Before")
+    pf.store.append_ticket_evidence(ticket.id, idempotency_key="seed", collection="checks",
+                                    evidence={"ok": True}, actor="test", reason="seed journal")
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    pf.update_ticket(ticket.id, name="After")
+    pf.store._ticket_index_invalidation_path.write_text("b" * 32)
+    with index._connection() as con:
+        sig = json.loads(con.execute("SELECT value FROM meta WHERE key='source_signature'").fetchone()[0])
+        if damage == "wrong_projection":
+            sig[4] = "old-version"
+        elif damage == "invalid_stamp":
+            sig[0][0][-1] = False
+        elif damage == "unknown_source":
+            sig[0][0][1] = "/unknown/sprint.yaml"
+        elif damage == "duplicate_journal":
+            sig[1].append(sig[1][0])
+        elif damage == "invalid_token":
+            sig[3] = []
+        elif damage == "token_only":
+            sig = json.loads(index.serialize_signature(pf.store._ticket_index_signature()))
+            sig[3] = "a" * 32
+        elif damage == "schema":
+            con.execute("UPDATE meta SET value='future' WHERE key='schema_version'")
+        elif damage == "locator":
+            sig[2] = [1, 0]
+        elif damage == "ticket_budget":
+            monkeypatch.setattr(index_repair, "MAX_REPAIR_TICKETS", 0)
+        elif damage == "byte_budget":
+            monkeypatch.setattr(index_repair, "MAX_REPAIR_BYTES", 1)
+        elif damage == "time_budget":
+            monkeypatch.setattr(index_repair, "MAX_REPAIR_SECONDS", 0)
+        value = "{" if damage == "invalid_json" else index.serialize_signature(sig)
+        con.execute("UPDATE meta SET value=? WHERE key='source_signature'", (value,))
+        con.commit()
+    calls = []
+    rebuild = pf.store._rebuild_ticket_index_unlocked
+
+    def observed(index, *, force):
+        calls.append(1)
+        return rebuild(index, force=force)
+
+    monkeypatch.setattr(pf.store, "_rebuild_ticket_index_unlocked", observed)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    assert server._repair_ticket_index()["current"]
+    assert calls == [1]
+    assert index.get_ticket(ticket.id)["name"] == "After"
+
+
+def test_background_recovers_after_independent_writer_commits_while_sqlite_is_busy(tmp_path, monkeypatch):
+    pf = setup_store(tmp_path)
+    ticket = pf.create_ticket(name="Before contention")
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    with closing(sqlite3.connect(index.path)) as blocker:
+        blocker.execute("BEGIN IMMEDIATE")
+        subprocess.run(
+            [sys.executable, "-c",
+             "import sys; from planfile import Planfile; "
+             "Planfile(sys.argv[1]).update_ticket(sys.argv[2], name='Durable update')",
+             str(tmp_path), ticket.id],
+            check=True, capture_output=True, text=True, timeout=45,
+        )
+        assert index.get_ticket(ticket.id)["name"] == "Before contention"
+        with pytest.raises(TicketIndexContentionError):
+            pf.store.require_current_ticket_index()
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(pf.store, "_ticket_index_records", lambda: pytest.fail("full archive scan"))
+    result = server._repair_ticket_index()
+    assert result["current"] and result["reconciled"] == 1
+    assert index.get_ticket(ticket.id)["name"] == "Durable update"

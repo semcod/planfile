@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-289",
+  "summary": "Bound scoped GitHub inbound sync with monotonic operation deadlines",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-289/**",
+    "planfile/sync/deadline.py",
+    "planfile/sync/operations.py",
+    "planfile/cli/groups/sync/core.py",
+    "planfile/cli/groups/sync/commands.py",
+    "tests/test_sync_inbound_deadlines.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c77f55300dcf3e62d29496841ec7ee2a620ced5f",
+    "architecture": {
+      "components": [
+        {
+          "name": "sync-deadline-core",
+          "paths": [
+            "planfile/sync/deadline.py",
+            "planfile/sync/operations.py"
+          ]
+        },
+        {
+          "name": "sync-cli-timeout",
+          "paths": [
+            "planfile/cli/groups/sync/core.py",
+            "planfile/cli/groups/sync/commands.py",
+            "tests/test_sync_inbound_deadlines.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Introduce planfile/sync/deadline.py with monotonic SyncDeadline, SyncDeadlineExceededError, and bind_backend_deadline wrapper; enforce stage and per-ticket deadline boundaries in sync_from_external and expose optional --timeout in planfile sync github without modifying planfile/sync/github.py.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Revert the commit on main; --timeout is optional and defaults to 60.0s monotonic bound.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 5,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "M",
+    "estimatedMinutes": 45,
+    "nonGoals": [
+      "Modifying planfile/sync/github.py reserved by ticket-288",
+      "Modifying outbound sync or healthcheck starvation logic"
+    ],
+    "outcome": "Scoped GitHub inbound sync operations enforce a monotonic operation deadline across identity, fetch, and local projection and fail closed with structured JSON CLI diagnostics on expiry.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "pytest -q tests/test_sync_inbound_deadlines.py"
+        ],
+        "criterion": "AC-01",
+        "evidence": "13 passed across deadline precedence/validation, CLI --timeout wiring, requester clamping, and monotonic clock checks."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_sync_inbound_deadlines.py tests/test_sync_selected_provider_reads.py tests/test_sync_failure_status.py"
+        ],
+        "criterion": "AC-02",
+        "evidence": "All fail-closed CLI JSON exit-1, CAS/lease preservation, ReadTimeout conversion, fast TimeoutError compatibility, and partial-projection retry assertions passed."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_sync_inbound_deadlines.py tests/test_sync_selected_provider_reads.py tests/test_sync_failure_status.py tests/test_repository_routing.py tests/test_scheduled_github_sync_workflow.py tests/test_sync_watch_inbound_polling.py tests/test_sync_inbound_sdk_revision.py",
+          "ruff check planfile/sync/deadline.py planfile/sync/operations.py planfile/cli/groups/sync/core.py planfile/cli/groups/sync/commands.py tests/test_sync_inbound_deadlines.py",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "criterion": "AC-03",
+        "evidence": "214 passed across all 7 sync test modules, ruff check passed, and ./project/governance-check.sh --base origin/main plus wellman check passed."
+      }
+    ]
+  }
+}

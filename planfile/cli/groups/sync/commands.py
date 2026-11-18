@@ -83,19 +83,35 @@ def github_cmd(
     ),
     incremental: bool = typer.Option(False, '--incremental', help='Queue changed/new outbound tickets; requires --direction to'),
     max_tickets: int = typer.Option(2, '--max-tickets', min=1, max=100, help='Maximum incremental deliveries per invocation'),
+    timeout: float | None = typer.Option(
+        None,
+        "--timeout",
+        min=0.01,
+        help="Monotonic operation deadline in seconds for GitHub inbound sync",
+    ),
 ) -> None:
     """Sync tickets with GitHub Issues."""
+    resolved_timeout = (
+        float(timeout)
+        if isinstance(timeout, (int, float)) and not isinstance(timeout, bool)
+        else None
+    )
+    sync_kwargs = {
+        "ticket_ids": ticket_ids,
+        "sprint_ids": sprint_ids,
+        "repo": repo,
+        "managed_only": managed_only,
+        "incremental": incremental,
+        "max_tickets": max_tickets,
+    }
+    if resolved_timeout is not None:
+        sync_kwargs["timeout_seconds"] = resolved_timeout
     sync_integration(
         "github",
         directory,
         dry_run,
         direction,
-        ticket_ids=ticket_ids,
-        sprint_ids=sprint_ids,
-        repo=repo,
-        managed_only=managed_only,
-        incremental=incremental,
-        max_tickets=max_tickets,
+        **sync_kwargs,
     )
 
 

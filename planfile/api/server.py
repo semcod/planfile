@@ -2112,6 +2112,16 @@ def _repair_ticket_index() -> dict:
             signature = store._ticket_index_signature()
             if index.is_current(signature):
                 return index.status(signature) | {"rebuilt": False}
+            from planfile.core.index_repair import reconcile_index
+
+            try:
+                repaired = reconcile_index(store, index)
+            except sqlite3.DatabaseError:
+                # The existing full-rebuild path handles damaged or busy
+                # projections through the store's normal recovery protocol.
+                repaired = None
+            if repaired is not None:
+                return repaired
             return store._rebuild_ticket_index_unlocked(index, force=False)
     except StoreLockTimeoutError:
         return {"rebuilt": False, "coalesced": True}
