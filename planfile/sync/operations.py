@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import logging
 import re
+from contextlib import nullcontext
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
 from rich.console import Console
 
+from planfile.sync.deadline import (
+    SyncDeadlineExceededError,
+    bind_backend_deadline,
+    resolve_inbound_deadline,
+)
 from planfile.sync.priority import normalize_inbound_priority
 from planfile.sync.state import SyncState, SyncStateRepositoryMismatch, normalize_repository
 
@@ -437,10 +443,21 @@ def _fetch_external_tickets(
             console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
             return None
         return list(external_tickets)
+    except SyncDeadlineExceededError:
+        raise
     except Exception as error:
         # Provider diagnostics may contain credentials. Keep a bounded message
         # and the cause so the caller can still observe retry/cooldown hints.
         raise RuntimeError("sync_inbound_fetch_failed") from error
+
+
+def _ticket_trace_id(ext_ticket: Any) -> str:
+    """Return a concise non-empty identifier for inbound deadline diagnostics."""
+    for attr in ("id", "key", "number", "external_id"):
+        value = getattr(ext_ticket, attr, None)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return repr(ext_ticket)
 
 
 def _resolve_selected_remote_ids(
@@ -626,94 +643,153 @@ def sync_from_external(
     sprint_ids: list[str] | None = None,
     remote_labels: list[str] | None = None,
     exclude_incident_noise: bool = False,
+    timeout_seconds: float | None = None,
 ) -> None:
     """Sync tickets from external system to planfile."""
-    sync_state = _bind_sync_state(
-        Path(store.base_dir), integration_name, backend, dry_run=dry_run
+    deadline = (
+        resolve_inbound_deadline(timeout_seconds, backend)
+        if integration_name == "github" or timeout_seconds is not None
+        else None
     )
-    imported_count = 0
-    updated_count = 0
-    sdk_store = (store if not v1_source_file and callable(getattr(store, "update_ticket", None))
-                 and callable(getattr(store, "create_ticket", None)) else None)
+    with bind_backend_deadline(backend, deadline) if deadline is not None else nullcontext():
+        if deadline is not None:
+            deadline.set_stage("repository_identity")
+            deadline.check("repository_identity")
+        sync_state = _bind_sync_state(
+            Path(store.base_dir), integration_name, backend, dry_run=dry_run
+        )
+        imported_count = 0
+        updated_count = 0
+        sdk_store = (
+            store
+            if not v1_source_file
+            and callable(getattr(store, "update_ticket", None))
+            and callable(getattr(store, "create_ticket", None))
+            else None
+        )
 
-    sprint, backlog = _load_sprint_and_backlog(store, v1_source_file, v1_data)
-    sections = _load_sync_sections(store, v1_source_file, v1_data)
-    # Reuse the snapshots returned by the compatibility loader so imports into
-    # the backlog are the same objects that are persisted below.
-    sections["current"] = sprint
-    sections["backlog"] = backlog
-    if sdk_store is not None:
-        # The compatibility loader may return mutable cached dictionaries.
-        # Freeze the observed records before fetching from the remote backend.
-        sections = deepcopy(sections)
-        sprint = sections["current"]
-        backlog = sections["backlog"]
-    requested_sprints = list(
-        dict.fromkeys(str(value).strip() for value in (sprint_ids or []) if str(value).strip())
-    )
-    import_target = backlog
-    lookup_sections = sections
-    if requested_sprints:
-        # An explicit sprint scope is also the destination for newly imported
-        # tickets. Unknown IDs fail closed rather than silently falling back to
-        # the global backlog.
-        target_id = next((value for value in requested_sprints if value in sections), None)
-        if target_id is None:
+        sprint, backlog = _load_sprint_and_backlog(store, v1_source_file, v1_data)
+        sections = _load_sync_sections(store, v1_source_file, v1_data)
+        # Reuse the snapshots returned by the compatibility loader so imports into
+        # the backlog are the same objects that are persisted below.
+        sections["current"] = sprint
+        sections["backlog"] = backlog
+        if sdk_store is not None:
+            # The compatibility loader may return mutable cached dictionaries.
+            # Freeze the observed records before fetching from the remote backend.
+            sections = deepcopy(sections)
+            sprint = sections["current"]
+            backlog = sections["backlog"]
+        requested_sprints = list(
+            dict.fromkeys(str(value).strip() for value in (sprint_ids or []) if str(value).strip())
+        )
+        import_target = backlog
+        lookup_sections = sections
+        if requested_sprints:
+            # An explicit sprint scope is also the destination for newly imported
+            # tickets. Unknown IDs fail closed rather than silently falling back to
+            # the global backlog.
+            target_id = next((value for value in requested_sprints if value in sections), None)
+            if target_id is None:
+                return
+            import_target = sections[target_id]
+            lookup_sections = {target_id: import_target}
+        normalized_ticket_ids = (
+            {str(value).strip() for value in (ticket_ids or []) if str(value).strip()} or None
+        )
+        if deadline is not None:
+            deadline.set_stage("resolve_selection")
+            deadline.check("resolve_selection")
+        if normalized_ticket_ids:
+            for section in lookup_sections.values():
+                for local_id, ticket in (section.get("tickets") or {}).items():
+                    if local_id in normalized_ticket_ids:
+                        _validate_ticket_binding(ticket, integration_name, backend)
+        selected_remote_ids = _resolve_selected_remote_ids(
+            normalized_ticket_ids, lookup_sections, sync_state, integration_name,
+            strict_local=integration_name == "github",
+        )
+        if deadline is not None:
+            deadline.set_stage("provider_fetch")
+            deadline.check("provider_fetch")
+        external_tickets = _fetch_external_tickets(
+            backend, integration_name, remote_labels, selected_remote_ids
+        )
+        if deadline is not None:
+            pending_after_fetch = (
+                [_ticket_trace_id(item) for item in external_tickets]
+                if external_tickets
+                else ()
+            )
+            deadline.check("provider_fetch", pending_tickets=pending_after_fetch)
+        if external_tickets is None:
             return
-        import_target = sections[target_id]
-        lookup_sections = {target_id: import_target}
-    normalized_ticket_ids = (
-        {str(value).strip() for value in (ticket_ids or []) if str(value).strip()} or None
-    )
-    if normalized_ticket_ids:
-        for section in lookup_sections.values():
-            for local_id, ticket in (section.get("tickets") or {}).items():
-                if local_id in normalized_ticket_ids:
-                    _validate_ticket_binding(ticket, integration_name, backend)
-    selected_remote_ids = _resolve_selected_remote_ids(
-        normalized_ticket_ids, lookup_sections, sync_state, integration_name,
-        strict_local=integration_name == "github",
-    )
-    external_tickets = _fetch_external_tickets(
-        backend, integration_name, remote_labels, selected_remote_ids
-    )
-    if external_tickets is None:
-        return
-    if not external_tickets:
-        console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
-        return
+        if not external_tickets:
+            console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
+            return
 
-    for ext_ticket in external_tickets:
-        if exclude_incident_noise and is_incident_noise(ext_ticket):
-            continue
-        imported_count, updated_count = _process_external_ticket(
-            ext_ticket,
-            sprint,
-            backlog,
-            sync_state,
-            integration_name,
-            dry_run,
-            imported_count,
-            updated_count,
-            publish_to,
-            lookup_sections,
-            normalized_ticket_ids,
-            import_target,
-            selected_remote_ids,
-            store=sdk_store,
-        )
+        work_tickets = [
+            ext_ticket
+            for ext_ticket in external_tickets
+            if not (exclude_incident_noise and is_incident_noise(ext_ticket))
+        ]
+        completed_tickets: list[str] = []
+        for idx, ext_ticket in enumerate(work_tickets):
+            if deadline is not None:
+                deadline.set_stage("local_projection")
+                pending_ids = [_ticket_trace_id(item) for item in work_tickets[idx:]]
+                try:
+                    deadline.check(
+                        "local_projection",
+                        completed_tickets=completed_tickets,
+                        pending_tickets=pending_ids,
+                    )
+                except SyncDeadlineExceededError:
+                    if (
+                        not dry_run
+                        and (imported_count > 0 or updated_count > 0)
+                        and sdk_store is None
+                    ):
+                        _save_import_results(
+                            store,
+                            v1_source_file,
+                            v1_data,
+                            sprint,
+                            backlog,
+                            imported_count,
+                            updated_count,
+                            sections=sections,
+                        )
+                    raise
+            imported_count, updated_count = _process_external_ticket(
+                ext_ticket,
+                sprint,
+                backlog,
+                sync_state,
+                integration_name,
+                dry_run,
+                imported_count,
+                updated_count,
+                publish_to,
+                lookup_sections,
+                normalized_ticket_ids,
+                import_target,
+                selected_remote_ids,
+                store=sdk_store,
+            )
+            completed_tickets.append(_ticket_trace_id(ext_ticket))
 
-    if not dry_run and (imported_count > 0 or updated_count > 0) and sdk_store is None:
-        _save_import_results(
-            store,
-            v1_source_file,
-            v1_data,
-            sprint,
-            backlog,
-            imported_count,
-            updated_count,
-            sections=sections,
-        )
+        if not dry_run and (imported_count > 0 or updated_count > 0) and sdk_store is None:
+            _save_import_results(
+                store,
+                v1_source_file,
+                v1_data,
+                sprint,
+                backlog,
+                imported_count,
+                updated_count,
+                sections=sections,
+            )
 
 
 _INCIDENT_NAME_PATTERN = re.compile(
