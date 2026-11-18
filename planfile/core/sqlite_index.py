@@ -119,6 +119,31 @@ class SQLiteTicketIndex:
         except (sqlite3.DatabaseError, json.JSONDecodeError) as error:
             raise RoutingSnapshotUnavailableError("ticket_index_unavailable") from error
 
+    @contextmanager
+    def _dag_connection(self, signature: tuple) -> Iterator[sqlite3.Connection]:
+        """Open a consistent read-only snapshot matching signature without loading ticket_json."""
+        if not self.path.exists():
+            raise RoutingSnapshotUnavailableError("ticket_index_unavailable")
+        try:
+            with closing(self._connect_routing()) as connection:
+                connection.row_factory = sqlite3.Row
+                connection.execute("BEGIN")
+                metadata = dict(
+                    connection.execute(
+                        "SELECT key, value FROM meta WHERE key IN ('source_signature', 'schema_version')"
+                    ).fetchall()
+                )
+                if (
+                    metadata.get("source_signature") != self.serialize_signature(signature)
+                    or metadata.get("schema_version") != str(_SCHEMA_VERSION)
+                ):
+                    raise RoutingSnapshotUnavailableError("ticket_index_stale")
+                yield connection
+        except RoutingSnapshotUnavailableError:
+            raise
+        except (sqlite3.DatabaseError, json.JSONDecodeError, OSError) as error:
+            raise RoutingSnapshotUnavailableError("ticket_index_unavailable") from error
+
     @staticmethod
     def _initialize(connection: sqlite3.Connection) -> None:
         connection.executescript(
@@ -397,6 +422,65 @@ class SQLiteTicketIndex:
                 (ticket_id,),
             ).fetchone()
         return json.loads(row["ticket_json"]) if row is not None else None
+
+    def dag_snapshot(
+        self,
+        signature: tuple,
+        *,
+        references: Iterable[str] = (),
+        subject_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Read DAG edges and reference existence without reading ticket_json payloads."""
+        refs = sorted({str(item) for item in references if item})
+        present_refs: set[str] = set()
+        subject_exists = False
+        subject_blocked_by: list[str] = []
+        with self._dag_connection(signature) as connection:
+            for start in range(0, len(refs), 500):
+                chunk = refs[start : start + 500]
+                placeholders = ",".join("?" for _ in chunk)
+                found_rows = connection.execute(
+                    f"SELECT id FROM tickets WHERE id IN ({placeholders})",
+                    chunk,
+                ).fetchall()
+                present_refs.update(str(row["id"]) for row in found_rows)
+            if subject_id:
+                subject_exists = (
+                    connection.execute(
+                        "SELECT 1 FROM tickets WHERE id=?",
+                        (subject_id,),
+                    ).fetchone()
+                    is not None
+                )
+                if subject_exists:
+                    subject_blocked_by = [
+                        str(row["blocked_by"])
+                        for row in connection.execute(
+                            "SELECT blocked_by FROM dependencies WHERE ticket_id=? ORDER BY rowid",
+                            (subject_id,),
+                        ).fetchall()
+                    ]
+            blocked_by_edges = [
+                (str(row["ticket_id"]), str(row["blocked_by"]))
+                for row in connection.execute(
+                    "SELECT ticket_id, blocked_by FROM dependencies"
+                ).fetchall()
+            ]
+            blocks_edges: list[tuple[str, str]] = []
+            for row in connection.execute(
+                "SELECT id, summary_json FROM tickets WHERE instr(summary_json, '\"blocks\"') > 0",
+            ):
+                summary = json.loads(row["summary_json"])
+                for target in summary.get("blocks") or []:
+                    blocks_edges.append((str(target), str(row["id"])))
+        return {
+            "present_refs": present_refs,
+            "subject_exists": subject_exists,
+            "subject_blocked_by": subject_blocked_by,
+            "blocked_by_edges": blocked_by_edges,
+            "blocks_edges": blocks_edges,
+            "source": "sqlite_index",
+        }
 
     def apply(
         self,
