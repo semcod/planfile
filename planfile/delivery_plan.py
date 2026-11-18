@@ -597,6 +597,23 @@ class DeliveryPlanRepository:
             else next(reserved)
             for candidate in plan.candidates
         }
+        for candidate in plan.candidates:
+            if candidate.candidate_key not in existing:
+                continue
+            desired_ext = ext_deps_by_key.get(candidate.candidate_key, [])
+            if not desired_ext:
+                continue
+            ticket_id = ticket_ids[candidate.candidate_key]
+            ticket = self.store.get_ticket(ticket_id)
+            if ticket is not None:
+                merged_blocked = _dedup_preserve([*(ticket.blocked_by or []), *desired_ext])
+                if merged_blocked != list(ticket.blocked_by or []):
+                    self.store._update_ticket_unlocked(
+                        ticket_id,
+                        blocked_by=merged_blocked,
+                        reason="delivery_plan_cross_plan_dependency_sync",
+                        actor="planfile.delivery-plan",
+                    )
         created = [
             self._ticket_for(
                 candidate,
@@ -616,7 +633,7 @@ class DeliveryPlanRepository:
             self.store._create_tickets_bulk_unlocked(created)
         ext_edges = [
             (dep_id, ticket_ids[candidate.candidate_key])
-            for candidate in missing
+            for candidate in plan.candidates
             for dep_id in ext_deps_by_key.get(candidate.candidate_key, [])
         ]
         if ext_edges:
