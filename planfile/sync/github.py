@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import os
 import re
 import sqlite3
@@ -27,6 +28,7 @@ except ImportError:
     Repository = None  # pip install PyGithub
 
 console = Console()
+logger = logging.getLogger(__name__)
 
 
 class GitHubReadCache:
@@ -132,6 +134,8 @@ class GitHubBackend(BasePMBackend):
 
     MAX_LABEL_LENGTH = 50
     DEFAULT_MUTATION_INTERVAL = 1.0
+    MAX_QUARANTINED_INBOUND_ISSUES = 64
+    QUARANTINE_PREVIEW_LIMIT = 5
 
     def __init__(self, repo: str, token: str | None = None, **kwargs):
         """
@@ -168,6 +172,53 @@ class GitHubBackend(BasePMBackend):
         self._last_mutation_at = 0.0
         self._mutation_interval = float(kwargs.get("mutation_interval", self.DEFAULT_MUTATION_INTERVAL))
         self._read_cache = GitHubReadCache(repo, self.config)
+        self._quarantined_inbound_issues: list[dict[str, str]] = []
+        self._quarantined_inbound_count = 0
+
+    @property
+    def quarantined_inbound_issues(self) -> tuple[dict[str, str], ...]:
+        """Bounded body-free diagnostics for issues quarantined in the latest _list_tickets pass."""
+        return tuple(getattr(self, "_quarantined_inbound_issues", ()))
+
+    @property
+    def quarantined_inbound_count(self) -> int:
+        """Total number of issues quarantined in the latest _list_tickets pass."""
+        return int(getattr(self, "_quarantined_inbound_count", 0))
+
+    def _record_quarantined_inbound_issue(self, issue: Any, reason: str) -> None:
+        """Record one body-free quarantine diagnostic for an unreadable remote issue."""
+        repo_name = (
+            getattr(self, "_verified_repository", None)
+            or getattr(getattr(self, "repo", None), "full_name", None)
+            or (getattr(self, "config", {}) or {}).get("repo", "")
+            or ""
+        )
+        raw_number = getattr(issue, "number", None)
+        issue_id = "" if raw_number is None else str(raw_number)
+        issue_key = (
+            f"{repo_name}#{issue_id}"
+            if repo_name and issue_id
+            else (f"#{issue_id}" if issue_id else repo_name)
+        )
+        record = {
+            "id": issue_id,
+            "key": issue_key,
+            "url": str(getattr(issue, "html_url", "") or ""),
+            "state": str(getattr(issue, "state", "") or ""),
+            "reason": reason,
+        }
+        self._quarantined_inbound_count = int(getattr(self, "_quarantined_inbound_count", 0)) + 1
+        records = getattr(self, "_quarantined_inbound_issues", None)
+        if not isinstance(records, list):
+            records = []
+            self._quarantined_inbound_issues = records
+        if len(records) < self.MAX_QUARANTINED_INBOUND_ISSUES:
+            records.append(record)
+        logger.warning(
+            "Quarantined GitHub issue %s during inbound list_tickets: %s",
+            issue_key or "<unknown>",
+            reason,
+        )
 
     def resolve_repository_identity(self, repository: str | None = None) -> dict | None:
         """Verify a named route against fresh GitHub numeric-ID readback."""
@@ -1096,6 +1147,8 @@ class GitHubBackend(BasePMBackend):
     ) -> list[TicketState]:
         """List GitHub issues with filters."""
         state = "all" if not status else status.lower()
+        self._quarantined_inbound_issues = []
+        self._quarantined_inbound_count = 0
 
         # Build kwargs - only include optional params if provided
         kwargs = {"state": state}
@@ -1115,7 +1168,28 @@ class GitHubBackend(BasePMBackend):
                 continue
             if limit and len(tickets) >= limit:
                 break
-            tickets.append(self._issue_to_ticket_status(issue))
+            try:
+                ticket_state = self._issue_to_ticket_status(issue)
+            except ValueError as error:
+                if str(error) == "sync_github_description_markers_ambiguous":
+                    self._record_quarantined_inbound_issue(issue, str(error))
+                    continue
+                raise
+            tickets.append(ticket_state)
+
+        if self._quarantined_inbound_count:
+            preview_keys = ", ".join(
+                entry["key"] or entry["id"] or "<unknown>"
+                for entry in self._quarantined_inbound_issues[: self.QUARANTINE_PREVIEW_LIMIT]
+            )
+            remaining = self._quarantined_inbound_count - min(
+                len(self._quarantined_inbound_issues), self.QUARANTINE_PREVIEW_LIMIT
+            )
+            suffix = f" (+{remaining} more)" if remaining > 0 else ""
+            console.print(
+                f"[yellow]⚠️ Quarantined {self._quarantined_inbound_count} GitHub issue(s) "
+                f"with ambiguous description markers ({preview_keys}{suffix})[/yellow]"
+            )
 
         return tickets
 
