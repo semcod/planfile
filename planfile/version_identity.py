@@ -17,6 +17,11 @@ SUPPORTED_AUTONOMY_SCHEMAS: dict[str, str] = {
     "comparative_finding": "planfile.comparative-finding/v1",
     "comparative_findings_admit_request": "planfile.comparative-findings-admit-request/v1",
     "compiled_work_plan": "subactor.compiled-work-plan/v1",
+    "compiled_work_plan_v2": "subactor.compiled-work-plan/v2",
+    "delivery_placement_v2": "planfile.delivery-placement/v2",
+    "ticket_candidate_v2": "subactor.ticket-candidate/v2",
+    "delivery_plan_bundle": "planfile.delivery-plan-bundle/v1",
+    "trusted_delivery_targets": "planfile.trusted-delivery-targets/v1",
     "external_import_metadata": "autodo.planfile-import/v1",
     "legacy_strategy_compatibility": "planfile.strategy.legacy-yaml/v2",
 }

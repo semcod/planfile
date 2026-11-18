@@ -51,12 +51,25 @@ from planfile.delegation import DelegationActor, load_delegation_actors
 from planfile.delivery_plan import DeliveryPlanError, DeliveryPlanRepository
 from planfile.delivery_plan_contracts import (
     AUTODO_PLANFILE_IMPORT_SCHEMA,
+    COMPILED_WORK_PLAN_V2_SCHEMA,
+    DEFAULT_TRUSTED_TARGET_POLICY,
+    DELIVERY_PLACEMENT_V2_SCHEMA,
+    DELIVERY_PLAN_BUNDLE_SCHEMA,
+    TRUSTED_TARGET_POLICY_SCHEMA,
     AutodoPlanfileImportMetadataV1,
     CompiledWorkPlanV1,
+    CompiledWorkPlanV2,
+    CrossPlanDependencyRefV1,
     DeliveryCheckpointV1,
+    DeliveryPlacementV2,
+    DeliveryPlanBundleV1,
     DeliveryPlanSplitV1,
     TicketCandidateV1,
+    TicketCandidateV2,
+    TrustedDeliveryTarget,
+    TrustedTargetPolicyV1,
     WorkPlanTerminalReceiptV1,
+    compose_delivery_plan_bundle,
 )
 from planfile.dsl import DSLExecutor, DSLParser, DSLResult
 from planfile.project_paths import canonical_project_root
@@ -870,22 +883,64 @@ class Planfile:
 
         return DeliveryPlanRepository(self.store)
 
-    def preflight_delivery_plan(self, payload: object) -> dict:
-        """Validate and classify a compiled plan or import envelope without writing storage."""
+    def preflight_delivery_plan(
+        self,
+        payload: object,
+        *,
+        trusted_policy: TrustedTargetPolicyV1 = DEFAULT_TRUSTED_TARGET_POLICY,
+    ) -> dict:
+        """Validate and classify a compiled plan, bundle, or import envelope without writing storage."""
 
-        return self.delivery_plans.preflight(payload)
+        return self.delivery_plans.preflight(payload, trusted_policy=trusted_policy)
 
     def materialize_delivery_plan(
         self,
         compiled_plan: dict,
         *,
         terminal_receipts: list[dict] | tuple[dict, ...] = (),
+        trusted_policy: TrustedTargetPolicyV1 = DEFAULT_TRUSTED_TARGET_POLICY,
+        external_ticket_bindings: dict[tuple[str, str], str] | None = None,
     ) -> dict:
         """Atomically materialize a Strategy DAG or recover its exact prior IDs."""
 
         return self.delivery_plans.materialize(
             compiled_plan,
             terminal_receipts=terminal_receipts,
+            trusted_policy=trusted_policy,
+            external_ticket_bindings=external_ticket_bindings,
+        )
+
+    def materialize_delivery_bundle(
+        self,
+        bundle: dict | DeliveryPlanBundleV1,
+        *,
+        trusted_policy: TrustedTargetPolicyV1 = DEFAULT_TRUSTED_TARGET_POLICY,
+        dry_run: bool = False,
+    ) -> dict:
+        """Atomically materialize or resume a bounded multi-repo delivery bundle."""
+
+        payload = (
+            bundle.model_dump(mode="json", by_alias=True, exclude_none=False)
+            if isinstance(bundle, DeliveryPlanBundleV1)
+            else bundle
+        )
+        return self.delivery_plans.materialize_bundle(
+            payload,
+            trusted_policy=trusted_policy,
+            dry_run=dry_run,
+        )
+
+    def migrate_delivery_plan_v1_to_v2(
+        self,
+        compiled_plan_v2: dict,
+        *,
+        trusted_policy: TrustedTargetPolicyV1 = DEFAULT_TRUSTED_TARGET_POLICY,
+    ) -> dict:
+        """Explicitly migrate a persisted v1 delivery plan to v2 while preserving exact ticket IDs."""
+
+        return self.delivery_plans.migrate_v1_to_v2(
+            compiled_plan_v2,
+            trusted_policy=trusted_policy,
         )
 
     def checkpoint_delivery_candidate(self, checkpoint: dict) -> dict:
@@ -988,9 +1043,16 @@ __all__ = [
     "Ticket", "TicketStatus", "TicketSource",
     "TicketExecutor", "TicketExecution", "TicketInputs", "TicketOutputs",
     "AUTODO_PLANFILE_IMPORT_SCHEMA", "AutodoPlanfileImportMetadataV1",
-    "CompiledWorkPlanV1", "DeliveryCheckpointV1", "DeliveryPlanError",
-    "DeliveryPlanRepository", "DeliveryPlanSplitV1", "TicketCandidateV1",
-    "WorkPlanTerminalReceiptV1",
+    "COMPILED_WORK_PLAN_V2_SCHEMA", "DEFAULT_TRUSTED_TARGET_POLICY",
+    "DELIVERY_PLACEMENT_V2_SCHEMA", "DELIVERY_PLAN_BUNDLE_SCHEMA",
+    "TRUSTED_TARGET_POLICY_SCHEMA",
+    "CompiledWorkPlanV1", "CompiledWorkPlanV2",
+    "CrossPlanDependencyRefV1", "DeliveryCheckpointV1",
+    "DeliveryPlacementV2", "DeliveryPlanBundleV1", "DeliveryPlanError",
+    "DeliveryPlanRepository", "DeliveryPlanSplitV1",
+    "TicketCandidateV1", "TicketCandidateV2",
+    "TrustedDeliveryTarget", "TrustedTargetPolicyV1",
+    "WorkPlanTerminalReceiptV1", "compose_delivery_plan_bundle",
     "ComparativeDependencyError", "ComparativeFindingError",
     "ComparativeFindingProposal", "ExecutorOwnershipSpec",
     "ObsoleteTargetHeadError", "admit_comparative_findings",

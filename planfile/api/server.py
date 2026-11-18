@@ -112,6 +112,8 @@ API_CAPABILITIES = [
     "ticket.discovery.current_scoped_pages",
     "autonomy.payload_validation.strict_v1",
     "delivery_plan.preflight.import_namespace_separation",
+    "delivery_plan.placement.verified_targets_v2",
+    "delivery_plan.bundle.multi_repo_v1",
 ]
 
 

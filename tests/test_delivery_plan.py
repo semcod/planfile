@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import timezone, datetime
+from datetime import datetime, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -313,3 +313,24 @@ def test_compiled_contract_rejects_embedded_tool_authority() -> None:
     plan["authority"] = "shell"
     with pytest.raises(ValidationError):
         CompiledWorkPlanV1.model_validate(plan)
+
+
+def test_v1_contract_refuses_foreign_owner_without_aliasing() -> None:
+    from planfile.delivery_plan_contracts import preflight_delivery_plan_payload
+
+    candidate = _candidate("runtime-core", 0)
+    candidate["placement"] = {
+        "home": "uritime",
+        "shape": "runtime_service",
+        "runtime_owner": "uritime",
+        "adopt": ["wellmanifest/dsl", "wellmanifest/new-project"],
+    }
+    plan = _plan([candidate])
+    plan["repository"] = "uritime/autodo"
+    plan["placement"] = dict(candidate["placement"])
+    with pytest.raises(ValidationError):
+        CompiledWorkPlanV1.model_validate(plan)
+    preflight = preflight_delivery_plan_payload(plan)
+    assert preflight["ok"] is False
+    assert preflight["materialize_allowed"] is False
+    assert preflight["code"] == "delivery_plan_v1_placement_unsupported"
