@@ -1,0 +1,90 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-288",
+  "summary": "Support GitHub issue templates when creating issues",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-288/**",
+    "planfile/integrations/config.py",
+    "planfile/sync/github.py",
+    "tests/test_github_issue_templates.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "123d5224d866d3d1543f604307b74fcc52f944f6",
+    "architecture": {
+      "components": [
+        {
+          "name": "github-issue-templates",
+          "paths": [
+            "planfile/integrations/config.py",
+            "planfile/sync/github.py",
+            "tests/test_github_issue_templates.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Resolve configured GitHub issue templates relative to project_dir in IntegrationConfig and render inline, Markdown frontmatter, and YAML issue forms in GitHubBackend.create_ticket while preserving the single delimited managed-description section and exact title readback.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Revert the commit on main; template rendering is opt-in via integrations.github.issue_template.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 1,
+      "maxImplementationFiles": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "M",
+    "estimatedMinutes": 45,
+    "nonGoals": [
+      "Modifying outbound.py title readback contract",
+      "Modifying planfile/core/configuration.py reserved by ticket-286"
+    ],
+    "outcome": "Support configured integrations.github.issue_template rendering when creating GitHub issues while keeping round-trip managed-description updates intact.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "pytest -q tests/test_github_issue_templates.py"
+        ],
+        "criterion": "AC-01",
+        "evidence": "All template loading, frontmatter, YAML form, and security negative tests pass."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_github_issue_templates.py tests/test_sync_lifecycle_readback.py tests/test_github_description_roundtrip.py"
+        ],
+        "criterion": "AC-02",
+        "evidence": "Managed description markers and readback round-trip tests pass."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_github_issue_templates.py tests/test_sync_lifecycle_readback.py tests/test_sync_bidirectional_order.py tests/test_sync_legacy_operations.py tests/test_github_description_roundtrip.py tests/test_github_sync_preserves_issue.py tests/test_github_deduplication.py",
+          "ruff check planfile/integrations/config.py planfile/sync/github.py tests/test_github_issue_templates.py",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "criterion": "AC-03",
+        "evidence": "363 passed, ruff check passed, and ./project/governance-check.sh passed."
+      }
+    ]
+  }
+}

@@ -206,6 +206,8 @@ class IntegrationConfig:
         if integration_name == "github":
             from planfile.integrations.github import GitHubBackend
 
+            config = {"project_dir": str(self.directory), **config}
+
             # Auto-fetch token from gh CLI if not provided or is unexpanded env var
             token = config.get("token", "")
             if not token or "${" in token:

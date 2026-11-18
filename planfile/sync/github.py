@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import yaml
 from filelock import FileLock
 from procache import CachedPyGithubRequester, SQLiteResponseCache
 from rich.console import Console
@@ -294,13 +295,19 @@ class GitHubBackend(BasePMBackend):
         return issue_labels
 
     def preflight(self, tickets) -> None:
-        """Validate lifecycle and labels before the first provider mutation."""
+        """Validate lifecycle, templates and labels before the first provider mutation."""
+        template = self._resolve_issue_template()
+        extra_labels = self._merge_unique_labels(
+            self._default_configured_labels(),
+            template["labels"] if template is not None else None,
+        )
         for _, ticket in tickets:
             status = ticket.get("status")
             if status and self.project_remote_status(status) is None:
                 raise ValueError("sync_github_status_unsupported")
         for _, ticket in tickets:
-            self._canonical_labels(ticket.get("labels"), ticket.get("priority"))
+            merged_labels = self._merge_unique_labels(extra_labels, ticket.get("labels"))
+            self._canonical_labels(merged_labels, ticket.get("priority"))
 
     def _prepare_labels(
         self,
@@ -510,6 +517,331 @@ class GitHubBackend(BasePMBackend):
             return "open"
         return None
 
+    TEMPLATE_TOKEN_RE = re.compile(
+        r"\{\{\s*(description|body|title|name|id|ticket_id|priority|status|assignee|labels)\s*\}\}"
+        r"|\{\s*(description|body|title|name|id|ticket_id|priority|status|assignee|labels)\s*\}"
+    )
+    FORM_SLOT_RE = re.compile(r"\x00FORM_SLOT:([A-Za-z0-9_.-]+)\x00")
+
+    @staticmethod
+    def _coerce_template_list(value: Any) -> list[str]:
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [part.strip() for part in value.split(",") if part.strip()]
+        if isinstance(value, (list, tuple)):
+            return [str(item).strip() for item in value if str(item).strip()]
+        raise ValueError("sync_github_issue_template_invalid")
+
+    @staticmethod
+    def _merge_unique_labels(*groups: list[str] | None) -> list[str]:
+        merged: list[str] = []
+        for group in groups:
+            for label in group or ():
+                if label and label not in merged:
+                    merged.append(label)
+        return merged
+
+    def _default_configured_labels(self) -> list[str]:
+        config = getattr(self, "config", None) or {}
+        raw = config.get("default_labels") if isinstance(config, dict) else None
+        return self._coerce_template_list(raw) if raw else []
+
+    @staticmethod
+    def _check_no_symlinks(base: Path, target: Path) -> None:
+        resolved_base = base.resolve()
+        try:
+            relative = target.relative_to(base)
+        except ValueError as exc:
+            raise ValueError("sync_github_issue_template_invalid") from exc
+        current = base
+        if current.is_symlink():
+            raise ValueError("sync_github_issue_template_invalid")
+        for part in relative.parts:
+            current = current / part
+            if current.is_symlink():
+                raise ValueError("sync_github_issue_template_invalid")
+        if not target.resolve().is_relative_to(resolved_base):
+            raise ValueError("sync_github_issue_template_invalid")
+
+    @classmethod
+    def _resolve_template_file(cls, project_dir: Path, raw: str) -> Path | None:
+        if "\x00" in raw or raw.startswith("~") or ".." in Path(raw).parts:
+            raise ValueError("sync_github_issue_template_invalid")
+        base = project_dir.resolve()
+        raw_path = Path(raw)
+        if raw_path.is_absolute():
+            cls._check_no_symlinks(base, raw_path)
+            if not raw_path.is_file():
+                raise ValueError(f"sync_github_issue_template_not_found:{raw}")
+            return raw_path
+
+        if raw.lower() == "auto":
+            for fixed in (".github/ISSUE_TEMPLATE.md", ".github/issue_template.md"):
+                candidate = base / fixed
+                cls._check_no_symlinks(base, candidate)
+                if candidate.is_file():
+                    return candidate
+            tmpl_dir = base / ".github" / "ISSUE_TEMPLATE"
+            cls._check_no_symlinks(base, tmpl_dir)
+            if tmpl_dir.is_dir():
+                found: list[Path] = []
+                for entry in sorted(tmpl_dir.iterdir()):
+                    cls._check_no_symlinks(base, entry)
+                    if (
+                        entry.is_file()
+                        and entry.suffix.lower() in {".md", ".yml", ".yaml"}
+                        and entry.name.lower() not in {"config.yml", "config.yaml"}
+                    ):
+                        found.append(entry)
+                if len(found) == 1:
+                    return found[0]
+                if len(found) > 1:
+                    raise ValueError("sync_github_issue_template_ambiguous")
+            raise ValueError("sync_github_issue_template_not_found:auto")
+
+        candidates = [base / raw_path]
+        if "/" not in raw and "\\" not in raw:
+            tmpl_root = base / ".github" / "ISSUE_TEMPLATE"
+            candidates.extend([
+                tmpl_root / raw,
+                tmpl_root / f"{raw}.md",
+                tmpl_root / f"{raw}.yml",
+                tmpl_root / f"{raw}.yaml",
+            ])
+        for candidate in candidates:
+            cls._check_no_symlinks(base, candidate)
+            if candidate.is_file():
+                return candidate
+
+        looks_like_file = (
+            "/" in raw
+            or "\\" in raw
+            or raw.startswith(".")
+            or raw.lower().endswith((".md", ".yml", ".yaml", ".txt"))
+        )
+        if looks_like_file:
+            raise ValueError(f"sync_github_issue_template_not_found:{raw}")
+        return None
+
+    @classmethod
+    def _parse_markdown_issue_template(cls, text: str) -> dict[str, Any]:
+        labels: list[str] = []
+        assignees: list[str] = []
+        title_default: str | None = None
+        body = text
+        match = re.match(r"^---\r?\n(.*?)\r?\n---(?:\r?\n|$)", text, flags=re.DOTALL)
+        if match:
+            try:
+                frontmatter = yaml.safe_load(match.group(1))
+            except yaml.YAMLError as exc:
+                raise ValueError("sync_github_issue_template_invalid") from exc
+            if frontmatter is not None and not isinstance(frontmatter, dict):
+                raise ValueError("sync_github_issue_template_invalid")
+            if isinstance(frontmatter, dict):
+                labels = cls._coerce_template_list(frontmatter.get("labels"))
+                assignees = cls._coerce_template_list(frontmatter.get("assignees"))
+                raw_title = frontmatter.get("title")
+                if raw_title is not None and str(raw_title).strip():
+                    title_default = str(raw_title).strip()
+            body = text[match.end():].lstrip("\r\n")
+        return {
+            "kind": "markdown",
+            "body": body,
+            "labels": labels,
+            "assignees": assignees,
+            "title_default": title_default,
+            "form_defaults": {},
+        }
+
+    @classmethod
+    def _parse_yaml_form_template(cls, text: str) -> dict[str, Any]:
+        try:
+            data = yaml.safe_load(text)
+        except yaml.YAMLError as exc:
+            raise ValueError("sync_github_issue_template_invalid") from exc
+        if not isinstance(data, dict) or not isinstance(data.get("body"), list):
+            raise ValueError("sync_github_issue_template_invalid")
+
+        labels = cls._coerce_template_list(data.get("labels"))
+        assignees = cls._coerce_template_list(data.get("assignees"))
+        raw_title = data.get("title")
+        title_default = str(raw_title).strip() if raw_title is not None and str(raw_title).strip() else None
+
+        items = data["body"]
+        has_explicit_desc = any(
+            isinstance(item, dict)
+            and isinstance(item.get("attributes"), dict)
+            and (
+                "{description}" in str(item["attributes"].get("value") or "")
+                or "{body}" in str(item["attributes"].get("value") or "")
+            )
+            for item in items
+        )
+        desc_index: int | None = None
+        if not has_explicit_desc:
+            preferred_ids = {"description", "body", "summary", "details", "what_happened"}
+            for idx, item in enumerate(items):
+                if isinstance(item, dict) and str(item.get("id") or "").strip().lower() in preferred_ids:
+                    desc_index = idx
+                    break
+            if desc_index is None:
+                for idx, item in enumerate(items):
+                    if isinstance(item, dict) and str(item.get("type") or "").strip().lower() == "textarea":
+                        desc_index = idx
+                        break
+
+        blocks: list[str] = []
+        form_defaults: dict[str, str] = {}
+        for idx, item in enumerate(items):
+            if not isinstance(item, dict):
+                raise ValueError("sync_github_issue_template_invalid")
+            item_type = str(item.get("type") or "").strip().lower()
+            attrs = item.get("attributes") or {}
+            if not isinstance(attrs, dict):
+                raise ValueError("sync_github_issue_template_invalid")
+            if item_type == "markdown":
+                content = str(attrs.get("value") or "").strip()
+                if content:
+                    blocks.append(content)
+                continue
+
+            item_id = str(item.get("id") or "").strip()
+            label = str(attrs.get("label") or item_id or "Details").strip()
+            if idx == desc_index:
+                section_value = "{description}"
+            elif item_type == "checkboxes":
+                options = attrs.get("options") or []
+                lines = []
+                for opt in options:
+                    if isinstance(opt, dict) and opt.get("label"):
+                        lines.append(f"- [ ] {str(opt['label']).strip()}")
+                section_value = "\n".join(lines) or "_No response_"
+            elif item_type == "dropdown":
+                options = attrs.get("options") or []
+                default_val = attrs.get("default")
+                resolved_opt: str | None = None
+                if isinstance(default_val, int) and not isinstance(default_val, bool) and 0 <= default_val < len(options):
+                    resolved_opt = str(options[default_val])
+                elif default_val is not None and str(default_val).strip():
+                    resolved_opt = str(default_val).strip()
+                if item_id:
+                    form_defaults[item_id] = resolved_opt or "_No response_"
+                    section_value = f"\x00FORM_SLOT:{item_id}\x00"
+                else:
+                    section_value = resolved_opt or "_No response_"
+            else:
+                explicit_val = attrs.get("value")
+                fallback = (
+                    str(explicit_val).strip()
+                    if explicit_val is not None and str(explicit_val).strip()
+                    else "_No response_"
+                )
+                if item_id and explicit_val is None:
+                    form_defaults[item_id] = fallback
+                    section_value = f"\x00FORM_SLOT:{item_id}\x00"
+                else:
+                    section_value = fallback
+            blocks.append(f"### {label}\n\n{section_value}")
+
+        return {
+            "kind": "yaml_form",
+            "body": "\n\n".join(blocks),
+            "labels": labels,
+            "assignees": assignees,
+            "title_default": title_default,
+            "form_defaults": form_defaults,
+        }
+
+    def _resolve_issue_template(self) -> dict[str, Any] | None:
+        config = getattr(self, "config", None) or {}
+        raw_spec = config.get("issue_template") if isinstance(config, dict) else None
+        if raw_spec is None:
+            return None
+        if not isinstance(raw_spec, str):
+            raise ValueError("sync_github_issue_template_invalid")
+        raw = raw_spec.strip()
+        if not raw:
+            return None
+
+        if "\n" not in raw:
+            project_dir = Path(str(config.get("project_dir") or ".")).resolve()
+            file_path = self._resolve_template_file(project_dir, raw)
+            if file_path is not None:
+                try:
+                    content = file_path.read_text(encoding="utf-8")
+                except (OSError, UnicodeDecodeError) as exc:
+                    raise ValueError("sync_github_issue_template_invalid") from exc
+                if file_path.suffix.lower() in {".yml", ".yaml"}:
+                    return self._parse_yaml_form_template(content)
+                return self._parse_markdown_issue_template(content)
+
+        return self._parse_markdown_issue_template(raw_spec)
+
+    def _render_issue_template(
+        self,
+        template: dict[str, Any],
+        ticket: dict[str, Any],
+        description: str | None,
+    ) -> tuple[str, list[str], str | None, str | None]:
+        raw_name = str(ticket.get("name") or ticket.get("title") or "").strip()
+        resolved_name = raw_name or template.get("title_default") or None
+        merged_labels = self._merge_unique_labels(
+            self._default_configured_labels(),
+            template.get("labels"),
+            ticket.get("labels"),
+        )
+        assignees = template.get("assignees") or []
+        resolved_assignee = ticket.get("assignee") or (assignees[0] if assignees else None)
+
+        plain_description = "" if description is None else str(description)
+        managed_section = None if description is None else self._merge_description(None, plain_description)
+        used_managed = False
+
+        metadata = ticket.get("metadata") if isinstance(ticket.get("metadata"), dict) else {}
+        form_defaults = template.get("form_defaults") or {}
+
+        def _replace_form_slot(match: re.Match[str]) -> str:
+            field_id = match.group(1)
+            candidate = ticket.get(field_id)
+            if candidate is None:
+                candidate = metadata.get(field_id)
+            if candidate is not None and str(candidate).strip():
+                return str(candidate).strip()
+            return str(form_defaults.get(field_id, "_No response_"))
+
+        values = {
+            "title": raw_name or (resolved_name or ""),
+            "name": raw_name or (resolved_name or ""),
+            "id": str(ticket.get("id") or ""),
+            "ticket_id": str(ticket.get("id") or ""),
+            "priority": str(ticket.get("priority") or ""),
+            "status": str(ticket.get("status") or ""),
+            "assignee": str(resolved_assignee or ""),
+            "labels": ", ".join(merged_labels),
+        }
+
+        def _replace_token(match: re.Match[str]) -> str:
+            nonlocal used_managed
+            token = match.group(1) or match.group(2)
+            if token in {"description", "body"}:
+                if managed_section is None:
+                    return ""
+                if not used_managed:
+                    used_managed = True
+                    return managed_section
+                return plain_description.strip()
+            return values.get(token, match.group(0))
+
+        rendered_body = self.TEMPLATE_TOKEN_RE.sub(
+            _replace_token, str(template.get("body") or "")
+        )
+        rendered_body = self.FORM_SLOT_RE.sub(_replace_form_slot, rendered_body)
+        if managed_section is not None and not used_managed:
+            rendered_body = self._merge_description(rendered_body, plain_description)
+        self._description_bounds(rendered_body)
+        return rendered_body, merged_labels, resolved_name, resolved_assignee
+
     def create_ticket(self, ticket: dict[str, Any], **kwargs) -> TicketRef:
         """Apply lifecycle to both a new issue and a durable-marker match."""
         status = ticket.get("status")
@@ -519,8 +851,23 @@ class GitHubBackend(BasePMBackend):
             raise ValueError("sync_github_status_unsupported")
         payload = dict(ticket)
         description = ticket.get("description") if "description" in ticket else ticket.get("body")
-        if description is not None:
-            payload["description"] = self._merge_description(None, description)
+        template = self._resolve_issue_template()
+        if template is not None:
+            rendered_body, merged_labels, resolved_name, resolved_assignee = self._render_issue_template(
+                template, payload, description
+            )
+            payload["description"] = rendered_body
+            payload["labels"] = merged_labels
+            if resolved_name and not str(payload.get("name") or payload.get("title") or "").strip():
+                payload["name"] = resolved_name
+            if resolved_assignee and not payload.get("assignee"):
+                payload["assignee"] = resolved_assignee
+        else:
+            default_labels = self._default_configured_labels()
+            if default_labels:
+                payload["labels"] = self._merge_unique_labels(default_labels, payload.get("labels"))
+            if description is not None:
+                payload["description"] = self._merge_description(None, description)
         reference = super().create_ticket(payload, **kwargs)
         self._clear_read_cache()
         issue = self.repo.get_issue(int(reference.id))
