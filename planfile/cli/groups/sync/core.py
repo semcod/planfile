@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import glob
+import json
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from planfile.cli.core import console, print_error, print_warning
 from planfile.integrations.config import IntegrationConfig
+from planfile.sync.deadline import SyncDeadlineExceededError
 from planfile.sync.github import GitHubBackend
 from planfile.sync.operations import (
     _bind_sync_state,
@@ -426,6 +428,7 @@ def _execute_sync_with_progress(
     sprint_ids: list[str] | None = None,
     remote_labels: list[str] | None = None,
     exclude_incident_noise: bool = False,
+    timeout_seconds: float | None = None,
 ) -> None:
     """Execute sync; GitHub both observes inbound before outbound mutation."""
     inbound_first = integration_name == "github" and direction == "both"
@@ -441,6 +444,15 @@ def _execute_sync_with_progress(
     ) as progress:
         def pull():
             task = progress.add_task("Syncing from external system...", total=None)
+            pull_kwargs: dict[str, Any] = {
+                "publish_to": publish_to,
+                "ticket_ids": ticket_ids,
+                "sprint_ids": sprint_ids,
+                "remote_labels": remote_labels,
+                "exclude_incident_noise": exclude_incident_noise,
+            }
+            if timeout_seconds is not None:
+                pull_kwargs["timeout_seconds"] = timeout_seconds
             sync_from_external(
                 observer if inbound_first else backend,
                 inbound_store,
@@ -448,11 +460,7 @@ def _execute_sync_with_progress(
                 integration_name,
                 v1_source_file,
                 v1_data,
-                publish_to=publish_to,
-                ticket_ids=ticket_ids,
-                sprint_ids=sprint_ids,
-                remote_labels=remote_labels,
-                exclude_incident_noise=exclude_incident_noise,
+                **pull_kwargs,
             )
             progress.update(task, description="[green]✓ Synced from external system[/green]")
 
@@ -510,6 +518,7 @@ def sync_integration(
     incremental: bool = False,
     max_tickets: int = 2,
     exclude_incident_noise: bool = False,
+    timeout_seconds: float | None = None,
 ) -> None:
     """Sync with a specific integration."""
     if show_header:
@@ -522,8 +531,6 @@ def sync_integration(
         _apply_github_overrides(config, repo)
 
     if incremental:
-        import json
-
         from planfile import Planfile
         from planfile.core.store import PlanfileStore
         from planfile.sync.incremental import sync_incremental
@@ -610,12 +617,17 @@ def sync_integration(
             sprint_ids,
             remote_labels,
             exclude_incident_noise=exclude_incident_noise,
+            **({"timeout_seconds": timeout_seconds} if timeout_seconds is not None else {}),
         )
         delivered_comments = []
         if integration_name == "github" and direction in {"to", "both"} and not dry_run:
             delivered_comments = sync_pending_comments(store, backend, ticket_ids)
     except OutboundSyncError as error:
         print_error(str(error))
+        raise typer.Exit(1) from error
+    except SyncDeadlineExceededError as error:
+        print_error(str(error))
+        typer.echo(json.dumps(error.to_dict(), sort_keys=True))
         raise typer.Exit(1) from error
 
     if not dry_run:
