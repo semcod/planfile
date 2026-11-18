@@ -566,3 +566,60 @@ def test_bundle_dry_run_replay_partial_resume_conflicts_and_execution_inert(tmp_
     with pytest.raises(DeliveryPlanError, match="delivery_plan_external_dependency_unresolved"):
         pf2.materialize_delivery_plan(dangling)
     assert pf2.list_tickets(sprint="all") == []
+
+
+def test_bundle_crash_between_bulk_create_and_blocker_wiring_repairs_inverse_blocks(
+    tmp_path, monkeypatch
+):
+    from planfile.delivery_plan import DeliveryPlanRepository
+
+    proposals = [
+        _proposal("plan-001", repository="semcod/planfile", home="semcod", base_sha="a" * 40),
+        _proposal(
+            "auto-001",
+            repository="uritime/autodo",
+            home="uritime",
+            base_sha="b" * 40,
+            depends_on=["plan-001"],
+        ),
+    ]
+    bundle = compose_delivery_plan_bundle(
+        proposals,
+        bundle_id="crash-wiring",
+        bundle_ref="artifact://semcod/planfile/crash-wiring",
+    )
+    bundle_dict = bundle.model_dump(mode="json", by_alias=True, exclude_none=False)
+    pf = Planfile(str(tmp_path))
+    subplans_by_repo = {s["repository"]: s for s in bundle_dict["subplans"]}
+
+    original_wire = DeliveryPlanRepository._wire_blocker_blocks_unlocked
+
+    def fail_once(self, edges):
+        raise RuntimeError("simulated_crash_before_wiring")
+
+    monkeypatch.setattr(DeliveryPlanRepository, "_wire_blocker_blocks_unlocked", fail_once)
+    with pytest.raises(RuntimeError, match="simulated_crash_before_wiring"):
+        pf.materialize_delivery_bundle(bundle_dict)
+
+    # First subplan finished, second bulk-created auto-001 before wiring blocker's blocks list.
+    assert len(pf.list_tickets(sprint="all")) == 2
+    by_key = {
+        t.source.context["candidate_key"]: t
+        for t in pf.list_tickets(sprint="all")
+        if t.source and isinstance(t.source.context, dict)
+    }
+    blocker = by_key["plan-001"]
+    dependent = by_key["auto-001"]
+    assert dependent.blocked_by == [blocker.id]
+    assert blocker.blocks == []
+
+    monkeypatch.setattr(DeliveryPlanRepository, "_wire_blocker_blocks_unlocked", original_wire)
+    recovered = pf.materialize_delivery_bundle(bundle_dict)
+    assert recovered["ticket_ids"][f"{subplans_by_repo['semcod/planfile']['plan_id']}:plan-001"] == blocker.id
+    assert recovered["ticket_ids"][f"{subplans_by_repo['uritime/autodo']['plan_id']}:auto-001"] == dependent.id
+    assert len(pf.list_tickets(sprint="all")) == 2
+
+    reloaded_blocker = pf.get_ticket(blocker.id)
+    assert reloaded_blocker is not None
+    assert dependent.id in (reloaded_blocker.blocks or [])
+

@@ -273,6 +273,26 @@ async def dag_validation_unavailable_handler(
         },
     )
 
+
+@app.exception_handler(TicketIndexContentionError)
+async def ticket_index_contention_handler(
+    _: Request,
+    __: TicketIndexContentionError,
+):
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": "ticket_index_repair_pending",
+            "code": "ticket_index_repair_pending",
+            "retryable": True,
+            "retry_after_seconds": STORE_LOCK_RETRY_AFTER_SECONDS,
+        },
+        headers={
+            **NO_STORE_HEADERS,
+            "Retry-After": str(STORE_LOCK_RETRY_AFTER_SECONDS),
+        },
+    )
+
 _cors_origins = [
     origin.strip()
     for origin in os.environ.get("PLANFILE_CORS_ORIGINS", "").split(",")
@@ -702,6 +722,7 @@ _TICKET_LIST_RESPONSE_BUILD_LOCKS = {
 }
 _TICKET_ARCHIVE_OPERATIONAL_BUILD_SLOTS = BoundedSemaphore(4)
 _TICKET_LIST_LATEST: dict[tuple, tuple[float, bytes, int, int]] = {}
+_TICKET_LIST_LATEST_STALE_KEYS: set[tuple] = set()
 _TICKET_LIST_RESPONSE_CACHE_DEFAULT_BYTES = 256 * 1024 * 1024
 _TICKET_LIST_RESPONSE_CACHE_MIN_BYTES = 1024 * 1024
 _TICKET_LIST_RESPONSE_CACHE_MAX_BYTES = 512 * 1024 * 1024
@@ -847,13 +868,11 @@ def _ticket_list_is_heavy_archive(
     limit: int | None,
     view: str,
 ) -> bool:
-    return (
-        sprint == "all"
-        and view == "operational"
-        and not filters
-        and limit is not None
-        and limit >= 500
-    )
+    if filters:
+        return False
+    if limit is not None and limit < 250:
+        return False
+    return view == "operational" or (sprint == "all" and view == "full")
 
 
 @contextmanager
@@ -877,6 +896,26 @@ def _ticket_list_workload_slot(
     yield
 
 
+def _evict_ticket_list_cache_locked(*, byte_limit: int, incoming_bytes: int) -> None:
+    """Evict oldest cached ticket list projections incrementally to stay bounded."""
+    while _TICKET_LIST_RESPONSE_CACHE and (
+        len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT
+        or _ticket_list_response_cached_bytes() + incoming_bytes > byte_limit
+    ):
+        oldest_key = next(iter(_TICKET_LIST_RESPONSE_CACHE))
+        _TICKET_LIST_RESPONSE_CACHE.pop(oldest_key, None)
+        evicted_query = oldest_key[:-1]
+        _TICKET_LIST_LATEST.pop(evicted_query, None)
+        _TICKET_LIST_LATEST_STALE_KEYS.discard(evicted_query)
+    while _TICKET_LIST_LATEST and (
+        len(_TICKET_LIST_LATEST) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT
+        or _ticket_list_response_cached_bytes() + incoming_bytes > byte_limit
+    ):
+        oldest_query = next(iter(_TICKET_LIST_LATEST))
+        _TICKET_LIST_LATEST.pop(oldest_query, None)
+        _TICKET_LIST_LATEST_STALE_KEYS.discard(oldest_query)
+
+
 def _cache_ticket_list_response(
     *,
     query_key: tuple,
@@ -891,18 +930,135 @@ def _cache_ticket_list_response(
             if existing_key[:-1] == query_key:
                 _TICKET_LIST_RESPONSE_CACHE.pop(existing_key, None)
         _TICKET_LIST_LATEST.pop(query_key, None)
+        _TICKET_LIST_LATEST_STALE_KEYS.discard(query_key)
 
         byte_limit = _ticket_list_response_cache_byte_limit()
         if len(body) > byte_limit:
             return
-        if (
-            len(_TICKET_LIST_RESPONSE_CACHE) >= _TICKET_LIST_RESPONSE_CACHE_LIMIT
-            or _ticket_list_response_cached_bytes() + len(body) > byte_limit
-        ):
-            _TICKET_LIST_RESPONSE_CACHE.clear()
-            _TICKET_LIST_LATEST.clear()
+        _evict_ticket_list_cache_locked(byte_limit=byte_limit, incoming_bytes=len(body))
         _TICKET_LIST_RESPONSE_CACHE[versioned_key] = (body, total, count)
         _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
+
+
+def _cache_stale_latest_response(
+    *,
+    query_key: tuple,
+    body: bytes,
+    total: int,
+    count: int,
+) -> None:
+    """Record a bounded stale snapshot in _TICKET_LIST_LATEST for repeated repair polls."""
+    with _TICKET_LIST_RESPONSE_CACHE_LOCK:
+        _TICKET_LIST_LATEST.pop(query_key, None)
+        _TICKET_LIST_LATEST_STALE_KEYS.discard(query_key)
+        byte_limit = _ticket_list_response_cache_byte_limit()
+        if len(body) > byte_limit:
+            return
+        _evict_ticket_list_cache_locked(byte_limit=byte_limit, incoming_bytes=len(body))
+        _TICKET_LIST_LATEST[query_key] = (time.monotonic(), body, total, count)
+        _TICKET_LIST_LATEST_STALE_KEYS.add(query_key)
+
+
+def _oversized_ticket_response(
+    *,
+    estimated_bytes: int,
+    response_limit: int,
+    total: int,
+    count: int,
+    offset: int,
+    view: str,
+) -> JSONResponse | None:
+    if estimated_bytes <= response_limit:
+        return None
+    requested_rows = max(1, count)
+    recommended_limit = max(
+        1,
+        min(1000, int(requested_rows * response_limit / estimated_bytes)),
+    )
+    return JSONResponse(
+        status_code=413,
+        content={
+            "detail": "ticket_response_too_large",
+            "estimated_bytes": estimated_bytes,
+            "max_bytes": response_limit,
+            "recommended_limit": recommended_limit,
+            "offset": offset,
+        },
+        headers={
+            **NO_STORE_HEADERS,
+            "X-Planfile-View": view,
+            "X-Total-Count": str(total),
+            "X-Result-Count": str(count),
+            "X-Planfile-Recommended-Limit": str(recommended_limit),
+        },
+    )
+
+
+def _durable_ticket_page_payload(
+    pf,
+    *,
+    sprint: str,
+    filters: dict[str, Any],
+    offset: int,
+    limit: int | None,
+    view: Literal["full", "operational", "summary"],
+) -> tuple[list[dict[str, Any]], int, int]:
+    """Stream durable ticket records without populating store._ticket_model_cache."""
+    store = getattr(pf, "store", None)
+    default_list_tickets = getattr(type(pf), "list_tickets", None)
+    instance_list_tickets = getattr(pf, "__dict__", {}).get("list_tickets")
+    has_custom_list_tickets = instance_list_tickets is not None and (
+        getattr(instance_list_tickets, "__func__", None) is not default_list_tickets
+    )
+    if (
+        has_custom_list_tickets
+        or store is None
+        or not callable(getattr(store, "ticket_records", None))
+        or not callable(getattr(store, "_ticket_from_data", None))
+    ):
+        tickets = pf.list_tickets(sprint=sprint, **filters)
+        total = len(tickets)
+        tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
+        count = len(tickets)
+        payload = [
+            _ticket_operational_payload(ticket) if view == "operational"
+            else _ticket_summary_payload(ticket) if view == "summary"
+            else ticket.model_dump(mode="json", exclude_none=True)
+            for ticket in tickets
+        ]
+        return payload, total, count
+
+    page_models: list[Ticket] = []
+    total = 0
+    end = None if limit is None else offset + limit
+    if not filters:
+        for record in store.ticket_records(sprint=sprint):
+            if "id" not in record:
+                continue
+            index = total
+            total += 1
+            if index < offset or (end is not None and index >= end):
+                continue
+            ticket = store._ticket_from_data(record)
+            if ticket is not None:
+                page_models.append(ticket)
+    else:
+        for record in store.ticket_records(sprint=sprint):
+            ticket = store._ticket_from_data(record)
+            if ticket is None or not store._apply_filters([ticket], **filters):
+                continue
+            index = total
+            total += 1
+            if index >= offset and (end is None or index < end):
+                page_models.append(ticket)
+    count = len(page_models)
+    payload = [
+        _ticket_operational_payload(ticket) if view == "operational"
+        else _ticket_summary_payload(ticket) if view == "summary"
+        else ticket.model_dump(mode="json", exclude_none=True)
+        for ticket in page_models
+    ]
+    return payload, total, count
 
 
 def _bounded_stale_index_response(
@@ -915,6 +1071,7 @@ def _bounded_stale_index_response(
     view: Literal["full", "operational", "summary"],
     allow_unbounded_summary: bool = False,
     require_fresh: bool = False,
+    query_key: tuple | None = None,
 ) -> Response | None:
     """Serve a recent, coherent projection while its source index is repaired."""
     if require_fresh:
@@ -922,8 +1079,9 @@ def _bounded_stale_index_response(
         # still stale data, so it must fall through to the explicit 503 instead.
         return None
     archive_queue = sprint == "all" and limit is not None
+    operational_bounded = view == "operational" and limit is not None
     legacy_summary = allow_unbounded_summary and view == "summary"
-    if view == "full" or not (archive_queue or legacy_summary):
+    if view == "full" or not (archive_queue or operational_bounded or legacy_summary):
         return None
     index = pf.store._sqlite_ticket_index()
     if not index.has_fresh_snapshot(_INDEX_REPAIR_STALE_WINDOW_SECONDS):
@@ -955,6 +1113,26 @@ def _bounded_stale_index_response(
         return None
     if view != "operational":
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        result_count = len(payload)
+    else:
+        result_count = count
+        oversized = _oversized_ticket_response(
+            estimated_bytes=len(body),
+            response_limit=_ticket_list_response_byte_limit(),
+            total=total,
+            count=result_count,
+            offset=offset,
+            view=view,
+        )
+        if oversized is not None:
+            return oversized
+    if query_key is not None:
+        _cache_stale_latest_response(
+            query_key=query_key,
+            body=body,
+            total=total,
+            count=result_count,
+        )
     return Response(
         content=body,
         media_type="application/json",
@@ -963,7 +1141,7 @@ def _bounded_stale_index_response(
             "X-Planfile-View": view,
             "X-Planfile-Index-State": "stale",
             "X-Total-Count": str(total),
-            "X-Result-Count": str(count if view == "operational" else len(payload)),
+            "X-Result-Count": str(result_count),
         },
     )
 
@@ -992,17 +1170,26 @@ def _ticket_list_response(
     ):
         with _TICKET_LIST_RESPONSE_CACHE_LOCK:
             latest = _TICKET_LIST_LATEST.get(query_key)
-        if allow_stale and latest is not None and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS:
+            latest_is_stale = query_key in _TICKET_LIST_LATEST_STALE_KEYS
+        if (
+            allow_stale
+            and not require_fresh
+            and latest is not None
+            and time.monotonic() - latest[0] < _DASHBOARD_STALE_WINDOW_SECONDS
+        ):
             _, body, total, count = latest
+            headers = {
+                **NO_STORE_HEADERS,
+                "X-Planfile-View": view,
+                "X-Total-Count": str(total),
+                "X-Result-Count": str(count),
+            }
+            if latest_is_stale:
+                headers["X-Planfile-Index-State"] = "stale"
             return Response(
                 content=body,
                 media_type="application/json",
-                headers={
-                    **NO_STORE_HEADERS,
-                    "X-Planfile-View": view,
-                    "X-Total-Count": str(total),
-                    "X-Result-Count": str(count),
-                },
+                headers=headers,
             )
         signature = _ticket_snapshot_signature(pf, sprint)
         key = query_key + (signature,)
@@ -1036,30 +1223,16 @@ def _ticket_list_response(
                             repair=False,
                             signature=signature,
                         )
-                        response_limit = _ticket_list_response_byte_limit()
-                        if estimated_bytes > response_limit:
-                            requested_rows = max(1, count)
-                            recommended_limit = max(
-                                1,
-                                min(1000, int(requested_rows * response_limit / estimated_bytes)),
-                            )
-                            return JSONResponse(
-                                status_code=413,
-                                content={
-                                    "detail": "ticket_response_too_large",
-                                    "estimated_bytes": estimated_bytes,
-                                    "max_bytes": response_limit,
-                                    "recommended_limit": recommended_limit,
-                                    "offset": offset,
-                                },
-                                headers={
-                                    **NO_STORE_HEADERS,
-                                    "X-Planfile-View": view,
-                                    "X-Total-Count": str(total),
-                                    "X-Result-Count": str(count),
-                                    "X-Planfile-Recommended-Limit": str(recommended_limit),
-                                },
-                            )
+                        oversized = _oversized_ticket_response(
+                            estimated_bytes=estimated_bytes,
+                            response_limit=_ticket_list_response_byte_limit(),
+                            total=total,
+                            count=count,
+                            offset=offset,
+                            view=view,
+                        )
+                        if oversized is not None:
+                            return oversized
                         body, total, count = pf.store.indexed_ticket_json_response(
                             sprint=sprint,
                             filters=filters,
@@ -1077,6 +1250,16 @@ def _ticket_list_response(
                             repair=False,
                             signature=signature,
                         )
+                        oversized = _oversized_ticket_response(
+                            estimated_bytes=len(body),
+                            response_limit=_ticket_list_response_byte_limit(),
+                            total=total,
+                            count=count,
+                            offset=offset,
+                            view=view,
+                        )
+                        if oversized is not None:
+                            return oversized
                     else:
                         payload, total = pf.store.indexed_ticket_payloads(
                             sprint=sprint,
@@ -1089,8 +1272,7 @@ def _ticket_list_response(
                         count = len(payload)
                 except TicketIndexContentionError:
                     if (
-                        (allow_stale or (view == "full" and not require_fresh))
-                        and not require_fresh
+                        not require_fresh
                         and latest is not None
                         and time.monotonic() - latest[0]
                         < _INDEX_REPAIR_STALE_WINDOW_SECONDS
@@ -1116,10 +1298,16 @@ def _ticket_list_response(
                         view=view,
                         allow_unbounded_summary=allow_stale or allow_index_stale,
                         require_fresh=require_fresh,
+                        query_key=query_key,
                     )
                     if stale_index_response is not None:
                         return stale_index_response
-                    if require_fresh or view == "full" or sprint == "all":
+                    if (
+                        require_fresh
+                        or view == "full"
+                        or sprint == "all"
+                        or (view == "operational" and pf.store.ticket_index_enabled())
+                    ):
                         return JSONResponse(
                             status_code=503,
                             content={"detail": "ticket_index_repair_pending"},
@@ -1127,18 +1315,27 @@ def _ticket_list_response(
                         )
                     use_durable_sources = True
             if use_durable_sources:
-                tickets = pf.list_tickets(sprint=sprint, **filters)
-                total = len(tickets)
-                tickets = tickets[offset:] if limit is None else tickets[offset : offset + limit]
-                count = len(tickets)
-                payload = [
-                    _ticket_operational_payload(ticket) if view == "operational"
-                    else _ticket_summary_payload(ticket) if view == "summary"
-                    else ticket.model_dump(mode="json", exclude_none=True)
-                    for ticket in tickets
-                ]
+                payload, total, count = _durable_ticket_page_payload(
+                    pf,
+                    sprint=sprint,
+                    filters=filters,
+                    offset=offset,
+                    limit=limit,
+                    view=view,
+                )
             if body is None:
                 body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+                if view == "operational":
+                    oversized = _oversized_ticket_response(
+                        estimated_bytes=len(body),
+                        response_limit=_ticket_list_response_byte_limit(),
+                        total=total,
+                        count=count,
+                        offset=offset,
+                        view=view,
+                    )
+                    if oversized is not None:
+                        return oversized
             # SQLite reads are transactionally coherent and version-keyed. The
             # durable-file fallback still needs a second source check because it
             # can span multiple independently replaced YAML files.
@@ -1532,7 +1729,7 @@ def _create_ticket_atomic(pf, body: TicketCreate) -> tuple[Ticket, bool, str]:
         try:
             created_ticket = store._create_ticket_unlocked(ticket_model)
             return created_ticket, True, "committed"
-        except sqlite3.DatabaseError as exc:
+        except (sqlite3.DatabaseError, TicketIndexContentionError) as exc:
             persisted = store.get_ticket(ticket_id, repair_index=False)
             if persisted is None:
                 raise
@@ -1819,7 +2016,7 @@ def _update_ticket_atomic(pf, ticket_id: str, body: TicketUpdate) -> tuple[Ticke
         stage = "committed"
         try:
             ticket = store._update_ticket_unlocked(ticket_id, **updates)
-        except sqlite3.DatabaseError as exc:
+        except (sqlite3.DatabaseError, TicketIndexContentionError) as exc:
             persisted = store.get_ticket(ticket_id, repair_index=False)
             if persisted is None or persisted.updated_at == before_updated_at:
                 raise
