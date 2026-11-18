@@ -13,14 +13,24 @@ from planfile.core.fastio import _atomic_write_text
 from planfile.core.models import Ticket, TicketExecution, TicketOutputs, TicketSource, TicketStatus
 from planfile.delivery_plan_contracts import (
     AUTODO_PLANFILE_IMPORT_SCHEMA,
+    COMPILED_WORK_PLAN_V2_SCHEMA,
+    DEFAULT_TRUSTED_TARGET_POLICY,
+    DELIVERY_PLACEMENT_V2_SCHEMA,
+    DELIVERY_PLAN_BUNDLE_STATE_SCHEMA,
     DELIVERY_PLAN_RESUME_SCHEMA,
     DELIVERY_PLAN_STATE_SCHEMA,
+    TICKET_CANDIDATE_V2_SCHEMA,
     AutodoPlanfileImportMetadataV1,
     CompiledWorkPlanV1,
+    CompiledWorkPlanV2,
     DeliveryCheckpointV1,
     DeliveryPlacementV1,
+    DeliveryPlacementV2,
+    DeliveryPlanBundleV1,
     DeliveryPlanSplitV1,
     TicketCandidateV1,
+    TicketCandidateV2,
+    TrustedTargetPolicyV1,
     WorkPlanTerminalReceiptV1,
     preflight_delivery_plan_payload,
 )
@@ -45,6 +55,22 @@ def _dump(model: Any) -> dict[str, Any]:
     )
 
 
+def _parse_placement_state(raw: object) -> DeliveryPlacementV1 | DeliveryPlacementV2:
+    if isinstance(raw, dict) and raw.get("schema") == DELIVERY_PLACEMENT_V2_SCHEMA:
+        return DeliveryPlacementV2.model_validate(raw)
+    return DeliveryPlacementV1.model_validate(raw)
+
+
+def _parse_candidate_state(raw: object) -> TicketCandidateV1 | TicketCandidateV2:
+    if isinstance(raw, dict) and raw.get("schema") == TICKET_CANDIDATE_V2_SCHEMA:
+        return TicketCandidateV2.model_validate(raw)
+    return TicketCandidateV1.model_validate(raw)
+
+
+def _dedup_preserve(items: list[str]) -> list[str]:
+    return list(dict.fromkeys(items))
+
+
 class DeliveryPlanRepository:
     """Persist delivery DAG state next to Planfile's authoritative ticket store.
 
@@ -57,6 +83,7 @@ class DeliveryPlanRepository:
     def __init__(self, store: Any):
         self.store = store
         self.base_dir = Path(store.base_dir) / "delivery-plans"
+        self.bundle_dir = self.base_dir / "bundles"
 
     @staticmethod
     def _plan_id(value: str) -> str:
@@ -124,7 +151,8 @@ class DeliveryPlanRepository:
             str(state.get("target_branch") or ""),
         ):
             _fail("delivery_plan_state_identity_invalid")
-        DeliveryPlacementV1.model_validate(state.get("placement"))
+        parsed_placement = _parse_placement_state(state.get("placement"))
+        placement_dump = _dump(parsed_placement)
         try:
             created_at = datetime.fromisoformat(str(state["created_at"]))
             updated_at = datetime.fromisoformat(str(state["updated_at"]))
@@ -152,11 +180,11 @@ class DeliveryPlanRepository:
                 "split",
             }:
                 _fail("delivery_plan_state_candidate_invalid")
-            candidate = TicketCandidateV1.model_validate(node["candidate"])
+            candidate = _parse_candidate_state(node["candidate"])
             if (
                 key != candidate.candidate_key
                 or candidate.plan_hash != state["plan_hash"]
-                or candidate.placement.model_dump(mode="json") != state["placement"]
+                or _dump(candidate.placement) != placement_dump
             ):
                 _fail("delivery_plan_state_candidate_binding_mismatch")
             ticket_id = str(node.get("ticket_id") or "")
@@ -277,9 +305,27 @@ class DeliveryPlanRepository:
             for dependencies in pending.values():
                 dependencies.difference_update(ready)
 
+    def _bundle_path(self, bundle_id: str) -> Path:
+        return self.bundle_dir / f"{self._plan_id(bundle_id)}.json"
+
+    def _read_bundle_unlocked(self, bundle_id: str) -> dict[str, Any] | None:
+        try:
+            value = json.loads(self._bundle_path(bundle_id).read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return None
+        except (OSError, ValueError) as exc:
+            raise DeliveryPlanError("delivery_plan_bundle_state_unreadable") from exc
+        if not isinstance(value, dict) or value.get("schema") != DELIVERY_PLAN_BUNDLE_STATE_SCHEMA:
+            _fail("delivery_plan_bundle_state_invalid")
+        return cast(dict[str, Any], value)
+
+    def _write_bundle_unlocked(self, state: dict[str, Any]) -> None:
+        content = json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+        _atomic_write_text(self._bundle_path(str(state["bundle_id"])), content)
+
     @staticmethod
     def _receipt_map(
-        plan: CompiledWorkPlanV1,
+        plan: CompiledWorkPlanV1 | CompiledWorkPlanV2,
         receipts: list[dict[str, Any]] | tuple[dict[str, Any], ...],
     ) -> dict[str, WorkPlanTerminalReceiptV1]:
         candidates = {candidate.candidate_key: candidate for candidate in plan.candidates}
@@ -326,7 +372,7 @@ class DeliveryPlanRepository:
 
     def _existing_ticket_bindings_unlocked(
         self,
-        plan: CompiledWorkPlanV1,
+        plan: CompiledWorkPlanV1 | CompiledWorkPlanV2,
     ) -> dict[str, dict[str, Any]]:
         expected = {candidate.candidate_key: candidate for candidate in plan.candidates}
         found: dict[str, dict[str, Any]] = {}
@@ -354,16 +400,21 @@ class DeliveryPlanRepository:
 
     @staticmethod
     def _ticket_for(
-        candidate: TicketCandidateV1,
+        candidate: TicketCandidateV1 | TicketCandidateV2,
         ticket_id: str,
         dependency_ids: list[str],
         receipt: WorkPlanTerminalReceiptV1 | None,
-        plan: CompiledWorkPlanV1,
+        plan: CompiledWorkPlanV1 | CompiledWorkPlanV2,
     ) -> Ticket:
+        is_v2 = isinstance(plan, CompiledWorkPlanV2)
         context = {
             "delivery_plan_id": plan.plan_id,
             "delivery_plan_ref": plan.plan_ref,
             "plan_hash": plan.plan_hash,
+            "repository": plan.repository,
+            "accepted_base_sha": plan.accepted_base_sha,
+            "placement_home": plan.placement.home,
+            "placement_runtime_owner": plan.placement.runtime_owner,
             "candidate_key": candidate.candidate_key,
             "candidate_digest": candidate.candidate_digest,
             "idempotency_key": candidate.idempotency_key,
@@ -401,14 +452,18 @@ class DeliveryPlanRepository:
             files=list(candidate.allowed_paths),
             acceptance_criteria=[criterion.statement for criterion in candidate.acceptance],
             blocked_by=dependency_ids,
-            source=TicketSource(tool="subactor.strategy", version="work-plan/v1", context=context),
+            source=TicketSource(
+                tool="subactor.strategy",
+                version=("work-plan/v2" if is_v2 else "work-plan/v1"),
+                context=context,
+            ),
             execution=TicketExecution(state=execution_state),
             outputs=outputs,
         )
 
     @staticmethod
     def _node(
-        candidate: TicketCandidateV1,
+        candidate: TicketCandidateV1 | TicketCandidateV2,
         ticket_id: str,
         receipt: WorkPlanTerminalReceiptV1 | None,
     ) -> dict[str, Any]:
@@ -429,87 +484,434 @@ class DeliveryPlanRepository:
             "split": None,
         }
 
-    def preflight(self, payload: object) -> dict[str, Any]:
-        """Validate and classify a compiled plan or import envelope without touching storage."""
+    def preflight(
+        self,
+        payload: object,
+        *,
+        trusted_policy: TrustedTargetPolicyV1 = DEFAULT_TRUSTED_TARGET_POLICY,
+    ) -> dict[str, Any]:
+        """Validate and classify a compiled plan, bundle, or import envelope without touching storage."""
 
-        return cast(dict[str, Any], preflight_delivery_plan_payload(payload))
+        return cast(
+            dict[str, Any],
+            preflight_delivery_plan_payload(payload, trusted_policy=trusted_policy),
+        )
+
+    @staticmethod
+    def _parse_compiled_plan(
+        compiled_plan: dict[str, Any],
+        trusted_policy: TrustedTargetPolicyV1,
+    ) -> CompiledWorkPlanV1 | CompiledWorkPlanV2:
+        if isinstance(compiled_plan, dict) and compiled_plan.get("schema") == AUTODO_PLANFILE_IMPORT_SCHEMA:
+            AutodoPlanfileImportMetadataV1.model_validate(compiled_plan)
+            _fail("delivery_plan_import_envelope_not_native")
+        if isinstance(compiled_plan, dict) and compiled_plan.get("schema") == COMPILED_WORK_PLAN_V2_SCHEMA:
+            plan_v2 = CompiledWorkPlanV2.model_validate(compiled_plan)
+            try:
+                trusted_policy.verify_target(plan_v2.repository, plan_v2.placement)
+            except ValueError as exc:
+                raise DeliveryPlanError(str(exc)) from exc
+            return plan_v2
+        return CompiledWorkPlanV1.model_validate(compiled_plan)
+
+    def _resolve_external_dependencies_unlocked(
+        self,
+        plan: CompiledWorkPlanV1 | CompiledWorkPlanV2,
+        external_ticket_bindings: dict[tuple[str, str], str] | None,
+    ) -> dict[str, list[str]]:
+        bindings = dict(external_ticket_bindings or {})
+        resolved: dict[str, list[str]] = {}
+        state_cache: dict[str, dict[str, Any]] = {}
+        for candidate in plan.candidates:
+            ext_refs = getattr(candidate, "external_depends_on", ())
+            ext_ids: list[str] = []
+            for ref in ext_refs:
+                ticket_id = bindings.get((ref.plan_id, ref.candidate_key))
+                if ticket_id is None:
+                    other = state_cache.get(ref.plan_id)
+                    if other is None:
+                        other = self._read_unlocked(ref.plan_id)
+                        if other is None:
+                            _fail("delivery_plan_external_dependency_unresolved")
+                        state_cache[ref.plan_id] = other
+                    other_node = other["candidates"].get(ref.candidate_key)
+                    if other_node is None:
+                        _fail("delivery_plan_external_dependency_unresolved")
+                    ticket_id = str(other_node["ticket_id"])
+                    bindings[(ref.plan_id, ref.candidate_key)] = ticket_id
+                ext_ids.append(ticket_id)
+            resolved[candidate.candidate_key] = _dedup_preserve(ext_ids)
+        return resolved
+
+    def _wire_blocker_blocks_unlocked(
+        self,
+        edges: list[tuple[str, str]],
+    ) -> None:
+        by_blocker: dict[str, list[str]] = {}
+        for blocker_id, dependent_id in edges:
+            by_blocker.setdefault(blocker_id, []).append(dependent_id)
+        for blocker_id, dependents in by_blocker.items():
+            blocker = self.store.get_ticket(blocker_id)
+            if blocker is None:
+                continue
+            merged = _dedup_preserve([*(blocker.blocks or []), *dependents])
+            if merged != list(blocker.blocks or []):
+                self.store._update_ticket_unlocked(
+                    blocker_id,
+                    blocks=merged,
+                    reason="delivery_plan_dependency_wiring",
+                    actor="planfile.delivery-plan",
+                )
+
+    def _materialize_unlocked(
+        self,
+        plan: CompiledWorkPlanV1 | CompiledWorkPlanV2,
+        receipts: dict[str, WorkPlanTerminalReceiptV1],
+        *,
+        external_ticket_bindings: dict[tuple[str, str], str] | None = None,
+    ) -> dict[str, Any]:
+        current = self._read_unlocked(plan.plan_id)
+        if current is not None:
+            return self._reconcile_unlocked(
+                current,
+                plan,
+                receipts,
+                external_ticket_bindings=external_ticket_bindings,
+            )
+
+        if any(
+            candidate.state == "terminal" and candidate.candidate_key not in receipts
+            for candidate in plan.candidates
+        ):
+            _fail("delivery_plan_terminal_receipt_missing")
+
+        ext_deps_by_key = self._resolve_external_dependencies_unlocked(
+            plan, external_ticket_bindings
+        )
+        existing = self._existing_ticket_bindings_unlocked(plan)
+        missing = [c for c in plan.candidates if c.candidate_key not in existing]
+        reserved = iter(self.store._reserve_ids_unlocked(len(missing)))
+        ticket_ids = {
+            candidate.candidate_key: str(existing[candidate.candidate_key]["id"])
+            if candidate.candidate_key in existing
+            else next(reserved)
+            for candidate in plan.candidates
+        }
+        created = [
+            self._ticket_for(
+                candidate,
+                ticket_ids[candidate.candidate_key],
+                _dedup_preserve(
+                    [
+                        *(ticket_ids[key] for key in candidate.depends_on),
+                        *ext_deps_by_key.get(candidate.candidate_key, []),
+                    ]
+                ),
+                receipts.get(candidate.candidate_key),
+                plan,
+            )
+            for candidate in missing
+        ]
+        if created:
+            self.store._create_tickets_bulk_unlocked(created)
+        ext_edges = [
+            (dep_id, ticket_ids[candidate.candidate_key])
+            for candidate in missing
+            for dep_id in ext_deps_by_key.get(candidate.candidate_key, [])
+        ]
+        if ext_edges:
+            self._wire_blocker_blocks_unlocked(ext_edges)
+        timestamp = _now()
+        state = {
+            "schema": DELIVERY_PLAN_STATE_SCHEMA,
+            "revision": 1,
+            "plan_id": plan.plan_id,
+            "plan_ref": plan.plan_ref,
+            "plan_hash": plan.plan_hash,
+            "repository": plan.repository,
+            "accepted_base_sha": plan.accepted_base_sha,
+            "target_branch": plan.target_branch,
+            "placement": _dump(plan.placement),
+            "created_at": timestamp,
+            "updated_at": timestamp,
+            "candidates": {
+                candidate.candidate_key: self._node(
+                    candidate,
+                    ticket_ids[candidate.candidate_key],
+                    receipts.get(candidate.candidate_key),
+                )
+                for candidate in plan.candidates
+            },
+        }
+        self._write_unlocked(state)
+        return copy.deepcopy(state)
 
     def materialize(
         self,
         compiled_plan: dict[str, Any],
         *,
         terminal_receipts: list[dict[str, Any]] | tuple[dict[str, Any], ...] = (),
+        trusted_policy: TrustedTargetPolicyV1 = DEFAULT_TRUSTED_TARGET_POLICY,
+        external_ticket_bindings: dict[tuple[str, str], str] | None = None,
     ) -> dict[str, Any]:
         """Create or recover the exact ticket DAG and return its durable state."""
 
-        if isinstance(compiled_plan, dict) and compiled_plan.get("schema") == AUTODO_PLANFILE_IMPORT_SCHEMA:
-            AutodoPlanfileImportMetadataV1.model_validate(compiled_plan)
-            _fail("delivery_plan_import_envelope_not_native")
-
-        plan = CompiledWorkPlanV1.model_validate(compiled_plan)
+        plan = self._parse_compiled_plan(compiled_plan, trusted_policy)
         receipts = self._receipt_map(plan, terminal_receipts)
         with self.store.allocation_lock():
-            current = self._read_unlocked(plan.plan_id)
-            if current is not None:
-                return self._reconcile_unlocked(current, plan, receipts)
+            return self._materialize_unlocked(
+                plan,
+                receipts,
+                external_ticket_bindings=external_ticket_bindings,
+            )
 
-            if any(
-                candidate.state == "terminal" and candidate.candidate_key not in receipts
-                for candidate in plan.candidates
+    def migrate_v1_to_v2(
+        self,
+        compiled_plan_v2: dict[str, Any],
+        *,
+        trusted_policy: TrustedTargetPolicyV1 = DEFAULT_TRUSTED_TARGET_POLICY,
+    ) -> dict[str, Any]:
+        """Explicitly migrate a persisted v1 plan state to v2 while preserving exact ticket IDs."""
+
+        plan_v2 = CompiledWorkPlanV2.model_validate(compiled_plan_v2)
+        try:
+            trusted_policy.verify_target(plan_v2.repository, plan_v2.placement)
+        except ValueError as exc:
+            raise DeliveryPlanError(str(exc)) from exc
+
+        with self.store.mutation_lock():
+            current = self._read_unlocked(plan_v2.plan_id)
+            if current is None:
+                _fail("delivery_plan_not_found")
+            if (
+                current["repository"],
+                current["accepted_base_sha"],
+                current["target_branch"],
+            ) != (
+                plan_v2.repository,
+                plan_v2.accepted_base_sha,
+                plan_v2.target_branch,
             ):
-                _fail("delivery_plan_terminal_receipt_missing")
+                _fail("delivery_plan_migration_conflict")
+            v2_by_key = {c.candidate_key: c for c in plan_v2.candidates}
+            if set(v2_by_key) != set(current["candidates"]):
+                _fail("delivery_plan_migration_conflict")
 
-            existing = self._existing_ticket_bindings_unlocked(plan)
-            missing = [c for c in plan.candidates if c.candidate_key not in existing]
-            reserved = iter(self.store._reserve_ids_unlocked(len(missing)))
-            ticket_ids = {
-                candidate.candidate_key: str(existing[candidate.candidate_key]["id"])
-                if candidate.candidate_key in existing
-                else next(reserved)
-                for candidate in plan.candidates
-            }
-            created = [
-                self._ticket_for(
-                    candidate,
-                    ticket_ids[candidate.candidate_key],
-                    [ticket_ids[key] for key in candidate.depends_on],
-                    receipts.get(candidate.candidate_key),
-                    plan,
+            if (
+                current["plan_hash"] == plan_v2.plan_hash
+                and current["placement"] == _dump(plan_v2.placement)
+                and all(
+                    _parse_candidate_state(current["candidates"][k]["candidate"]).candidate_digest
+                    == c.candidate_digest
+                    for k, c in v2_by_key.items()
                 )
-                for candidate in missing
-            ]
-            if created:
-                self.store._create_tickets_bulk_unlocked(created)
-            timestamp = _now()
-            state = {
-                "schema": DELIVERY_PLAN_STATE_SCHEMA,
-                "revision": 1,
-                "plan_id": plan.plan_id,
-                "plan_ref": plan.plan_ref,
-                "plan_hash": plan.plan_hash,
-                "repository": plan.repository,
-                "accepted_base_sha": plan.accepted_base_sha,
-                "target_branch": plan.target_branch,
-                "placement": plan.placement.model_dump(mode="json"),
-                "created_at": timestamp,
-                "updated_at": timestamp,
-                "candidates": {
-                    candidate.candidate_key: self._node(
-                        candidate,
-                        ticket_ids[candidate.candidate_key],
-                        receipts.get(candidate.candidate_key),
-                    )
-                    for candidate in plan.candidates
-                },
+            ):
+                return copy.deepcopy(current)
+
+            for key, cand_v2 in v2_by_key.items():
+                node = current["candidates"][key]
+                ticket_id = str(node["ticket_id"])
+                ticket = self.store.get_ticket(ticket_id)
+                if ticket is None:
+                    _fail("delivery_plan_ticket_missing")
+                src = (
+                    ticket.source.model_dump(mode="python")
+                    if ticket.source is not None
+                    else {"tool": "subactor.strategy", "context": {}}
+                )
+                ctx = dict(src.get("context") or {})
+                ctx.update(
+                    {
+                        "delivery_plan_id": plan_v2.plan_id,
+                        "delivery_plan_ref": plan_v2.plan_ref,
+                        "plan_hash": plan_v2.plan_hash,
+                        "repository": plan_v2.repository,
+                        "accepted_base_sha": plan_v2.accepted_base_sha,
+                        "placement_home": plan_v2.placement.home,
+                        "placement_runtime_owner": plan_v2.placement.runtime_owner,
+                        "candidate_digest": cand_v2.candidate_digest,
+                        "idempotency_key": cand_v2.idempotency_key,
+                        "execution": "inert",
+                        "authority": "none",
+                    }
+                )
+                src["version"] = "work-plan/v2"
+                src["context"] = ctx
+                self.store._update_ticket_unlocked(
+                    ticket_id,
+                    source=TicketSource(**src),
+                    reason="delivery_plan_migrate_v1_to_v2",
+                    actor="planfile.delivery-plan",
+                )
+                node["candidate"] = _dump(cand_v2)
+
+            current["plan_ref"] = plan_v2.plan_ref
+            current["plan_hash"] = plan_v2.plan_hash
+            current["placement"] = _dump(plan_v2.placement)
+            current["revision"] += 1
+            current["updated_at"] = _now()
+            self._write_unlocked(current)
+            return copy.deepcopy(current)
+
+    @staticmethod
+    def _topo_sort_bundle_subplans(bundle: DeliveryPlanBundleV1) -> list[CompiledWorkPlanV2]:
+        by_id = {s.plan_id: s for s in bundle.subplans}
+        deps: dict[str, set[str]] = {
+            s.plan_id: {
+                ref.plan_id
+                for c in s.candidates
+                for ref in c.external_depends_on
             }
-            self._write_unlocked(state)
-            return copy.deepcopy(state)
+            for s in bundle.subplans
+        }
+        ordered: list[CompiledWorkPlanV2] = []
+        remaining = set(by_id)
+        while remaining:
+            ready = sorted(pid for pid in remaining if not (deps[pid] & remaining))
+            if not ready:
+                _fail("delivery_plan_bundle_dependency_cycle")
+            for pid in ready:
+                remaining.remove(pid)
+                ordered.append(by_id[pid])
+        return ordered
+
+    def materialize_bundle(
+        self,
+        bundle_payload: dict[str, Any],
+        *,
+        trusted_policy: TrustedTargetPolicyV1 = DEFAULT_TRUSTED_TARGET_POLICY,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        """Atomically materialize or resume a multi-repo bundle of bounded native subplans."""
+
+        bundle = DeliveryPlanBundleV1.model_validate(bundle_payload)
+        for subplan in bundle.subplans:
+            try:
+                trusted_policy.verify_target(subplan.repository, subplan.placement)
+            except ValueError as exc:
+                raise DeliveryPlanError(str(exc)) from exc
+
+        existing_bundle = self._read_bundle_unlocked(bundle.bundle_id)
+        if existing_bundle is not None and (
+            existing_bundle.get("bundle_hash") != bundle.bundle_hash
+            or existing_bundle.get("bundle_ref") != bundle.bundle_ref
+            or [item.get("plan_id") for item in existing_bundle.get("subplans", [])]
+            != [s.plan_id for s in bundle.subplans]
+        ):
+            _fail("delivery_plan_bundle_identity_conflict")
+
+        for subplan in bundle.subplans:
+            existing_subplan = self._read_unlocked(subplan.plan_id)
+            if existing_subplan is not None and (
+                existing_subplan["plan_hash"],
+                existing_subplan["plan_ref"],
+                existing_subplan["repository"],
+                existing_subplan["accepted_base_sha"],
+                existing_subplan["target_branch"],
+            ) != (
+                subplan.plan_hash,
+                subplan.plan_ref,
+                subplan.repository,
+                subplan.accepted_base_sha,
+                subplan.target_branch,
+            ):
+                _fail("delivery_plan_identity_conflict")
+
+        if dry_run:
+            return {
+                "schema": DELIVERY_PLAN_BUNDLE_STATE_SCHEMA,
+                "dry_run": True,
+                "bundle_id": bundle.bundle_id,
+                "bundle_ref": bundle.bundle_ref,
+                "bundle_hash": bundle.bundle_hash,
+                "execution": "inert",
+                "authority": "none",
+                "subplan_count": len(bundle.subplans),
+                "candidate_count": sum(s.candidate_count for s in bundle.subplans),
+                "subplans": [
+                    {
+                        "plan_id": s.plan_id,
+                        "repository": s.repository,
+                        "accepted_base_sha": s.accepted_base_sha,
+                        "candidate_count": s.candidate_count,
+                        "already_materialized": self._read_unlocked(s.plan_id) is not None,
+                    }
+                    for s in bundle.subplans
+                ],
+            }
+
+        ordered_subplans = self._topo_sort_bundle_subplans(bundle)
+        with self.store.allocation_lock():
+            existing_bundle = self._read_bundle_unlocked(bundle.bundle_id)
+            if existing_bundle is not None:
+                if (
+                    existing_bundle.get("bundle_hash") != bundle.bundle_hash
+                    or existing_bundle.get("bundle_ref") != bundle.bundle_ref
+                ):
+                    _fail("delivery_plan_bundle_identity_conflict")
+            external_bindings: dict[tuple[str, str], str] = {}
+            subplan_states: dict[str, dict[str, Any]] = {}
+            for subplan in ordered_subplans:
+                state = self._materialize_unlocked(
+                    subplan,
+                    {},
+                    external_ticket_bindings=external_bindings,
+                )
+                subplan_states[subplan.plan_id] = state
+                for cand_key, node in state["candidates"].items():
+                    external_bindings[(subplan.plan_id, cand_key)] = str(node["ticket_id"])
+
+            ticket_map = {
+                f"{pid}:{ckey}": tid
+                for (pid, ckey), tid in sorted(external_bindings.items())
+            }
+            bundle_state = {
+                "schema": DELIVERY_PLAN_BUNDLE_STATE_SCHEMA,
+                "revision": (
+                    int(existing_bundle["revision"])
+                    if existing_bundle is not None
+                    and existing_bundle.get("ticket_ids") == ticket_map
+                    else (int(existing_bundle["revision"]) + 1 if existing_bundle is not None else 1)
+                ),
+                "bundle_id": bundle.bundle_id,
+                "bundle_ref": bundle.bundle_ref,
+                "bundle_hash": bundle.bundle_hash,
+                "execution": "inert",
+                "authority": "none",
+                "created_at": (
+                    str(existing_bundle["created_at"])
+                    if existing_bundle is not None
+                    else _now()
+                ),
+                "updated_at": _now(),
+                "subplans": [
+                    {
+                        "plan_id": s.plan_id,
+                        "plan_hash": s.plan_hash,
+                        "repository": s.repository,
+                        "accepted_base_sha": s.accepted_base_sha,
+                        "candidate_count": s.candidate_count,
+                        "ticket_ids": {
+                            ckey: str(subplan_states[s.plan_id]["candidates"][ckey]["ticket_id"])
+                            for ckey in (c.candidate_key for c in s.candidates)
+                        },
+                    }
+                    for s in bundle.subplans
+                ],
+                "ticket_ids": ticket_map,
+            }
+            if existing_bundle is None or existing_bundle.get("ticket_ids") != ticket_map:
+                self._write_bundle_unlocked(bundle_state)
+                return copy.deepcopy(bundle_state)
+            return copy.deepcopy(existing_bundle)
 
     def _reconcile_unlocked(
         self,
         current: dict[str, Any],
-        plan: CompiledWorkPlanV1,
+        plan: CompiledWorkPlanV1 | CompiledWorkPlanV2,
         receipts: dict[str, WorkPlanTerminalReceiptV1],
+        *,
+        external_ticket_bindings: dict[tuple[str, str], str] | None = None,
     ) -> dict[str, Any]:
         identity = (
             current["plan_hash"],
@@ -530,12 +932,31 @@ class DeliveryPlanRepository:
         candidates = {candidate.candidate_key: candidate for candidate in plan.candidates}
         if set(candidates) != set(current["candidates"]):
             _fail("delivery_plan_candidate_set_conflict")
+        ext_deps_by_key = self._resolve_external_dependencies_unlocked(
+            plan, external_ticket_bindings
+        )
         changed = False
         for key, candidate in candidates.items():
             node = current["candidates"][key]
-            stored = TicketCandidateV1.model_validate(node["candidate"])
+            stored = _parse_candidate_state(node["candidate"])
             if stored.candidate_digest != candidate.candidate_digest:
                 _fail("delivery_plan_candidate_conflict")
+            desired_ext = ext_deps_by_key.get(key, [])
+            if desired_ext:
+                ticket_id = str(node["ticket_id"])
+                ticket = self.store.get_ticket(ticket_id)
+                if ticket is not None:
+                    merged_blocked = _dedup_preserve([*(ticket.blocked_by or []), *desired_ext])
+                    if merged_blocked != list(ticket.blocked_by or []):
+                        self.store._update_ticket_unlocked(
+                            ticket_id,
+                            blocked_by=merged_blocked,
+                            reason="delivery_plan_cross_plan_dependency_sync",
+                            actor="planfile.delivery-plan",
+                        )
+                    self._wire_blocker_blocks_unlocked(
+                        [(dep_id, ticket_id) for dep_id in desired_ext]
+                    )
             receipt = receipts.get(key)
             if receipt is None:
                 if candidate.state == "terminal":
@@ -609,7 +1030,7 @@ class DeliveryPlanRepository:
             node = state["candidates"].get(checkpoint.candidate_key)
             if node is None:
                 _fail("delivery_plan_checkpoint_candidate_unknown")
-            candidate = TicketCandidateV1.model_validate(node["candidate"])
+            candidate = _parse_candidate_state(node["candidate"])
             if (
                 checkpoint.plan_hash != state["plan_hash"]
                 or checkpoint.candidate_digest != candidate.candidate_digest
@@ -643,7 +1064,7 @@ class DeliveryPlanRepository:
             node = state["candidates"].get(receipt.candidate_key)
             if node is None:
                 _fail("delivery_plan_receipt_candidate_unknown")
-            candidate = TicketCandidateV1.model_validate(node["candidate"])
+            candidate = _parse_candidate_state(node["candidate"])
             if (
                 receipt.plan_hash != state["plan_hash"]
                 or receipt.accepted_base_sha != state["accepted_base_sha"]
@@ -682,7 +1103,7 @@ class DeliveryPlanRepository:
             parent = state["candidates"].get(split.parent_candidate_key)
             if parent is None:
                 _fail("delivery_plan_split_parent_unknown")
-            parent_candidate = TicketCandidateV1.model_validate(parent["candidate"])
+            parent_candidate = _parse_candidate_state(parent["candidate"])
             if (
                 split.plan_hash != state["plan_hash"]
                 or split.parent_candidate_digest != parent_candidate.candidate_digest

@@ -1,0 +1,123 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-293",
+  "summary": "Extend verified repository placement and compose multi-repo delivery bundles (#383)",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-293/**",
+    "planfile/version_identity.py",
+    "planfile/__init__.py",
+    "planfile/delivery_plan_contracts.py",
+    "planfile/delivery_plan.py",
+    "planfile/api/server.py",
+    "tests/test_delivery_plan.py",
+    "tests/test_delivery_plan_multi_repo_bundle.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c59b8adc25355f654c1d2c26a65152a5455d3b95",
+    "architecture": {
+      "components": [
+        {
+          "name": "versioned-placement-and-bundle-contracts",
+          "paths": [
+            "planfile/delivery_plan_contracts.py",
+            "planfile/version_identity.py"
+          ]
+        },
+        {
+          "name": "bundle-materialization-and-migration",
+          "paths": [
+            "planfile/delivery_plan.py",
+            "planfile/__init__.py"
+          ]
+        },
+        {
+          "name": "delivery-plan-preflight-and-tests",
+          "paths": [
+            "planfile/api/server.py",
+            "tests/test_delivery_plan.py",
+            "tests/test_delivery_plan_multi_repo_bundle.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Keep DeliveryPlacementV1 and CompiledWorkPlanV1 intact for existing v1 compatibility, introduce TrustedTargetPolicyV1, DeliveryPlacementV2, TicketCandidateV2, CompiledWorkPlanV2, and DeliveryPlanBundleV1 with anti-owner-aliasing checks and <=12 single-repo subplans, wire preflight, v1->v2 ticket-preserving migration, dry-run, idempotent replay/resume, and real cross-repo blocked_by/blocks ticket wiring while keeping authority=none and execution=inert.",
+      "interfaceChanges": [
+        "Planfile.materialize_delivery_bundle"
+      ],
+      "responsibilityChanges": false,
+      "rollback": "Revert the commit on main; v1 delivery-plan state files remain unchanged and compatible.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 3,
+      "maxImplementationFiles": 7,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "L",
+    "estimatedMinutes": 90,
+    "nonGoals": [
+      "Relaxing the <=12 candidate or single-repository invariant of CompiledWorkPlanV1",
+      "Granting execution authority, leases, or runner dispatch from delivery-plan schema validity",
+      "Implicit owner aliasing between placement.home and foreign repositories"
+    ],
+    "outcome": "Planfile validates and materializes versioned multi-repo delivery bundles from bounded native subplans over trusted targets with real cross-repo DAG ticket edges and resumable replay.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "pytest -q tests/test_delivery_plan_multi_repo_bundle.py -k trusted_targets"
+        ],
+        "criterion": "AC-01",
+        "evidence": "Verified uritime/autodo and paxlet-com/heyasa v2 acceptance with exact base SHAs, v1 refusal (delivery_plan_v1_placement_unsupported), and pre-write rejection of untrusted targets, owner aliases, and runtime owners."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_delivery_plan.py tests/test_delivery_plan_multi_repo_bundle.py -k v1"
+        ],
+        "criterion": "AC-02",
+        "evidence": "Verified all existing v1 delivery-plan tests pass unchanged and explicit migrate_delivery_plan_v1_to_v2 preserves exact ticket IDs, checkpoints, and repository conflict checks."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_delivery_plan_multi_repo_bundle.py -k bundle_composition"
+        ],
+        "criterion": "AC-03",
+        "evidence": "Verified 12 vs 13 candidate matrix (v1 rejects 13; bundle splits 13 into 12+1) and 36-proposal campaign (AUTO10+LLM10+HEY10+PLAN6) passes POST /delivery-plans/preflight as 4 bounded subplans."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_delivery_plan_multi_repo_bundle.py -k execution_inert"
+        ],
+        "criterion": "AC-04",
+        "evidence": "Verified dry-run zero writes, idempotent replay, crash recovery after missing subplan/bundle state preserving exact ticket IDs, and pre-write rejection of conflicting hashes, base SHAs, or external deps."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_delivery_plan.py tests/test_delivery_plan_multi_repo_bundle.py tests/test_autonomy_version_and_payloads.py tests/test_release_availability.py tests/test_ci_readiness.py tests/test_comparative_findings.py tests/test_ticket_api_events.py tests/test_cli_startup.py"
+        ],
+        "criterion": "AC-05",
+        "evidence": "Verified executor=None and authority=none/execution=inert on all foreign-namespace tickets with real cross-repo blocked_by/blocks links; 135 passed across all 8 test suites and ruff check passed."
+      }
+    ]
+  }
+}
