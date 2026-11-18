@@ -15,10 +15,10 @@ SESSION_EXECUTION_AUTHORIZATION: user approved this ticket's three implementatio
 
 - [x] AC-01: Reconcile a bounded changed sprint or journal without an archive scan and preserve deletion and ordering semantics.
 - [x] AC-02: Fall back when metadata, schema, budgets or concurrent observations cannot confirm correctness.
-- [ ] AC-03: Validate with private test stores and request independent source publication.
+- [x] AC-03: Validate with private test stores and request independent source publication.
 
 ## Verification
 
-On a private store of 1,245 tickets, a competing SQLite writer forced a durable update to be deferred. The accepted base scanned the archive once. The candidate refreshed the 245 tickets in the changed sprint, preserved the historical record, and restored indexed reads with zero full archive scans. The existing full-rebuild path still handles an unannounced YAML edit.
+Two private runs started with 1,245 tickets. One reproduced a committed write under SQLite contention. The other reproduced the observed change to the current sprint with an unchanged invalidation token. In each case the accepted base scanned the archive once. The candidate refreshed the 245 tickets in the changed sprint with zero full archive scans. The historical control and the updated ticket both matched the authoritative store.
 
-The 42 tests in the index repair module passed on Python 3.13, including two-process contention, malformed metadata, repair budgets, and source changes during reconciliation. Independent publication is tracked against the frozen Git head.
+The two stable-token regression cases failed on the first candidate and passed after this correction. The existing one-sprint concurrent rebuild test covers the fallback. Independent publication is tracked in PR #349.

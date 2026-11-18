@@ -69,14 +69,14 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
     """Recover stamps for known sources from an existing, committed projection.
 
     Only the current sprint layout and locator can be interpreted without an
-    older locator snapshot. A fresh invalidation token identifies a committed
-    source write deferred by SQLite contention. Unannounced edits and journal
-    removals retain their full-rebuild semantics.
+    older locator snapshot. Recover deferred writes from their contention token,
+    or a single changed sprint when a full rebuild would also scan other tickets.
     """
     from planfile.core.sqlite_index import _SCHEMA_VERSION, RoutingSnapshotUnavailableError
 
     current_token = target[3]
-    if not isinstance(current_token, str) or not re.fullmatch("[0-9a-f]{32}", current_token):
+    if current_token is not None and (not isinstance(current_token, str)
+                                      or not re.fullmatch("[0-9a-f]{32}", current_token)):
         return None
     try:
         with closing(index._connect_routing()) as connection:
@@ -94,7 +94,7 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
         sprints, journals, locator, token, revision = saved
         if revision != target[4] or locator != (list(target[2]) if target[2] else None):
             return None
-        if token == current_token:
+        if current_token is None and token is not None:
             return None
         if token is not None and (not isinstance(token, str) or not re.fullmatch("[0-9a-f]{32}", token)):
             return None
@@ -122,7 +122,20 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
             return None
         # Verify the routing generation and its required objects on a
         # read-only connection. Never initialize metadata to qualify a delta.
-        with index._routing_connection(baseline):
+        with index._routing_connection(baseline) as connection:
+            if token == current_token:
+                changed = {old[0] for old, new in zip(baseline[0], target[0], strict=True) if old != new}
+                if len(changed) != 1 or baseline[1] != target[1]:
+                    return None
+                sprint = changed.pop()
+                # Two indexed range probes avoid counting or loading archive rows.
+                # With only this sprint populated the existing rebuild is sufficient.
+                other_tickets = connection.execute(
+                    "SELECT EXISTS(SELECT 1 FROM tickets WHERE sprint < ?) "
+                    "OR EXISTS(SELECT 1 FROM tickets WHERE sprint > ?)", (sprint, sprint),
+                ).fetchone()[0]
+                if not other_tickets:
+                    return None
             return baseline, row[1]
     except (ValueError, RecursionError, sqlite3.DatabaseError, RoutingSnapshotUnavailableError):
         return None

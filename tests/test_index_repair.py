@@ -366,6 +366,30 @@ def test_background_repairs_stored_generation_without_archive_scan(tmp_path, mon
     assert pf.store.require_current_ticket_index()["current"]
 
 
+@pytest.mark.parametrize("token", [None, "c" * 32])
+def test_background_repairs_one_changed_sprint_without_a_new_token(tmp_path, monkeypatch, token):
+    pf = setup_store(tmp_path)
+    cold = pf.create_ticket(name="Unchanged archive ticket", sprint="history-old")
+    ticket = pf.create_ticket(name="Before")
+    if token is not None:
+        pf.store._ticket_index_invalidation_path.parent.mkdir(exist_ok=True, parents=True)
+        pf.store._ticket_index_invalidation_path.write_text(token)
+    pf.store.configure_ticket_index(True)
+    before = pf.store._ticket_index_signature()
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    pf.update_ticket(ticket.id, name="Changed current sprint")
+    after = pf.store._ticket_index_signature()
+    assert before[0] != after[0] and before[1:] == after[1:]
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(pf.store, "_ticket_index_records", lambda: pytest.fail("full archive scan"))
+    result = server._repair_ticket_index()
+    index = pf.store._sqlite_ticket_index()
+    assert result["current"] and result["reconciled"] == 1
+    assert index.get_ticket(cold.id)["name"] == "Unchanged archive ticket"
+    assert index.get_ticket(ticket.id)["name"] == "Changed current sprint"
+
+
 @pytest.mark.parametrize("damage", [
     "invalid_json", "wrong_projection", "invalid_stamp", "unknown_source",
     "duplicate_journal", "invalid_token", "token_only", "schema", "locator",
