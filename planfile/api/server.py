@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import re
 import sqlite3
 import time
 from collections import deque
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import BoundedSemaphore, RLock
@@ -39,6 +40,7 @@ except ImportError as exc:
 
 from planfile import __version__
 from planfile.core.models import (
+    Ticket,
     TicketExecution,
     TicketExecutor,
     TicketInputs,
@@ -93,6 +95,26 @@ API_CAPABILITIES = [
 ]
 
 STORE_LOCK_RETRY_AFTER_SECONDS = 5
+DAG_FALLBACK_DEFAULT_MAX_BYTES = 2 * 1024 * 1024
+
+
+def _dag_fallback_max_bytes() -> int:
+    raw = os.environ.get("PLANFILE_DAG_FALLBACK_MAX_BYTES")
+    if raw is None or not raw.strip():
+        return DAG_FALLBACK_DEFAULT_MAX_BYTES
+    try:
+        return max(1024, int(raw))
+    except ValueError:
+        return DAG_FALLBACK_DEFAULT_MAX_BYTES
+
+
+class DagValidationUnavailableError(RuntimeError):
+    """Typed retryable refusal when DAG validation cannot verify an oversized stale index."""
+
+    def __init__(self, reason: str, *, stage: str = "dag_validation") -> None:
+        self.reason = str(reason)
+        self.stage = str(stage)
+        super().__init__(self.reason)
 
 
 @app.exception_handler(ImmutableTerminalReopenError)
@@ -111,6 +133,10 @@ async def ticket_updated_at_conflict_handler(
     return JSONResponse(
         status_code=409,
         content={"detail": "ticket_updated_at_precondition_failed"},
+        headers={
+            **NO_STORE_HEADERS,
+            "X-Planfile-Mutation-Stage": "canonical_write",
+        },
     )
 
 
@@ -130,6 +156,30 @@ async def store_lock_timeout_handler(
         headers={
             **NO_STORE_HEADERS,
             "Retry-After": str(STORE_LOCK_RETRY_AFTER_SECONDS),
+            "X-Planfile-Mutation-Stage": "canonical_write",
+        },
+    )
+
+
+@app.exception_handler(DagValidationUnavailableError)
+async def dag_validation_unavailable_handler(
+    _: Request,
+    exc: DagValidationUnavailableError,
+):
+    return JSONResponse(
+        status_code=503,
+        content={
+            "detail": "dag_validation_index_unavailable",
+            "code": "dag_validation_index_unavailable",
+            "stage": exc.stage,
+            "reason": exc.reason,
+            "retryable": True,
+            "retry_after_seconds": STORE_LOCK_RETRY_AFTER_SECONDS,
+        },
+        headers={
+            **NO_STORE_HEADERS,
+            "Retry-After": str(STORE_LOCK_RETRY_AFTER_SECONDS),
+            "X-Planfile-Mutation-Stage": exc.stage,
         },
     )
 
@@ -996,6 +1046,117 @@ def discover_tickets(
     return JSONResponse(content=page, headers=NO_STORE_HEADERS)
 
 
+def _reconcile_dag_index_if_stale(store) -> None:
+    """Repair small incremental index deltas before acquiring mutation_lock."""
+    if store is None or not callable(getattr(store, "ticket_index_enabled", None)):
+        return
+    try:
+        if not store.ticket_index_enabled():
+            return
+        index = store._sqlite_ticket_index()
+        signature = store._ticket_index_signature()
+        if index.is_current(signature):
+            return
+        from planfile.core.index_repair import reconcile_index
+
+        reconcile_index(store, index)
+    except (sqlite3.DatabaseError, OSError, TicketIndexContentionError, StoreLockTimeoutError):
+        return
+
+
+def _load_dag_graph_state(
+    pf,
+    *,
+    subject_id: str,
+    references: list[str],
+) -> dict[str, Any]:
+    """Load minimal DAG edges/references via SQLite index or bounded record scan."""
+    store = getattr(pf, "store", None)
+    if store is not None and callable(getattr(store, "ticket_index_enabled", None)):
+        if store.ticket_index_enabled():
+            from planfile.core.sqlite_index import RoutingSnapshotUnavailableError
+
+            index = store._sqlite_ticket_index()
+            try:
+                return index.dag_snapshot(
+                    store._ticket_index_signature(),
+                    references=references,
+                    subject_id=subject_id,
+                )
+            except RoutingSnapshotUnavailableError:
+                pass
+
+    if (
+        store is not None
+        and callable(getattr(store, "_all_sprint_ids", None))
+        and callable(getattr(store, "_sprint_storage_files", None))
+        and callable(getattr(store, "ticket_records", None))
+    ):
+        total_bytes = 0
+        for sprint_id in store._all_sprint_ids():
+            for path in store._sprint_storage_files(sprint_id):
+                try:
+                    total_bytes += path.stat().st_size
+                except OSError:
+                    continue
+        if total_bytes > _dag_fallback_max_bytes():
+            raise DagValidationUnavailableError("ticket_index_stale_exceeds_fallback_budget")
+
+        present_refs: set[str] = set()
+        ref_set = set(references)
+        subject_blocked_by: list[str] = []
+        blocked_by_edges: list[tuple[str, str]] = []
+        blocks_edges: list[tuple[str, str]] = []
+        for record in store.ticket_records(sprint="all"):
+            rec_id = str(record.get("id") or "")
+            if not rec_id:
+                continue
+            if rec_id in ref_set:
+                present_refs.add(rec_id)
+            rec_blocked_by = [str(dep) for dep in (record.get("blocked_by") or []) if dep]
+            if rec_id == subject_id:
+                subject_blocked_by = rec_blocked_by
+            else:
+                for dep in rec_blocked_by:
+                    blocked_by_edges.append((rec_id, dep))
+            for target in record.get("blocks") or []:
+                if target:
+                    blocks_edges.append((str(target), rec_id))
+        return {
+            "present_refs": present_refs,
+            "subject_blocked_by": subject_blocked_by,
+            "blocked_by_edges": blocked_by_edges,
+            "blocks_edges": blocks_edges,
+            "source": "bounded_records_fallback",
+        }
+
+    existing_tickets = list(pf.list_tickets(sprint="all"))
+    present_refs = {t.id for t in existing_tickets}
+    current_ticket = next((t for t in existing_tickets if t.id == subject_id), None)
+    return {
+        "present_refs": present_refs,
+        "subject_blocked_by": (
+            [str(dep) for dep in (current_ticket.blocked_by or []) if dep]
+            if current_ticket
+            else []
+        ),
+        "blocked_by_edges": [
+            (t.id, dep)
+            for t in existing_tickets
+            if t.id != subject_id
+            for dep in (t.blocked_by or [])
+            if dep
+        ],
+        "blocks_edges": [
+            (str(target), t.id)
+            for t in existing_tickets
+            for target in (getattr(t, "blocks", None) or [])
+            if target
+        ],
+        "source": "list_tickets_fallback",
+    }
+
+
 def _validate_api_dag_relations(
     pf,
     *,
@@ -1004,73 +1165,196 @@ def _validate_api_dag_relations(
     blocks: list[str] | None = None,
     parent: str | None = None,
     children: list[str] | None = None,
+    lock_held: bool = False,
 ) -> None:
     """Validate existence and DAG acyclicity for blocked_by/blocks/parent/children."""
     from planfile.core.decompose import _check_dag_edges
 
-    for ref in [*(blocked_by or []), *(blocks or []), *(children or []), *([parent] if parent else [])]:
+    references = [*(blocked_by or []), *(blocks or []), *(children or []), *([parent] if parent else [])]
+    for ref in references:
         if ref == subject_id:
-            raise HTTPException(409, f"self_dependency_or_hierarchy_forbidden:{subject_id}")
-        if pf.get_ticket(ref, repair_index=False) is None:
-            raise HTTPException(422, f"related_ticket_not_found:{ref}")
+            raise HTTPException(
+                409,
+                f"self_dependency_or_hierarchy_forbidden:{subject_id}",
+                headers={"X-Planfile-Mutation-Stage": "dag_validation"},
+            )
 
-    existing_tickets = list(pf.list_tickets(sprint="all"))
-    all_nodes = list({*(t.id for t in existing_tickets), subject_id})
-    edges: list[tuple[str, str]] = [
-        (t.id, dep)
-        for t in existing_tickets
-        if t.id != subject_id
-        for dep in (t.blocked_by or [])
-    ]
-    current_ticket = next((t for t in existing_tickets if t.id == subject_id), None)
-    effective_blocked_by = (
-        blocked_by
-        if blocked_by is not None
-        else (list(current_ticket.blocked_by or []) if current_ticket else [])
+    store = getattr(pf, "store", None)
+    if not lock_held:
+        _reconcile_dag_index_if_stale(store)
+    lock_ctx = (
+        nullcontext()
+        if lock_held or store is None or not callable(getattr(store, "mutation_lock", None))
+        else store.mutation_lock()
     )
-    for dep in effective_blocked_by:
-        edges.append((subject_id, dep))
-    for dep_target in blocks or []:
-        edges.append((dep_target, subject_id))
-    is_dag, cycle_nodes = _check_dag_edges(edges, all_nodes)
-    if not is_dag:
-        raise HTTPException(409, f"dependency_cycle_detected:{cycle_nodes}")
+    with lock_ctx:
+        state = _load_dag_graph_state(pf, subject_id=subject_id, references=references)
+        present_refs: set[str] = state["present_refs"]
+        for ref in references:
+            if ref not in present_refs:
+                raise HTTPException(
+                    422,
+                    f"related_ticket_not_found:{ref}",
+                    headers={"X-Planfile-Mutation-Stage": "dag_validation"},
+                )
+
+        edges: list[tuple[str, str]] = [
+            (src, dst) for src, dst in state["blocked_by_edges"] if src != subject_id
+        ]
+        for target, blocker in state["blocks_edges"]:
+            if blocker != subject_id or blocks is None:
+                edges.append((target, blocker))
+
+        effective_blocked_by = (
+            [str(dep) for dep in blocked_by if dep]
+            if blocked_by is not None
+            else list(state["subject_blocked_by"])
+        )
+        for dep in effective_blocked_by:
+            edges.append((subject_id, dep))
+        for dep_target in blocks or []:
+            if dep_target:
+                edges.append((dep_target, subject_id))
+
+        edges = list(dict.fromkeys(edges))
+        all_nodes = sorted({subject_id, *(src for src, _ in edges), *(dst for _, dst in edges)})
+        is_dag, cycle_nodes = _check_dag_edges(edges, all_nodes)
+        if not is_dag:
+            raise HTTPException(
+                409,
+                f"dependency_cycle_detected:{cycle_nodes}",
+                headers={"X-Planfile-Mutation-Stage": "dag_validation"},
+            )
+
+
+def _mark_ticket_index_degraded(store, stage: str, error: Exception) -> None:
+    """Record cross-process index invalidation after a durable canonical write."""
+    if store is not None:
+        from planfile.core.fastio import _atomic_write_text
+
+        invalidation_path = getattr(store, "_ticket_index_invalidation_path", None)
+        if invalidation_path is not None:
+            _atomic_write_text(invalidation_path, os.urandom(16).hex())
+        if callable(getattr(store, "_invalidate_ticket_index_signature_cache", None)):
+            store._invalidate_ticket_index_signature_cache()
+    logging.getLogger("planfile.api").warning(
+        "ticket mutation persisted canonically; derived index update failed stage=%s: %s",
+        stage,
+        error,
+    )
+
+
+def _create_ticket_atomic(pf, body: TicketCreate) -> tuple[Ticket, bool, str]:
+    """Serialize deduplication, DAG validation, and canonical ticket creation."""
+    _validate_process_envelope(body.labels, body.inputs)
+    store = getattr(pf, "store", None)
+    has_dag_fields = bool(body.blocked_by or body.blocks or body.parent or body.children)
+
+    if (
+        store is None
+        or "create_ticket_deduplicated" in getattr(pf, "__dict__", {})
+        or not callable(getattr(store, "deduplication_lock", None))
+        or not callable(getattr(store, "_next_id_unlocked", None))
+        or not callable(getattr(store, "_create_ticket_unlocked", None))
+    ):
+        if has_dag_fields:
+            _validate_api_dag_relations(
+                pf,
+                subject_id="__new_ticket__",
+                blocked_by=body.blocked_by,
+                blocks=body.blocks,
+                parent=body.parent,
+                children=body.children,
+            )
+        ticket, created = pf.create_ticket_deduplicated(
+            name=body.name,
+            priority=body.priority,
+            sprint=body.sprint,
+            description=body.description,
+            acceptance_criteria=body.acceptance_criteria,
+            labels=body.labels,
+            blocked_by=body.blocked_by,
+            blocks=body.blocks,
+            parent=body.parent,
+            children=body.children,
+            group=body.group,
+            files=body.files,
+            sync=body.sync,
+            executor=body.executor,
+            execution=body.execution,
+            inputs=body.inputs,
+            outputs=body.outputs,
+            source=body.source or TicketSource(tool="planfile-api", version=__version__),
+            dedupe_key=body.dedupe_key,
+        )
+        return ticket, created, ("committed" if created else "deduplicated_readback")
+
+    if has_dag_fields:
+        _reconcile_dag_index_if_stale(store)
+
+    labels = list(body.labels or [])
+    dedupe_label = pf._ticket_dedupe_label(body.dedupe_key, labels)
+    if dedupe_label and dedupe_label not in labels:
+        labels.append(dedupe_label)
+
+    with store.deduplication_lock(dedupe_label) as live:
+        if dedupe_label and live:
+            oldest = min(live, key=lambda record: str(record.get("created_at") or ""))
+            existing = store.get_ticket(str(oldest.get("id") or ""), repair_index=False)
+            if existing is not None:
+                return existing, False, "deduplicated_readback"
+
+        ticket_id = store._next_id_unlocked()
+        if has_dag_fields:
+            _validate_api_dag_relations(
+                pf,
+                subject_id=ticket_id,
+                blocked_by=body.blocked_by,
+                blocks=body.blocks,
+                parent=body.parent,
+                children=body.children,
+                lock_held=True,
+            )
+        create_kwargs: dict[str, Any] = {
+            "id": ticket_id,
+            "name": body.name,
+            "priority": body.priority,
+            "sprint": body.sprint,
+            "description": body.description,
+            "acceptance_criteria": body.acceptance_criteria,
+            "labels": labels,
+            "blocked_by": body.blocked_by,
+            "blocks": body.blocks,
+            "parent": body.parent,
+            "children": body.children,
+            "group": body.group,
+            "files": body.files,
+            "sync": body.sync,
+            "source": body.source or TicketSource(tool="planfile-api", version=__version__),
+        }
+        for opt_key in ("executor", "execution", "inputs", "outputs"):
+            opt_val = getattr(body, opt_key)
+            if opt_val is not None:
+                create_kwargs[opt_key] = opt_val
+        ticket_model = Ticket(**create_kwargs)
+        try:
+            created_ticket = store._create_ticket_unlocked(ticket_model)
+            return created_ticket, True, "committed"
+        except sqlite3.DatabaseError as exc:
+            persisted = store.get_ticket(ticket_id, repair_index=False)
+            if persisted is None:
+                raise
+            _mark_ticket_index_degraded(store, "derived_index_update", exc)
+            return persisted, True, "derived_index_degraded"
 
 
 @app.post("/tickets", status_code=201, tags=["tickets"])
 async def create_ticket(body: TicketCreate, response: Response):
     pf = get_planfile()
-    _validate_process_envelope(body.labels, body.inputs)
-    if body.blocked_by or body.blocks or body.parent or body.children:
-        _validate_api_dag_relations(
-            pf,
-            subject_id="__new_ticket__",
-            blocked_by=body.blocked_by,
-            blocks=body.blocks,
-            parent=body.parent,
-            children=body.children,
-        )
-    ticket, created = pf.create_ticket_deduplicated(
-        name=body.name,
-        priority=body.priority,
-        sprint=body.sprint,
-        description=body.description,
-        acceptance_criteria=body.acceptance_criteria,
-        labels=body.labels,
-        blocked_by=body.blocked_by,
-        blocks=body.blocks,
-        parent=body.parent,
-        children=body.children,
-        group=body.group,
-        files=body.files,
-        sync=body.sync,
-        executor=body.executor,
-        execution=body.execution,
-        inputs=body.inputs,
-        outputs=body.outputs,
-        source=body.source or TicketSource(tool="planfile-api", version=__version__),
-        dedupe_key=body.dedupe_key,
-    )
+    ticket, created, stage = await asyncio.to_thread(_create_ticket_atomic, pf, body)
+    response.headers["X-Planfile-Mutation-Stage"] = stage
+    if stage == "derived_index_degraded":
+        response.headers["X-Planfile-Index-State"] = "degraded"
     if not created:
         response.status_code = 200
         return ticket.model_dump(mode="json", exclude_none=True)
@@ -1234,51 +1518,137 @@ def _merged_ticket_updates(body: TicketUpdate, current) -> dict:
     return updates
 
 
-@app.patch("/tickets/{ticket_id}", tags=["tickets"])
-async def update_ticket(ticket_id: str, body: TicketUpdate):
-    pf = get_planfile()
-    current = pf.get_ticket(ticket_id, repair_index=False)
-    if not current:
-        raise HTTPException(404, f"Ticket {ticket_id} not found")
-    _require_governed_history_metadata(current, body.actor, body.reason)
-    # The production creation gate must not freeze pre-v2 tickets. Existing
-    # legacy records may be updated or migrated incrementally; as soon as an
-    # update declares v2, the full envelope is still validated above.
-    _validate_process_envelope(
-        body.labels if body.labels is not None else current.labels,
-        body.inputs if body.inputs is not None else current.inputs,
-        require_for_legacy=False,
-    )
-    if (
+def _update_ticket_atomic(pf, ticket_id: str, body: TicketUpdate) -> tuple[Ticket, str]:
+    """Serialize CAS guard, DAG validation, and canonical ticket update under one lock."""
+    store = getattr(pf, "store", None)
+    has_dag_fields = (
         body.blocked_by is not None
         or body.blocks is not None
         or body.parent is not None
         or body.children is not None
+    )
+    if (
+        store is None
+        or "update_ticket" in getattr(pf, "__dict__", {})
+        or not callable(getattr(store, "mutation_lock", None))
+        or not callable(getattr(store, "_update_ticket_unlocked", None))
     ):
-        _validate_api_dag_relations(
-            pf,
-            subject_id=ticket_id,
-            blocked_by=body.blocked_by,
-            blocks=body.blocks,
-            parent=body.parent,
-            children=body.children,
+        current = pf.get_ticket(ticket_id, repair_index=False)
+        if not current:
+            raise HTTPException(404, f"Ticket {ticket_id} not found")
+        _require_governed_history_metadata(current, body.actor, body.reason)
+        _validate_process_envelope(
+            body.labels if body.labels is not None else current.labels,
+            body.inputs if body.inputs is not None else current.inputs,
+            require_for_legacy=False,
         )
-    updates = _merged_ticket_updates(body, current)
-    if body.status is not None and str(body.status) != str(current.status.value):
-        updates["actor"] = body.actor or "unknown:api"
-        updates["reason"] = body.reason or f"status_transition:{current.status.value}->{body.status}"
-    ticket = pf.update_ticket(ticket_id, **updates)
-    if not ticket:
-        raise HTTPException(404, f"Ticket {ticket_id} not found")
+        if has_dag_fields:
+            _validate_api_dag_relations(
+                pf,
+                subject_id=ticket_id,
+                blocked_by=body.blocked_by,
+                blocks=body.blocks,
+                parent=body.parent,
+                children=body.children,
+            )
+        updates = _merged_ticket_updates(body, current)
+        if body.status is not None and str(body.status) != str(current.status.value):
+            updates["actor"] = body.actor or "unknown:api"
+            updates["reason"] = (
+                body.reason or f"status_transition:{current.status.value}->{body.status}"
+            )
+        ticket = pf.update_ticket(ticket_id, **updates)
+        if not ticket:
+            raise HTTPException(404, f"Ticket {ticket_id} not found")
+        return ticket, "committed"
+
+    if has_dag_fields:
+        _reconcile_dag_index_if_stale(store)
+
+    with store.mutation_lock():
+        current = store.get_ticket(ticket_id, repair_index=False)
+        if not current:
+            raise HTTPException(404, f"Ticket {ticket_id} not found")
+        _require_governed_history_metadata(current, body.actor, body.reason)
+        _validate_process_envelope(
+            body.labels if body.labels is not None else current.labels,
+            body.inputs if body.inputs is not None else current.inputs,
+            require_for_legacy=False,
+        )
+        expected_updated_at = getattr(body, "expected_updated_at", None)
+        if expected_updated_at is not None and callable(
+            getattr(store, "_guard_expected_updated_at", None)
+        ):
+            store._guard_expected_updated_at(
+                current.model_dump(mode="json", exclude_none=True),
+                expected_updated_at,
+            )
+        if has_dag_fields:
+            _validate_api_dag_relations(
+                pf,
+                subject_id=ticket_id,
+                blocked_by=body.blocked_by,
+                blocks=body.blocks,
+                parent=body.parent,
+                children=body.children,
+                lock_held=True,
+            )
+        updates = _merged_ticket_updates(body, current)
+        if body.status is not None and str(body.status) != str(current.status.value):
+            updates["actor"] = body.actor or "unknown:api"
+            updates["reason"] = (
+                body.reason or f"status_transition:{current.status.value}->{body.status}"
+            )
+        before_updated_at = current.updated_at
+        stage = "committed"
+        try:
+            ticket = store._update_ticket_unlocked(ticket_id, **updates)
+        except sqlite3.DatabaseError as exc:
+            persisted = store.get_ticket(ticket_id, repair_index=False)
+            if persisted is None or persisted.updated_at == before_updated_at:
+                raise
+            _mark_ticket_index_degraded(store, "derived_index_update", exc)
+            ticket = persisted
+            stage = "derived_index_degraded"
+        if not ticket:
+            raise HTTPException(404, f"Ticket {ticket_id} not found")
+        if ticket.status == "done":
+            from planfile.sync.completion import enqueue_completion
+
+            try:
+                enqueue_completion(store, ticket)
+            except Exception:
+                import warnings
+
+                warnings.warn(
+                    "sync_completion_enqueue_failed: local ticket committed; "
+                    "remote completion unverified; retry worker will reconcile",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+        return ticket, stage
+
+
+@app.patch("/tickets/{ticket_id}", tags=["tickets"])
+async def update_ticket(ticket_id: str, body: TicketUpdate, response: Response):
+    pf = get_planfile()
+    ticket, stage = await asyncio.to_thread(_update_ticket_atomic, pf, ticket_id, body)
+    response.headers["X-Planfile-Mutation-Stage"] = stage
+    if stage == "derived_index_degraded":
+        response.headers["X-Planfile-Index-State"] = "degraded"
     await _broadcast_ticket_event("ticket.changed", "update", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
 @app.post("/tickets/{ticket_id}/update-if-current", tags=["tickets"])
-async def update_ticket_if_current(ticket_id: str, body: TicketUpdateIfCurrentRequest):
+async def update_ticket_if_current(
+    ticket_id: str,
+    body: TicketUpdateIfCurrentRequest,
+    response: Response,
+):
     # A separate route prevents older servers silently ignoring the guard.
     # Keep validation, the store mutation lock and event delivery shared.
-    return await update_ticket(ticket_id, body)
+    return await update_ticket(ticket_id, body, response)
 
 
 @app.post("/tickets/{ticket_id}/evidence", tags=["tickets"])

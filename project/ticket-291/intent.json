@@ -1,0 +1,103 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-291",
+  "summary": "Bound and atomicize API dependency DAG validation",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-291/**",
+    "planfile/core/sqlite_index.py",
+    "planfile/api/server.py",
+    "tests/test_api_dag_validation.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5b89992e4fd8017d61180fc76dddcaba3d803c3d",
+    "architecture": {
+      "components": [
+        {
+          "name": "sqlite-dag-projection",
+          "paths": [
+            "planfile/core/sqlite_index.py"
+          ]
+        },
+        {
+          "name": "api-atomic-dag-validation",
+          "paths": [
+            "planfile/api/server.py",
+            "tests/test_api_dag_validation.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Read DAG edges and reference existence from SQLiteTicketIndex.dag_snapshot without decoding ticket_json or scanning archived YAML files, serialize validation and unlocked canonical store writes under one store lock, enforce a byte-bounded fallback or typed retryable 503 refusal, and emit explicit X-Planfile-Mutation-Stage diagnostics.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Revert the commit on main; schema v1 SQLite tables and canonical YAML/sharded files remain unchanged.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "M",
+    "estimatedMinutes": 45,
+    "nonGoals": [
+      "Modifying planfile/core/store.py reserved by ticket-286",
+      "Adding a separate dependency source of truth outside canonical ticket records"
+    ],
+    "outcome": "API dependency validation runs boundedly against indexed edge projections inside the canonical write lock with typed retryable unavailability and stage-level diagnostics.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "pytest -q tests/test_api_dag_validation.py -k skips_archive"
+        ],
+        "criterion": "AC-01",
+        "evidence": "Verified 0 pf.list_tickets calls and 0 archive YAML reads across 200 archived tickets using SQLiteTicketIndex.dag_snapshot."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_api_dag_validation.py -k concurrent_opposing"
+        ],
+        "criterion": "AC-02",
+        "evidence": "Barrier-synchronized opposing edge mutations serialized under one store lock; every round returned [200, 409] with acyclic final DAG."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_api_dag_validation.py -k bounded_fallback"
+        ],
+        "criterion": "AC-03",
+        "evidence": "Missing small index fell back safely to bounded records scan (409 cycle); oversized stale store returned retryable 503 dag_validation_index_unavailable and recovered after repair."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_api_dag_validation.py tests/test_ticket_api_events.py tests/test_store_lock_timeout.py",
+          "pytest -q tests/test_index_repair.py tests/test_sqlite_ticket_index.py tests/test_comparative_findings.py",
+          "ruff check planfile/core/sqlite_index.py planfile/api/server.py tests/test_api_dag_validation.py",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "criterion": "AC-04",
+        "evidence": "65 API/lock tests + 128 index/findings tests (193 passed), ruff passed, and ./project/governance-check.sh --base origin/main plus wellman check passed."
+      }
+    ]
+  }
+}
