@@ -13,11 +13,12 @@ import re
 import sqlite3
 import time
 from collections import deque
+from collections.abc import Sequence
 from contextlib import asynccontextmanager, contextmanager, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import BoundedSemaphore, RLock
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import yaml
@@ -25,6 +26,7 @@ import yaml
 try:
     from fastapi import (
         BackgroundTasks,
+        Body,
         FastAPI,
         HTTPException,
         Query,
@@ -32,13 +34,26 @@ try:
         WebSocket,
         WebSocketDisconnect,
     )
+    from fastapi.encoders import jsonable_encoder
+    from fastapi.exceptions import RequestValidationError
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
-    from pydantic import BaseModel, Field
+    from pydantic import (
+        BaseModel,
+        ConfigDict,
+        Field,
+        StrictBool,
+        StrictStr,
+        StringConstraints,
+        ValidationError,
+        ValidationInfo,
+        field_validator,
+    )
 except ImportError as exc:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
 
 from planfile import __version__
+from planfile.core.comparative_findings import ComparativeFindingProposal
 from planfile.core.models import (
     Ticket,
     TicketExecution,
@@ -46,6 +61,7 @@ from planfile.core.models import (
     TicketInputs,
     TicketOutputs,
     TicketSource,
+    TicketUriProcess,
 )
 from planfile.core.store import (
     ImmutableTerminalReopenError,
@@ -53,6 +69,7 @@ from planfile.core.store import (
     TicketIndexContentionError,
     TicketUpdatedAtConflictError,
 )
+from planfile.delivery_plan_contracts import preflight_delivery_plan_payload
 from planfile.runtime_context import (
     DEFAULT_CONFIG as DEFAULT_RUNTIME_CONFIG,
 )
@@ -61,6 +78,7 @@ from planfile.runtime_context import (
     load_runtime_context_config,
 )
 from planfile.server_common import get_planfile
+from planfile.version_identity import get_runtime_identity
 
 
 @asynccontextmanager
@@ -92,7 +110,77 @@ API_CAPABILITIES = [
     "findings.comparative.admit",
     "ticket.store_lock_timeout.retryable_503",
     "ticket.discovery.current_scoped_pages",
+    "autonomy.payload_validation.strict_v1",
+    "delivery_plan.preflight.import_namespace_separation",
 ]
+
+
+def _custom_openapi() -> dict[str, Any]:
+    from fastapi.openapi.utils import get_openapi
+
+    import planfile
+
+    identity = get_runtime_identity(runtime_version=planfile.__version__)
+    if app.openapi_schema and app.openapi_schema.get("info", {}).get("version") == planfile.__version__:
+        return app.openapi_schema
+    schema = get_openapi(
+        title=app.title,
+        version=planfile.__version__,
+        description=app.description,
+        routes=app.routes,
+    )
+    info = schema.setdefault("info", {})
+    info["version"] = planfile.__version__
+    info["x-planfile-source-identity"] = {
+        "install_mode": identity["install_mode"],
+        "source_sha": identity["source_sha"],
+        "package_version": planfile.__version__,
+        "version_identifies_active_deployment": False,
+    }
+    info["x-planfile-schema-versions"] = identity["schema_versions"]
+    app.openapi_schema = schema
+    return app.openapi_schema
+
+
+app.openapi = _custom_openapi
+
+
+def _format_validation_errors(
+    errors: Sequence[Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    details: list[dict[str, Any]] = []
+    formatted: list[dict[str, Any]] = []
+    for raw in errors:
+        item = dict(jsonable_encoder(raw))
+        loc = [part for part in (raw.get("loc") or ()) if part != "body"]
+        field_path = ".".join(str(part) for part in loc)
+        item["field_path"] = field_path
+        details.append(item)
+        formatted.append(
+            {
+                "field_path": field_path,
+                "type": str(item.get("type") or "validation_error"),
+                "message": str(item.get("msg") or "Validation failed"),
+            }
+        )
+    return details, formatted
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(
+    _: Request,
+    exc: RequestValidationError,
+):
+    details, formatted = _format_validation_errors(exc.errors())
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": details,
+            "code": "payload_validation_failed",
+            "errors": formatted,
+        },
+        headers=NO_STORE_HEADERS,
+    )
 
 STORE_LOCK_RETRY_AFTER_SECONDS = 5
 DAG_FALLBACK_DEFAULT_MAX_BYTES = 2 * 1024 * 1024
@@ -207,60 +295,160 @@ NO_STORE_HEADERS = {"Cache-Control": "no-store, max-age=0"}
 
 # ── Schemas ────────────────────────────────────────────────────────────────────
 
+TICKET_CREATE_SCHEMAS = frozenset({"planfile.ticket-create/v1", "planfile.ticket/v1"})
+TICKET_UPDATE_SCHEMAS = frozenset({"planfile.ticket-update/v1", "planfile.ticket/v1"})
+COMPARATIVE_ADMIT_REQUEST_SCHEMAS = frozenset(
+    {
+        "planfile.comparative-findings-admit-request/v1",
+        "planfile.comparative-finding-admission/v1",
+    }
+)
+_SECTION_MODEL_MAP: dict[str, type[BaseModel]] = {
+    "executor": TicketExecutor,
+    "execution": TicketExecution,
+    "inputs": TicketInputs,
+    "outputs": TicketOutputs,
+    "source": TicketSource,
+}
+
+
+_NonEmptyDepId = Annotated[StrictStr, StringConstraints(min_length=1, pattern=r"\S")]
+
+
+def _validate_section_unknown_keys(value: Any, info: ValidationInfo) -> Any:
+    if not isinstance(value, dict) or not info.field_name:
+        return value
+    model_cls = _SECTION_MODEL_MAP.get(info.field_name)
+    if model_cls is None:
+        return value
+    unknown = sorted(set(value) - set(model_cls.model_fields))
+    if unknown:
+        raise ValueError(
+            f"Unknown field(s) in {info.field_name}: {', '.join(unknown)}"
+        )
+    if info.field_name == "inputs" and isinstance(value.get("uri_processes"), list):
+        allowed_proc = set(TicketUriProcess.model_fields)
+        for index, item in enumerate(value["uri_processes"]):
+            if isinstance(item, dict):
+                unknown_proc = sorted(set(item) - allowed_proc)
+                if unknown_proc:
+                    raise ValueError(
+                        f"Unknown field(s) in inputs.uri_processes[{index}]: {', '.join(unknown_proc)}"
+                    )
+    return value
+
+
 class TicketCreate(BaseModel):
-    name: str
-    priority: str = "normal"
-    sprint: str = Field("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
-    description: str = ""
-    acceptance_criteria: list[str] = Field(default_factory=list)
-    labels: list[str] = Field(default_factory=list)
-    blocked_by: list[str] = Field(default_factory=list)
-    blocks: list[str] = Field(default_factory=list)
-    parent: str | None = None
-    children: list[str] = Field(default_factory=list)
-    group: str | None = None
-    files: list[str] = Field(default_factory=list)
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    schema_version: StrictStr | None = Field(default=None, alias="schema")
+    name: StrictStr
+    priority: StrictStr = "normal"
+    sprint: StrictStr = Field("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
+    description: StrictStr = ""
+    acceptance_criteria: list[StrictStr] = Field(default_factory=list)
+    labels: list[StrictStr] = Field(default_factory=list)
+    blocked_by: list[_NonEmptyDepId] = Field(default_factory=list)
+    blocks: list[_NonEmptyDepId] = Field(default_factory=list)
+    parent: StrictStr | None = None
+    children: list[_NonEmptyDepId] = Field(default_factory=list)
+    group: StrictStr | None = None
+    files: list[StrictStr] = Field(default_factory=list)
     sync: dict[str, Any] = Field(default_factory=dict)
     executor: TicketExecutor | None = None
     execution: TicketExecution | None = None
     inputs: TicketInputs | None = None
     outputs: TicketOutputs | None = None
     source: TicketSource | None = None
-    dedupe_key: str | None = None
+    dedupe_key: StrictStr | None = None
+
+    @field_validator("schema_version")
+    @classmethod
+    def _validate_schema_version(cls, value: str | None) -> str | None:
+        if value is not None and value not in TICKET_CREATE_SCHEMAS:
+            raise ValueError(f"unsupported_schema_version:{value}")
+        return value
+
+    @field_validator("parent")
+    @classmethod
+    def _check_parent_id(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("Empty parent ticket identifier")
+        return value
+
+    @field_validator("executor", "execution", "inputs", "outputs", "source", mode="before")
+    @classmethod
+    def _check_sections(cls, value: Any, info: ValidationInfo) -> Any:
+        return _validate_section_unknown_keys(value, info)
 
 
 class TicketUpdate(BaseModel):
-    status: str | None = None
-    priority: str | None = None
-    name: str | None = None
-    description: str | None = None
-    acceptance_criteria: list[str] | None = None
-    labels: list[str] | None = None
-    blocked_by: list[str] | None = None
-    blocks: list[str] | None = None
-    parent: str | None = None
-    children: list[str] | None = None
-    group: str | None = None
-    files: list[str] | None = None
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    schema_version: StrictStr | None = Field(default=None, alias="schema")
+    status: StrictStr | None = None
+    priority: StrictStr | None = None
+    name: StrictStr | None = None
+    description: StrictStr | None = None
+    acceptance_criteria: list[StrictStr] | None = None
+    labels: list[StrictStr] | None = None
+    blocked_by: list[_NonEmptyDepId] | None = None
+    blocks: list[_NonEmptyDepId] | None = None
+    parent: StrictStr | None = None
+    children: list[_NonEmptyDepId] | None = None
+    group: StrictStr | None = None
+    files: list[StrictStr] | None = None
     sync: dict[str, Any] | None = None
     executor: TicketExecutor | None = None
     execution: TicketExecution | None = None
     inputs: TicketInputs | None = None
     outputs: TicketOutputs | None = None
-    expected_updated_at: str | None = None
-    reason: str | None = None
-    actor: str | None = None
+    expected_updated_at: StrictStr | None = None
+    reason: StrictStr | None = None
+    actor: StrictStr | None = None
+
+    @field_validator("schema_version")
+    @classmethod
+    def _validate_schema_version(cls, value: str | None) -> str | None:
+        if value is not None and value not in TICKET_UPDATE_SCHEMAS:
+            raise ValueError(f"unsupported_schema_version:{value}")
+        return value
+
+    @field_validator("parent")
+    @classmethod
+    def _check_parent_id(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("Empty parent ticket identifier")
+        return value
+
+    @field_validator("executor", "execution", "inputs", "outputs", mode="before")
+    @classmethod
+    def _check_sections(cls, value: Any, info: ValidationInfo) -> Any:
+        return _validate_section_unknown_keys(value, info)
 
 
 class TicketUpdateIfCurrentRequest(TicketUpdate):
-    expected_updated_at: str = Field(..., min_length=1, pattern=r"\S")
+    expected_updated_at: StrictStr = Field(..., min_length=1, pattern=r"\S")
 
 
 class ComparativeFindingsAdmitRequest(BaseModel):
-    findings: list[dict[str, Any]]
-    current_target_heads: dict[str, str] | None = None
-    sprint: str = Field("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
-    dry_run: bool = False
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    schema_version: StrictStr = Field(
+        default="planfile.comparative-findings-admit-request/v1",
+        alias="schema",
+    )
+    findings: list[ComparativeFindingProposal]
+    current_target_heads: dict[StrictStr, StrictStr] | None = None
+    sprint: StrictStr = Field("current", pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
+    dry_run: StrictBool = False
+
+    @field_validator("schema_version")
+    @classmethod
+    def _validate_schema_version(cls, value: str) -> str:
+        if value not in COMPARATIVE_ADMIT_REQUEST_SCHEMAS:
+            raise ValueError(f"unsupported_schema_version:{value}")
+        return value
 
 
 class TicketEvidenceAppendRequest(BaseModel):
@@ -271,13 +459,15 @@ class TicketEvidenceAppendRequest(BaseModel):
     evidence, notes or artifact references.
     """
 
-    idempotency_key: str = Field(..., min_length=1, max_length=240)
-    collection: str = Field("evidence", pattern=r"^[A-Za-z][A-Za-z0-9_]{0,63}$")
+    model_config = ConfigDict(extra="forbid")
+
+    idempotency_key: StrictStr = Field(..., min_length=1, max_length=240)
+    collection: StrictStr = Field("evidence", pattern=r"^[A-Za-z][A-Za-z0-9_]{0,63}$")
     evidence: dict[str, Any]
-    notes: list[str] = Field(default_factory=list)
-    artifacts: list[str] = Field(default_factory=list)
-    actor: str = Field(..., min_length=1, max_length=240)
-    reason: str = Field(..., min_length=1, max_length=2000)
+    notes: list[StrictStr] = Field(default_factory=list)
+    artifacts: list[StrictStr] = Field(default_factory=list)
+    actor: StrictStr = Field(..., min_length=1, max_length=240)
+    reason: StrictStr = Field(..., min_length=1, max_length=2000)
 
 
 class SprintCreate(BaseModel):
@@ -1381,6 +1571,17 @@ async def admit_comparative_findings_endpoint(body: ComparativeFindingsAdmitRequ
             sprint=body.sprint,
             dry_run=body.dry_run,
         )
+    except ValidationError as exc:
+        details, formatted = _format_validation_errors(exc.errors())
+        return JSONResponse(
+            status_code=422,
+            content={
+                "detail": details,
+                "code": "payload_validation_failed",
+                "errors": formatted,
+            },
+            headers=NO_STORE_HEADERS,
+        )
     except (ObsoleteTargetHeadError, ComparativeDependencyError) as exc:
         raise HTTPException(409, str(exc)) from exc
     except (ComparativeFindingError, ValueError) as exc:
@@ -1391,6 +1592,15 @@ async def admit_comparative_findings_endpoint(body: ComparativeFindingsAdmitRequ
                 admitted = pf.get_ticket(str(decision["ticket_id"]), repair_index=False)
                 if admitted is not None:
                     await _broadcast_ticket_event("ticket.changed", "comparative_admit", admitted)
+    return report
+
+
+@app.post("/delivery-plans/preflight", tags=["tickets"])
+async def preflight_delivery_plan_endpoint(payload: Any = Body(...)):
+    """Classify and validate a delivery-plan or import envelope without mutating storage."""
+    report = preflight_delivery_plan_payload(payload)
+    if not report.get("ok"):
+        return JSONResponse(status_code=422, content=report, headers=NO_STORE_HEADERS)
     return report
 
 
@@ -1504,7 +1714,11 @@ def _merged_ticket_updates(body: TicketUpdate, current) -> dict:
     keys onto what is stored. An explicitly sent `null` still clears its field;
     only omission is now inert.
     """
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    updates = {
+        k: v
+        for k, v in body.model_dump(exclude={"schema_version"}).items()
+        if v is not None
+    }
     for section in _MERGEABLE_TICKET_SECTIONS:
         if section not in body.model_fields_set:
             continue
@@ -4806,10 +5020,19 @@ async def websocket_dsl(websocket: WebSocket, project_path: str = "."):
 @app.get("/health", tags=["system"])
 async def health() -> dict[str, Any]:
     import planfile
+
+    identity = get_runtime_identity(runtime_version=planfile.__version__)
     return {
         "status": "ok",
         "version": planfile.__version__,
         "capabilities": API_CAPABILITIES,
+        "source_identity": {
+            "install_mode": identity["install_mode"],
+            "source_sha": identity["source_sha"],
+            "package_version": planfile.__version__,
+            "version_identifies_active_deployment": False,
+        },
+        "schema_versions": identity["schema_versions"],
     }
 
 

@@ -8,7 +8,17 @@ This package provides:
 - CLI and API for applying and reviewing strategies
 """
 
-__version__ = "0.1.126"
+from planfile.version_identity import (
+    RUNTIME_VERSION_CONSTANT as _RUNTIME_VERSION_CONSTANT,
+)
+from planfile.version_identity import (
+    get_runtime_identity,
+)
+from planfile.version_identity import (
+    resolve_runtime_version as _resolve_runtime_version,
+)
+
+__version__ = _resolve_runtime_version(_RUNTIME_VERSION_CONSTANT, package_file=__file__)
 __author__ = "Tom Sapletta"
 __email__ = "tom@sapletta.com"
 
@@ -40,6 +50,8 @@ from planfile.core.store import ImmutableTerminalReopenError, PlanfileStore
 from planfile.delegation import DelegationActor, load_delegation_actors
 from planfile.delivery_plan import DeliveryPlanError, DeliveryPlanRepository
 from planfile.delivery_plan_contracts import (
+    AUTODO_PLANFILE_IMPORT_SCHEMA,
+    AutodoPlanfileImportMetadataV1,
     CompiledWorkPlanV1,
     DeliveryCheckpointV1,
     DeliveryPlanSplitV1,
@@ -858,6 +870,11 @@ class Planfile:
 
         return DeliveryPlanRepository(self.store)
 
+    def preflight_delivery_plan(self, payload: object) -> dict:
+        """Validate and classify a compiled plan or import envelope without writing storage."""
+
+        return self.delivery_plans.preflight(payload)
+
     def materialize_delivery_plan(
         self,
         compiled_plan: dict,
@@ -967,8 +984,10 @@ __all__ = [
     "ModelHints", "ModelTier", "ModelTierV2",
     "Goal", "QualityGate",
     # Tickets
+    "get_runtime_identity",
     "Ticket", "TicketStatus", "TicketSource",
     "TicketExecutor", "TicketExecution", "TicketInputs", "TicketOutputs",
+    "AUTODO_PLANFILE_IMPORT_SCHEMA", "AutodoPlanfileImportMetadataV1",
     "CompiledWorkPlanV1", "DeliveryCheckpointV1", "DeliveryPlanError",
     "DeliveryPlanRepository", "DeliveryPlanSplitV1", "TicketCandidateV1",
     "WorkPlanTerminalReceiptV1",

@@ -12,14 +12,17 @@ from typing import Any, NoReturn, cast
 from planfile.core.fastio import _atomic_write_text
 from planfile.core.models import Ticket, TicketExecution, TicketOutputs, TicketSource, TicketStatus
 from planfile.delivery_plan_contracts import (
+    AUTODO_PLANFILE_IMPORT_SCHEMA,
     DELIVERY_PLAN_RESUME_SCHEMA,
     DELIVERY_PLAN_STATE_SCHEMA,
+    AutodoPlanfileImportMetadataV1,
     CompiledWorkPlanV1,
     DeliveryCheckpointV1,
     DeliveryPlacementV1,
     DeliveryPlanSplitV1,
     TicketCandidateV1,
     WorkPlanTerminalReceiptV1,
+    preflight_delivery_plan_payload,
 )
 
 
@@ -426,6 +429,11 @@ class DeliveryPlanRepository:
             "split": None,
         }
 
+    def preflight(self, payload: object) -> dict[str, Any]:
+        """Validate and classify a compiled plan or import envelope without touching storage."""
+
+        return cast(dict[str, Any], preflight_delivery_plan_payload(payload))
+
     def materialize(
         self,
         compiled_plan: dict[str, Any],
@@ -433,6 +441,10 @@ class DeliveryPlanRepository:
         terminal_receipts: list[dict[str, Any]] | tuple[dict[str, Any], ...] = (),
     ) -> dict[str, Any]:
         """Create or recover the exact ticket DAG and return its durable state."""
+
+        if isinstance(compiled_plan, dict) and compiled_plan.get("schema") == AUTODO_PLANFILE_IMPORT_SCHEMA:
+            AutodoPlanfileImportMetadataV1.model_validate(compiled_plan)
+            _fail("delivery_plan_import_envelope_not_native")
 
         plan = CompiledWorkPlanV1.model_validate(compiled_plan)
         receipts = self._receipt_map(plan, terminal_receipts)
