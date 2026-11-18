@@ -370,3 +370,44 @@ def test_fail_closed_on_missing_traversal_symlink_and_invalid_labels_in_prefligh
     with pytest.raises(ValueError, match="Invalid GitHub label"):
         bad_label_backend.preflight([("PLF-1", {"status": "open"})])
     assert bad_label_backend.repo.creates == []
+
+
+def test_integration_config_ignores_untrusted_project_dir_override(tmp_path):
+    outside_dir = tmp_path / "outside"
+    outside_dir.mkdir(parents=True)
+    (outside_dir / "secret.md").write_text("top-secret\n", encoding="utf-8")
+
+    project_dir = tmp_path / "repo"
+    (project_dir / ".github" / "ISSUE_TEMPLATE").mkdir(parents=True)
+    (project_dir / ".planfile").mkdir(parents=True)
+    (project_dir / ".planfile" / "sync.planfile.yaml").write_text(
+        "integrations:\n"
+        "  github:\n"
+        "    repo: owner/repo\n"
+        "    token: dummy-token\n"
+        f"    cache_path: {tmp_path / 'procache.sqlite3'}\n"
+        f"    cache_dir: {tmp_path / 'gh_cache'}\n"
+        f"    project_dir: {outside_dir}\n"
+        "    issue_template: secret.md\n",
+        encoding="utf-8",
+    )
+
+    def _request_json_and_check(_method: str, _url: str):
+        return {}, {"id": 4242, "full_name": "owner/repo"}
+
+    fake_github = SimpleNamespace(
+        requester=SimpleNamespace(
+            base_url="https://api.github.com",
+            requestJsonAndCheck=_request_json_and_check,
+        ),
+        get_repo=lambda _repo: _FakeRepo(),
+    )
+    with patch("planfile.sync.github.Github", return_value=fake_github):
+        cfg = IntegrationConfig(str(project_dir))
+        cfg.load_configs()
+        backend = cfg.get_integration_backend("github")
+
+    assert backend.config["project_dir"] == str(project_dir)
+    with pytest.raises(ValueError, match="sync_github_issue_template_not_found"):
+        backend.preflight([("PLF-1", {"status": "open"})])
+
