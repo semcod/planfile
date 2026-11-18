@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-290",
+  "summary": "Enforce trusted project_dir boundary for GitHub issue templates",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-290/**",
+    "planfile/integrations/config.py",
+    "tests/test_github_issue_templates.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c77f55300dcf3e62d29496841ec7ee2a620ced5f",
+    "architecture": {
+      "components": [
+        {
+          "name": "github-template-root-boundary",
+          "paths": [
+            "planfile/integrations/config.py",
+            "tests/test_github_issue_templates.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Merge repository GitHub integration config before setting project_dir to str(self.directory) in IntegrationConfig.get_integration_backend so untrusted sync.planfile.yaml values cannot redirect issue_template containment outside the project root.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Revert the commit on main.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 1,
+      "maxImplementationFiles": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "nonGoals": [
+      "Modifying planfile/sync/github.py template rendering",
+      "Modifying unrelated integration backends"
+    ],
+    "outcome": "GitHub integration initialization always pins project_dir to the trusted IntegrationConfig root so untrusted project_dir overrides cannot escape template containment.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "pytest -q tests/test_github_issue_templates.py"
+        ],
+        "criterion": "AC-01",
+        "evidence": "8 passed including test_integration_config_ignores_untrusted_project_dir_override."
+      },
+      {
+        "commands": [
+          "pytest -q tests/test_github_issue_templates.py",
+          "ruff check planfile/integrations/config.py tests/test_github_issue_templates.py",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "criterion": "AC-02",
+        "evidence": "8 passed, ruff check passed, ./project/governance-check.sh --base origin/main and wellman check passed."
+      }
+    ]
+  }
+}
