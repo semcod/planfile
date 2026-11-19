@@ -1,0 +1,91 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-299",
+  "summary": "Allow multi-MB sprint index reconciliation and discovery stale retry",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-299/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "planfile/core/store.py",
+    "planfile/core/sqlite_index.py"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "55edc6ab0244e53d2804d073d8ffd064c664ded2",
+    "targetBranch": "main",
+    "outcome": "Resolve semcod/planfile#403 by raising MAX_REPAIR_SECONDS from 2.0 to 8.0 in planfile/core/index_repair.py so background server._repair_ticket_index() reconciles ~7 MB current.yaml incrementally within budget and restores GET /tickets/discovery to HTTP 200 without 200s full rebuilds, qualifying this path in tests/test_index_repair.py without modifying store.py or sqlite_index.py.",
+    "nonGoals": [
+      "Do not weaken GET /tickets/discovery read-only isolation or rebuild inside GET handlers.",
+      "Do not modify planfile/core/store.py or planfile/core/sqlite_index.py (reserved by active foreign tickets).",
+      "Do not weaken bounded byte/ticket caps or signature race refusal in index_repair.py."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep bounded MAX_REPAIR_BYTES/MAX_REPAIR_TICKETS and read-only discovery intact while raising MAX_REPAIR_SECONDS to 8.0 in planfile/core/index_repair.py so multi-MB current.yaml deltas reconcile incrementally during maintenance instead of triggering 200s full rebuilds.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert MAX_REPAIR_SECONDS to 2.0 in planfile/core/index_repair.py."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_index_repair.py -v"
+        ],
+        "evidence": "Simulated 2.6s current.yaml parse reconciles incrementally within MAX_REPAIR_SECONDS=8.0 with zero full archive scans."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest tests/test_index_repair.py tests/test_ticket_discovery.py -v"
+        ],
+        "evidence": "Read-only GET /tickets/discovery stays 503 while stale and returns HTTP 200 once background _repair_ticket_index completes incremental reconciliation."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "pytest tests/test_index_repair.py -v"
+        ],
+        "evidence": "Over-budget reconciliation continues returning None and preserving 503 with Retry-After: 2."
+      }
+    ]
+  }
+}

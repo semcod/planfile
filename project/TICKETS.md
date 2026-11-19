@@ -175,6 +175,21 @@ This file indexes governance tickets without taking ownership of
 | **ticket-274** | [`README.md`](./ticket-274/README.md) | - | - | - | - | - |
 | **ticket-275** | [`README.md`](./ticket-275/README.md) | - | - | - | - | - |
 | **ticket-277** | [`README.md`](./ticket-277/README.md) | - | - | - | - | - |
-| **ticket-279** | [`README.md`](./ticket-279/README.md) | Prevent stale bidirectional sync and owner overwrites | BUG | P1 | health | application |
-| **ticket-287** | [`README.md`](./ticket-287/README.md) | Reconcile a bounded stale index before an archive rebuild | BUG | P1 | requested | application |
+| **ticket-278** | [`README.md`](./ticket-278/README.md) | - | - | - | - | - |
+| **ticket-279** | [`README.md`](./ticket-279/README.md) | - | - | - | - | - |
+| **ticket-281** | [`README.md`](./ticket-281/README.md) | - | - | - | - | - |
+| **ticket-282** | [`README.md`](./ticket-282/README.md) | - | - | - | - | - |
+| **ticket-283** | [`README.md`](./ticket-283/README.md) | - | - | - | - | - |
+| **ticket-284** | [`README.md`](./ticket-284/README.md) | - | - | - | - | - |
+| **ticket-285** | [`README.md`](./ticket-285/README.md) | - | - | - | - | - |
+| **ticket-287** | [`README.md`](./ticket-287/README.md) | - | - | - | - | - |
+| **ticket-288** | [`README.md`](./ticket-288/README.md) | - | - | - | - | - |
+| **ticket-289** | [`README.md`](./ticket-289/README.md) | - | - | - | - | - |
+| **ticket-290** | [`README.md`](./ticket-290/README.md) | - | - | - | - | - |
+| **ticket-291** | [`README.md`](./ticket-291/README.md) | - | - | - | - | - |
+| **ticket-292** | [`README.md`](./ticket-292/README.md) | - | - | - | - | - |
+| **ticket-293** | [`README.md`](./ticket-293/README.md) | - | - | - | - | - |
+| **ticket-294** | [`README.md`](./ticket-294/README.md) | - | - | - | - | - |
+| **ticket-295** | [`README.md`](./ticket-295/README.md) | - | - | - | - | - |
+| **ticket-297** | [`README.md`](./ticket-297/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
