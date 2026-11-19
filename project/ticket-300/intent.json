@@ -1,0 +1,106 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-300",
+  "summary": "CQRS-028: Map URT campaign metadata to Planfile and deduplicate import",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-300/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/urt_campaign_import.py",
+    "tests/test_urt_campaign_import.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "planfile/core/store.py",
+    "planfile/core/sqlite_index.py",
+    "planfile/core/index_repair.py"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "55edc6ab0244e53d2804d073d8ffd064c664ded2",
+    "targetBranch": "main",
+    "outcome": "Deliver CQRS-028 (semcod/planfile#431) in planfile/sync/urt_campaign_import.py and tests/test_urt_campaign_import.py: raw BACKLOG.json payload guard, tracking vs target repository separation, URT/intent/proposal metadata mapping, verified planfile.sync.receipts GitHub issue binding, and idempotent/revision-conflict-aware preview and import commit.",
+    "nonGoals": [
+      "Do not modify planfile/core/store.py, sqlite_index.py, or index_repair.py.",
+      "Do not guess unknown target repositories or accept unverified GitHub issue numbers.",
+      "Do not perform live GitHub issue creation inside mapping/preview."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 40,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add standalone planfile/sync/urt_campaign_import.py reusing planfile.sync.receipts.latest_ticket_receipts for verified readback lookup and atomic JSON state/receipt writes, with full unit tests in tests/test_urt_campaign_import.py.",
+      "components": [
+        {
+          "name": "urt-campaign-import-mapper",
+          "paths": [
+            "planfile/sync/urt_campaign_import.py",
+            "tests/test_urt_campaign_import.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Abort import on UrtCampaignRevisionConflictError preserving prior state/receipts, or remove additive planfile/sync/urt_campaign_import.py and tests/test_urt_campaign_import.py."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_urt_campaign_import.py -v"
+        ],
+        "evidence": "assert_not_raw_backlog_payload rejects unmapped BACKLOG.json manifests and raw proposal payloads."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest tests/test_urt_campaign_import.py -v"
+        ],
+        "evidence": "Identical content yields noop_duplicate; changed content without bumped plan_revision raises UrtCampaignRevisionConflictError without mutating state."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "pytest tests/test_urt_campaign_import.py -v"
+        ],
+        "evidence": "tracking_repository stays separate and unknown/nieustalone target candidates map to None with routing_status=unrouted."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "pytest tests/test_urt_campaign_import.py -v"
+        ],
+        "evidence": "original_phrase, urt_ref, temporal_intent, and proposal_accepted=False are retained cleanly."
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "pytest tests/test_urt_campaign_import.py -v"
+        ],
+        "evidence": "linked_github_issue binds only verified succeeded receipts from planfile.sync.receipts and ignores unverified raw hints."
+      }
+    ]
+  }
+}
