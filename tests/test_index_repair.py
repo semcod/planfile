@@ -470,3 +470,54 @@ def test_background_recovers_after_independent_writer_commits_while_sqlite_is_bu
     result = server._repair_ticket_index()
     assert result["current"] and result["reconciled"] == 1
     assert index.get_ticket(ticket.id)["name"] == "Durable update"
+
+
+def test_multi_mb_current_sprint_reconciles_within_default_budget_and_restores_discovery_200(
+    tmp_path, monkeypatch
+):
+    from fastapi.testclient import TestClient
+
+    assert index_repair.MAX_REPAIR_SECONDS >= 8.0
+
+    pf = setup_store(tmp_path)
+    pf.create_ticket(name="Cold archive ticket", sprint="history-old")
+    ticket = pf.create_ticket(
+        name="Before slow current delta",
+        execution={"queue": "coding-agent", "state": "ready"},
+    )
+    pf.store.configure_ticket_index(True)
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    pf.update_ticket(ticket.id, name="After slow current delta")
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+    query = {"mode": "queue", "queue": "coding-agent", "state": "ready"}
+    stale = client.get("/tickets/discovery", params=query)
+    assert stale.status_code == 503
+    assert stale.headers.get("Retry-After") == "2"
+
+    now = 1000.0
+    read = index_repair.read_yaml_fast
+
+    def fake_monotonic():
+        return now
+
+    def slow_current_read(path):
+        nonlocal now
+        if path.stem == "current":
+            now += 2.6
+        return read(path)
+
+    monkeypatch.setattr(index_repair.time, "monotonic", fake_monotonic)
+    monkeypatch.setattr(index_repair, "read_yaml_fast", slow_current_read)
+    monkeypatch.setattr(pf.store, "_ticket_index_records", lambda: pytest.fail("full archive scan"))
+
+    result = server._repair_ticket_index()
+    assert result["current"] is True and result["reconciled"] == 1
+
+    recovered = client.get("/tickets/discovery", params=query)
+    assert recovered.status_code == 200
+    assert any(
+        row["id"] == ticket.id and row["name"] == "After slow current delta"
+        for row in recovered.json()["tickets"]
+    )
