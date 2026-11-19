@@ -25,7 +25,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "55edc6ab0244e53d2804d073d8ffd064c664ded2",
+    "acceptedBaseSha": "e55acd9ac4b56f5c6f9419afd223def6201b9917",
     "targetBranch": "main",
     "outcome": "Resolve semcod/planfile#403 by raising MAX_REPAIR_SECONDS from 2.0 to 8.0 in planfile/core/index_repair.py so background server._repair_ticket_index() reconciles ~7 MB current.yaml incrementally within budget and restores GET /tickets/discovery to HTTP 200 without 200s full rebuilds, qualifying this path in tests/test_index_repair.py without modifying store.py or sqlite_index.py.",
     "nonGoals": [
