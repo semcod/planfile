@@ -59,6 +59,24 @@ def test_ac01_rejects_raw_backlog_manifest_without_mapping() -> None:
     assert_not_raw_backlog_payload(mapped)
 
 
+@pytest.mark.parametrize("payload", [
+    {"schema": "uritime.evolution-plan/v1", "campaign": "uritime-cqrs-es-20261118", "tickets": []},
+    {"native_planfile_payload": False, "tickets": []},
+    {
+        "id": "CQRS-001", "title": "Define event records", "ticket_path": "tickets/CQRS-001.md",
+        "target_projects": ["uritime"], "target_repository_candidate": None,
+    },
+])
+def test_rejects_evolution_plan_manifest_and_unmapped_items(payload) -> None:
+    with pytest.raises(UrtCampaignImportError, match="without mapping"):
+        assert_not_raw_backlog_payload(payload)
+
+
+def test_native_ticket_can_share_fields_with_an_evolution_proposal() -> None:
+    assert_not_raw_backlog_payload({"id": "CQRS-001", "name": "Track an approved change"})
+    assert_not_raw_backlog_payload({"ticket_path": "tickets/native.md", "target_projects": ["uritime"]})
+
+
 def test_ac02_deduplicates_identical_import_and_guards_revisions(tmp_path: Path) -> None:
     state_path = tmp_path / "import_state.json"
     receipt_path = tmp_path / "import_receipt.json"
