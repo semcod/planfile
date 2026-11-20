@@ -113,6 +113,14 @@ def assert_not_raw_backlog_payload(payload: Mapping[str, Any]) -> None:
     """Reject passing unmapped BACKLOG.json or raw campaign manifests directly as native payloads."""
     if not isinstance(payload, Mapping):
         raise UrtCampaignImportError("Native Planfile ticket payload must be a mapping")
+    if (
+        payload.get("schema") == "uritime.evolution-plan/v1"
+        or payload.get("native_planfile_payload") is False
+    ):
+        raise UrtCampaignImportError("Raw URT evolution plan cannot be submitted without mapping")
+    proposal_fields = {"id", "title", "ticket_path", "target_projects"}
+    if proposal_fields.issubset(payload):
+        raise UrtCampaignImportError("Raw URT backlog item cannot be submitted without mapping")
     if payload.get("schema") == MAPPED_TICKET_SCHEMA:
         return
     raw_markers = {"proposals", "campaign_manifest", "backlog_version", "proposal_id"}
