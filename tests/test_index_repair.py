@@ -521,3 +521,96 @@ def test_multi_mb_current_sprint_reconciles_within_default_budget_and_restores_d
         row["id"] == ticket.id and row["name"] == "After slow current delta"
         for row in recovered.json()["tickets"]
     )
+
+
+@pytest.mark.parametrize("new_daily_history", [False, True])
+def test_background_repairs_auto_archive_move_without_full_rebuild(
+    tmp_path, monkeypatch, new_daily_history
+):
+    from fastapi.testclient import TestClient
+
+    pf = Planfile(str(tmp_path))
+    config = pf.store._read_config()
+    config["archive"]["enabled"] = True
+    config["archive"]["max_current_tickets"] = 1
+    config["archive"]["keep_recent_terminal"] = 0
+    pf.store._write_config(config)
+
+    cold = pf.create_ticket(name="Cold archive ticket", sprint="history-2026-10-01")
+    if not new_daily_history:
+        # Seed today's daily archive file so it already exists before rotation.
+        pre_done = pf.create_ticket(name="Already archived today")
+        pf.update_ticket(pre_done.id, status="done")
+        pf.store.archive_completed(force=True)
+
+    active = pf.create_ticket(
+        name="Queued coding ticket",
+        execution={"queue": "coding-agent", "state": "ready"},
+    )
+    completing = pf.create_ticket(name="Hourly scheduled ticket")
+    pf.store.configure_ticket_index(True)
+    assert pf.store.require_current_ticket_index()["current"]
+
+    # Completing triggers _archive_completed_unlocked(), which rotates the ticket
+    # into history-YYYY-MM-DD.yaml, updates history-locations.yaml, and leaves
+    # the SQLite index stale across two sprints.
+    pf.update_ticket(completing.id, status="done")
+    with pytest.raises(TicketIndexContentionError, match="stale"):
+        pf.store.require_current_ticket_index()
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    client = TestClient(server.app)
+    query = {"mode": "queue", "queue": "coding-agent", "state": "ready"}
+    assert client.get("/tickets/discovery", params=query).status_code == 503
+
+    monkeypatch.setattr(pf.store, "_ticket_index_records", lambda: pytest.fail("full archive scan"))
+    result = server._repair_ticket_index()
+    assert result["current"] is True
+    assert result["reconciled"] >= 2
+
+    index = pf.store._sqlite_ticket_index()
+    assert index.get_ticket(cold.id)["name"] == "Cold archive ticket"
+    archived_row = index.get_ticket(completing.id)
+    assert archived_row["status"] == "done"
+    assert archived_row["sprint"].startswith("history-")
+
+    recovered = client.get("/tickets/discovery", params=query)
+    assert recovered.status_code == 200
+    assert any(row["id"] == active.id for row in recovered.json()["tickets"])
+
+
+def test_background_rejects_out_of_scope_locator_change_from_stored_baseline(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    first = pf.create_ticket(name="History A copy", sprint="history-a")
+    raw = first.model_dump(mode="json", exclude_none=True)
+    raw.update(name="History B copy", sprint="history-b")
+    pf.store._write_yaml_atomic(pf.store._sprint_file("history-b"), {
+        "sprint": {"id": "history-b", "tickets": {first.id: raw}},
+    })
+    with pf.store.mutation_lock():
+        pf.store._record_history_locations_unlocked({first.id: "history-a"})
+    active = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+
+    # Mutate current.yaml AND externally repoint an unrelated duplicate ticket
+    # between two unchanged history sprints without touching either history file.
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    pf.update_ticket(active.id, name="After")
+    with pf.store.mutation_lock():
+        pf.store._record_history_locations_unlocked({first.id: "history-b"})
+
+    rebuilds = []
+    orig_rebuild = pf.store._rebuild_ticket_index_unlocked
+
+    def tracked_rebuild(index, *, force):
+        rebuilds.append(1)
+        return orig_rebuild(index, force=force)
+
+    monkeypatch.setattr(pf.store, "_rebuild_ticket_index_unlocked", tracked_rebuild)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    result = server._repair_ticket_index()
+    assert result["current"] is True
+    assert rebuilds == [1]
+    assert pf.store._sqlite_ticket_index().get_ticket(first.id)["sprint"] == "history-b"
