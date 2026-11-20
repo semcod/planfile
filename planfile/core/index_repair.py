@@ -8,6 +8,7 @@ import sqlite3
 import time
 from contextlib import closing
 from dataclasses import dataclass
+from pathlib import Path
 
 from yaml import YAMLError
 
@@ -26,9 +27,13 @@ class _RepairBudgetExceeded(Exception):
 
 @dataclass(frozen=True)
 class _LocatorSnapshot:
+    path: Path
     signature: tuple | None
     locations: dict[str, str]
     byte_count: int
+
+    def matches(self, store, signature: tuple) -> bool:
+        return self.path == store._history_locations_path and self.signature == signature[2]
 
 
 def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot | None:
@@ -61,7 +66,7 @@ def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot 
         if (store._history_locations_signature() != expected
                 or time.monotonic() - started > MAX_REPAIR_SECONDS):
             return None
-        return _LocatorSnapshot(expected, dict(locations), len(raw))
+        return _LocatorSnapshot(store._history_locations_path, expected, dict(locations), len(raw))
     except (OSError, UnicodeError, YAMLError):
         return None
 
@@ -144,23 +149,10 @@ def _removed_current_shards_are_archived(
 
 
 def _has_unmapped_earlier_copy(indexed_sprints, locations, affected, sprint_order, tickets) -> bool:
-    """Check whether an unproven locator removal can change canonical precedence.
-
-    Only locator-eligible sprints (``history-*`` sprints or sprints currently
-    referenced by ``history-locations.yaml``) can lose a locator entry.
-    Non-locator sprints such as ``backlog`` or legacy ``archive-*`` files never
-    appear in ``history-locations.yaml`` and must not force scanning untouched
-    multi-megabyte archives during incremental repair.
-    """
-    locator_sprints = set(locations.values())
+    """Check whether an unproven locator removal can change canonical precedence."""
     unmapped = {}
     for ticket_id, sprint in indexed_sprints.items():
-        if (
-            sprint != "current"
-            and (sprint.startswith("history-") or sprint in locator_sprints)
-            and ticket_id not in locations
-            and ticket_id not in affected
-        ):
+        if sprint != "current" and ticket_id not in locations and ticket_id not in affected:
             unmapped.setdefault(sprint, set()).add(ticket_id)
     later_ids = set()
     for sprint in reversed(sprint_order):
@@ -298,9 +290,11 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
         if target == built_signature:
             return index.status(target) | {"rebuilt": True}
         locator_changed = target[2] != built_signature[2]
-        if locator_changed and not from_stored_baseline and (
-            locator_snapshot is None or locator_snapshot.signature != built_signature[2]
+        if locator_snapshot is not None and (
+            not locator_changed or not locator_snapshot.matches(store, built_signature)
         ):
+            locator_snapshot = None
+        if locator_changed and not from_stored_baseline and locator_snapshot is None:
             return None
 
         consumed = stored_bytes + (locator_snapshot.byte_count if locator_snapshot is not None else 0)
@@ -397,9 +391,12 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
             if len(ids) > MAX_REPAIR_TICKETS:
                 raise _RepairBudgetExceeded
             all_sprints = store._all_sprint_ids()
-            if (indexed_sprints is not None and built_signature[2] is not None
-                    and _has_unmapped_earlier_copy(indexed_sprints, locations, ids, all_sprints, tickets)):
-                return None
+            if indexed_sprints is not None and built_signature[2] is not None:
+                if locator_snapshot is None:
+                    if _has_unmapped_earlier_copy(indexed_sprints, locations, ids, all_sprints, tickets):
+                        return None
+                elif locator_snapshot.locations.keys() - locations.keys() - ids:
+                    return None
             records = []
             deleted = []
             for ticket_id in sorted(ids):

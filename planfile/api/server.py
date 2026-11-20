@@ -2875,7 +2875,7 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
         await asyncio.sleep(interval_seconds)
 
 
-def _repair_ticket_index() -> dict:
+def _repair_ticket_index(*, locator_snapshot=None) -> dict:
     """Repair the newest state without requiring a quiet writer interval."""
     store = get_planfile().store
     index = store._sqlite_ticket_index()
@@ -2898,7 +2898,7 @@ def _repair_ticket_index() -> dict:
             from planfile.core.index_repair import reconcile_index
 
             try:
-                repaired = reconcile_index(store, index)
+                repaired = reconcile_index(store, index, locator_snapshot=locator_snapshot)
             except sqlite3.DatabaseError:
                 # The existing full-rebuild path handles damaged or busy
                 # projections through the store's normal recovery protocol.
@@ -2912,6 +2912,9 @@ def _repair_ticket_index() -> dict:
 
 async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
     """Coalesce stale-index repair away from latency-sensitive API requests."""
+    from planfile.core.index_repair import capture_locator_snapshot
+
+    locator_snapshot = None
     while True:
         await asyncio.sleep(interval_seconds)
         try:
@@ -2920,8 +2923,13 @@ async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
                 continue
             signature = await asyncio.to_thread(store._ticket_index_signature)
             if await asyncio.to_thread(store._sqlite_ticket_index().is_current, signature):
+                if locator_snapshot is None or not locator_snapshot.matches(store, signature):
+                    locator_snapshot = await asyncio.to_thread(capture_locator_snapshot, store, signature)
                 continue
-            await asyncio.to_thread(_repair_ticket_index)
+            if locator_snapshot is None:
+                await asyncio.to_thread(_repair_ticket_index)
+            else:
+                await asyncio.to_thread(_repair_ticket_index, locator_snapshot=locator_snapshot)
         except (StoreLockTimeoutError, TicketIndexContentionError):
             # Another worker or request already owns .rebuild.lock or deferred
             # rebuilds after contention; retry quietly on the next tick.

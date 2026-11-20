@@ -47,6 +47,34 @@ def test_maintenance_repairs_even_when_every_observation_has_a_new_signature(mon
     assert repairs == [1, 2]
 
 
+def test_maintenance_reuses_locator_observed_while_index_is_current(tmp_path, monkeypatch):
+    pf = setup_store(tmp_path)
+    active = pf.create_ticket(name="Before")
+    pf.store.configure_ticket_index(True)
+    observed = pf.store._ticket_index_signature()
+    expected = index_repair.capture_locator_snapshot(pf.store, observed)
+    assert expected is not None
+    ticks = 0
+    repairs = []
+
+    async def next_tick(_interval):
+        nonlocal ticks
+        ticks += 1
+        if ticks == 2:
+            monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+            pf.update_ticket(active.id, name="After")
+        if ticks == 3:
+            raise asyncio.CancelledError
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    monkeypatch.setattr(asyncio, "sleep", next_tick)
+    monkeypatch.setattr(server, "_repair_ticket_index",
+                        lambda *, locator_snapshot: repairs.append(locator_snapshot))
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(server._maintain_ticket_index())
+    assert repairs == [expected]
+
+
 @pytest.mark.parametrize("sharded", [False, True])
 def test_rebuild_converges_when_an_independent_process_writes_during_every_scan(
     tmp_path, monkeypatch, sharded
@@ -656,23 +684,34 @@ def test_background_rejects_out_of_scope_locator_change_from_stored_baseline(
 
 
 @pytest.mark.parametrize("sharded", [False, True])
-def test_background_rebuilds_after_unrelated_locator_removal(tmp_path, monkeypatch, sharded):
+@pytest.mark.parametrize("prefix", ["history", "archive"])
+@pytest.mark.parametrize("known_locator", [False, True])
+def test_background_rebuilds_after_unrelated_locator_removal(
+    tmp_path, monkeypatch, sharded, prefix, known_locator,
+):
     pf = setup_store(tmp_path)
-    first = pf.create_ticket(name="First history", sprint="history-a")
+    earlier, preferred = f"{prefix}-a", f"{prefix}-b"
+    first = pf.create_ticket(name="First history", sprint=earlier)
     raw = first.model_dump(mode="json", exclude_none=True)
-    raw.update(name="Preferred history", sprint="history-b")
-    pf.store._write_yaml_atomic(pf.store._sprint_file("history-b"), {
-        "sprint": {"id": "history-b", "tickets": {first.id: raw}},
+    raw.update(name="Preferred history", sprint=preferred)
+    pf.store._write_yaml_atomic(pf.store._sprint_file(preferred), {
+        "sprint": {"id": preferred, "tickets": {first.id: raw}},
     })
     active = pf.create_ticket(name="Stay in current")
     completing = pf.create_ticket(name="Move to daily history")
     if sharded:
         pf.store.migrate_to_sharded_yaml(shard_size=1)
     with pf.store.mutation_lock():
-        pf.store._record_history_locations_unlocked({first.id: "history-b"})
+        pf.store._move_history_location_unlocked(first.id, preferred)
     pf.store.configure_ticket_index(True)
     index = pf.store._sqlite_ticket_index()
-    assert index.get_ticket(first.id)["sprint"] == "history-b"
+    assert index.get_ticket(first.id)["sprint"] == preferred
+    snapshot = (
+        index_repair.capture_locator_snapshot(pf.store, pf.store._ticket_index_signature())
+        if known_locator else None
+    )
+    if known_locator:
+        assert snapshot is not None
 
     config = pf.store._read_config()
     config["archive"].update(enabled=True, max_current_tickets=1, keep_recent_terminal=0)
@@ -682,29 +721,34 @@ def test_background_rebuilds_after_unrelated_locator_removal(tmp_path, monkeypat
         pf.store._move_history_location_unlocked(first.id, "current")
     assert pf.store._history_locations()[completing.id].startswith("history-")
     assert index_repair._stored_baseline(index, pf.store._ticket_index_signature()) is not None
-    assert index_repair.reconcile_index(pf.store, index) is None
+    assert index_repair.reconcile_index(pf.store, index, locator_snapshot=snapshot) is None
 
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
-    result = server._repair_ticket_index()
+    result = server._repair_ticket_index(locator_snapshot=snapshot)
     assert result["current"] and "reconciled" not in result
-    assert index.get_ticket(first.id)["sprint"] == "history-a"
+    assert index.get_ticket(first.id)["sprint"] == earlier
     assert index.get_ticket(first.id)["name"] == first.name
     assert index.get_ticket(active.id)["sprint"] == "current"
 
 
-def test_background_archive_repair_skips_unmapped_backlog_and_legacy_archives(
+def test_known_prior_locator_avoids_unrelated_archive_reads(
     tmp_path, monkeypatch
 ):
     pf = setup_store(tmp_path)
     pf.create_ticket(name="Backlog item", sprint="backlog")
     pf.create_ticket(name="Legacy archive 07", sprint="archive-2026-07")
     pf.create_ticket(name="Legacy archive 08", sprint="archive-2026-08")
+    tracked = pf.create_ticket(name="Mapped history", sprint="history-old")
+    with pf.store.mutation_lock():
+        pf.store._record_history_locations_unlocked({tracked.id: "history-old"})
     active = pf.create_ticket(name="Stay in current")
     completing = pf.create_ticket(name="Archive to daily history")
 
     pf.store.configure_ticket_index(True)
     index = pf.store._sqlite_ticket_index()
     assert pf.store.require_current_ticket_index()["current"]
+    snapshot = index_repair.capture_locator_snapshot(pf.store, pf.store._ticket_index_signature())
+    assert snapshot is not None and snapshot.locations[tracked.id] == "history-old"
 
     config = pf.store._read_config()
     config["archive"].update(enabled=True, max_current_tickets=1, keep_recent_terminal=0)
@@ -719,9 +763,35 @@ def test_background_archive_repair_skips_unmapped_backlog_and_legacy_archives(
         return orig_read_yaml(path)
 
     monkeypatch.setattr(index_repair, "read_yaml_fast", forbid_legacy_archive_reads)
-    reconciled = index_repair.reconcile_index(pf.store, index)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    reconciled = server._repair_ticket_index(locator_snapshot=snapshot)
     assert reconciled is not None
     assert reconciled["current"] is True
     assert reconciled["reconciled"] >= 2
     assert index.get_ticket(active.id)["sprint"] == "current"
     assert index.get_ticket(completing.id)["sprint"].startswith("history-")
+
+
+def test_has_unmapped_earlier_copy_still_guards_custom_locator_backed_sprints():
+    # A custom non-'history-' sprint that IS referenced in locations.values()
+    # remains locator-eligible and still flags an earlier duplicate copy.
+    indexed_sprints = {
+        "PLF-1": "custom-arch",
+        "PLF-2": "custom-arch",
+        "PLF-3": "archive-2026-07",
+    }
+    locations = {"PLF-2": "custom-arch"}
+    reads: list[str] = []
+
+    def fake_tickets(sprint: str) -> dict:
+        reads.append(sprint)
+        return {"PLF-1": {"id": "PLF-1"}} if sprint == "backlog" else {}
+
+    assert index_repair._has_unmapped_earlier_copy(
+        indexed_sprints,
+        locations,
+        affected=set(),
+        sprint_order=["current", "backlog", "archive-2026-07", "custom-arch"],
+        tickets=fake_tickets,
+    ) is True
+    assert "backlog" in reads
