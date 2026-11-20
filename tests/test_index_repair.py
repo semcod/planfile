@@ -524,8 +524,9 @@ def test_multi_mb_current_sprint_reconciles_within_default_budget_and_restores_d
 
 
 @pytest.mark.parametrize("new_daily_history", [False, True])
+@pytest.mark.parametrize("sharded", [False, True])
 def test_background_repairs_auto_archive_move_without_full_rebuild(
-    tmp_path, monkeypatch, new_daily_history
+    tmp_path, monkeypatch, new_daily_history, sharded
 ):
     from fastapi.testclient import TestClient
 
@@ -548,6 +549,11 @@ def test_background_repairs_auto_archive_move_without_full_rebuild(
         execution={"queue": "coding-agent", "state": "ready"},
     )
     completing = pf.create_ticket(name="Hourly scheduled ticket")
+    removed_shard = None
+    if sharded:
+        pf.store.migrate_to_sharded_yaml(shard_size=1)
+        removed_shard = pf.store._sharded_storage().shard_path("current", completing.id)
+        assert removed_shard.is_file()
     pf.store.configure_ticket_index(True)
     assert pf.store.require_current_ticket_index()["current"]
 
@@ -555,6 +561,8 @@ def test_background_repairs_auto_archive_move_without_full_rebuild(
     # into history-YYYY-MM-DD.yaml, updates history-locations.yaml, and leaves
     # the SQLite index stale across two sprints.
     pf.update_ticket(completing.id, status="done")
+    if removed_shard is not None:
+        assert not removed_shard.exists()
     with pytest.raises(TicketIndexContentionError, match="stale"):
         pf.store.require_current_ticket_index()
 
@@ -577,6 +585,37 @@ def test_background_repairs_auto_archive_move_without_full_rebuild(
     recovered = client.get("/tickets/discovery", params=query)
     assert recovered.status_code == 200
     assert any(row["id"] == active.id for row in recovered.json()["tickets"])
+
+
+def test_background_rejects_removed_shard_with_unaccounted_ticket(tmp_path):
+    from planfile.core.fastio import mirror_path
+
+    pf = setup_store(tmp_path)
+    pf.create_ticket(name="Cold history", sprint="history-2026-10-01")
+    unaffected = pf.create_ticket(name="Must stay in current")
+    completing = pf.create_ticket(name="Will move to history")
+    pf.store.migrate_to_sharded_yaml(shard_size=100)
+    storage = pf.store._sharded_storage()
+    shard = storage.shard_path("current", completing.id)
+    assert shard == storage.shard_path("current", unaffected.id)
+    pf.store.configure_ticket_index(True)
+
+    config = pf.store._read_config()
+    config["archive"].update(enabled=True, max_current_tickets=1, keep_recent_terminal=0)
+    pf.store._write_config(config)
+    pf.update_ticket(completing.id, status="done")
+    assert shard.is_file()
+    # Model a separate deletion after the archive writer moved only the completed ticket.
+    with pf.store.mutation_lock():
+        shard.unlink()
+        mirror_path(shard).unlink(missing_ok=True)
+
+    index = pf.store._sqlite_ticket_index()
+    assert index_repair._stored_baseline(index, pf.store._ticket_index_signature()) is not None
+    assert index_repair.reconcile_index(pf.store, index) is None
+    assert index.get_ticket(unaffected.id)["sprint"] == "current"
+    with pytest.raises(TicketIndexContentionError, match="stale"):
+        pf.store.require_current_ticket_index()
 
 
 def test_background_rejects_out_of_scope_locator_change_from_stored_baseline(
@@ -614,3 +653,40 @@ def test_background_rejects_out_of_scope_locator_change_from_stored_baseline(
     assert result["current"] is True
     assert rebuilds == [1]
     assert pf.store._sqlite_ticket_index().get_ticket(first.id)["sprint"] == "history-b"
+
+
+@pytest.mark.parametrize("sharded", [False, True])
+def test_background_rebuilds_after_unrelated_locator_removal(tmp_path, monkeypatch, sharded):
+    pf = setup_store(tmp_path)
+    first = pf.create_ticket(name="First history", sprint="history-a")
+    raw = first.model_dump(mode="json", exclude_none=True)
+    raw.update(name="Preferred history", sprint="history-b")
+    pf.store._write_yaml_atomic(pf.store._sprint_file("history-b"), {
+        "sprint": {"id": "history-b", "tickets": {first.id: raw}},
+    })
+    active = pf.create_ticket(name="Stay in current")
+    completing = pf.create_ticket(name="Move to daily history")
+    if sharded:
+        pf.store.migrate_to_sharded_yaml(shard_size=1)
+    with pf.store.mutation_lock():
+        pf.store._record_history_locations_unlocked({first.id: "history-b"})
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    assert index.get_ticket(first.id)["sprint"] == "history-b"
+
+    config = pf.store._read_config()
+    config["archive"].update(enabled=True, max_current_tickets=1, keep_recent_terminal=0)
+    pf.store._write_config(config)
+    pf.update_ticket(completing.id, status="done")
+    with pf.store.mutation_lock():
+        pf.store._move_history_location_unlocked(first.id, "current")
+    assert pf.store._history_locations()[completing.id].startswith("history-")
+    assert index_repair._stored_baseline(index, pf.store._ticket_index_signature()) is not None
+    assert index_repair.reconcile_index(pf.store, index) is None
+
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    result = server._repair_ticket_index()
+    assert result["current"] and "reconciled" not in result
+    assert index.get_ticket(first.id)["sprint"] == "history-a"
+    assert index.get_ticket(first.id)["name"] == first.name
+    assert index.get_ticket(active.id)["sprint"] == "current"
