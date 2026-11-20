@@ -70,26 +70,26 @@ def maybe_emit_ticket_created(
     state_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Emit a Planfile ticket create/reuse intent into UrtLogStore and register its URN."""
-    target_dir = resolve_state_dir(state_dir)
-    if target_dir is None:
-        return {"emitted": False, "reason": "disabled"}
-    urtlog_mod = _load_urtlog()
-    if urtlog_mod is None:
-        return {"emitted": False, "reason": "urtlog_not_installed"}
-
-    tid = str(_extract_attr(ticket, "id", "unknown"))
-    title = str(_extract_attr(ticket, "name", "") or "")
-    sprint = str(_extract_attr(ticket, "sprint", "current") or "current")
-    priority = _norm_enum(_extract_attr(ticket, "priority", "normal"), "normal")
-    status_val = _norm_enum(_extract_attr(ticket, "status", "open"), "open")
-    labels = list(_extract_attr(ticket, "labels", []) or [])
-    blocked_by = list(_extract_attr(ticket, "blocked_by", []) or [])
-    at_us = _now_us()
-    event_id = f"plf-create-{_slug(tid)}-{at_us}"
-    op_uri = f"planfile://ticket/{'create' if created else 'reuse'}/{_slug(tid)}"
-    urn = _ticket_urn(tid)
-
     try:
+        target_dir = resolve_state_dir(state_dir)
+        if target_dir is None:
+            return {"emitted": False, "reason": "disabled"}
+        urtlog_mod = _load_urtlog()
+        if urtlog_mod is None:
+            return {"emitted": False, "reason": "urtlog_not_installed"}
+
+        tid = str(_extract_attr(ticket, "id", "unknown"))
+        title = str(_extract_attr(ticket, "name", "") or "")
+        sprint = str(_extract_attr(ticket, "sprint", "current") or "current")
+        priority = _norm_enum(_extract_attr(ticket, "priority", "normal"), "normal")
+        status_val = _norm_enum(_extract_attr(ticket, "status", "open"), "open")
+        labels = list(_extract_attr(ticket, "labels", []) or [])
+        blocked_by = list(_extract_attr(ticket, "blocked_by", []) or [])
+        at_us = _now_us()
+        event_id = f"plf-create-{_slug(tid)}-{at_us}"
+        op_uri = f"planfile://ticket/{'create' if created else 'reuse'}/{_slug(tid)}"
+        urn = _ticket_urn(tid)
+
         with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository) as client:
             client.registry.register_urn(
                 urn,
@@ -167,40 +167,40 @@ def maybe_emit_ticket_dependency(
     state_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Emit a Planfile DAG dependency edge (`--after`/`--before`) into UrtLogStore."""
-    target_dir = resolve_state_dir(state_dir)
-    if target_dir is None:
-        return {"emitted": False, "reason": "disabled"}
-    urtlog_mod = _load_urtlog()
-    if urtlog_mod is None:
-        return {"emitted": False, "reason": "urtlog_not_installed"}
-
-    after_list = [str(x) for x in after if x]
-    before_list = [str(x) for x in before if x]
-    at_us = _now_us()
-    event_id = f"plf-depend-{_slug(ticket_id)}-{at_us}"
-    op_uri = f"planfile://ticket/depend/{_slug(ticket_id)}"
-    urn = _ticket_urn(ticket_id)
-
-    inputs = tuple(
-        urtlog_mod.DataRef(urn=_ticket_urn(dep), role="dependency", sensitivity="internal")
-        for dep in after_list
-    ) or (urtlog_mod.DataRef(urn=urn, role="ticket", sensitivity="internal"),)
-    outputs = (
-        urtlog_mod.DataRef(urn=urn, role="dependent_ticket", sensitivity="internal"),
-        *(
-            urtlog_mod.DataRef(urn=_ticket_urn(nxt), role="downstream_ticket", sensitivity="internal")
-            for nxt in before_list
-        ),
-    )
-
-    parts = []
-    if after_list:
-        parts.append(f"after {', '.join(after_list)}")
-    if before_list:
-        parts.append(f"before {', '.join(before_list)}")
-    summary = f"Sequenced {ticket_id}: {'; '.join(parts) or 'dependency updated'}"
-
     try:
+        target_dir = resolve_state_dir(state_dir)
+        if target_dir is None:
+            return {"emitted": False, "reason": "disabled"}
+        urtlog_mod = _load_urtlog()
+        if urtlog_mod is None:
+            return {"emitted": False, "reason": "urtlog_not_installed"}
+
+        after_list = [str(x) for x in after if x]
+        before_list = [str(x) for x in before if x]
+        at_us = _now_us()
+        event_id = f"plf-depend-{_slug(ticket_id)}-{at_us}"
+        op_uri = f"planfile://ticket/depend/{_slug(ticket_id)}"
+        urn = _ticket_urn(ticket_id)
+
+        inputs = tuple(
+            urtlog_mod.DataRef(urn=_ticket_urn(dep), role="dependency", sensitivity="internal")
+            for dep in after_list
+        ) or (urtlog_mod.DataRef(urn=urn, role="ticket", sensitivity="internal"),)
+        outputs = (
+            urtlog_mod.DataRef(urn=urn, role="dependent_ticket", sensitivity="internal"),
+            *(
+                urtlog_mod.DataRef(urn=_ticket_urn(nxt), role="downstream_ticket", sensitivity="internal")
+                for nxt in before_list
+            ),
+        )
+
+        parts = []
+        if after_list:
+            parts.append(f"after {', '.join(after_list)}")
+        if before_list:
+            parts.append(f"before {', '.join(before_list)}")
+        summary = f"Sequenced {ticket_id}: {'; '.join(parts) or 'dependency updated'}"
+
         with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository) as client:
             client.registry.register_urn(
                 urn,
@@ -260,42 +260,42 @@ def maybe_emit_ticket_event(
     state_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Emit a Planfile ticket transition (`update`, `block`, `done`, `fail`, `start`, `ready`, etc.)."""
-    target_dir = resolve_state_dir(state_dir)
-    if target_dir is None:
-        return {"emitted": False, "reason": "disabled"}
-    urtlog_mod = _load_urtlog()
-    if urtlog_mod is None:
-        return {"emitted": False, "reason": "urtlog_not_installed"}
-
-    tid = str(_extract_attr(ticket, "id", str(ticket)))
-    title = str(_extract_attr(ticket, "name", "") or "")
-    status_val = _norm_enum(_extract_attr(ticket, "status", action), action)
-    priority = _norm_enum(_extract_attr(ticket, "priority", "normal"), "normal")
-    sprint = str(_extract_attr(ticket, "sprint", "current") or "current")
-    blocked_by = list(_extract_attr(ticket, "blocked_by", []) or [])
-    clean_action = _slug(action, "update").lower()
-
-    if clean_action in {"block", "input"}:
-        urt_status = "unknown"
-        log_type = "audit"
-    elif clean_action == "fail":
-        urt_status = "failed"
-        log_type = "error"
-    elif clean_action in {"done", "complete"}:
-        urt_status = "succeeded"
-        log_type = "summary"
-    else:
-        urt_status = "succeeded"
-        log_type = "lifecycle"
-
-    detail = reason or note or title
-    summary = f"Ticket {tid} {clean_action} ({status_val})" + (f": {str(detail)[:160]}" if detail else "")
-    at_us = _now_us()
-    event_id = f"plf-{clean_action}-{_slug(tid)}-{at_us}"
-    op_uri = f"planfile://ticket/{clean_action}/{_slug(tid)}"
-    urn = _ticket_urn(tid)
-
     try:
+        target_dir = resolve_state_dir(state_dir)
+        if target_dir is None:
+            return {"emitted": False, "reason": "disabled"}
+        urtlog_mod = _load_urtlog()
+        if urtlog_mod is None:
+            return {"emitted": False, "reason": "urtlog_not_installed"}
+
+        tid = str(_extract_attr(ticket, "id", str(ticket)))
+        title = str(_extract_attr(ticket, "name", "") or "")
+        status_val = _norm_enum(_extract_attr(ticket, "status", action), action)
+        priority = _norm_enum(_extract_attr(ticket, "priority", "normal"), "normal")
+        sprint = str(_extract_attr(ticket, "sprint", "current") or "current")
+        blocked_by = list(_extract_attr(ticket, "blocked_by", []) or [])
+        clean_action = _slug(action, "update").lower()
+
+        if clean_action in {"block", "input"}:
+            urt_status = "unknown"
+            log_type = "audit"
+        elif clean_action == "fail":
+            urt_status = "failed"
+            log_type = "error"
+        elif clean_action in {"done", "complete"}:
+            urt_status = "succeeded"
+            log_type = "summary"
+        else:
+            urt_status = "succeeded"
+            log_type = "lifecycle"
+
+        detail = reason or note or title
+        summary = f"Ticket {tid} {clean_action} ({status_val})" + (f": {str(detail)[:160]}" if detail else "")
+        at_us = _now_us()
+        event_id = f"plf-{clean_action}-{_slug(tid)}-{at_us}"
+        op_uri = f"planfile://ticket/{clean_action}/{_slug(tid)}"
+        urn = _ticket_urn(tid)
+
         with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository) as client:
             client.registry.register_urn(
                 urn,
@@ -369,20 +369,20 @@ def load_planfile_queue_brief(
     state_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Read compact Planfile ticket/DAG state from UnifiedRegistry + UrtLogStore for Heyasa/D1."""
-    target_dir = resolve_state_dir(state_dir)
-    if target_dir is None:
-        return {"enabled": False, "reason": "disabled", "tickets": [], "blocked": [], "done": [], "queued": []}
-    urtlog_mod = _load_urtlog()
-    if urtlog_mod is None:
-        return {"enabled": False, "reason": "urtlog_not_installed", "tickets": [], "blocked": [], "done": [], "queued": []}
-
-    ctx = urtlog_mod.AccessContext(
-        "heyasa",
-        roles=frozenset({"assistant"}),
-        groups=frozenset({"ops"}),
-        max_sensitivity="internal",
-    )
     try:
+        target_dir = resolve_state_dir(state_dir)
+        if target_dir is None:
+            return {"enabled": False, "reason": "disabled", "tickets": [], "blocked": [], "done": [], "queued": []}
+        urtlog_mod = _load_urtlog()
+        if urtlog_mod is None:
+            return {"enabled": False, "reason": "urtlog_not_installed", "tickets": [], "blocked": [], "done": [], "queued": []}
+
+        ctx = urtlog_mod.AccessContext(
+            "heyasa",
+            roles=frozenset({"assistant"}),
+            groups=frozenset({"ops"}),
+            max_sensitivity="internal",
+        )
         with urtlog_mod.UrtClient(target_dir, source="planfile", repository="semcod/planfile") as client:
             urn_rows = client.registry.search(ctx, kind="urn", system="planfile", limit=max(1, min(int(limit), 200)))
             events = client.store.query(ctx, source="planfile", op_prefix="op/planfile/ticket/", limit=max(1, min(int(limit) * 2, 200)))

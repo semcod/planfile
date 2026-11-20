@@ -43,6 +43,19 @@ def test_bridge_fail_open_when_urtlog_missing(tmp_path: Path) -> None:
         }
 
 
+def test_bridge_handles_unresolvable_state_directory() -> None:
+    ticket = SimpleNamespace(id="PLF-001", status="open")
+    with mock.patch("planfile.urtlog_bridge.resolve_state_dir", side_effect=RuntimeError):
+        assert maybe_emit_ticket_created(ticket) == {"emitted": False, "reason": "emit_failed"}
+        assert maybe_emit_ticket_dependency("PLF-002", after=["PLF-001"]) == {
+            "emitted": False, "reason": "emit_failed",
+        }
+        assert maybe_emit_ticket_event("done", ticket) == {"emitted": False, "reason": "emit_failed"}
+        assert load_planfile_queue_brief() == {
+            "enabled": False, "reason": "query_failed", "tickets": [], "blocked": [], "done": [], "queued": [],
+        }
+
+
 def test_live_planfile_dag_blockers_and_queue_brief(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

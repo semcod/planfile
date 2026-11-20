@@ -1,7 +1,7 @@
 # Ticket 309: Optional uritime-urtlog bridge for planfile ticket lifecycle and dependency DAG
 
 - **ID**: ticket-309
-- **Owner**: agent:antigravity
+- **Owner**: agent:codex
 - **Status**: IN_PROGRESS
 - **Workflow state**: PUBLICATION
 - **Created**: 2026-11-21
@@ -20,6 +20,10 @@ Add a zero-mandatory-dependency, strictly opt-in `planfile.urtlog_bridge` module
 - [x] AC-01: Strict no-op when `URTLOG_STATE_DIR` is unset and fail-open when `urtlog` is absent; zero mandatory runtime dependencies.
 - [x] AC-02: Live multi-ticket DAG (`create`, `depend`, `update`, `block`) projects into `UrtLogStore` and `UnifiedRegistry` and reconstructs via `load_planfile_queue_brief()`.
 - [x] AC-03: Unit tests and `./project/governance-check.sh` pass cleanly with disjoint scope from active tickets.
+
+- [x] AC-04: URTLog setup errors produce the existing unavailable results for emitters and queue reads.
+
+The pilot reproduced a failure while expanding an invalid URTLog directory. Include setup in the same error handling as the optional store operation. The session's execution authorization covers repair and protected publication.
 
 ## Tracking boundary
 
