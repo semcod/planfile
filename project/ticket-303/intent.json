@@ -1,0 +1,87 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-303",
+  "summary": "Enable bounded coordination.idleTakeover in governance manifest for autonomous continuation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-303/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".governance/manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".governance/manifest.base.json"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e828360849ea7706442928200a5979fc41aca869",
+    "targetBranch": "main",
+    "outcome": "Enable bounded coordination.idleTakeover (enabled=true, idleMinutes=15, leaseMinutes=120) in semcod/planfile/.governance/manifest.json (part of semcod/planfile#442) so idle or expired ticket worktrees can be continued through the sanctioned idle_takeover.py controller.",
+    "nonGoals": [
+      "Do not modify locked managed files such as .governance/manifest.base.json or .governance/manifest.lock.json.",
+      "Do not change Python application source or switch ticketStorage to sqlite in this governance-only change."
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add coordination.idleTakeover to target-owned .governance/manifest.json per manifest.schema.json and GOV-IDLE-TAKEOVER.md.",
+      "components": [
+        {
+          "name": "governance-manifest",
+          "paths": [
+            ".governance/manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Remove coordination.idleTakeover from .governance/manifest.json."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "Governance check validates manifest.json against manifest.schema.json with 0 errors."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 .governance/idle_takeover.py --root . observe"
+        ],
+        "evidence": "idle_takeover.py observe reports active idleTakeover policy (idleMinutes=15, leaseMinutes=120)."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "wellman check --root ."
+        ],
+        "evidence": "Wellman standards compliance check passes with manifest.base.json untouched."
+      }
+    ]
+  }
+}
