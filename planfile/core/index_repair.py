@@ -144,10 +144,23 @@ def _removed_current_shards_are_archived(
 
 
 def _has_unmapped_earlier_copy(indexed_sprints, locations, affected, sprint_order, tickets) -> bool:
-    """Check whether an unproven locator removal can change canonical precedence."""
+    """Check whether an unproven locator removal can change canonical precedence.
+
+    Only locator-eligible sprints (``history-*`` sprints or sprints currently
+    referenced by ``history-locations.yaml``) can lose a locator entry.
+    Non-locator sprints such as ``backlog`` or legacy ``archive-*`` files never
+    appear in ``history-locations.yaml`` and must not force scanning untouched
+    multi-megabyte archives during incremental repair.
+    """
+    locator_sprints = set(locations.values())
     unmapped = {}
     for ticket_id, sprint in indexed_sprints.items():
-        if sprint != "current" and ticket_id not in locations and ticket_id not in affected:
+        if (
+            sprint != "current"
+            and (sprint.startswith("history-") or sprint in locator_sprints)
+            and ticket_id not in locations
+            and ticket_id not in affected
+        ):
             unmapped.setdefault(sprint, set()).add(ticket_id)
     later_ids = set()
     for sprint in reversed(sprint_order):

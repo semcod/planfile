@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-305",
+  "summary": "Skip non-locator archive and backlog sprints in _has_unmapped_earlier_copy during incremental index repair",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-305/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fe8c247f0dc73791858e94993c4c281e647b0709",
+    "targetBranch": "main",
+    "outcome": "Avoid scanning untouched non-locator backlog and legacy archive-* sprints in _has_unmapped_earlier_copy so incremental index repair succeeds within budget on production stores while keeping locator-removal precedence safety intact.",
+    "nonGoals": [
+      "Changing SQLite index schema, discovery API contracts, or history-locations.yaml format."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Filter unmapped candidates in _has_unmapped_earlier_copy to locator-eligible sprints (history-* or sprints referenced in locations.values()) because store._record_history_locations_unlocked only writes history-* locators and untouched backlog/archive-* sprints cannot have lost a locator entry.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-305 PR on main."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "Regression test proves incremental archive repair succeeds without opening untouched backlog or legacy archive-* sprints."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "All existing index repair and discovery tests including locator-removal rebuild tests pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "GOV-PASS with zero errors."
+      }
+    ]
+  }
+}

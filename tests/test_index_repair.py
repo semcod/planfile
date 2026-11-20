@@ -690,3 +690,38 @@ def test_background_rebuilds_after_unrelated_locator_removal(tmp_path, monkeypat
     assert index.get_ticket(first.id)["sprint"] == "history-a"
     assert index.get_ticket(first.id)["name"] == first.name
     assert index.get_ticket(active.id)["sprint"] == "current"
+
+
+def test_background_archive_repair_skips_unmapped_backlog_and_legacy_archives(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    pf.create_ticket(name="Backlog item", sprint="backlog")
+    pf.create_ticket(name="Legacy archive 07", sprint="archive-2026-07")
+    pf.create_ticket(name="Legacy archive 08", sprint="archive-2026-08")
+    active = pf.create_ticket(name="Stay in current")
+    completing = pf.create_ticket(name="Archive to daily history")
+
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    assert pf.store.require_current_ticket_index()["current"]
+
+    config = pf.store._read_config()
+    config["archive"].update(enabled=True, max_current_tickets=1, keep_recent_terminal=0)
+    pf.store._write_config(config)
+    pf.update_ticket(completing.id, status="done")
+
+    orig_read_yaml = index_repair.read_yaml_fast
+
+    def forbid_legacy_archive_reads(path):
+        if getattr(path, "stem", "") in {"backlog", "archive-2026-07", "archive-2026-08"}:
+            raise AssertionError(f"untouched non-locator sprint read: {path}")
+        return orig_read_yaml(path)
+
+    monkeypatch.setattr(index_repair, "read_yaml_fast", forbid_legacy_archive_reads)
+    reconciled = index_repair.reconcile_index(pf.store, index)
+    assert reconciled is not None
+    assert reconciled["current"] is True
+    assert reconciled["reconciled"] >= 2
+    assert index.get_ticket(active.id)["sprint"] == "current"
+    assert index.get_ticket(completing.id)["sprint"].startswith("history-")
