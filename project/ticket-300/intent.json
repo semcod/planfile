@@ -26,7 +26,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "e55acd9ac4b56f5c6f9419afd223def6201b9917",
+    "acceptedBaseSha": "2750d373800bf0c62e3af55cd92b0cf6fbb67548",
     "targetBranch": "main",
     "outcome": "Deliver CQRS-028 (semcod/planfile#431) in planfile/sync/urt_campaign_import.py and tests/test_urt_campaign_import.py: raw BACKLOG.json payload guard, tracking vs target repository separation, URT/intent/proposal metadata mapping, verified planfile.sync.receipts GitHub issue binding, and idempotent/revision-conflict-aware preview and import commit.",
     "nonGoals": [

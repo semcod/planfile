@@ -1,14 +1,15 @@
 """Map URT campaign manifests to Planfile contracts with revision-safe deduplication (CQRS-028)."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import hashlib
 import json
 import os
-from pathlib import Path
 import re
 import tempfile
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 from planfile.sync.receipts import latest_ticket_receipts
 

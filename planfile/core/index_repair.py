@@ -16,7 +16,7 @@ from planfile.core.fastio import load_yaml_text, read_yaml_fast
 # Never turn finalization into a second archive scan under the writer lock.
 MAX_REPAIR_BYTES = 16 * 1024 * 1024
 MAX_REPAIR_TICKETS = 1024
-MAX_REPAIR_SECONDS = 2.0
+MAX_REPAIR_SECONDS = 8.0
 
 
 class _RepairBudgetExceeded(Exception):
