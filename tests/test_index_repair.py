@@ -685,9 +685,9 @@ def test_background_rejects_out_of_scope_locator_change_from_stored_baseline(
 
 @pytest.mark.parametrize("sharded", [False, True])
 @pytest.mark.parametrize("prefix", ["history", "archive"])
-@pytest.mark.parametrize("known_locator", [False, True])
+@pytest.mark.parametrize("locator_source", ["none", "memory", "persisted"])
 def test_background_rebuilds_after_unrelated_locator_removal(
-    tmp_path, monkeypatch, sharded, prefix, known_locator,
+    tmp_path, monkeypatch, sharded, prefix, locator_source,
 ):
     pf = setup_store(tmp_path)
     earlier, preferred = f"{prefix}-a", f"{prefix}-b"
@@ -706,12 +706,14 @@ def test_background_rebuilds_after_unrelated_locator_removal(
     pf.store.configure_ticket_index(True)
     index = pf.store._sqlite_ticket_index()
     assert index.get_ticket(first.id)["sprint"] == preferred
-    snapshot = (
-        index_repair.capture_locator_snapshot(pf.store, pf.store._ticket_index_signature())
-        if known_locator else None
-    )
-    if known_locator:
+    snapshot = None
+    if locator_source != "none":
+        signature = pf.store._ticket_index_signature()
+        snapshot = index_repair.capture_locator_snapshot(pf.store, signature)
         assert snapshot is not None
+        if locator_source == "persisted":
+            assert index_repair.persist_locator_snapshot(index, signature, snapshot)
+            snapshot = None
 
     config = pf.store._read_config()
     config["archive"].update(enabled=True, max_current_tickets=1, keep_recent_terminal=0)
@@ -731,8 +733,9 @@ def test_background_rebuilds_after_unrelated_locator_removal(
     assert index.get_ticket(active.id)["sprint"] == "current"
 
 
+@pytest.mark.parametrize("restart", [False, True])
 def test_known_prior_locator_avoids_unrelated_archive_reads(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, restart
 ):
     pf = setup_store(tmp_path)
     pf.create_ticket(name="Backlog item", sprint="backlog")
@@ -747,13 +750,20 @@ def test_known_prior_locator_avoids_unrelated_archive_reads(
     pf.store.configure_ticket_index(True)
     index = pf.store._sqlite_ticket_index()
     assert pf.store.require_current_ticket_index()["current"]
-    snapshot = index_repair.capture_locator_snapshot(pf.store, pf.store._ticket_index_signature())
+    signature = pf.store._ticket_index_signature()
+    snapshot = index_repair.capture_locator_snapshot(pf.store, signature)
     assert snapshot is not None and snapshot.locations[tracked.id] == "history-old"
+    if restart:
+        assert index_repair.persist_locator_snapshot(index, signature, snapshot)
 
     config = pf.store._read_config()
     config["archive"].update(enabled=True, max_current_tickets=1, keep_recent_terminal=0)
     pf.store._write_config(config)
     pf.update_ticket(completing.id, status="done")
+    if restart:
+        pf = Planfile(str(tmp_path))
+        index = pf.store._sqlite_ticket_index()
+        snapshot = None
 
     orig_read_yaml = index_repair.read_yaml_fast
 
@@ -770,6 +780,33 @@ def test_known_prior_locator_avoids_unrelated_archive_reads(
     assert reconciled["reconciled"] >= 2
     assert index.get_ticket(active.id)["sprint"] == "current"
     assert index.get_ticket(completing.id)["sprint"].startswith("history-")
+
+
+def test_locator_snapshot_cannot_overwrite_a_newer_index_generation(tmp_path):
+    pf = setup_store(tmp_path)
+    store = pf.store
+    first = pf.create_ticket(name="First location", sprint="history-old")
+    with store.mutation_lock():
+        store._record_history_locations_unlocked({first.id: "history-old"})
+    store.configure_ticket_index(True)
+    index = store._sqlite_ticket_index()
+    previous_signature = store._ticket_index_signature()
+    previous = index_repair.capture_locator_snapshot(store, previous_signature)
+    assert previous is not None
+    assert index_repair.persist_locator_snapshot(index, previous_signature, previous)
+
+    second = pf.create_ticket(name="Second location", sprint="history-new")
+    with store.mutation_lock():
+        store._record_history_locations_unlocked({second.id: "history-new"})
+    store.ensure_ticket_index(force=True)
+    signature = store._ticket_index_signature()
+    current = index_repair.capture_locator_snapshot(store, signature)
+    assert current is not None
+    assert index_repair.persist_locator_snapshot(index, signature, current)
+    assert not index_repair.persist_locator_snapshot(index, previous_signature, previous)
+    restored = index_repair._restore_locator_snapshot(store, index, signature)
+    assert restored and restored.locations == current.locations
+    assert index_repair._restore_locator_snapshot(store, index, previous_signature) is None
 
 
 def test_has_unmapped_earlier_copy_still_guards_custom_locator_backed_sprints():

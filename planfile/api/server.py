@@ -2912,9 +2912,10 @@ def _repair_ticket_index(*, locator_snapshot=None) -> dict:
 
 async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
     """Coalesce stale-index repair away from latency-sensitive API requests."""
-    from planfile.core.index_repair import capture_locator_snapshot
+    from planfile.core.index_repair import capture_locator_snapshot, persist_locator_snapshot
 
     locator_snapshot = None
+    locator_snapshot_saved = False
     while True:
         await asyncio.sleep(interval_seconds)
         try:
@@ -2922,9 +2923,15 @@ async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
             if not store.ticket_index_enabled():
                 continue
             signature = await asyncio.to_thread(store._ticket_index_signature)
-            if await asyncio.to_thread(store._sqlite_ticket_index().is_current, signature):
+            index = store._sqlite_ticket_index()
+            if await asyncio.to_thread(index.is_current, signature):
                 if locator_snapshot is None or not locator_snapshot.matches(store, signature):
                     locator_snapshot = await asyncio.to_thread(capture_locator_snapshot, store, signature)
+                    locator_snapshot_saved = False
+                if locator_snapshot is not None and not locator_snapshot_saved:
+                    locator_snapshot_saved = await asyncio.to_thread(
+                        persist_locator_snapshot, index, signature, locator_snapshot
+                    )
                 continue
             if locator_snapshot is None:
                 await asyncio.to_thread(_repair_ticket_index)

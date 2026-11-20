@@ -19,6 +19,7 @@ MAX_REPAIR_BYTES = 32 * 1024 * 1024
 MAX_REPAIR_TICKETS = 2048
 MAX_REPAIR_SECONDS = 8.0
 MAX_STORED_CHANGED_SPRINTS = 4
+_LOCATOR_SNAPSHOT_KEY = "source_locator_snapshot_v1"
 
 
 class _RepairBudgetExceeded(Exception):
@@ -34,6 +35,14 @@ class _LocatorSnapshot:
 
     def matches(self, store, signature: tuple) -> bool:
         return self.path == store._history_locations_path and self.signature == signature[2]
+
+
+def _valid_locations(store, locations) -> bool:
+    return isinstance(locations, dict) and all(
+        isinstance(ticket, str) and ticket and isinstance(sprint, str)
+        and store.SPRINT_ID_PATTERN.fullmatch(sprint)
+        for ticket, sprint in locations.items()
+    )
 
 
 def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot | None:
@@ -57,11 +66,7 @@ def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot 
             return None
         data = load_yaml_text(raw.decode("utf-8")) or {}
         locations = data.get("tickets", {}) if isinstance(data, dict) else None
-        if not isinstance(locations, dict) or any(
-            not isinstance(key, str) or not key or not isinstance(value, str)
-            or not store.SPRINT_ID_PATTERN.fullmatch(value)
-            for key, value in locations.items()
-        ):
+        if not _valid_locations(store, locations):
             return None
         if (store._history_locations_signature() != expected
                 or time.monotonic() - started > MAX_REPAIR_SECONDS):
@@ -69,6 +74,36 @@ def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot 
         return _LocatorSnapshot(store._history_locations_path, expected, dict(locations), len(raw))
     except (OSError, UnicodeError, YAMLError):
         return None
+
+
+def persist_locator_snapshot(index, signature: tuple, snapshot: _LocatorSnapshot) -> bool:
+    """Remember observed locator contents only while their index generation is current."""
+    if snapshot.signature != signature[2]:
+        return False
+    if snapshot.signature is None:
+        return True
+    payload = json.dumps([str(snapshot.path), snapshot.signature, snapshot.locations],
+                         separators=(",", ":"))
+    if len(payload) > MAX_REPAIR_BYTES:
+        return True
+    try:
+        uri = index.path.resolve().as_uri() + "?mode=rw"
+        with closing(sqlite3.connect(uri, uri=True, timeout=0.05)) as connection, connection:
+            # The signature comparison and metadata write share one SQLite
+            # statement, so a late worker cannot overwrite a newer generation.
+            cursor = connection.execute(
+                """
+                INSERT INTO meta(key,value)
+                SELECT ?,? WHERE EXISTS (
+                    SELECT 1 FROM meta WHERE key='source_signature' AND value=?
+                )
+                ON CONFLICT(key) DO UPDATE SET value=excluded.value
+                """,
+                (_LOCATOR_SNAPSHOT_KEY, payload, index.serialize_signature(signature)),
+            )
+            return cursor.rowcount > 0
+    except sqlite3.DatabaseError:
+        return False
 
 
 def _valid_locator_stamp(value) -> tuple[int, int] | None:
@@ -79,6 +114,33 @@ def _valid_locator_stamp(value) -> tuple[int, int] | None:
     ):
         return (value[0], value[1])
     return None
+
+
+def _restore_locator_snapshot(store, index, signature: tuple) -> _LocatorSnapshot | None:
+    """Load optional, bounded metadata for the same path and source locator stamp."""
+    if signature[2] is None:
+        return None
+    try:
+        with closing(index._connect_routing()) as connection:
+            row = connection.execute(
+                """
+                SELECT value FROM meta WHERE key=? AND typeof(value)='text'
+                AND length(CAST(value AS BLOB)) BETWEEN 1 AND ?
+                """,
+                (_LOCATOR_SNAPSHOT_KEY, MAX_REPAIR_BYTES),
+            ).fetchone()
+        if row is None:
+            return None
+        payload = row[0]
+        path, stamp, locations = json.loads(payload)
+        if (path != str(store._history_locations_path)
+                or _valid_locator_stamp(stamp) != signature[2]
+                or not _valid_locations(store, locations)):
+            return None
+        return _LocatorSnapshot(store._history_locations_path, signature[2],
+                                locations, len(payload.encode("utf-8")))
+    except (ValueError, TypeError, RecursionError, sqlite3.DatabaseError):
+        return None
 
 
 def _changed_sprint_ids(before_rows: tuple, after_rows: tuple) -> set[str]:
@@ -294,6 +356,8 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
             not locator_changed or not locator_snapshot.matches(store, built_signature)
         ):
             locator_snapshot = None
+        if locator_changed and from_stored_baseline and locator_snapshot is None:
+            locator_snapshot = _restore_locator_snapshot(store, index, built_signature)
         if locator_changed and not from_stored_baseline and locator_snapshot is None:
             return None
 

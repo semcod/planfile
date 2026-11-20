@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-306",
+  "summary": "Retain the index locator across API worker restarts",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-306/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/api/server.py",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c366c0ee431bd2243151d4ccb9fffa46a90bc85a",
+    "targetBranch": "main",
+    "outcome": "Persist a bounded verified index locator across worker restarts so a matching stale baseline can be repaired without scanning untouched legacy archives.",
+    "nonGoals": [
+      "Changing canonical YAML, discovery contracts, or production deployment admission."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 26,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Retain locator contents in the existing SQLite meta table with a conditional write bound to the exact source signature. On a cold repair validate the path and locator stamp, then keep the existing guarded fallback when the snapshot cannot be verified.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "planfile/api/server.py",
+            "tests/test_index_repair.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the source change. Older releases ignore the optional SQLite metadata key."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "Restart canary and guarded legacy-read regression."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "Exact-generation CAS, unrelated locator removal and backend tests."
+      }
+    ]
+  }
+}
