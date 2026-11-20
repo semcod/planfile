@@ -786,6 +786,39 @@ def test_known_prior_locator_avoids_unrelated_archive_reads(
     assert index.get_ticket(completing.id)["sprint"].startswith("history-")
 
 
+def test_repair_retains_locator_for_the_next_deferred_archive_move(tmp_path, monkeypatch):
+    pf = setup_store(tmp_path)
+    store = pf.store
+    history = "history-2026-11-20"
+    tracked = pf.create_ticket(name="Previously archived", sprint="history-old")
+    with store.mutation_lock():
+        store._record_history_locations_unlocked({tracked.id: "history-old"})
+    first = pf.create_ticket(name="First move")
+    second = pf.create_ticket(name="Second move")
+    store.configure_ticket_index(True)
+    signature = store._ticket_index_signature()
+    snapshot = index_repair.capture_locator_snapshot(store, signature)
+    assert snapshot is not None
+    assert index_repair.persist_locator_snapshot(store._sqlite_ticket_index(), signature, snapshot)
+
+    def forbid_full_scan(*args, **kwargs):
+        pytest.fail("a verified locator addition must use bounded reconciliation")
+
+    monkeypatch.setattr(index_repair, "_indexed_ticket_sprints", forbid_full_scan)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+
+    for ticket in (first, second):
+        with monkeypatch.context() as deferred:
+            deferred.setattr(pf.store, "_begin_index_mutation", lambda: False)
+            assert pf.store.move_ticket(ticket.id, history)
+        pf = Planfile(str(tmp_path))
+        monkeypatch.setattr(pf.store, "_rebuild_ticket_index_unlocked", forbid_full_scan)
+        assert not pf.store.ticket_index_status()["current"]
+        result = server._repair_ticket_index()
+        assert result["current"] and result["reconciled"]
+        assert pf.store._sqlite_ticket_index().get_ticket(ticket.id)["sprint"] == history
+
+
 def test_locator_snapshot_cannot_overwrite_a_newer_index_generation(tmp_path):
     pf = setup_store(tmp_path)
     store = pf.store

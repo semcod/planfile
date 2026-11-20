@@ -410,6 +410,7 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
                 return None
             charge(store._history_locations_path)
             indexed_sprints = None
+            latest = None
             if locator_changed:
                 latest = capture_locator_snapshot(store, target)
                 if latest is None:
@@ -508,6 +509,8 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
             index.apply(upserts=records, deletes=deleted, signature=target)
             if store._ticket_index_signature() != target:
                 return None
+            if latest is not None:
+                persist_locator_snapshot(index, target, latest)
             return index.status(target) | {"rebuilt": True, "reconciled": len(ids)}
         except _RepairBudgetExceeded:
             return None

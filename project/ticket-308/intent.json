@@ -1,0 +1,69 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-308",
+  "summary": "Retain the latest locator after bounded index repair",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-308/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a4312f3555ff4ed6d1ea260c0cac9ab968364838",
+    "targetBranch": "main",
+    "outcome": "A bounded repair preserves the verified locator for the index generation it just made current.",
+    "nonGoals": [
+      "Changing canonical archive precedence, repair budgets, the SQLite schema or other index writers."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "After applying and verifying a bounded repair, store the locator already captured for that generation through the existing guarded metadata writer.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": ["planfile/core/index_repair.py", "tests/test_index_repair.py"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this change. The saved locator uses the existing metadata format."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["python -m pytest -q tests/test_index_repair.py"],
+        "evidence": "Reopening the store and reconciling successive deferred archive moves requires neither the full identity query nor a full rebuild."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"],
+        "evidence": "Existing tests exercise unrelated locator removals, shard removal, saved-generation guards and queue discovery."
+      }
+    ]
+  }
+}
