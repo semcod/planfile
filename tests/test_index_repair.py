@@ -772,7 +772,11 @@ def test_known_prior_locator_avoids_unrelated_archive_reads(
             raise AssertionError(f"untouched non-locator sprint read: {path}")
         return orig_read_yaml(path)
 
+    def forbid_full_identity_scan(index):
+        raise AssertionError("verified locator additions need only the affected ticket IDs")
+
     monkeypatch.setattr(index_repair, "read_yaml_fast", forbid_legacy_archive_reads)
+    monkeypatch.setattr(index_repair, "_indexed_ticket_sprints", forbid_full_identity_scan)
     monkeypatch.setattr(server, "get_planfile", lambda: pf)
     reconciled = server._repair_ticket_index(locator_snapshot=snapshot)
     assert reconciled is not None

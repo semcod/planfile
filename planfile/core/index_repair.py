@@ -415,9 +415,24 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
                 if latest is None:
                     return None
                 locations = latest.locations
-                if locator_snapshot is not None and not from_stored_baseline:
-                    ids.update(changed_keys(locator_snapshot.locations, locations))
-                else:
+                removed_sources = before_sources.keys() - after_sources.keys()
+                use_locator_delta = False
+                if locator_snapshot is not None:
+                    locator_delta = changed_keys(locator_snapshot.locations, locations)
+                    # A new mapping into a changed source cannot affect a ticket
+                    # outside this delta. Keep the projection checks for remaps,
+                    # removals and any missing source shard on cold recovery.
+                    use_locator_delta = not from_stored_baseline or (
+                        not removed_sources
+                        and all(
+                            ticket_id not in locator_snapshot.locations
+                            and locations[ticket_id] in changed_sprints
+                            for ticket_id in locator_delta
+                        )
+                    )
+                    if use_locator_delta:
+                        ids.update(locator_delta)
+                if not use_locator_delta:
                     indexed_sprints = _indexed_ticket_sprints(index)
                     check_budget()
                     if indexed_sprints is None:
@@ -433,7 +448,6 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
                         for tid, loc_sprint in mismatched
                     ):
                         return None
-                    removed_sources = before_sources.keys() - after_sources.keys()
                     if removed_sources and not _removed_current_shards_are_archived(
                         store, removed_sources, changed_sprints, indexed_sprints, locations, tickets,
                     ):

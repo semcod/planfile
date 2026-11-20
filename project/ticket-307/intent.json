@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-307",
+  "summary": "Skip the full identity scan for proven locator additions",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-307/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a2bfaadebf0c20b55ca676c6f9fde3fe5e3e8102",
+    "targetBranch": "main",
+    "outcome": "Keep queue discovery responsive during an incremental archive update when a verified prior locator makes a full identity scan unnecessary.",
+    "nonGoals": [
+      "Changing canonical ticket precedence, discovery contracts, deployment admission or the repair budgets."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the validated saved locator to identify additions into changed sources. Keep the existing conservative verification for remaps, removals, unknown baselines and removed shards.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the source change. The index schema and repair budgets are unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "A cold archive update with a verified locator succeeds while the full identity query is forbidden."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "The existing duplicate precedence, unrelated locator removal and shard rotation cases remain green."
+      }
+    ]
+  }
+}
