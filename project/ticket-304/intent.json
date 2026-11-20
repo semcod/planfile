@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-304",
+  "summary": "Preserve index correctness after shard rotation and locator removal",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-304/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "beb9c46a92eb845fdde10ec8a94b876b18f1f381",
+    "targetBranch": "main",
+    "outcome": "Recover proven shard rotations incrementally and preserve canonical history when a locator removal changes precedence.",
+    "nonGoals": [
+      "Changes to discovery APIs, SQLite schemas, or production deployment."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the stored source signature and prove archived shard membership against indexed identities and target records. Rebuild when a missing locator reveals an earlier copy outside the repair scope.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket implementation on the protected target branch."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "Both YAML layouts recover without a full scan when the moved rows are accounted for."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "A missing active row prevents use of the stored baseline."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "The earlier historical duplicate is selected after rebuilding."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "Current discovery and queue integration tests pass."
+      }
+    ]
+  }
+}

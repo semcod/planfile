@@ -114,6 +114,49 @@ def _indexed_ticket_sprints(index) -> dict[str, str] | None:
         return None
 
 
+def _removed_current_shards_are_archived(
+    store, removed_sources, changed_sprints, indexed_sprints, locations, tickets,
+) -> bool:
+    """Prove every ticket indexed in a missing current shard reached daily history."""
+    if not store._uses_sharded_storage():
+        return False
+    storage = store._sharded_storage()
+    current_tickets = tickets("current")
+    terminal_statuses = store._archive_config()["terminal_statuses"]
+    verified_sources = set()
+    for ticket_id, previous in indexed_sprints.items():
+        if previous != "current":
+            continue
+        source = (previous, str(storage.shard_path(previous, ticket_id)))
+        if source not in removed_sources:
+            continue
+        destination = locations.get(ticket_id)
+        if (destination is None or destination not in changed_sprints
+                or not re.fullmatch(r"history-[0-9]{4}-[0-9]{2}-[0-9]{2}", destination)
+                or ticket_id in current_tickets):
+            return False
+        archived = tickets(destination).get(ticket_id)
+        if (not isinstance(archived, dict) or archived.get("sprint") != destination
+                or str(archived.get("status", "")).lower() not in terminal_statuses):
+            return False
+        verified_sources.add(source)
+    return verified_sources == removed_sources
+
+
+def _has_unmapped_earlier_copy(indexed_sprints, locations, affected, sprint_order, tickets) -> bool:
+    """Check whether an unproven locator removal can change canonical precedence."""
+    unmapped = {}
+    for ticket_id, sprint in indexed_sprints.items():
+        if sprint != "current" and ticket_id not in locations and ticket_id not in affected:
+            unmapped.setdefault(sprint, set()).add(ticket_id)
+    later_ids = set()
+    for sprint in reversed(sprint_order):
+        if later_ids and not later_ids.isdisjoint(tickets(sprint)):
+            return True
+        later_ids.update(unmapped.get(sprint, ()))
+    return False
+
+
 def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
     """Recover stamps for known sources from an existing, committed projection.
 
@@ -169,7 +212,11 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
             if not valid_stamps(old, 4) or not isinstance(old[0], str) or not isinstance(old[1], str):
                 return None
             key = (old[0], old[1])
-            if key not in target_sprint_keys or key in seen_sprint_keys:
+            if key in seen_sprint_keys:
+                return None
+            # An archive rotation can remove a current shard's last ticket.
+            # Reconciliation must prove where its indexed tickets went.
+            if key not in target_sprint_keys and not (locator_changed and key[0] == "current"):
                 return None
             seen_sprint_keys.add(key)
 
@@ -291,27 +338,33 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
             if any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", ticket_id) for ticket_id in ids):
                 return None
             charge(store._history_locations_path)
+            indexed_sprints = None
             if locator_changed:
                 latest = capture_locator_snapshot(store, target)
                 if latest is None:
                     return None
                 locations = latest.locations
-                if locator_snapshot is not None:
+                if locator_snapshot is not None and not from_stored_baseline:
                     ids.update(changed_keys(locator_snapshot.locations, locations))
                 else:
-                    db_sprints = _indexed_ticket_sprints(index)
+                    indexed_sprints = _indexed_ticket_sprints(index)
                     check_budget()
-                    if db_sprints is None:
+                    if indexed_sprints is None:
                         return None
                     mismatched = [
                         (tid, loc_sprint)
                         for tid, loc_sprint in locations.items()
-                        if db_sprints.get(tid) != loc_sprint
+                        if indexed_sprints.get(tid) != loc_sprint
                     ]
                     if any(
                         loc_sprint not in changed_sprints
-                        and db_sprints.get(tid) not in changed_sprints
+                        and indexed_sprints.get(tid) not in changed_sprints
                         for tid, loc_sprint in mismatched
+                    ):
+                        return None
+                    removed_sources = before_sources.keys() - after_sources.keys()
+                    if removed_sources and not _removed_current_shards_are_archived(
+                        store, removed_sources, changed_sprints, indexed_sprints, locations, tickets,
                     ):
                         return None
                     ids.update(tid for tid, _ in mismatched)
@@ -331,6 +384,9 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
             if len(ids) > MAX_REPAIR_TICKETS:
                 raise _RepairBudgetExceeded
             all_sprints = store._all_sprint_ids()
+            if (indexed_sprints is not None and built_signature[2] is not None
+                    and _has_unmapped_earlier_copy(indexed_sprints, locations, ids, all_sprints, tickets)):
+                return None
             records = []
             deleted = []
             for ticket_id in sorted(ids):
