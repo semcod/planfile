@@ -1,0 +1,91 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-305",
+  "summary": "Use a verified prior locator during background index repair",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-305/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py",
+    "planfile/api/server.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fe8c247f0dc73791858e94993c4c281e647b0709",
+    "targetBranch": "main",
+    "outcome": "Retain a verified locator from a current projection and use it to rule out unrelated removals without scanning untouched archives.",
+    "nonGoals": [
+      "Changing SQLite index schema, discovery API contracts, or history-locations.yaml format."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Retain the bounded locator snapshot in the background worker for the same store and source stamp. Compare exact locator keys while repairing an admitted stored baseline. Keep the canonical earlier-copy check when no bound snapshot is available.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py",
+            "planfile/api/server.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-305 PR on main."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "Regression test proves incremental archive repair succeeds without opening untouched backlog or legacy archive-* sprints."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py"
+        ],
+        "evidence": "All existing index repair and discovery tests including locator-removal rebuild tests pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "GOV-PASS with zero errors."
+      }
+    ]
+  }
+}
