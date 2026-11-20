@@ -1,0 +1,91 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-301",
+  "summary": "Incremental archive-move recovery in index_repair without full rebuild",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-301/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "planfile/core/store.py",
+    "planfile/core/sqlite_index.py"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2750d373800bf0c62e3af55cd92b0cf6fbb67548",
+    "targetBranch": "main",
+    "outcome": "Allow stored-baseline incremental reconciliation in planfile/core/index_repair.py to recover bounded multi-sprint archive moves (including newly created daily history files and history-locations.yaml updates verified against indexed ticket sprints) without triggering full archive rebuilds, while preserving fail-closed fallbacks on ambiguous/corrupted locators and leaving store.py and sqlite_index.py untouched.",
+    "nonGoals": [
+      "Do not modify planfile/core/store.py or planfile/core/sqlite_index.py (reserved by active foreign tickets).",
+      "Do not weaken GET /tickets/discovery read-only isolation or rebuild inside GET handlers.",
+      "Do not accept locator-only edits without an in-memory locator snapshot or locator changes affecting sprints outside the bounded changed-sprint set."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 35,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend _stored_baseline and reconcile_index in planfile/core/index_repair.py to accept up to 4 changed/new sprints with verified locator deltas checked against the read-only SQLite sprint projection (preferring ticket_operational), and raise bounded byte/ticket caps to 32 MiB / 2048 tickets for end-of-day multi-MB daily history rotations while preserving fail-closed fallback on every ambiguous or out-of-scope locator mutation.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert planfile/core/index_repair.py and tests/test_index_repair.py to acceptedBaseSha."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest tests/test_index_repair.py -v"
+        ],
+        "evidence": "Auto-archive moving completed tickets from current into an existing or newly created history-YYYY-MM-DD sprint with updated history-locations.yaml reconciles via server._repair_ticket_index() with zero full archive scans and restores GET /tickets/discovery to HTTP 200."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest tests/test_index_repair.py -v"
+        ],
+        "evidence": "Missing locator, locator-only change without changed sprints, and out-of-scope locator mutation pointing to an unchanged history sprint all return None and fall back to full rebuild."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "pytest tests/test_index_repair.py tests/test_ticket_discovery.py -v"
+        ],
+        "evidence": "All existing index_repair and discovery tests pass unchanged."
+      }
+    ]
+  }
+}

@@ -14,9 +14,10 @@ from yaml import YAMLError
 from planfile.core.fastio import load_yaml_text, read_yaml_fast
 
 # Never turn finalization into a second archive scan under the writer lock.
-MAX_REPAIR_BYTES = 16 * 1024 * 1024
-MAX_REPAIR_TICKETS = 1024
+MAX_REPAIR_BYTES = 32 * 1024 * 1024
+MAX_REPAIR_TICKETS = 2048
 MAX_REPAIR_SECONDS = 8.0
+MAX_STORED_CHANGED_SPRINTS = 4
 
 
 class _RepairBudgetExceeded(Exception):
@@ -65,12 +66,60 @@ def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot 
         return None
 
 
+def _valid_locator_stamp(value) -> tuple[int, int] | None:
+    if (
+        isinstance(value, (list, tuple))
+        and len(value) == 2
+        and all(type(n) is int and n >= 0 for n in value)
+    ):
+        return (value[0], value[1])
+    return None
+
+
+def _changed_sprint_ids(before_rows: tuple, after_rows: tuple) -> set[str]:
+    before = {(row[0], row[1]): row[2:] for row in before_rows}
+    after = {(row[0], row[1]): row[2:] for row in after_rows}
+    return {
+        key[0]
+        for key in before.keys() | after.keys()
+        if before.get(key) != after.get(key)
+    }
+
+
+def _has_other_tickets(connection: sqlite3.Connection, changed: set[str]) -> bool:
+    if not changed:
+        return True
+    placeholders = ", ".join("?" for _ in changed)
+    return bool(
+        connection.execute(
+            f"SELECT EXISTS(SELECT 1 FROM tickets WHERE sprint NOT IN ({placeholders}))",
+            tuple(sorted(changed)),
+        ).fetchone()[0]
+    )
+
+
+def _indexed_ticket_sprints(index) -> dict[str, str] | None:
+    """Read (id, sprint) from the committed projection without scanning full payloads."""
+    try:
+        with closing(index._connect_routing()) as connection:
+            connection.row_factory = sqlite3.Row
+            connection.execute("BEGIN")
+            op_ready = connection.execute(
+                "SELECT 1 FROM meta WHERE key='operational_version' AND value='1'"
+            ).fetchone()
+            table = "ticket_operational" if op_ready else "tickets"
+            rows = connection.execute(f"SELECT id, sprint FROM {table}").fetchall()
+            return {row["id"]: row["sprint"] for row in rows}
+    except sqlite3.DatabaseError:
+        return None
+
+
 def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
     """Recover stamps for known sources from an existing, committed projection.
 
-    Only the current sprint layout and locator can be interpreted without an
-    older locator snapshot. Recover deferred writes from their contention token,
-    or a single changed sprint when a full rebuild would also scan other tickets.
+    Recover deferred writes from their contention token, or bounded sprint/archive
+    rotations (including newly created daily history files and matching
+    history-locations updates) when a full rebuild would also scan other tickets.
     """
     from planfile.core.sqlite_index import _SCHEMA_VERSION, RoutingSnapshotUnavailableError
 
@@ -92,7 +141,16 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
         if not isinstance(saved, list) or len(saved) != len(target):
             return None
         sprints, journals, locator, token, revision = saved
-        if revision != target[4] or locator != (list(target[2]) if target[2] else None):
+        if revision != target[4]:
+            return None
+        if locator is None:
+            saved_locator = None
+        else:
+            saved_locator = _valid_locator_stamp(locator)
+            if saved_locator is None:
+                return None
+        locator_changed = saved_locator != target[2]
+        if locator_changed and target[2] is None:
             return None
         if current_token is None and token is not None:
             return None
@@ -105,11 +163,16 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
             return (isinstance(row, list) and len(row) == width
                     and all(type(n) is int and n >= -1 for n in row[-2:]))
 
-        if len(sprints) != len(target[0]) or any(
-            not valid_stamps(old, 4) or old[:2] != list(current[:2])
-            for old, current in zip(sprints, target[0], strict=True)
-        ):
-            return None
+        target_sprint_keys = {(row[0], row[1]) for row in target[0]}
+        seen_sprint_keys = set()
+        for old in sprints:
+            if not valid_stamps(old, 4) or not isinstance(old[0], str) or not isinstance(old[1], str):
+                return None
+            key = (old[0], old[1])
+            if key not in target_sprint_keys or key in seen_sprint_keys:
+                return None
+            seen_sprint_keys.add(key)
+
         current_names = {row[0] for row in target[1]}
         if any(not valid_stamps(old, 3) or not isinstance(old[0], str)
                or old[0] not in current_names for old in journals):
@@ -117,25 +180,33 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
         names = [row[0] for row in journals]
         if names != sorted(set(names)):
             return None
-        baseline = (tuple(map(tuple, sprints)), tuple(map(tuple, journals)), target[2], token, revision)
+        baseline = (
+            tuple(map(tuple, sprints)),
+            tuple(map(tuple, journals)),
+            saved_locator,
+            token,
+            revision,
+        )
         if baseline[:2] == target[:2]:
             return None
+        changed = _changed_sprint_ids(baseline[0], target[0])
+        if locator_changed and (
+            not changed or len(changed) > MAX_STORED_CHANGED_SPRINTS
+        ):
+            return None
+        if locator_changed and saved_locator is not None and target[2][1] < saved_locator[1]:
+            if not any(s not in ("current", "backlog") for s in changed):
+                return None
         # Verify the routing generation and its required objects on a
         # read-only connection. Never initialize metadata to qualify a delta.
         with index._routing_connection(baseline) as connection:
             if token == current_token:
-                changed = {old[0] for old, new in zip(baseline[0], target[0], strict=True) if old != new}
-                if len(changed) != 1 or baseline[1] != target[1]:
+                if not changed or len(changed) > MAX_STORED_CHANGED_SPRINTS:
                     return None
-                sprint = changed.pop()
-                # Two indexed range probes avoid counting or loading archive rows.
-                # With only this sprint populated the existing rebuild is sufficient.
-                other_tickets = connection.execute(
-                    "SELECT EXISTS(SELECT 1 FROM tickets WHERE sprint < ?) "
-                    "OR EXISTS(SELECT 1 FROM tickets WHERE sprint > ?)", (sprint, sprint),
-                ).fetchone()[0]
-                if not other_tickets:
+                if not _has_other_tickets(connection, changed):
                     return None
+            elif locator_changed and not _has_other_tickets(connection, changed):
+                return None
             return baseline, row[1]
     except (ValueError, RecursionError, sqlite3.DatabaseError, RoutingSnapshotUnavailableError):
         return None
@@ -149,14 +220,17 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
     every ID in those sprints (including IDs no longer present) and every
     changed evidence journal, resolving canonical location precedence again.
     Writers use the same mutation lock, so the final signature and payloads
-    describe one state. Locator changes require a matching captured baseline;
-    an unknown baseline or a large delta stays stale.
+    describe one state. Locator changes require a matching captured baseline
+    (or, for stored-baseline recovery, verification that every locator delta
+    belongs to the bounded changed-sprint set); an unknown baseline or a large
+    delta stays stale.
     """
     with store.mutation_lock():
         started = time.monotonic()
         target = store._ticket_index_signature()
         stored_bytes = 0
-        if built_signature is None:
+        from_stored_baseline = built_signature is None
+        if from_stored_baseline:
             prior = _stored_baseline(index, target)
             if prior is None:
                 return None
@@ -164,7 +238,7 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
         if target == built_signature:
             return index.status(target) | {"rebuilt": True}
         locator_changed = target[2] != built_signature[2]
-        if locator_changed and (
+        if locator_changed and not from_stored_baseline and (
             locator_snapshot is None or locator_snapshot.signature != built_signature[2]
         ):
             return None
@@ -222,7 +296,25 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
                 if latest is None:
                     return None
                 locations = latest.locations
-                ids.update(changed_keys(locator_snapshot.locations, locations))
+                if locator_snapshot is not None:
+                    ids.update(changed_keys(locator_snapshot.locations, locations))
+                else:
+                    db_sprints = _indexed_ticket_sprints(index)
+                    check_budget()
+                    if db_sprints is None:
+                        return None
+                    mismatched = [
+                        (tid, loc_sprint)
+                        for tid, loc_sprint in locations.items()
+                        if db_sprints.get(tid) != loc_sprint
+                    ]
+                    if any(
+                        loc_sprint not in changed_sprints
+                        and db_sprints.get(tid) not in changed_sprints
+                        for tid, loc_sprint in mismatched
+                    ):
+                        return None
+                    ids.update(tid for tid, _ in mismatched)
             else:
                 locations = store._history_locations()
             for sprint in sorted(changed_sprints):
