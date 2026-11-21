@@ -41,6 +41,20 @@ def _load_urtlog() -> Any | None:
         return None
 
 
+def bridge_health_summary(state_dir: Path | str | None = None) -> dict[str, Any]:
+    """Return privacy-safe, read-only urtlog bridge readiness metadata for /health."""
+    state_dir_configured = resolve_state_dir(state_dir) is not None
+    urtlog_importable = _load_urtlog() is not None
+    return {
+        "advisory_only": True,
+        "enabled": state_dir_configured and urtlog_importable,
+        "execution_allowed": False,
+        "max_decision_slice_bytes": DEFAULT_MAX_DECISION_SLICE_BYTES,
+        "state_dir_configured": state_dir_configured,
+        "urtlog_importable": urtlog_importable,
+    }
+
+
 def _now_us() -> int:
     return int(datetime.now(timezone.utc).timestamp() * 1_000_000)
 

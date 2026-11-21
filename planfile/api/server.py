@@ -5234,6 +5234,7 @@ async def websocket_dsl(websocket: WebSocket, project_path: str = "."):
 @app.get("/health", tags=["system"])
 async def health() -> dict[str, Any]:
     import planfile
+    from planfile.urtlog_bridge import bridge_health_summary
 
     identity = get_runtime_identity(runtime_version=planfile.__version__)
     return {
@@ -5247,6 +5248,7 @@ async def health() -> dict[str, Any]:
             "version_identifies_active_deployment": False,
         },
         "schema_versions": identity["schema_versions"],
+        "urtlog_bridge": bridge_health_summary(),
     }
 
 
