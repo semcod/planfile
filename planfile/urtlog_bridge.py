@@ -14,11 +14,16 @@ decision models can observe completed, blocked, and queued work.
 from __future__ import annotations
 
 import importlib
+import json
 import os
 from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+DEFAULT_MAX_DECISION_SLICE_BYTES = 600
+MIN_DECISION_SLICE_BYTES = 128
+MAX_DECISION_SLICE_BYTES = 1024
 
 
 def resolve_state_dir(explicit: Path | str | None = None) -> Path | None:
@@ -424,3 +429,76 @@ def load_planfile_queue_brief(
         }
     except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError):
         return {"enabled": False, "reason": "query_failed", "tickets": [], "blocked": [], "done": [], "queued": []}
+
+
+def fetch_decision_slice(
+    *,
+    ticket_id: str | None = None,
+    urn: str | None = None,
+    text: str | None = None,
+    max_bytes: int = DEFAULT_MAX_DECISION_SLICE_BYTES,
+    state_dir: Path | str | None = None,
+) -> dict[str, Any] | None:
+    """Return a strictly bounded (<= max_bytes, default 600 B) Planfile URN slice for small D1 models."""
+    try:
+        target_dir = resolve_state_dir(state_dir)
+        if target_dir is None:
+            return None
+        urtlog_mod = _load_urtlog()
+        if urtlog_mod is None:
+            return None
+
+        budget = (
+            DEFAULT_MAX_DECISION_SLICE_BYTES
+            if isinstance(max_bytes, bool) or not isinstance(max_bytes, int)
+            else max(MIN_DECISION_SLICE_BYTES, min(max_bytes, MAX_DECISION_SLICE_BYTES))
+        )
+        target_urn = _ticket_urn(ticket_id) if ticket_id else (urn.strip() if urn else None)
+        ctx = urtlog_mod.AccessContext(
+            "heyasa", roles=frozenset({"assistant"}), groups=frozenset({"ops"}), max_sensitivity="internal"
+        )
+        with urtlog_mod.UrtClient(target_dir, source="planfile", repository="semcod/planfile") as client:
+            rows = client.registry.search(
+                ctx, kind="urn", system="planfile", text=target_urn or text or None, only_available=False, limit=32
+            )
+    except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError):
+        return None
+
+    if target_urn:
+        rows = [row for row in rows if str(row.get("address") or "") == target_urn]
+
+    items: list[dict[str, Any]] = []
+    truncated = False
+    payload: dict[str, Any] = {
+        "advisory_only": True,
+        "execution_allowed": False,
+        "items": items,
+        "max_bytes": budget,
+        "mode": "single-urn" if target_urn else "prefix",
+        "truncated": False,
+    }
+    for row in rows:
+        meta = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
+        entry: dict[str, Any] = {
+            "addr": str(row.get("address") or "")[:96],
+            "desc": str(row.get("description") or "")[:96],
+        }
+        status = str(meta.get("status") or row.get("revision") or "").strip()
+        if status:
+            entry["status"] = status[:24]
+        deps = meta.get("depends_on") or meta.get("blocked_by")
+        if isinstance(deps, list) and deps:
+            entry["deps"] = [str(d)[:24] for d in deps[:4]]
+        items.append(entry)
+        if len(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")) > budget:
+            items.pop()
+            truncated = True
+            break
+    payload["truncated"] = truncated
+    if (
+        truncated
+        and items
+        and len(json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")) > budget
+    ):
+        items.pop()
+    return payload
