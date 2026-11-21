@@ -418,6 +418,12 @@ def ticket_create(
     )
     action = "Created" if created else "Reused"
     console.print(f"[green]✓[/green] {action} {ticket.id}: {ticket.name}")
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_created
+
+        maybe_emit_ticket_created(ticket, created=created)
+    except Exception:
+        pass
     if not created:
         # The key identifies an existing record, including its original route.
         # Current defaults or incoming -i/-s must never retarget that record.
@@ -710,6 +716,12 @@ def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: 
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Updated {ticket.id}')
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_event
+
+        maybe_emit_ticket_event('update', ticket, note=note)
+    except Exception:
+        pass
 
     if sync:
         _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=[ticket_id])
@@ -782,6 +794,12 @@ def ticket_done(ticket_id: str=typer.Argument(..., help='Ticket ID to mark as do
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Marked {ticket.id} as [green]done[/green]')
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_event
+
+        maybe_emit_ticket_event('done', ticket)
+    except Exception:
+        pass
 
 def ticket_claim(
     ticket_id: str=typer.Argument(..., help='Ticket ID to claim'),
@@ -811,6 +829,12 @@ def ticket_start(
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Started {ticket.id} → [yellow]in_progress[/yellow]')
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_event
+
+        maybe_emit_ticket_event('start', ticket)
+    except Exception:
+        pass
 
 def ticket_ready(ticket_id: str=typer.Argument(..., help='Ticket ID to make runnable again'), note: str | None=typer.Option(None, '-n', '--note', help='Optional note appended to outputs.notes (e.g. resolution of the input phase)')) -> None:
     """Mark execution state as ready after human input or manual recovery."""
@@ -856,6 +880,12 @@ def ticket_fail(
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Marked {ticket.id} as [red]failed[/red]')
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_event
+
+        maybe_emit_ticket_event('fail', ticket, reason=error)
+    except Exception:
+        pass
 
 def ticket_input(
     ticket_id: str=typer.Argument(..., help='Ticket ID waiting on human or external input'),
@@ -887,6 +917,12 @@ def ticket_complete(
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Completed {ticket.id}')
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_event
+
+        maybe_emit_ticket_event('complete', ticket, note=note)
+    except Exception:
+        pass
 
 def ticket_block(ticket_id: str=typer.Argument(..., help='Ticket ID to block'), reason: str=typer.Option(None, '-r', '--reason', help='Block reason')) -> None:
     """Mark ticket as blocked and clear any running execution claim."""
@@ -897,6 +933,12 @@ def ticket_block(ticket_id: str=typer.Argument(..., help='Ticket ID to block'), 
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Blocked {ticket.id}')
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_event
+
+        maybe_emit_ticket_event('block', ticket, reason=reason)
+    except Exception:
+        pass
 
 def _collect_delete_ids(
     pf: Any,
@@ -1239,6 +1281,12 @@ def ticket_depend(
     if result['before']:
         parts.append(f"before {', '.join(result['before'])}")
     console.print(f"[green]✓[/green] [cyan]{ticket_id}[/cyan] sequenced: {'; '.join(parts)}")
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_dependency
+
+        maybe_emit_ticket_dependency(ticket_id, after=result['after'], before=result['before'])
+    except Exception:
+        pass
 
 
 # ── Semantic layer: duplicates / decompose / coverage ─────────────────────────
