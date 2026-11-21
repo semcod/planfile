@@ -76,7 +76,13 @@ def capture_locator_snapshot(store, built_signature: tuple) -> _LocatorSnapshot 
         return None
 
 
-def persist_locator_snapshot(index, signature: tuple, snapshot: _LocatorSnapshot) -> bool:
+def persist_locator_snapshot(
+    index,
+    signature: tuple,
+    snapshot: _LocatorSnapshot,
+    *,
+    timeout: float = 1.0,
+) -> bool:
     """Remember observed locator contents only while their index generation is current."""
     if snapshot.signature != signature[2]:
         return False
@@ -88,7 +94,7 @@ def persist_locator_snapshot(index, signature: tuple, snapshot: _LocatorSnapshot
         return True
     try:
         uri = index.path.resolve().as_uri() + "?mode=rw"
-        with closing(sqlite3.connect(uri, uri=True, timeout=0.05)) as connection, connection:
+        with closing(sqlite3.connect(uri, uri=True, timeout=timeout)) as connection, connection:
             # The signature comparison and metadata write share one SQLite
             # statement, so a late worker cannot overwrite a newer generation.
             cursor = connection.execute(
@@ -339,12 +345,23 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
     belongs to the bounded changed-sprint set); an unknown baseline or a large
     delta stays stale.
     """
+    if (
+        built_signature is not None
+        and locator_snapshot is not None
+        and locator_snapshot.matches(store, built_signature)
+    ):
+        # Preserve the rebuilt generation's verified locator outside the writer
+        # lock so a contention/budget abort never leaves source_signature ahead
+        # of source_locator_snapshot_v1.
+        persist_locator_snapshot(index, built_signature, locator_snapshot)
     with store.mutation_lock():
         started = time.monotonic()
         target = store._ticket_index_signature()
         stored_bytes = 0
         from_stored_baseline = built_signature is None
         if from_stored_baseline:
+            if index.is_current(target):
+                return index.status(target) | {"rebuilt": False}
             prior = _stored_baseline(index, target)
             if prior is None:
                 return None
@@ -456,17 +473,19 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
                     ids.update(tid for tid, _ in mismatched)
             else:
                 locations = store._history_locations()
-            for sprint in sorted(changed_sprints):
-                ids.update(tickets(sprint))
-                # Read identities only, never deserialize historical payloads.
-                with index._connection() as connection:
-                    rows = connection.execute(
-                        "SELECT id FROM tickets WHERE sprint=? LIMIT ?",
-                        (sprint, MAX_REPAIR_TICKETS + 1),
-                    ).fetchall()
-                ids.update(row["id"] for row in rows)
-                if len(ids) > MAX_REPAIR_TICKETS:
-                    raise _RepairBudgetExceeded
+            if changed_sprints:
+                with closing(index._connect_routing()) as connection:
+                    connection.row_factory = sqlite3.Row
+                    for sprint in sorted(changed_sprints):
+                        ids.update(tickets(sprint))
+                        # Read identities only, never deserialize historical payloads.
+                        rows = connection.execute(
+                            "SELECT id FROM tickets WHERE sprint=? LIMIT ?",
+                            (sprint, MAX_REPAIR_TICKETS + 1),
+                        ).fetchall()
+                        ids.update(row["id"] for row in rows)
+                        if len(ids) > MAX_REPAIR_TICKETS:
+                            raise _RepairBudgetExceeded
             if len(ids) > MAX_REPAIR_TICKETS:
                 raise _RepairBudgetExceeded
             all_sprints = store._all_sprint_ids()
