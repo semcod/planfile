@@ -13,11 +13,12 @@ decision models can observe completed, blocked, and queued work.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import importlib
 import os
+from collections.abc import Sequence
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 
 def resolve_state_dir(explicit: Path | str | None = None) -> Path | None:
