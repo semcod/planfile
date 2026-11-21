@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-310",
+  "summary": "Analyze fleet Planfile to GitHub sync drift 2026-11-21",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-310/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/README.md",
+    "docs/analysis/planfile-github-sync-fleet-audit-2026-11-21.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
