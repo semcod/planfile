@@ -24,7 +24,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "f9eadd97ba472d8b2b6f960a36a3be7b59ebecc9",
+    "acceptedBaseSha": "2a2a163ae0871f6027a59fea2340cef21a3a05e4",
     "targetBranch": "main",
     "outcome": "Verified locator snapshots remain synchronized with source_signature across full rebuilds, aborted post-rebuild reconciliations, and daily archive sweeps, eliminating stale-locator full-rebuild thrashing.",
     "nonGoals": [

@@ -641,20 +641,28 @@ def discover_planfile_repositories(
     *,
     max_depth: int = 2,
 ) -> list[Path]:
-    """Discover non-symlinked local repositories containing a ``.planfile`` directory."""
+    """Discover non-symlinked local repositories containing a ``.planfile`` directory.
+
+    Non-Git container directories (for example organization folders under
+    ``~/github/<org>`` that hold an org-level ``.planfile``) are still traversed
+    so child repositories are not shadowed, and any non-Git container that has
+    discovered child repositories is omitted from the result.
+    """
 
     root = Path(workspace_root)
     if root.is_symlink() or not root.is_dir():
         return []
-    found: list[Path] = []
+    candidates: list[tuple[Path, bool]] = []
     queue: list[tuple[Path, int]] = [(root.resolve(), 0)]
     while queue:
         current, depth = queue.pop(0)
+        is_git_repo = (current / ".git").exists()
         if depth > 0:
             pf_dir = current / ".planfile"
             if pf_dir.is_dir() and not pf_dir.is_symlink():
-                found.append(current)
-                continue
+                candidates.append((current, is_git_repo))
+                if is_git_repo:
+                    continue
         if depth < max_depth:
             try:
                 children = sorted(current.iterdir())
@@ -665,7 +673,12 @@ def discover_planfile_repositories(
                     continue
                 if entry.is_dir():
                     queue.append((entry, depth + 1))
-    return found
+    all_paths = [path for path, _ in candidates]
+    return [
+        path
+        for path, is_git_repo in candidates
+        if is_git_repo or not any(other != path and other.is_relative_to(path) for other in all_paths)
+    ]
 
 
 def _ticket_dict_view(ticket: Ticket | Mapping[str, Any]) -> dict[str, Any]:
