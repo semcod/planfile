@@ -2921,8 +2921,12 @@ def _repair_ticket_index(*, locator_snapshot=None) -> dict:
 
             try:
                 repaired = reconcile_index(store, index, locator_snapshot=locator_snapshot)
-            except sqlite3.DatabaseError:
-                # The existing full-rebuild path handles damaged or busy
+            except sqlite3.DatabaseError as exc:
+                from planfile.core.sqlite_index import _is_sqlite_contention
+
+                if _is_sqlite_contention(exc):
+                    raise TicketIndexContentionError("ticket_index_repair_busy") from exc
+                # The existing full-rebuild path handles damaged
                 # projections through the store's normal recovery protocol.
                 repaired = None
             if repaired is not None:

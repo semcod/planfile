@@ -994,3 +994,43 @@ def test_persist_current_locator_snapshot_syncs_after_incremental_archive(
     assert result["current"] is True
     assert result["reconciled"] >= 2
     assert reopened.store._sqlite_ticket_index().get_ticket(second.id)["sprint"] == "history-2026-11-21"
+
+
+def test_stored_baseline_reconcile_returns_current_without_full_rebuild_after_concurrent_writer(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    pf.create_ticket(name="Active ticket")
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    assert pf.store.ticket_index_status()["current"] is True
+
+    # Simulate a maintenance check observing a mid-commit mutation right before
+    # the writer finishes index.apply() and releases store.mutation_lock().
+    result = index_repair.reconcile_index(pf.store, index)
+    assert result is not None
+    assert result["current"] is True
+    assert result["rebuilt"] is False
+
+
+def test_repair_ticket_index_defers_instead_of_rebuilding_on_sqlite_contention(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    ticket = pf.create_ticket(name="Before busy repair")
+    pf.store.configure_ticket_index(True)
+    with monkeypatch.context() as deferred:
+        deferred.setattr(pf.store, "_begin_index_mutation", lambda: False)
+        pf.update_ticket(ticket.id, name="After busy repair")
+
+    def busy_reconcile(*args, **kwargs):
+        raise sqlite3.OperationalError("database is locked")
+
+    def forbid_rebuild(*args, **kwargs):
+        pytest.fail("transient SQLite contention must defer instead of launching full rebuild")
+
+    monkeypatch.setattr(index_repair, "reconcile_index", busy_reconcile)
+    monkeypatch.setattr(pf.store, "_rebuild_ticket_index_unlocked", forbid_rebuild)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    with pytest.raises(TicketIndexContentionError, match="ticket_index_repair_busy"):
+        server._repair_ticket_index()

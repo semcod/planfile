@@ -360,6 +360,8 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
         stored_bytes = 0
         from_stored_baseline = built_signature is None
         if from_stored_baseline:
+            if index.is_current(target):
+                return index.status(target) | {"rebuilt": False}
             prior = _stored_baseline(index, target)
             if prior is None:
                 return None
