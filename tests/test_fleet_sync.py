@@ -92,3 +92,78 @@ def test_fleet_cli_dry_run(sync_cli, tmp_path):
     result = runner.invoke(sync_cli, ["sync", "fleet", str(tmp_path), "--dry-run"])
     assert result.exit_code == 0
     assert "No GitHub-integrated repositories found" in result.output
+
+
+def test_discover_fleet_repositories_descends_past_non_git_org_planfile(tmp_path):
+    # Org container directory has a stray .planfile (NOT a git repo)
+    org = tmp_path / "org"
+    (org / ".planfile").mkdir(parents=True)
+    (org / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/org\n")
+
+    # Actual Git repositories inside the org directory
+    repo1 = org / "proj1"
+    (repo1 / ".git").mkdir(parents=True)
+    (repo1 / ".planfile").mkdir(parents=True)
+    (repo1 / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/proj1\n")
+
+    repo2 = org / "proj2"
+    (repo2 / ".git").mkdir(parents=True)
+    (repo2 / ".planfile").mkdir(parents=True)
+    (repo2 / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/proj2\n")
+
+    discovered = discover_fleet_repositories(tmp_path, max_depth=2)
+    assert discovered == [(repo1, "org/proj1"), (repo2, "org/proj2")]
+
+
+def test_sync_fleet_continues_after_typer_exit_and_forwards_timeout(tmp_path):
+    for name in ("repo1", "repo2"):
+        pf = tmp_path / "org" / name / ".planfile"
+        pf.mkdir(parents=True)
+        (pf / "github.planfile.yaml").write_text(f"integrations:\n  github:\n    repo: org/{name}\n")
+
+    calls = []
+
+    def _fake_sync(backend, directory, **kwargs):
+        calls.append((directory, kwargs))
+        if directory.endswith("repo1"):
+            raise typer.Exit(1)
+
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=_fake_sync):
+        stats = sync_fleet(tmp_path, max_depth=2, dry_run=True, timeout_seconds=30.0)
+
+    assert stats["scanned"] == 2
+    assert stats["synced"] == 1
+    assert stats["failed"] == 1
+    assert all(kw["timeout_seconds"] == 30.0 for _, kw in calls)
+
+
+def test_reject_github_pull_request_urls_at_write_time():
+    from planfile.sync.operations import (
+        _import_new_ticket,
+        _record_backend_ref,
+        _update_local_ticket,
+    )
+
+    pr_url = "https://github.com/org/repo/pull/42"
+    with pytest.raises(ValueError, match="sync_github_pull_request_mapping_forbidden"):
+        _record_backend_ref({}, "github", {"id": "42", "url": pr_url, "key": "org/repo#42"}, "42")
+
+    with pytest.raises(ValueError, match="sync_github_pull_request_mapping_forbidden"):
+        _update_local_ticket(
+            {"tickets": {"PLF-1": {"id": "PLF-1", "status": "open"}}},
+            {},
+            "PLF-1",
+            {"id": "42", "name": "PR", "status": "open", "assignee": None, "labels": [], "url": pr_url},
+            0,
+            "github",
+            None,
+        )
+
+    with pytest.raises(ValueError, match="sync_github_pull_request_mapping_forbidden"):
+        _import_new_ticket(
+            {"tickets": {}},
+            {"id": "42", "name": "PR", "description": "", "status": "open", "assignee": None, "labels": [], "url": pr_url},
+            "github",
+            object(),
+            0,
+        )

@@ -37,7 +37,9 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart={bin_str} sync fleet {root_str}
+RuntimeDirectory=planfile-fleet-sync
+RuntimeDirectoryMode=0700
+ExecStart=/usr/bin/flock --nonblock --conflict-exit-code 0 %t/planfile-fleet-sync/sync.lock {bin_str} sync fleet {root_str} --timeout 45
 TimeoutStartSec=20min
 Nice=10
 UMask=0077
@@ -123,30 +125,38 @@ def discover_fleet_repositories(
     root: Path,
     max_depth: int = 2,
 ) -> list[tuple[Path, str]]:
-    """Scan subdirectories up to max_depth for .planfile stores configured with GitHub."""
-    results: list[tuple[Path, str]] = []
+    """Scan subdirectories up to max_depth for .planfile stores configured with GitHub.
+
+    Non-Git container directories (such as organization folders under
+    ``~/github/<org>`` that hold an org-level ``.planfile``) are still traversed
+    so child repositories are not shadowed, and any non-Git container that has
+    discovered child repositories is omitted from the result.
+    """
+    candidates: list[tuple[Path, str, bool]] = []
     if not root.is_dir():
-        return results
+        return []
 
     # Breadth-first search bounded by max_depth
     queue: list[tuple[Path, int]] = [(root, 0)]
     while queue:
         current, depth = queue.pop(0)
+        is_git_repo = (current / ".git").exists()
         if depth > 0:
             try:
                 planfile_dir = current / ".planfile"
-                if planfile_dir.is_dir():
+                if planfile_dir.is_dir() and not planfile_dir.is_symlink():
                     try:
                         config = IntegrationConfig(str(current))
                         config.load_configs()
                         gh_cfg = config.get_integration_config("github")
                         repo_name = gh_cfg.get("repo") if isinstance(gh_cfg, dict) else None
                         if repo_name and config.validate_integration("github"):
-                            results.append((current, str(repo_name)))
+                            candidates.append((current, str(repo_name), is_git_repo))
                     except Exception:
                         pass
-                    # Once a repository with .planfile is matched, do not descend into internal subtrees
-                    continue
+                    # Stop descending only inside an actual Git repository.
+                    if is_git_repo:
+                        continue
             except (PermissionError, OSError):
                 continue
 
@@ -158,7 +168,12 @@ def discover_fleet_repositories(
             except PermissionError:
                 continue
 
-    return results
+    all_paths = [path for path, _, _ in candidates]
+    return [
+        (path, repo_name)
+        for path, repo_name, is_git_repo in candidates
+        if is_git_repo or not any(other != path and other.is_relative_to(path) for other in all_paths)
+    ]
 
 
 def sync_fleet(
@@ -168,6 +183,7 @@ def sync_fleet(
     exclude_incident_noise: bool = True,
     managed_only: bool = False,
     max_projects: int | None = None,
+    timeout_seconds: float | None = 45.0,
 ) -> dict[str, Any]:
     """Execute inbound sync across all discovered fleet repositories."""
     discovered = discover_fleet_repositories(root, max_depth=max_depth)
@@ -195,24 +211,25 @@ def sync_fleet(
         repo_name = repo_path.name
         console.print(f"[bold cyan]📁 {repo_name}[/bold cyan] [dim]({gh_repo})[/dim]")
         try:
-            sync_integration(
-                "github",
-                str(repo_path),
-                dry_run=dry_run,
-                direction="from",
-                show_header=False,
-                managed_only=managed_only,
-                exclude_incident_noise=exclude_incident_noise,
-            )
+            sync_kwargs: dict[str, Any] = {
+                "dry_run": dry_run,
+                "direction": "from",
+                "show_header": False,
+                "managed_only": managed_only,
+                "exclude_incident_noise": exclude_incident_noise,
+            }
+            if timeout_seconds is not None:
+                sync_kwargs["timeout_seconds"] = timeout_seconds
+            sync_integration("github", str(repo_path), **sync_kwargs)
             stats["synced"] += 1
             stats["results"].append({"repo": repo_name, "github": gh_repo, "status": "ok"})
-        except Exception as exc:
+        except (Exception, SystemExit) as exc:
             stats["failed"] += 1
             stats["results"].append({
                 "repo": repo_name,
                 "github": gh_repo,
                 "status": "error",
-                "error": str(exc),
+                "error": str(exc) or type(exc).__name__,
             })
             console.print(f"  [red]✗ Sync error for {repo_name}: {exc}[/red]")
 
@@ -235,6 +252,18 @@ def fleet_cmd(
         False,
         "--managed-only",
         help="Only sync issues with 'planfile' or 'managed' labels",
+    ),
+    max_projects: int | None = typer.Option(
+        None,
+        "--max-projects",
+        min=1,
+        help="Limit number of repositories synchronized in this invocation",
+    ),
+    timeout: float = typer.Option(
+        45.0,
+        "--timeout",
+        min=1.0,
+        help="Per-repository monotonic deadline in seconds for inbound GitHub sync",
     ),
     install_timer: bool = typer.Option(
         False,
@@ -289,6 +318,8 @@ def fleet_cmd(
         dry_run=dry_run,
         exclude_incident_noise=exclude_incident_noise,
         managed_only=managed_only,
+        max_projects=max_projects,
+        timeout_seconds=timeout,
     )
 
     table = Table(title="Fleet Sync Summary", show_header=True, header_style="bold magenta")

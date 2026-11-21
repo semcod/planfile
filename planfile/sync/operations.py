@@ -202,11 +202,21 @@ def _create_new_ticket(
     return external_id, external_ticket
 
 
+def _reject_github_pull_request_url(integration_name: str, url: Any) -> None:
+    """Refuse to persist a GitHub Pull Request URL as a ticket mapping."""
+    if integration_name != "github" or not url:
+        return
+    text = str(url).strip().lower()
+    if "github.com/" in text and "/pull/" in text:
+        raise ValueError("sync_github_pull_request_mapping_forbidden")
+
+
 def _record_backend_ref(
     ticket: dict, integration_name: str, external_ticket, external_id: str
 ) -> None:
     """Store backend-scoped references so OneDev IDs are never mistaken for GitHub IDs."""
     url = external_ticket.url if hasattr(external_ticket, "url") else external_ticket.get("url")
+    _reject_github_pull_request_url(integration_name, url)
     key = external_ticket.key if hasattr(external_ticket, "key") else external_ticket.get("key")
     sync = ticket.setdefault("sync", {})
     existing = sync.get(integration_name)
@@ -903,6 +913,7 @@ def _update_local_ticket(
     store=None,
 ) -> int:
     """Update an existing local ticket from external data."""
+    _reject_github_pull_request_url(integration_name, ext_data.get("url"))
     backend_ref = {
         key: value
         for key, value in {
@@ -976,6 +987,7 @@ def _import_new_ticket(
     target_sprint: str = "backlog",
 ) -> int:
     """Import a new ticket from external system."""
+    _reject_github_pull_request_url(integration_name, ext_data.get("url"))
     new_id = f"{integration_name.upper()}-{ext_data['id']}"
 
     existing = (backlog.get("tickets") or {}).get(new_id)
