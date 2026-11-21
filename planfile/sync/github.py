@@ -325,15 +325,29 @@ class GitHubBackend(BasePMBackend):
     def _canonical_labels(cls, labels: list[str] | None, priority: str | None) -> list[str]:
         """Build and validate the provider label projection without I/O."""
         issue_labels = []
-        for label in labels or []:
+        for raw_label in labels or []:
+            if not isinstance(raw_label, str):
+                raise ValueError(f"Invalid GitHub label: {raw_label!r}")
             # Dedupe keys are persisted in metadata/body markers. They are not
             # GitHub labels and can exceed GitHub's 50-character limit.
-            if label.startswith("dedupe:") or label.startswith("priority: "):
+            if raw_label.startswith("dedupe:") or raw_label.startswith("priority: "):
                 continue
-            if not label or len(label) > cls.MAX_LABEL_LENGTH or any(ord(char) < 32 for char in label):
-                raise ValueError(f"Invalid GitHub label: {label!r}")
-            if label not in issue_labels:
-                issue_labels.append(label)
+            if not raw_label or any(ord(char) < 32 for char in raw_label):
+                raise ValueError(f"Invalid GitHub label: {raw_label!r}")
+            parts = (
+                [part.strip() for part in raw_label.split(",") if part.strip()]
+                if "," in raw_label
+                else [raw_label]
+            )
+            if not parts:
+                raise ValueError(f"Invalid GitHub label: {raw_label!r}")
+            for label in parts:
+                if label.startswith("dedupe:") or label.startswith("priority: "):
+                    continue
+                if not label or len(label) > cls.MAX_LABEL_LENGTH or any(ord(char) < 32 for char in label):
+                    raise ValueError(f"Invalid GitHub label: {label!r}")
+                if label not in issue_labels:
+                    issue_labels.append(label)
         if priority:
             priority_label = f"priority-{priority}"
             if len(priority_label) > cls.MAX_LABEL_LENGTH:
