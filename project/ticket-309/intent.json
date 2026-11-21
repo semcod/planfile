@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-309",
+  "summary": "Optional uritime-urtlog bridge for planfile ticket lifecycle and dependency DAG",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-309/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/urtlog_bridge.py",
+    "planfile/cli/groups/ticket/commands.py",
+    "tests/test_urtlog_bridge.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
