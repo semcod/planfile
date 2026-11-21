@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-312",
+  "summary": "Pin subactor-procache to 853441c6 for ETag revalidation and rate-limit cooldown",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-312/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3a76ad444b4c1eb6a2362a1727ccfe21b7bf4c27",
+    "targetBranch": "main",
+    "outcome": "Update the subactor-procache Git dependency pin in pyproject.toml and uv.lock to Validator-merged dockuri/procache main commit 853441c623201517f293deb3f28a5195fc59de35 (PR #22 rate-limit cooldown and PR #23 ETag revalidation).",
+    "nonGoals": [
+      "No runtime Python code changes in planfile.",
+      "No unrelated dependency upgrades in uv.lock."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update only the subactor-procache git revision in pyproject.toml and uv.lock via uv lock --upgrade-package subactor-procache.",
+      "components": [
+        {
+          "name": "Planfile Python dependency lock",
+          "paths": [
+            "pyproject.toml",
+            "uv.lock"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert to accepted base 3a76ad444b4c1eb6a2362a1727ccfe21b7bf4c27 to restore subactor-procache@94cb3118."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "git diff pyproject.toml uv.lock"
+        ],
+        "evidence": "Only subactor-procache revision changes from 94cb3118 to 853441c6."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          ".venv/bin/pytest tests/test_scoped_provider_cache.py tests/test_github_metadata_cache_scope.py tests/test_github_issue_templates.py tests/test_github_transport_retry.py tests/test_github_deduplication.py tests/test_index_repair.py tests/test_urtlog_bridge.py -q",
+          "./project/governance-check.sh --base origin/main",
+          "wellman check --root . --json"
+        ],
+        "evidence": "Targeted tests, governance gate, and wellman check pass cleanly."
+      }
+    ]
+  }
+}
