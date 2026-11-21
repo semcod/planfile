@@ -85,7 +85,7 @@ expected `OPEN` when its status is `open`, `in_progress`, `review` or
 | Configured repository differs from `origin` | `twinerd/premesh` → `subactor/premesh`; `if-uri/urirun-contract` (origin `dockuri/urirun-contract`) |
 | Sync state repository differs from configuration | `dockuri/willuri` (state `paxlet-com/willuri`) |
 | Scheduled fleet sync (`planfile-fleet-sync.timer`) | not installed |
-| Repository-specific autosync units | `c2004-planfile-autosync`, `fixos-planfile-sync`, `maskfleet-planfile-feed` |
+| Repository-specific Planfile jobs | `c2004-planfile-autosync` and `fixos-planfile-sync` synchronize. `maskfleet-planfile-feed` exports a read-only snapshot. |
 
 <!-- docs:section facts -->
 ## Facts
@@ -93,16 +93,20 @@ expected `OPEN` when its status is `open`, `in_progress`, `review` or
 1. The [GitHub sync policy](planfile-github-sync-policy.md) makes outbound sync
    campaign-scoped and opt-in, so the 667 projects without GitHub sync follow
    the policy and are not drift.
-2. Only three repositories have unattended synchronization. Everything else
-   synchronizes only when an agent runs `planfile sync github`, which explains
-   the 46-day median age and the 82 configured projects that never
-   synchronized.
+2. Two repository-scoped timers run unattended synchronization. MaskFleet has
+   a separate read-only snapshot feed. Most configured stores depend on
+   explicitly initiated runs of `planfile sync github`. The measured activity
+   is consistent with the 46-day median age and the 82 configured projects
+   without a sync record.
 3. The dominant real drift is one-directional: 250 tickets are still open
    locally after their GitHub issue was closed. Inbound state is not
    reconciled without a sync run.
 4. 442 mappings point at pull requests, concentrated in repositories whose
    tickets were imported as `GITHUB-<n>` from a PR-and-issue listing. A pull
    request cannot carry the ticket lifecycle the policy expects.
+   The current GitHub backend excludes pull requests from inbound issue
+   reads by default. The `include_pull_requests` opt-in and stored legacy
+   mappings need separate review.
 5. Several `heyasa/*` and `paxlet-com/*` checkouts are clones of the same
    GitHub repository with separate stores. They report the same tickets twice,
    so per-repository counts above include that duplication.
@@ -112,12 +116,14 @@ expected `OPEN` when its status is `open`, `in_progress`, `review` or
 <!-- docs:section hypotheses -->
 ## Hypotheses
 
-1. A bounded inbound reconciliation (`--direction from`, state only) for the
-   115 repositories with closed-remote tickets would remove most state drift
-   without creating issues, which is consistent with the opt-in policy.
-2. Rejecting `PullRequest` targets when a mapping is written would prevent
-   new PR mappings; existing ones need an explicit owner decision per
-   repository.
+1. A bounded, state-only reconciliation of existing issue mappings could
+   reduce drift in the 115 repositories with closed-remote tickets. The
+   general `--direction from` operation can update local issue fields and
+   import remote issues into Planfile. A state-only pilot needs an explicit
+   selection of mapped tickets and an independently verified transition.
+2. Extending mapping verification to every writer could prevent new
+   `PullRequest` mappings. Existing mappings and repositories that explicitly
+   include pull requests need an owner decision.
 3. One canonical store per GitHub repository, instead of a store per clone,
    would remove the duplicated reports.
 
@@ -135,8 +141,8 @@ which was in an index-rebuild livelock at the time (#403).
 
 | Recommendation | Owner | Effect |
 | --- | --- | --- |
-| Decide whether to install a bounded scheduled sync (inbound state reconciliation first) for opted-in repositories | semcod/planfile maintainers and fleet operator | removes stale state; needs the API budget noted in #403 and dockuri/procache#18 |
-| Reconcile the 250 local-open/remote-closed tickets through a state-only inbound run per repository | each repository owner | restores lifecycle truth |
+| Qualify a bounded preview for opted-in repositories before scheduling state reconciliation | semcod/planfile maintainers and fleet operator | verifies eligible mappings and measures the API budget noted in #403 and dockuri/procache#18 |
+| Review the 250 local-open/remote-closed tickets against current issue states and repository policy | each repository owner | identifies state corrections supported by fresh evidence |
 | Reject `PullRequest` mappings at write time; review the 442 existing ones | semcod/planfile; `clonerd-com`, `semcod`, `wellmanifest` owners | prevents misleading mappings |
 | Fix configuration mismatches (`twinerd/premesh`, `if-uri/urirun-contract`, `dockuri/willuri`) | those repository owners | sync writes to the right repository |
 | Drain or resolve the `maskservice/c2004` retry queue (2 failed, 6 running) | maskservice/c2004 | completes queued deliveries |

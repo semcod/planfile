@@ -17,6 +17,8 @@ records the read-only audit as
 `docs/analysis/planfile-github-sync-fleet-audit-2026-11-21.md` with its
 `docs/README.md` index entry. No ticket, issue or retry record was written.
 
+SESSION_EXECUTION_AUTHORIZATION covers integrating the current base, correcting the audit's descriptions of inbound sync and the MaskFleet feed, and protected publication.
+
 Known gap: `wellmanifest/docs` `check.py --prepare` (revision
 `b536d012cde20a27fbc9ff2b3dfc8c80bfc075a0`) accepts the placement but reports
 the repository-level `DOCS_ADOPTION` finding (no tracked
