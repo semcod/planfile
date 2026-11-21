@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-317",
+  "summary": "Isolate per-project dotenv values in IntegrationConfig to prevent cross-repo GITHUB_TOKEN pollution in fleet sync",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-317/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/integrations/config.py",
+    "tests/test_integration_config_dotenv.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

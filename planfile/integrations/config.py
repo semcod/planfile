@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
 
 @lru_cache(maxsize=256)
@@ -27,13 +27,23 @@ class IntegrationConfig:
     def __init__(self, directory: str = "."):
         self.directory = Path(directory)
         self.config = {}
+        self._dotenv_vars: dict[str, str] = {}
         self.load_dotenv()
 
     def load_dotenv(self):
-        """Load .env file if it exists."""
+        """Read project-local .env without mutating global process os.environ."""
         env_file = self.directory / ".env"
+        self._dotenv_vars = {}
         if env_file.exists():
-            load_dotenv(env_file)
+            raw = dotenv_values(env_file)
+            self._dotenv_vars = {
+                str(k): str(v) for k, v in raw.items() if k is not None and v is not None
+            }
+
+    def _lookup_env(self, name: str) -> str | None:
+        if name in os.environ:
+            return os.environ[name]
+        return self._dotenv_vars.get(name)
 
     def _expand_env_vars(self, config: Any) -> Any:
         """Recursively expand environment variables in configuration."""
@@ -45,7 +55,8 @@ class IntegrationConfig:
             # Expand ${VAR_NAME} and $VAR_NAME patterns
             def replace_env_var(match):
                 var_name = match.group(1) if match.group(1) else match.group(2)
-                return os.environ.get(var_name, match.group(0))
+                value = self._lookup_env(var_name)
+                return value if value is not None else match.group(0)
 
             # Match both ${VAR} and $VAR patterns
             pattern = r"\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)"
@@ -138,13 +149,13 @@ class IntegrationConfig:
             has_password = bool(
                 config.get("password")
                 or config.get("password_file")
-                or os.environ.get("ONEDEV_PASSWORD")
-                or os.environ.get("ONEDEV_PASSWORD_FILE")
+                or self._lookup_env("ONEDEV_PASSWORD")
+                or self._lookup_env("ONEDEV_PASSWORD_FILE")
             )
             return bool(
                 config.get("url")
                 and config.get("project")
-                and (config.get("username") or os.environ.get("ONEDEV_USER"))
+                and (config.get("username") or self._lookup_env("ONEDEV_USER"))
                 and has_password
             )
         elif integration_name == "gitlab":
@@ -208,8 +219,13 @@ class IntegrationConfig:
 
             config = {**config, "project_dir": str(self.directory)}
 
-            # Auto-fetch token from gh CLI if not provided or is unexpanded env var
+            # Resolve token from config, project-local .env, or gh CLI fallback
             token = config.get("token", "")
+            if not token or "${" in token:
+                env_token = self._lookup_env("GITHUB_TOKEN") or ""
+                if env_token:
+                    config = {**config, "token": env_token}
+                    token = env_token
             if not token or "${" in token:
                 import subprocess
 
