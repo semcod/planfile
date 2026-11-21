@@ -1,0 +1,95 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-316",
+  "summary": "Persist locator snapshot on rebuild and daily archive to prevent full-rebuild thrashing",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-316/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/api/server.py",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2a2a163ae0871f6027a59fea2340cef21a3a05e4",
+    "targetBranch": "main",
+    "outcome": "Verified locator snapshots remain synchronized with source_signature across full rebuilds, aborted post-rebuild reconciliations, and daily archive sweeps, eliminating stale-locator full-rebuild thrashing.",
+    "nonGoals": [
+      "Changing canonical archive precedence, repair budgets, SQLite schema, store.py, or sqlite_index.py."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Persist the verified built locator snapshot before acquiring mutation_lock in reconcile_index using the existing exact source_signature SQL guard, persist the current locator right after quiet full rebuilds and daily archive sweeps in server.py, increase persist_locator_snapshot timeout to 1.0s, and use a single read-only routing connection for changed-sprint ID queries in reconcile_index.",
+      "components": [
+        {
+          "name": "incremental-index-repair",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py"
+          ]
+        },
+        {
+          "name": "api-index-maintenance",
+          "paths": [
+            "planfile/api/server.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this change. The persisted locator uses the existing source_locator_snapshot_v1 metadata key and exact-signature guard."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          ".venv/bin/pytest -q tests/test_index_repair.py"
+        ],
+        "evidence": "Aborted post-rebuild reconciliation still persists source_locator_snapshot_v1 for built_signature, allowing subsequent reopened stored-baseline repair to reconcile without full identity scans or rebuilds."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          ".venv/bin/pytest -q tests/test_index_repair.py"
+        ],
+        "evidence": "Quiet full rebuilds in _repair_ticket_index and daily archive sweeps persist the current locator snapshot immediately."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          ".venv/bin/pytest -q tests/test_index_repair.py tests/test_ticket_discovery.py",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "All index repair, discovery, and governance checks pass cleanly."
+      }
+    ]
+  }
+}

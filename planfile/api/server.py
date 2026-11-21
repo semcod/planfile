@@ -2858,6 +2858,12 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
             else:
                 last_run_date = today
                 if report.get("archived"):
+                    try:
+                        await asyncio.to_thread(
+                            _persist_current_locator_snapshot, get_planfile().store
+                        )
+                    except Exception:  # pragma: no cover - best-effort metadata sync
+                        pass
                     _remember_durable_event(
                         {
                             "type": "management.event",
@@ -2873,6 +2879,22 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
                         }
                     )
         await asyncio.sleep(interval_seconds)
+
+
+def _persist_current_locator_snapshot(store, index=None) -> bool:
+    """Persist the verified locator while the SQLite projection matches sources."""
+    if not store.ticket_index_enabled():
+        return False
+    index = index or store._sqlite_ticket_index()
+    signature = store._ticket_index_signature()
+    if not index.is_current(signature):
+        return False
+    from planfile.core.index_repair import capture_locator_snapshot, persist_locator_snapshot
+
+    snapshot = capture_locator_snapshot(store, signature)
+    if snapshot is None:
+        return False
+    return persist_locator_snapshot(index, signature, snapshot)
 
 
 def _repair_ticket_index(*, locator_snapshot=None) -> dict:
@@ -2899,13 +2921,20 @@ def _repair_ticket_index(*, locator_snapshot=None) -> dict:
 
             try:
                 repaired = reconcile_index(store, index, locator_snapshot=locator_snapshot)
-            except sqlite3.DatabaseError:
-                # The existing full-rebuild path handles damaged or busy
+            except sqlite3.DatabaseError as exc:
+                from planfile.core.sqlite_index import _is_sqlite_contention
+
+                if _is_sqlite_contention(exc):
+                    raise TicketIndexContentionError("ticket_index_repair_busy") from exc
+                # The existing full-rebuild path handles damaged
                 # projections through the store's normal recovery protocol.
                 repaired = None
             if repaired is not None:
                 return repaired
-            return store._rebuild_ticket_index_unlocked(index, force=False)
+            result = store._rebuild_ticket_index_unlocked(index, force=False)
+            if isinstance(result, dict) and result.get("current"):
+                _persist_current_locator_snapshot(store, index)
+            return result
     except StoreLockTimeoutError:
         return {"rebuilt": False, "coalesced": True}
 
