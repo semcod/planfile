@@ -53,6 +53,14 @@ except ImportError as exc:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
 
 from planfile import __version__
+from planfile.api.standby import (
+    MUTATING_HTTP_METHODS,
+    READ_ONLY_RETRY_AFTER_SECONDS,
+    evaluate_readiness,
+    is_read_only_mode,
+    maintenance_disabled_for_standby,
+    read_only_rejection_payload,
+)
 from planfile.core.comparative_findings import ComparativeFindingProposal
 from planfile.core.models import (
     Ticket,
@@ -313,6 +321,17 @@ if _cors_origins:
     )
 
 NO_STORE_HEADERS = {"Cache-Control": "no-store, max-age=0"}
+
+
+@app.middleware("http")
+async def enforce_read_only_standby(request: Request, call_next):
+    if is_read_only_mode() and request.method.upper() in MUTATING_HTTP_METHODS:
+        return JSONResponse(
+            status_code=503,
+            content=read_only_rejection_payload(),
+            headers={**NO_STORE_HEADERS, "Retry-After": str(READ_ONLY_RETRY_AFTER_SECONDS)},
+        )
+    return await call_next(request)
 
 
 # ── Schemas ────────────────────────────────────────────────────────────────────
@@ -2978,7 +2997,7 @@ async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
 
 async def _start_ticket_index_maintenance() -> None:
     global _ticket_index_maintenance_task
-    if os.environ.get("PLANFILE_DISABLE_INDEX_MAINTENANCE") == "1":
+    if maintenance_disabled_for_standby("PLANFILE_DISABLE_INDEX_MAINTENANCE"):
         return
     if (
         _ticket_index_maintenance_task is None
@@ -3003,7 +3022,7 @@ async def _stop_ticket_index_maintenance() -> None:
 
 async def _start_archive_maintenance() -> None:
     global _archive_maintenance_task
-    if os.environ.get("PLANFILE_DISABLE_ARCHIVE_MAINTENANCE") == "1":
+    if maintenance_disabled_for_standby("PLANFILE_DISABLE_ARCHIVE_MAINTENANCE"):
         return
     if _archive_maintenance_task is None or _archive_maintenance_task.done():
         _archive_maintenance_task = asyncio.create_task(
@@ -3025,6 +3044,8 @@ async def _stop_archive_maintenance() -> None:
 
 async def _start_planfile_watcher() -> None:
     global _watch_task
+    if is_read_only_mode():
+        return
     _remember_durable_event(
         {
             "type": "management.event",
@@ -5279,6 +5300,13 @@ async def health() -> dict[str, Any]:
         "schema_versions": identity["schema_versions"],
         "urtlog_bridge": bridge_health_summary(),
     }
+
+
+@app.get("/readyz", tags=["system"])
+def readyz() -> JSONResponse:
+    status_code, payload = evaluate_readiness(get_planfile())
+    headers = {**NO_STORE_HEADERS, **({"Retry-After": "2"} if status_code != 200 else {})}
+    return JSONResponse(status_code=status_code, content=payload, headers=headers)
 
 
 @app.get("/", response_class=HTMLResponse, tags=["system"])
