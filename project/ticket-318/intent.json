@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-318",
+  "summary": "Add PLANFILE_READ_ONLY standby mode and /readyz endpoint",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-318/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/api/server.py",
+    "planfile/api/standby.py",
+    "tests/test_api_read_only_standby.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
