@@ -5,8 +5,8 @@ import asyncio
 import sqlite3
 from types import SimpleNamespace
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
 from planfile.api import server
 from planfile.api.standby import is_read_only_mode, maintenance_disabled_for_standby

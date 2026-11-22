@@ -1,9 +1,9 @@
 """Read-only standby mode and readiness probe helpers for Blue/Green & canary deployments."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import os
 import sqlite3
+from collections.abc import Mapping
 from typing import Any
 
 from planfile.core.store import StoreLockTimeoutError, TicketIndexContentionError
