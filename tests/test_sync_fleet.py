@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import pytest
 
 from planfile.cli.groups.sync import fleet as fleet_mod
