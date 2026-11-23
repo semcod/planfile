@@ -1,0 +1,31 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-320",
+  "summary": "Fix GitHub inbound sync N+1 fetches, incremental cursor, evidence CAS, and tracked sprints guard",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-320/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/fleet.py",
+    "planfile/sync/base.py",
+    "planfile/sync/github.py",
+    "planfile/sync/operations.py",
+    "planfile/sync/state.py",
+    "tests/test_fleet_sync.py",
+    "tests/test_sync_inbound_incremental.py",
+    "tests/test_sync_inbound_sdk_revision.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

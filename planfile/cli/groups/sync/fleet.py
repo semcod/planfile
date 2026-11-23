@@ -124,6 +124,23 @@ def status_fleet_systemd_timer() -> str:
         return f"Could not inspect systemctl: {exc}"
 
 
+def _has_git_tracked_planfile_sprints(repo_path: Path) -> bool:
+    """Return True when .planfile/sprints is tracked in Git so fleet sync will not dirty primary checkouts."""
+    if not (repo_path / ".git").exists():
+        return False
+    try:
+        res = subprocess.run(
+            ["git", "-C", str(repo_path), "ls-files", "--", ".planfile/sprints"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return res.returncode == 0 and bool(res.stdout.strip())
+
+
 def discover_fleet_repositories(
     root: Path,
     max_depth: int = 2,
@@ -154,7 +171,8 @@ def discover_fleet_repositories(
                         gh_cfg = config.get_integration_config("github")
                         repo_name = gh_cfg.get("repo") if isinstance(gh_cfg, dict) else None
                         if repo_name and config.validate_integration("github"):
-                            candidates.append((current, str(repo_name), is_git_repo))
+                            if not (is_git_repo and _has_git_tracked_planfile_sprints(current)):
+                                candidates.append((current, str(repo_name), is_git_repo))
                     except Exception:
                         pass
                     # Stop descending only inside an actual Git repository.

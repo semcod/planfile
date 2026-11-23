@@ -375,3 +375,41 @@ def test_repair_preview_does_not_create_missing_indexes_or_yaml_mirrors(store):
     plan = preview_priority_repair(fresh, ['GITHUB-298'])
     assert plan.items[0].priority == 'high'
     assert project_files(fresh) == before
+
+
+def test_pre_existing_append_only_evidence_does_not_block_inbound_update(store):
+    store.append_ticket_evidence(
+        'PLF-001',
+        idempotency_key='pre-sync-ev-1',
+        collection='receipts',
+        evidence={'ok': True},
+        reason='pre-sync evidence',
+        actor='agent:test',
+    )
+    pull(store)
+    after = read(store)
+    assert after.status == 'done'
+    assert after.description == 'remote update'
+    assert after.outputs.result['receipts'][0]['idempotency_key'] == 'pre-sync-ev-1'
+
+
+def test_concurrent_append_only_evidence_during_fetch_still_rejected(store):
+    before = read(store)
+
+    def concurrent():
+        store.append_ticket_evidence(
+            'PLF-001',
+            idempotency_key='during-fetch-ev-1',
+            collection='receipts',
+            evidence={'ok': True},
+            reason='concurrent evidence during fetch',
+            actor='agent:test',
+        )
+
+    with pytest.raises(TicketUpdatedAtConflictError):
+        pull(store, concurrent)
+    after = read(store)
+    assert after.status == 'open'
+    assert after.description == before.description
+    assert 'remote update' not in after.description
+    assert after.outputs.result['receipts'][0]['idempotency_key'] == 'during-fetch-ev-1'

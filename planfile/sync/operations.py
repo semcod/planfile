@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
+import os
 import re
 from contextlib import nullcontext
 from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -434,20 +437,109 @@ def _find_local_ticket(
     return matches[0] if matches else (None, None, None)
 
 
+_INCREMENTAL_SINCE_OVERLAP_SECONDS = 60
+_FULL_SYNC_ENV_VAR = "PLANFILE_SYNC_FULL"
+
+
+def _supports_since_filter(backend) -> bool:
+    """Return True when the backend explicitly declares an optional ``since`` parameter."""
+    # Check both instance and class methods because bind_backend_deadline wraps
+    # instance ``list_tickets`` without preserving inspect.signature metadata.
+    candidates: list[Any] = []
+    if callable(getattr(backend, "_list_tickets", None)):
+        candidates.extend((getattr(backend, "_list_tickets", None), getattr(type(backend), "_list_tickets", None)))
+    else:
+        candidates.extend((getattr(backend, "list_tickets", None), getattr(type(backend), "list_tickets", None)))
+    for target in candidates:
+        if not callable(target):
+            continue
+        try:
+            sig = inspect.signature(target)
+        except (TypeError, ValueError):
+            continue
+        if "since" in sig.parameters:
+            return True
+    return False
+
+
+def _resolve_incremental_since(
+    sync_state,
+    integration_name: str,
+    *,
+    selected_remote_ids: set[str] | None,
+    remote_labels: list[str] | None,
+    requested_sprints: list[str],
+) -> datetime | None:
+    """Resolve an incremental ``since`` watermark for unscoped GitHub inbound syncs."""
+    if (
+        integration_name != "github"
+        or selected_remote_ids is not None
+        or remote_labels
+        or requested_sprints
+    ):
+        return None
+    if os.environ.get(_FULL_SYNC_ENV_VAR, "").strip().lower() in {"1", "true", "yes"}:
+        return None
+    try:
+        raw_state = sync_state.get_last_sync()
+    except Exception:
+        return None
+    if not isinstance(raw_state, dict):
+        return None
+    raw_cursor = raw_state.get("inbound_cursor_at")
+    if not isinstance(raw_cursor, str) or not raw_cursor.strip():
+        return None
+    try:
+        cursor = datetime.fromisoformat(raw_cursor.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if cursor.tzinfo is None:
+        cursor = cursor.replace(tzinfo=timezone.utc)
+    else:
+        cursor = cursor.astimezone(timezone.utc)
+    return cursor - timedelta(seconds=_INCREMENTAL_SINCE_OVERLAP_SECONDS)
+
+
+def _freeze_observed_updated_at(sections: dict[str, dict], store: Any) -> dict[str, str | None]:
+    """Capture evidence-projected updated_at revisions before provider network calls."""
+    projector = getattr(store, "_project_ticket_evidence", None)
+    observed: dict[str, str | None] = {}
+    for section in sections.values():
+        if not isinstance(section, dict):
+            continue
+        for tid, raw_ticket in (section.get("tickets") or {}).items():
+            if not isinstance(raw_ticket, dict):
+                continue
+            projected = raw_ticket
+            if callable(projector):
+                try:
+                    projected = projector(raw_ticket)
+                except ValueError:
+                    projected = raw_ticket
+            if isinstance(projected, dict):
+                observed[str(tid)] = projected.get("updated_at")
+            else:
+                observed[str(tid)] = raw_ticket.get("updated_at")
+    return observed
+
+
 def _fetch_external_tickets(
     backend,
     integration_name: str,
     labels: list[str] | None = None,
     selected_remote_ids: set[str] | None = None,
+    since: datetime | None = None,
 ) -> list | None:
     """Fetch tickets; preserve provider failures for caller retry and cooldown."""
     try:
-        kwargs = {"labels": labels} if labels else {}
+        kwargs: dict[str, Any] = {"labels": labels} if labels else {}
         selected_reader = getattr(backend, "list_selected_tickets", None)
         if (integration_name == "github" and selected_remote_ids is not None
                 and callable(selected_reader)):
             external_tickets = selected_reader(selected_remote_ids, **kwargs)
         else:
+            if since is not None and _supports_since_filter(backend):
+                kwargs["since"] = since
             external_tickets = backend.list_tickets(**kwargs)
         if external_tickets is None:
             console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
@@ -548,6 +640,7 @@ def _process_external_ticket(
     import_target: dict | None = None,
     selected_remote_ids: set[str] | None = None,
     store=None,
+    observed_updated_at: dict[str, str | None] | None = None,
 ) -> tuple[int, int]:
     """Process a single external ticket. Returns updated (imported_count, updated_count)."""
     ext_data = _extract_ticket_data(ext_ticket)
@@ -593,7 +686,7 @@ def _process_external_ticket(
                 return imported_count, updated_count
             result = _update_local_ticket(
                 target, {}, planfile_id, ext_data, updated_count, integration_name, publish_to,
-                store=store,
+                store=store, observed_updated_at=observed_updated_at,
             )
             if not dry_run:
                 # Backfill the durable reverse mapping when an old ticket only
@@ -611,6 +704,7 @@ def _process_external_ticket(
                 store=store,
                 target_sprint=next((name for name, section in sections.items()
                                     if section is (import_target or backlog)), "backlog"),
+                observed_updated_at=observed_updated_at,
             ), updated_count
     except Exception as e:
         console.print(f"  ✗ Failed to import {ext_data['id']}: {e}")
@@ -684,12 +778,16 @@ def sync_from_external(
         # the backlog are the same objects that are persisted below.
         sections["current"] = sprint
         sections["backlog"] = backlog
+        observed_updated_at: dict[str, str | None] | None = None
         if sdk_store is not None:
             # The compatibility loader may return mutable cached dictionaries.
             # Freeze the observed records before fetching from the remote backend.
             sections = deepcopy(sections)
             sprint = sections["current"]
             backlog = sections["backlog"]
+            observed_updated_at = (
+                _freeze_observed_updated_at(sections, sdk_store) if not dry_run else None
+            )
         requested_sprints = list(
             dict.fromkeys(str(value).strip() for value in (sprint_ids or []) if str(value).strip())
         )
@@ -722,8 +820,21 @@ def sync_from_external(
         if deadline is not None:
             deadline.set_stage("provider_fetch")
             deadline.check("provider_fetch")
+        is_unscoped = (
+            normalized_ticket_ids is None
+            and not remote_labels
+            and not requested_sprints
+        )
+        sync_started_at = datetime.now(timezone.utc)
+        since = _resolve_incremental_since(
+            sync_state,
+            integration_name,
+            selected_remote_ids=selected_remote_ids,
+            remote_labels=remote_labels,
+            requested_sprints=requested_sprints,
+        )
         external_tickets = _fetch_external_tickets(
-            backend, integration_name, remote_labels, selected_remote_ids
+            backend, integration_name, remote_labels, selected_remote_ids, since=since
         )
         if deadline is not None:
             pending_after_fetch = (
@@ -736,6 +847,8 @@ def sync_from_external(
             return
         if not external_tickets:
             console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
+            if not dry_run and is_unscoped:
+                sync_state.save_sync({}, inbound_cursor_at=sync_started_at.isoformat())
             return
 
         work_tickets = [
@@ -786,6 +899,7 @@ def sync_from_external(
                 import_target,
                 selected_remote_ids,
                 store=sdk_store,
+                observed_updated_at=observed_updated_at,
             )
             completed_tickets.append(_ticket_trace_id(ext_ticket))
 
@@ -800,6 +914,8 @@ def sync_from_external(
                 updated_count,
                 sections=sections,
             )
+        if not dry_run and is_unscoped:
+            sync_state.save_sync({}, inbound_cursor_at=sync_started_at.isoformat())
 
 
 _INCIDENT_NAME_PATTERN = re.compile(
@@ -911,6 +1027,7 @@ def _update_local_ticket(
     integration_name: str,
     publish_to: list[str] | None,
     store=None,
+    observed_updated_at: dict[str, str | None] | None = None,
 ) -> int:
     """Update an existing local ticket from external data."""
     _reject_github_pull_request_url(integration_name, ext_data.get("url"))
@@ -961,13 +1078,20 @@ def _update_local_ticket(
                 and (execution.get("state") in {"running", "in_progress"}
                      or execution.get("assigned_to") or execution.get("lease_expires_at"))):
             raise ValueError("inbound_terminal_transition_requires_execution_reconciliation")
+        expected_updated_at = (
+            observed_updated_at.get(planfile_id, ticket.get("updated_at"))
+            if observed_updated_at is not None
+            else ticket.get("updated_at")
+        )
         updated = store.update_ticket(
-            planfile_id, expected_updated_at=ticket.get("updated_at"),
+            planfile_id, expected_updated_at=expected_updated_at,
             expected_snapshot=deepcopy(ticket), actor=f"sync:{integration_name}",
             reason=f"Inbound {integration_name} ticket {ext_data['id']}", **changes)
         if updated is None:
             raise ValueError(f"inbound_ticket_disappeared: {planfile_id}")
         ticket.update(updated.model_dump(mode="json"))
+        if observed_updated_at is not None:
+            observed_updated_at[planfile_id] = updated.updated_at
     else:
         ticket.update(update_fields)
         ticket.setdefault("sprint", default_sprint)
@@ -985,6 +1109,7 @@ def _import_new_ticket(
     publish_to: list[str] | None = None,
     store=None,
     target_sprint: str = "backlog",
+    observed_updated_at: dict[str, str | None] | None = None,
 ) -> int:
     """Import a new ticket from external system."""
     _reject_github_pull_request_url(integration_name, ext_data.get("url"))
@@ -994,7 +1119,8 @@ def _import_new_ticket(
     if isinstance(existing, dict):
         # Duplicate identity is an update, never authority to reschedule it.
         _update_local_ticket(backlog, {}, new_id, ext_data, 0,
-                             integration_name, publish_to, store=store)
+                             integration_name, publish_to, store=store,
+                             observed_updated_at=observed_updated_at)
         sync_state.save_sync({new_id: ext_data["id"]})
         return imported_count
 
