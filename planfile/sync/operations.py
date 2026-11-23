@@ -633,6 +633,8 @@ def _is_isolatable_ticket_conflict(exc: Exception) -> bool:
                 "stale_ticket_snapshot",
                 "inbound_ticket_disappeared",
                 "ticket_already_exists",
+                "inbound_priority_invalid",
+                "inbound_priority_conflict",
             )
         )
     return False

@@ -13,7 +13,14 @@ from planfile.core.models import Ticket
 
 _LABEL = re.compile(r"^priority\s*(?:::|:|-)\s*(.*)$", re.IGNORECASE)
 _CANONICAL = {"critical", "high", "normal", "low"}
-_ALIASES = {"medium": "normal", "med": "normal"}
+_ALIASES = {
+    "medium": "normal",
+    "med": "normal",
+    "p0": "critical",
+    "p1": "high",
+    "p2": "normal",
+    "p3": "low",
+}
 
 
 def normalize_inbound_priority(data: dict[str, Any]) -> str:
@@ -45,7 +52,8 @@ def normalize_inbound_priority(data: dict[str, Any]) -> str:
         if normalized not in _CANONICAL:
             raise ValueError(
                 f"inbound_priority_invalid: ticket {identity}: {source}={value!r}; "
-                "expected critical, high, normal or low (medium/med alias normal)"
+                "expected critical, high, normal or low "
+                "(medium/med alias normal; p0-p3 alias critical/high/normal/low)"
             )
         values.add(normalized)
     if len(values) > 1:
