@@ -664,6 +664,14 @@ def _process_external_ticket(
     )
     if local_ticket is None:
         planfile_id = None
+        generated_id = f"{integration_name.upper()}-{ext_data['id']}"
+        for sec_name, sec in sections.items():
+            sec_tickets = sec.get("tickets") if isinstance(sec, dict) else None
+            if isinstance(sec_tickets, dict) and isinstance(sec_tickets.get(generated_id), dict):
+                sprint_name = sec_name
+                planfile_id = generated_id
+                local_ticket = sec_tickets[generated_id]
+                break
     if ticket_ids:
         matches_local = bool(planfile_id and planfile_id in ticket_ids)
         matches_remote = bool(
@@ -857,6 +865,7 @@ def sync_from_external(
             if not (exclude_incident_noise and is_incident_noise(ext_ticket))
         ]
         completed_tickets: list[str] = []
+        deferred_reconciliation_error: ValueError | None = None
         for idx, ext_ticket in enumerate(work_tickets):
             if deadline is not None:
                 deadline.set_stage("local_projection")
@@ -884,23 +893,30 @@ def sync_from_external(
                             sections=sections,
                         )
                     raise
-            imported_count, updated_count = _process_external_ticket(
-                ext_ticket,
-                sprint,
-                backlog,
-                sync_state,
-                integration_name,
-                dry_run,
-                imported_count,
-                updated_count,
-                publish_to,
-                lookup_sections,
-                normalized_ticket_ids,
-                import_target,
-                selected_remote_ids,
-                store=sdk_store,
-                observed_updated_at=observed_updated_at,
-            )
+            try:
+                imported_count, updated_count = _process_external_ticket(
+                    ext_ticket,
+                    sprint,
+                    backlog,
+                    sync_state,
+                    integration_name,
+                    dry_run,
+                    imported_count,
+                    updated_count,
+                    publish_to,
+                    lookup_sections,
+                    normalized_ticket_ids,
+                    import_target,
+                    selected_remote_ids,
+                    store=sdk_store,
+                    observed_updated_at=observed_updated_at,
+                )
+            except ValueError as exc:
+                if str(exc) == "inbound_terminal_transition_requires_execution_reconciliation":
+                    if deferred_reconciliation_error is None:
+                        deferred_reconciliation_error = exc
+                    continue
+                raise
             completed_tickets.append(_ticket_trace_id(ext_ticket))
 
         if not dry_run and (imported_count > 0 or updated_count > 0) and sdk_store is None:
@@ -914,6 +930,8 @@ def sync_from_external(
                 updated_count,
                 sections=sections,
             )
+        if deferred_reconciliation_error is not None:
+            raise deferred_reconciliation_error
         if not dry_run and is_unscoped:
             sync_state.save_sync({}, inbound_cursor_at=sync_started_at.isoformat())
 
