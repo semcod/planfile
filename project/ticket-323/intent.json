@@ -1,0 +1,74 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-323",
+  "summary": "Handle duplicate ticket_already_exists and terminal reconciliation errors per-ticket in inbound sync",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-323/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/operations.py",
+    "tests/test_sync_inbound_resilience.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "3fcc147d8b45f5e4777697ee145d5479c4594680",
+    "outcome": "Prevent single-ticket pre-existing ID or active-lease reconciliation errors from aborting entire repository inbound GitHub sync runs.",
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "Relaxing expected_absent=True protection against concurrent writers in PlanfileStore."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Resolve pre-existing generated IDs across loaded sections in _process_external_ticket and handle inbound_terminal_transition_requires_execution_reconciliation per-ticket without aborting the batch.",
+      "components": [
+        {
+          "name": "inbound sync per-ticket resilience",
+          "paths": [
+            "planfile/sync/operations.py",
+            "tests/test_sync_inbound_resilience.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit touching planfile/sync/operations.py and tests/test_sync_inbound_resilience.py."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest -q tests/test_sync_inbound_resilience.py tests/test_sync_inbound_sdk_revision.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Both new resilience tests and existing concurrency protection tests pass; governance-check passes."
+      }
+    ]
+  }
+}
