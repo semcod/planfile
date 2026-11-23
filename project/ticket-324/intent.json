@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-324",
+  "summary": "Align inbound ticket lookup sprint order with store update lookup to prevent stale_ticket_snapshot",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-324/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/operations.py",
+    "tests/test_sync_inbound_resilience.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "af15345a6d1f6e15578f82993170d3e7e1140c92",
+    "outcome": "Order inbound ticket sprint lookup via store._ticket_lookup_sprints so duplicate archived sprints never mismatch store.update_ticket expected_snapshot.",
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "Relaxing store.update_ticket expected_snapshot concurrency checks."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add _ordered_sprints_for_ticket in planfile/sync/operations.py and use it in _find_local_ticket and _process_external_ticket.",
+      "components": [
+        {
+          "name": "planfile inbound sync lookup",
+          "paths": [
+            "planfile/sync/operations.py",
+            "tests/test_sync_inbound_resilience.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit touching planfile/sync/operations.py and tests/test_sync_inbound_resilience.py."
+    },
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "pytest -q tests/test_sync_inbound_resilience.py tests/test_sync_inbound_sdk_revision.py",
+          "ruff check planfile/sync/operations.py tests/test_sync_inbound_resilience.py",
+          "./project/governance-check.sh",
+          "wellman check"
+        ],
+        "evidence": "All 87 tests pass with 0 ruff errors and GOV-PASS."
+      }
+    ]
+  }
+}
