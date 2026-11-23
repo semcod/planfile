@@ -84,7 +84,8 @@ def test_github_list_tickets_avoids_lazy_issue_properties_and_forwards_since(tmp
             return FakeRepo()
 
     monkeypatch.setattr("planfile.sync.github.Github", FakeGithub)
-    backend = GitHubBackend("org/repo", token="test-token")
+    monkeypatch.setenv("GITHUB_TOKEN", "fixture-placeholder")
+    backend = GitHubBackend("org/repo")
     since_dt = datetime(2026, 11, 23, 12, 0, 0, tzinfo=timezone.utc)
     tickets = backend.list_tickets(since=since_dt)
 
