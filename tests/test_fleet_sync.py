@@ -167,3 +167,46 @@ def test_reject_github_pull_request_urls_at_write_time():
             object(),
             0,
         )
+
+
+def test_sync_fleet_prioritizes_unsynced_and_stalest_repositories_under_max_projects(tmp_path):
+    repos = {
+        "a-fresh": "2026-11-23T12:00:00+00:00",
+        "b-stale": "2026-11-10T00:00:00+00:00",
+        "c-never": None,
+    }
+    for name, synced_at in repos.items():
+        pf = tmp_path / "org" / name / ".planfile"
+        pf.mkdir(parents=True)
+        (pf / "github.planfile.yaml").write_text(f"integrations:\n  github:\n    repo: org/{name}\n")
+        if synced_at is not None:
+            (pf / "sync").mkdir()
+            (pf / "sync/github.state.yaml").write_text(f"synced_at: '{synced_at}'\n")
+
+    called = []
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=lambda b, d, **kw: called.append(d.split("/")[-1])):
+        stats = sync_fleet(tmp_path, max_depth=2, max_projects=2, dry_run=True)
+
+    assert stats["scanned"] == 2
+    assert called == ["c-never", "b-stale"]
+
+
+def test_sync_fleet_treats_corrupt_state_file_as_unsynced(tmp_path):
+    fresh = tmp_path / "org" / "a-fresh" / ".planfile"
+    fresh.mkdir(parents=True)
+    (fresh / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/a-fresh\n")
+    (fresh / "sync").mkdir()
+    (fresh / "sync/github.state.yaml").write_text("synced_at: '2026-11-23T12:00:00Z'\n")
+
+    corrupt = tmp_path / "org" / "b-corrupt" / ".planfile"
+    corrupt.mkdir(parents=True)
+    (corrupt / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/b-corrupt\n")
+    (corrupt / "sync").mkdir()
+    (corrupt / "sync/github.state.yaml").write_text("::::\n\t[unterminated\n")
+
+    called = []
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=lambda b, d, **kw: called.append(d.split("/")[-1])):
+        stats = sync_fleet(tmp_path, max_depth=2, max_projects=1, dry_run=True)
+
+    assert stats["scanned"] == 1
+    assert called == ["b-corrupt"]

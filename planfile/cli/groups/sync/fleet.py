@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import math
 import shutil
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import typer
+import yaml
 from rich.table import Table
 
 from planfile.cli.core import console, print_error, print_success
@@ -176,6 +179,31 @@ def discover_fleet_repositories(
     ]
 
 
+def _last_synced_timestamp(repo_path: Path) -> float:
+    """Return last inbound GitHub sync epoch seconds, or 0.0 when unsynced/unreadable."""
+    state_file = repo_path / ".planfile" / "sync" / "github.state.yaml"
+    try:
+        if not state_file.is_file() or state_file.is_symlink():
+            return 0.0
+        raw_yaml = state_file.read_text(encoding="utf-8")[:65536]
+        data = yaml.safe_load(raw_yaml)
+    except (OSError, yaml.YAMLError, UnicodeDecodeError):
+        return 0.0
+    if not isinstance(data, dict):
+        return 0.0
+    raw = data.get("synced_at")
+    if not isinstance(raw, str) or not raw.strip():
+        return 0.0
+    try:
+        dt = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        ts = dt.timestamp()
+    except (ValueError, TypeError, OverflowError):
+        return 0.0
+    return ts if math.isfinite(ts) else 0.0
+
+
 def sync_fleet(
     root: Path,
     max_depth: int = 2,
@@ -187,6 +215,7 @@ def sync_fleet(
 ) -> dict[str, Any]:
     """Execute inbound sync across all discovered fleet repositories."""
     discovered = discover_fleet_repositories(root, max_depth=max_depth)
+    discovered.sort(key=lambda item: (_last_synced_timestamp(item[0]), str(item[0])))
     if max_projects:
         discovered = discovered[:max_projects]
 
