@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
 import yaml
+from github.Issue import Issue
 
 from planfile.core.store import PlanfileStore, Ticket
 from planfile.sync.github import GitHubBackend
@@ -13,10 +14,10 @@ from planfile.sync.operations import sync_from_external
 
 
 class _RawIssue:
-    """Fake PyGithub Issue whose .pull_request/.state_reason properties fail on lazy access."""
+    """Fake PyGithub Issue whose lazy properties and .raw_data fail on access."""
 
     def __init__(self, raw_data: dict):
-        self.raw_data = dict(raw_data)
+        self._rawData = dict(raw_data)
         self.number = raw_data["number"]
         self.title = raw_data["title"]
         self.body = raw_data.get("body", "")
@@ -28,11 +29,15 @@ class _RawIssue:
         self.labels = [SimpleNamespace(name=lbl) for lbl in (raw_data.get("labels") or [])]
 
     @property
-    def pull_request(self):  # pragma: no cover - must never be evaluated when raw_data is present
+    def raw_data(self):  # pragma: no cover - CompletableGithubObject.raw_data triggers HTTP completion
+        raise AssertionError("CompletableGithubObject.raw_data must not be accessed during list")
+
+    @property
+    def pull_request(self):  # pragma: no cover - must never be evaluated when _rawData is present
         raise AssertionError("Lazy Issue.pull_request HTTP completion must not run during list")
 
     @property
-    def state_reason(self):  # pragma: no cover - must never be evaluated when raw_data is present
+    def state_reason(self):  # pragma: no cover - must never be evaluated when _rawData is present
         raise AssertionError("Lazy Issue.state_reason HTTP completion must not run during list")
 
 
@@ -93,6 +98,79 @@ def test_github_list_tickets_avoids_lazy_issue_properties_and_forwards_since(tmp
     assert seen_get_issues_kwargs == [{"state": "all", "since": since_dt}]
     assert len(tickets) == 1
     assert tickets[0].id == "10"
+    assert tickets[0].metadata["state_reason"] == "completed"
+
+
+def test_github_list_tickets_real_uncompleted_pygithub_issue_makes_zero_extra_http_calls(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setenv("SUBACTOR_PROCACHE_PATH", str(tmp_path / "provider.sqlite3"))
+
+    class BombRequester:
+        is_not_lazy = False
+        auth = None
+        base_url = "https://api.github.com"
+
+        def requestJsonAndCheck(self, *args, **kwargs):  # pragma: no cover
+            raise AssertionError(f"N+1 HTTP completion forbidden during list: {args} {kwargs}")
+
+    bomb = BombRequester()
+    real_issue = Issue(
+        bomb,
+        {},
+        {
+            "number": 42,
+            "title": "Real issue",
+            "body": "Body text",
+            "state": "closed",
+            "state_reason": "completed",
+            "html_url": "https://github.com/org/repo/issues/42",
+            "url": "https://api.github.com/repos/org/repo/issues/42",
+            "labels": [],
+            "assignee": None,
+            "updated_at": "2026-11-23T12:00:00Z",
+        },
+        completed=False,
+    )
+    real_pr = Issue(
+        bomb,
+        {},
+        {
+            "number": 43,
+            "title": "Pull request item",
+            "body": "PR body",
+            "state": "open",
+            "pull_request": {"url": "https://api.github.com/repos/org/repo/pulls/43"},
+            "html_url": "https://github.com/org/repo/pull/43",
+            "url": "https://api.github.com/repos/org/repo/issues/43",
+            "labels": [],
+            "assignee": None,
+            "updated_at": "2026-11-23T12:00:00Z",
+        },
+        completed=False,
+    )
+
+    class FakeRepo:
+        full_name = "org/repo"
+
+        def get_issues(self, **kwargs):
+            return [real_issue, real_pr]
+
+    class FakeGithub:
+        def __init__(self, auth_arg, **kwargs):
+            self.requester = BombRequester()
+            self._Github__requester = self.requester
+
+        def get_repo(self, repo):
+            return FakeRepo()
+
+    monkeypatch.setattr("planfile.sync.github.Github", FakeGithub)
+    monkeypatch.setenv("GITHUB_TOKEN", "fixture-placeholder")
+    backend = GitHubBackend("org/repo")
+    tickets = backend.list_tickets()
+
+    assert len(tickets) == 1
+    assert tickets[0].id == "42"
     assert tickets[0].metadata["state_reason"] == "completed"
 
 
