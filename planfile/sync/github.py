@@ -25,6 +25,7 @@ try:
     from github.Repository import Repository
 except ImportError:
     Github = None
+    GithubObject = None
     Issue = None
     Repository = None  # pip install PyGithub
 
@@ -1086,19 +1087,30 @@ class GitHubBackend(BasePMBackend):
         return self._issue_to_ticket_status(issue)
 
     @staticmethod
-    def _is_pull_request_issue(issue: Any) -> bool:
-        """Detect pull requests without triggering PyGithub lazy _completeIfNotSet fetches."""
-        raw_data = getattr(issue, "raw_data", None)
+    def _issue_raw_data(issue: Any) -> dict[str, Any] | None:
+        """Return already-fetched raw payload without triggering PyGithub _completeIfNeeded()."""
+        raw_data = getattr(issue, "_rawData", None)
         if isinstance(raw_data, dict):
+            return raw_data
+        if GithubObject is not None and isinstance(issue, GithubObject):
+            return None
+        fallback = getattr(issue, "raw_data", None)
+        return fallback if isinstance(fallback, dict) else None
+
+    @classmethod
+    def _is_pull_request_issue(cls, issue: Any) -> bool:
+        """Detect pull requests without triggering PyGithub lazy _completeIfNotSet fetches."""
+        raw_data = cls._issue_raw_data(issue)
+        if raw_data is not None:
             return bool(raw_data.get("pull_request"))
         return bool(getattr(issue, "pull_request", None))
 
     def _issue_to_ticket_status(self, issue: Issue) -> TicketState:
         """Convert a GitHub issue object into a TicketState."""
-        raw_data = getattr(issue, "raw_data", None)
+        raw_data = self._issue_raw_data(issue)
         state_reason = (
             raw_data.get("state_reason")
-            if isinstance(raw_data, dict)
+            if raw_data is not None
             else getattr(issue, "state_reason", None)
         )
         metadata = {"state_reason": state_reason}
