@@ -367,17 +367,39 @@ def _load_sync_sections(store, v1_source_file, v1_data) -> dict[str, dict]:
     return sections
 
 
+def _ordered_sprints_for_ticket(
+    sections: dict[str, dict], ticket_id: str, store: Any = None
+) -> list[str]:
+    """Return section sprint IDs in the exact lookup order used by store.update_ticket."""
+    lookup = getattr(store, "_ticket_lookup_sprints", None) if store is not None else None
+    if callable(lookup):
+        ordered: list[str] = []
+        seen: set[str] = set()
+        for sprint_id in lookup(ticket_id):
+            key = str(sprint_id)
+            if key in sections and key not in seen:
+                ordered.append(key)
+                seen.add(key)
+        for sprint_id in sections:
+            if sprint_id not in seen:
+                ordered.append(sprint_id)
+        return ordered
+    return list(sections.keys())
+
+
 def _find_local_ticket(
     sections: dict[str, dict],
     remote_id: str,
     sync_state,
     integration_name: str,
     ext_data: dict | None = None,
+    store: Any = None,
 ) -> tuple[str | None, str | None, dict | None]:
     """Find an existing mapping even when the state ledger predates a repair."""
     planfile_id = sync_state.get_local_id(remote_id)
     if planfile_id:
-        for sprint_id, section in sections.items():
+        for sprint_id in _ordered_sprints_for_ticket(sections, planfile_id, store):
+            section = sections[sprint_id]
             ticket = (section.get("tickets") or {}).get(planfile_id)
             if isinstance(ticket, dict):
                 return sprint_id, planfile_id, ticket
@@ -399,7 +421,8 @@ def _find_local_ticket(
                         val = val.split(":")[-1].strip()
                     candidate_keys.append(val)
         for cand in candidate_keys:
-            for sprint_id, section in sections.items():
+            for sprint_id in _ordered_sprints_for_ticket(sections, cand, store):
+                section = sections[sprint_id]
                 ticket = (section.get("tickets") or {}).get(cand)
                 if isinstance(ticket, dict):
                     return sprint_id, cand, ticket
@@ -425,7 +448,13 @@ def _find_local_ticket(
     if len(matches) > 1:
         unique_local_ids = {m[1] for m in matches}
         if len(unique_local_ids) == 1:
-            for preferred in ("current", "backlog"):
+            only_id = next(iter(unique_local_ids))
+            preferred_order = (
+                _ordered_sprints_for_ticket(sections, only_id, store)
+                if store is not None
+                else ["current", "backlog"]
+            )
+            for preferred in preferred_order:
                 for m in matches:
                     if m[0] == preferred:
                         return m
@@ -660,12 +689,13 @@ def _process_external_ticket(
                 return imported_count, updated_count
 
     sprint_name, planfile_id, local_ticket = _find_local_ticket(
-        sections, ext_data["id"], sync_state, integration_name, ext_data=ext_data
+        sections, ext_data["id"], sync_state, integration_name, ext_data=ext_data, store=store
     )
     if local_ticket is None:
         planfile_id = None
         generated_id = f"{integration_name.upper()}-{ext_data['id']}"
-        for sec_name, sec in sections.items():
+        for sec_name in _ordered_sprints_for_ticket(sections, generated_id, store):
+            sec = sections[sec_name]
             sec_tickets = sec.get("tickets") if isinstance(sec, dict) else None
             if isinstance(sec_tickets, dict) and isinstance(sec_tickets.get(generated_id), dict):
                 sprint_name = sec_name

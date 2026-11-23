@@ -108,3 +108,68 @@ def test_inbound_sync_defers_active_lease_reconciliation_until_other_tickets_syn
     t101 = store.get_ticket("GITHUB-101")
     assert t101 is not None
     assert t101.name == "Follow-up ticket"
+
+
+def test_inbound_sync_aligns_duplicate_history_sprint_with_store_lookup_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = PlanfileStore(tmp_path)
+    # Simulate a legacy ticket duplicated across two archived history sprints
+    # where the newer sprint is first in store._ticket_lookup_sprints("PLF-176")
+    # while _all_sprint_ids() lists history-2026-09-19 before history-2026-10-18.
+    older = {
+        "id": "history-2026-09-19",
+        "tickets": {
+            "PLF-176": {
+                "id": "PLF-176",
+                "name": "Older archived title",
+                "status": "done",
+                "sprint": "history-2026-09-19",
+                "description": "old snapshot",
+                "sync": {"github": {"id": "176"}},
+                "updated_at": "2026-09-19T21:25:20+00:00",
+            }
+        },
+    }
+    newer = {
+        "id": "history-2026-10-18",
+        "tickets": {
+            "PLF-176": {
+                "id": "PLF-176",
+                "name": "Newer archived title",
+                "status": "done",
+                "sprint": "history-2026-10-18",
+                "description": "newer snapshot",
+                "sync": {"github": {"id": "176"}},
+                "updated_at": "2026-10-18T20:07:04+00:00",
+            }
+        },
+    }
+    store.save_sprint("history-2026-09-19", older)
+    store.save_sprint("history-2026-10-18", newer)
+    # Simulate indexed lookup returning the newer history sprint first.
+    monkeypatch.setattr(
+        store,
+        "_ticket_lookup_sprints",
+        lambda _tid: ["current", "history-2026-10-18", "history-2026-09-19"],
+    )
+
+    backend = _StubBackend(
+        [
+            {
+                "id": "176",
+                "title": "Synced archived title",
+                "status": "closed",
+                "description": "synced body",
+                "assignee": None,
+                "labels": ["done"],
+                "url": "https://github.com/org/demo/issues/176",
+                "metadata": {"state_reason": "completed"},
+            }
+        ]
+    )
+
+    sync_from_external(backend, store, integration_name="github", dry_run=False)
+    refreshed = store.load_sprint("history-2026-10-18")
+    assert refreshed["tickets"]["PLF-176"]["name"] == "Synced archived title"
+
