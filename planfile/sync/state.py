@@ -124,7 +124,7 @@ class SyncState:
         return {
             key: state[key] for key in (
                 "schema", "backend", "repository", "repository_id",
-                "repository_aliases", "ticket_map", "synced_at",
+                "repository_aliases", "ticket_map", "inbound_cursor_at", "synced_at",
             ) if key in state
         }
 
@@ -281,7 +281,12 @@ class SyncState:
         self._validate_repository(state)
         return state
 
-    def save_sync(self, ticket_map: dict[str, str]) -> None:
+    def save_sync(
+        self,
+        ticket_map: dict[str, str],
+        *,
+        inbound_cursor_at: str | None = None,
+    ) -> None:
         """Merge mappings under a lock and replace the state atomically."""
         if not isinstance(ticket_map, dict):
             raise TypeError("ticket_map must be a mapping")
@@ -307,6 +312,8 @@ class SyncState:
                 **{str(k): str(v) for k, v in existing.items()},
                 **clean_map,
             }
+            if isinstance(inbound_cursor_at, str) and inbound_cursor_at.strip():
+                state["inbound_cursor_at"] = inbound_cursor_at.strip()
             state["synced_at"] = datetime.now(timezone.utc).isoformat()
             content = yaml.safe_dump(state, default_flow_style=False, sort_keys=False)
             _atomic_write_text(self.state_file, content)

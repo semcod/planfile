@@ -5,6 +5,7 @@ import os
 import re
 import sqlite3
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -158,7 +159,7 @@ class GitHubBackend(BasePMBackend):
         self._provider_read_cache = SQLiteResponseCache(cache_path, namespace=f"planfile-github:{repo}")
         # OutboundJournal owns durable retry/cooldown. PyGithub's default retry
         # can sleep until quota reset before the journal ever sees the failure.
-        self.github = Github(self.config["token"], retry=0)
+        self.github = Github(self.config["token"], retry=0, per_page=100)
         # Identity observations must bypass the read cache: an old name may
         # have been reused by a different repository since the cached response.
         self._identity_requester = self.github.requester
@@ -1084,9 +1085,23 @@ class GitHubBackend(BasePMBackend):
 
         return self._issue_to_ticket_status(issue)
 
+    @staticmethod
+    def _is_pull_request_issue(issue: Any) -> bool:
+        """Detect pull requests without triggering PyGithub lazy _completeIfNotSet fetches."""
+        raw_data = getattr(issue, "raw_data", None)
+        if isinstance(raw_data, dict):
+            return bool(raw_data.get("pull_request"))
+        return bool(getattr(issue, "pull_request", None))
+
     def _issue_to_ticket_status(self, issue: Issue) -> TicketState:
         """Convert a GitHub issue object into a TicketState."""
-        metadata = {"state_reason": getattr(issue, "state_reason", None)}
+        raw_data = getattr(issue, "raw_data", None)
+        state_reason = (
+            raw_data.get("state_reason")
+            if isinstance(raw_data, dict)
+            else getattr(issue, "state_reason", None)
+        )
+        metadata = {"state_reason": state_reason}
         body = getattr(issue, "body", "") or ""
         if markers := self._deduplication_markers(body):
             metadata["deduplication_key"] = markers[0].split("=", 1)[1].rsplit("-->", 1)[0].strip()
@@ -1158,6 +1173,7 @@ class GitHubBackend(BasePMBackend):
         backend_tag: str = "github",
         assignee: str | None = None,
         limit: int | None = None,
+        since: datetime | None = None,
     ) -> list[TicketState]:
         """List GitHub issues with filters."""
         state = "all" if not status else status.lower()
@@ -1165,18 +1181,25 @@ class GitHubBackend(BasePMBackend):
         self._quarantined_inbound_count = 0
 
         # Build kwargs - only include optional params if provided
-        kwargs = {"state": state}
+        kwargs: dict[str, Any] = {"state": state}
         if labels:
             kwargs["labels"] = labels
         if assignee:
             kwargs["assignee"] = assignee
+        if since is not None:
+            since_utc = (
+                since.replace(tzinfo=timezone.utc)
+                if since.tzinfo is None
+                else since.astimezone(timezone.utc)
+            )
+            kwargs["since"] = since_utc
 
         issues = self.repo.get_issues(**kwargs)
 
         tickets = []
         # GitHub listing path
         for issue in issues:
-            if getattr(issue, "pull_request", None) and not self.config.get(
+            if self._is_pull_request_issue(issue) and not self.config.get(
                 "include_pull_requests", False
             ):
                 continue

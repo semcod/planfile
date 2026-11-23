@@ -210,3 +210,23 @@ def test_sync_fleet_treats_corrupt_state_file_as_unsynced(tmp_path):
 
     assert stats["scanned"] == 1
     assert called == ["b-corrupt"]
+
+
+def test_discover_fleet_repositories_skips_git_tracked_planfile_sprints(tmp_path):
+    import subprocess
+
+    tracked = tmp_path / "org" / "tracked"
+    (tracked / ".planfile" / "sprints").mkdir(parents=True)
+    (tracked / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/tracked\n")
+    (tracked / ".planfile" / "sprints" / "current.yaml").write_text("sprint:\n  tickets: {}\n")
+    subprocess.run(["git", "init"], cwd=tracked, check=True, capture_output=True)
+    subprocess.run(["git", "add", "-f", ".planfile/sprints/current.yaml"], cwd=tracked, check=True, capture_output=True)
+
+    ignored = tmp_path / "org" / "ignored"
+    (ignored / ".planfile" / "sprints").mkdir(parents=True)
+    (ignored / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/ignored\n")
+    (ignored / ".planfile" / "sprints" / "current.yaml").write_text("sprint:\n  tickets: {}\n")
+    subprocess.run(["git", "init"], cwd=ignored, check=True, capture_output=True)
+
+    discovered = discover_fleet_repositories(tmp_path, max_depth=2)
+    assert discovered == [(ignored, "org/ignored")]
