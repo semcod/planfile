@@ -124,7 +124,8 @@ class SyncState:
         return {
             key: state[key] for key in (
                 "schema", "backend", "repository", "repository_id",
-                "repository_aliases", "ticket_map", "inbound_cursor_at", "synced_at",
+                "repository_aliases", "ticket_map", "inbound_cursor_at",
+                "quarantined_inbound_tickets", "synced_at",
             ) if key in state
         }
 
@@ -286,6 +287,7 @@ class SyncState:
         ticket_map: dict[str, str],
         *,
         inbound_cursor_at: str | None = None,
+        quarantined_inbound_tickets: list[dict[str, str]] | None = None,
     ) -> None:
         """Merge mappings under a lock and replace the state atomically."""
         if not isinstance(ticket_map, dict):
@@ -314,6 +316,20 @@ class SyncState:
             }
             if isinstance(inbound_cursor_at, str) and inbound_cursor_at.strip():
                 state["inbound_cursor_at"] = inbound_cursor_at.strip()
+            if quarantined_inbound_tickets is not None:
+                clean_quarantined = [
+                    {
+                        "local_id": str(entry.get("local_id") or ""),
+                        "remote_id": str(entry.get("remote_id") or ""),
+                        "reason": str(entry.get("reason") or "")[:200],
+                    }
+                    for entry in quarantined_inbound_tickets[:50]
+                    if isinstance(entry, dict)
+                ]
+                if clean_quarantined:
+                    state["quarantined_inbound_tickets"] = clean_quarantined
+                else:
+                    state.pop("quarantined_inbound_tickets", None)
             state["synced_at"] = datetime.now(timezone.utc).isoformat()
             content = yaml.safe_dump(state, default_flow_style=False, sort_keys=False)
             _atomic_write_text(self.state_file, content)

@@ -292,3 +292,42 @@ def test_scoped_sync_and_full_override_do_not_use_or_advance_cursor(tmp_path, mo
     assert seen_calls[4] == {"labels": None, "since": None}
     state_after_forced = yaml.safe_load(state_file.read_text(encoding="utf-8"))
     assert datetime.fromisoformat(state_after_forced["inbound_cursor_at"]) >= datetime.fromisoformat(cursor_before)
+
+
+def test_unscoped_sync_skips_redundant_save_sync_and_get_local_id_for_already_mapped(
+    tmp_path, monkeypatch
+):
+    from planfile.sync.state import SyncState
+
+    store = _make_store(tmp_path)
+    state = SyncState(store.base_dir, "github", repository="fixture/repo")
+    state.save_sync({"PLF-001": "101"})
+
+    save_calls: list[dict] = []
+    orig_save = SyncState.save_sync
+
+    def spy_save(self, ticket_map, **kwargs):
+        save_calls.append({"ticket_map": dict(ticket_map), **kwargs})
+        return orig_save(self, ticket_map, **kwargs)
+
+    def forbid_get_local_id(self, remote_id):  # pragma: no cover
+        raise AssertionError("SyncState.get_local_id should not hit disk when snapshot loaded")
+
+    monkeypatch.setattr(SyncState, "save_sync", spy_save)
+    monkeypatch.setattr(SyncState, "get_local_id", forbid_get_local_id)
+    monkeypatch.delenv("PLANFILE_SYNC_FULL", raising=False)
+
+    class MappedBackend:
+        config = {"repo": "fixture/repo"}
+
+        def list_tickets(self, labels=None, status=None, assignee=None, limit=None, since=None):
+            return [_remote_issue("101", "unchanged or updated description")]
+
+    sync_from_external(MappedBackend(), store, False, "github")
+    read_ticket = store.get_ticket("PLF-001", repair_index=False)
+    assert read_ticket is not None
+    assert read_ticket.description == "unchanged or updated description"
+    # Only the final metadata write (inbound_cursor_at) ran — zero per-ticket map rewrites.
+    assert len(save_calls) == 1
+    assert save_calls[0]["ticket_map"] == {}
+    assert "inbound_cursor_at" in save_calls[0]
