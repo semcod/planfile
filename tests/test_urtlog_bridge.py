@@ -169,3 +169,57 @@ def test_bridge_health_summary_and_api_health_without_path_leak(
     assert missing["state_dir_configured"] is True
     assert missing["urtlog_importable"] is False
     assert missing["enabled"] is False
+
+
+def test_repository_qualified_cli_tickets_share_a_store_without_aliasing(tmp_path, monkeypatch):
+    pytest.importorskip("urtlog")
+    import typer
+    from typer.testing import CliRunner
+
+    from planfile import Planfile
+    from planfile.cli.groups.ticket import register_ticket_commands
+
+    app = typer.Typer()
+    register_ticket_commands(app)
+    runner = CliRunner()
+    monkeypatch.setenv("URTLOG_STATE_DIR", str(tmp_path / "journal"))
+
+    def invoke(*args):
+        result = runner.invoke(app, ["ticket", *args])
+        assert result.exit_code == 0, (result.output, result.exception)
+
+    for name in ("first", "second"):
+        root = tmp_path / name
+        root.mkdir()
+        monkeypatch.chdir(root)
+        Planfile(str(root))
+        (root / ".planfile/github.planfile.yaml").write_text(
+            f"integrations:\n  github:\n    repo: team/{name}\n"
+        )
+        invoke("create", name, "--no-sync")
+        if name == "first":
+            invoke("create", "prerequisite", "--no-sync")
+            invoke("depend", "PLF-001", "--after", "PLF-002")
+            invoke("block", "PLF-001", "--reason", "missing input")
+        else:
+            invoke("claim", "PLF-001", "--assigned-to", "test-worker")
+            invoke("complete", "PLF-001")
+
+    first = "urn:planfile:ticket:team:first:PLF-001"
+    second = "urn:planfile:ticket:team:second:PLF-001"
+    assert load_planfile_queue_brief()["blocked"] == [first]
+    assert load_planfile_queue_brief()["done"] == [second]
+    brief = load_planfile_queue_brief(repository="Team/Second")
+    assert brief["done"] == ["PLF-001"] and brief["event_count"] == 3
+    item = fetch_decision_slice(ticket_id="PLF-001", repository="team/first")["items"][0]
+    assert item["addr"] == first and item["status"] == "blocked"
+    assert fetch_decision_slice(urn=second, repository="team/first") is None
+    assert not fetch_decision_slice(ticket_id="PLF-001")["items"]
+
+    unbound = tmp_path / "unbound"
+    unbound.mkdir()
+    ticket = SimpleNamespace(id="PLF-001", name="unbound")
+    assert maybe_emit_ticket_created(ticket, project_dir=unbound) == {
+        "emitted": False, "reason": "repository_unresolved"
+    }
+    assert not fetch_decision_slice(ticket_id="PLF-001")["items"]
