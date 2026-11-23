@@ -222,6 +222,9 @@ def _last_synced_timestamp(repo_path: Path) -> float:
     return ts if math.isfinite(ts) else 0.0
 
 
+VALID_FLEET_DIRECTIONS = frozenset({"from", "to", "both"})
+
+
 def sync_fleet(
     root: Path,
     max_depth: int = 2,
@@ -230,8 +233,14 @@ def sync_fleet(
     managed_only: bool = False,
     max_projects: int | None = None,
     timeout_seconds: float | None = 45.0,
+    direction: str = "from",
 ) -> dict[str, Any]:
-    """Execute inbound sync across all discovered fleet repositories."""
+    """Execute GitHub sync across all discovered fleet repositories."""
+    norm_direction = str(direction or "from").strip().lower()
+    if norm_direction not in VALID_FLEET_DIRECTIONS:
+        raise ValueError(
+            f"Invalid fleet sync direction {direction!r}; expected one of: from, to, both"
+        )
     discovered = discover_fleet_repositories(root, max_depth=max_depth)
     discovered.sort(key=lambda item: (_last_synced_timestamp(item[0]), str(item[0])))
     if max_projects:
@@ -241,6 +250,7 @@ def sync_fleet(
         "scanned": len(discovered),
         "synced": 0,
         "failed": 0,
+        "direction": norm_direction,
         "results": [],
     }
 
@@ -248,9 +258,14 @@ def sync_fleet(
         console.print(f"[dim]ℹ️ No GitHub-integrated repositories found under {root}[/dim]")
         return stats
 
+    dir_labels = {
+        "from": "from (inbound GitHub ➔ Planfile)",
+        "to": "to (outbound Planfile ➔ GitHub)",
+        "both": "both (bidirectional GitHub ⇄ Planfile)",
+    }
     console.print(f"\n[bold blue]🚀 Starting Fleet Sync across {len(discovered)} repositories...[/bold blue]")
     console.print(f"[dim]   Root: {root} (depth: {max_depth})[/dim]")
-    console.print("[dim]   Direction: from (inbound GitHub ➔ Planfile)[/dim]")
+    console.print(f"[dim]   Direction: {dir_labels[norm_direction]}[/dim]")
     console.print(f"[dim]   Filter incident noise: {exclude_incident_noise}[/dim]")
     console.print(f"[dim]   Managed labels only: {managed_only}[/dim]\n")
 
@@ -260,7 +275,7 @@ def sync_fleet(
         try:
             sync_kwargs: dict[str, Any] = {
                 "dry_run": dry_run,
-                "direction": "from",
+                "direction": norm_direction,
                 "show_header": False,
                 "managed_only": managed_only,
                 "exclude_incident_noise": exclude_incident_noise,
@@ -310,7 +325,12 @@ def fleet_cmd(
         45.0,
         "--timeout",
         min=1.0,
-        help="Per-repository monotonic deadline in seconds for inbound GitHub sync",
+        help="Per-repository monotonic deadline in seconds for GitHub sync",
+    ),
+    direction: str = typer.Option(
+        "from",
+        "--direction",
+        help="Sync direction: from (inbound), to (outbound), or both (bidirectional)",
     ),
     install_timer: bool = typer.Option(
         False,
@@ -359,6 +379,10 @@ def fleet_cmd(
         print_error(f"Root path does not exist: {root_path}")
         raise typer.Exit(1)
 
+    if str(direction).strip().lower() not in VALID_FLEET_DIRECTIONS:
+        print_error(f"Invalid --direction value: {direction!r} (expected: from, to, both)")
+        raise typer.Exit(2)
+
     stats = sync_fleet(
         root_path,
         max_depth=depth,
@@ -367,6 +391,7 @@ def fleet_cmd(
         managed_only=managed_only,
         max_projects=max_projects,
         timeout_seconds=timeout,
+        direction=direction,
     )
 
     table = Table(title="Fleet Sync Summary", show_header=True, header_style="bold magenta")

@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-322",
+  "summary": "Add --direction (from/to/both) support to planfile sync fleet",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-322/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/fleet.py",
+    "tests/test_sync_fleet.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "3fcc147d8b45f5e4777697ee145d5479c4594680",
+    "outcome": "Allow planfile sync fleet to run inbound (from), outbound (to), or bidirectional (both) GitHub synchronization.",
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "Changing default direction away from 'from' for existing callers."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add validated direction parameter ('from'|'to'|'both') to sync_fleet and --direction option to fleet_cmd in planfile/cli/groups/sync/fleet.py.",
+      "components": [
+        {
+          "name": "planfile fleet sync direction",
+          "paths": [
+            "planfile/cli/groups/sync/fleet.py",
+            "tests/test_sync_fleet.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add optional direction='from' to sync_fleet and --direction CLI option to fleet_cmd"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit touching planfile/cli/groups/sync/fleet.py and tests/test_sync_fleet.py."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest -q tests/test_sync_fleet.py tests/test_fleet_sync.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Unit tests verify direction forwarding and validation; governance-check passes."
+      }
+    ]
+  }
+}
