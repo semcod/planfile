@@ -561,8 +561,9 @@ def _freeze_observed_updated_at(sections: dict[str, dict], store: Any) -> dict[s
             continue
         projected = raw_ticket
         if callable(projector):
+            raw_with_id = raw_ticket if raw_ticket.get("id") else {**raw_ticket, "id": tid}
             try:
-                projected = projector(raw_ticket)
+                projected = projector(raw_with_id)
             except ValueError:
                 projected = raw_ticket
         if isinstance(projected, dict):
@@ -635,6 +636,8 @@ def _is_isolatable_ticket_conflict(exc: Exception) -> bool:
                 "ticket_already_exists",
                 "inbound_priority_invalid",
                 "inbound_priority_conflict",
+                "ambiguous sync mapping",
+                "evidence_ticket_id_invalid",
             )
         )
     return False
@@ -779,15 +782,32 @@ def _process_external_ticket(
             if not candidate_ids.intersection(selected_remote_ids):
                 return imported_count, updated_count
 
-    sprint_name, planfile_id, local_ticket = _find_local_ticket(
-        sections,
-        ext_data["id"],
-        sync_state,
-        integration_name,
-        ext_data=ext_data,
-        store=store,
-        known_ticket_map=known_ticket_map,
-    )
+    try:
+        sprint_name, planfile_id, local_ticket = _find_local_ticket(
+            sections,
+            ext_data["id"],
+            sync_state,
+            integration_name,
+            ext_data=ext_data,
+            store=store,
+            known_ticket_map=known_ticket_map,
+        )
+    except Exception as e:
+        if store is not None and isolate_ticket_conflicts and _is_isolatable_ticket_conflict(e):
+            console.print(
+                f"  [yellow]⚠️ Quarantined {ext_data['id']} "
+                f"(remote #{ext_data['id']}): {e}[/yellow]"
+            )
+            if quarantined_tickets is not None:
+                quarantined_tickets.append(
+                    {
+                        "local_id": "",
+                        "remote_id": str(ext_data["id"]),
+                        "reason": str(e)[:200],
+                    }
+                )
+            return imported_count, updated_count
+        raise
     if local_ticket is None:
         planfile_id = None
         generated_id = f"{integration_name.upper()}-{ext_data['id']}"
@@ -1254,6 +1274,9 @@ def _update_local_ticket(
     if store is not None:
         changes = {key: value for key, value in update_fields.items()
                    if key != "id" and ticket.get(key) != value}
+        has_inner_id = bool(str(ticket.get("id") or "").strip())
+        if not has_inner_id:
+            changes["id"] = planfile_id
         if not changes:
             return updated_count
         execution = ticket.get("execution") or {}
@@ -1262,9 +1285,13 @@ def _update_local_ticket(
                      or execution.get("assigned_to") or execution.get("lease_expires_at"))):
             raise ValueError("inbound_terminal_transition_requires_execution_reconciliation")
         expected_updated_at = (
-            observed_updated_at.get(planfile_id, ticket.get("updated_at"))
-            if observed_updated_at is not None
-            else ticket.get("updated_at")
+            (
+                observed_updated_at.get(planfile_id, ticket.get("updated_at"))
+                if observed_updated_at is not None
+                else ticket.get("updated_at")
+            )
+            if has_inner_id
+            else None
         )
         updated = store.update_ticket(
             planfile_id, expected_updated_at=expected_updated_at,
