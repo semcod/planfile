@@ -548,3 +548,44 @@ def test_isolate_ticket_conflicts_quarantines_lease_and_preserves_across_empty_i
     st2 = yaml.safe_load(state_file.read_text(encoding='utf-8'))
     assert len(st2.get('quarantined_inbound_tickets') or []) == 1
     assert st2['quarantined_inbound_tickets'][0]['local_id'] == 'PLF-001'
+
+
+def test_isolate_ticket_conflicts_quarantines_invalid_priority_while_default_fails_closed(store):
+    import yaml
+
+    issues = [
+        SimpleNamespace(
+            id='901', name='bad priority', description='invalid label', status='open',
+            assignee=None, labels=['priority:urgent'], metadata={}, key=None,
+            url='https://github.com/fixture/repo/issues/901',
+        ),
+        SimpleNamespace(
+            id='902', name='valid sibling', description='valid priority', status='open',
+            assignee=None, labels=['priority:P1'], metadata={}, key=None,
+            url='https://github.com/fixture/repo/issues/902',
+        ),
+    ]
+
+    class Backend:
+        config = {'repo': 'fixture/repo'}
+
+        def list_tickets(self, since=None, **_kwargs):
+            return list(issues)
+
+    with pytest.raises(ValueError, match='inbound_priority_invalid'):
+        sync_from_external(Backend(), store, False, 'github')
+
+    sync_from_external(Backend(), store, False, 'github', isolate_ticket_conflicts=True)
+
+    assert read(store, 'GITHUB-901') is None
+    imported = read(store, 'GITHUB-902')
+    assert imported is not None
+    assert imported.priority == 'high'
+
+    state_file = store.project_dir / '.planfile' / 'sync' / 'github.state.yaml'
+    st = yaml.safe_load(state_file.read_text(encoding='utf-8'))
+    assert st.get('inbound_cursor_at')
+    quarantined = st.get('quarantined_inbound_tickets') or []
+    assert len(quarantined) == 1
+    assert quarantined[0]['remote_id'] == '901'
+    assert 'inbound_priority_invalid' in quarantined[0]['reason']

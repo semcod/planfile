@@ -343,6 +343,11 @@ PRIORITY_CASES = [
     ({}, 'normal'),
     ({'priority': 'HIGH', 'labels': ['priority-high', 'priority: high']}, 'high'),
     ({'priority': 'normal', 'labels': ['priority-medium', 'priority::med']}, 'normal'),
+    ({'labels': ['priority-P0']}, 'critical'),
+    ({'labels': ['priority:P1', 'priority-high']}, 'high'),
+    ({'labels': ['priority-p1']}, 'high'),
+    ({'labels': ['priority::p2']}, 'normal'),
+    ({'priority': 'P3'}, 'low'),
 ]
 INVALID_PRIORITIES = [
     {'priority': 'urgent'}, {'priority': ''}, {'priority': '  '},
@@ -350,6 +355,7 @@ INVALID_PRIORITIES = [
     {'priority': ['high']}, {'priority': {'name': 'high'}},
     {'labels': ['priority-urgent']}, {'labels': ['priority::']},
     {'labels': ['priority:high', 'priority-low']},
+    {'labels': ['priority:P0', 'priority-low']},
     {'priority': 'normal', 'labels': ['priority-high']},
     {'labels': 'priority-high'}, {'labels': [None]},
 ]
