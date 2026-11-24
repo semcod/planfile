@@ -745,6 +745,49 @@ def _resolve_selected_remote_ids(
     return remote_ids
 
 
+_DEDUP_MARKER_RE = re.compile(r"<!--\s*planfile:deduplication-key=([^>]+?)\s*-->")
+
+
+def _retired_own_dedup_origin(ext_data: dict, sync_state: Any) -> str | None:
+    """Return the original local ticket ID if ext_data carries this store's dedup marker.
+
+    When a ticket originally created by this repository and Planfile store is
+    later retired locally, inbound sync must not resurrect it as a duplicate
+    ``GITHUB-N`` ticket. Matching requires both the canonical repository name
+    and the clone-local ``store_identity`` namespace so issues originating from
+    other repositories or other clones still import normally.
+    """
+    repository = str(getattr(sync_state, "repository", "") or "").strip().lower()
+    store_identity = str(getattr(sync_state, "store_identity", "") or "").strip()
+    if not repository or not store_identity:
+        return None
+
+    raw_keys: list[str] = []
+    desc = ext_data.get("description") or ""
+    marker_match = _DEDUP_MARKER_RE.search(desc)
+    if marker_match:
+        raw_keys.append(marker_match.group(1).strip())
+    meta = ext_data.get("metadata") or {}
+    if isinstance(meta, dict):
+        for field in ("planfile_id", "deduplication_key", "dedupe_key"):
+            value = meta.get(field)
+            if value and str(value).strip():
+                raw_keys.append(str(value).strip())
+
+    for raw_key in raw_keys:
+        parts = raw_key.split(":", 2)
+        if len(parts) != 3:
+            continue
+        key_repo, key_store_id, key_local_id = (
+            parts[0].strip().lower(),
+            parts[1].strip(),
+            parts[2].strip(),
+        )
+        if key_repo == repository and key_store_id == store_identity and key_local_id:
+            return key_local_id
+    return None
+
+
 def _process_external_ticket(
     ext_ticket,
     sprint: dict,
@@ -830,6 +873,14 @@ def _process_external_ticket(
             return imported_count, updated_count
 
     try:
+        if not planfile_id:
+            retired_origin = _retired_own_dedup_origin(ext_data, sync_state)
+            if retired_origin:
+                console.print(
+                    f"  [dim]⏭ Skipped retired local origin {retired_origin} "
+                    f"(remote #{ext_data['id']})[/dim]"
+                )
+                return imported_count, updated_count
         if dry_run:
             if not planfile_id:
                 normalize_inbound_priority(ext_data)
