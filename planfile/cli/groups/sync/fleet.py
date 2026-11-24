@@ -294,6 +294,7 @@ def sync_fleet(
     stats: dict[str, Any] = {
         "scanned": len(discovered),
         "synced": 0,
+        "deferred": 0,
         "failed": 0,
         "direction": norm_direction,
         "results": [],
@@ -335,6 +336,23 @@ def sync_fleet(
                 stats["results"].append({"repo": repo_name, "github": gh_repo, "status": "ok"})
                 break
             except (Exception, SystemExit) as exc:
+                exit_code = getattr(exc, "exit_code", getattr(exc, "code", None))
+                if (
+                    isinstance(exc, (typer.Exit, SystemExit))
+                    and exit_code == 2
+                    and norm_direction in {"to", "both"}
+                ):
+                    stats["deferred"] += 1
+                    stats["results"].append({
+                        "repo": repo_name,
+                        "github": gh_repo,
+                        "status": "deferred",
+                        "reason": "deferred_outbound_conflicts",
+                    })
+                    console.print(
+                        f"  [yellow]⚠ Synced with deferred outbound conflicts for {repo_name}[/yellow]"
+                    )
+                    break
                 if attempt < max_attempts and _is_transient_fleet_network_error(exc):
                     console.print(
                         f"  [yellow]↻ Transient fetch error for {repo_name}; "
@@ -464,12 +482,18 @@ def fleet_cmd(
     table.add_column("Status", justify="center")
 
     for res in stats["results"]:
-        status_styled = "[green]✓ synced[/green]" if res["status"] == "ok" else f"[red]✗ {res.get('error', 'failed')}[/red]"
+        if res["status"] == "ok":
+            status_styled = "[green]✓ synced[/green]"
+        elif res["status"] == "deferred":
+            status_styled = "[yellow]⚠ deferred[/yellow]"
+        else:
+            status_styled = f"[red]✗ {res.get('error', 'failed')}[/red]"
         table.add_row(res["repo"], res["github"], status_styled)
 
     console.print(table)
     console.print(
         f"[bold]Total scanned:[/bold] {stats['scanned']} | "
         f"[green bold]Synced:[/green bold] {stats['synced']} | "
+        f"[yellow bold]Deferred:[/yellow bold] {stats['deferred']} | "
         f"[red bold]Failed:[/red bold] {stats['failed']}\n"
     )
