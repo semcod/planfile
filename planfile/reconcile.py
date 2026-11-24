@@ -8,9 +8,10 @@ import re
 import subprocess
 import sys
 import types
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -22,6 +23,8 @@ from planfile.core.models import Ticket, TicketExecution
 
 if TYPE_CHECKING:
     from planfile import Planfile
+
+SlugIndex = Mapping[str, Path] | Callable[[], Mapping[str, Path]]
 
 TERMINAL_LEASE_PHASES: frozenset[str] = frozenset(
     {"merged", "closed", "cancelled", "canceled", "expired", "released"}
@@ -747,7 +750,7 @@ def resolve_ticket_target_repo(
     workspace_root: Path | None = None,
     now: datetime | None = None,
     observations: MutableMapping[Path, TargetRepoObservation] | None = None,
-    slug_index: Mapping[str, Path] | None = None,
+    slug_index: SlugIndex | None = None,
 ) -> tuple[TargetRepoObservation | None, str | None]:
     """Resolve and observe the target repository checkout for ``ticket``.
 
@@ -782,6 +785,10 @@ def resolve_ticket_target_repo(
             and default_obs.repository_slug == explicit_slug
         ):
             return default_obs, None
+        # A foreign alias can have a different directory name. Local observations
+        # above can be decided without discovering the rest of the workspace.
+        if slug_index is not None and not isinstance(slug_index, Mapping):
+            slug_index = slug_index()
         if slug_index and explicit_slug in slug_index:
             indexed_obs = _observe(slug_index[explicit_slug])
             if indexed_obs.observable:
@@ -1242,6 +1249,18 @@ def _build_slug_index(
     return index
 
 
+def _deferred_slug_index(
+    workspace_root: Path | None,
+    observations: MutableMapping[Path, TargetRepoObservation],
+    now: datetime,
+) -> Callable[[], Mapping[str, Path]]:
+    @cache
+    def load() -> Mapping[str, Path]:
+        return _build_slug_index(workspace_root, observations, now)
+
+    return load
+
+
 def reconcile_in_progress(
     pf_or_path: Planfile | str | Path = ".",
     *,
@@ -1275,7 +1294,7 @@ def reconcile_in_progress(
     obs_cache: MutableMapping[Path, TargetRepoObservation] = (
         observations if observations is not None else {}
     )
-    slug_index = _build_slug_index(ws_root, obs_cache, current_time)
+    slug_index = _deferred_slug_index(ws_root, obs_cache, current_time)
 
     tickets = iter_sprint_tickets(pf, sprint=sprint)
     in_progress_tickets = [

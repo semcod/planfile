@@ -20,8 +20,9 @@ from planfile.contracts import (
 )
 from planfile.core.models import Ticket
 from planfile.reconcile import (
+    SlugIndex,
     TargetRepoObservation,
-    _build_slug_index,
+    _deferred_slug_index,
     _utc_now,
     discover_planfile_repositories,
     find_live_ticket_binding,
@@ -177,7 +178,7 @@ def evaluate_executable_candidate(
     queue: str | None = None,
     now: datetime | None = None,
     observations: MutableMapping[Path, TargetRepoObservation] | None = None,
-    slug_index: Mapping[str, Path] | None = None,
+    slug_index: SlugIndex | None = None,
 ) -> CandidateEvaluation:
     """Evaluate whether ``ticket`` belongs to the canonical executable pending queue."""
 
@@ -380,7 +381,7 @@ def executable_queue(
     obs_cache: MutableMapping[Path, TargetRepoObservation] = (
         observations if observations is not None else {}
     )
-    slug_index = _build_slug_index(ws_root, obs_cache, current_time)
+    slug_index = _deferred_slug_index(ws_root, obs_cache, current_time)
 
     tickets = iter_sprint_tickets(pf, sprint=sprint)
     ticket_by_id = pf._ticket_snapshot_with_dependencies(tickets)
