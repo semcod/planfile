@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-331",
+  "summary": "Classify typer.Exit(2) deferred outbound conflicts separately from hard failures in planfile sync fleet",
+  "workstream": "application",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-331/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/fleet.py",
+    "tests/test_sync_fleet.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "68bf3538f1e25a37926ef840b1e9cc168613f99c",
+    "outcome": "Count typer.Exit(2)/SystemExit(2) deferred outbound conflicts under a dedicated deferred counter in planfile sync fleet instead of hard failures.",
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "Changing deferred outbound conflict semantics or suppressing exit(1) failures."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Track stats['deferred'] in sync_fleet for typer.Exit(2)/SystemExit(2) when direction is to or both, and display deferred status separately in fleet_cmd.",
+      "components": [
+        {
+          "name": "planfile fleet sync reporting",
+          "paths": [
+            "planfile/cli/groups/sync/fleet.py",
+            "tests/test_sync_fleet.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit touching planfile/cli/groups/sync/fleet.py and tests/test_sync_fleet.py."
+    },
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "ruff check planfile/cli/groups/sync/fleet.py tests/test_sync_fleet.py",
+          "pytest -q tests/test_sync_fleet.py",
+          "./project/governance-check.sh",
+          "wellman check"
+        ],
+        "evidence": "All tests in test_sync_fleet.py pass with 0 ruff errors and GOV-PASS."
+      }
+    ]
+  }
+}

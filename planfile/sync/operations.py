@@ -1264,6 +1264,13 @@ def _update_local_ticket(
         return updated_count
 
     update_fields["status"] = _inbound_status(ext_data, integration_name, ticket.get("status"))
+    remote_labels = list(ext_data.get("labels") or [])
+    local_dedupe_labels = [
+        lbl
+        for lbl in (ticket.get("labels") or [])
+        if isinstance(lbl, str) and lbl.startswith("dedupe:") and lbl not in remote_labels
+    ]
+    update_fields["labels"] = remote_labels + local_dedupe_labels
     if ext_data.get("url") and "github.com/" in str(ext_data["url"]):
         backend_ref["repository"] = str(ext_data["url"]).split("github.com/", 1)[1].split(
             "/issues/", 1
