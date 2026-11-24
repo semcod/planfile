@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-330",
+  "summary": "Preserve local dedupe:* labels during inbound external ticket sync",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-330/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/operations.py",
+    "tests/test_sync_inbound_resilience.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "f2f6f5e55ed3ddef91f7b4f35d88c9f6c7cc927d",
+    "outcome": "Retain local dedupe:* labels on local tickets when _update_local_ticket applies inbound remote labels from external providers such as GitHub.",
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "Changing outbound label publishing or modifying non-dedupe remote label sync semantics."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Merge ext_data['labels'] with preserved local dedupe:* labels inside _update_local_ticket in planfile/sync/operations.py.",
+      "components": [
+        {
+          "name": "planfile inbound sync label merge",
+          "paths": [
+            "planfile/sync/operations.py",
+            "tests/test_sync_inbound_resilience.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit touching planfile/sync/operations.py and tests/test_sync_inbound_resilience.py."
+    },
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "ruff check planfile/sync/operations.py tests/test_sync_inbound_resilience.py",
+          "pytest -q tests/test_sync_inbound_resilience.py tests/test_sync_inbound_sdk_revision.py",
+          "./project/governance-check.sh",
+          "wellman check"
+        ],
+        "evidence": "All 88 inbound sync tests pass with 0 ruff errors and GOV-PASS."
+      }
+    ]
+  }
+}

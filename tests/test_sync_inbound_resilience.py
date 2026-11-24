@@ -173,3 +173,38 @@ def test_inbound_sync_aligns_duplicate_history_sprint_with_store_lookup_order(
     refreshed = store.load_sprint("history-2026-10-18")
     assert refreshed["tickets"]["PLF-176"]["name"] == "Synced archived title"
 
+
+def test_inbound_sync_preserves_local_dedupe_labels(tmp_path: Path) -> None:
+    store = PlanfileStore(tmp_path)
+    dedupe_label = "dedupe:scheduled-route-health-and-canonical-qualification-v1"
+    store.create_ticket(
+        Ticket(
+            id="VA-076",
+            name="Route health tracker",
+            sprint="current",
+            status="open",
+            description="tracks route transitions",
+            labels=["old-label", dedupe_label],
+            sync={"github": {"id": "820"}},
+        )
+    )
+    backend = _StubBackend(
+        [
+            {
+                "id": "820",
+                "title": "Route health tracker",
+                "status": "open",
+                "description": "tracks route transitions",
+                "assignee": None,
+                "labels": ["planfile", "routing-health"],
+                "url": "https://github.com/org/demo/issues/820",
+                "metadata": {},
+            }
+        ]
+    )
+
+    sync_from_external(backend, store, integration_name="github", dry_run=False)
+    updated = store.get_ticket("VA-076")
+    assert updated is not None
+    assert updated.labels == ["planfile", "routing-health", dedupe_label]
+
