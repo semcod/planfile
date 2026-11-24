@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import math
 import shutil
 import subprocess
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import typer
+import yaml
 from rich.table import Table
 
 from planfile.cli.core import console, print_error, print_success
 from planfile.cli.groups.sync.core import sync_integration
 from planfile.integrations.config import IntegrationConfig
+from planfile.sync.deadline import SyncDeadlineExceededError
 
 DEFAULT_INTERVAL_HOURS = 6
 SERVICE_NAME = "planfile-fleet-sync.service"
@@ -37,7 +42,9 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart={bin_str} sync fleet {root_str}
+RuntimeDirectory=planfile-fleet-sync
+RuntimeDirectoryMode=0700
+ExecStart=/usr/bin/flock --nonblock --conflict-exit-code 0 %t/planfile-fleet-sync/sync.lock {bin_str} sync fleet {root_str} --timeout 45
 TimeoutStartSec=20min
 Nice=10
 UMask=0077
@@ -119,34 +126,60 @@ def status_fleet_systemd_timer() -> str:
         return f"Could not inspect systemctl: {exc}"
 
 
+def _has_git_tracked_planfile_sprints(repo_path: Path) -> bool:
+    """Return True when .planfile/sprints is tracked in Git so fleet sync will not dirty primary checkouts."""
+    if not (repo_path / ".git").exists():
+        return False
+    try:
+        res = subprocess.run(
+            ["git", "-C", str(repo_path), "ls-files", "--", ".planfile/sprints"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return res.returncode == 0 and bool(res.stdout.strip())
+
+
 def discover_fleet_repositories(
     root: Path,
     max_depth: int = 2,
 ) -> list[tuple[Path, str]]:
-    """Scan subdirectories up to max_depth for .planfile stores configured with GitHub."""
-    results: list[tuple[Path, str]] = []
+    """Scan subdirectories up to max_depth for .planfile stores configured with GitHub.
+
+    Non-Git container directories (such as organization folders under
+    ``~/github/<org>`` that hold an org-level ``.planfile``) are still traversed
+    so child repositories are not shadowed, and any non-Git container that has
+    discovered child repositories is omitted from the result.
+    """
+    candidates: list[tuple[Path, str, bool]] = []
     if not root.is_dir():
-        return results
+        return []
 
     # Breadth-first search bounded by max_depth
     queue: list[tuple[Path, int]] = [(root, 0)]
     while queue:
         current, depth = queue.pop(0)
+        is_git_repo = (current / ".git").exists()
         if depth > 0:
             try:
                 planfile_dir = current / ".planfile"
-                if planfile_dir.is_dir():
+                if planfile_dir.is_dir() and not planfile_dir.is_symlink():
                     try:
                         config = IntegrationConfig(str(current))
                         config.load_configs()
                         gh_cfg = config.get_integration_config("github")
                         repo_name = gh_cfg.get("repo") if isinstance(gh_cfg, dict) else None
                         if repo_name and config.validate_integration("github"):
-                            results.append((current, str(repo_name)))
+                            if not (is_git_repo and _has_git_tracked_planfile_sprints(current)):
+                                candidates.append((current, str(repo_name), is_git_repo))
                     except Exception:
                         pass
-                    # Once a repository with .planfile is matched, do not descend into internal subtrees
-                    continue
+                    # Stop descending only inside an actual Git repository.
+                    if is_git_repo:
+                        continue
             except (PermissionError, OSError):
                 continue
 
@@ -158,7 +191,80 @@ def discover_fleet_repositories(
             except PermissionError:
                 continue
 
-    return results
+    all_paths = [path for path, _, _ in candidates]
+    return [
+        (path, repo_name)
+        for path, repo_name, is_git_repo in candidates
+        if is_git_repo or not any(other != path and other.is_relative_to(path) for other in all_paths)
+    ]
+
+
+def _last_synced_timestamp(repo_path: Path) -> float:
+    """Return last inbound GitHub sync epoch seconds, or 0.0 when unsynced/unreadable."""
+    state_file = repo_path / ".planfile" / "sync" / "github.state.yaml"
+    try:
+        if not state_file.is_file() or state_file.is_symlink():
+            return 0.0
+        raw_yaml = state_file.read_text(encoding="utf-8")[:65536]
+        data = yaml.safe_load(raw_yaml)
+    except (OSError, yaml.YAMLError, UnicodeDecodeError):
+        return 0.0
+    if not isinstance(data, dict):
+        return 0.0
+    raw = data.get("synced_at")
+    if not isinstance(raw, str) or not raw.strip():
+        return 0.0
+    try:
+        dt = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        ts = dt.timestamp()
+    except (ValueError, TypeError, OverflowError):
+        return 0.0
+    return ts if math.isfinite(ts) else 0.0
+
+
+VALID_FLEET_DIRECTIONS = frozenset({"from", "to", "both"})
+_NON_TRANSIENT_PROVIDER_MARKERS = (
+    "403",
+    "429",
+    "rate limit",
+    "ratelimit",
+    "secondary limit",
+    "abuse detection",
+    "permission",
+    "unauthorized",
+    "401",
+)
+_TRANSIENT_FLEET_NETWORK_MARKERS = (
+    "nameresolutionerror",
+    "temporary failure in name resolution",
+    "tls handshake timeout",
+    "remotedisconnected",
+    "read timed out",
+    "connection aborted",
+    "connection reset",
+    "sync_inbound_fetch_failed",
+    "httpsconnectionpool",
+)
+
+
+def _is_transient_fleet_network_error(exc: BaseException) -> bool:
+    """Return True only for short-lived transport/DNS errors during read-only inbound sync."""
+    if isinstance(exc, (SyncDeadlineExceededError, SystemExit, KeyboardInterrupt)):
+        return False
+    parts: list[str] = []
+    cur: BaseException | None = exc
+    seen: set[int] = set()
+    while cur is not None and id(cur) not in seen:
+        seen.add(id(cur))
+        parts.append(str(cur))
+        parts.append(type(cur).__name__)
+        cur = cur.__cause__ or cur.__context__
+    text = " ".join(parts).lower()
+    if any(marker in text for marker in _NON_TRANSIENT_PROVIDER_MARKERS):
+        return False
+    return any(marker in text for marker in _TRANSIENT_FLEET_NETWORK_MARKERS)
 
 
 def sync_fleet(
@@ -168,9 +274,20 @@ def sync_fleet(
     exclude_incident_noise: bool = True,
     managed_only: bool = False,
     max_projects: int | None = None,
+    timeout_seconds: float | None = 45.0,
+    direction: str = "from",
+    isolate_ticket_conflicts: bool = True,
+    transient_retries: int = 1,
+    transient_retry_delay_seconds: float = 1.0,
 ) -> dict[str, Any]:
-    """Execute inbound sync across all discovered fleet repositories."""
+    """Execute GitHub sync across all discovered fleet repositories."""
+    norm_direction = str(direction or "from").strip().lower()
+    if norm_direction not in VALID_FLEET_DIRECTIONS:
+        raise ValueError(
+            f"Invalid fleet sync direction {direction!r}; expected one of: from, to, both"
+        )
     discovered = discover_fleet_repositories(root, max_depth=max_depth)
+    discovered.sort(key=lambda item: (_last_synced_timestamp(item[0]), str(item[0])))
     if max_projects:
         discovered = discovered[:max_projects]
 
@@ -178,6 +295,7 @@ def sync_fleet(
         "scanned": len(discovered),
         "synced": 0,
         "failed": 0,
+        "direction": norm_direction,
         "results": [],
     }
 
@@ -185,36 +303,55 @@ def sync_fleet(
         console.print(f"[dim]ℹ️ No GitHub-integrated repositories found under {root}[/dim]")
         return stats
 
+    dir_labels = {
+        "from": "from (inbound GitHub ➔ Planfile)",
+        "to": "to (outbound Planfile ➔ GitHub)",
+        "both": "both (bidirectional GitHub ⇄ Planfile)",
+    }
     console.print(f"\n[bold blue]🚀 Starting Fleet Sync across {len(discovered)} repositories...[/bold blue]")
     console.print(f"[dim]   Root: {root} (depth: {max_depth})[/dim]")
-    console.print("[dim]   Direction: from (inbound GitHub ➔ Planfile)[/dim]")
+    console.print(f"[dim]   Direction: {dir_labels[norm_direction]}[/dim]")
     console.print(f"[dim]   Filter incident noise: {exclude_incident_noise}[/dim]")
     console.print(f"[dim]   Managed labels only: {managed_only}[/dim]\n")
 
+    max_attempts = 1 + (max(0, transient_retries) if norm_direction == "from" else 0)
     for repo_path, gh_repo in discovered:
         repo_name = repo_path.name
         console.print(f"[bold cyan]📁 {repo_name}[/bold cyan] [dim]({gh_repo})[/dim]")
-        try:
-            sync_integration(
-                "github",
-                str(repo_path),
-                dry_run=dry_run,
-                direction="from",
-                show_header=False,
-                managed_only=managed_only,
-                exclude_incident_noise=exclude_incident_noise,
-            )
-            stats["synced"] += 1
-            stats["results"].append({"repo": repo_name, "github": gh_repo, "status": "ok"})
-        except Exception as exc:
-            stats["failed"] += 1
-            stats["results"].append({
-                "repo": repo_name,
-                "github": gh_repo,
-                "status": "error",
-                "error": str(exc),
-            })
-            console.print(f"  [red]✗ Sync error for {repo_name}: {exc}[/red]")
+        sync_kwargs: dict[str, Any] = {
+            "dry_run": dry_run,
+            "direction": norm_direction,
+            "show_header": False,
+            "managed_only": managed_only,
+            "exclude_incident_noise": exclude_incident_noise,
+            "isolate_ticket_conflicts": isolate_ticket_conflicts,
+        }
+        if timeout_seconds is not None:
+            sync_kwargs["timeout_seconds"] = timeout_seconds
+        for attempt in range(1, max_attempts + 1):
+            try:
+                sync_integration("github", str(repo_path), **sync_kwargs)
+                stats["synced"] += 1
+                stats["results"].append({"repo": repo_name, "github": gh_repo, "status": "ok"})
+                break
+            except (Exception, SystemExit) as exc:
+                if attempt < max_attempts and _is_transient_fleet_network_error(exc):
+                    console.print(
+                        f"  [yellow]↻ Transient fetch error for {repo_name}; "
+                        f"retrying ({attempt}/{max_attempts - 1})[/yellow]"
+                    )
+                    if transient_retry_delay_seconds > 0:
+                        time.sleep(transient_retry_delay_seconds)
+                    continue
+                stats["failed"] += 1
+                stats["results"].append({
+                    "repo": repo_name,
+                    "github": gh_repo,
+                    "status": "error",
+                    "error": str(exc) or type(exc).__name__,
+                })
+                console.print(f"  [red]✗ Sync error for {repo_name}: {exc}[/red]")
+                break
 
     return stats
 
@@ -235,6 +372,28 @@ def fleet_cmd(
         False,
         "--managed-only",
         help="Only sync issues with 'planfile' or 'managed' labels",
+    ),
+    max_projects: int | None = typer.Option(
+        None,
+        "--max-projects",
+        min=1,
+        help="Limit number of repositories synchronized in this invocation",
+    ),
+    timeout: float = typer.Option(
+        45.0,
+        "--timeout",
+        min=1.0,
+        help="Per-repository monotonic deadline in seconds for GitHub sync",
+    ),
+    direction: str = typer.Option(
+        "from",
+        "--direction",
+        help="Sync direction: from (inbound), to (outbound), or both (bidirectional)",
+    ),
+    isolate_conflicts: bool = typer.Option(
+        True,
+        "--isolate-conflicts/--no-isolate-conflicts",
+        help="Quarantine per-ticket inbound conflicts instead of aborting the repository sync",
     ),
     install_timer: bool = typer.Option(
         False,
@@ -283,12 +442,20 @@ def fleet_cmd(
         print_error(f"Root path does not exist: {root_path}")
         raise typer.Exit(1)
 
+    if str(direction).strip().lower() not in VALID_FLEET_DIRECTIONS:
+        print_error(f"Invalid --direction value: {direction!r} (expected: from, to, both)")
+        raise typer.Exit(2)
+
     stats = sync_fleet(
         root_path,
         max_depth=depth,
         dry_run=dry_run,
         exclude_incident_noise=exclude_incident_noise,
         managed_only=managed_only,
+        max_projects=max_projects,
+        timeout_seconds=timeout,
+        direction=direction,
+        isolate_ticket_conflicts=isolate_conflicts,
     )
 
     table = Table(title="Fleet Sync Summary", show_header=True, header_style="bold magenta")

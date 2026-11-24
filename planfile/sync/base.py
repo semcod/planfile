@@ -187,13 +187,18 @@ class BasePMBackend(ABC):
         status: str | None = None,
         assignee: str | None = None,
         limit: int | None = None,
+        since: Any = None,
     ) -> list[TicketState]:
         """List tickets with filters through the backend-specific implementation."""
+        extra: dict[str, Any] = {}
+        if since is not None:
+            extra["since"] = since
         return self._list_tickets(
             labels=labels,
             status=status,
             assignee=assignee,
             limit=limit,
+            **extra,
         )
 
     @abstractmethod

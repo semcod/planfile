@@ -869,3 +869,168 @@ def test_has_unmapped_earlier_copy_still_guards_custom_locator_backed_sprints():
         tickets=fake_tickets,
     ) is True
     assert "backlog" in reads
+
+
+def test_aborted_post_rebuild_reconcile_persists_built_locator_snapshot(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    pf.create_ticket(name="Backlog item", sprint="backlog")
+    pf.create_ticket(name="Legacy archive", sprint="archive-2026-07")
+    tracked = pf.create_ticket(name="Previously archived", sprint="history-old")
+    with pf.store.mutation_lock():
+        pf.store._record_history_locations_unlocked({tracked.id: "history-old"})
+    active = pf.create_ticket(name="Stay in current")
+    moving = pf.create_ticket(name="Move while rebuilding")
+
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    built = pf.store._ticket_index_signature()
+    built_snapshot = index_repair.capture_locator_snapshot(pf.store, built)
+    assert built_snapshot is not None
+    # Simulate a full rebuild that committed source_signature without a saved locator.
+    assert index_repair._restore_locator_snapshot(pf.store, index, built) is None
+
+    with monkeypatch.context() as deferred:
+        deferred.setattr(pf.store, "_begin_index_mutation", lambda: False)
+        assert pf.store.move_ticket(moving.id, "history-2026-11-21")
+
+    with monkeypatch.context() as aborted:
+        aborted.setattr(index_repair, "MAX_REPAIR_SECONDS", -1)
+        assert index_repair.reconcile_index(
+            pf.store, index, built, locator_snapshot=built_snapshot
+        ) is None
+
+    restored = index_repair._restore_locator_snapshot(pf.store, index, built)
+    assert restored is not None
+    assert restored.locations == built_snapshot.locations
+
+    reopened = Planfile(str(tmp_path))
+
+    def forbid_full_scan(*args, **kwargs):
+        pytest.fail("persisted rebuilt locator must enable bounded stored-baseline repair")
+
+    monkeypatch.setattr(index_repair, "_indexed_ticket_sprints", forbid_full_scan)
+    monkeypatch.setattr(reopened.store, "_rebuild_ticket_index_unlocked", forbid_full_scan)
+    monkeypatch.setattr(server, "get_planfile", lambda: reopened)
+    result = server._repair_ticket_index()
+    assert result["current"] is True
+    assert result["reconciled"] >= 2
+    assert reopened.store._sqlite_ticket_index().get_ticket(active.id)["sprint"] == "current"
+    assert reopened.store._sqlite_ticket_index().get_ticket(moving.id)["sprint"] == "history-2026-11-21"
+
+
+def test_repair_ticket_index_persists_locator_after_quiet_full_rebuild(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    pf.create_ticket(name="Backlog item", sprint="backlog")
+    pf.create_ticket(name="Legacy archive", sprint="archive-2026-07")
+    tracked = pf.create_ticket(name="Previously archived", sprint="history-old")
+    with pf.store.mutation_lock():
+        pf.store._record_history_locations_unlocked({tracked.id: "history-old"})
+    pf.create_ticket(name="Stay in current")
+    moving = pf.create_ticket(name="Archive after quiet rebuild")
+
+    pf.store.configure_ticket_index(True)
+    pf.store._sqlite_ticket_index().reset()
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    rebuilt = server._repair_ticket_index()
+    assert rebuilt["current"] is True
+    sig = pf.store._ticket_index_signature()
+    restored = index_repair._restore_locator_snapshot(
+        pf.store, pf.store._sqlite_ticket_index(), sig
+    )
+    assert restored is not None
+    assert restored.locations[tracked.id] == "history-old"
+
+    with monkeypatch.context() as deferred:
+        deferred.setattr(pf.store, "_begin_index_mutation", lambda: False)
+        assert pf.store.move_ticket(moving.id, "history-2026-11-21")
+
+    reopened = Planfile(str(tmp_path))
+
+    def forbid_full_scan(*args, **kwargs):
+        pytest.fail("quiet full rebuild must persist locator for next deferred archive move")
+
+    monkeypatch.setattr(index_repair, "_indexed_ticket_sprints", forbid_full_scan)
+    monkeypatch.setattr(reopened.store, "_rebuild_ticket_index_unlocked", forbid_full_scan)
+    monkeypatch.setattr(server, "get_planfile", lambda: reopened)
+    result = server._repair_ticket_index()
+    assert result["current"] is True
+    assert result["reconciled"] >= 2
+    assert reopened.store._sqlite_ticket_index().get_ticket(moving.id)["sprint"] == "history-2026-11-21"
+
+
+def test_persist_current_locator_snapshot_syncs_after_incremental_archive(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    pf.create_ticket(name="Backlog item", sprint="backlog")
+    tracked = pf.create_ticket(name="Previously archived", sprint="history-old")
+    with pf.store.mutation_lock():
+        pf.store._record_history_locations_unlocked({tracked.id: "history-old"})
+    first = pf.create_ticket(name="First archived")
+    second = pf.create_ticket(name="Second archived")
+
+    pf.store.configure_ticket_index(True)
+    assert pf.store.move_ticket(first.id, "history-2026-11-21")
+    assert pf.store.ticket_index_status()["current"] is True
+    assert server._persist_current_locator_snapshot(pf.store) is True
+
+    with monkeypatch.context() as deferred:
+        deferred.setattr(pf.store, "_begin_index_mutation", lambda: False)
+        assert pf.store.move_ticket(second.id, "history-2026-11-21")
+
+    reopened = Planfile(str(tmp_path))
+
+    def forbid_full_scan(*args, **kwargs):
+        pytest.fail("synced locator after incremental archive must reconcile without full scan")
+
+    monkeypatch.setattr(index_repair, "_indexed_ticket_sprints", forbid_full_scan)
+    monkeypatch.setattr(reopened.store, "_rebuild_ticket_index_unlocked", forbid_full_scan)
+    monkeypatch.setattr(server, "get_planfile", lambda: reopened)
+    result = server._repair_ticket_index()
+    assert result["current"] is True
+    assert result["reconciled"] >= 2
+    assert reopened.store._sqlite_ticket_index().get_ticket(second.id)["sprint"] == "history-2026-11-21"
+
+
+def test_stored_baseline_reconcile_returns_current_without_full_rebuild_after_concurrent_writer(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    pf.create_ticket(name="Active ticket")
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    assert pf.store.ticket_index_status()["current"] is True
+
+    # Simulate a maintenance check observing a mid-commit mutation right before
+    # the writer finishes index.apply() and releases store.mutation_lock().
+    result = index_repair.reconcile_index(pf.store, index)
+    assert result is not None
+    assert result["current"] is True
+    assert result["rebuilt"] is False
+
+
+def test_repair_ticket_index_defers_instead_of_rebuilding_on_sqlite_contention(
+    tmp_path, monkeypatch
+):
+    pf = setup_store(tmp_path)
+    ticket = pf.create_ticket(name="Before busy repair")
+    pf.store.configure_ticket_index(True)
+    with monkeypatch.context() as deferred:
+        deferred.setattr(pf.store, "_begin_index_mutation", lambda: False)
+        pf.update_ticket(ticket.id, name="After busy repair")
+
+    def busy_reconcile(*args, **kwargs):
+        raise sqlite3.OperationalError("database is locked")
+
+    def forbid_rebuild(*args, **kwargs):
+        pytest.fail("transient SQLite contention must defer instead of launching full rebuild")
+
+    monkeypatch.setattr(index_repair, "reconcile_index", busy_reconcile)
+    monkeypatch.setattr(pf.store, "_rebuild_ticket_index_unlocked", forbid_rebuild)
+    monkeypatch.setattr(server, "get_planfile", lambda: pf)
+    with pytest.raises(TicketIndexContentionError, match="ticket_index_repair_busy"):
+        server._repair_ticket_index()

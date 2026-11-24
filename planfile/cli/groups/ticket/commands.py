@@ -421,7 +421,7 @@ def ticket_create(
     try:
         from planfile.urtlog_bridge import maybe_emit_ticket_created
 
-        maybe_emit_ticket_created(ticket, created=created)
+        maybe_emit_ticket_created(ticket, created=created, project_dir=pf.store.project_dir)
     except Exception:
         pass
     if not created:
@@ -688,6 +688,16 @@ def ticket_waves(
     console.print(table)
 
 
+def _emit_transition(pf, action, ticket, **details):
+    try:
+        from planfile.urtlog_bridge import maybe_emit_ticket_event
+
+        maybe_emit_ticket_event(action, ticket, project_dir=pf.store.project_dir, **details)
+    except Exception:
+        # Optional telemetry must never undo a committed ticket transition.
+        pass
+
+
 def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: str | None=typer.Option(None, help='New status'), priority: str | None=typer.Option(None, '-p', '--priority'), name: str | None=typer.Option(None, help='New name'), description: str | None=typer.Option(None, '-d', '--description', help='New description (replaces existing)'), note: str | None=typer.Option(None, '-n', '--note', help='Append a note to outputs.notes (additive, does NOT replace description)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after update'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
     """Update ticket fields. `--note` appends to outputs.notes without replacing other fields."""
     from planfile import Planfile
@@ -716,12 +726,7 @@ def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: 
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Updated {ticket.id}')
-    try:
-        from planfile.urtlog_bridge import maybe_emit_ticket_event
-
-        maybe_emit_ticket_event('update', ticket, note=note)
-    except Exception:
-        pass
+    _emit_transition(pf, 'update', ticket, note=note)
 
     if sync:
         _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=[ticket_id])
@@ -794,12 +799,7 @@ def ticket_done(ticket_id: str=typer.Argument(..., help='Ticket ID to mark as do
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Marked {ticket.id} as [green]done[/green]')
-    try:
-        from planfile.urtlog_bridge import maybe_emit_ticket_event
-
-        maybe_emit_ticket_event('done', ticket)
-    except Exception:
-        pass
+    _emit_transition(pf, 'done', ticket)
 
 def ticket_claim(
     ticket_id: str=typer.Argument(..., help='Ticket ID to claim'),
@@ -816,6 +816,7 @@ def ticket_claim(
     assignee = ticket.execution.assigned_to if ticket.execution else assigned_to
     suffix = f' by [cyan]{assignee}[/cyan]' if assignee else ''
     console.print(f'[green]✓[/green] Claimed {ticket.id}{suffix}')
+    _emit_transition(pf, 'claim', ticket)
 
 def ticket_start(
     ticket_id: str=typer.Argument(..., help='Ticket ID to start working on'),
@@ -829,12 +830,7 @@ def ticket_start(
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Started {ticket.id} → [yellow]in_progress[/yellow]')
-    try:
-        from planfile.urtlog_bridge import maybe_emit_ticket_event
-
-        maybe_emit_ticket_event('start', ticket)
-    except Exception:
-        pass
+    _emit_transition(pf, 'start', ticket)
 
 def ticket_ready(ticket_id: str=typer.Argument(..., help='Ticket ID to make runnable again'), note: str | None=typer.Option(None, '-n', '--note', help='Optional note appended to outputs.notes (e.g. resolution of the input phase)')) -> None:
     """Mark execution state as ready after human input or manual recovery."""
@@ -849,6 +845,8 @@ def ticket_ready(ticket_id: str=typer.Argument(..., help='Ticket ID to make runn
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Ticket {ticket.id} is [green]ready[/green]')
+    _emit_transition(pf, 'ready', ticket, note=note)
+
 
 def ticket_resume(
     ticket_id: str=typer.Argument(..., help='Ticket ID to resume from archive or failed state'),
@@ -866,6 +864,7 @@ def ticket_resume(
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Resumed {ticket.id} → [green]current (ready)[/green]')
+    _emit_transition(pf, 'resume', ticket, note=note)
 
 
 def ticket_fail(
@@ -880,12 +879,7 @@ def ticket_fail(
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Marked {ticket.id} as [red]failed[/red]')
-    try:
-        from planfile.urtlog_bridge import maybe_emit_ticket_event
-
-        maybe_emit_ticket_event('fail', ticket, reason=error)
-    except Exception:
-        pass
+    _emit_transition(pf, 'fail', ticket, reason=error)
 
 def ticket_input(
     ticket_id: str=typer.Argument(..., help='Ticket ID waiting on human or external input'),
@@ -901,6 +895,8 @@ def ticket_input(
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Ticket {ticket.id} now waits for input')
+    _emit_transition(pf, 'input', ticket, reason=prompt)
+
 
 def ticket_complete(
     ticket_id: str=typer.Argument(..., help='Ticket ID to complete'),
@@ -917,12 +913,7 @@ def ticket_complete(
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Completed {ticket.id}')
-    try:
-        from planfile.urtlog_bridge import maybe_emit_ticket_event
-
-        maybe_emit_ticket_event('complete', ticket, note=note)
-    except Exception:
-        pass
+    _emit_transition(pf, 'complete', ticket, note=note)
 
 def ticket_block(ticket_id: str=typer.Argument(..., help='Ticket ID to block'), reason: str=typer.Option(None, '-r', '--reason', help='Block reason')) -> None:
     """Mark ticket as blocked and clear any running execution claim."""
@@ -933,12 +924,7 @@ def ticket_block(ticket_id: str=typer.Argument(..., help='Ticket ID to block'), 
         console.print(f'[red]✗[/red] Ticket {ticket_id} not found.')
         raise typer.Exit(1)
     console.print(f'[green]✓[/green] Blocked {ticket.id}')
-    try:
-        from planfile.urtlog_bridge import maybe_emit_ticket_event
-
-        maybe_emit_ticket_event('block', ticket, reason=reason)
-    except Exception:
-        pass
+    _emit_transition(pf, 'block', ticket, reason=reason)
 
 def _collect_delete_ids(
     pf: Any,
@@ -1284,7 +1270,7 @@ def ticket_depend(
     try:
         from planfile.urtlog_bridge import maybe_emit_ticket_dependency
 
-        maybe_emit_ticket_dependency(ticket_id, after=result['after'], before=result['before'])
+        maybe_emit_ticket_dependency(ticket_id, after=result['after'], before=result['before'], project_dir=pf.store.project_dir)
     except Exception:
         pass
 

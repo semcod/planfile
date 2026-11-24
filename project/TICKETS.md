@@ -207,4 +207,21 @@ This file indexes governance tickets without taking ownership of
 | **ticket-310** | [`README.md`](./ticket-310/README.md) | - | - | - | - | - |
 | **ticket-311** | [`README.md`](./ticket-311/README.md) | - | - | - | - | - |
 | **ticket-312** | [`README.md`](./ticket-312/README.md) | - | - | - | - | - |
+| **ticket-313** | [`README.md`](./ticket-313/README.md) | - | - | - | - | - |
+| **ticket-314** | [`README.md`](./ticket-314/README.md) | - | - | - | - | - |
+| **ticket-315** | [`README.md`](./ticket-315/README.md) | - | - | - | - | - |
+| **ticket-316** | [`README.md`](./ticket-316/README.md) | - | - | - | - | - |
+| **ticket-317** | [`README.md`](./ticket-317/README.md) | - | - | - | - | - |
+| **ticket-318** | [`README.md`](./ticket-318/README.md) | - | - | - | - | - |
+| **ticket-319** | [`README.md`](./ticket-319/README.md) | - | - | - | - | - |
+| **ticket-320** | [`README.md`](./ticket-320/README.md) | - | - | - | - | - |
+| **ticket-321** | [`README.md`](./ticket-321/README.md) | - | - | - | - | - |
+| **ticket-322** | [`README.md`](./ticket-322/README.md) | - | - | - | - | - |
+| **ticket-323** | [`README.md`](./ticket-323/README.md) | - | - | - | - | - |
+| **ticket-324** | [`README.md`](./ticket-324/README.md) | - | - | - | - | - |
+| **ticket-325** | [`README.md`](./ticket-325/README.md) | - | - | - | - | - |
+| **ticket-326** | [`README.md`](./ticket-326/README.md) | - | - | - | - | - |
+| **ticket-327** | [`README.md`](./ticket-327/README.md) | - | - | - | - | - |
+| **ticket-328** | [`README.md`](./ticket-328/README.md) | - | - | - | - | - |
+| **ticket-329** | [`README.md`](./ticket-329/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->

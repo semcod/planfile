@@ -375,3 +375,322 @@ def test_repair_preview_does_not_create_missing_indexes_or_yaml_mirrors(store):
     plan = preview_priority_repair(fresh, ['GITHUB-298'])
     assert plan.items[0].priority == 'high'
     assert project_files(fresh) == before
+
+
+def test_pre_existing_append_only_evidence_does_not_block_inbound_update(store):
+    store.append_ticket_evidence(
+        'PLF-001',
+        idempotency_key='pre-sync-ev-1',
+        collection='receipts',
+        evidence={'ok': True},
+        reason='pre-sync evidence',
+        actor='agent:test',
+    )
+    pull(store)
+    after = read(store)
+    assert after.status == 'done'
+    assert after.description == 'remote update'
+    assert after.outputs.result['receipts'][0]['idempotency_key'] == 'pre-sync-ev-1'
+
+
+def test_concurrent_append_only_evidence_during_fetch_still_rejected(store):
+    before = read(store)
+
+    def concurrent():
+        store.append_ticket_evidence(
+            'PLF-001',
+            idempotency_key='during-fetch-ev-1',
+            collection='receipts',
+            evidence={'ok': True},
+            reason='concurrent evidence during fetch',
+            actor='agent:test',
+        )
+
+    with pytest.raises(TicketUpdatedAtConflictError):
+        pull(store, concurrent)
+    after = read(store)
+    assert after.status == 'open'
+    assert after.description == before.description
+    assert 'remote update' not in after.description
+    assert after.outputs.result['receipts'][0]['idempotency_key'] == 'during-fetch-ev-1'
+
+
+def test_duplicate_history_ticket_id_with_evidence_freezes_canonical_sprint(tmp_path, monkeypatch):
+    store = PlanfileStore(tmp_path)
+    store.init()
+    older = {
+        'id': 'history-2026-10-03',
+        'tickets': {
+            'TEST-001-REPAIR': {
+                'id': 'TEST-001-REPAIR',
+                'name': 'Older repair snapshot',
+                'status': 'done',
+                'sprint': 'history-2026-10-03',
+                'description': 'older snapshot',
+                'sync': {'github': {'id': '777', 'repository': 'fixture/repo'}},
+                'updated_at': '2026-10-03T10:35:33+00:00',
+            }
+        },
+    }
+    newer = {
+        'id': 'history-2026-10-05',
+        'tickets': {
+            'TEST-001-REPAIR': {
+                'id': 'TEST-001-REPAIR',
+                'name': 'Newer repair snapshot',
+                'status': 'done',
+                'sprint': 'history-2026-10-05',
+                'description': 'newer snapshot',
+                'sync': {'github': {'id': '777', 'repository': 'fixture/repo'}},
+                'updated_at': '2026-10-05T19:44:25+00:00',
+            }
+        },
+    }
+    store.save_sprint('history-2026-10-03', older)
+    store.save_sprint('history-2026-10-05', newer)
+    store.append_ticket_evidence(
+        'TEST-001-REPAIR',
+        idempotency_key='ev-dup-1',
+        collection='receipts',
+        evidence={'ok': True},
+        reason='pre-sync evidence on duplicated ticket',
+        actor='agent:test',
+    )
+    monkeypatch.setattr(
+        store,
+        '_ticket_lookup_sprints',
+        lambda _tid: ['current', 'history-2026-10-05', 'history-2026-10-03'],
+    )
+
+    class Backend:
+        config = {'repo': 'fixture/repo'}
+
+        def list_tickets(self, **_kwargs):
+            return [SimpleNamespace(
+                id='777',
+                name='Newer repair snapshot',
+                description='updated via canonical sprint',
+                status='closed',
+                assignee=None,
+                labels=[],
+                metadata={'state_reason': 'completed'},
+                key=None,
+                url='https://github.com/fixture/repo/issues/777',
+            )]
+
+    sync_from_external(Backend(), store, False, 'github')
+    refreshed = store.load_sprint('history-2026-10-05')
+    assert refreshed['tickets']['TEST-001-REPAIR']['description'] == 'updated via canonical sprint'
+
+
+def test_isolate_ticket_conflicts_quarantines_lease_and_preserves_across_empty_incremental(store):
+    import yaml
+
+    store.update_ticket(
+        'PLF-001',
+        status='in_progress',
+        execution={'state': 'running', 'assigned_to': 'other', 'lease_expires_at': '2099-01-01T00:00:00Z'},
+    )
+    store.create_ticket(
+        Ticket(
+            id='PLF-002',
+            name='sibling open ticket',
+            description='ready to close',
+            status='open',
+            sprint='backlog',
+            integration=['github'],
+            sync={'github': {'id': '124', 'url': 'https://github.com/fixture/repo/issues/124',
+                             'repository': 'fixture/repo'}},
+        )
+    )
+
+    responses = [
+        [
+            SimpleNamespace(
+                id='123', name='fixture', description='remote update', status='closed',
+                assignee=None, labels=[], metadata={'state_reason': 'completed'}, key=None,
+                url='https://github.com/fixture/repo/issues/123',
+            ),
+            SimpleNamespace(
+                id='124', name='sibling open ticket', description='sibling closed remotely', status='closed',
+                assignee=None, labels=[], metadata={'state_reason': 'completed'}, key=None,
+                url='https://github.com/fixture/repo/issues/124',
+            ),
+        ],
+        [],
+    ]
+
+    class Backend:
+        config = {'repo': 'fixture/repo'}
+
+        def list_tickets(self, since=None, **_kwargs):
+            return responses.pop(0)
+
+    backend = Backend()
+    sync_from_external(backend, store, False, 'github', isolate_ticket_conflicts=True)
+
+    # Leased PLF-001 untouched; sibling PLF-002 closed; cursor + quarantine persisted.
+    plf1 = read(store, 'PLF-001')
+    plf2 = read(store, 'PLF-002')
+    assert plf1.status == 'in_progress'
+    assert plf1.execution.assigned_to == 'other'
+    assert plf2.status == 'done'
+
+    state_file = store.project_dir / '.planfile' / 'sync' / 'github.state.yaml'
+    st1 = yaml.safe_load(state_file.read_text(encoding='utf-8'))
+    assert st1.get('inbound_cursor_at')
+    assert len(st1.get('quarantined_inbound_tickets') or []) == 1
+    assert st1['quarantined_inbound_tickets'][0]['local_id'] == 'PLF-001'
+    assert st1['quarantined_inbound_tickets'][0]['remote_id'] == '123'
+
+    # Follow-up incremental 0-delta run MUST preserve unresolved quarantine reminders.
+    sync_from_external(backend, store, False, 'github', isolate_ticket_conflicts=True)
+    st2 = yaml.safe_load(state_file.read_text(encoding='utf-8'))
+    assert len(st2.get('quarantined_inbound_tickets') or []) == 1
+    assert st2['quarantined_inbound_tickets'][0]['local_id'] == 'PLF-001'
+
+
+def test_isolate_ticket_conflicts_quarantines_invalid_priority_while_default_fails_closed(store):
+    import yaml
+
+    issues = [
+        SimpleNamespace(
+            id='901', name='bad priority', description='invalid label', status='open',
+            assignee=None, labels=['priority:urgent'], metadata={}, key=None,
+            url='https://github.com/fixture/repo/issues/901',
+        ),
+        SimpleNamespace(
+            id='902', name='valid sibling', description='valid priority', status='open',
+            assignee=None, labels=['priority:P1'], metadata={}, key=None,
+            url='https://github.com/fixture/repo/issues/902',
+        ),
+    ]
+
+    class Backend:
+        config = {'repo': 'fixture/repo'}
+
+        def list_tickets(self, since=None, **_kwargs):
+            return list(issues)
+
+    with pytest.raises(ValueError, match='inbound_priority_invalid'):
+        sync_from_external(Backend(), store, False, 'github')
+
+    sync_from_external(Backend(), store, False, 'github', isolate_ticket_conflicts=True)
+
+    assert read(store, 'GITHUB-901') is None
+    imported = read(store, 'GITHUB-902')
+    assert imported is not None
+    assert imported.priority == 'high'
+
+    state_file = store.project_dir / '.planfile' / 'sync' / 'github.state.yaml'
+    st = yaml.safe_load(state_file.read_text(encoding='utf-8'))
+    assert st.get('inbound_cursor_at')
+    quarantined = st.get('quarantined_inbound_tickets') or []
+    assert len(quarantined) == 1
+    assert quarantined[0]['remote_id'] == '901'
+    assert 'inbound_priority_invalid' in quarantined[0]['reason']
+
+
+def test_legacy_ticket_without_inner_id_field_updates_and_backfills_id(tmp_path):
+    store = PlanfileStore(tmp_path)
+    store.init()
+    legacy_sprint = {
+        'id': 'history-2026-09-19',
+        'tickets': {
+            'GITHUB-138': {
+                'name': 'Legacy imported issue without inner id',
+                'status': 'done',
+                'sprint': 'history-2026-09-19',
+                'description': 'stale description',
+                'sync': {'github': {'id': '138', 'repository': 'fixture/repo'}},
+                'updated_at': '2026-09-19T12:00:00+00:00',
+            }
+        },
+    }
+    store.save_sprint('history-2026-09-19', legacy_sprint)
+
+    class Backend:
+        config = {'repo': 'fixture/repo'}
+
+        def list_tickets(self, since=None, **_kwargs):
+            return [
+                SimpleNamespace(
+                    id='138',
+                    name='Legacy imported issue without inner id',
+                    description='updated description',
+                    status='closed',
+                    assignee=None,
+                    labels=[],
+                    metadata={'state_reason': 'completed'},
+                    key=None,
+                    url='https://github.com/fixture/repo/issues/138',
+                )
+            ]
+
+    sync_from_external(Backend(), store, False, 'github')
+    refreshed = store.load_sprint('history-2026-09-19')
+    updated = refreshed['tickets']['GITHUB-138']
+    assert updated['id'] == 'GITHUB-138'
+    assert updated['description'] == 'updated description'
+
+
+def test_isolate_ticket_conflicts_quarantines_ambiguous_sync_mapping_while_default_fails_closed(store):
+    import yaml
+
+    store.create_ticket(
+        Ticket(
+            id='PLF-002',
+            name='sibling open ticket',
+            description='ready to close',
+            status='open',
+            sprint='backlog',
+            integration=['github'],
+            sync={'github': {'id': '124', 'url': 'https://github.com/fixture/repo/issues/124',
+                             'repository': 'fixture/repo'}},
+        )
+    )
+    state_file = store.project_dir / '.planfile' / 'sync' / 'github.state.yaml'
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    state_file.write_text(
+        yaml.safe_dump(
+            {
+                'schema': 'planfile.sync-state/v2',
+                'backend': 'github',
+                'repository': 'fixture/repo',
+                'ticket_map': {'PLF-001': '123', 'GITHUB-123': '123', 'PLF-002': '124'},
+            }
+        ),
+        encoding='utf-8',
+    )
+
+    issues = [
+        SimpleNamespace(
+            id='123', name='ambiguous', description='ambiguous remote', status='closed',
+            assignee=None, labels=[], metadata={'state_reason': 'completed'}, key=None,
+            url='https://github.com/fixture/repo/issues/123',
+        ),
+        SimpleNamespace(
+            id='124', name='sibling open ticket', description='sibling closed cleanly', status='closed',
+            assignee=None, labels=[], metadata={'state_reason': 'completed'}, key=None,
+            url='https://github.com/fixture/repo/issues/124',
+        ),
+    ]
+
+    class Backend:
+        config = {'repo': 'fixture/repo'}
+
+        def list_tickets(self, since=None, **_kwargs):
+            return list(issues)
+
+    with pytest.raises(ValueError, match='ambiguous sync mapping for remote ticket 123'):
+        sync_from_external(Backend(), store, False, 'github')
+
+    sync_from_external(Backend(), store, False, 'github', isolate_ticket_conflicts=True)
+
+    assert read(store, 'PLF-002').status == 'done'
+    st = yaml.safe_load(state_file.read_text(encoding='utf-8'))
+    assert st.get('inbound_cursor_at')
+    quarantined = st.get('quarantined_inbound_tickets') or []
+    assert len(quarantined) == 1
+    assert quarantined[0]['remote_id'] == '123'
+    assert 'ambiguous sync mapping' in quarantined[0]['reason']

@@ -429,6 +429,7 @@ def _execute_sync_with_progress(
     remote_labels: list[str] | None = None,
     exclude_incident_noise: bool = False,
     timeout_seconds: float | None = None,
+    isolate_ticket_conflicts: bool = False,
 ) -> None:
     """Execute sync; GitHub both observes inbound before outbound mutation."""
     inbound_first = integration_name == "github" and direction == "both"
@@ -453,6 +454,8 @@ def _execute_sync_with_progress(
             }
             if timeout_seconds is not None:
                 pull_kwargs["timeout_seconds"] = timeout_seconds
+            if isolate_ticket_conflicts:
+                pull_kwargs["isolate_ticket_conflicts"] = True
             sync_from_external(
                 observer if inbound_first else backend,
                 inbound_store,
@@ -519,6 +522,7 @@ def sync_integration(
     max_tickets: int = 2,
     exclude_incident_noise: bool = False,
     timeout_seconds: float | None = None,
+    isolate_ticket_conflicts: bool = False,
 ) -> None:
     """Sync with a specific integration."""
     if show_header:
@@ -618,6 +622,7 @@ def sync_integration(
             remote_labels,
             exclude_incident_noise=exclude_incident_noise,
             **({"timeout_seconds": timeout_seconds} if timeout_seconds is not None else {}),
+            **({"isolate_ticket_conflicts": True} if isolate_ticket_conflicts else {}),
         )
         delivered_comments = []
         if integration_name == "github" and direction in {"to", "both"} and not dry_run:

@@ -53,6 +53,14 @@ except ImportError as exc:
     raise ImportError("FastAPI required: pip install 'fastapi[all]' uvicorn") from exc
 
 from planfile import __version__
+from planfile.api.standby import (
+    MUTATING_HTTP_METHODS,
+    READ_ONLY_RETRY_AFTER_SECONDS,
+    evaluate_readiness,
+    is_read_only_mode,
+    maintenance_disabled_for_standby,
+    read_only_rejection_payload,
+)
 from planfile.core.comparative_findings import ComparativeFindingProposal
 from planfile.core.models import (
     Ticket,
@@ -313,6 +321,17 @@ if _cors_origins:
     )
 
 NO_STORE_HEADERS = {"Cache-Control": "no-store, max-age=0"}
+
+
+@app.middleware("http")
+async def enforce_read_only_standby(request: Request, call_next):
+    if is_read_only_mode() and request.method.upper() in MUTATING_HTTP_METHODS:
+        return JSONResponse(
+            status_code=503,
+            content=read_only_rejection_payload(),
+            headers={**NO_STORE_HEADERS, "Retry-After": str(READ_ONLY_RETRY_AFTER_SECONDS)},
+        )
+    return await call_next(request)
 
 
 # ── Schemas ────────────────────────────────────────────────────────────────────
@@ -2858,6 +2877,12 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
             else:
                 last_run_date = today
                 if report.get("archived"):
+                    try:
+                        await asyncio.to_thread(
+                            _persist_current_locator_snapshot, get_planfile().store
+                        )
+                    except Exception:  # pragma: no cover - best-effort metadata sync
+                        pass
                     _remember_durable_event(
                         {
                             "type": "management.event",
@@ -2873,6 +2898,22 @@ async def _archive_history_daily(interval_seconds: float = 300.0) -> None:
                         }
                     )
         await asyncio.sleep(interval_seconds)
+
+
+def _persist_current_locator_snapshot(store, index=None) -> bool:
+    """Persist the verified locator while the SQLite projection matches sources."""
+    if not store.ticket_index_enabled():
+        return False
+    index = index or store._sqlite_ticket_index()
+    signature = store._ticket_index_signature()
+    if not index.is_current(signature):
+        return False
+    from planfile.core.index_repair import capture_locator_snapshot, persist_locator_snapshot
+
+    snapshot = capture_locator_snapshot(store, signature)
+    if snapshot is None:
+        return False
+    return persist_locator_snapshot(index, signature, snapshot)
 
 
 def _repair_ticket_index(*, locator_snapshot=None) -> dict:
@@ -2899,13 +2940,20 @@ def _repair_ticket_index(*, locator_snapshot=None) -> dict:
 
             try:
                 repaired = reconcile_index(store, index, locator_snapshot=locator_snapshot)
-            except sqlite3.DatabaseError:
-                # The existing full-rebuild path handles damaged or busy
+            except sqlite3.DatabaseError as exc:
+                from planfile.core.sqlite_index import _is_sqlite_contention
+
+                if _is_sqlite_contention(exc):
+                    raise TicketIndexContentionError("ticket_index_repair_busy") from exc
+                # The existing full-rebuild path handles damaged
                 # projections through the store's normal recovery protocol.
                 repaired = None
             if repaired is not None:
                 return repaired
-            return store._rebuild_ticket_index_unlocked(index, force=False)
+            result = store._rebuild_ticket_index_unlocked(index, force=False)
+            if isinstance(result, dict) and result.get("current"):
+                _persist_current_locator_snapshot(store, index)
+            return result
     except StoreLockTimeoutError:
         return {"rebuilt": False, "coalesced": True}
 
@@ -2949,7 +2997,7 @@ async def _maintain_ticket_index(interval_seconds: float = 3.0) -> None:
 
 async def _start_ticket_index_maintenance() -> None:
     global _ticket_index_maintenance_task
-    if os.environ.get("PLANFILE_DISABLE_INDEX_MAINTENANCE") == "1":
+    if maintenance_disabled_for_standby("PLANFILE_DISABLE_INDEX_MAINTENANCE"):
         return
     if (
         _ticket_index_maintenance_task is None
@@ -2974,7 +3022,7 @@ async def _stop_ticket_index_maintenance() -> None:
 
 async def _start_archive_maintenance() -> None:
     global _archive_maintenance_task
-    if os.environ.get("PLANFILE_DISABLE_ARCHIVE_MAINTENANCE") == "1":
+    if maintenance_disabled_for_standby("PLANFILE_DISABLE_ARCHIVE_MAINTENANCE"):
         return
     if _archive_maintenance_task is None or _archive_maintenance_task.done():
         _archive_maintenance_task = asyncio.create_task(
@@ -2996,6 +3044,8 @@ async def _stop_archive_maintenance() -> None:
 
 async def _start_planfile_watcher() -> None:
     global _watch_task
+    if is_read_only_mode():
+        return
     _remember_durable_event(
         {
             "type": "management.event",
@@ -5234,6 +5284,7 @@ async def websocket_dsl(websocket: WebSocket, project_path: str = "."):
 @app.get("/health", tags=["system"])
 async def health() -> dict[str, Any]:
     import planfile
+    from planfile.urtlog_bridge import bridge_health_summary
 
     identity = get_runtime_identity(runtime_version=planfile.__version__)
     return {
@@ -5247,7 +5298,15 @@ async def health() -> dict[str, Any]:
             "version_identifies_active_deployment": False,
         },
         "schema_versions": identity["schema_versions"],
+        "urtlog_bridge": bridge_health_summary(),
     }
+
+
+@app.get("/readyz", tags=["system"])
+def readyz() -> JSONResponse:
+    status_code, payload = evaluate_readiness(get_planfile())
+    headers = {**NO_STORE_HEADERS, **({"Retry-After": "2"} if status_code != 200 else {})}
+    return JSONResponse(status_code=status_code, content=payload, headers=headers)
 
 
 @app.get("/", response_class=HTMLResponse, tags=["system"])

@@ -89,6 +89,11 @@ def github_cmd(
         min=0.01,
         help="Monotonic operation deadline in seconds for GitHub inbound sync",
     ),
+    isolate_conflicts: bool = typer.Option(
+        False,
+        "--isolate-conflicts",
+        help="Quarantine per-ticket local CAS/lease conflicts instead of aborting the whole repository sync",
+    ),
 ) -> None:
     """Sync tickets with GitHub Issues."""
     resolved_timeout = (
@@ -106,6 +111,8 @@ def github_cmd(
     }
     if resolved_timeout is not None:
         sync_kwargs["timeout_seconds"] = resolved_timeout
+    if isolate_conflicts is True:
+        sync_kwargs["isolate_ticket_conflicts"] = True
     sync_integration(
         "github",
         directory,

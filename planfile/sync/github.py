@@ -5,6 +5,7 @@ import os
 import re
 import sqlite3
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -24,6 +25,7 @@ try:
     from github.Repository import Repository
 except ImportError:
     Github = None
+    GithubObject = None
     Issue = None
     Repository = None  # pip install PyGithub
 
@@ -158,7 +160,7 @@ class GitHubBackend(BasePMBackend):
         self._provider_read_cache = SQLiteResponseCache(cache_path, namespace=f"planfile-github:{repo}")
         # OutboundJournal owns durable retry/cooldown. PyGithub's default retry
         # can sleep until quota reset before the journal ever sees the failure.
-        self.github = Github(self.config["token"], retry=0)
+        self.github = Github(self.config["token"], retry=0, per_page=100)
         # Identity observations must bypass the read cache: an old name may
         # have been reused by a different repository since the cached response.
         self._identity_requester = self.github.requester
@@ -325,15 +327,29 @@ class GitHubBackend(BasePMBackend):
     def _canonical_labels(cls, labels: list[str] | None, priority: str | None) -> list[str]:
         """Build and validate the provider label projection without I/O."""
         issue_labels = []
-        for label in labels or []:
+        for raw_label in labels or []:
+            if not isinstance(raw_label, str):
+                raise ValueError(f"Invalid GitHub label: {raw_label!r}")
             # Dedupe keys are persisted in metadata/body markers. They are not
             # GitHub labels and can exceed GitHub's 50-character limit.
-            if label.startswith("dedupe:") or label.startswith("priority: "):
+            if raw_label.startswith("dedupe:") or raw_label.startswith("priority: "):
                 continue
-            if not label or len(label) > cls.MAX_LABEL_LENGTH or any(ord(char) < 32 for char in label):
-                raise ValueError(f"Invalid GitHub label: {label!r}")
-            if label not in issue_labels:
-                issue_labels.append(label)
+            if not raw_label or any(ord(char) < 32 for char in raw_label):
+                raise ValueError(f"Invalid GitHub label: {raw_label!r}")
+            parts = (
+                [part.strip() for part in raw_label.split(",") if part.strip()]
+                if "," in raw_label
+                else [raw_label]
+            )
+            if not parts:
+                raise ValueError(f"Invalid GitHub label: {raw_label!r}")
+            for label in parts:
+                if label.startswith("dedupe:") or label.startswith("priority: "):
+                    continue
+                if not label or len(label) > cls.MAX_LABEL_LENGTH or any(ord(char) < 32 for char in label):
+                    raise ValueError(f"Invalid GitHub label: {label!r}")
+                if label not in issue_labels:
+                    issue_labels.append(label)
         if priority:
             priority_label = f"priority-{priority}"
             if len(priority_label) > cls.MAX_LABEL_LENGTH:
@@ -1070,9 +1086,34 @@ class GitHubBackend(BasePMBackend):
 
         return self._issue_to_ticket_status(issue)
 
+    @staticmethod
+    def _issue_raw_data(issue: Any) -> dict[str, Any] | None:
+        """Return already-fetched raw payload without triggering PyGithub _completeIfNeeded()."""
+        raw_data = getattr(issue, "_rawData", None)
+        if isinstance(raw_data, dict):
+            return raw_data
+        if GithubObject is not None and isinstance(issue, GithubObject):
+            return None
+        fallback = getattr(issue, "raw_data", None)
+        return fallback if isinstance(fallback, dict) else None
+
+    @classmethod
+    def _is_pull_request_issue(cls, issue: Any) -> bool:
+        """Detect pull requests without triggering PyGithub lazy _completeIfNotSet fetches."""
+        raw_data = cls._issue_raw_data(issue)
+        if raw_data is not None:
+            return bool(raw_data.get("pull_request"))
+        return bool(getattr(issue, "pull_request", None))
+
     def _issue_to_ticket_status(self, issue: Issue) -> TicketState:
         """Convert a GitHub issue object into a TicketState."""
-        metadata = {"state_reason": getattr(issue, "state_reason", None)}
+        raw_data = self._issue_raw_data(issue)
+        state_reason = (
+            raw_data.get("state_reason")
+            if raw_data is not None
+            else getattr(issue, "state_reason", None)
+        )
+        metadata = {"state_reason": state_reason}
         body = getattr(issue, "body", "") or ""
         if markers := self._deduplication_markers(body):
             metadata["deduplication_key"] = markers[0].split("=", 1)[1].rsplit("-->", 1)[0].strip()
@@ -1144,6 +1185,7 @@ class GitHubBackend(BasePMBackend):
         backend_tag: str = "github",
         assignee: str | None = None,
         limit: int | None = None,
+        since: datetime | None = None,
     ) -> list[TicketState]:
         """List GitHub issues with filters."""
         state = "all" if not status else status.lower()
@@ -1151,18 +1193,25 @@ class GitHubBackend(BasePMBackend):
         self._quarantined_inbound_count = 0
 
         # Build kwargs - only include optional params if provided
-        kwargs = {"state": state}
+        kwargs: dict[str, Any] = {"state": state}
         if labels:
             kwargs["labels"] = labels
         if assignee:
             kwargs["assignee"] = assignee
+        if since is not None:
+            since_utc = (
+                since.replace(tzinfo=timezone.utc)
+                if since.tzinfo is None
+                else since.astimezone(timezone.utc)
+            )
+            kwargs["since"] = since_utc
 
         issues = self.repo.get_issues(**kwargs)
 
         tickets = []
         # GitHub listing path
         for issue in issues:
-            if getattr(issue, "pull_request", None) and not self.config.get(
+            if self._is_pull_request_issue(issue) and not self.config.get(
                 "include_pull_requests", False
             ):
                 continue

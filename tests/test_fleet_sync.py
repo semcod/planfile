@@ -92,3 +92,225 @@ def test_fleet_cli_dry_run(sync_cli, tmp_path):
     result = runner.invoke(sync_cli, ["sync", "fleet", str(tmp_path), "--dry-run"])
     assert result.exit_code == 0
     assert "No GitHub-integrated repositories found" in result.output
+
+
+def test_discover_fleet_repositories_descends_past_non_git_org_planfile(tmp_path):
+    # Org container directory has a stray .planfile (NOT a git repo)
+    org = tmp_path / "org"
+    (org / ".planfile").mkdir(parents=True)
+    (org / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/org\n")
+
+    # Actual Git repositories inside the org directory
+    repo1 = org / "proj1"
+    (repo1 / ".git").mkdir(parents=True)
+    (repo1 / ".planfile").mkdir(parents=True)
+    (repo1 / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/proj1\n")
+
+    repo2 = org / "proj2"
+    (repo2 / ".git").mkdir(parents=True)
+    (repo2 / ".planfile").mkdir(parents=True)
+    (repo2 / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/proj2\n")
+
+    discovered = discover_fleet_repositories(tmp_path, max_depth=2)
+    assert discovered == [(repo1, "org/proj1"), (repo2, "org/proj2")]
+
+
+def test_sync_fleet_continues_after_typer_exit_and_forwards_timeout(tmp_path):
+    for name in ("repo1", "repo2"):
+        pf = tmp_path / "org" / name / ".planfile"
+        pf.mkdir(parents=True)
+        (pf / "github.planfile.yaml").write_text(f"integrations:\n  github:\n    repo: org/{name}\n")
+
+    calls = []
+
+    def _fake_sync(backend, directory, **kwargs):
+        calls.append((directory, kwargs))
+        if directory.endswith("repo1"):
+            raise typer.Exit(1)
+
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=_fake_sync):
+        stats = sync_fleet(tmp_path, max_depth=2, dry_run=True, timeout_seconds=30.0)
+
+    assert stats["scanned"] == 2
+    assert stats["synced"] == 1
+    assert stats["failed"] == 1
+    assert all(kw["timeout_seconds"] == 30.0 for _, kw in calls)
+
+
+def test_reject_github_pull_request_urls_at_write_time():
+    from planfile.sync.operations import (
+        _import_new_ticket,
+        _record_backend_ref,
+        _update_local_ticket,
+    )
+
+    pr_url = "https://github.com/org/repo/pull/42"
+    with pytest.raises(ValueError, match="sync_github_pull_request_mapping_forbidden"):
+        _record_backend_ref({}, "github", {"id": "42", "url": pr_url, "key": "org/repo#42"}, "42")
+
+    with pytest.raises(ValueError, match="sync_github_pull_request_mapping_forbidden"):
+        _update_local_ticket(
+            {"tickets": {"PLF-1": {"id": "PLF-1", "status": "open"}}},
+            {},
+            "PLF-1",
+            {"id": "42", "name": "PR", "status": "open", "assignee": None, "labels": [], "url": pr_url},
+            0,
+            "github",
+            None,
+        )
+
+    with pytest.raises(ValueError, match="sync_github_pull_request_mapping_forbidden"):
+        _import_new_ticket(
+            {"tickets": {}},
+            {"id": "42", "name": "PR", "description": "", "status": "open", "assignee": None, "labels": [], "url": pr_url},
+            "github",
+            object(),
+            0,
+        )
+
+
+def test_sync_fleet_prioritizes_unsynced_and_stalest_repositories_under_max_projects(tmp_path):
+    repos = {
+        "a-fresh": "2026-11-23T12:00:00+00:00",
+        "b-stale": "2026-11-10T00:00:00+00:00",
+        "c-never": None,
+    }
+    for name, synced_at in repos.items():
+        pf = tmp_path / "org" / name / ".planfile"
+        pf.mkdir(parents=True)
+        (pf / "github.planfile.yaml").write_text(f"integrations:\n  github:\n    repo: org/{name}\n")
+        if synced_at is not None:
+            (pf / "sync").mkdir()
+            (pf / "sync/github.state.yaml").write_text(f"synced_at: '{synced_at}'\n")
+
+    called = []
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=lambda b, d, **kw: called.append(d.split("/")[-1])):
+        stats = sync_fleet(tmp_path, max_depth=2, max_projects=2, dry_run=True)
+
+    assert stats["scanned"] == 2
+    assert called == ["c-never", "b-stale"]
+
+
+def test_sync_fleet_treats_corrupt_state_file_as_unsynced(tmp_path):
+    fresh = tmp_path / "org" / "a-fresh" / ".planfile"
+    fresh.mkdir(parents=True)
+    (fresh / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/a-fresh\n")
+    (fresh / "sync").mkdir()
+    (fresh / "sync/github.state.yaml").write_text("synced_at: '2026-11-23T12:00:00Z'\n")
+
+    corrupt = tmp_path / "org" / "b-corrupt" / ".planfile"
+    corrupt.mkdir(parents=True)
+    (corrupt / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/b-corrupt\n")
+    (corrupt / "sync").mkdir()
+    (corrupt / "sync/github.state.yaml").write_text("::::\n\t[unterminated\n")
+
+    called = []
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=lambda b, d, **kw: called.append(d.split("/")[-1])):
+        stats = sync_fleet(tmp_path, max_depth=2, max_projects=1, dry_run=True)
+
+    assert stats["scanned"] == 1
+    assert called == ["b-corrupt"]
+
+
+def test_discover_fleet_repositories_skips_git_tracked_planfile_sprints(tmp_path):
+    import subprocess
+
+    tracked = tmp_path / "org" / "tracked"
+    (tracked / ".planfile" / "sprints").mkdir(parents=True)
+    (tracked / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/tracked\n")
+    (tracked / ".planfile" / "sprints" / "current.yaml").write_text("sprint:\n  tickets: {}\n")
+    subprocess.run(["git", "init"], cwd=tracked, check=True, capture_output=True)
+    subprocess.run(["git", "add", "-f", ".planfile/sprints/current.yaml"], cwd=tracked, check=True, capture_output=True)
+
+    ignored = tmp_path / "org" / "ignored"
+    (ignored / ".planfile" / "sprints").mkdir(parents=True)
+    (ignored / ".planfile" / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/ignored\n")
+    (ignored / ".planfile" / "sprints" / "current.yaml").write_text("sprint:\n  tickets: {}\n")
+    subprocess.run(["git", "init"], cwd=ignored, check=True, capture_output=True)
+
+    discovered = discover_fleet_repositories(tmp_path, max_depth=2)
+    assert discovered == [(ignored, "org/ignored")]
+
+
+def test_sync_fleet_forwards_isolate_ticket_conflicts_default_and_cli_override(sync_cli, tmp_path):
+    pf = tmp_path / "org" / "repo1" / ".planfile"
+    pf.mkdir(parents=True)
+    (pf / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/repo1\n")
+
+    with patch("planfile.cli.groups.sync.fleet.sync_integration") as mock_sync:
+        sync_fleet(tmp_path, max_depth=2, dry_run=True)
+        assert mock_sync.call_args.kwargs["isolate_ticket_conflicts"] is True
+
+        mock_sync.reset_mock()
+        sync_fleet(tmp_path, max_depth=2, dry_run=True, isolate_ticket_conflicts=False)
+        assert mock_sync.call_args.kwargs["isolate_ticket_conflicts"] is False
+
+        runner = CliRunner()
+        mock_sync.reset_mock()
+        res_default = runner.invoke(sync_cli, ["sync", "fleet", str(tmp_path), "--dry-run"])
+        assert res_default.exit_code == 0
+        assert mock_sync.call_args.kwargs["isolate_ticket_conflicts"] is True
+
+        mock_sync.reset_mock()
+        res_no = runner.invoke(sync_cli, ["sync", "fleet", str(tmp_path), "--dry-run", "--no-isolate-conflicts"])
+        assert res_no.exit_code == 0
+        assert mock_sync.call_args.kwargs["isolate_ticket_conflicts"] is False
+
+
+def test_sync_fleet_retries_transient_inbound_network_errors_only(tmp_path):
+    pf = tmp_path / "org" / "repo1" / ".planfile"
+    pf.mkdir(parents=True)
+    (pf / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/repo1\n")
+
+    attempts = {"count": 0}
+
+    def _flaky_dns(backend, directory, **kwargs):
+        attempts["count"] += 1
+        if attempts["count"] == 1:
+            raise RuntimeError("sync_inbound_fetch_failed") from ConnectionError(
+                "NameResolutionError: Failed to resolve 'api.github.com' ([Errno -3] Temporary failure in name resolution)"
+            )
+
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=_flaky_dns):
+        stats = sync_fleet(
+            tmp_path,
+            max_depth=2,
+            direction="from",
+            transient_retries=1,
+            transient_retry_delay_seconds=0.0,
+        )
+    assert attempts["count"] == 2
+    assert stats["synced"] == 1
+    assert stats["failed"] == 0
+
+    for blocked_direction in ("to", "both"):
+        attempts["count"] = 0
+        with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=_flaky_dns):
+            stats = sync_fleet(
+                tmp_path,
+                max_depth=2,
+                direction=blocked_direction,
+                transient_retries=1,
+                transient_retry_delay_seconds=0.0,
+            )
+        assert attempts["count"] == 1
+        assert stats["synced"] == 0
+        assert stats["failed"] == 1
+
+    attempts["count"] = 0
+
+    def _rate_limited(backend, directory, **kwargs):
+        attempts["count"] += 1
+        raise RuntimeError("403 API rate limit exceeded")
+
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=_rate_limited):
+        stats = sync_fleet(
+            tmp_path,
+            max_depth=2,
+            direction="from",
+            transient_retries=1,
+            transient_retry_delay_seconds=0.0,
+        )
+    assert attempts["count"] == 1
+    assert stats["synced"] == 0
+    assert stats["failed"] == 1

@@ -262,3 +262,16 @@ def test_fleet_executable_queue_and_cli_json(tmp_path: Path, monkeypatch) -> Non
     assert res_ticket.exit_code == 0, res_ticket.output
     cli_single = json.loads(res_ticket.stdout)
     assert cli_single["candidate_ids"] == [c1.id]
+
+
+def test_discover_planfile_repositories_descends_past_non_git_org_planfile(tmp_path):
+    from planfile.reconcile import discover_planfile_repositories
+
+    org = tmp_path / "org"
+    (org / ".planfile").mkdir(parents=True)
+    repo = org / "service-a"
+    (repo / ".git").mkdir(parents=True)
+    (repo / ".planfile").mkdir(parents=True)
+
+    discovered = discover_planfile_repositories(tmp_path, max_depth=2)
+    assert discovered == [repo.resolve()]

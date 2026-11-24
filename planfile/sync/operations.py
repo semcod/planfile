@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
+import os
 import re
 from contextlib import nullcontext
 from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -202,11 +205,21 @@ def _create_new_ticket(
     return external_id, external_ticket
 
 
+def _reject_github_pull_request_url(integration_name: str, url: Any) -> None:
+    """Refuse to persist a GitHub Pull Request URL as a ticket mapping."""
+    if integration_name != "github" or not url:
+        return
+    text = str(url).strip().lower()
+    if "github.com/" in text and "/pull/" in text:
+        raise ValueError("sync_github_pull_request_mapping_forbidden")
+
+
 def _record_backend_ref(
     ticket: dict, integration_name: str, external_ticket, external_id: str
 ) -> None:
     """Store backend-scoped references so OneDev IDs are never mistaken for GitHub IDs."""
     url = external_ticket.url if hasattr(external_ticket, "url") else external_ticket.get("url")
+    _reject_github_pull_request_url(integration_name, url)
     key = external_ticket.key if hasattr(external_ticket, "key") else external_ticket.get("key")
     sync = ticket.setdefault("sync", {})
     existing = sync.get(integration_name)
@@ -354,17 +367,50 @@ def _load_sync_sections(store, v1_source_file, v1_data) -> dict[str, dict]:
     return sections
 
 
+def _ordered_sprints_for_ticket(
+    sections: dict[str, dict], ticket_id: str, store: Any = None
+) -> list[str]:
+    """Return section sprint IDs in the exact lookup order used by store.update_ticket."""
+    lookup = getattr(store, "_ticket_lookup_sprints", None) if store is not None else None
+    if callable(lookup):
+        ordered: list[str] = []
+        seen: set[str] = set()
+        for sprint_id in lookup(ticket_id):
+            key = str(sprint_id)
+            if key in sections and key not in seen:
+                ordered.append(key)
+                seen.add(key)
+        for sprint_id in sections:
+            if sprint_id not in seen:
+                ordered.append(sprint_id)
+        return ordered
+    return list(sections.keys())
+
+
 def _find_local_ticket(
     sections: dict[str, dict],
     remote_id: str,
     sync_state,
     integration_name: str,
     ext_data: dict | None = None,
+    store: Any = None,
+    known_ticket_map: dict[str, str] | None = None,
 ) -> tuple[str | None, str | None, dict | None]:
     """Find an existing mapping even when the state ledger predates a repair."""
-    planfile_id = sync_state.get_local_id(remote_id)
+    if known_ticket_map is not None:
+        id_matches = [
+            str(local_id)
+            for local_id, mapped_id in known_ticket_map.items()
+            if str(mapped_id) == str(remote_id)
+        ]
+        if len(id_matches) > 1:
+            raise ValueError(f"ambiguous sync mapping for remote ticket {remote_id}")
+        planfile_id = id_matches[0] if id_matches else None
+    else:
+        planfile_id = sync_state.get_local_id(remote_id)
     if planfile_id:
-        for sprint_id, section in sections.items():
+        for sprint_id in _ordered_sprints_for_ticket(sections, planfile_id, store):
+            section = sections[sprint_id]
             ticket = (section.get("tickets") or {}).get(planfile_id)
             if isinstance(ticket, dict):
                 return sprint_id, planfile_id, ticket
@@ -386,7 +432,8 @@ def _find_local_ticket(
                         val = val.split(":")[-1].strip()
                     candidate_keys.append(val)
         for cand in candidate_keys:
-            for sprint_id, section in sections.items():
+            for sprint_id in _ordered_sprints_for_ticket(sections, cand, store):
+                section = sections[sprint_id]
                 ticket = (section.get("tickets") or {}).get(cand)
                 if isinstance(ticket, dict):
                     return sprint_id, cand, ticket
@@ -412,7 +459,13 @@ def _find_local_ticket(
     if len(matches) > 1:
         unique_local_ids = {m[1] for m in matches}
         if len(unique_local_ids) == 1:
-            for preferred in ("current", "backlog"):
+            only_id = next(iter(unique_local_ids))
+            preferred_order = (
+                _ordered_sprints_for_ticket(sections, only_id, store)
+                if store is not None
+                else ["current", "backlog"]
+            )
+            for preferred in preferred_order:
                 for m in matches:
                     if m[0] == preferred:
                         return m
@@ -424,20 +477,189 @@ def _find_local_ticket(
     return matches[0] if matches else (None, None, None)
 
 
+_INCREMENTAL_SINCE_OVERLAP_SECONDS = 60
+_FULL_SYNC_ENV_VAR = "PLANFILE_SYNC_FULL"
+
+
+def _supports_since_filter(backend) -> bool:
+    """Return True when the backend explicitly declares an optional ``since`` parameter."""
+    # Check both instance and class methods because bind_backend_deadline wraps
+    # instance ``list_tickets`` without preserving inspect.signature metadata.
+    candidates: list[Any] = []
+    if callable(getattr(backend, "_list_tickets", None)):
+        candidates.extend((getattr(backend, "_list_tickets", None), getattr(type(backend), "_list_tickets", None)))
+    else:
+        candidates.extend((getattr(backend, "list_tickets", None), getattr(type(backend), "list_tickets", None)))
+    for target in candidates:
+        if not callable(target):
+            continue
+        try:
+            sig = inspect.signature(target)
+        except (TypeError, ValueError):
+            continue
+        if "since" in sig.parameters:
+            return True
+    return False
+
+
+def _resolve_incremental_since(
+    sync_state,
+    integration_name: str,
+    *,
+    selected_remote_ids: set[str] | None,
+    remote_labels: list[str] | None,
+    requested_sprints: list[str],
+) -> datetime | None:
+    """Resolve an incremental ``since`` watermark for unscoped GitHub inbound syncs."""
+    if (
+        integration_name != "github"
+        or selected_remote_ids is not None
+        or remote_labels
+        or requested_sprints
+    ):
+        return None
+    if os.environ.get(_FULL_SYNC_ENV_VAR, "").strip().lower() in {"1", "true", "yes"}:
+        return None
+    try:
+        raw_state = sync_state.get_last_sync()
+    except Exception:
+        return None
+    if not isinstance(raw_state, dict):
+        return None
+    raw_cursor = raw_state.get("inbound_cursor_at")
+    if not isinstance(raw_cursor, str) or not raw_cursor.strip():
+        return None
+    try:
+        cursor = datetime.fromisoformat(raw_cursor.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if cursor.tzinfo is None:
+        cursor = cursor.replace(tzinfo=timezone.utc)
+    else:
+        cursor = cursor.astimezone(timezone.utc)
+    return cursor - timedelta(seconds=_INCREMENTAL_SINCE_OVERLAP_SECONDS)
+
+
+def _freeze_observed_updated_at(sections: dict[str, dict], store: Any) -> dict[str, str | None]:
+    """Capture evidence-projected updated_at revisions in canonical store lookup order."""
+    projector = getattr(store, "_project_ticket_evidence", None)
+    observed: dict[str, str | None] = {}
+    seen_ids: set[str] = set()
+    for section in sections.values():
+        if not isinstance(section, dict):
+            continue
+        for tid in section.get("tickets") or {}:
+            seen_ids.add(str(tid))
+    for tid in seen_ids:
+        raw_ticket = None
+        for sprint_id in _ordered_sprints_for_ticket(sections, tid, store):
+            cand = (sections[sprint_id].get("tickets") or {}).get(tid)
+            if isinstance(cand, dict):
+                raw_ticket = cand
+                break
+        if raw_ticket is None:
+            continue
+        projected = raw_ticket
+        if callable(projector):
+            raw_with_id = raw_ticket if raw_ticket.get("id") else {**raw_ticket, "id": tid}
+            try:
+                projected = projector(raw_with_id)
+            except ValueError:
+                projected = raw_ticket
+        if isinstance(projected, dict):
+            observed[tid] = projected.get("updated_at")
+        else:
+            observed[tid] = raw_ticket.get("updated_at")
+    return observed
+
+
+def _snapshot_ticket_map(sync_state: Any) -> dict[str, str] | None:
+    """Load ticket_map once into memory to avoid O(N) YAML reads during inbound sync."""
+    getter = getattr(sync_state, "get_last_sync", None)
+    if not callable(getter):
+        return None
+    try:
+        raw_state = getter()
+    except Exception:
+        return None
+    if not isinstance(raw_state, dict):
+        return None
+    raw_map = raw_state.get("ticket_map")
+    if raw_map is None:
+        return {}
+    if not isinstance(raw_map, dict):
+        return None
+    return {
+        str(k): str(v)
+        for k, v in raw_map.items()
+        if str(k).strip() and str(v).strip()
+    }
+
+
+def _save_sync_state_metadata(
+    sync_state: Any,
+    *,
+    inbound_cursor_at: str,
+    quarantined_inbound_tickets: list[dict[str, str]] | None = None,
+) -> None:
+    """Persist cursor/quarantine metadata while respecting minimal sync_state stubs."""
+    save_fn = getattr(sync_state, "save_sync", None)
+    if not callable(save_fn):
+        return
+    kwargs: dict[str, Any] = {}
+    try:
+        params = inspect.signature(save_fn).parameters
+    except (TypeError, ValueError):
+        params = {}
+    has_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+    if has_var_kw or "inbound_cursor_at" in params:
+        kwargs["inbound_cursor_at"] = inbound_cursor_at
+    if quarantined_inbound_tickets is not None and (
+        has_var_kw or "quarantined_inbound_tickets" in params
+    ):
+        kwargs["quarantined_inbound_tickets"] = quarantined_inbound_tickets
+    save_fn({}, **kwargs)
+
+
+def _is_isolatable_ticket_conflict(exc: Exception) -> bool:
+    """Return True when an inbound per-ticket conflict can be safely quarantined."""
+    if type(exc).__name__ == "TicketUpdatedAtConflictError":
+        return True
+    if isinstance(exc, ValueError):
+        msg = str(exc)
+        return any(
+            marker in msg
+            for marker in (
+                "inbound_terminal_transition_requires_execution_reconciliation",
+                "stale_ticket_snapshot",
+                "inbound_ticket_disappeared",
+                "ticket_already_exists",
+                "inbound_priority_invalid",
+                "inbound_priority_conflict",
+                "ambiguous sync mapping",
+                "evidence_ticket_id_invalid",
+            )
+        )
+    return False
+
+
 def _fetch_external_tickets(
     backend,
     integration_name: str,
     labels: list[str] | None = None,
     selected_remote_ids: set[str] | None = None,
+    since: datetime | None = None,
 ) -> list | None:
     """Fetch tickets; preserve provider failures for caller retry and cooldown."""
     try:
-        kwargs = {"labels": labels} if labels else {}
+        kwargs: dict[str, Any] = {"labels": labels} if labels else {}
         selected_reader = getattr(backend, "list_selected_tickets", None)
         if (integration_name == "github" and selected_remote_ids is not None
                 and callable(selected_reader)):
             external_tickets = selected_reader(selected_remote_ids, **kwargs)
         else:
+            if since is not None and _supports_since_filter(backend):
+                kwargs["since"] = since
             external_tickets = backend.list_tickets(**kwargs)
         if external_tickets is None:
             console.print(f"  [dim]ℹ️ No tickets found in {integration_name}[/dim]")
@@ -538,6 +760,10 @@ def _process_external_ticket(
     import_target: dict | None = None,
     selected_remote_ids: set[str] | None = None,
     store=None,
+    observed_updated_at: dict[str, str | None] | None = None,
+    known_ticket_map: dict[str, str] | None = None,
+    isolate_ticket_conflicts: bool = False,
+    quarantined_tickets: list[dict[str, str]] | None = None,
 ) -> tuple[int, int]:
     """Process a single external ticket. Returns updated (imported_count, updated_count)."""
     ext_data = _extract_ticket_data(ext_ticket)
@@ -556,11 +782,43 @@ def _process_external_ticket(
             if not candidate_ids.intersection(selected_remote_ids):
                 return imported_count, updated_count
 
-    sprint_name, planfile_id, local_ticket = _find_local_ticket(
-        sections, ext_data["id"], sync_state, integration_name, ext_data=ext_data
-    )
+    try:
+        sprint_name, planfile_id, local_ticket = _find_local_ticket(
+            sections,
+            ext_data["id"],
+            sync_state,
+            integration_name,
+            ext_data=ext_data,
+            store=store,
+            known_ticket_map=known_ticket_map,
+        )
+    except Exception as e:
+        if store is not None and isolate_ticket_conflicts and _is_isolatable_ticket_conflict(e):
+            console.print(
+                f"  [yellow]⚠️ Quarantined {ext_data['id']} "
+                f"(remote #{ext_data['id']}): {e}[/yellow]"
+            )
+            if quarantined_tickets is not None:
+                quarantined_tickets.append(
+                    {
+                        "local_id": "",
+                        "remote_id": str(ext_data["id"]),
+                        "reason": str(e)[:200],
+                    }
+                )
+            return imported_count, updated_count
+        raise
     if local_ticket is None:
         planfile_id = None
+        generated_id = f"{integration_name.upper()}-{ext_data['id']}"
+        for sec_name in _ordered_sprints_for_ticket(sections, generated_id, store):
+            sec = sections[sec_name]
+            sec_tickets = sec.get("tickets") if isinstance(sec, dict) else None
+            if isinstance(sec_tickets, dict) and isinstance(sec_tickets.get(generated_id), dict):
+                sprint_name = sec_name
+                planfile_id = generated_id
+                local_ticket = sec_tickets[generated_id]
+                break
     if ticket_ids:
         matches_local = bool(planfile_id and planfile_id in ticket_ids)
         matches_remote = bool(
@@ -583,12 +841,15 @@ def _process_external_ticket(
                 return imported_count, updated_count
             result = _update_local_ticket(
                 target, {}, planfile_id, ext_data, updated_count, integration_name, publish_to,
-                store=store,
+                store=store, observed_updated_at=observed_updated_at,
             )
             if not dry_run:
-                # Backfill the durable reverse mapping when an old ticket only
-                # carried its embedded sync reference.
-                sync_state.save_sync({planfile_id: ext_data["id"]})
+                remote_str = str(ext_data["id"])
+                # Backfill the durable reverse mapping only when missing or changed.
+                if known_ticket_map is None or known_ticket_map.get(planfile_id) != remote_str:
+                    sync_state.save_sync({planfile_id: remote_str})
+                    if known_ticket_map is not None:
+                        known_ticket_map[planfile_id] = remote_str
             return imported_count, result
         else:
             return _import_new_ticket(
@@ -601,8 +862,25 @@ def _process_external_ticket(
                 store=store,
                 target_sprint=next((name for name, section in sections.items()
                                     if section is (import_target or backlog)), "backlog"),
+                observed_updated_at=observed_updated_at,
+                known_ticket_map=known_ticket_map,
             ), updated_count
     except Exception as e:
+        if store is not None and isolate_ticket_conflicts and _is_isolatable_ticket_conflict(e):
+            local_ref = str(planfile_id or "")
+            console.print(
+                f"  [yellow]⚠️ Quarantined {local_ref or ext_data['id']} "
+                f"(remote #{ext_data['id']}): {e}[/yellow]"
+            )
+            if quarantined_tickets is not None:
+                quarantined_tickets.append(
+                    {
+                        "local_id": local_ref,
+                        "remote_id": str(ext_data["id"]),
+                        "reason": str(e)[:200],
+                    }
+                )
+            return imported_count, updated_count
         console.print(f"  ✗ Failed to import {ext_data['id']}: {e}")
         if store is not None:
             raise
@@ -644,6 +922,7 @@ def sync_from_external(
     remote_labels: list[str] | None = None,
     exclude_incident_noise: bool = False,
     timeout_seconds: float | None = None,
+    isolate_ticket_conflicts: bool = False,
 ) -> None:
     """Sync tickets from external system to planfile."""
     deadline = (
@@ -658,6 +937,8 @@ def sync_from_external(
         sync_state = _bind_sync_state(
             Path(store.base_dir), integration_name, backend, dry_run=dry_run
         )
+        known_ticket_map = _snapshot_ticket_map(sync_state)
+        quarantined_tickets: list[dict[str, str]] = []
         imported_count = 0
         updated_count = 0
         sdk_store = (
@@ -674,12 +955,16 @@ def sync_from_external(
         # the backlog are the same objects that are persisted below.
         sections["current"] = sprint
         sections["backlog"] = backlog
+        observed_updated_at: dict[str, str | None] | None = None
         if sdk_store is not None:
             # The compatibility loader may return mutable cached dictionaries.
             # Freeze the observed records before fetching from the remote backend.
             sections = deepcopy(sections)
             sprint = sections["current"]
             backlog = sections["backlog"]
+            observed_updated_at = (
+                _freeze_observed_updated_at(sections, sdk_store) if not dry_run else None
+            )
         requested_sprints = list(
             dict.fromkeys(str(value).strip() for value in (sprint_ids or []) if str(value).strip())
         )
@@ -712,8 +997,21 @@ def sync_from_external(
         if deadline is not None:
             deadline.set_stage("provider_fetch")
             deadline.check("provider_fetch")
+        is_unscoped = (
+            normalized_ticket_ids is None
+            and not remote_labels
+            and not requested_sprints
+        )
+        sync_started_at = datetime.now(timezone.utc)
+        since = _resolve_incremental_since(
+            sync_state,
+            integration_name,
+            selected_remote_ids=selected_remote_ids,
+            remote_labels=remote_labels,
+            requested_sprints=requested_sprints,
+        )
         external_tickets = _fetch_external_tickets(
-            backend, integration_name, remote_labels, selected_remote_ids
+            backend, integration_name, remote_labels, selected_remote_ids, since=since
         )
         if deadline is not None:
             pending_after_fetch = (
@@ -726,6 +1024,12 @@ def sync_from_external(
             return
         if not external_tickets:
             console.print(f"  [dim]ℹ️ No tickets to import from {integration_name}[/dim]")
+            if not dry_run and is_unscoped:
+                _save_sync_state_metadata(
+                    sync_state,
+                    inbound_cursor_at=sync_started_at.isoformat(),
+                    quarantined_inbound_tickets=[] if since is None else None,
+                )
             return
 
         work_tickets = [
@@ -734,6 +1038,7 @@ def sync_from_external(
             if not (exclude_incident_noise and is_incident_noise(ext_ticket))
         ]
         completed_tickets: list[str] = []
+        deferred_reconciliation_error: ValueError | None = None
         for idx, ext_ticket in enumerate(work_tickets):
             if deadline is not None:
                 deadline.set_stage("local_projection")
@@ -761,22 +1066,33 @@ def sync_from_external(
                             sections=sections,
                         )
                     raise
-            imported_count, updated_count = _process_external_ticket(
-                ext_ticket,
-                sprint,
-                backlog,
-                sync_state,
-                integration_name,
-                dry_run,
-                imported_count,
-                updated_count,
-                publish_to,
-                lookup_sections,
-                normalized_ticket_ids,
-                import_target,
-                selected_remote_ids,
-                store=sdk_store,
-            )
+            try:
+                imported_count, updated_count = _process_external_ticket(
+                    ext_ticket,
+                    sprint,
+                    backlog,
+                    sync_state,
+                    integration_name,
+                    dry_run,
+                    imported_count,
+                    updated_count,
+                    publish_to,
+                    lookup_sections,
+                    normalized_ticket_ids,
+                    import_target,
+                    selected_remote_ids,
+                    store=sdk_store,
+                    observed_updated_at=observed_updated_at,
+                    known_ticket_map=known_ticket_map,
+                    isolate_ticket_conflicts=isolate_ticket_conflicts,
+                    quarantined_tickets=quarantined_tickets,
+                )
+            except ValueError as exc:
+                if str(exc) == "inbound_terminal_transition_requires_execution_reconciliation":
+                    if deferred_reconciliation_error is None:
+                        deferred_reconciliation_error = exc
+                    continue
+                raise
             completed_tickets.append(_ticket_trace_id(ext_ticket))
 
         if not dry_run and (imported_count > 0 or updated_count > 0) and sdk_store is None:
@@ -789,6 +1105,19 @@ def sync_from_external(
                 imported_count,
                 updated_count,
                 sections=sections,
+            )
+        if deferred_reconciliation_error is not None:
+            raise deferred_reconciliation_error
+        if not dry_run and is_unscoped:
+            quarantine_arg = (
+                quarantined_tickets
+                if (since is None or quarantined_tickets)
+                else None
+            )
+            _save_sync_state_metadata(
+                sync_state,
+                inbound_cursor_at=sync_started_at.isoformat(),
+                quarantined_inbound_tickets=quarantine_arg,
             )
 
 
@@ -901,8 +1230,10 @@ def _update_local_ticket(
     integration_name: str,
     publish_to: list[str] | None,
     store=None,
+    observed_updated_at: dict[str, str | None] | None = None,
 ) -> int:
     """Update an existing local ticket from external data."""
+    _reject_github_pull_request_url(integration_name, ext_data.get("url"))
     backend_ref = {
         key: value
         for key, value in {
@@ -943,6 +1274,9 @@ def _update_local_ticket(
     if store is not None:
         changes = {key: value for key, value in update_fields.items()
                    if key != "id" and ticket.get(key) != value}
+        has_inner_id = bool(str(ticket.get("id") or "").strip())
+        if not has_inner_id:
+            changes["id"] = planfile_id
         if not changes:
             return updated_count
         execution = ticket.get("execution") or {}
@@ -950,13 +1284,24 @@ def _update_local_ticket(
                 and (execution.get("state") in {"running", "in_progress"}
                      or execution.get("assigned_to") or execution.get("lease_expires_at"))):
             raise ValueError("inbound_terminal_transition_requires_execution_reconciliation")
+        expected_updated_at = (
+            (
+                observed_updated_at.get(planfile_id, ticket.get("updated_at"))
+                if observed_updated_at is not None
+                else ticket.get("updated_at")
+            )
+            if has_inner_id
+            else None
+        )
         updated = store.update_ticket(
-            planfile_id, expected_updated_at=ticket.get("updated_at"),
+            planfile_id, expected_updated_at=expected_updated_at,
             expected_snapshot=deepcopy(ticket), actor=f"sync:{integration_name}",
             reason=f"Inbound {integration_name} ticket {ext_data['id']}", **changes)
         if updated is None:
             raise ValueError(f"inbound_ticket_disappeared: {planfile_id}")
         ticket.update(updated.model_dump(mode="json"))
+        if observed_updated_at is not None:
+            observed_updated_at[planfile_id] = updated.updated_at
     else:
         ticket.update(update_fields)
         ticket.setdefault("sprint", default_sprint)
@@ -974,16 +1319,24 @@ def _import_new_ticket(
     publish_to: list[str] | None = None,
     store=None,
     target_sprint: str = "backlog",
+    observed_updated_at: dict[str, str | None] | None = None,
+    known_ticket_map: dict[str, str] | None = None,
 ) -> int:
     """Import a new ticket from external system."""
+    _reject_github_pull_request_url(integration_name, ext_data.get("url"))
     new_id = f"{integration_name.upper()}-{ext_data['id']}"
 
     existing = (backlog.get("tickets") or {}).get(new_id)
     if isinstance(existing, dict):
         # Duplicate identity is an update, never authority to reschedule it.
         _update_local_ticket(backlog, {}, new_id, ext_data, 0,
-                             integration_name, publish_to, store=store)
-        sync_state.save_sync({new_id: ext_data["id"]})
+                             integration_name, publish_to, store=store,
+                             observed_updated_at=observed_updated_at)
+        remote_str = str(ext_data["id"])
+        if known_ticket_map is None or known_ticket_map.get(new_id) != remote_str:
+            sync_state.save_sync({new_id: remote_str})
+            if known_ticket_map is not None:
+                known_ticket_map[new_id] = remote_str
         return imported_count
 
     priority = normalize_inbound_priority(ext_data)
@@ -1026,7 +1379,10 @@ def _import_new_ticket(
         created = store.create_ticket(Ticket.model_validate(ticket_data), expected_absent=True)
         ticket_data = created.model_dump(mode="json")
     tickets[new_id] = ticket_data
-    sync_state.save_sync({new_id: ext_data["id"]})
+    remote_str = str(ext_data["id"])
+    sync_state.save_sync({new_id: remote_str})
+    if known_ticket_map is not None:
+        known_ticket_map[new_id] = remote_str
 
     console.print(f"  ✓ Imported: {new_id} ← {ext_data['id']}")
     return imported_count + 1
