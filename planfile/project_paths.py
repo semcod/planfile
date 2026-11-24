@@ -199,22 +199,23 @@ def _configured_github_repository(project_path: Path) -> str | None:
     return None
 
 
-def _validate_repository_origin(project_path: Path) -> None:
-    """Fail closed when a configured GitHub repository differs from origin."""
+def project_repository(project_path: Path) -> str | None:
+    """Resolve the local store's configured repository and cross-check its Git origin."""
     configured = _configured_github_repository(project_path)
     origin = _git_value(project_path, "remote", "get-url", "origin")
-    if not configured or not origin:
-        return
+    if not origin:
+        return configured
     try:
         actual = normalize_repository(origin)
     except ValueError:
-        raise RepositoryRoutingError(
-            f"cannot normalize Git origin {origin!r} for configured {configured}"
-        ) from None
-    if actual != configured:
+        if not configured:
+            return None
+        raise RepositoryRoutingError(f"cannot verify Git origin for configured {configured}") from None
+    if configured and actual != configured:
         raise RepositoryRoutingError(
             f"repository origin {actual} does not match integrations.github.repo {configured}"
         )
+    return actual
 
 
 def _outermost_planfile_ancestor(path: Path) -> Path | None:
@@ -260,7 +261,7 @@ def canonical_project_root(start: str | Path) -> Path:
         if project_root == path and start_root != path and is_operational_store_enabled(start_root):
             project_root = start_root
     if (project_root / PLANFILE_DIRNAME).is_dir() or is_operational_store_enabled(project_root):
-        _validate_repository_origin(project_root)
+        project_repository(project_root)
     return project_root
 
 

@@ -7,7 +7,7 @@ Projects Planfile CLI ticket mutations (``create``, ``depend``, ``update``,
 ``block``, ``done``, ``start``, ``claim``, ``ready``, ``resume``, ``fail``,
 ``input``, ``complete``) into ``UrtLogStore`` (PLAN/LOG records with DAG
 ``causation_id`` / ``depends_on`` edges) and indexes each ticket URN
-(``urn:planfile:ticket:<id>``) in ``UnifiedRegistry`` so Heyasa / Liquid D1
+(``urn:planfile:ticket:<owner>:<repo>:<id>`` for repository-bound producers) in ``UnifiedRegistry`` so Heyasa / Liquid D1
 decision models can observe completed, blocked, and queued work.
 """
 
@@ -20,6 +20,9 @@ from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from planfile.project_paths import RepositoryRoutingError, project_repository
+from planfile.utils.repository import normalize_repository
 
 DEFAULT_MAX_DECISION_SLICE_BYTES = 600
 MIN_DECISION_SLICE_BYTES = 128
@@ -64,8 +67,31 @@ def _slug(value: str, fallback: str = "unknown") -> str:
     return cleaned or fallback
 
 
-def _ticket_urn(ticket_id: str) -> str:
-    return f"urn:planfile:ticket:{_slug(ticket_id)}"
+def _repository_identity(repository: str | None, project_dir: Path | None) -> str | None:
+    if project_dir is None:
+        return normalize_repository(repository)
+    bound = project_repository(project_dir)
+    if not bound or (repository and bound != normalize_repository(repository)):
+        raise RepositoryRoutingError("unresolved ticket repository")
+    return bound
+
+
+def _resource_key(value: str, repository: str | None) -> str:
+    """Keep legacy unqualified SDK addresses readable, partition new store-bound records."""
+    if repository:
+        return f"{repository.replace('/', ':')}:{_slug(value)}"
+    return _slug(value)
+
+
+def _ticket_urn(ticket_id: str, repository: str | None) -> str:
+    return f"urn:planfile:ticket:{_resource_key(ticket_id, repository)}"
+
+
+def _registry_prefix(urtlog_mod, repository: str | None) -> str | None:
+    if not repository:
+        return None
+    path = urtlog_mod.DataRef(urn=_ticket_urn("ticket", repository)).res_path
+    return path.rsplit("/", 1)[0] + "/"
 
 
 def _extract_attr(obj: Any, name: str, default: Any = None) -> Any:
@@ -86,7 +112,8 @@ def maybe_emit_ticket_created(
     ticket: Any,
     *,
     created: bool = True,
-    repository: str = "semcod/planfile",
+    repository: str | None = None,
+    project_dir: Path | None = None,
     state_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Emit a Planfile ticket create/reuse intent into UrtLogStore and register its URN."""
@@ -98,6 +125,8 @@ def maybe_emit_ticket_created(
         if urtlog_mod is None:
             return {"emitted": False, "reason": "urtlog_not_installed"}
 
+        repository = _repository_identity(repository, project_dir)
+
         tid = str(_extract_attr(ticket, "id", "unknown"))
         title = str(_extract_attr(ticket, "name", "") or "")
         sprint = str(_extract_attr(ticket, "sprint", "current") or "current")
@@ -106,19 +135,20 @@ def maybe_emit_ticket_created(
         labels = list(_extract_attr(ticket, "labels", []) or [])
         blocked_by = list(_extract_attr(ticket, "blocked_by", []) or [])
         at_us = _now_us()
-        event_id = f"plf-create-{_slug(tid)}-{at_us}"
+        event_id = f"plf-create-{_resource_key(tid, repository)}-{at_us}"
         op_uri = f"planfile://ticket/{'create' if created else 'reuse'}/{_slug(tid)}"
-        urn = _ticket_urn(tid)
+        urn = _ticket_urn(tid, repository)
 
-        with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository) as client:
+        with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository or "semcod/planfile") as client:
             client.registry.register_urn(
                 urn,
-                owner="semcod/planfile",
+                owner=repository or "semcod/planfile",
                 system="planfile",
                 description=f"[{status_val}|{priority}|sprint:{sprint}] {title[:180]}",
                 sensitivity="internal",
                 revision=status_val,
                 metadata={
+                    "repository": repository,
                     "ticket_id": tid,
                     "title": title[:240],
                     "status": status_val,
@@ -136,7 +166,7 @@ def maybe_emit_ticket_created(
                 uri=urtlog_mod.OperationUri.parse(op_uri),
                 inputs=(
                     urtlog_mod.DataRef(
-                        urn=f"urn:planfile:sprint:{_slug(sprint)}",
+                        urn=f"urn:planfile:sprint:{_resource_key(sprint, repository)}",
                         role="sprint",
                         sensitivity="internal",
                     ),
@@ -149,14 +179,15 @@ def maybe_emit_ticket_created(
                     ),
                 ),
                 status="planned",
-                repository=repository,
+                repository=repository or "semcod/planfile",
                 actor="planfile",
                 sensitivity="internal",
                 owner_principal="planfile",
-                run_id=f"planfile-{_slug(tid)}",
+                run_id=f"planfile-{_resource_key(tid, repository)}",
                 log_type="lifecycle",
                 summary=f"{'Created' if created else 'Reused'} {tid} ({priority}, {sprint}): {title[:140]}",
                 metadata={
+                    "repository": repository,
                     "ticket_id": tid,
                     "created": bool(created),
                     "title": title[:240],
@@ -174,6 +205,8 @@ def maybe_emit_ticket_created(
             )
             client.store.append(record)
         return {"emitted": True, "event_id": event_id, "uri": op_uri, "urn": urn}
+    except RepositoryRoutingError:
+        return {"emitted": False, "reason": "repository_unresolved"}
     except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError):
         return {"emitted": False, "reason": "emit_failed"}
 
@@ -183,7 +216,8 @@ def maybe_emit_ticket_dependency(
     *,
     after: Sequence[str] = (),
     before: Sequence[str] = (),
-    repository: str = "semcod/planfile",
+    repository: str | None = None,
+    project_dir: Path | None = None,
     state_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Emit a Planfile DAG dependency edge (`--after`/`--before`) into UrtLogStore."""
@@ -195,21 +229,23 @@ def maybe_emit_ticket_dependency(
         if urtlog_mod is None:
             return {"emitted": False, "reason": "urtlog_not_installed"}
 
+        repository = _repository_identity(repository, project_dir)
+
         after_list = [str(x) for x in after if x]
         before_list = [str(x) for x in before if x]
         at_us = _now_us()
-        event_id = f"plf-depend-{_slug(ticket_id)}-{at_us}"
+        event_id = f"plf-depend-{_resource_key(ticket_id, repository)}-{at_us}"
         op_uri = f"planfile://ticket/depend/{_slug(ticket_id)}"
-        urn = _ticket_urn(ticket_id)
+        urn = _ticket_urn(ticket_id, repository)
 
         inputs = tuple(
-            urtlog_mod.DataRef(urn=_ticket_urn(dep), role="dependency", sensitivity="internal")
+            urtlog_mod.DataRef(urn=_ticket_urn(dep, repository), role="dependency", sensitivity="internal")
             for dep in after_list
         ) or (urtlog_mod.DataRef(urn=urn, role="ticket", sensitivity="internal"),)
         outputs = (
             urtlog_mod.DataRef(urn=urn, role="dependent_ticket", sensitivity="internal"),
             *(
-                urtlog_mod.DataRef(urn=_ticket_urn(nxt), role="downstream_ticket", sensitivity="internal")
+                urtlog_mod.DataRef(urn=_ticket_urn(nxt, repository), role="downstream_ticket", sensitivity="internal")
                 for nxt in before_list
             ),
         )
@@ -221,15 +257,16 @@ def maybe_emit_ticket_dependency(
             parts.append(f"before {', '.join(before_list)}")
         summary = f"Sequenced {ticket_id}: {'; '.join(parts) or 'dependency updated'}"
 
-        with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository) as client:
+        with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository or "semcod/planfile") as client:
             client.registry.register_urn(
                 urn,
-                owner="semcod/planfile",
+                owner=repository or "semcod/planfile",
                 system="planfile",
                 description=f"[waiting_dependency] {summary[:180]}",
                 sensitivity="internal",
                 revision="sequenced",
                 metadata={
+                    "repository": repository,
                     "ticket_id": ticket_id,
                     "status": "waiting_dependency" if after_list else "open",
                     "depends_on": after_list,
@@ -245,15 +282,16 @@ def maybe_emit_ticket_dependency(
                 inputs=inputs,
                 outputs=outputs,
                 status="planned",
-                repository=repository,
+                repository=repository or "semcod/planfile",
                 actor="planfile",
                 sensitivity="internal",
                 owner_principal="planfile",
-                run_id=f"planfile-{_slug(ticket_id)}",
-                causation_id=f"planfile-{_slug(after_list[0])}" if after_list else None,
+                run_id=f"planfile-{_resource_key(ticket_id, repository)}",
+                causation_id=f"planfile-{_resource_key(after_list[0], repository)}" if after_list else None,
                 log_type="lifecycle",
                 summary=summary[:240],
                 metadata={
+                    "repository": repository,
                     "ticket_id": ticket_id,
                     "depends_on": after_list,
                     "blocks": before_list,
@@ -266,6 +304,8 @@ def maybe_emit_ticket_dependency(
             )
             client.store.append(record)
         return {"emitted": True, "event_id": event_id, "uri": op_uri, "depends_on": after_list}
+    except RepositoryRoutingError:
+        return {"emitted": False, "reason": "repository_unresolved"}
     except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError):
         return {"emitted": False, "reason": "emit_failed"}
 
@@ -276,7 +316,8 @@ def maybe_emit_ticket_event(
     *,
     reason: str | None = None,
     note: str | None = None,
-    repository: str = "semcod/planfile",
+    repository: str | None = None,
+    project_dir: Path | None = None,
     state_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Emit a Planfile ticket transition (`update`, `block`, `done`, `fail`, `start`, `ready`, etc.)."""
@@ -287,6 +328,8 @@ def maybe_emit_ticket_event(
         urtlog_mod = _load_urtlog()
         if urtlog_mod is None:
             return {"emitted": False, "reason": "urtlog_not_installed"}
+
+        repository = _repository_identity(repository, project_dir)
 
         tid = str(_extract_attr(ticket, "id", str(ticket)))
         title = str(_extract_attr(ticket, "name", "") or "")
@@ -312,19 +355,20 @@ def maybe_emit_ticket_event(
         detail = reason or note or title
         summary = f"Ticket {tid} {clean_action} ({status_val})" + (f": {str(detail)[:160]}" if detail else "")
         at_us = _now_us()
-        event_id = f"plf-{clean_action}-{_slug(tid)}-{at_us}"
+        event_id = f"plf-{clean_action}-{_resource_key(tid, repository)}-{at_us}"
         op_uri = f"planfile://ticket/{clean_action}/{_slug(tid)}"
-        urn = _ticket_urn(tid)
+        urn = _ticket_urn(tid, repository)
 
-        with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository) as client:
+        with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository or "semcod/planfile") as client:
             client.registry.register_urn(
                 urn,
-                owner="semcod/planfile",
+                owner=repository or "semcod/planfile",
                 system="planfile",
                 description=f"[{status_val}|{priority}] {title[:120]}" + (f" | {str(reason or note)[:100]}" if (reason or note) else ""),
                 sensitivity="internal",
                 revision=status_val,
                 metadata={
+                    "repository": repository,
                     "ticket_id": tid,
                     "title": title[:240],
                     "status": status_val,
@@ -353,15 +397,16 @@ def maybe_emit_ticket_event(
                     ),
                 ),
                 status=urt_status,
-                repository=repository,
+                repository=repository or "semcod/planfile",
                 actor="planfile",
                 sensitivity="internal",
                 owner_principal="planfile",
-                run_id=f"planfile-{_slug(tid)}",
+                run_id=f"planfile-{_resource_key(tid, repository)}",
                 stage="completed",
                 log_type=log_type,
                 summary=summary[:240],
                 metadata={
+                    "repository": repository,
                     "ticket_id": tid,
                     "action": clean_action,
                     "status": status_val,
@@ -379,6 +424,8 @@ def maybe_emit_ticket_event(
             )
             client.store.append(record)
         return {"emitted": True, "event_id": event_id, "uri": op_uri, "status": urt_status}
+    except RepositoryRoutingError:
+        return {"emitted": False, "reason": "repository_unresolved"}
     except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError):
         return {"emitted": False, "reason": "emit_failed"}
 
@@ -386,6 +433,7 @@ def maybe_emit_ticket_event(
 def load_planfile_queue_brief(
     *,
     limit: int = 50,
+    repository: str | None = None,
     state_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Read compact Planfile ticket/DAG state from UnifiedRegistry + UrtLogStore for Heyasa/D1."""
@@ -397,6 +445,8 @@ def load_planfile_queue_brief(
         if urtlog_mod is None:
             return {"enabled": False, "reason": "urtlog_not_installed", "tickets": [], "blocked": [], "done": [], "queued": []}
 
+        repository = normalize_repository(repository)
+        prefix = _registry_prefix(urtlog_mod, repository)
         ctx = urtlog_mod.AccessContext(
             "heyasa",
             roles=frozenset({"assistant"}),
@@ -404,8 +454,8 @@ def load_planfile_queue_brief(
             max_sensitivity="internal",
         )
         with urtlog_mod.UrtClient(target_dir, source="planfile", repository="semcod/planfile") as client:
-            urn_rows = client.registry.search(ctx, kind="urn", system="planfile", limit=max(1, min(int(limit), 200)))
-            events = client.store.query(ctx, source="planfile", op_prefix="op/planfile/ticket/", limit=max(1, min(int(limit) * 2, 200)))
+            urn_rows = client.registry.search(ctx, kind="urn", system="planfile", prefix=prefix, limit=max(1, min(int(limit), 200)))
+            events = client.store.query(ctx, source="planfile", op_prefix="op/planfile/ticket/", repository=repository, res_prefix=prefix, limit=max(1, min(int(limit) * 2, 200)))
 
         tickets: list[dict[str, Any]] = []
         blocked: list[str] = []
@@ -413,11 +463,14 @@ def load_planfile_queue_brief(
         queued: list[str] = []
         for row in urn_rows:
             meta = row.get("metadata") or {}
+            if repository and meta.get("repository") != repository:
+                continue
             tid = str(meta.get("ticket_id") or row.get("address", ""))
             st = str(meta.get("status") or row.get("revision") or "unknown").lower()
             entry = {
                 "ticket_id": tid,
                 "urn": row.get("address"),
+                "repository": meta.get("repository"),
                 "status": st,
                 "description": row.get("description", ""),
                 "depends_on": meta.get("depends_on") or meta.get("blocked_by") or [],
@@ -425,12 +478,13 @@ def load_planfile_queue_brief(
                 "note": meta.get("note"),
             }
             tickets.append(entry)
+            key = entry["urn"] if entry["repository"] and not repository else tid
             if st == "blocked":
-                blocked.append(tid)
+                blocked.append(key)
             elif st in {"done", "completed"}:
-                done.append(tid)
+                done.append(key)
             else:
-                queued.append(tid)
+                queued.append(key)
 
         return {
             "enabled": True,
@@ -448,6 +502,7 @@ def load_planfile_queue_brief(
 def fetch_decision_slice(
     *,
     ticket_id: str | None = None,
+    repository: str | None = None,
     urn: str | None = None,
     text: str | None = None,
     max_bytes: int = DEFAULT_MAX_DECISION_SLICE_BYTES,
@@ -467,17 +522,26 @@ def fetch_decision_slice(
             if isinstance(max_bytes, bool) or not isinstance(max_bytes, int)
             else max(MIN_DECISION_SLICE_BYTES, min(max_bytes, MAX_DECISION_SLICE_BYTES))
         )
-        target_urn = _ticket_urn(ticket_id) if ticket_id else (urn.strip() if urn else None)
+        repository = normalize_repository(repository)
+        target_urn = _ticket_urn(ticket_id, repository) if ticket_id else (urn.strip() if urn else None)
+        group = _registry_prefix(urtlog_mod, repository)
+        if target_urn:
+            target_path = urtlog_mod.DataRef(urn=target_urn).res_path
+            if group and not target_path.startswith(group):
+                return None
+            group = target_path
         ctx = urtlog_mod.AccessContext(
             "heyasa", roles=frozenset({"assistant"}), groups=frozenset({"ops"}), max_sensitivity="internal"
         )
         with urtlog_mod.UrtClient(target_dir, source="planfile", repository="semcod/planfile") as client:
             rows = client.registry.search(
-                ctx, kind="urn", system="planfile", text=target_urn or text or None, only_available=False, limit=32
+                ctx, kind="urn", system="planfile", prefix=group, text=target_urn or text or None, only_available=False, limit=32
             )
     except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError):
         return None
 
+    if repository:
+        rows = [row for row in rows if (row.get("metadata") or {}).get("repository") == repository]
     if target_urn:
         rows = [row for row in rows if str(row.get("address") or "") == target_urn]
 
@@ -494,7 +558,7 @@ def fetch_decision_slice(
     for row in rows:
         meta = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
         entry: dict[str, Any] = {
-            "addr": str(row.get("address") or "")[:96],
+            "addr": str(row.get("address") or ""),
             "desc": str(row.get("description") or "")[:96],
         }
         status = str(meta.get("status") or row.get("revision") or "").strip()
