@@ -8,12 +8,14 @@ import pytest
 
 from planfile.core.store import PlanfileStore, Ticket
 from planfile.sync.operations import sync_from_external
+from planfile.sync.state import SyncState
 
 
 class _StubBackend:
     def __init__(self, tickets: list[dict]):
         self._tickets = tickets
         self.repo_name = "org/demo"
+        self.config = {"repo": "org/demo"}
 
     def list_tickets(self, **_kwargs):
         return list(self._tickets)
@@ -207,4 +209,79 @@ def test_inbound_sync_preserves_local_dedupe_labels(tmp_path: Path) -> None:
     updated = store.get_ticket("VA-076")
     assert updated is not None
     assert updated.labels == ["planfile", "routing-health", dedupe_label]
+
+
+def test_inbound_sync_skips_retired_local_ticket_with_own_deduplication_key(
+    tmp_path: Path,
+) -> None:
+    store = PlanfileStore(tmp_path)
+    state = SyncState(Path(store.base_dir), "github", repository="org/demo")
+    own_marker = f"<!-- planfile:deduplication-key=org/demo:{state.store_identity}:PLF-474 -->"
+    backend = _StubBackend(
+        [
+            {
+                "id": "474",
+                "title": "Retired local ticket",
+                "status": "closed",
+                "description": f"{own_marker}\nPreviously exported from this store.",
+                "assignee": None,
+                "labels": [],
+                "url": "https://github.com/org/demo/issues/474",
+                "metadata": {"state_reason": "completed"},
+            },
+            {
+                "id": "475",
+                "title": "Genuine external issue",
+                "status": "open",
+                "description": "Created directly on GitHub.",
+                "assignee": None,
+                "labels": [],
+                "url": "https://github.com/org/demo/issues/475",
+                "metadata": {},
+            },
+        ]
+    )
+
+    sync_from_external(backend, store, integration_name="github", dry_run=False)
+    assert store.get_ticket("GITHUB-474") is None
+    assert store.get_ticket("PLF-474") is None
+    imported = store.get_ticket("GITHUB-475")
+    assert imported is not None
+    assert imported.name == "Genuine external issue"
+
+
+def test_inbound_sync_imports_ticket_with_foreign_repo_or_store_deduplication_key(
+    tmp_path: Path,
+) -> None:
+    store = PlanfileStore(tmp_path)
+    state = SyncState(Path(store.base_dir), "github", repository="org/demo")
+    foreign_store_id = "0" * 16 if state.store_identity != "0" * 16 else "1" * 16
+    backend = _StubBackend(
+        [
+            {
+                "id": "501",
+                "title": "From another clone",
+                "status": "open",
+                "description": f"<!-- planfile:deduplication-key=org/demo:{foreign_store_id}:PLF-10 -->\nBody",
+                "assignee": None,
+                "labels": [],
+                "url": "https://github.com/org/demo/issues/501",
+                "metadata": {},
+            },
+            {
+                "id": "502",
+                "title": "From another repo",
+                "status": "open",
+                "description": f"<!-- planfile:deduplication-key=other/repo:{state.store_identity}:PLF-11 -->\nBody",
+                "assignee": None,
+                "labels": [],
+                "url": "https://github.com/org/demo/issues/502",
+                "metadata": {},
+            },
+        ]
+    )
+
+    sync_from_external(backend, store, integration_name="github", dry_run=False)
+    assert store.get_ticket("GITHUB-501") is not None
+    assert store.get_ticket("GITHUB-502") is not None
 
