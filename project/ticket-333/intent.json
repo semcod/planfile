@@ -1,0 +1,27 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-333",
+  "summary": "Defer the workspace alias index for local ticket observations (PLF-29386)",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-333/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/executable_queue.py",
+    "planfile/reconcile.py",
+    "tests/test_executable_queue.py",
+    "tests/test_reconcile_in_progress.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
