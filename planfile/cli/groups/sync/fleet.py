@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import shutil
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ from rich.table import Table
 from planfile.cli.core import console, print_error, print_success
 from planfile.cli.groups.sync.core import sync_integration
 from planfile.integrations.config import IntegrationConfig
+from planfile.sync.deadline import SyncDeadlineExceededError
 
 DEFAULT_INTERVAL_HOURS = 6
 SERVICE_NAME = "planfile-fleet-sync.service"
@@ -223,6 +225,46 @@ def _last_synced_timestamp(repo_path: Path) -> float:
 
 
 VALID_FLEET_DIRECTIONS = frozenset({"from", "to", "both"})
+_NON_TRANSIENT_PROVIDER_MARKERS = (
+    "403",
+    "429",
+    "rate limit",
+    "ratelimit",
+    "secondary limit",
+    "abuse detection",
+    "permission",
+    "unauthorized",
+    "401",
+)
+_TRANSIENT_FLEET_NETWORK_MARKERS = (
+    "nameresolutionerror",
+    "temporary failure in name resolution",
+    "tls handshake timeout",
+    "remotedisconnected",
+    "read timed out",
+    "connection aborted",
+    "connection reset",
+    "sync_inbound_fetch_failed",
+    "httpsconnectionpool",
+)
+
+
+def _is_transient_fleet_network_error(exc: BaseException) -> bool:
+    """Return True only for short-lived transport/DNS errors during read-only inbound sync."""
+    if isinstance(exc, (SyncDeadlineExceededError, SystemExit, KeyboardInterrupt)):
+        return False
+    parts: list[str] = []
+    cur: BaseException | None = exc
+    seen: set[int] = set()
+    while cur is not None and id(cur) not in seen:
+        seen.add(id(cur))
+        parts.append(str(cur))
+        parts.append(type(cur).__name__)
+        cur = cur.__cause__ or cur.__context__
+    text = " ".join(parts).lower()
+    if any(marker in text for marker in _NON_TRANSIENT_PROVIDER_MARKERS):
+        return False
+    return any(marker in text for marker in _TRANSIENT_FLEET_NETWORK_MARKERS)
 
 
 def sync_fleet(
@@ -234,6 +276,9 @@ def sync_fleet(
     max_projects: int | None = None,
     timeout_seconds: float | None = 45.0,
     direction: str = "from",
+    isolate_ticket_conflicts: bool = True,
+    transient_retries: int = 1,
+    transient_retry_delay_seconds: float = 1.0,
 ) -> dict[str, Any]:
     """Execute GitHub sync across all discovered fleet repositories."""
     norm_direction = str(direction or "from").strip().lower()
@@ -269,31 +314,44 @@ def sync_fleet(
     console.print(f"[dim]   Filter incident noise: {exclude_incident_noise}[/dim]")
     console.print(f"[dim]   Managed labels only: {managed_only}[/dim]\n")
 
+    max_attempts = 1 + (max(0, transient_retries) if norm_direction == "from" else 0)
     for repo_path, gh_repo in discovered:
         repo_name = repo_path.name
         console.print(f"[bold cyan]📁 {repo_name}[/bold cyan] [dim]({gh_repo})[/dim]")
-        try:
-            sync_kwargs: dict[str, Any] = {
-                "dry_run": dry_run,
-                "direction": norm_direction,
-                "show_header": False,
-                "managed_only": managed_only,
-                "exclude_incident_noise": exclude_incident_noise,
-            }
-            if timeout_seconds is not None:
-                sync_kwargs["timeout_seconds"] = timeout_seconds
-            sync_integration("github", str(repo_path), **sync_kwargs)
-            stats["synced"] += 1
-            stats["results"].append({"repo": repo_name, "github": gh_repo, "status": "ok"})
-        except (Exception, SystemExit) as exc:
-            stats["failed"] += 1
-            stats["results"].append({
-                "repo": repo_name,
-                "github": gh_repo,
-                "status": "error",
-                "error": str(exc) or type(exc).__name__,
-            })
-            console.print(f"  [red]✗ Sync error for {repo_name}: {exc}[/red]")
+        sync_kwargs: dict[str, Any] = {
+            "dry_run": dry_run,
+            "direction": norm_direction,
+            "show_header": False,
+            "managed_only": managed_only,
+            "exclude_incident_noise": exclude_incident_noise,
+            "isolate_ticket_conflicts": isolate_ticket_conflicts,
+        }
+        if timeout_seconds is not None:
+            sync_kwargs["timeout_seconds"] = timeout_seconds
+        for attempt in range(1, max_attempts + 1):
+            try:
+                sync_integration("github", str(repo_path), **sync_kwargs)
+                stats["synced"] += 1
+                stats["results"].append({"repo": repo_name, "github": gh_repo, "status": "ok"})
+                break
+            except (Exception, SystemExit) as exc:
+                if attempt < max_attempts and _is_transient_fleet_network_error(exc):
+                    console.print(
+                        f"  [yellow]↻ Transient fetch error for {repo_name}; "
+                        f"retrying ({attempt}/{max_attempts - 1})[/yellow]"
+                    )
+                    if transient_retry_delay_seconds > 0:
+                        time.sleep(transient_retry_delay_seconds)
+                    continue
+                stats["failed"] += 1
+                stats["results"].append({
+                    "repo": repo_name,
+                    "github": gh_repo,
+                    "status": "error",
+                    "error": str(exc) or type(exc).__name__,
+                })
+                console.print(f"  [red]✗ Sync error for {repo_name}: {exc}[/red]")
+                break
 
     return stats
 
@@ -331,6 +389,11 @@ def fleet_cmd(
         "from",
         "--direction",
         help="Sync direction: from (inbound), to (outbound), or both (bidirectional)",
+    ),
+    isolate_conflicts: bool = typer.Option(
+        True,
+        "--isolate-conflicts/--no-isolate-conflicts",
+        help="Quarantine per-ticket inbound conflicts instead of aborting the repository sync",
     ),
     install_timer: bool = typer.Option(
         False,
@@ -392,6 +455,7 @@ def fleet_cmd(
         max_projects=max_projects,
         timeout_seconds=timeout,
         direction=direction,
+        isolate_ticket_conflicts=isolate_conflicts,
     )
 
     table = Table(title="Fleet Sync Summary", show_header=True, header_style="bold magenta")

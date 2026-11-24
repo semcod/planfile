@@ -230,3 +230,87 @@ def test_discover_fleet_repositories_skips_git_tracked_planfile_sprints(tmp_path
 
     discovered = discover_fleet_repositories(tmp_path, max_depth=2)
     assert discovered == [(ignored, "org/ignored")]
+
+
+def test_sync_fleet_forwards_isolate_ticket_conflicts_default_and_cli_override(sync_cli, tmp_path):
+    pf = tmp_path / "org" / "repo1" / ".planfile"
+    pf.mkdir(parents=True)
+    (pf / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/repo1\n")
+
+    with patch("planfile.cli.groups.sync.fleet.sync_integration") as mock_sync:
+        sync_fleet(tmp_path, max_depth=2, dry_run=True)
+        assert mock_sync.call_args.kwargs["isolate_ticket_conflicts"] is True
+
+        mock_sync.reset_mock()
+        sync_fleet(tmp_path, max_depth=2, dry_run=True, isolate_ticket_conflicts=False)
+        assert mock_sync.call_args.kwargs["isolate_ticket_conflicts"] is False
+
+        runner = CliRunner()
+        mock_sync.reset_mock()
+        res_default = runner.invoke(sync_cli, ["sync", "fleet", str(tmp_path), "--dry-run"])
+        assert res_default.exit_code == 0
+        assert mock_sync.call_args.kwargs["isolate_ticket_conflicts"] is True
+
+        mock_sync.reset_mock()
+        res_no = runner.invoke(sync_cli, ["sync", "fleet", str(tmp_path), "--dry-run", "--no-isolate-conflicts"])
+        assert res_no.exit_code == 0
+        assert mock_sync.call_args.kwargs["isolate_ticket_conflicts"] is False
+
+
+def test_sync_fleet_retries_transient_inbound_network_errors_only(tmp_path):
+    pf = tmp_path / "org" / "repo1" / ".planfile"
+    pf.mkdir(parents=True)
+    (pf / "github.planfile.yaml").write_text("integrations:\n  github:\n    repo: org/repo1\n")
+
+    attempts = {"count": 0}
+
+    def _flaky_dns(backend, directory, **kwargs):
+        attempts["count"] += 1
+        if attempts["count"] == 1:
+            raise RuntimeError("sync_inbound_fetch_failed") from ConnectionError(
+                "NameResolutionError: Failed to resolve 'api.github.com' ([Errno -3] Temporary failure in name resolution)"
+            )
+
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=_flaky_dns):
+        stats = sync_fleet(
+            tmp_path,
+            max_depth=2,
+            direction="from",
+            transient_retries=1,
+            transient_retry_delay_seconds=0.0,
+        )
+    assert attempts["count"] == 2
+    assert stats["synced"] == 1
+    assert stats["failed"] == 0
+
+    for blocked_direction in ("to", "both"):
+        attempts["count"] = 0
+        with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=_flaky_dns):
+            stats = sync_fleet(
+                tmp_path,
+                max_depth=2,
+                direction=blocked_direction,
+                transient_retries=1,
+                transient_retry_delay_seconds=0.0,
+            )
+        assert attempts["count"] == 1
+        assert stats["synced"] == 0
+        assert stats["failed"] == 1
+
+    attempts["count"] = 0
+
+    def _rate_limited(backend, directory, **kwargs):
+        attempts["count"] += 1
+        raise RuntimeError("403 API rate limit exceeded")
+
+    with patch("planfile.cli.groups.sync.fleet.sync_integration", side_effect=_rate_limited):
+        stats = sync_fleet(
+            tmp_path,
+            max_depth=2,
+            direction="from",
+            transient_retries=1,
+            transient_retry_delay_seconds=0.0,
+        )
+    assert attempts["count"] == 1
+    assert stats["synced"] == 0
+    assert stats["failed"] == 1
