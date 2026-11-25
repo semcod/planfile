@@ -153,6 +153,56 @@ def test_evidence_only_drift_is_reconciled_without_loading_unchanged_archive(
     assert payload["outputs"]["result"]["proof"][0]["fresh"] is True
 
 
+@pytest.mark.parametrize("existing_journal", [False, True])
+def test_background_repairs_interrupted_evidence_append_after_restart(
+    tmp_path, monkeypatch, existing_journal
+):
+    pf = setup_store(tmp_path)
+    ticket = pf.create_ticket(name="Active")
+    cold = pf.create_ticket(name="Unrelated archive", sprint="history-old")
+    pf.store.configure_ticket_index(True)
+
+    def append(key):
+        return pf.append_ticket_evidence(
+            ticket.id, idempotency_key=key, collection="checks",
+            evidence={"sample": key}, actor="test", reason="record sample",
+        )
+
+    if existing_journal:
+        append("initial")
+    before = pf.store._ticket_index_signature()
+
+    def interrupted_apply(*args, **kwargs):
+        raise RuntimeError("interrupted after journal write")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(pf.store, "_finish_index_mutation", interrupted_apply)
+        with pytest.raises(RuntimeError, match="interrupted after journal write"):
+            append("last")
+
+    restarted = Planfile(str(tmp_path))
+    after = restarted.store._ticket_index_signature()
+    assert before[1] != after[1]
+    assert before[0] == after[0] and before[2:] == after[2:]
+    monkeypatch.setattr(server, "get_planfile", lambda: restarted)
+    monkeypatch.setattr(restarted.store, "_ticket_index_records",
+                        lambda: pytest.fail("full archive scan"))
+    read = index_repair.read_yaml_fast
+
+    def read_affected(path):
+        assert path.stem != cold.sprint
+        return read(path)
+
+    monkeypatch.setattr(index_repair, "read_yaml_fast", read_affected)
+    result = server._repair_ticket_index()
+    assert result["current"] and result["reconciled"] == 1
+    index = restarted.store._sqlite_ticket_index()
+    checks = index.get_ticket(ticket.id)["outputs"]["result"]["checks"]
+    expected = ["initial", "last"] if existing_journal else ["last"]
+    assert [entry["sample"] for entry in checks] == expected
+    assert server._repair_ticket_index()["rebuilt"] is False
+
+
 @pytest.mark.parametrize("budget", ["bytes", "tickets", "time", "locator"])
 def test_unbounded_or_ambiguous_finalization_keeps_index_stale(tmp_path, monkeypatch, budget):
     pf = setup_store(tmp_path)
