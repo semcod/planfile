@@ -335,3 +335,21 @@ def test_reconcile_cli_and_fleet_json(tmp_path: Path) -> None:
     fleet_report = reconcile_fleet_in_progress(ws, apply=False)
     assert fleet_report["counts"]["repositories_scanned"] == 1
     assert fleet_report["counts"]["scanned_in_progress"] == 0
+
+
+def test_local_reconciliation_skips_workspace_index(tmp_path, monkeypatch):
+    from planfile import reconcile
+
+    repo = tmp_path / "local-project"
+    _init_git_repo(repo)
+    pf = Planfile(repo)
+    ticket = pf.create_ticket(name="Recover local job")
+    pf.start_ticket(ticket.id, assigned_to="agent:test")
+
+    def unexpected_scan(*args, **kwargs):
+        raise AssertionError("A local reconciliation should not observe unrelated repositories")
+
+    monkeypatch.setattr(reconcile, "discover_planfile_repositories", unexpected_scan)
+    report = reconcile_in_progress(pf, workspace_root=tmp_path)
+    assert [item["id"] for item in report["decisions"]] == [ticket.id]
+    assert pf.get_ticket(ticket.id).status.value == "in_progress"

@@ -320,6 +320,10 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
         # Verify the routing generation and its required objects on a
         # read-only connection. Never initialize metadata to qualify a delta.
         with index._routing_connection(baseline) as connection:
+            # An interrupted receipt append can leave the journal ahead of SQLite
+            # without changing a sprint, its locator or the contention token.
+            if baseline[0] == target[0] and baseline[1] != target[1] and not locator_changed:
+                return baseline, row[1]
             if token == current_token:
                 if not changed or len(changed) > MAX_STORED_CHANGED_SPRINTS:
                     return None

@@ -23,6 +23,7 @@ from planfile.sync.operations import (
     sync_from_external,
 )
 from planfile.sync.outbound import OutboundSyncError, sync_to_external
+from planfile.sync.receipts import latest_ticket_receipts
 from planfile.sync.ticket_comments import sync_pending_comments
 
 
@@ -414,6 +415,56 @@ def _github_reconciled_outbound(backend, store, tickets, observed):
     return eligible, deferred
 
 
+def _is_blocked_vallm_report(ticket: dict) -> bool:
+    """Recognize the old Koru proposals to repair only a generated report."""
+    if ticket.get("status") != "blocked":
+        return False
+    execution = ticket.get("execution")
+    source = ticket.get("source")
+    if not isinstance(execution, dict) or execution.get("state") != "blocked":
+        return False
+    if not isinstance(source, dict) or source.get("tool") != "koru-scan":
+        return False
+    context = source.get("context")
+    files = ticket.get("files")
+    return (
+        isinstance(context, dict)
+        and context.get("signal") == "vallm_validation"
+        and not context.get("evidence")
+        and isinstance(files, list)
+        and len(files) == 1
+        and context.get("dedupe_key") == f"koru-scan:vallm_validation:{files[0]}"
+    )
+
+
+def _without_archived_vallm_replays(backend, store, tickets):
+    """Withhold unlinked report-only history during a bulk GitHub publish."""
+    candidates = [
+        (ticket_id, ticket)
+        for ticket_id, ticket in tickets
+        if _is_blocked_vallm_report(ticket)
+        and (located := store._locate_ticket_source(ticket_id)) is not None
+        and located[0].startswith(("history-", "archive-"))
+    ]
+    if not candidates:
+        return tickets
+
+    state = _bind_sync_state(Path(store.base_dir), "github", backend, dry_run=True)
+    receipts = latest_ticket_receipts(Path(store.base_dir), "github", state.repository) if state.repository else {}
+    withheld = {
+        ticket_id
+        for ticket_id, ticket in candidates
+        if not _ticket_external_id(ticket, ticket_id, "github", state)
+        and not receipts.get(ticket_id, {}).get("remote_id")
+    }
+    if withheld:
+        print_warning(
+            f"Deferred {len(withheld)} archived VALLM report-only ticket(s) without finding evidence. "
+            "Use explicit ticket or sprint selection to publish an archived record."
+        )
+    return [item for item in tickets if item[0] not in withheld]
+
+
 def _execute_sync_with_progress(
     backend: Any,
     all_tickets: list[tuple[str, dict]],
@@ -482,6 +533,12 @@ def _execute_sync_with_progress(
             all_tickets, deferred = _github_reconciled_outbound(
                 backend, store, all_tickets, observer.states
             )
+
+        if (
+            integration_name == "github" and direction in {"to", "both"}
+            and not ticket_ids and not sprint_ids and not v1_source_file
+        ):
+            all_tickets = _without_archived_vallm_replays(backend, store, all_tickets)
 
         outbound_store = store
         if inbound_first and not v1_source_file:

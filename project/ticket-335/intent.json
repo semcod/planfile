@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-335",
+  "summary": "Defer archived report-only VALLM records during bulk GitHub sync",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-335/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/sync/core.py",
+    "tests/test_sync_bidirectional_order.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

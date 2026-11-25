@@ -275,3 +275,39 @@ def test_discover_planfile_repositories_descends_past_non_git_org_planfile(tmp_p
 
     discovered = discover_planfile_repositories(tmp_path, max_depth=2)
     assert discovered == [repo.resolve()]
+
+
+def test_local_queue_skips_workspace_index_and_foreign_aliases_share_it(tmp_path, monkeypatch):
+    from planfile import reconcile
+
+    repo = tmp_path / "tracker"
+    _init_git_repo(repo, remote_slug="example/tracker")
+    pf = Planfile(repo)
+    local = pf.create_ticket(
+        name="Same repository",
+        source=TicketSource(tool="test", context={"repository": "example/tracker"}),
+    )
+    alias = tmp_path / "renamed-checkout"
+    _init_git_repo(alias, remote_slug="other/product")
+    Planfile(alias).create_ticket(name="Initialize foreign store")
+
+    scans = []
+    discover = reconcile.discover_planfile_repositories
+
+    def count_scans(root, **kwargs):
+        scans.append(root)
+        return discover(root, **kwargs)
+
+    monkeypatch.setattr(reconcile, "discover_planfile_repositories", count_scans)
+    result = pf.executable_queue(workspace_root=tmp_path)
+    assert [item["id"] for item in result["candidates"]] == [local.id]
+    assert scans == []
+
+    source = TicketSource(tool="test", context={"repository": "other/product"})
+    foreign = {
+        pf.create_ticket(name=name, source=source).id for name in ("First target", "Second target")
+    }
+    result = pf.executable_queue(workspace_root=tmp_path)
+    assert scans == [tmp_path]
+    resolved = {item["id"] for item in result["candidates"] if item["repository"] == "other/product"}
+    assert resolved == foreign

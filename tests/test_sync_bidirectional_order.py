@@ -10,6 +10,7 @@ from planfile.cli.groups.sync import core
 from planfile.core.store import PlanfileStore, Ticket
 from planfile.sync.base import TicketRef, TicketState
 from planfile.sync.github import GitHubBackend
+from planfile.sync.receipts import publish_intent, record_receipt
 from planfile.sync.state import SyncState
 
 
@@ -105,6 +106,82 @@ def run(sample, direction="both", dry_run=False):
         backend, tickets, dry_run, store, "github", source, data, direction,
         ticket_ids=["PLF-001"],
     )
+
+
+def vallm_report(store, *, archived=True, evidence=False):
+    if not archived:
+        config = store._read_config()
+        config["archive"]["enabled"] = False
+        store._write_config(config)
+    path = "project/validation.toon.yaml"
+    context = {
+        "signal": "vallm_validation",
+        "dedupe_key": f"koru-scan:vallm_validation:{path}",
+    }
+    if evidence:
+        context["evidence"] = {"schema": "koru.ticket_evidence.v1"}
+    store.create_ticket(Ticket(
+        id="PLF-496",
+        name="Repair VALLM validation findings",
+        description="The generated report lists findings.",
+        status="blocked",
+        integration=["github"],
+        files=[path],
+        execution={"state": "blocked"},
+        source={"tool": "koru-scan", "context": context},
+    ))
+    if archived:
+        assert store.move_ticket("PLF-496", "history-2026-10-20")
+
+
+@pytest.mark.parametrize("direction,dry_run", [("both", False), ("to", False), ("to", True)])
+def test_bulk_github_sync_defers_archived_report_without_findings(tmp_path, capsys, direction, dry_run):
+    store = PlanfileStore(tmp_path)
+    store.init()
+    vallm_report(store)
+    backend = Backend()
+    backend.remote = {}
+    before = deepcopy(store._locate_ticket_source("PLF-496"))
+    tickets, _, source, data = loaded((store, backend, False))
+
+    core._execute_sync_with_progress(backend, tickets, dry_run, store, "github", source, data, direction)
+
+    assert not any(e[0] in {"create", "update"} for e in backend.events)
+    assert store._locate_ticket_source("PLF-496") == before
+    assert "Deferred 1 archived VALLM report-only ticket" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("mode", ["active", "evidence", "ticket", "sprint", "mapped", "receipt"])
+def test_github_sync_keeps_supported_vallm_publications(tmp_path, mode):
+    store = PlanfileStore(tmp_path)
+    store.init()
+    vallm_report(store, archived=mode != "active", evidence=mode == "evidence")
+    backend = Backend(status="open")
+    ticket = store.get_ticket("PLF-496")
+    remote = backend.remote["42"]
+    remote.name = ticket.name
+    remote.description = ticket.description
+    selection = {}
+    if mode == "ticket":
+        selection["ticket_ids"] = [ticket.id]
+    if mode == "sprint":
+        selection["sprint_ids"] = ["history-2026-10-20"]
+    if mode == "mapped":
+        store.update_ticket(ticket.id, sync={"github": {"id": "42", "repository": "fixture/repo"}})
+    if mode == "receipt":
+        payload = store._locate_ticket_source(ticket.id)[1]
+        intent = publish_intent(ticket.id, payload, "github", "fixture/repo")
+        record_receipt(store.base_dir, intent, operation="create", outcome="succeeded", remote_id="42")
+    tickets, _, source, data = core._load_tickets_for_sync(
+        store, str(store.project_dir), "github", **selection
+    )
+
+    core._execute_sync_with_progress(backend, tickets, False, store, "github", source, data, "to", **selection)
+
+    actions = [e[0] for e in backend.events]
+    assert actions == (["update"] if mode == "mapped" else [] if mode == "receipt" else ["create"])
+    synced_id = store._locate_ticket_source(ticket.id)[1]["sync"]["github"]["id"]
+    assert synced_id == ("42" if mode in {"mapped", "receipt"} else "900")
 
 
 @pytest.mark.parametrize("reason,status", [("completed", "done"), ("not_planned", "canceled"), (None, "blocked")])
