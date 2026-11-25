@@ -16,13 +16,17 @@ from __future__ import annotations
 import importlib
 import json
 import os
+import sqlite3
 from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from planfile.project_paths import RepositoryRoutingError, project_repository
 from planfile.utils.repository import normalize_repository
+
+if TYPE_CHECKING:
+    from planfile.core.models import Ticket
 
 DEFAULT_MAX_DECISION_SLICE_BYTES = 600
 MIN_DECISION_SLICE_BYTES = 128
@@ -319,6 +323,8 @@ def maybe_emit_ticket_event(
     repository: str | None = None,
     project_dir: Path | None = None,
     state_dir: Path | str | None = None,
+    committed_at: datetime | None = None,
+    update_registry: bool = True,
 ) -> dict[str, Any]:
     """Emit a Planfile ticket transition (`update`, `block`, `done`, `fail`, `start`, `ready`, etc.)."""
     try:
@@ -354,32 +360,33 @@ def maybe_emit_ticket_event(
 
         detail = reason or note or title
         summary = f"Ticket {tid} {clean_action} ({status_val})" + (f": {str(detail)[:160]}" if detail else "")
-        at_us = _now_us()
+        at_us = int(committed_at.timestamp() * 1_000_000) if committed_at is not None else _now_us()
         event_id = f"plf-{clean_action}-{_resource_key(tid, repository)}-{at_us}"
         op_uri = f"planfile://ticket/{clean_action}/{_slug(tid)}"
         urn = _ticket_urn(tid, repository)
 
         with urtlog_mod.UrtClient(target_dir, source="planfile", repository=repository or "semcod/planfile") as client:
-            client.registry.register_urn(
-                urn,
-                owner=repository or "semcod/planfile",
-                system="planfile",
-                description=f"[{status_val}|{priority}] {title[:120]}" + (f" | {str(reason or note)[:100]}" if (reason or note) else ""),
-                sensitivity="internal",
-                revision=status_val,
-                metadata={
-                    "repository": repository,
-                    "ticket_id": tid,
-                    "title": title[:240],
-                    "status": status_val,
-                    "action": clean_action,
-                    "priority": priority,
-                    "sprint": sprint,
-                    "blocked_by": blocked_by[:20],
-                    "reason": reason[:300] if reason else None,
-                    "note": note[:300] if note else None,
-                },
-            )
+            if update_registry:
+                client.registry.register_urn(
+                    urn,
+                    owner=repository or "semcod/planfile",
+                    system="planfile",
+                    description=f"[{status_val}|{priority}] {title[:120]}" + (f" | {str(reason or note)[:100]}" if (reason or note) else ""),
+                    sensitivity="internal",
+                    revision=status_val,
+                    metadata={
+                        "repository": repository,
+                        "ticket_id": tid,
+                        "title": title[:240],
+                        "status": status_val,
+                        "action": clean_action,
+                        "priority": priority,
+                        "sprint": sprint,
+                        "blocked_by": blocked_by[:20],
+                        "reason": reason[:300] if reason else None,
+                        "note": note[:300] if note else None,
+                    },
+                )
             record = urtlog_mod.UrtEventRecord(
                 event_id=event_id,
                 kind="log",
@@ -426,8 +433,42 @@ def maybe_emit_ticket_event(
         return {"emitted": True, "event_id": event_id, "uri": op_uri, "status": urt_status}
     except RepositoryRoutingError:
         return {"emitted": False, "reason": "repository_unresolved"}
-    except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError):
+    except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError, sqlite3.Error):
         return {"emitted": False, "reason": "emit_failed"}
+
+
+def maybe_emit_api_ticket_outcome(action: str, ticket: Ticket, project_dir: Path) -> None:
+    """Record the committed revision of a ticket from the HTTP execution API."""
+    try:
+        state_dir = resolve_state_dir()
+        if state_dir is None:
+            return
+        body = ticket.inputs.api_body if ticket.inputs else None
+        source = body.get("source") if isinstance(body, dict) else None
+        references = (source, ticket.sync.get("github"))
+        repositories = set()
+        for reference in references:
+            if isinstance(reference, dict):
+                identity = normalize_repository(reference.get("repository") or reference.get("repo"))
+                if identity:
+                    repositories.add(identity)
+        if len(repositories) > 1:
+            return
+        repository = next(iter(repositories), None) or project_repository(project_dir)
+        if repository is None:
+            return
+        # Persist the committed outcome as a log. A slow writer must not
+        # overwrite a newer ticket snapshot in the mutable registry.
+        maybe_emit_ticket_event(
+            action,
+            {"id": ticket.id, "status": ticket.status, "priority": ticket.priority, "sprint": ticket.sprint},
+            repository=repository,
+            state_dir=state_dir,
+            committed_at=ticket.updated_at,
+            update_registry=False,
+        )
+    except (OSError, ValueError, TypeError, AttributeError, RuntimeError, KeyError, sqlite3.Error):
+        return
 
 
 def load_planfile_queue_brief(

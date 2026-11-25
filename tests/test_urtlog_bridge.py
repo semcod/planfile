@@ -164,6 +164,82 @@ def test_bridge_health_summary_and_api_health_without_path_leak(
         "urtlog_importable": True,
     }
 
+
+def test_api_logs_persisted_outcomes_under_bound_repository(tmp_path, monkeypatch):
+    if importlib.util.find_spec("urtlog") is None:
+        return
+
+    from fastapi.testclient import TestClient
+    from urtlog import AccessContext, UrtClient
+
+    from planfile import Planfile
+    from planfile.api import server
+
+    state_dir = tmp_path / "urtlog"
+    plan = Planfile(str(tmp_path))
+    monkeypatch.setenv("URTLOG_STATE_DIR", str(state_dir))
+    monkeypatch.setattr(server, "get_planfile", lambda: plan)
+    completed = plan.create_ticket(
+        "Internal ticket title",
+        inputs={"api_body": {"source": {"repository": "Heyasa/Heyasa"}}},
+    )
+    failed = plan.create_ticket("Private failure title", sync={"github": {"repo": "semcod/planfile"}})
+    conflicting = plan.create_ticket(
+        "Conflicting ticket",
+        inputs={"api_body": {"source": {"repository": "heyasa/heyasa"}}},
+        sync={"github": {"repo": "semcod/planfile"}},
+    )
+
+    client = TestClient(server.app)
+    expected = completed.updated_at.isoformat()
+    success = client.post(
+        f"/tickets/{completed.id}/complete-if-current",
+        json={"expected_updated_at": expected, "result": {"value": "local output"}},
+    )
+    assert success.status_code == 200, success.text
+    stale = client.post(
+        f"/tickets/{completed.id}/complete-if-current",
+        json={"expected_updated_at": expected},
+    )
+    assert stale.status_code == 409, stale.text
+    failure = client.post(f"/tickets/{failed.id}/fail", json={"error": "private runner error"})
+    assert failure.status_code == 200, failure.text
+    ambiguous = client.post(f"/tickets/{conflicting.id}/done")
+    assert ambiguous.status_code == 200, ambiguous.text
+
+    context = AccessContext("heyasa", roles=frozenset({"assistant"}), groups=frozenset({"ops"}))
+    with UrtClient(state_dir) as urtlog:
+        success_rows = urtlog.store.query(context, source="planfile", repository="heyasa/heyasa")
+        failure_rows = urtlog.store.query(context, source="planfile", repository="semcod/planfile")
+        assert len(success_rows) == len(failure_rows) == 1
+        assert success_rows[0]["metadata"]["ticket_id"] == completed.id
+        assert success_rows[0]["status"] == "succeeded"
+        assert failure_rows[0]["metadata"]["ticket_id"] == failed.id
+        assert failure_rows[0]["status"] == "failed"
+        combined = json.dumps(success_rows + failure_rows)
+        assert "private runner error" not in combined
+        assert "local output" not in combined
+        assert "Internal ticket title" not in combined
+
+
+def test_api_outcome_is_committed_when_urtlog_storage_fails(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from planfile import Planfile
+    from planfile.api import server
+
+    broken_state = tmp_path / "urtlog-is-a-file"
+    broken_state.touch()
+    plan = Planfile(str(tmp_path))
+    ticket = plan.create_ticket("Complete task", sync={"github": {"repo": "heyasa/heyasa"}})
+    monkeypatch.setenv("URTLOG_STATE_DIR", str(broken_state))
+    monkeypatch.setattr(server, "get_planfile", lambda: plan)
+
+    result = TestClient(server.app).post(f"/tickets/{ticket.id}/done")
+
+    assert result.status_code == 200, result.text
+    assert plan.get_ticket(ticket.id).status == "done"
+
     with mock.patch("planfile.urtlog_bridge._load_urtlog", return_value=None):
         missing = bridge_health_summary()
     assert missing["state_dir_configured"] is True

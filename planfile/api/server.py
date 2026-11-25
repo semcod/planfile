@@ -18,10 +18,13 @@ from contextlib import asynccontextmanager, contextmanager, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import BoundedSemaphore, RLock
-from typing import Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import yaml
+
+if TYPE_CHECKING:
+    from planfile import Planfile
 
 try:
     from fastapi import (
@@ -2155,6 +2158,14 @@ async def move_ticket(
     return {"moved": ticket_id, "to": to_sprint}
 
 
+async def _publish_ticket_outcome(pf: Planfile, action: str, ticket: Ticket) -> None:
+    if os.environ.get("URTLOG_STATE_DIR"):
+        from planfile.urtlog_bridge import maybe_emit_api_ticket_outcome
+
+        await asyncio.to_thread(maybe_emit_api_ticket_outcome, action, ticket, pf.store.project_dir)
+    await _broadcast_ticket_event("ticket.execution.changed", action, ticket)
+
+
 @app.post("/tickets/{ticket_id}/done", tags=["tickets"])
 async def done_ticket(ticket_id: str):
     pf = get_planfile()
@@ -2166,7 +2177,7 @@ async def done_ticket(ticket_id: str):
     ticket = pf.complete_ticket(ticket_id, reason="legacy_done_endpoint", actor="legacy:api")
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
-    await _broadcast_ticket_event("ticket.execution.changed", "done", ticket)
+    await _publish_ticket_outcome(pf, "done", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
@@ -2222,7 +2233,7 @@ async def complete_ticket(ticket_id: str, body: TicketCompleteRequest):
     )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
-    await _broadcast_ticket_event("ticket.execution.changed", "complete", ticket)
+    await _publish_ticket_outcome(pf, "complete", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
@@ -2246,7 +2257,7 @@ async def _fail_ticket(ticket_id: str, body: TicketFailRequest):
     )
     if not ticket:
         raise HTTPException(404, f"Ticket {ticket_id} not found")
-    await _broadcast_ticket_event("ticket.execution.changed", "fail", ticket)
+    await _publish_ticket_outcome(pf, "fail", ticket)
     return ticket.model_dump(mode="json", exclude_none=True)
 
 
