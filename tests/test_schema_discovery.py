@@ -19,7 +19,9 @@ def _write_config(path: Path, project: str = "demo") -> None:
     )
 
 
-def test_local_config_wins_over_legacy_document(tmp_path, monkeypatch):
+@pytest.mark.parametrize("width", [40, 80, 120])
+def test_local_config_wins_over_legacy_document(tmp_path, monkeypatch, width):
+    monkeypatch.setattr(console, "width", width)
     _write_config(tmp_path / ".planfile" / "config.yaml")
     (tmp_path / "planfile.yaml").write_text(
         "schema: '1.1'\nproject: legacy\n", encoding="utf-8"
@@ -29,7 +31,7 @@ def test_local_config_wins_over_legacy_document(tmp_path, monkeypatch):
     result = CliRunner().invoke(app, ["validate", "schema"])
 
     assert result.exit_code == 0, result.output
-    assert "type: config" in result.output
+    assert "(type: config)" in " ".join(result.output.split())
     assert "planfile.yaml" not in result.output
     assert validate_yaml_file(tmp_path / ".planfile" / "config.yaml", "config") == (True, [])
 
