@@ -336,6 +336,31 @@ def _stored_baseline(index, target: tuple) -> tuple[tuple, int] | None:
         return None
 
 
+def _read_sprint_tickets(store, sprint):
+    if store._uses_sharded_storage():
+        snapshot = store._sharded_storage().load_sprint(sprint)
+    else:
+        snapshot = read_yaml_fast(store._sprint_file(sprint)) or {}
+    return snapshot.get("sprint", snapshot).get("tickets") or {}
+
+
+def _prepare_current_sprint(store, index, built_signature):
+    current = store.sprint_signature("current")
+    if built_signature is None:
+        target = store._ticket_index_signature()
+        if index.is_current(target):
+            return None
+        stored = _stored_baseline(index, target)
+        if stored is None:
+            return None
+        built_signature = stored[0]
+    if current == tuple(row for row in built_signature[0] if row[0] == "current"):
+        return None
+    if sum(max(row[-1], 0) for row in current) > MAX_REPAIR_BYTES:
+        return None
+    return current, _read_sprint_tickets(store, "current")
+
+
 def reconcile_index(store, index, built_signature: tuple | None = None, *,
                     locator_snapshot: _LocatorSnapshot | None = None) -> dict | None:
     """Make a scanned projection current using only a small changed-source set.
@@ -347,7 +372,8 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
     describe one state. Locator changes require a matching captured baseline
     (or, for stored-baseline recovery, verification that every locator delta
     belongs to the bounded changed-sprint set); an unknown baseline or a large
-    delta stays stale.
+    delta stays stale. Parse a changed current sprint before taking the writer
+    lock, then verify its source signature before using the prepared records.
     """
     if (
         built_signature is not None
@@ -358,8 +384,9 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
         # lock so a contention/budget abort never leaves source_signature ahead
         # of source_locator_snapshot_v1.
         persist_locator_snapshot(index, built_signature, locator_snapshot)
+    started = time.monotonic()
+    prepared_current = _prepare_current_sprint(store, index, built_signature)
     with store.mutation_lock():
-        started = time.monotonic()
         target = store._ticket_index_signature()
         stored_bytes = 0
         from_stored_baseline = built_signature is None
@@ -406,12 +433,15 @@ def reconcile_index(store, index, built_signature: tuple | None = None, *,
             if sprint not in snapshots:
                 for path in store._sprint_storage_files(sprint):
                     charge(path)
-                if store._uses_sharded_storage():
-                    snapshot = store._sharded_storage().load_sprint(sprint)
+                if sprint == "current" and prepared_current is not None:
+                    from planfile.core.store import TicketIndexContentionError
+
+                    current_signature, current_tickets = prepared_current
+                    if tuple(row for row in target[0] if row[0] == "current") != current_signature:
+                        raise TicketIndexContentionError("ticket_index_current_changed_during_repair")
+                    snapshots[sprint] = current_tickets
                 else:
-                    snapshot = read_yaml_fast(store._sprint_file(sprint)) or {}
-                root = snapshot.get("sprint", snapshot)
-                snapshots[sprint] = root.get("tickets") or {}
+                    snapshots[sprint] = _read_sprint_tickets(store, sprint)
                 check_budget()
             return snapshots[sprint]
 
