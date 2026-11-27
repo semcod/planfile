@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-339",
+  "summary": "Prepare current sprint data outside the index repair writer lock",
+  "workstream": "application",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-339/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/core/index_repair.py",
+    "tests/test_index_repair.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2ca6f89cb39193adcec82d19f0153459f7eed1ab",
+    "targetBranch": "main",
+    "outcome": "Let Planfile writers proceed while the index repair reads a changed current sprint.",
+    "nonGoals": [
+      "Change the canonical YAML, index schema, queue admission, or writer-lock policy."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read the current sprint before acquiring the writer lock. Compare its physical source signature before using the prepared tickets and preserve the final signature and write checks.",
+      "components": [
+        {
+          "name": "SQLite ticket index reconciliation",
+          "paths": [
+            "planfile/core/index_repair.py",
+            "tests/test_index_repair.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the preload through normal review. The prior reconciler still accepts persisted index data."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py"
+        ],
+        "evidence": "Prove current YAML and sharded reads happen with the writer lock available."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_index_repair.py"
+        ],
+        "evidence": "A concurrent edit during preparation must never publish the older snapshot."
+      }
+    ]
+  }
+}

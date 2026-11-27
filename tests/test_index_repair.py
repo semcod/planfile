@@ -1063,6 +1063,66 @@ def test_stored_baseline_reconcile_returns_current_without_full_rebuild_after_co
     assert result["rebuilt"] is False
 
 
+@pytest.mark.parametrize("sharded", [False, True])
+@pytest.mark.parametrize("stored_baseline", [False, True])
+def test_current_sprint_is_read_before_writer_lock(tmp_path, monkeypatch, sharded, stored_baseline):
+    pf = setup_store(tmp_path)
+    active = pf.create_ticket(name="Before")
+    pf.create_ticket(name="History", sprint="history-old")
+    if sharded:
+        pf.store.migrate_to_sharded_yaml(shard_size=2)
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    built = pf.store._ticket_index_signature()
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    pf.update_ticket(active.id, name="After")
+
+    read = index_repair._read_sprint_tickets
+    current_reads = 0
+
+    def read_with_free_writer_lock(store, sprint):
+        nonlocal current_reads
+        if sprint == "current":
+            # Another writer can acquire the actual lock while the repair
+            # prepares this snapshot. A nested acquisition under repair fails.
+            with store.mutation_lock(timeout_seconds=0.0):
+                pass
+            current_reads += 1
+        return read(store, sprint)
+
+    monkeypatch.setattr(index_repair, "_read_sprint_tickets", read_with_free_writer_lock)
+    repaired = index_repair.reconcile_index(pf.store, index, None if stored_baseline else built)
+    assert repaired["current"] is True
+    assert current_reads == 1
+    assert index.get_ticket(active.id)["name"] == "After"
+
+
+def test_current_sprint_changed_during_preparation_is_not_published(tmp_path, monkeypatch):
+    pf = setup_store(tmp_path)
+    active = pf.create_ticket(name="Baseline")
+    pf.store.configure_ticket_index(True)
+    index = pf.store._sqlite_ticket_index()
+    baseline = pf.store._ticket_index_signature()
+    monkeypatch.setattr(pf.store, "_begin_index_mutation", lambda: False)
+    pf.update_ticket(active.id, name="First edit")
+    read = index_repair._read_sprint_tickets
+
+    def read_then_commit(store, sprint):
+        result = read(store, sprint)
+        if sprint == "current":
+            pf.update_ticket(active.id, name="Concurrent edit")
+        return result
+
+    with monkeypatch.context() as patch:
+        patch.setattr(index_repair, "_read_sprint_tickets", read_then_commit)
+        with pytest.raises(TicketIndexContentionError, match="ticket_index_current_changed_during_repair"):
+            index_repair.reconcile_index(pf.store, index, baseline)
+    assert index.is_current(baseline)
+    assert index.get_ticket(active.id)["name"] == "Baseline"
+    assert index_repair.reconcile_index(pf.store, index, baseline)["current"] is True
+    assert index.get_ticket(active.id)["name"] == "Concurrent edit"
+
+
 def test_repair_ticket_index_defers_instead_of_rebuilding_on_sqlite_contention(
     tmp_path, monkeypatch
 ):
