@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-338",
+  "summary": "Add write-free --dry-run to ticket create, warn on --sync-dry-run, and notify on unsynced remote updates",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-338/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/cli/groups/ticket/commands.py",
+    "tests/test_ticket_dry_run_and_sync_notice_cli.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

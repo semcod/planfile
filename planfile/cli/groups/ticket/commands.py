@@ -24,6 +24,158 @@ def _find_template_placeholders(*texts: str | None) -> list[str]:
     return found
 
 
+def _remote_integrations_for_ticket(ticket: Any) -> list[str]:
+    remotes: list[str] = []
+    sync_map = getattr(ticket, "sync", None)
+    if isinstance(sync_map, dict):
+        for name, payload in sync_map.items():
+            if name != "markdown" and payload and name not in remotes:
+                remotes.append(str(name))
+    integrations = getattr(ticket, "integration", None) or []
+    for name in integrations:
+        if name and name != "markdown" and name not in remotes:
+            remotes.append(str(name))
+    if not remotes and getattr(ticket, "external_id", None):
+        remotes.append("external")
+    return remotes
+
+
+def _notice_unsynced_remote_tickets(
+    action: str,
+    tickets: list[Any],
+    *,
+    sync: bool | None,
+) -> None:
+    if sync is not None:
+        return
+    affected: list[Any] = []
+    remotes: list[str] = []
+    for ticket in tickets:
+        ticket_remotes = _remote_integrations_for_ticket(ticket)
+        if ticket_remotes:
+            affected.append(ticket)
+            for name in ticket_remotes:
+                if name not in remotes:
+                    remotes.append(name)
+    if not affected:
+        return
+    ids = [str(getattr(t, "id", "")) for t in affected]
+    ids_text = ", ".join(ids[:10])
+    if len(ids) > 10:
+        ids_text += f" (+{len(ids) - 10} more)"
+    console.print(
+        f"[yellow]ℹ️ Local {action} saved, not synced to remote ({', '.join(remotes)}): "
+        f"{ids_text}. Pass --sync (or run `planfile sync`) to push changes, "
+        "or pass --no-sync to silence this notice.[/yellow]"
+    )
+
+
+def _find_live_dedupe_readonly(store: Any, dedupe_label: str) -> dict[str, str] | None:
+    from planfile.core.allocator_sprints import records
+    from planfile.core.fastio import load_yaml_text
+
+    sources: list[tuple[str, Any]] = []
+    if store._uses_sharded_storage():
+        storage = store._sharded_storage()
+        for sprint_id in storage.sprint_ids():
+            shard_dir = storage.sprints_dir / f"{sprint_id}.shards"
+            if shard_dir.is_dir():
+                for path in sorted(shard_dir.glob("*.yaml")):
+                    sources.append((sprint_id, path))
+    else:
+        for path in store._all_sprint_files():
+            sources.append((path.stem, path))
+
+    matches: list[dict[str, str]] = []
+    for sprint_id, path in sources:
+        try:
+            data = load_yaml_text(path.read_text(encoding="utf-8"))
+        except OSError:
+            continue
+        for row in records(data):
+            status = str(row.get("status") or "")
+            if status in {"done", "canceled"}:
+                continue
+            labels = row.get("labels") or []
+            if dedupe_label in labels:
+                matches.append({
+                    "id": str(row.get("id") or ""),
+                    "name": str(row.get("name") or ""),
+                    "sprint": str(row.get("sprint") or sprint_id),
+                    "created_at": str(row.get("created_at") or ""),
+                })
+    if not matches:
+        return None
+    return min(matches, key=lambda row: row["created_at"])
+
+
+def _preview_ticket_create(
+    *,
+    name: str,
+    sprint: str,
+    labels: list[str],
+    integration: list[str] | None,
+    sync: bool | None,
+    dedupe_key: str | None,
+) -> None:
+    from planfile import Planfile
+    from planfile.core.store import PlanfileStore
+    from planfile.integrations.config import IntegrationConfig
+    from planfile.project_paths import canonical_project_root
+
+    project_root = canonical_project_root(".")
+    store = PlanfileStore(str(project_root))
+
+    configured_integrations: list[str] = []
+    valid_remote_integrations: list[str] = []
+    if (project_root / ".planfile").is_dir():
+        integration_config = IntegrationConfig(str(project_root))
+        integration_config.load_configs()
+        configured_integrations = list(integration_config.config.get("integrations", {}).keys())
+        valid_remote_integrations = [
+            k
+            for k in configured_integrations
+            if k != "markdown" and integration_config.validate_integration(k)
+        ]
+
+    target_integrations: list[str] = []
+    if integration:
+        target_integrations = list(integration)
+    elif valid_remote_integrations:
+        target_integrations = [
+            k
+            for k in configured_integrations
+            if integration_config.validate_integration(k)
+        ]
+    elif sync is True:
+        target_integrations = (
+            list(configured_integrations) if configured_integrations else ["markdown"]
+        )
+        if "markdown" not in target_integrations:
+            target_integrations.append("markdown")
+
+    preview_id = "PLF-001"
+    reused: dict[str, str] | None = None
+    dedupe_label = Planfile._ticket_dedupe_label(dedupe_key, list(labels))
+    if store.is_initialized():
+        config = store._read_config()
+        preview_id = f"{config.get('prefix', 'PLF')}-{int(config.get('next_id', 1)):03d}"
+        if dedupe_label:
+            reused = _find_live_dedupe_readonly(store, dedupe_label)
+
+    route_text = ", ".join(target_integrations) if target_integrations else "local-only"
+    if reused is not None:
+        console.print(
+            f"[cyan]--dry-run[/cyan]: Would reuse {reused['id']}: {reused['name']} "
+            f"(sprint={reused['sprint']}, integrations={route_text}; no local or remote changes made)."
+        )
+    else:
+        console.print(
+            f"[cyan]--dry-run[/cyan]: Would create {preview_id}: {name} "
+            f"(sprint={sprint}, integrations={route_text}; no local or remote changes made)."
+        )
+
+
 def _auto_sync(
     directory: str,
     integrations: list[str] | None = None,
@@ -327,8 +479,15 @@ def ticket_create(
         "--sync/--no-sync",
         help="Auto-sync to configured integrations after creation (defaults to true when remote integrations are configured)",
     ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Preview ticket creation without writing to .planfile or syncing",
+    ),
     sync_dry_run: bool = typer.Option(
-        False, "--sync-dry-run", help="Preview sync without making changes"
+        False,
+        "--sync-dry-run",
+        help="Preview remote sync only (still writes the local ticket; use --dry-run to avoid local writes)",
     ),
     inbound_sync: bool | None = typer.Option(
         None,
@@ -360,6 +519,17 @@ def ticket_create(
             "[dim]Fill in real values (finding key, failing line, command) or pass --force to override.[/dim]"
         )
         raise typer.Exit(2)
+    is_dry_run = bool(dry_run.default if hasattr(dry_run, "default") else dry_run)
+    if is_dry_run:
+        _preview_ticket_create(
+            name=name,
+            sprint=sprint,
+            labels=list(label) if label else [],
+            integration=list(integration) if integration else None,
+            sync=sync.default if hasattr(sync, "default") else sync,
+            dedupe_key=dedupe_key,
+        )
+        return
     pf = Planfile.auto_discover()
     ticket_data = {
         "name": name,
@@ -418,6 +588,11 @@ def ticket_create(
     )
     action = "Created" if created else "Reused"
     console.print(f"[green]✓[/green] {action} {ticket.id}: {ticket.name}")
+    if sync_dry_run:
+        console.print(
+            "[yellow]⚠️ --sync-dry-run previews remote sync only; local ticket was written. "
+            "Use --dry-run to avoid local writes.[/yellow]"
+        )
     try:
         from planfile.urtlog_bridge import maybe_emit_ticket_created
 
@@ -698,9 +873,10 @@ def _emit_transition(pf, action, ticket, **details):
         pass
 
 
-def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: str | None=typer.Option(None, help='New status'), priority: str | None=typer.Option(None, '-p', '--priority'), name: str | None=typer.Option(None, help='New name'), description: str | None=typer.Option(None, '-d', '--description', help='New description (replaces existing)'), note: str | None=typer.Option(None, '-n', '--note', help='Append a note to outputs.notes (additive, does NOT replace description)'), sync: bool=typer.Option(False, '--sync', help='Auto-sync to configured integrations after update'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
+def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: str | None=typer.Option(None, help='New status'), priority: str | None=typer.Option(None, '-p', '--priority'), name: str | None=typer.Option(None, help='New name'), description: str | None=typer.Option(None, '-d', '--description', help='New description (replaces existing)'), note: str | None=typer.Option(None, '-n', '--note', help='Append a note to outputs.notes (additive, does NOT replace description)'), sync: bool | None=typer.Option(None, '--sync/--no-sync', help='Auto-sync to configured integrations after update (defaults to local-only; prints a notice for synced tickets unless --no-sync is set)'), sync_dry_run: bool=typer.Option(False, '--sync-dry-run', help='Preview sync without making changes')) -> None:
     """Update ticket fields. `--note` appends to outputs.notes without replacing other fields."""
     from planfile import Planfile
+    sync = sync.default if hasattr(sync, 'default') else sync
     pf = Planfile.auto_discover()
     updates = {}
     if status:
@@ -728,8 +904,10 @@ def ticket_update(ticket_id: str=typer.Argument(..., help='Ticket ID'), status: 
     console.print(f'[green]✓[/green] Updated {ticket.id}')
     _emit_transition(pf, 'update', ticket, note=note)
 
-    if sync:
+    if sync is True:
         _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=[ticket_id])
+    else:
+        _notice_unsynced_remote_tickets('update', [ticket], sync=sync)
 
 
 def ticket_comment(
@@ -978,11 +1156,12 @@ def ticket_delete(
     files: list[str] = typer.Option(None, '--files', help='Delete tickets associated with files matching glob pattern(s)'),
     dry_run: bool = typer.Option(False, '--dry-run', help='Preview what would be deleted without deleting'),
     force: bool = typer.Option(False, '-f', '--force', help='Skip confirmation prompt'),
-    sync: bool = typer.Option(False, '--sync', help='Auto-sync to configured integrations after deletion'),
+    sync: bool | None = typer.Option(None, '--sync/--no-sync', help='Auto-sync to configured integrations after deletion (defaults to local-only; prints a notice for synced tickets unless --no-sync is set)'),
     sync_dry_run: bool = typer.Option(False, '--sync-dry-run', help='Preview sync without making changes'),
 ) -> None:
     """Delete tickets by ID(s) or filters (status, sprint, label, source, files)."""
     from planfile import Planfile
+    sync = sync.default if hasattr(sync, 'default') else sync
     pf = Planfile.auto_discover()
 
     to_delete = _collect_delete_ids(pf, ticket_ids, sprint, status, label, source, files)
@@ -990,6 +1169,7 @@ def ticket_delete(
         console.print('[yellow]⚠[/yellow] No tickets match the specified criteria.')
         raise typer.Exit(0)
 
+    target_tickets = {tid: pf.get_ticket(tid) for tid in to_delete}
     deleted, not_found = _confirm_and_delete(pf, to_delete, dry_run, force)
 
     if deleted:
@@ -997,8 +1177,15 @@ def ticket_delete(
     if not_found:
         console.print(f'[yellow]⚠[/yellow] {len(not_found)} ticket(s) not found: {", ".join(not_found)}')
 
-    if sync and deleted:
-        _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=deleted)
+    if deleted:
+        if sync is True:
+            _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=deleted)
+        else:
+            _notice_unsynced_remote_tickets(
+                'delete',
+                [target_tickets[tid] for tid in deleted if target_tickets.get(tid) is not None],
+                sync=sync,
+            )
 
 def _print_bulk_update_preview(
     tickets: list,
@@ -1077,11 +1264,12 @@ def ticket_bulk_update(
     move_to_sprint: str = typer.Option(None, '--move-to-sprint', help='Move tickets to another sprint'),
     dry_run: bool = typer.Option(False, '--dry-run', help='Preview what would be updated without updating'),
     force: bool = typer.Option(False, '-f', '--force', help='Skip confirmation prompt'),
-    sync: bool = typer.Option(False, '--sync', help='Auto-sync to configured integrations after update'),
+    sync: bool | None = typer.Option(None, '--sync/--no-sync', help='Auto-sync to configured integrations after update (defaults to local-only; prints a notice for synced tickets unless --no-sync is set)'),
     sync_dry_run: bool = typer.Option(False, '--sync-dry-run', help='Preview sync without making changes'),
 ) -> None:
     """Bulk update tickets matching filters. Update status, priority, labels, or sprint."""
     from planfile import Planfile
+    sync = sync.default if hasattr(sync, 'default') else sync
     pf = Planfile.auto_discover()
 
     filters: dict = {}
@@ -1131,8 +1319,16 @@ def ticket_bulk_update(
         for tid, err in failed:
             console.print(f'  - {tid}: {err}')
 
-    if sync and updated:
-        _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=updated)
+    if updated:
+        if sync is True:
+            _auto_sync(str(pf.store.project_dir), None, sync_dry_run, ticket_ids=updated)
+        else:
+            updated_set = set(updated)
+            _notice_unsynced_remote_tickets(
+                'bulk-update',
+                [t for t in tickets if t.id in updated_set],
+                sync=sync,
+            )
 
 
 # ── Git-like decomposition: split / tree / group / merge ──────────────────────
