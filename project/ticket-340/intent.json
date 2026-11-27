@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-340",
+  "summary": "Fix URT campaign import dedup identity and stale preview re-verification",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-340/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/urt_campaign_import.py",
+    "tests/test_urt_campaign_import.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e1da1f96f63d982294d25f6887529fc074488432",
+    "targetBranch": "main",
+    "outcome": "Prevent URT campaign dedup-key collisions for colon-containing identifier pairs and enforce commit-time re-verification against live persisted state while staying compatible with pre-change state and receipts.",
+    "nonGoals": [
+      "Modify unrelated sync adapters or Planfile ticket-storage schemas outside planfile/sync/urt_campaign_import.py."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep colon-free dedup keys in campaign_id:proposal_id form while encoding colon-containing pairs via injective urt-key/v2 JSON list serialization; match pre-change persisted legacy keys via verified embedded urt_campaign identity and validate noop_duplicate, create, and supersede_revision against current state before persisting state or receipts.",
+      "components": [
+        {
+          "name": "URT campaign import deduplication and commit validation",
+          "paths": [
+            "planfile/sync/urt_campaign_import.py",
+            "tests/test_urt_campaign_import.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Export build_urt_dedup_key helper for injective campaign_id/proposal_id dedup keys."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit touching planfile/sync/urt_campaign_import.py and tests/test_urt_campaign_import.py."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/test_urt_campaign_import.py"
+        ],
+        "evidence": "Distinct identifier pairs with colons produce disjoint dedup keys and never collide."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/test_urt_campaign_import.py",
+          "./project/governance-check.sh --base main"
+        ],
+        "evidence": "Stale noop_duplicate and supersede_revision previews fail closed against newer state without emitting receipts; pre-change state and plain receipts remain compatible."
+      }
+    ]
+  }
+}

@@ -17,6 +17,7 @@ MAPPED_TICKET_SCHEMA = "planfile.urt-mapped-ticket/v1"
 CAMPAIGN_METADATA_SCHEMA = "planfile.urt-campaign-metadata/v1"
 PREVIEW_SCHEMA = "planfile.urt-campaign-preview/v1"
 IMPORT_RECEIPT_SCHEMA = "planfile.urt-campaign-import-receipt/v1"
+DEDUP_KEY_V2_PREFIX = "urt-key/v2:"
 
 _PRIORITY_MAP: dict[str, str] = {
     "P0": "critical",
@@ -45,6 +46,13 @@ def _canonical_json(value: Any) -> str:
 
 def _sha256_json(value: Any) -> str:
     return hashlib.sha256(_canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def build_urt_dedup_key(campaign_id: str, proposal_id: str) -> str:
+    """Build an injective dedup key while keeping colon-free legacy keys unchanged."""
+    if ":" not in campaign_id and ":" not in proposal_id:
+        return f"{campaign_id}:{proposal_id}"
+    return f"{DEDUP_KEY_V2_PREFIX}{_canonical_json([campaign_id, proposal_id])}"
 
 
 def _atomic_write_json(path: Path, payload: Mapping[str, Any]) -> None:
@@ -178,7 +186,7 @@ def map_urt_campaign_item_to_planfile(
 
     native_id_raw = item.get("native_ticket_id")
     native_ticket_id = str(native_id_raw).strip() if isinstance(native_id_raw, str) and native_id_raw.strip() else None
-    dedup_key = f"{campaign_id}:{proposal_id}"
+    dedup_key = build_urt_dedup_key(campaign_id, proposal_id)
 
     linked_issue, linked_receipt_id, linked_url = _resolve_verified_issue_binding(
         dedup_key=dedup_key,
@@ -270,6 +278,48 @@ def _load_import_state(state_path: Path) -> dict[str, Any]:
     return loaded
 
 
+def _entry_identity(entry: Mapping[str, Any]) -> tuple[str | None, str | None]:
+    if not isinstance(entry, Mapping):
+        return None, None
+    native = entry.get("native_ticket")
+    if not isinstance(native, Mapping):
+        return None, None
+    inputs = native.get("inputs")
+    if not isinstance(inputs, Mapping):
+        return None, None
+    meta = inputs.get("urt_campaign")
+    if not isinstance(meta, Mapping):
+        return None, None
+    cid = meta.get("campaign_id")
+    pid = meta.get("proposal_id")
+    return (
+        cid.strip() if isinstance(cid, str) and cid.strip() else None,
+        pid.strip() if isinstance(pid, str) and pid.strip() else None,
+    )
+
+
+def _lookup_existing_entry(
+    entries: Mapping[str, Any],
+    *,
+    dedup_key: str,
+    campaign_id: str | None,
+    proposal_id: str | None,
+) -> tuple[str | None, Mapping[str, Any] | None]:
+    direct = entries.get(dedup_key)
+    if isinstance(direct, Mapping):
+        return dedup_key, direct
+    if campaign_id and proposal_id:
+        legacy_key = f"{campaign_id}:{proposal_id}"
+        if legacy_key != dedup_key:
+            legacy_entry = entries.get(legacy_key)
+            if isinstance(legacy_entry, Mapping) and _entry_identity(legacy_entry) == (
+                campaign_id,
+                proposal_id,
+            ):
+                return legacy_key, legacy_entry
+    return None, None
+
+
 def prepare_urt_campaign_preview(
     manifest: Mapping[str, Any],
     *,
@@ -304,7 +354,13 @@ def prepare_urt_campaign_preview(
             )
         seen_in_batch[dkey] = cdig
 
-        prior = existing_entries.get(dkey)
+        meta = mapped["native_ticket"]["inputs"]["urt_campaign"]
+        _stored_key, prior = _lookup_existing_entry(
+            existing_entries,
+            dedup_key=dkey,
+            campaign_id=meta["campaign_id"],
+            proposal_id=meta["proposal_id"],
+        )
         if prior is None:
             operations.append({
                 "action": "create",
@@ -366,7 +422,7 @@ def commit_urt_campaign_import(
     if not isinstance(preview, Mapping) or preview.get("schema") != PREVIEW_SCHEMA:
         raise UrtCampaignImportError("Invalid campaign import preview payload")
     ops = preview.get("operations")
-    if not isinstance(ops, Sequence):
+    if not isinstance(ops, Sequence) or isinstance(ops, (str, bytes)):
         raise UrtCampaignImportError("Preview operations missing")
 
     state = _load_import_state(state_path)
@@ -374,19 +430,40 @@ def commit_urt_campaign_import(
 
     applied: list[dict[str, Any]] = []
     for op in ops:
+        if not isinstance(op, Mapping):
+            raise UrtCampaignImportError("Preview operation must be a mapping")
         action = str(op.get("action") or "")
-        dkey = str(op.get("dedup_key") or "")
-        cdig = str(op.get("content_digest") or "")
-        rev = int(op.get("plan_revision") or 0)
-        mapped = op["mapped_ticket"]
-        prior = entries.get(dkey)
+        dkey = _clean_nonempty(op.get("dedup_key"), "dedup_key")
+        cdig = _clean_nonempty(op.get("content_digest"), "content_digest")
+        rev_raw = op.get("plan_revision")
+        if isinstance(rev_raw, bool) or not isinstance(rev_raw, int) or rev_raw < 1:
+            raise UrtCampaignImportError("Preview operation plan_revision must be an integer >= 1")
+        rev = rev_raw
+        mapped = op.get("mapped_ticket")
+        if not isinstance(mapped, Mapping):
+            raise UrtCampaignImportError("Preview operation missing mapped_ticket")
+        campaign_id, proposal_id = _entry_identity(mapped)
+        stored_key, prior = _lookup_existing_entry(
+            entries,
+            dedup_key=dkey,
+            campaign_id=campaign_id,
+            proposal_id=proposal_id,
+        )
 
         if action == "noop_duplicate":
+            if (
+                prior is None
+                or int(prior.get("plan_revision", 0)) != rev
+                or prior.get("content_digest") != cdig
+            ):
+                raise UrtCampaignRevisionConflictError(
+                    f"Stale noop_duplicate preview for {dkey!r}: expected revision {rev} with matching digest"
+                )
             applied.append({"dedup_key": dkey, "action": "noop_duplicate", "plan_revision": rev})
             continue
         if action == "create":
             if prior is not None:
-                if prior.get("content_digest") == cdig:
+                if prior.get("content_digest") == cdig and int(prior.get("plan_revision", 0)) == rev:
                     applied.append({"dedup_key": dkey, "action": "noop_duplicate", "plan_revision": int(prior["plan_revision"])})
                     continue
                 raise UrtCampaignRevisionConflictError(f"Concurrent entry created for {dkey!r}")
@@ -403,8 +480,13 @@ def commit_urt_campaign_import(
         elif action == "supersede_revision":
             if prior is None or rev <= int(prior.get("plan_revision", 0)):
                 raise UrtCampaignRevisionConflictError(f"Stale supersede revision for {dkey!r}")
+            expected_prev = op.get("supersedes_revision")
+            if expected_prev is not None and int(prior.get("plan_revision", 0)) != int(expected_prev):
+                raise UrtCampaignRevisionConflictError(f"Stale supersede revision for {dkey!r}")
             history = list(prior.get("revision_history") or [])
             history.append({"plan_revision": rev, "content_digest": cdig})
+            if stored_key is not None and stored_key != dkey:
+                entries.pop(stored_key, None)
             entries[dkey] = {
                 "dedup_key": dkey,
                 "plan_revision": rev,
