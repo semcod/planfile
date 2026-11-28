@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-341",
+  "summary": "Warn when inbound GitHub sync keeps a local status that conflicts with the issue state (#489)",
+  "workstream": "application",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-341/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "planfile/sync/operations.py",
+    "tests/test_sync_bidirectional_order.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

@@ -1272,6 +1272,21 @@ def _inbound_status(ext_data: dict, integration_name: str, local_status=None) ->
     return "blocked"
 
 
+def _warn_lifecycle_conflict(planfile_id: str, local_status, ext_data: dict) -> None:
+    """Say so when the preserved local status disagrees with the GitHub issue state."""
+    from planfile.sync.github import GitHubBackend
+
+    projected = GitHubBackend.project_remote_status(local_status)
+    if projected == ext_data["status"]:
+        return
+    console.print(
+        f"[yellow]⚠️ Lifecycle conflict: {planfile_id} keeps local status "
+        f"'{getattr(local_status, 'value', local_status)}' while issue {ext_data['id']} is "
+        f"{ext_data['status']}. Reconcile intent: an explicit --direction to would push "
+        "the local state to GitHub.[/yellow]"
+    )
+
+
 def _update_local_ticket(
     sprint: dict,
     backlog: dict,
@@ -1315,6 +1330,8 @@ def _update_local_ticket(
         return updated_count
 
     update_fields["status"] = _inbound_status(ext_data, integration_name, ticket.get("status"))
+    if integration_name == "github":
+        _warn_lifecycle_conflict(planfile_id, update_fields["status"], ext_data)
     remote_labels = list(ext_data.get("labels") or [])
     local_dedupe_labels = [
         lbl

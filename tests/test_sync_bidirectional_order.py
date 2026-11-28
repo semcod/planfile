@@ -458,3 +458,17 @@ def test_native_outbound_checks_snapshot_before_remote_write(sample, monkeypatch
         run(sample)
     assert all(event[0] not in {"update", "create"} for event in backend.events)
     assert records(sample)["PLF-001"]["description"] == "owner changed before send"
+
+
+@pytest.mark.parametrize("local,remote,warned", [
+    ("done", "open", True), ("canceled", "open", True), ("done", "closed", False), ("open", "open", False),
+])
+def test_inbound_only_sync_reports_a_preserved_lifecycle_conflict(sample, capsys, local, remote, warned):
+    replace_record(sample, "PLF-001", status=local)
+    backend = sample[1]
+    backend.remote["42"].status = remote
+    run(sample, direction="from")
+    output = " ".join(capsys.readouterr().out.split())
+    assert ("Lifecycle conflict: PLF-001" in output) is warned
+    assert records(sample)["PLF-001"]["status"] == local
+    assert backend.remote["42"].status == remote
